@@ -1,0 +1,144 @@
+package macrobase.summary.itemset;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import macrobase.analysis.summary.itemset.Apriori;
+import macrobase.analysis.summary.itemset.FPGrowth;
+import macrobase.analysis.summary.itemset.StreamingFPGrowth;
+import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * Created by pbailis on 12/15/15.
+ */
+public class StreamingFPGrowthTest {
+
+    private static final Logger log = LoggerFactory.getLogger(StreamingFPGrowthTest.class);
+
+    private Set<Integer> intIfy(String txnStr) {
+        return Arrays.stream(txnStr.split(", ")).map(s -> (int) s.charAt(0)).collect(Collectors.toSet());
+    }
+
+    private void printItemsets(List<ItemsetWithCount> itemsets) {
+        itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
+        for(ItemsetWithCount i : itemsets) {
+            System.out.format("\ncount %d, size %d\n", i.getCount(), i.getItems().size());
+            for(int item : i.getItems()) {
+                System.out.println((char)item);
+            }
+        }
+    }
+
+    @Test
+    public void testFPFromPaper()
+    {
+        List<Set<Integer>> allTxns = new ArrayList<>();
+        allTxns.add(intIfy("f, a, c, d, g, i, m, p"));
+        allTxns.add(intIfy("a, b, c, f, l, m, o"));
+        allTxns.add(intIfy("b, f, h, j, o"));
+        allTxns.add(intIfy("b, c, k, s, p"));
+        allTxns.add(intIfy("a, f, c, e, l, p, m, n"));
+
+        StreamingFPGrowth fp = new StreamingFPGrowth(.2);
+
+        fp.buildTree(allTxns);
+        List<ItemsetWithCount> itemsets;
+        //itemsets = fp.getItemsets();
+
+        //printItemsets(itemsets);
+
+        List<Set<Integer>> newBatch = new ArrayList<>();
+        newBatch.add(intIfy("a, b, c, d, e"));
+        newBatch.add(intIfy("b, a, d, a, s, s,"));
+        newBatch.add(intIfy("d, a, t, t, h, i, n, g"));
+        newBatch.add(intIfy("f, a, k, s, p, e"));
+
+        allTxns.addAll(newBatch);
+
+        fp.insertTransactionsStreaming(newBatch);
+
+        itemsets = fp.getItemsets();
+
+        FPGrowth apriori = new FPGrowth();
+
+        List<ItemsetWithCount> apItemsets = apriori.getItemsets(allTxns, .2);
+
+        System.out.println("MISSING SETS");
+        Set<Set<Integer>> apis = apItemsets.stream().map(i -> i.getItems()).collect(Collectors.toSet());
+
+        List<Set<Integer>> apil = apItemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
+        Set<Set<Integer>> dupdetector = new HashSet<>();
+
+        for(Set<Integer> s : apil) {
+            if(!dupdetector.add(s)) {
+                log.warn("DUPLICATE FPTREE SET {}", s);
+            }
+        }
+
+
+        Set<Set<Integer>> iss = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toSet());
+
+        List<Set<Integer>> issl = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
+        Set<Set<Integer>> dupdetector2 = new HashSet<>();
+
+        for(Set<Integer> s : issl) {
+            if(!dupdetector2.add(s)) {
+                log.warn("DUPLICATE STREAM SET {}", s);
+            }
+        }
+
+        Set<Set<Integer>> diff = Sets.difference(apis, iss);
+        log.debug("DIFF: {}\ndiff size: {}, fptree sets size: {}, fptree list size: {}", diff, diff.size(), apis.size(),
+                  apItemsets.size());
+
+        assertEquals(apItemsets.size(), itemsets.size());
+    }
+
+    @Test
+    public void simpletest() {
+        List<Set<Integer>> allTxns = new ArrayList<>();
+        allTxns.add(intIfy("a, b, c"));
+        allTxns.add(intIfy("a, b"));
+
+        StreamingFPGrowth fp = new StreamingFPGrowth(.5);
+
+        fp.buildTree(allTxns);
+        List<ItemsetWithCount> itemsets;
+        //itemsets = fp.getItemsets();
+
+        //printItemsets(itemsets);
+
+        List<Set<Integer>> newBatch = new ArrayList<>();
+        newBatch.add(intIfy("c, d"));
+        newBatch.add(intIfy("a, d"));
+        newBatch.add(intIfy("a, d, e"));
+
+        allTxns.addAll(newBatch);
+
+        fp.insertTransactionsStreaming(newBatch);
+
+        itemsets = fp.getItemsets();
+
+        Apriori apriori = new Apriori();
+
+        Set<ItemsetWithCount> apItemsets = apriori.getItemsets(allTxns, .5);
+
+        System.out.printf("%d %d\n", itemsets.size(), apItemsets.size());
+
+        System.out.println("FPTREE");
+        printItemsets(itemsets);
+
+        System.out.println("APRIORI");
+        printItemsets(Lists.newArrayList(apItemsets));
+
+        assertEquals(apItemsets.size(), itemsets.size());
+    }
+}

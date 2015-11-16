@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ngStorage/0.3.6/ngStorage.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+      integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+      integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<body>
+
+
+<div class="alert alert-warning">    
+
+
+
+    <h1>Welcome to MacroBase Alpha</h1>
+</div>
+</div>
+
+<div ng-app="consoleApp">
+
+    <div class="row">
+        <div class="col-md-12" style="padding: 20px;">
+
+            <div ng-controller="exploreController" ng-init="getRows()">
+
+
+                <div class="panel panel-default" ng-show="hasItemsets()">
+
+                    <div class="panel-heading" >Itemset Under Consideration</div>
+                    <div class="panel-body">
+
+                        <table class="table" style="margin-top: 10px">
+                            <tr>
+                                <th style="width:50%">Column</th>
+                                <th style="width:50%">Value</th>
+                            </tr>
+                            <tr ng-repeat="item in itemset">
+                                <td>{{item.column}}</td>
+                                <td>{{item.value}}</td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </div>
+
+
+                <div class="panel panel-default">
+
+                    <div class="panel  panel-default">
+                        <div class="panel-heading">Hidden Columns (<span ng-click="hideAllColumns()">mark all</span>)
+                            (<span ng-click="clearHiddenColumns()">clear</span>)
+                        </div>
+                        <div class="panel-body"><span ng-repeat="c in getHiddenColumns()"><span
+                                ng-click="showColumn(c)">{{c}}{{$last ? '' : ', '}}</span></span></div>
+                    </div>
+                    <div class="panel-heading">Matching Rows</div>
+                    <div class="panel-body">
+                        <table class="table">
+                            <tr>
+                                <th ng-repeat="h in visibleRows[0].columnValues"><span ng-click="hideColumn(h.column)">{{h.column}}</span>
+                                </th>
+                            </tr>
+                            <tr ng-repeat="r in visibleRows">
+                                <td ng-repeat="p in r.columnValues">{{p.value}}</td>
+                            </tr>
+                        </table>
+                        <a id="morerows" href="#morerows" ng-click="getRows()">more rows</a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="consoleController.js"></script>
+
+</body>
+</html>

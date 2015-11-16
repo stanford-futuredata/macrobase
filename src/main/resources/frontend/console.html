@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ngStorage/0.3.6/ngStorage.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+      integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+      integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<style>
+    .active-schema {
+    background-color: #97e17a !important;
+    background-image: none !important;
+    }
+</style>
+
+
+<body>
+
+
+<div class="row">
+  <div class="col-md-12" style="padding: 20px; padding-left:
+  40px; padding-bottom: 0px;"><img src="macrobase.png" width=200 /></div>
+
+    <div class="col-md-12">
+      <hr style="border-bottom: 10px solid black;" />
+      </div>
+  </div>
+</div>
+
+<div ng-app="consoleApp"
+     data-ng-init="postgresstr='postgres'; pg_url='postgres';">
+
+
+    <div class="row">
+        <div class="col-md-6" style="padding: 20px;">
+
+            <div ng-controller="connectController" ng-init="get_schema(true)">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Database Configuration</div>
+                    <div class="panel-body">
+                        <table>
+                            <tr>
+                                <td nowrap style="width: 100px;">Database URL:</td>
+                                <td style="padding: 2px; width: 100%"><input ng-model="postgresstr" style="width:100%">
+                                </td>
+                                <td>
+                                    <button ng-click="updateDB()">submit</button>
+                                </td>
+                            </tr>
+                        </table>
+
+
+                        <table>
+                            <tr>
+                                <td nowrap style="width: 100px;">Base query:</td>
+                                <td style="padding: 2px; width:100%"><input ng-model="baseQuery" style="width:100%">
+                                </td>
+                                <td>
+                                    <button ng-click="updateDB()">submit</button>
+                                </td>
+                            </tr>
+                        </table>
+
+
+                        <p style="margin-top: 5px; margin-bottom:-5px">Connected to {{pg_url}} database!</p>
+
+                    </div>
+                </div>
+                <br>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">Schema Information and Selection
+                        <div style="float:right;">
+                            <button ng-click="clearSchema()">clear</button>
+                        </div>
+                        <div style="float:right;">
+                            <button ng-click="resetSchema()">reset</button>
+                        </div>
+			<div style="float:right;">
+			  <button ng-click="sampleRows()">sample</button>
+			  </div>
+                    </div>
+                    <div class="panel-body">
+
+
+                        <table class="table" ng-controller="selectorController">
+                            <tr>
+                                <th>Clustering<br>Attribute?</th>
+                                <th>Target Metric?<br>Lo/Hi</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                            </tr>
+                            <tr ng-repeat="x in schemaCols.columns">
+                                <td>
+                                    <button ng-click="selectedAttribute(x.name)" type="button"
+                                            ng-class="applyClassAttributeButton(x.name)"><span
+                                            id="{{x.name}}-attribute"
+                                            ng-class="applyClassAttributeGlyph(x.name)" aria-hidden="true"></span>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button ng-click="selectedMetric(x.name, false)" type="button"
+                                            ng-class="applyClassMetricButton(x.name, false)"><span
+                                            id="{{x.name}}-metric" class="glyphicon glyphicon-arrow-down"
+                                            aria-hidden="true"></span></button>
+                                    <button ng-click="selectedMetric(x.name, true)" type="button"
+                                            ng-class="applyClassMetricButton(x.name, true)"><span
+                                            id="{{x.name}}-metric" class="glyphicon glyphicon-arrow-up"
+                                            aria-hidden="true"></span></button>
+                                </td>
+                                <td>{{x.name}}</td>
+                                <td>{{x.type}}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-controller="analyzeController" class="col-md-6" style="padding: 20px;"
+             data-ng-init="analyzeStr='Analyze'">
+            <button ng-click="triggerAnalyze()" type="button" class="btn btn-default btn-lg">
+                <span class="glyphicon glyphicon-flash" aria-hidden="true"></span> {{analyzeStr}}
+            </button>
+
+            <div class="panel panel-info" ng-show="shouldShowAnalysis()" style="margin-top: 20px;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Results:</h3>
+                </div>
+
+                <div class="panel-body">
+                    <div class="panel">
+                        <div class="panel-body">
+
+                            <table class="table">
+                                <tr>
+                                    <td># Outliers</td>
+                                    <td>{{numOutliers}}</td>
+                                </tr>
+                                <tr>
+                                    <td># Inliers</td>
+                                    <td>{{numInliers}}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><b>Timing</b></td>
+                                </tr>
+                                <tr>
+                                    <td>Load time</td>
+                                    <td>{{loadTime}}ms</td>
+                                </tr>
+                                <tr>
+                                    <td>Conversion time</td>
+                                    <td>{{conversionTime}}ms</td>
+                                </tr>
+                                <tr>
+                                    <td>Label time</td>
+                                    <td>{{labelTime}}ms</td>
+                                </tr>
+                                <tr>
+                                    <td>Summarization time</td>
+                                    <td>{{summarizationTime}}ms</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default" ng-repeat="i in itemsets">
+                        <div class="panel-body">
+                            <table>
+                                <tr style="width:100%">
+                                    <td style="width:50%"><b>Support: </b></td>
+                                    <td style="width:50%"> {{i.support}}</td>
+                                </tr>
+                                <tr style="width:100%">
+                                    <td style="width:50%"><b>Ratio Out/In: </b></td>
+                                    <td style="width:50%"> {{i.ratioToInliers}}</td>
+                                </tr>
+                                <tr>
+                                    <td style="width:50%"><b>Records: </b></td>
+                                    <td style="width:50%"> {{i.numRecords}}</td>
+                                </tr>
+                            </table>
+                            <table class="table" style="margin-top: 10px">
+                                <tr>
+                                    <th style="width:50%">Column</th>
+                                    <th style="width:50%">Value</th>
+                                </tr>
+                                <tr ng-repeat="item in i.items">
+                                    <td>{{item.column}}</td>
+                                    <td>{{item.value}}</td>
+                                </tr>
+                            </table>
+                            <a href="#" ng-click="exploreItems(i.items)">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="consoleController.js"></script>
+
+</body>
+</html>
