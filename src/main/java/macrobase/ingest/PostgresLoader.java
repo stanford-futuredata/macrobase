@@ -114,7 +114,7 @@ public class PostgresLoader {
 
             int i = 1;
             for(; i <= attributes.size(); ++i) {
-                attrList.add(encoder.getIntegerEncoding(i-1, rs.getString(i)));
+                attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
             }
 
             List<Double> metricList = new ArrayList<>(lowMetrics.size()+highMetrics.size());

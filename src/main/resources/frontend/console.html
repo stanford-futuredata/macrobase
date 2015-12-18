@@ -152,10 +152,6 @@
                                     <td>{{loadTime}}ms</td>
                                 </tr>
                                 <tr>
-                                    <td>Conversion time</td>
-                                    <td>{{conversionTime}}ms</td>
-                                </tr>
-                                <tr>
                                     <td>Label time</td>
                                     <td>{{labelTime}}ms</td>
                                 </tr>
@@ -166,6 +162,12 @@
                             </table>
                         </div>
                     </div>
+
+                    <div>
+                     Sort order: <button ng-click="sortAnalysis('support')">support</button>
+                        <button ng-click="sortAnalysis('ratioToInliers')">ratio</button>
+                        <button ng-click="sortAnalysis('itemSize')">number of attributes</button>
+                        </div>
 
                     <div class="panel panel-default" ng-repeat="i in itemsets">
                         <div class="panel-body">

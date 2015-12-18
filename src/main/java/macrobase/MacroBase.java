@@ -25,9 +25,9 @@ public class MacroBase
     {
         System.out.println("Hello World!");
 
-        benchmark();
+        //benchmark();
 
-        //MacroBaseServer.main(args);
+        MacroBaseServer.main(args);
     }
 
     static void benchmark() throws Exception {

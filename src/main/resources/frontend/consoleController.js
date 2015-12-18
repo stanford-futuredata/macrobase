@@ -305,16 +305,34 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
 	        configService.analysisReceived()
 	        $scope.analyzeStr = "Analyze"
 
-	        $scope.itemsets = response.data.itemSets
-	        $scope.numOutliers = response.data.numOutliers
-	        $scope.numInliers = response.data.numInliers
-	        $scope.loadTime = response.data.loadTime
-  	        $scope.conversionTime = response.data.conversionTime
-	        $scope.labelTime = response.data.labelTime
-	        $scope.summarizationTime = response.data.summarizationTime
+            $scope.analysisResult = response.data;
 
+            $scope.numOutliers = response.data.numOutliers
+            $scope.numInliers = response.data.numInliers
+            $scope.loadTime = response.data.loadTime
+            $scope.labelTime = response.data.labelTime
+            $scope.summarizationTime = response.data.summarizationTime
+            $scope.itemsets = response.data.itemSets
 	    });
     }
+    }
+
+    $scope.sortAnalysis = function(field) {
+        $scope.itemsets.sort(function(a, b) {
+            if(field === "itemSize") {
+               return a.items.length - b.items.length;
+            } else {
+                var compare = b[field] - a[field];
+                if(compare == 0) {
+                    compare = b.items.length - a.items.length;
+                    if(compare == 0) {
+                        compare = b.items[0].value < a.items[0].value;
+                    }
+                }
+
+                return compare;
+            }
+        });
     }
 
     $scope.exploreItems = function(items) {
