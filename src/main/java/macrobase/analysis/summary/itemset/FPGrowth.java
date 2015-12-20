@@ -2,6 +2,7 @@ package macrobase.analysis.summary.itemset;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import macrobase.analysis.outlier.result.DatumWithScore;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +129,16 @@ public class FPGrowth {
             }
         }
 
+        public void setFrequentCounts(Map<Integer, Integer> counts) {
+            frequentItemCounts = counts;
+            List<Map.Entry<Integer, Integer>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
+            sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
+                    .compareTo(frequentItemCounts.get(i2.getKey())));
+            for(int i = 0; i < sortedItemCounts.size(); ++i) {
+                frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
+            }
+        }
+
         public void insertFrequentItems(List<Set<Integer>> transactions,
                                         int countRequiredForSupport) {
 
@@ -180,6 +191,16 @@ public class FPGrowth {
             }
         }
 
+        public void insertDatum(List<DatumWithScore> datums) {
+            for(DatumWithScore d : datums) {
+                List<Integer> filtered = d.getDatum().getAttributes().stream().filter(
+                        i -> frequentItemCounts.containsKey(i)).collect(Collectors.toList());
+                filtered.sort((i1, i2) -> frequentItemOrder.get(i2).compareTo(frequentItemOrder.get(i1)));
+                root.insertTransaction(filtered, 0, 1);
+            }
+        }
+
+
         public void insertConditionalFrequentPatterns(List<ItemsetWithCount> patterns) {
             for(ItemsetWithCount is : patterns) {
                 List<Integer> filtered = is.getItems().stream().filter(i -> frequentItemCounts.containsKey(i)).collect(Collectors.toList());
@@ -197,6 +218,40 @@ public class FPGrowth {
                     root.insertTransaction(filtered, 0, 1);
                 }
             }
+        }
+
+        public int getSupport(Set<Integer> pattern) {
+            for(Integer i : pattern) {
+                if(!frequentItemCounts.containsKey(i)) {
+                    return 0;
+                }
+            }
+
+            List<Integer> plist = Lists.newArrayList(pattern);
+            plist.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
+
+            int count = 0;
+            FPTreeNode pathHead = nodeHeaders.get(plist.get(0));
+            while(pathHead != null) {
+                FPTreeNode curNode = pathHead;
+                int itemsToFind = plist.size();
+
+                while(curNode != null) {
+                    if(pattern.contains(curNode.getItem())) {
+                        itemsToFind -= 1;
+                    }
+                    curNode = curNode.getParent();
+
+                    if(itemsToFind == 0) {
+                        count += pathHead.count;
+                        break;
+                    }
+
+                    curNode = curNode.getNextLink();
+                }
+            }
+
+            return count;
         }
 
 
@@ -356,6 +411,28 @@ public class FPGrowth {
         en = System.currentTimeMillis();
 
         log.debug("FPTree mine: {}", en-st);
+
+        return ret;
+    }
+
+    // ugh, this is a really ugly function sig, but it's efficient
+    public List<ItemsetWithCount> getCounts(
+            List<DatumWithScore> transactions,
+            Map<Integer, Integer> initialCounts,
+            Set<Integer> targetItems,
+            List<ItemsetWithCount> toCount) {
+        FPTree countTree = new FPTree();
+        for(Integer i : targetItems) {
+            initialCounts.remove(i);
+        }
+
+        countTree.setFrequentCounts(initialCounts);
+        countTree.insertDatum(transactions);
+
+        List<ItemsetWithCount> ret = new ArrayList<>();
+        for(ItemsetWithCount c : toCount) {
+            ret.add(new ItemsetWithCount(c.getItems(), countTree.getSupport(c.getItems())));
+        }
 
         return ret;
     }

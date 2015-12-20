@@ -2,7 +2,7 @@
 var myApp = angular.module('consoleApp', ['ngStorage']);
 
 myApp.service('explorerService', function($localStorage) {
-    function setItems(ni) { localStorage.itemsJson = angular.toJson(ni); console.log(ni); console.log(angular.toJson(ni)); console.log(localStorage.itemsJson) }
+    function setItems(ni) { localStorage.itemsJson = angular.toJson(ni); }
     function getItems() {   if('itemsJson' in localStorage) return localStorage.itemsJson }
 
     function markHiddenColumn(c) {
@@ -50,8 +50,6 @@ myApp.service('configService', function($localStorage) {
     function hasAnalysis() { return hasAnalysisForConfig }
     function analysisReceived() { hasAnalysisForConfig = true; }
 
-    console.log("IN DEFS,", $localStorage.markForBasicQuery)
-
   function reset()
    {
                 hasAnalysisForConfig = false
@@ -85,9 +83,9 @@ function unmarkForBasicQuery() {
 
   function getPostgresUrl() { return $localStorage.pgUrl }
 
-  function setBaseQuery(q) { console.log("SET BASE QUERY", q); $localStorage.baseQuery = q }
+  function setBaseQuery(q) { $localStorage.baseQuery = q }
 
-    function getBaseQuery() { console.log($localStorage.baseQuery); return $localStorage.baseQuery }
+    function getBaseQuery() { return $localStorage.baseQuery }
 
 
   function addConfigIfNeeded(name, listname) {
@@ -359,16 +357,16 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
         $scope.visibleRows = angular.copy($scope.exploreRows)
          for(var row of $scope.visibleRows) {
                 for(var hc of explorerService.getHiddenColumns()) {
-                            for(var i=0; i < row.pairs.length; i++) {
+                            for(var i=0; i < row.columnValues.length; i++) {
 
-                    var ele = row.pairs[i]
+                    var ele = row.columnValues[i]
 
                     if(ele.column == hc) {
 
-                        if(row.pairs.length > 1)
-                            row.pairs.splice(i, 1)
+                        if(row.columnValues.length > 1)
+                            row.columnValues.splice(i, 1)
                         else {
-                            row.pairs = []
+                            row.columnValues = []
                             }
                     }
                 }
@@ -394,12 +392,9 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
     }
 
     $scope.hideAllColumns = function () {
-        for(var p of $scope.exploreRows[0].pairs) {
-            console.log(p)
+        for(var p of $scope.exploreRows[0].columnValues) {
             if(explorerService.getHiddenColumns().indexOf(p.column) < 0) {
                 explorerService.markHiddenColumn(p.column)
-            } else {
-                console.log("NOT HIDDEN", p.column)
             }
 
         }
@@ -410,9 +405,6 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 
     $scope.getRows = function() {
 
-    console.log(explorerService.getItems())
-console.log("INIT", configService.getBaseQuery())
-	
 	configService.unmarkForBasicQuery()
 
 	var _items = angular.fromJson(explorerService.getItems())
@@ -436,8 +428,6 @@ console.log("INIT", configService.getBaseQuery())
 	        $scope.exploreRows = $scope.exploreRows.concat(response.data.rows)
 	        $scope.visibleRows = angular.copy($scope.exploreRows)
 	        rowNo += 10
-	        console.log($scope.exploreRows)
-	        console.log(response.data)
 	        updateVisibleData()
 	    });
     }

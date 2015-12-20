@@ -7,6 +7,8 @@ import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
 import macrobase.server.resources.RowSetResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class PostgresLoader {
+    private static final Logger log = LoggerFactory.getLogger(PostgresLoader.class);
+
     private Connection connection;
 
     private String removeLimit(String sql) {
@@ -61,8 +65,10 @@ public class PostgresLoader {
             StringJoiner sj = new StringJoiner(" AND ");
             preds.stream().forEach(e -> sj.add(String.format("%s = '%s'", e.column, e.value)));
 
-            if(!sql.contains("WHERE")) {
+            if(!sql.toLowerCase().contains("where")) {
                 sql += " WHERE ";
+            } else {
+                sql += " AND ";
             }
 
             sql += sj.toString();

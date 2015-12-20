@@ -5,7 +5,10 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import macrobase.ingest.result.ColumnValue;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 public class DatumEncoder {
     private HashMap<Integer, String> attributeDimensionNameMap = Maps.newHashMap();
@@ -25,6 +28,15 @@ public class DatumEncoder {
         String columnValue = integerEncoding.get(matchingColumn).inverse().get(encodedAttr);
 
         return new ColumnValue(columnName, columnValue);
+    }
+
+    public List<ColumnValue> getColsFromAttrSet(Set<Integer> attrs) {
+        List<ColumnValue> ret = new ArrayList<>();
+        for(Integer item : attrs) {
+            ret.add(getAttribute(item));
+        }
+
+        return ret;
     }
 
     public int getIntegerEncoding(int dimension, String attr) {

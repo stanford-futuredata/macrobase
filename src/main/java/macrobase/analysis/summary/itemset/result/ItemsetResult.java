@@ -32,6 +32,8 @@ public class ItemsetResult {
         return ratioToInliers;
     }
 
+    public void setRatioToInliers(double ratio) { ratioToInliers = ratio; }
+
     public List<ColumnValue> getItems() {
         return items;
     }

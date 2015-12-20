@@ -9,6 +9,7 @@ import macrobase.analysis.outlier.ZScoreDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.FPGrowth;
+import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.datamodel.Datum;
@@ -75,83 +76,16 @@ public class CoreAnalyzer {
         log.debug("Starting summarization...");
 
         sw.start();
-        Map<Integer, Integer> inlierCounts = new ExactCount().count(or.getInliers()).getCounts();
-        Map<Integer, Integer> outlierCounts = new ExactCount().count(or.getOutliers()).getCounts();
-
-
-        // TODO: truncate inliers!
-        ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
-
-        for(DatumWithScore d : or.getOutliers()) {
-            Set<Integer> txn = null;
-
-            for(int i : d.getDatum().getAttributes()) {
-                int outlierCount = outlierCounts.get(i);
-                if(outlierCount > supportCountRequired) {
-                    Integer inlierCount = inlierCounts.get(i);
-
-                    double outlierInlierRatio;
-                    if(inlierCount == null || inlierCount == 0) {
-                        outlierInlierRatio = Double.POSITIVE_INFINITY;
-                    } else {
-                        outlierInlierRatio = ((double)outlierCount/outlierSize)/((double)inlierCount/inlierSize);
-                    }
-                    if(outlierInlierRatio > MIN_INLIER_RATIO) {
-                        if(txn == null) {
-                            txn = new HashSet<>();
-                        }
-                        txn.add(i);
-                    }
-                }
-            }
-
-            if(txn != null) {
-                outlierTransactions.add(txn);
-            }
-        }
-
-        FPGrowth fpg = new FPGrowth();
-        List<ItemsetWithCount> iwc = fpg.getItemsets(outlierTransactions, MIN_SUPPORT);
-        sw.stop();
-
-        long summarizeTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        FPGrowthEmerging fpg = new FPGrowthEmerging();
+        List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(or.getInliers(),
+                                                                        or.getOutliers(),
+                                                                        MIN_SUPPORT,
+                                                                        MIN_INLIER_RATIO,
+                                                                        encoder);
         sw.reset();
-
+        long summarizeTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended summarization (time: {}ms)!", summarizeTime);
 
-
-        // to fix!
-        final double INLIER_RATIO = 0;
-
-        iwc.sort((x, y) -> x.getCount() != y.getCount() ?
-                -Integer.compare(x.getCount(), y.getCount()) :
-                -Integer.compare(x.getItems().size(), y.getItems().size()));
-
-        List<ItemsetResult> isr = new ArrayList<>();
-
-        Set<Integer> prevSet = null;
-        Integer prevCount = -1;
-        for(ItemsetWithCount i : iwc) {
-            if(i.getCount() == prevCount) {
-                if(prevSet != null && Sets.difference(i.getItems(), prevSet).size() == 0) {
-                    continue;
-                }
-            }
-
-            prevCount = i.getCount();
-            prevSet = i.getItems();
-
-            List<ColumnValue> cols = new ArrayList<>();
-
-            for(int item : i.getItems()) {
-                cols.add(encoder.getAttribute(item));
-            }
-
-            isr.add(new ItemsetResult((double) i.getCount()/outlierSize,
-                                      i.getCount(),
-                                      INLIER_RATIO,
-                                      cols));
-        }
 
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
     }
