@@ -4,7 +4,7 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Sets;
 import macrobase.MacroBase;
-import macrobase.analysis.outlier.result.DatumWithScore;
+import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;

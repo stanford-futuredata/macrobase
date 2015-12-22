@@ -5,7 +5,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.ZScoreDetector;
-import macrobase.analysis.outlier.result.DatumWithScore;
+import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.Apriori;

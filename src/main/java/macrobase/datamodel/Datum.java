@@ -1,12 +1,14 @@
 package macrobase.datamodel;
 
+import org.apache.commons.math3.linear.RealVector;
+
 import java.util.List;
 
-public class Datum {
+public class Datum implements HasMetrics {
     private List<Integer> attributes;
-    private List<Double> metrics;
+    private RealVector metrics;
 
-    public Datum(List<Integer> attributes, List<Double> metrics) {
+    public Datum(List<Integer> attributes, RealVector metrics) {
         this.attributes = attributes;
         this.metrics = metrics;
     }
@@ -15,7 +17,8 @@ public class Datum {
         return attributes;
     }
 
-    public List<Double> getMetrics() {
+    @Override
+    public RealVector getMetrics() {
         return metrics;
     }
 }

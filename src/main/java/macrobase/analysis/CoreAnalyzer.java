@@ -1,21 +1,15 @@
 package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import macrobase.analysis.outlier.result.DatumWithScore;
+import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.ZScoreDetector;
 import macrobase.analysis.result.AnalysisResult;
-import macrobase.analysis.summary.count.ExactCount;
-import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
-import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.PostgresLoader;
-import macrobase.ingest.result.ColumnValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +51,14 @@ public class CoreAnalyzer {
 
         log.debug("Starting classification...");
         sw.start();
-        ZScoreDetector detector = new ZScoreDetector(ZSCORE);
+        OutlierDetector detector;
+        if(lowMetrics.size() + highMetrics.size() == 1) {
+            detector = new ZScoreDetector(ZSCORE);
+        } else {
+            detector = new MinCovDet(.01);
+        }
         OutlierDetector.BatchResult or = detector.classifyBatch(data);
+
         sw.stop();
 
         long classifyTime = sw.elapsed(TimeUnit.MILLISECONDS);

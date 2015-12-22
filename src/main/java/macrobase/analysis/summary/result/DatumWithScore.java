@@ -1,10 +1,10 @@
-package macrobase.analysis.outlier.result;
+package macrobase.analysis.summary.result;
 
 import macrobase.datamodel.Datum;
 
 public class DatumWithScore {
     private Datum datum;
-    private double score;
+    private Double score;
 
     public DatumWithScore(Datum datum, double score) {
         this.datum = datum;
@@ -15,7 +15,7 @@ public class DatumWithScore {
         return datum;
     }
 
-    public double getScore() {
+    public Double getScore() {
         return score;
     }
 }

@@ -7,6 +7,8 @@ import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
 import macrobase.server.resources.RowSetResource;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,17 +125,19 @@ public class PostgresLoader {
                 attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
             }
 
-            List<Double> metricList = new ArrayList<>(lowMetrics.size()+highMetrics.size());
+            RealVector metricVec = new ArrayRealVector(lowMetrics.size()+highMetrics.size());
+            int vecPos = 0;
 
             for(; i <= attributes.size()+lowMetrics.size(); ++i) {
-                metricList.add(Math.pow(Math.max(rs.getDouble(i), 0.1), -1));
+                metricVec.setEntry(vecPos++, Math.pow(Math.max(rs.getDouble(i), 0.1), -1));
             }
 
             for(; i <= attributes.size()+lowMetrics.size()+highMetrics.size(); ++i) {
-                metricList.add(rs.getDouble(i));
+                metricVec.setEntry(vecPos++, rs.getDouble(i));
             }
 
-            ret.add(new Datum(attrList, metricList));
+
+            ret.add(new Datum(attrList, metricVec));
         }
 
         return ret;

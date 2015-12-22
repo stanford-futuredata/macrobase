@@ -4,7 +4,7 @@ import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import macrobase.MacroBase;
-import macrobase.analysis.outlier.result.DatumWithScore;
+import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static com.codahale.metrics.MetricRegistry.name;

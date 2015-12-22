@@ -1,6 +1,6 @@
 package macrobase.analysis.outlier;
 
-import macrobase.analysis.outlier.result.DatumWithScore;
+import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 
 import java.util.List;

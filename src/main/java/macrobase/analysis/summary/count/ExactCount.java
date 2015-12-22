@@ -1,6 +1,6 @@
 package macrobase.analysis.summary.count;
 
-import macrobase.analysis.outlier.result.DatumWithScore;
+import macrobase.analysis.summary.result.DatumWithScore;
 
 import java.util.HashMap;
 import java.util.List;
