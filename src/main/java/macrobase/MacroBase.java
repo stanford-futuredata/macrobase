@@ -36,7 +36,11 @@ public class MacroBase
 
     public static void main( String[] args ) throws Exception
     {
-        System.out.println("Hello World!");
+        System.out.println("Welcome to\n" +
+                           "  _   _   _   _   _   _   _   _   _  \n" +
+                           " / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ \n" +
+                           "( m | a | c | r | o | b | a | s | e )\n" +
+                           " \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \n");
 
         //benchmark();
 
