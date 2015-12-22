@@ -4,7 +4,7 @@ import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import macrobase.analysis.outlier.OutlierDetector;
-import macrobase.analysis.outlier.ZScoreDetector;
+import macrobase.analysis.outlier.ZScore;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.FPGrowth;
@@ -68,7 +68,7 @@ public class MacroBase
                                           Lists.newArrayList(),
                                           "SELECT * FROM sf_datasets D, mapmatch_history H WHERE H.dataset_id = D.id LIMIT 10000000");
 
-        ZScoreDetector detector = new ZScoreDetector(3.0);
+        ZScore detector = new ZScore(3.0);
         OutlierDetector.BatchResult or = detector.classifyBatch(data);
 
         // SUMMARY

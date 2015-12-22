@@ -6,12 +6,12 @@ import macrobase.datamodel.Datum;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZScoreDetector implements OutlierDetector {
+public class ZScore implements OutlierDetector {
     private double mean;
     private double std;
     private final double zscoreThresh;
 
-    public ZScoreDetector(Double _zscore) {
+    public ZScore(Double _zscore) {
         zscoreThresh = _zscore;
     }
 

@@ -3,7 +3,7 @@ package macrobase.analysis;
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
-import macrobase.analysis.outlier.ZScoreDetector;
+import macrobase.analysis.outlier.ZScore;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -53,7 +53,7 @@ public class CoreAnalyzer {
         sw.start();
         OutlierDetector detector;
         if(lowMetrics.size() + highMetrics.size() == 1) {
-            detector = new ZScoreDetector(ZSCORE);
+            detector = new ZScore(ZSCORE);
         } else {
             detector = new MinCovDet(.01);
         }
