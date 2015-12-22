@@ -71,6 +71,7 @@ public class MinCovDet implements OutlierDetector  {
                 alreadyChosen.add(idx);
                 ret.add(allData.get(idx));
             }
+            remaining -= 1;
         }
 
         assert(ret.size() == k);
