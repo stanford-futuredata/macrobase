@@ -102,7 +102,7 @@ public class FPGrowthEmerging {
                 Integer inlierCount = inlierCounts.get(i.getItems().iterator().next());
 
                 if(inlierCount != null && inlierCount > 0) {
-                    ratio = (i.getCount()/outliers.size())/((double)inlierCount/inliers.size());
+                    ratio = ((double)i.getCount()/outliers.size())/((double)inlierCount/inliers.size());
                 } else {
                     ratio = Double.POSITIVE_INFINITY;
                 }

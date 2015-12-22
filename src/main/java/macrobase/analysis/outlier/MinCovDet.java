@@ -109,7 +109,7 @@ public class MinCovDet implements OutlierDetector  {
             if(vec == null) {
                 vec = dvec;
             } else {
-                vec.add(dvec);
+                vec = vec.add(dvec);
             }
         }
 
@@ -183,10 +183,14 @@ public class MinCovDet implements OutlierDetector  {
                 break;
             }
 
-            log.debug("Iteration {}: delta = {}; det = {}", stepNo, delta, newDet);
+            log.trace("Iteration {}: delta = {}; det = {}", stepNo, delta, newDet);
             det = newDet;
             stepNo++;
         }
+
+        log.trace("mean: {}", mean);
+        log.trace("cov: {}", cov);
+
 
         List<MetricsWithScore> rankedScores = findKClosest(data.size(), data, mean, cov);
 

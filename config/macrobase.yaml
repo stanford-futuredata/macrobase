@@ -9,4 +9,4 @@ logging:
 
   # Logger-specific levels.
   loggers:
-    "macrobase": DEBUG
+    "macrobase": TRACE
