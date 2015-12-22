@@ -1,5 +1,6 @@
 package macrobase.server.resources;
 
+import macrobase.MacroBase;
 import macrobase.analysis.CoreAnalyzer;
 import macrobase.ingest.PostgresLoader;
 import macrobase.analysis.result.AnalysisResult;
@@ -33,10 +34,17 @@ public class AnalyzeResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public AnalysisResult getAnalysis(AnalysisRequest request) throws Exception {
         loader.connect(request.pgUrl);
-        return CoreAnalyzer.analyze(loader,
-                                    request.attributes,
-                                    request.lowMetrics,
-                                    request.highMetrics,
-                                    request.baseQuery);
+        AnalysisResult result = CoreAnalyzer.analyze(loader,
+                                                     request.attributes,
+                                                     request.lowMetrics,
+                                                     request.highMetrics,
+                                                     request.baseQuery);
+        if(result.getItemSets().size() > 1000) {
+            log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
+            result.setItemSets(result.getItemSets().subList(0, 1000));
+        }
+
+        MacroBase.reporter.report();
+        return result;
     }
 }

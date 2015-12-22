@@ -1,18 +1,31 @@
 package macrobase.analysis.summary.itemset;
 
+import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import macrobase.MacroBase;
 import macrobase.analysis.outlier.result.DatumWithScore;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
 public class FPGrowth {
     private static final Logger log = LoggerFactory.getLogger(FPGrowth.class);
+    private final Timer singleItemCounts = MacroBase.metrics.timer(name(FPGrowth.class, "itemCounts"));
+    private final Timer insertTransactions = MacroBase.metrics.timer(name(FPGrowth.class, "insertTransactions"));
+    private final Timer fpMine = MacroBase.metrics.timer(name(FPGrowth.class, "fpMine"));
+
 
     class FPTree {
         private FPTreeNode root = new FPTreeNode(-1, null, 0);
@@ -383,6 +396,7 @@ public class FPGrowth {
                     Set<Integer> combinedItems = new HashSet<>();
                     combinedItems.addAll(i.getItems());
                     combinedItems.addAll(j.getItems());
+
                     ret.add(new ItemsetWithCount(combinedItems, Math.min(i.getCount(), j.getCount())));
                 }
             }
@@ -398,8 +412,13 @@ public class FPGrowth {
         log.debug("count required: {}", countRequiredForSupport);
 
         long st = System.currentTimeMillis();
+
+        Timer.Context context = singleItemCounts.time();
         fp.insertFrequentItems(transactions, countRequiredForSupport);
+        context.stop();
+        context = insertTransactions.time();
         fp.insertTransactions(transactions);
+        context.stop();
         long en = System.currentTimeMillis();
 
         log.debug("FPTree load: {}", en - st);
@@ -407,7 +426,9 @@ public class FPGrowth {
         //fp.printTreeDebug();
 
         st = System.currentTimeMillis();
+        context = fpMine.time();
         List<ItemsetWithCount> ret = fp.mineItemsets(countRequiredForSupport);
+        context.stop();
         en = System.currentTimeMillis();
 
         log.debug("FPTree mine: {}", en-st);

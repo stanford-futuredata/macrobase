@@ -1,20 +1,27 @@
 package macrobase.analysis.summary.itemset;
 
+import com.codahale.metrics.Timer;
+import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Sets;
+import macrobase.MacroBase;
 import macrobase.analysis.outlier.result.DatumWithScore;
-import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.result.ColumnValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 public class FPGrowthEmerging {
+    private final Timer singleItemCounts = MacroBase.metrics.timer(name(FPGrowthEmerging.class, "singleItemCounts"));
+    private final Timer outlierFPGrowth = MacroBase.metrics.timer(name(FPGrowthEmerging.class, "outlierFPGrowth"));
+    private final Timer inlierRatio = MacroBase.metrics.timer(name(FPGrowthEmerging.class, "inlierRatio"));
+
+
     private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
 
     public List<ItemsetResult> getEmergingItemsetsWithMinSupport(List<DatumWithScore> inliers,
@@ -23,6 +30,7 @@ public class FPGrowthEmerging {
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
+        Context context = singleItemCounts.time();
         // TODO: truncate inliers!
         ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
 
@@ -58,19 +66,18 @@ public class FPGrowthEmerging {
                 outlierTransactions.add(txn);
             }
         }
+        context.stop();
 
+        context = outlierFPGrowth.time();
         FPGrowth fpg = new FPGrowth();
         List<ItemsetWithCount> iwc = fpg.getItemsets(outlierTransactions, minSupport);
+        context.stop();
 
-        // to fix!
-        final double TEMP_INLIER_RATIO = 0;
+        context = inlierRatio.time();
 
         iwc.sort((x, y) -> x.getCount() != y.getCount() ?
                 -Integer.compare(x.getCount(), y.getCount()) :
                 -Integer.compare(x.getItems().size(), y.getItems().size()));
-
-        List<ItemsetResult> isr = new ArrayList<>();
-
 
         Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
@@ -84,6 +91,7 @@ public class FPGrowthEmerging {
                     continue;
                 }
             }
+
 
             prevCount = i.getCount();
             prevSet = i.getItems();
@@ -135,6 +143,8 @@ public class FPGrowthEmerging {
                                           encoder.getColsFromAttrSet(oc.getItems())));
             }
         }
+
+        context.stop();
 
         // finally sort one last time
         ret.sort((x, y) -> x.getNumRecords() != y.getNumRecords() ?

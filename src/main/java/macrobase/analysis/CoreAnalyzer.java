@@ -86,7 +86,6 @@ public class CoreAnalyzer {
         long summarizeTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended summarization (time: {}ms)!", summarizeTime);
 
-
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
     }
 }

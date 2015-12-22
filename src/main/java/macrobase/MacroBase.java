@@ -1,5 +1,7 @@
 package macrobase;
 
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Lists;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.ZScoreDetector;
@@ -12,8 +14,11 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.PostgresLoader;
 import macrobase.server.MacroBaseServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Hello world!
@@ -21,6 +26,14 @@ import java.util.*;
  */
 public class MacroBase
 {
+    public static final MetricRegistry metrics = new MetricRegistry();
+    public static final ConsoleReporter reporter = ConsoleReporter.forRegistry(metrics)
+                                                    .convertRatesTo(TimeUnit.SECONDS)
+                                                    .convertDurationsTo(TimeUnit.MILLISECONDS)
+                                                    .build();
+
+    private static final Logger log = LoggerFactory.getLogger(MacroBase.class);
+
     public static void main( String[] args ) throws Exception
     {
         System.out.println("Hello World!");

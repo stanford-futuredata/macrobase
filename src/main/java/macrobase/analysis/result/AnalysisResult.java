@@ -44,6 +44,10 @@ public class AnalysisResult {
         return summarizationTime;
     }
 
+    public void setItemSets(List<ItemsetResult> itemsets) {
+        this.itemSets = itemsets;
+    }
+
     public List<ItemsetResult> getItemSets() {
         return itemSets;
     }

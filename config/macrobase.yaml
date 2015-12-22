@@ -3,3 +3,10 @@ defaultName: Stranger
 
 server:
     rootPath: /api/*
+
+logging:
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+    "macrobase": DEBUG
