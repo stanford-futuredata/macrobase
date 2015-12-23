@@ -1,6 +1,7 @@
 package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
+import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.ZScore;
@@ -54,7 +55,7 @@ public class CoreAnalyzer {
         OutlierDetector detector;
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
         if(metricsDimensions == 1) {
-            detector = new ZScore();
+            detector = new MAD();
         } else {
             detector = new MinCovDet(metricsDimensions);
         }
@@ -84,8 +85,9 @@ public class CoreAnalyzer {
                                                                         MIN_SUPPORT,
                                                                         MIN_INLIER_RATIO,
                                                                         encoder);
-        sw.reset();
+        sw.stop();
         long summarizeTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        sw.reset();
         log.debug("...ended summarization (time: {}ms)!", summarizeTime);
 
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);

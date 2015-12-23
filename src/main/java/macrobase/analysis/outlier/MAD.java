@@ -3,14 +3,20 @@ package macrobase.analysis.outlier;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MAD extends OutlierDetector {
+    private static final Logger log = LoggerFactory.getLogger(MAD.class);
+
     private double median;
     private double MAD;
+
+
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
@@ -42,6 +48,8 @@ public class MAD extends OutlierDetector {
             MAD = residuals.get((int) Math.ceil(data.size() / 2));
         }
 
+        log.trace("trained! median is {}, MAD is {}", median, MAD);
+
         List<DatumWithScore> ret = new ArrayList<>();
 
         for (Datum d : data) {
@@ -56,6 +64,8 @@ public class MAD extends OutlierDetector {
 
     @Override
     public double getZScoreEquivalent(double zscore) {
-        return zscore*MAD_TO_ZSCORE_COEFFICIENT;
+        double ret = zscore/MAD_TO_ZSCORE_COEFFICIENT;
+        log.trace("setting zscore of {} threshold to {}", zscore, ret);
+        return ret;
     }
 }
