@@ -3,6 +3,8 @@ package macrobase.analysis.outlier;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.HasMetrics;
 import macrobase.datamodel.Datum;
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -16,9 +18,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
-public class MinCovDet implements OutlierDetector  {
+public class MinCovDet extends OutlierDetector  {
     private static final Logger log = LoggerFactory.getLogger(MinCovDet.class);
 
     class MetricsWithScore implements HasMetrics {
@@ -47,13 +50,12 @@ public class MinCovDet implements OutlierDetector  {
         }
     }
 
-
-    // N.B. p == dataset dimension
+    // p == dataset dimension
+    private final int p;
     // H = alpha*(n+p+1)
     private double alpha = .5;
     private Random random = new Random();
     private double stoppingDelta = 1e-3;
-    private double thresholdPercent;
 
     private RealMatrix cov;
     private RealVector mean;
@@ -78,12 +80,12 @@ public class MinCovDet implements OutlierDetector  {
         return ret;
     }
 
-    public MinCovDet(double thresholdPercent ) {
-        this.thresholdPercent = thresholdPercent;
+    public MinCovDet(int dataDim) {
+        this.p = dataDim;
     }
 
-    public MinCovDet(double thresholdPercent, double alpha) {
-        this(thresholdPercent);
+    public MinCovDet(int dataDim, double alpha) {
+        this(dataDim);
         this.alpha = alpha;
     }
 
@@ -153,11 +155,9 @@ public class MinCovDet implements OutlierDetector  {
     }
 
     @Override
-    public BatchResult classifyBatch(List<Datum> data) {
-        // dataset dimension
-        int p = data.iterator().next().getMetrics().getDimension();
-
+    public List<DatumWithScore> scoreData(List<Datum> data) {
         // for now, only handle multivariate case...
+        assert(data.iterator().next().getMetrics().getDimension() == p);
         assert(p > 1);
 
         int h = (int)Math.floor((data.size() + p + 1)*alpha);
@@ -191,24 +191,17 @@ public class MinCovDet implements OutlierDetector  {
         log.trace("mean: {}", mean);
         log.trace("cov: {}", cov);
 
+        return data.stream().map(x -> new DatumWithScore(x,
+                                                         getMahalanobis(mean, cov, x.getMetrics())))
+                .collect(Collectors.toList());
+    }
 
-        List<MetricsWithScore> rankedScores = findKClosest(data.size(), data, mean, cov);
-
-        int splitPoint = (int)(data.size()-data.size()*thresholdPercent);
-
-        List<DatumWithScore> inliers = new ArrayList<>();
-        List<DatumWithScore> outliers = new ArrayList<>();
-
-        for(int i = 0; i < data.size(); ++i) {
-            MetricsWithScore m = rankedScores.get(i);
-            DatumWithScore d = new DatumWithScore(data.get(i), m.getScore());
-            if(i < splitPoint) {
-                inliers.add(d);
-            } else {
-                outliers.add(d);
-            }
-        }
-
-        return new BatchResult(inliers, outliers);
+    @Override
+    public double getZScoreEquivalent(double zscore) {
+        // compute zscore to CDF
+        double cdf = (new NormalDistribution()).cumulativeProbability(zscore);
+        // for normal distribution, mahalanobis distance is chi-squared
+        // https://en.wikipedia.org/wiki/Mahalanobis_distance#Normal_distributions
+        return (new ChiSquaredDistribution(p)).inverseCumulativeProbability(cdf);
     }
 }

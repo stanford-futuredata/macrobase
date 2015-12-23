@@ -6,17 +6,12 @@ import macrobase.datamodel.Datum;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ZScore implements OutlierDetector {
+public class ZScore extends OutlierDetector {
     private double mean;
     private double std;
-    private final double zscoreThresh;
-
-    public ZScore(Double _zscore) {
-        zscoreThresh = _zscore;
-    }
 
     @Override
-    public BatchResult classifyBatch(List<Datum> data) {
+    public List<DatumWithScore> scoreData(List<Datum> data) {
         double sum = 0;
 
         for(Datum d : data) {
@@ -31,20 +26,21 @@ public class ZScore implements OutlierDetector {
         }
         std = Math.sqrt(ss / data.size());
 
-        List<DatumWithScore> inliers = new ArrayList<>();
-        List<DatumWithScore> outliers = new ArrayList<>();
+        List<DatumWithScore> ret = new ArrayList<>();
 
         for(Datum d : data) {
             double point = d.getMetrics().getEntry(0);
             double score = Math.abs(point-mean)/std;
 
-            if(score > zscoreThresh) {
-                outliers.add(new DatumWithScore(d, score));
-            } else {
-                inliers.add(new DatumWithScore(d, score));
-            }
+            ret.add(new DatumWithScore(d, score));
         }
 
-        return new OutlierDetector.BatchResult(inliers, outliers);
+        return ret;
+    }
+
+    @Override
+    public double getZScoreEquivalent(double zscore) {
+        // z-score is identity since we're literally calculating the z-score
+        return zscore;
     }
 }

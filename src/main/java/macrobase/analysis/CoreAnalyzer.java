@@ -52,12 +52,14 @@ public class CoreAnalyzer {
         log.debug("Starting classification...");
         sw.start();
         OutlierDetector detector;
-        if(lowMetrics.size() + highMetrics.size() == 1) {
-            detector = new ZScore(ZSCORE);
+        int metricsDimensions = lowMetrics.size() + highMetrics.size();
+        if(metricsDimensions == 1) {
+            detector = new ZScore();
         } else {
-            detector = new MinCovDet(.01);
+            detector = new MinCovDet(metricsDimensions);
         }
-        OutlierDetector.BatchResult or = detector.classifyBatch(data);
+        OutlierDetector.BatchResult or = detector
+                .classifyBatchByZScoreEquivalent(data, ZSCORE);
 
         sw.stop();
 

@@ -68,8 +68,8 @@ public class MacroBase
                                           Lists.newArrayList(),
                                           "SELECT * FROM sf_datasets D, mapmatch_history H WHERE H.dataset_id = D.id LIMIT 10000000");
 
-        ZScore detector = new ZScore(3.0);
-        OutlierDetector.BatchResult or = detector.classifyBatch(data);
+        ZScore detector = new ZScore();
+        OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(data, 3);
 
         // SUMMARY
 
