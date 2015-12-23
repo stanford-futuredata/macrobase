@@ -22,6 +22,7 @@ public class CoreAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(CoreAnalyzer.class);
 
     private static final double ZSCORE = 3;
+    private static final double TARGET_PERCENTILE = 0.01;
     private static final double MIN_SUPPORT = 0.001;
     private static final double MIN_INLIER_RATIO = 1;
 
@@ -60,7 +61,7 @@ public class CoreAnalyzer {
             detector = new MinCovDet(metricsDimensions);
         }
         OutlierDetector.BatchResult or = detector
-                .classifyBatchByZScoreEquivalent(data, ZSCORE);
+                .classifyBatchByPercentile(data, TARGET_PERCENTILE);
 
         sw.stop();
 
