@@ -1,8 +1,8 @@
-package macrobase.runtime.server.resources;
+package macrobase.runtime.resources;
 
 import com.google.common.base.Optional;
 import com.codahale.metrics.annotation.Timed;
-import macrobase.runtime.server.api.Saying;
+import macrobase.runtime.api.Saying;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

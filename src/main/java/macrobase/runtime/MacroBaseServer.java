@@ -1,4 +1,4 @@
-package macrobase.runtime.server;
+package macrobase.runtime;
 
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
@@ -6,12 +6,12 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import macrobase.ingest.PostgresLoader;
 import macrobase.ingest.SQLLoader;
-import macrobase.runtime.server.healthcheck.TemplateHealthCheck;
-import macrobase.runtime.server.resources.AnalyzeResource;
-import macrobase.runtime.server.resources.HelloResource;
-import macrobase.runtime.server.resources.RowSetResource;
-import macrobase.runtime.server.resources.SchemaResource;
-import macrobase.runtime.server.standalone.MacroBaseStandalone;
+import macrobase.runtime.healthcheck.TemplateHealthCheck;
+import macrobase.runtime.resources.AnalyzeResource;
+import macrobase.runtime.resources.RowSetResource;
+import macrobase.runtime.resources.SchemaResource;
+import macrobase.runtime.resources.HelloResource;
+import macrobase.runtime.standalone.MacroBaseStandalone;
 
 public class MacroBaseServer extends Application<ServerConfiguration> {
     public static void main(String[] args) throws Exception {

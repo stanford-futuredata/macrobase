@@ -1,4 +1,4 @@
-package macrobase.runtime.server.resources;
+package macrobase.runtime.resources;
 
 import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.RowSet;

@@ -1,4 +1,4 @@
-package macrobase.runtime.server;
+package macrobase.runtime;
 
 import io.dropwizard.Configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;

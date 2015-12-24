@@ -14,7 +14,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.PostgresLoader;
 import macrobase.ingest.SQLLoader;
-import macrobase.runtime.server.MacroBaseServer;
+import macrobase.runtime.MacroBaseServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,6 @@ public class MacroBase
     }
 
     static void benchmark() throws Exception {
-
         double MIN_INLIER_RATIO = 0;
         double MIN_SUPPORT = 0.01;
 

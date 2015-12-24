@@ -3,6 +3,7 @@ package macrobase.analysis.result;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 
 import java.util.List;
+import java.util.StringJoiner;
 
 public class AnalysisResult {
     private int numOutliers;
@@ -24,6 +25,27 @@ public class AnalysisResult {
         this.labelTime = labelTime;
         this.summarizationTime = summarizationTime;
         this.itemSets = itemSets;
+    }
+
+    public String prettyPrint() {
+        String ret = String.format("outliers: %d\n" +
+                                   "inliers: %d\n" +
+                                   "load time %d\n" +
+                                   "labeling time: %d\n" +
+                                   "summarization time: %d\n\n",
+                                   numOutliers,
+                                   numInliers,
+                                   loadTime,
+                                   labelTime,
+                                   summarizationTime);
+
+        final String sep = "-----\n\n";
+        StringJoiner joiner = new StringJoiner(sep);
+        for(ItemsetResult result : itemSets) {
+            joiner.add(result.prettyPrint());
+        }
+
+        return ret + sep + joiner.toString() + sep;
     }
 
     public int getNumOutliers() {
