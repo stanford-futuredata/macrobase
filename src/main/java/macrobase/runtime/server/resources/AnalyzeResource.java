@@ -1,4 +1,4 @@
-package macrobase.server.resources;
+package macrobase.runtime.server.resources;
 
 import macrobase.MacroBase;
 import macrobase.analysis.CoreAnalyzer;

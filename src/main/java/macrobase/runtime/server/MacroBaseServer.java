@@ -1,17 +1,18 @@
-package macrobase.server;
+package macrobase.runtime.server;
 
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import macrobase.ingest.PostgresLoader;
-import macrobase.server.healthcheck.TemplateHealthCheck;
-import macrobase.server.resources.AnalyzeResource;
-import macrobase.server.resources.HelloResource;
-import macrobase.server.resources.RowSetResource;
-import macrobase.server.resources.SchemaResource;
+import macrobase.runtime.server.healthcheck.TemplateHealthCheck;
+import macrobase.runtime.server.resources.AnalyzeResource;
+import macrobase.runtime.server.resources.HelloResource;
+import macrobase.runtime.server.resources.RowSetResource;
+import macrobase.runtime.server.resources.SchemaResource;
+import macrobase.runtime.server.standalone.MacroBaseStandalone;
 
-public class MacroBaseServer extends Application<MacroBaseConfiguration> {
+public class MacroBaseServer extends Application<ServerConfiguration> {
     public static void main(String[] args) throws Exception {
         new MacroBaseServer().run(args);
     }
@@ -22,12 +23,13 @@ public class MacroBaseServer extends Application<MacroBaseConfiguration> {
     }
 
     @Override
-    public void initialize(Bootstrap<MacroBaseConfiguration> bootstrap) {
+    public void initialize(Bootstrap<ServerConfiguration> bootstrap) {
+        bootstrap.addCommand(new MacroBaseStandalone());
         bootstrap.addBundle(new AssetsBundle("/frontend", "/", "console.html"));
     }
 
     @Override
-    public void run(MacroBaseConfiguration configuration,
+    public void run(ServerConfiguration configuration,
                     Environment environment) throws Exception {
 
         PostgresLoader loader = new PostgresLoader();

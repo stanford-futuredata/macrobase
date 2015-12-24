@@ -6,7 +6,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
-import macrobase.server.resources.RowSetResource;
+import macrobase.runtime.server.resources.RowSetResource;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;

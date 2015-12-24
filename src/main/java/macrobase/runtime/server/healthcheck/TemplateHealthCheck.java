@@ -1,4 +1,4 @@
-package macrobase.server.healthcheck;
+package macrobase.runtime.server.healthcheck;
 
 import com.codahale.metrics.health.HealthCheck;
 

@@ -1,4 +1,4 @@
-package macrobase.server.resources;
+package macrobase.runtime.server.resources;
 
 import macrobase.ingest.PostgresLoader;
 import macrobase.ingest.result.Schema;
