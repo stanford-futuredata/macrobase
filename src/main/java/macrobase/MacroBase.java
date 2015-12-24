@@ -13,6 +13,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.PostgresLoader;
+import macrobase.ingest.SQLLoader;
 import macrobase.runtime.server.MacroBaseServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class MacroBase
 
         // OUTLIER ANALYSIS
 
-        PostgresLoader loader = new PostgresLoader();
+        SQLLoader loader = new PostgresLoader();
         loader.connect("postgres");
 
         List<Datum> data = loader.getData(encoder,

@@ -5,6 +5,7 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import macrobase.ingest.PostgresLoader;
+import macrobase.ingest.SQLLoader;
 import macrobase.runtime.server.healthcheck.TemplateHealthCheck;
 import macrobase.runtime.server.resources.AnalyzeResource;
 import macrobase.runtime.server.resources.HelloResource;
@@ -32,7 +33,7 @@ public class MacroBaseServer extends Application<ServerConfiguration> {
     public void run(ServerConfiguration configuration,
                     Environment environment) throws Exception {
 
-        PostgresLoader loader = new PostgresLoader();
+        SQLLoader loader = new PostgresLoader();
 
         final HelloResource resource = new HelloResource(
                 configuration.getTemplate(),

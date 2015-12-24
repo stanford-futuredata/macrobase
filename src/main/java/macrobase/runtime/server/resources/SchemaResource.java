@@ -1,6 +1,6 @@
 package macrobase.runtime.server.resources;
 
-import macrobase.ingest.PostgresLoader;
+import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.Schema;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -22,9 +22,9 @@ public class SchemaResource {
         public String baseQuery;
     }
 
-    private PostgresLoader loader;
+    private SQLLoader loader;
 
-    public SchemaResource(PostgresLoader _loader) {
+    public SchemaResource(SQLLoader _loader) {
         loader = _loader;
     }
 

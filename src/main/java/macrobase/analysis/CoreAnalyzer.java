@@ -4,13 +4,12 @@ import com.google.common.base.Stopwatch;
 import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
-import macrobase.analysis.outlier.ZScore;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.PostgresLoader;
+import macrobase.ingest.SQLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,7 @@ public class CoreAnalyzer {
     private static final double MIN_SUPPORT = 0.001;
     private static final double MIN_INLIER_RATIO = 1;
 
-    public static AnalysisResult analyze(PostgresLoader loader,
+    public static AnalysisResult analyze(SQLLoader loader,
                                          List<String> attributes,
                                          List<String> lowMetrics,
                                          List<String> highMetrics,

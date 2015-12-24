@@ -1,6 +1,6 @@
 package macrobase.runtime.server.resources;
 
-import macrobase.ingest.PostgresLoader;
+import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.RowSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +27,9 @@ public class RowSetResource {
         }
     }
 
-    private PostgresLoader loader;
+    private SQLLoader loader;
 
-    public RowSetResource(PostgresLoader _loader) {
+    public RowSetResource(SQLLoader _loader) {
         loader = _loader;
     }
 

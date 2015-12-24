@@ -2,7 +2,7 @@ package macrobase.runtime.server.resources;
 
 import macrobase.MacroBase;
 import macrobase.analysis.CoreAnalyzer;
-import macrobase.ingest.PostgresLoader;
+import macrobase.ingest.SQLLoader;
 import macrobase.analysis.result.AnalysisResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +24,9 @@ public class AnalyzeResource {
         public List<String> lowMetrics;
     }
 
-    private PostgresLoader loader;
+    private SQLLoader loader;
 
-    public AnalyzeResource(PostgresLoader _loader) {
+    public AnalyzeResource(SQLLoader _loader) {
         loader = _loader;
     }
 
