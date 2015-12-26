@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +30,7 @@ public class FPGrowth {
     class FPTree {
         private FPTreeNode root = new FPTreeNode(-1, null, 0);
         // used to calculate the order
-        private Map<Integer, Integer> frequentItemCounts = new HashMap<>();
+        private Map<Integer, Double> frequentItemCounts = new HashMap<>();
 
         // item order -- need canonical to break ties
         private Map<Integer, Integer> frequentItemOrder = new HashMap<>();
@@ -56,7 +57,7 @@ public class FPGrowth {
 
         private class FPTreeNode {
             private int item;
-            private int count;
+            private double count;
             private FPTreeNode nextLink;
             private FPTreeNode parent;
             private List<FPTreeNode> children;
@@ -71,11 +72,11 @@ public class FPGrowth {
                 return item;
             }
 
-            public int getCount() {
+            public double getCount() {
                 return count;
             }
 
-            public void incrementCount(int by) {
+            public void incrementCount(double by) {
                 count += by;
             }
 
@@ -100,7 +101,7 @@ public class FPGrowth {
             // then find the child that matches
             public void insertTransaction(List<Integer> fullTransaction,
                                           int currentIndex,
-                                          final int transactionCount) {
+                                          final double transactionCount) {
                 incrementCount(transactionCount);
 
                 if(currentIndex == fullTransaction.size()) {
@@ -141,9 +142,9 @@ public class FPGrowth {
             }
         }
 
-        public void setFrequentCounts(Map<Integer, Integer> counts) {
+        public void setFrequentCounts(Map<Integer, Double> counts) {
             frequentItemCounts = counts;
-            List<Map.Entry<Integer, Integer>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
+            List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
             sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
                     .compareTo(frequentItemCounts.get(i2.getKey())));
             for(int i = 0; i < sortedItemCounts.size(); ++i) {
@@ -154,14 +155,14 @@ public class FPGrowth {
         public void insertFrequentItems(List<Set<Integer>> transactions,
                                         int countRequiredForSupport) {
 
-            Map<Integer, Integer> itemCounts = new HashMap<>();
+            Map<Integer, Double> itemCounts = new HashMap<>();
             for(Set<Integer> t : transactions) {
                 for(Integer item : t) {
                     itemCounts.compute(item, (k, v) -> v == null ? 1 : v + 1);
                 }
             }
 
-            for(Map.Entry<Integer, Integer> e : itemCounts.entrySet()) {
+            for(Map.Entry<Integer, Double> e : itemCounts.entrySet()) {
                 if(e.getValue() >= countRequiredForSupport) {
                     frequentItemCounts.put(e.getKey(), e.getValue());
                 }
@@ -169,7 +170,7 @@ public class FPGrowth {
 
             // we have to materialize a canonical order so that items with equal counts
             // are consistently ordered when they are sorted during transaction insertion
-            List<Map.Entry<Integer, Integer>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
+            List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
             sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
                     .compareTo(frequentItemCounts.get(i2.getKey())));
             for(int i = 0; i < sortedItemCounts.size(); ++i) {
@@ -179,7 +180,7 @@ public class FPGrowth {
 
         public void insertConditionalFrequentItems(List<ItemsetWithCount> patterns,
                                                    int countRequiredForSupport) {
-            Map<Integer, Integer> itemCounts = new HashMap<>();
+            Map<Integer, Double> itemCounts = new HashMap<>();
 
             for(ItemsetWithCount i : patterns) {
                 for(Integer item : i.getItems()) {
@@ -187,7 +188,7 @@ public class FPGrowth {
                 }
             }
 
-            for(Map.Entry<Integer, Integer> e : itemCounts.entrySet()) {
+            for(Map.Entry<Integer, Double> e : itemCounts.entrySet()) {
                 if(e.getValue() >= countRequiredForSupport) {
                     frequentItemCounts.put(e.getKey(), e.getValue());
                 }
@@ -195,7 +196,7 @@ public class FPGrowth {
 
             // we have to materialize a canonical order so that items with equal counts
             // are consistently ordered when they are sorted during transaction insertion
-            List<Map.Entry<Integer, Integer>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
+            List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
             sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
                     .compareTo(frequentItemCounts.get(i2.getKey())));
             for(int i = 0; i < sortedItemCounts.size(); ++i) {
@@ -298,7 +299,7 @@ public class FPGrowth {
                     continue;
                 }
 
-                int minSupportInSubset = -1;
+                double minSupportInSubset = -1;
                 Set<Integer> items = new HashSet<>();
                 for(FPTreeNode n : subset) {
                     items.add(n.getItem());
@@ -344,7 +345,7 @@ public class FPGrowth {
                 // walk each "leaf" node
                 FPTreeNode conditionalNode = header.getValue();
                 while (conditionalNode != null) {
-                    final int leafSupport = conditionalNode.getCount();
+                    final double leafSupport = conditionalNode.getCount();
 
                     // walk the tree up to the branch node
                     Set<Integer> conditionalPattern = new HashSet<>();
@@ -438,7 +439,7 @@ public class FPGrowth {
     // ugh, this is a really ugly function sig, but it's efficient
     public List<ItemsetWithCount> getCounts(
             List<DatumWithScore> transactions,
-            Map<Integer, Integer> initialCounts,
+            Map<Integer, Double> initialCounts,
             Set<Integer> targetItems,
             List<ItemsetWithCount> toCount) {
         FPTree countTree = new FPTree();

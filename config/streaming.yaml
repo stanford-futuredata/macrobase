@@ -1,0 +1,38 @@
+taskName: testTasks
+targetAttributes: [userid]
+targetLowMetrics: [data_count_minutes]
+targetHighMetrics: []
+
+dbUrl: postgres
+baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
+
+minSupport: 0.01
+minInlierRatio: 1
+
+useZScore: true
+zScore: 3.0
+
+usePercentile: false
+targetPercentile: 0.01
+
+inputReservoirSize: 10000
+scoreReservoirSize: 10000
+
+inlierItemSummarySize: 10000
+outlierItemSummarySize: 10000
+
+summaryRefreshPeriod: 10000
+modelRefreshPeriod: 1000
+
+useRealTimePeriod: false
+useTupleCountPeriod: true
+
+warmupCount: 100
+
+decayRate: .5
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE

@@ -11,7 +11,7 @@ public class ZScore extends OutlierDetector {
     private double std;
 
     @Override
-    public List<DatumWithScore> scoreData(List<Datum> data) {
+    public void train(List<Datum> data) {
         double sum = 0;
 
         for(Datum d : data) {
@@ -25,17 +25,12 @@ public class ZScore extends OutlierDetector {
             ss += Math.pow(mean - d.getMetrics().getEntry(0), 2);
         }
         std = Math.sqrt(ss / data.size());
+    }
 
-        List<DatumWithScore> ret = new ArrayList<>();
-
-        for(Datum d : data) {
-            double point = d.getMetrics().getEntry(0);
-            double score = Math.abs(point-mean)/std;
-
-            ret.add(new DatumWithScore(d, score));
-        }
-
-        return ret;
+    @Override
+    public double score(Datum datum) {
+        double point = datum.getMetrics().getEntry(0);
+        return Math.abs(point-mean)/std;
     }
 
     @Override

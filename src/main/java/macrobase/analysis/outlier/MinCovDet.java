@@ -155,7 +155,7 @@ public class MinCovDet extends OutlierDetector  {
     }
 
     @Override
-    public List<DatumWithScore> scoreData(List<Datum> data) {
+    public void train(List<Datum> data) {
         // for now, only handle multivariate case...
         assert(data.iterator().next().getMetrics().getDimension() == p);
         assert(p > 1);
@@ -190,10 +190,11 @@ public class MinCovDet extends OutlierDetector  {
 
         log.trace("mean: {}", mean);
         log.trace("cov: {}", cov);
+    }
 
-        return data.stream().map(x -> new DatumWithScore(x,
-                                                         getMahalanobis(mean, cov, x.getMetrics())))
-                .collect(Collectors.toList());
+    @Override
+    public double score(Datum datum) {
+        return getMahalanobis(mean, cov, datum.getMetrics());
     }
 
     @Override

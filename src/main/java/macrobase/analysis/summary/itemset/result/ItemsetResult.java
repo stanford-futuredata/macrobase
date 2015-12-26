@@ -7,12 +7,12 @@ import java.util.StringJoiner;
 
 public class ItemsetResult {
     private double support;
-    private int numRecords;
+    private double numRecords;
     private double ratioToInliers;
     private List<ColumnValue> items;
 
     public ItemsetResult(double support,
-                         int numRecords,
+                         double numRecords,
                          double ratioToInliers,
                          List<ColumnValue> items) {
         this.support = support;
@@ -28,9 +28,9 @@ public class ItemsetResult {
                                                        i.getColumn(),
                                                        i.getValue())));
 
-        return String.format("support: %f.04\n" +
-                             "records: %d\n" +
-                             "ratio: %f.04\n" +
+        return String.format("support: %f\n" +
+                             "records: %f\n" +
+                             "ratio: %f\n" +
                              "\nColumns:\n%s\n\n",
                              support,
                              numRecords,
@@ -42,7 +42,7 @@ public class ItemsetResult {
         return support;
     }
 
-    public int getNumRecords() {
+    public double getNumRecords() {
         return numRecords;
     }
 

@@ -6,7 +6,6 @@ import macrobase.analysis.summary.itemset.Apriori;
 import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.StreamingFPGrowth;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,7 @@ public class StreamingFPGrowthTest {
     private void printItemsets(List<ItemsetWithCount> itemsets) {
         itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
         for(ItemsetWithCount i : itemsets) {
-            System.out.format("\ncount %d, size %d\n", i.getCount(), i.getItems().size());
+            System.out.format("\ncount %f, size %d\n", i.getCount(), i.getItems().size());
             for(int item : i.getItems()) {
                 System.out.println((char)item);
             }
@@ -63,7 +62,7 @@ public class StreamingFPGrowthTest {
 
         allTxns.addAll(newBatch);
 
-        fp.insertTransactionsStreaming(newBatch);
+        fp.insertTransactionsStreamingExact(newBatch);
 
         itemsets = fp.getItemsets();
 
@@ -123,7 +122,7 @@ public class StreamingFPGrowthTest {
 
         allTxns.addAll(newBatch);
 
-        fp.insertTransactionsStreaming(newBatch);
+        fp.insertTransactionsStreamingExact(newBatch);
 
         itemsets = fp.getItemsets();
 

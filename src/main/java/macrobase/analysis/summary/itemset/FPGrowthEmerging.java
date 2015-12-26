@@ -34,8 +34,8 @@ public class FPGrowthEmerging {
         // TODO: truncate inliers!
         ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
 
-        Map<Integer, Integer> inlierCounts = new ExactCount().count(inliers).getCounts();
-        Map<Integer, Integer> outlierCounts = new ExactCount().count(outliers).getCounts();
+        Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
+        Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
 
         int supportCountRequired = (int)(outliers.size()*minSupport);
 
@@ -43,15 +43,15 @@ public class FPGrowthEmerging {
             Set<Integer> txn = null;
 
             for(int i : d.getDatum().getAttributes()) {
-                int outlierCount = outlierCounts.get(i);
-                if(outlierCount >= supportCountRequired) {
-                    Integer inlierCount = inlierCounts.get(i);
+                Number outlierCount = outlierCounts.get(i);
+                if(outlierCount.doubleValue() >= supportCountRequired) {
+                    Number inlierCount = inlierCounts.get(i);
 
                     double outlierInlierRatio;
-                    if(inlierCount == null || inlierCount == 0) {
+                    if(inlierCount == null || inlierCount.doubleValue() == 0) {
                         outlierInlierRatio = Double.POSITIVE_INFINITY;
                     } else {
-                        outlierInlierRatio = ((double)outlierCount/outliers.size())/((double)inlierCount/inliers.size());
+                        outlierInlierRatio = (outlierCount.doubleValue()/outliers.size())/(inlierCount.doubleValue()/inliers.size());
                     }
                     if(outlierInlierRatio > minRatio) {
                         if(txn == null) {
@@ -76,15 +76,15 @@ public class FPGrowthEmerging {
         context = inlierRatio.time();
 
         iwc.sort((x, y) -> x.getCount() != y.getCount() ?
-                -Integer.compare(x.getCount(), y.getCount()) :
-                -Integer.compare(x.getItems().size(), y.getItems().size()));
+                -Double.compare(x.getCount(), y.getCount()) :
+                -Double.compare(x.getItems().size(), y.getItems().size()));
 
         Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
         List<ItemsetResult> ret = new ArrayList<>();
 
         Set<Integer> prevSet = null;
-        Integer prevCount = -1;
+        Double prevCount = -1.;
         for(ItemsetWithCount i : iwc) {
             if(i.getCount() == prevCount) {
                 if(prevSet != null && Sets.difference(i.getItems(), prevSet).size() == 0) {
@@ -99,9 +99,9 @@ public class FPGrowthEmerging {
 
             if(i.getItems().size() == 1) {
                 double ratio = 0;
-                Integer inlierCount = inlierCounts.get(i.getItems().iterator().next());
+                Number inlierCount = inlierCounts.get(i.getItems().iterator().next());
 
-                if(inlierCount != null && inlierCount > 0) {
+                if(inlierCount != null && inlierCount.doubleValue() > 0) {
                     ratio = ((double)i.getCount()/outliers.size())/((double)inlierCount/inliers.size());
                 } else {
                     ratio = Double.POSITIVE_INFINITY;
@@ -148,8 +148,8 @@ public class FPGrowthEmerging {
 
         // finally sort one last time
         ret.sort((x, y) -> x.getNumRecords() != y.getNumRecords() ?
-                -Integer.compare(x.getNumRecords(), y.getNumRecords()) :
-                -Integer.compare(x.getItems().size(), y.getItems().size()));
+                -Double.compare(x.getNumRecords(), y.getNumRecords()) :
+                -Double.compare(x.getItems().size(), y.getItems().size()));
 
         return ret;
     }

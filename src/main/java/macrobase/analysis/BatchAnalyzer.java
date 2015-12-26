@@ -17,19 +17,14 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class CoreAnalyzer {
-    private static final Logger log = LoggerFactory.getLogger(CoreAnalyzer.class);
+public class BatchAnalyzer extends BaseAnalyzer {
+    private static final Logger log = LoggerFactory.getLogger(BatchAnalyzer.class);
 
-    private static final double ZSCORE = 3;
-    private static final double TARGET_PERCENTILE = 0.01;
-    private static final double MIN_SUPPORT = 0.001;
-    private static final double MIN_INLIER_RATIO = 1;
-
-    public static AnalysisResult analyze(SQLLoader loader,
-                                         List<String> attributes,
-                                         List<String> lowMetrics,
-                                         List<String> highMetrics,
-                                         String baseQuery) throws SQLException {
+    public AnalysisResult analyze(SQLLoader loader,
+                                  List<String> attributes,
+                                  List<String> lowMetrics,
+                                  List<String> highMetrics,
+                                  String baseQuery) throws SQLException {
         DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
@@ -59,9 +54,13 @@ public class CoreAnalyzer {
         } else {
             detector = new MinCovDet(metricsDimensions);
         }
-        OutlierDetector.BatchResult or = detector
-                .classifyBatchByPercentile(data, TARGET_PERCENTILE);
 
+        OutlierDetector.BatchResult or;
+        if(forceUsePercentile || (!forceUseZScore && TARGET_PERCENTILE > 0)) {
+            or = detector.classifyBatchByPercentile(data, TARGET_PERCENTILE);
+        } else {
+            or = detector.classifyBatchByZScoreEquivalent(data, ZSCORE);
+        }
         sw.stop();
 
         long classifyTime = sw.elapsed(TimeUnit.MILLISECONDS);

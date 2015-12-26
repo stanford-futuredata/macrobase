@@ -11,7 +11,8 @@ import macrobase.runtime.resources.AnalyzeResource;
 import macrobase.runtime.resources.RowSetResource;
 import macrobase.runtime.resources.SchemaResource;
 import macrobase.runtime.resources.HelloResource;
-import macrobase.runtime.standalone.MacroBaseStandalone;
+import macrobase.runtime.standalone.batch.MacroBaseBatchCommand;
+import macrobase.runtime.standalone.streaming.MacroBaseStreamingCommand;
 
 public class MacroBaseServer extends Application<ServerConfiguration> {
     public static void main(String[] args) throws Exception {
@@ -25,7 +26,8 @@ public class MacroBaseServer extends Application<ServerConfiguration> {
 
     @Override
     public void initialize(Bootstrap<ServerConfiguration> bootstrap) {
-        bootstrap.addCommand(new MacroBaseStandalone());
+        bootstrap.addCommand(new MacroBaseBatchCommand());
+        bootstrap.addCommand(new MacroBaseStreamingCommand());
         bootstrap.addBundle(new AssetsBundle("/frontend", "/", "console.html"));
     }
 

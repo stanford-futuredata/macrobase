@@ -28,7 +28,7 @@ public class FPGrowthTest {
     private void printItemsets(List<ItemsetWithCount> itemsets) {
         itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
         for(ItemsetWithCount i : itemsets) {
-            System.out.format("\ncount %d, size %d\n", i.getCount(), i.getItems().size());
+            System.out.format("\ncount %f, size %d\n", i.getCount(), i.getItems().size());
             for(int item : i.getItems()) {
                 System.out.println((char)item);
             }

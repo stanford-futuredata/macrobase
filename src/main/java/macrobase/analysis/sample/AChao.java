@@ -8,7 +8,7 @@ import java.util.Random;
 /**
  * See http://arxiv.org/pdf/1012.0256.pdf
  */
-public class AChao<T> {
+class AChao<T> {
     private final List<T> reservoir;
     double runningCount;
     private final int reservoirCapacity;

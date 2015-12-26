@@ -4,9 +4,9 @@ import java.util.Set;
 
 public class ItemsetWithCount {
     private Set<Integer> items;
-    private int count;
+    private double count;
 
-    public ItemsetWithCount(Set<Integer> items, int count) {
+    public ItemsetWithCount(Set<Integer> items, double count) {
         this.items = items;
         this.count = count;
     }
@@ -15,7 +15,7 @@ public class ItemsetWithCount {
         return items;
     }
 
-    public int getCount() {
+    public double getCount() {
         return count;
     }
 }

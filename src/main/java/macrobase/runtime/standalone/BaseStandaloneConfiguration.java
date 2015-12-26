@@ -4,12 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
  * Created by pbailis on 12/24/15.
  */
-public class StandaloneConfiguration extends Configuration {
+public class BaseStandaloneConfiguration extends Configuration {
     @NotEmpty
     private String taskName;
 
@@ -22,6 +23,22 @@ public class StandaloneConfiguration extends Configuration {
     private List<String> targetHighMetrics;
 
     private List<String> targetLowMetrics;
+
+    private Double zScore;
+
+    private Double targetPercentile;
+
+    @NotNull
+    private Boolean usePercentile;
+
+    @NotNull
+    private Boolean useZScore;
+
+    @NotNull
+    private Double minSupport;
+
+    @NotNull
+    private Double minInlierRatio;
 
     @NotEmpty
     private String baseQuery;
@@ -54,5 +71,35 @@ public class StandaloneConfiguration extends Configuration {
     @JsonProperty
     public List<String> getTargetAttributes() {
         return targetAttributes;
+    }
+
+    @JsonProperty
+    public double getzScore() {
+        return zScore;
+    }
+
+    @JsonProperty
+    public double getTargetPercentile() {
+        return targetPercentile;
+    }
+
+    @JsonProperty
+    public double getMinSupport() {
+        return minSupport;
+    }
+
+    @JsonProperty
+    public double getMinInlierRatio() {
+        return minInlierRatio;
+    }
+
+    @JsonProperty
+    public boolean usePercentile() {
+        return usePercentile;
+    }
+
+    @JsonProperty
+    public boolean useZScore() {
+        return useZScore;
     }
 }
