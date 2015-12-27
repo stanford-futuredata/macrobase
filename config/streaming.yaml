@@ -4,7 +4,7 @@ targetLowMetrics: [data_count_minutes]
 targetHighMetrics: []
 
 dbUrl: postgres
-baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
+baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000000;
 
 minSupport: 0.001
 minInlierRatio: 1
@@ -21,13 +21,13 @@ scoreReservoirSize: 10000
 inlierItemSummarySize: 1000
 outlierItemSummarySize: 10000
 
-summaryRefreshPeriod: 10000
-modelRefreshPeriod: 1000
+summaryRefreshPeriod: 100000
+modelRefreshPeriod: 10000
 
 useRealTimePeriod: false
 useTupleCountPeriod: true
 
-warmupCount: 100
+warmupCount: 1000
 
 decayRate: .01
 

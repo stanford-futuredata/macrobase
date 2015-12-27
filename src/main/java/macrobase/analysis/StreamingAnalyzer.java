@@ -109,6 +109,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         log.debug("...ended loading (time: {}ms)!", loadTime);
 
+        //System.console().readLine("waiting to start (press a key)");
+
         OutlierDetector detector;
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
         if(metricsDimensions == 1) {
@@ -182,7 +184,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                     scoreReservoir.insert(score);
                 }
 
-                // TODO: handle percentile
                 if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
                    forceUsePercentile && detector.isPercentileOutlier(score,
                                                                       TARGET_PERCENTILE,
@@ -197,6 +198,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
+
+        //System.console().readLine("Finished! Press any key to continue");
 
         return new AnalysisResult(0, 0, 0, 0, 0, isr);
     }

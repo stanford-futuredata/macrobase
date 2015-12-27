@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class SpaceSaving {
+public class SpaceSaving extends ApproximateCount {
     private static final Logger log = LoggerFactory.getLogger(SpaceSaving.class);
 
     Map<Integer, CounterToken> digest = new HashMap<>();
@@ -78,6 +78,7 @@ public class SpaceSaving {
         }
     }
 
+    @Override
     public double getTotalCount() {
         return totalCount;
     }
@@ -193,6 +194,7 @@ public class SpaceSaving {
         }
     }
 
+    @Override
     public double getCount(int item) {
         CounterToken token = digest.get(item);
 
@@ -311,16 +313,7 @@ public class SpaceSaving {
         }
     }
 
-    public void observe(Collection<Integer> items) {
-        for(Integer item : items) {
-            observe(item);
-        }
-    }
-
-    public void observe(Integer item) {
-        observe(item, 1);
-    }
-
+    @Override
     public void observe(Integer item, double count) {
         //sanityCheck();
         totalCount += count;
@@ -368,6 +361,7 @@ public class SpaceSaving {
         //sanityCheck();
     }
 
+    @Override
     public Map<Integer, Double> getCounts() {
         Map<Integer, Double> ret = new HashMap<>();
 
@@ -388,6 +382,7 @@ public class SpaceSaving {
         return ret;
     }
 
+    @Override
     public void multiplyAllCounts(Double by) {
         totalCount *= by;
 

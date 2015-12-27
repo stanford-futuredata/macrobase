@@ -3,6 +3,8 @@ package macrobase.analysis.summary.itemset;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Sets;
 import macrobase.MacroBase;
+import macrobase.analysis.summary.count.ApproximateCount;
+import macrobase.analysis.summary.count.DirectCountWithThreshold;
 import macrobase.analysis.summary.count.SpaceSaving;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
@@ -40,8 +42,8 @@ public class ExponentiallyDecayingEmergingItemsets {
     private final double minRatio;
     private final double exponentialDecayRate;
 
-    private final SpaceSaving outlierCountSummary;
-    private final SpaceSaving inlierCountSummary;
+    private final ApproximateCount outlierCountSummary;
+    private final ApproximateCount inlierCountSummary;
     private final StreamingFPGrowth outlierPatternSummary;
     private final StreamingFPGrowth inlierPatternSummary = new StreamingFPGrowth(0);
 
@@ -56,8 +58,8 @@ public class ExponentiallyDecayingEmergingItemsets {
         this.minRatio = minRatio;
         this.exponentialDecayRate = exponentialDecayRate;
 
-        outlierCountSummary = new SpaceSaving(sizeOutlierSS);
-        inlierCountSummary = new SpaceSaving(sizeInlierSS);
+        outlierCountSummary = new DirectCountWithThreshold(minSupportOutlier/.1); //new SpaceSaving(sizeOutlierSS);
+        inlierCountSummary = new DirectCountWithThreshold(minSupportOutlier/.1);//new SpaceSaving(sizeInlierSS);
         outlierPatternSummary = new StreamingFPGrowth(minSupportOutlier);
     }
 
