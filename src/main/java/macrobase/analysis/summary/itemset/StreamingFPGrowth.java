@@ -148,6 +148,7 @@ public class StreamingFPGrowth {
 
                 // O(N^2); slow for large lists; consider optimizing
                 for(FPTreeNode otherChild : otherChildren) {
+                    otherChild.parent = this;
                     boolean matched = false;
                     for(FPTreeNode ourChild : children) {
                         if(otherChild.item == ourChild.item) {
@@ -255,6 +256,8 @@ public class StreamingFPGrowth {
 
                     curNode = curNode.getNextLink();
                 }
+
+                pathHead = pathHead.getNextLink();
             }
 
             return count;

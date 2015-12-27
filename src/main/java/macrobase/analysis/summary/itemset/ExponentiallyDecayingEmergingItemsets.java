@@ -58,7 +58,7 @@ public class ExponentiallyDecayingEmergingItemsets {
 
         outlierCountSummary = new SpaceSaving(sizeOutlierSS);
         inlierCountSummary = new SpaceSaving(sizeInlierSS);
-        outlierPatternSummary = new StreamingFPGrowth(minRatio);
+        outlierPatternSummary = new StreamingFPGrowth(minSupportOutlier);
     }
 
     Map<Integer, Double> interestingItems;

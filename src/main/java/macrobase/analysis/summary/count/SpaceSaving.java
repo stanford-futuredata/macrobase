@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 public class SpaceSaving {
@@ -14,6 +15,68 @@ public class SpaceSaving {
     CounterGroup groupHead = null;
     private final int maxSize;
     private double totalCount;
+
+    private void sanityCheck() {
+        CounterGroup curGroup = groupHead;
+
+        HashSet<CounterToken> allTokens = new HashSet<>();
+        HashSet<Integer> allItems = new HashSet<>();
+
+        HashMap<CounterToken, CounterGroup> tokenMap = new HashMap<>();
+
+
+        HashSet<CounterGroup> allGroups = new HashSet<>();
+
+        while(curGroup != null) {
+            if(allGroups.contains(curGroup)) {
+                log.error("Duplicate group detected!");
+            }
+
+            allGroups.add(curGroup);
+
+            CounterToken token = curGroup.tokenList;
+            CounterToken prevToken = null;
+
+            HashSet<CounterToken> groupTokens = new HashSet<>();
+            HashSet<Integer> groupItems = new HashSet<>();
+            while(token != null) {
+                if(token.prev != prevToken) {
+                    log.error("Broken backward pointer!");
+                }
+
+                if(token.group != curGroup) {
+                    log.error("Wrong group!");
+                }
+
+                if(groupTokens.contains(token)) {
+                    log.error("Token ring detected!");
+                }
+                else if(allTokens.contains(token)) {
+                    log.error("Reused token detected!");
+                }
+
+                if(groupItems.contains(token.item)) {
+                    log.error("Item ring detected!");
+                }
+                else if(allItems.contains(token.item)) {
+                    log.error("Reused item detected!");
+                }
+
+
+                groupTokens.add(token);
+                allTokens.add(token);
+                tokenMap.put(token, curGroup);
+
+                groupItems.add(token.item);
+                allItems.add(token.item);
+
+                prevToken = token;
+                token = token.next;
+            }
+
+            curGroup = curGroup.next;
+        }
+    }
 
     public double getTotalCount() {
         return totalCount;
@@ -88,17 +151,24 @@ public class SpaceSaving {
         }
 
         public void removeToken(CounterToken token) {
+
+
             if(token.prev != null) {
                 token.prev.next = token.next;
             }
 
             if(token.next != null) {
                 // head of list
-                if(token.prev == null) {
-                    assert(tokenList == token);
+                if(tokenList == token) {
+                    assert(token.prev == null);
                     tokenList = token.next;
+                    token.next.prev = null;
                 } else {
                     token.next.prev = token.prev;
+                }
+            } else {
+                if(tokenList == token) {
+                    tokenList = null;
                 }
             }
 
@@ -204,6 +274,7 @@ public class SpaceSaving {
             remaining -= gteGroup.differential;
             prevGroup = gteGroup;
             gteGroup = gteGroup.next;
+            assert(gteGroup == null || gteGroup.prev == prevGroup);
         }
 
         // we should be the new tail node
@@ -229,8 +300,14 @@ public class SpaceSaving {
                                                      prevGroup.prev,
                                                      prevGroup,
                                                      token);
-            prevGroup.prev.next = newGroup;
-            prevGroup.prev = newGroup;
+
+            if(prevGroup == groupHead) {
+                groupHead = newGroup;
+                prevGroup.prev = newGroup;
+            } else {
+                prevGroup.prev.next = newGroup;
+                prevGroup.prev = newGroup;
+            }
         }
     }
 
@@ -245,6 +322,7 @@ public class SpaceSaving {
     }
 
     public void observe(Integer item, double count) {
+        //sanityCheck();
         totalCount += count;
 
         CounterToken token = digest.get(item);
@@ -287,6 +365,7 @@ public class SpaceSaving {
         } else {
             incrementCounter(token, count);
         }
+        //sanityCheck();
     }
 
     public Map<Integer, Double> getCounts() {
