@@ -1,9 +1,3 @@
-import pandas as pd
-import numpy as np
-from sklearn import linear_model
-from collections import defaultdict, Iterable
-from itertools import chain, combinations
-import operator
 import random
 import psycopg2
 
