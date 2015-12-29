@@ -17,7 +17,7 @@ states = ["CA", "MA", "NY", "WY", "AR", "NV"]
 
 print "Creating table..."
 
-cur.execute("DROP TABLE sensor_data; CREATE TABLE sensor_data ( reading_id bigint NOT NULL, device_id bigint NOT NULL, state varchar(2), model varchar(40), firmware_version varchar(40), temperature numeric, power_drain numeric );")
+cur.execute("DROP TABLE IF EXISTS sensor_data; CREATE TABLE sensor_data ( reading_id bigint NOT NULL, device_id bigint NOT NULL, state varchar(2), model varchar(40), firmware_version varchar(40), temperature numeric, power_drain numeric );")
 
 print "...created!"
 
