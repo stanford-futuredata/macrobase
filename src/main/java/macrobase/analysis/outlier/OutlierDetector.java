@@ -1,12 +1,12 @@
 package macrobase.analysis.outlier;
 
-import macrobase.analysis.summary.result.DatumWithScore;
-import macrobase.datamodel.Datum;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import macrobase.analysis.summary.result.DatumWithScore;
+import macrobase.datamodel.Datum;
 
 /**
  * Created by pbailis on 12/14/15.
