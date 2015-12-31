@@ -3,14 +3,15 @@ package macrobase.analysis.summary.itemset;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import macrobase.MacroBase;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +38,8 @@ public class FPGrowth {
 
         protected Map<Integer, FPTreeNode> nodeHeaders = new HashMap<>();
 
-        private void printTreeDebug() {
+        @SuppressWarnings("unused")
+		private void printTreeDebug() {
             log.debug("Frequent Item Counts:");
             frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %d", e.getKey(), e.getValue())));
 

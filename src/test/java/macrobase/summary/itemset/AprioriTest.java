@@ -1,8 +1,10 @@
 package macrobase.summary.itemset;
 
 import com.google.common.collect.Lists;
+
 import macrobase.analysis.summary.itemset.Apriori;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -21,7 +23,8 @@ public class AprioriTest {
         return Arrays.stream(txnStr.split(", ")).map(s -> (int) s.charAt(0)).collect(Collectors.toSet());
     }
 
-    private void printItemsets(Set<ItemsetWithCount> itemsetsSet) {
+    @SuppressWarnings("unused")
+	private void printItemsets(Set<ItemsetWithCount> itemsetsSet) {
         List<ItemsetWithCount> itemsets = Lists.newArrayList(itemsetsSet);
 
         itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());

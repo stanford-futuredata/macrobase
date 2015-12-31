@@ -1,10 +1,8 @@
 package macrobase.analysis.outlier;
 
-import macrobase.analysis.summary.result.DatumWithScore;
-import macrobase.datamodel.Datum;
-
-import java.util.ArrayList;
 import java.util.List;
+
+import macrobase.datamodel.Datum;
 
 public class ZScore extends OutlierDetector {
     private double mean;

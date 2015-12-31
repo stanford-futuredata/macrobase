@@ -1,7 +1,6 @@
 package macrobase.analysis.summary.itemset;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 
 import java.util.*;

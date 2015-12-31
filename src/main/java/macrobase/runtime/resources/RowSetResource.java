@@ -2,17 +2,20 @@ package macrobase.runtime.resources;
 
 import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.RowSet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
 import java.util.List;
 
 @Path("/rows")
 @Produces(MediaType.APPLICATION_JSON)
 public class RowSetResource {
-    private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
+    @SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
 
     public static class RowSetRequest {
         public String pgUrl;

@@ -1,25 +1,14 @@
 package macrobase;
 
-import com.codahale.metrics.ConsoleReporter;
-import com.codahale.metrics.MetricRegistry;
-import com.google.common.collect.Lists;
-import macrobase.analysis.outlier.OutlierDetector;
-import macrobase.analysis.outlier.ZScore;
-import macrobase.analysis.summary.result.DatumWithScore;
-import macrobase.analysis.summary.count.ExactCount;
-import macrobase.analysis.summary.itemset.FPGrowth;
-import macrobase.analysis.summary.itemset.Apriori;
-import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
-import macrobase.datamodel.Datum;
-import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.PostgresLoader;
-import macrobase.ingest.SQLLoader;
+import java.util.concurrent.TimeUnit;
+
 import macrobase.runtime.MacroBaseServer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * Hello world!
@@ -33,7 +22,8 @@ public class MacroBase
                                                     .convertDurationsTo(TimeUnit.MILLISECONDS)
                                                     .build();
 
-    private static final Logger log = LoggerFactory.getLogger(MacroBase.class);
+    @SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(MacroBase.class);
 
     public static void main( String[] args ) throws Exception
     {

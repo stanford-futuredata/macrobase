@@ -1,6 +1,7 @@
 package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
+
 import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
@@ -16,6 +17,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +33,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     private Integer scoreReservoirSize;
     private Integer summaryPeriod;
     private Boolean useRealTimePeriod;
-    private Boolean useTupleCountPeriod;
+    @SuppressWarnings("unused")
+	private Boolean useTupleCountPeriod;
     private double decayRate;
     private Integer modelRefreshPeriod;
 

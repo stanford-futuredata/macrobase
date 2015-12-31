@@ -1,6 +1,7 @@
 package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
+
 import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
@@ -10,6 +11,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +72,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         // SUMMARY
 
-        final int supportCountRequired = (int) MIN_SUPPORT*or.getOutliers().size();
+        @SuppressWarnings("unused")
+		final int supportCountRequired = (int) MIN_SUPPORT*or.getOutliers().size();
 
         final int inlierSize = or.getInliers().size();
         final int outlierSize = or.getOutliers().size();

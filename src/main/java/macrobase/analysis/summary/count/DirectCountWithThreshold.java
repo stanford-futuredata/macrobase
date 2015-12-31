@@ -1,9 +1,6 @@
 package macrobase.analysis.summary.count;
 
-import macrobase.analysis.summary.result.DatumWithScore;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class DirectCountWithThreshold extends ApproximateCount {

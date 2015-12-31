@@ -3,6 +3,7 @@ package macrobase.ingest;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
+
 import macrobase.ingest.result.ColumnValue;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.Set;
 public class DatumEncoder {
     private HashMap<Integer, String> attributeDimensionNameMap = Maps.newHashMap();
     private HashMap<Integer, HashBiMap<String, Integer>> integerEncoding = new HashMap<>();
-    private HashMap<Integer, Integer> integerToColumn = new HashMap();
+    private HashMap<Integer, Integer> integerToColumn = new HashMap<Integer, Integer>();
 
     private Integer nextKey = 0;
 

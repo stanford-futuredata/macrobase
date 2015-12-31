@@ -2,7 +2,9 @@ package macrobase.analysis.summary.itemset;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,8 @@ public class StreamingFPGrowth {
 
         Set<FPTreeNode> sortedNodes = new HashSet<>();
 
-        private void printTreeDebug() {
+        @SuppressWarnings("unused")
+		private void printTreeDebug() {
             log.debug("Frequent Item Counts:");
             frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %d", e.getKey(), e.getValue())));
 

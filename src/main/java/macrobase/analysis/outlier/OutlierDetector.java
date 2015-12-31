@@ -1,6 +1,5 @@
 package macrobase.analysis.outlier;
 
-import com.google.common.collect.Lists;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 

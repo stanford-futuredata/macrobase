@@ -7,8 +7,6 @@ package macrobase.summary.count;
 import macrobase.analysis.summary.count.SpaceSaving;
 import org.junit.Test;
 
-import java.util.HashMap;
-
 import static org.junit.Assert.assertEquals;
 
 public class SpaceSavingTest {

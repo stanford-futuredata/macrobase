@@ -1,24 +1,23 @@
 package macrobase.analysis.outlier;
 
-import macrobase.analysis.summary.result.DatumWithScore;
-import macrobase.datamodel.HasMetrics;
-import macrobase.datamodel.Datum;
-import org.apache.commons.math3.distribution.ChiSquaredDistribution;
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.stat.correlation.Covariance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import macrobase.datamodel.Datum;
+import macrobase.datamodel.HasMetrics;
+
+import org.apache.commons.math3.distribution.ChiSquaredDistribution;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.stat.correlation.Covariance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class MinCovDet extends OutlierDetector  {

@@ -1,6 +1,7 @@
 package macrobase.summary.itemset;
 
 import com.google.common.collect.Sets;
+
 import macrobase.analysis.summary.itemset.Apriori;
 import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
@@ -25,7 +26,8 @@ public class FPGrowthTest {
         return Arrays.stream(txnStr.split(", ")).map(s -> (int) s.charAt(0)).collect(Collectors.toSet());
     }
 
-    private void printItemsets(List<ItemsetWithCount> itemsets) {
+    @SuppressWarnings("unused")
+	private void printItemsets(List<ItemsetWithCount> itemsets) {
         itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
         for(ItemsetWithCount i : itemsets) {
             System.out.format("\ncount %f, size %d\n", i.getCount(), i.getItems().size());

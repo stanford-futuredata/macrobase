@@ -1,12 +1,12 @@
 package macrobase.analysis.outlier;
 
-import macrobase.analysis.summary.result.DatumWithScore;
-import macrobase.datamodel.Datum;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import macrobase.datamodel.Datum;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MAD extends OutlierDetector {
     private static final Logger log = LoggerFactory.getLogger(MAD.class);

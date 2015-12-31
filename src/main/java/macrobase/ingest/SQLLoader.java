@@ -2,6 +2,7 @@ package macrobase.ingest;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.ManagedDataSource;
 import macrobase.MacroBase;
@@ -10,6 +11,7 @@ import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
 import macrobase.runtime.resources.RowSetResource;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -26,7 +28,8 @@ public abstract class SQLLoader {
     abstract public String getDriverClass();
     abstract public String getJDBCUrlPrefix();
 
-    private static final Logger log = LoggerFactory.getLogger(SQLLoader.class);
+    @SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(SQLLoader.class);
 
     private ManagedDataSource source;
 

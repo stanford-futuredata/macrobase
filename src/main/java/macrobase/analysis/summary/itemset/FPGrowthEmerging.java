@@ -3,12 +3,14 @@ package macrobase.analysis.summary.itemset;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Sets;
+
 import macrobase.MacroBase;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.ingest.DatumEncoder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +24,8 @@ public class FPGrowthEmerging {
     private final Timer inlierRatio = MacroBase.metrics.timer(name(FPGrowthEmerging.class, "inlierRatio"));
 
 
-    private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
+    @SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
 
     public List<ItemsetResult> getEmergingItemsetsWithMinSupport(List<DatumWithScore> inliers,
                                                                  List<DatumWithScore> outliers,

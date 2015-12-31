@@ -1,18 +1,6 @@
 package macrobase.analysis.summary.itemset;
 
-import com.codahale.metrics.Timer;
-import com.google.common.collect.Sets;
-import macrobase.MacroBase;
-import macrobase.analysis.summary.count.ApproximateCount;
-import macrobase.analysis.summary.count.DirectCountWithThreshold;
-import macrobase.analysis.summary.count.SpaceSaving;
-import macrobase.analysis.summary.itemset.result.ItemsetResult;
-import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
-import macrobase.datamodel.Datum;
-import macrobase.ingest.DatumEncoder;
-import org.apache.commons.math3.analysis.function.Exp;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.codahale.metrics.MetricRegistry.name;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +9,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.codahale.metrics.MetricRegistry.name;
+import macrobase.MacroBase;
+import macrobase.analysis.summary.count.ApproximateCount;
+import macrobase.analysis.summary.count.DirectCountWithThreshold;
+import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import macrobase.datamodel.Datum;
+import macrobase.ingest.DatumEncoder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.Timer;
+import com.google.common.collect.Sets;
 
 /**
  * Created by pbailis on 12/26/15.
@@ -35,8 +35,10 @@ public class ExponentiallyDecayingEmergingItemsets {
             name(ExponentiallyDecayingEmergingItemsets.class, "outlierDecayTime"));
 
 
-    private final int sizeOutlierSS;
-    private final int sizeInlierSS;
+    @SuppressWarnings("unused")
+	private final int sizeOutlierSS;
+    @SuppressWarnings("unused")
+	private final int sizeInlierSS;
 
     private final double minSupportOutlier;
     private final double minRatio;
