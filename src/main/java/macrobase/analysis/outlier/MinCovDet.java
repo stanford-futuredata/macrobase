@@ -1,11 +1,14 @@
 package macrobase.analysis.outlier;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import macrobase.MacroBase;
 import macrobase.datamodel.Datum;
 import macrobase.datamodel.HasMetrics;
 
@@ -19,9 +22,16 @@ import org.apache.commons.math3.stat.correlation.Covariance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Timer;
 
 public class MinCovDet extends OutlierDetector  {
     private static final Logger log = LoggerFactory.getLogger(MinCovDet.class);
+
+    private final Timer chooseKRandom = MacroBase.metrics.timer(name(MinCovDet.class, "chooseKRandom"));
+    private final Timer meanComputation = MacroBase.metrics.timer(name(MinCovDet.class, "meanComputation"));
+    private final Timer covarianceComputation = MacroBase.metrics.timer(name(MinCovDet.class, "covarianceComputation"));
+    private final Timer determinantComputation = MacroBase.metrics.timer(name(MinCovDet.class, "determinantComputation"));
+    private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
 
     class MetricsWithScore implements HasMetrics {
         private RealVector metrics;
@@ -162,20 +172,42 @@ public class MinCovDet extends OutlierDetector  {
         int h = (int)Math.floor((data.size() + p + 1)*alpha);
 
         // select initial dataset
+        Timer.Context context = chooseKRandom.time();
         List<? extends HasMetrics> initialSubset = chooseKRandom(data, p + 1);
+        context.stop();
+
+        context = meanComputation.time();
         mean = getMean(initialSubset);
+        context.stop();
+
+        context = covarianceComputation.time();
         cov = getCovariance(initialSubset);
+        context.stop();
+
+        context = determinantComputation.time();
         double det = getDeterminant(cov);
+        context.stop();
 
         int stepNo = 1;
 
         // now take C-steps
         while(true) {
+            context = findKClosest.time();
             List<? extends HasMetrics> newH = findKClosest(h, data, mean, cov);
-            mean = getMean(newH);
-            cov = getCovariance(newH);
+            context.stop();
 
+            context = meanComputation.time();
+            mean = getMean(newH);
+            context.stop();
+
+            context = covarianceComputation.time();
+            cov = getCovariance(newH);
+            context.stop();
+
+            context = determinantComputation.time();
             double newDet = getDeterminant(cov);
+            context.stop();
+
             double delta = det - newDet;
 
             if(newDet == 0 || delta < stoppingDelta) {
