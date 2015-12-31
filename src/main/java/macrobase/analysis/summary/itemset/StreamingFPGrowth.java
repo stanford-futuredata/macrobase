@@ -1,8 +1,12 @@
 package macrobase.analysis.summary.itemset;
 
+import static com.codahale.metrics.MetricRegistry.name;
+
+import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import macrobase.MacroBase;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 
 import org.slf4j.Logger;
@@ -13,6 +17,10 @@ import java.util.stream.Collectors;
 
 public class StreamingFPGrowth {
     private static final Logger log = LoggerFactory.getLogger(StreamingFPGrowth.class);
+    private final Timer fpMine = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "fpMine"));
+    private final Timer restructureTree = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "restructureTree"));
+    private final Timer updateFrequentItemOrder = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "updateFrequentItemOrder"));
+    private final Timer insertFrequentItems = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "insertFrequentItems"));
 
     StreamingFPTree fp = new StreamingFPTree();
     boolean needsRestructure = false;
@@ -268,6 +276,7 @@ public class StreamingFPGrowth {
 
         public void insertFrequentItems(List<Set<Integer>> transactions,
                                         int countRequiredForSupport) {
+            Timer.Context context = insertFrequentItems.time();
 
             Map<Integer, Double> itemCounts = new HashMap<>();
             for(Set<Integer> t : transactions) {
@@ -290,6 +299,8 @@ public class StreamingFPGrowth {
             for(int i = 0; i < sortedItemCounts.size(); ++i) {
                 frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
             }
+
+            context.stop();
         }
 
         private void deleteItems(Set<Integer> itemsToDelete) {
@@ -324,6 +335,8 @@ public class StreamingFPGrowth {
         }
 
         private void updateFrequentItemOrder() {
+            Timer.Context context = updateFrequentItemOrder.time();
+
             sortedNodes.clear();
 
             frequentItemOrder.clear();
@@ -336,6 +349,8 @@ public class StreamingFPGrowth {
             for(int i = 0; i < sortedItemCounts.size(); ++i) {
                 frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
             }
+
+            context.stop();
         }
 
         public void insertConditionalFrequentItems(List<ItemsetWithCount> patterns,
@@ -651,10 +666,13 @@ public class StreamingFPGrowth {
     public void restructureTree(Set<Integer> itemsToDelete) {
         needsRestructure = false;
         // todo: prune infrequent items
+        Timer.Context context = restructureTree.time();
 
         fp.deleteItems(itemsToDelete);
         fp.updateFrequentItemOrder();
         fp.sortByNewOrder();
+
+        context.stop();
     }
 
     public void buildTree(List<Set<Integer>> transactions) {
@@ -663,6 +681,7 @@ public class StreamingFPGrowth {
         }
 
         int countRequiredForSupport = (int)(support*transactions.size());
+
         fp.insertFrequentItems(transactions, countRequiredForSupport);
         fp.insertTransactions(transactions, false, false);
     }
@@ -690,6 +709,10 @@ public class StreamingFPGrowth {
             restructureTree(null);
         }
 
-        return fp.mineItemsets((int)(fp.root.getCount()*support));
+        Timer.Context context = fpMine.time();
+        List<ItemsetWithCount> itemset = fp.mineItemsets((int)(fp.root.getCount()*support));
+        context.stop();
+
+        return itemset;
     }
 }
