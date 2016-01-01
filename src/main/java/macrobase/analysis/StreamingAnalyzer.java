@@ -128,7 +128,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         ExponentiallyBiasedAChao<Double> scoreReservoir = null;
 
         if(forceUsePercentile) {
-            new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
+            scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
         }
 
         ExponentiallyDecayingEmergingItemsets streamingSummarizer =
