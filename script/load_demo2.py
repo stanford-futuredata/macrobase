@@ -3,10 +3,14 @@ import psycopg2
 import sys
 import numpy
 
-if len(sys.argv) != 2:
-  print "Usage: python load_data2.py <percentage_inliers>"
+if len(sys.argv) < 2:
+  print "Usage: python load_data2.py <percentage_inliers> <port (optional)>"
   exit(-1)
 x = float(sys.argv[1])
+
+port = None
+if(len(sys.argv) > 2):
+    port = sys.argv[2]
 
 # TODO: These can be made configurable later
 NUM_ATTRIBUTES = 4
@@ -20,12 +24,12 @@ attributes = [
   ["CA", "MA", "NY", "WY", "AR", "NV", "PA", "WA", "WI"]
 ]
 
-conn = psycopg2.connect("dbname='postgres' host='localhost'")
+conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "")
 cur = conn.cursor()
 
 print "Creating table..."
 
-cur.execute("DROP TABLE IF EXISTS car_synth_data; CREATE TABLE car_synth_data ( model varchar(40), year_of_make varchar(4), color varchar(7), state varchar(2), metric1 numeric, metric2 numeric, metric3 numeric, metric4 numeric, metric5 numeric );")
+cur.execute("DROP TABLE IF EXISTS car_data_demo; CREATE TABLE car_data_demo ( model varchar(40), year_of_make varchar(4), color varchar(7), state varchar(2), metric1 numeric, metric2 numeric, metric3 numeric, metric4 numeric, metric5 numeric );")
 
 print "...created!"
 
@@ -55,10 +59,10 @@ for i in xrange(NUM_READINGS):
     for j in xrange(NUM_METRICS):
       metrics.append(numpy.random.normal(picked_means[j], stddevs[j]))
 
-    sql = "INSERT INTO car_synth_data VALUES ('%s', '%s', '%s', '%s', %f, %f, %f, %f, %f);" % (picked_attributes[0], picked_attributes[1], picked_attributes[2], picked_attributes[3], metrics[0], metrics[1], metrics[2], metrics[3], metrics[4])
+    sql = "INSERT INTO car_data_demo VALUES ('%s', '%s', '%s', '%s', %f, %f, %f, %f, %f);" % (picked_attributes[0], picked_attributes[1], picked_attributes[2], picked_attributes[3], metrics[0], metrics[1], metrics[2], metrics[3], metrics[4])
     cur.execute(sql)
 
 print "...loaded!"
 
 conn.commit()
-print "Done! Look at car_synth_data."
+print "Done! Look at car_data_demo."

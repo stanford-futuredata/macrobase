@@ -1,7 +1,12 @@
 import random
 import psycopg2
+import sys
 
-conn = psycopg2.connect("dbname='postgres' host='localhost'")
+port = None
+if(len(sys.argv) > 1):
+    port = sys.argv[1]
+
+conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "")
 
 cur = conn.cursor()
 
@@ -17,7 +22,7 @@ states = ["CA", "MA", "NY", "WY", "AR", "NV"]
 
 print "Creating table..."
 
-cur.execute("DROP TABLE IF EXISTS sensor_data; CREATE TABLE sensor_data ( reading_id bigint NOT NULL, device_id bigint NOT NULL, state varchar(2), model varchar(40), firmware_version varchar(40), temperature numeric, power_drain numeric );")
+cur.execute("DROP TABLE IF EXISTS sensor_data_demo; CREATE TABLE sensor_data_demo ( reading_id bigint NOT NULL, device_id bigint NOT NULL, state varchar(2), model varchar(40), firmware_version varchar(40), temperature numeric, power_drain numeric );")
 
 print "...created!"
 
@@ -38,7 +43,7 @@ for r in range(123912, 123912+readings-242):
 
             
 
-    sql = "INSERT INTO sensor_data VALUES ('%s', '%s', '%s', '%s', '%s', %f, %f);" % (r, d_id, state, model, firmware_version, temperature, power_drain)
+    sql = "INSERT INTO sensor_data_demo VALUES ('%s', '%s', '%s', '%s', '%s', %f, %f);" % (r, d_id, state, model, firmware_version, temperature, power_drain)
     cur.execute(sql)
 
 print "...loaded!"
@@ -55,11 +60,11 @@ for i in range(0, int(readings*.01)+random.randint(1, 2042)):
     else:
         temperature = 70+random.random()*10        
 
-    sql = "INSERT INTO sensor_data VALUES ('%s', '%s', '%s', '%s', '%s', %f, %f);" % (r, d_id, state, model, firmware_version, temperature, power_drain)
+    sql = "INSERT INTO sensor_data_demo VALUES ('%s', '%s', '%s', '%s', '%s', %f, %f);" % (r, d_id, state, model, firmware_version, temperature, power_drain)
     cur.execute(sql)
 
 print "...loaded!"
     
 conn.commit()
 
-print "Done! Look at sensor_data."
+print "Done! Look at sensor_data_demo."
