@@ -9,8 +9,7 @@
 <body>
 
 
-<div class="alert alert-warning">    
-
+<div class="alert alert-warning">
 
 
     <h1>Welcome to MacroBase Alpha</h1>
@@ -27,19 +26,21 @@
 
                 <div class="panel panel-default" ng-show="hasItemsets()">
 
-                    <div class="panel-heading" >Itemset Under Consideration</div>
+                    <div class="panel-heading">Itemset Under Consideration</div>
                     <div class="panel-body">
 
-                        <table class="table" style="margin-top: 10px">
-                            <tr>
-                                <th style="width:50%">Column</th>
-                                <th style="width:50%">Value</th>
-                            </tr>
-                            <tr ng-repeat="item in itemset">
-                                <td>{{item.column}}</td>
-                                <td>{{item.value}}</td>
-                            </tr>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table" style="margin-top: 10px">
+                                <tr>
+                                    <th style="width:50%">Column</th>
+                                    <th style="width:50%">Value</th>
+                                </tr>
+                                <tr ng-repeat="item in itemset">
+                                    <td>{{item.column}}</td>
+                                    <td>{{item.value}}</td>
+                                </tr>
+                            </table>
+                        </div>
 
                     </div>
                 </div>
@@ -56,17 +57,20 @@
                     </div>
                     <div class="panel-heading">Matching Rows</div>
                     <div class="panel-body">
-                        <table class="table">
-                            <tr>
-                                <th ng-repeat="h in visibleRows[0].columnValues"><span ng-click="hideColumn(h.column)">{{h.column}}</span>
-                                </th>
-                            </tr>
-                            <tr ng-repeat="r in visibleRows">
-                                <td ng-repeat="p in r.columnValues">{{p.value}}</td>
-                            </tr>
-                        </table>
-                        <a id="morerows" href="#morerows" ng-click="getRows()">more rows</a>
+                        <div class="table-responsive">
 
+                            <table class="table">
+                                <tr>
+                                    <th ng-repeat="h in visibleRows[0].columnValues"><span
+                                            ng-click="hideColumn(h.column)">{{h.column}}</span>
+                                    </th>
+                                </tr>
+                                <tr ng-repeat="r in visibleRows">
+                                    <td ng-repeat="p in r.columnValues">{{p.value}}</td>
+                                </tr>
+                            </table>
+                            <a id="morerows" href="#morerows" ng-click="getRows()">more rows</a>
+                        </div>
                     </div>
                 </div>
             </div>

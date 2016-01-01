@@ -19,13 +19,13 @@
 
 
 <div class="row">
-  <div class="col-md-12" style="padding: 20px; padding-left:
-  40px; padding-bottom: 0px;"><img src="macrobase.png" width=200 /></div>
+    <div class="col-md-12" style="padding: 20px; padding-left:
+  40px; padding-bottom: 0px;"><img src="macrobase.png" width=200/></div>
 
     <div class="col-md-12">
-      <hr style="border-bottom: 10px solid black;" />
-      </div>
-  </div>
+        <hr style="border-bottom: 10px solid black;"/>
+    </div>
+</div>
 </div>
 
 <div ng-app="consoleApp"
@@ -49,8 +49,6 @@
                                 </td>
                             </tr>
                         </table>
-
-
                         <table>
                             <tr>
                                 <td nowrap style="width: 100px;">Base query:</td>
@@ -61,8 +59,6 @@
                                 </td>
                             </tr>
                         </table>
-
-
                         <p style="margin-top: 5px; margin-bottom:-5px">Connected to {{pg_url}} database!</p>
 
                     </div>
@@ -77,42 +73,44 @@
                         <div style="float:right;">
                             <button ng-click="resetSchema()">reset</button>
                         </div>
-			<div style="float:right;">
-			  <button ng-click="sampleRows()">sample</button>
-			  </div>
+                        <div style="float:right;">
+                            <button ng-click="sampleRows()">sample</button>
+                        </div>
                     </div>
                     <div class="panel-body">
 
+                        <div class="table-responsive">
 
-                        <table class="table" ng-controller="selectorController">
-                            <tr>
-                                <th>Clustering<br>Attribute?</th>
-                                <th>Target Metric?<br>Lo/Hi</th>
-                                <th>Name</th>
-                                <th>Type</th>
-                            </tr>
-                            <tr ng-repeat="x in schemaCols.columns">
-                                <td>
-                                    <button ng-click="selectedAttribute(x.name)" type="button"
-                                            ng-class="applyClassAttributeButton(x.name)"><span
-                                            id="{{x.name}}-attribute"
-                                            ng-class="applyClassAttributeGlyph(x.name)" aria-hidden="true"></span>
-                                    </button>
-                                </td>
-                                <td>
-                                    <button ng-click="selectedMetric(x.name, false)" type="button"
-                                            ng-class="applyClassMetricButton(x.name, false)"><span
-                                            id="{{x.name}}-metric" class="glyphicon glyphicon-arrow-down"
-                                            aria-hidden="true"></span></button>
-                                    <button ng-click="selectedMetric(x.name, true)" type="button"
-                                            ng-class="applyClassMetricButton(x.name, true)"><span
-                                            id="{{x.name}}-metric" class="glyphicon glyphicon-arrow-up"
-                                            aria-hidden="true"></span></button>
-                                </td>
-                                <td>{{x.name}}</td>
-                                <td>{{x.type}}</td>
-                            </tr>
-                        </table>
+                            <table class="table" ng-controller="selectorController">
+                                <tr>
+                                    <th>Clustering<br>Attribute?</th>
+                                    <th>Target Metric?<br>Lo/Hi</th>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                </tr>
+                                <tr ng-repeat="x in schemaCols.columns">
+                                    <td>
+                                        <button ng-click="selectedAttribute(x.name)" type="button"
+                                                ng-class="applyClassAttributeButton(x.name)"><span
+                                                id="{{x.name}}-attribute"
+                                                ng-class="applyClassAttributeGlyph(x.name)" aria-hidden="true"></span>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button ng-click="selectedMetric(x.name, false)" type="button"
+                                                ng-class="applyClassMetricButton(x.name, false)"><span
+                                                id="{{x.name}}-metric" class="glyphicon glyphicon-arrow-down"
+                                                aria-hidden="true"></span></button>
+                                        <button ng-click="selectedMetric(x.name, true)" type="button"
+                                                ng-class="applyClassMetricButton(x.name, true)"><span
+                                                id="{{x.name}}-metric" class="glyphicon glyphicon-arrow-up"
+                                                aria-hidden="true"></span></button>
+                                    </td>
+                                    <td>{{x.name}}</td>
+                                    <td>{{x.type}}</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -132,40 +130,42 @@
                 <div class="panel-body">
                     <div class="panel">
                         <div class="panel-body">
-
-                            <table class="table">
-                                <tr>
-                                    <td># Outliers</td>
-                                    <td>{{numOutliers}}</td>
-                                </tr>
-                                <tr>
-                                    <td># Inliers</td>
-                                    <td>{{numInliers}}</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2"><b>Timing</b></td>
-                                </tr>
-                                <tr>
-                                    <td>Load time</td>
-                                    <td>{{loadTime}}ms</td>
-                                </tr>
-                                <tr>
-                                    <td>Label time</td>
-                                    <td>{{labelTime}}ms</td>
-                                </tr>
-                                <tr>
-                                    <td>Summarization time</td>
-                                    <td>{{summarizationTime}}ms</td>
-                                </tr>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <tr>
+                                        <td># Outliers</td>
+                                        <td>{{numOutliers}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td># Inliers</td>
+                                        <td>{{numInliers}}</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2"><b>Timing</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Load time</td>
+                                        <td>{{loadTime}}ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Label time</td>
+                                        <td>{{labelTime}}ms</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Summarization time</td>
+                                        <td>{{summarizationTime}}ms</td>
+                                    </tr>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
                     <div>
-                     Sort order: <button ng-click="sortAnalysis('support')">support</button>
+                        Sort order:
+                        <button ng-click="sortAnalysis('support')">support</button>
                         <button ng-click="sortAnalysis('ratioToInliers')">ratio</button>
                         <button ng-click="sortAnalysis('itemSize')">number of attributes</button>
-                        </div>
+                    </div>
 
                     <div class="panel panel-default" ng-repeat="i in itemsets">
                         <div class="panel-body">
