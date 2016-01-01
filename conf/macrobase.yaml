@@ -1,5 +1,3 @@
-template: Hello, %s!
-defaultName: Stranger
 
 server:
     rootPath: /api/*
@@ -10,3 +8,29 @@ logging:
   # Logger-specific levels.
   loggers:
     "macrobase": TRACE
+
+doPreLoadData: true
+preLoad:
+  - baseQuery: "SELECT * FROM sensor_data;"
+    dbUrl: postgres
+
+    targetAttributes: [device_id, state, model, firmware_version]
+    targetLowMetrics: [temperature]
+    targetHighMetrics: [power_drain]
+
+  - baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000;
+    dbUrl: postgres
+    targetAttributes: [start_reason,
+                       stop_reason,
+                       app_version,
+                       android_baseband,
+                       android_codename,
+                       android_api_version,
+                       android_fw_version,
+                       hardware_carrier,
+                       hardware_bootloader,
+                       hardware_model,
+                       hardware_manufacturer,
+                       state]
+    targetLowMetrics: [data_count_minutes, runtime, distance_gps_km, battery_drain_rate_per_hour]
+    targetHighMetrics: [data_count_minutes, runtime, distance_gps_km, battery_drain_rate_per_hour]

@@ -49,7 +49,6 @@ public abstract class SQLLoader {
         factory.setUrl(getJDBCUrlPrefix()+pgUrl);
         source = factory.build(MacroBase.metrics, "postgres");
         connection = source.getConnection();
-
     }
 
     public Schema getSchema(String baseQuery)

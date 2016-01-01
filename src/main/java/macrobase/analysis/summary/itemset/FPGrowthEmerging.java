@@ -122,6 +122,10 @@ public class FPGrowthEmerging {
 
         // check the ratios of any itemsets we just marked
         FPGrowth inlierTree = new FPGrowth();
+        int newSize = Math.min(inliers.size(), outliers.size()*100);
+        log.debug("Truncating inliers (size {}) to size {} (outlier size: {})",
+                  inliers.size(), newSize, outliers.size());
+        inliers = inliers.subList(0, newSize);
         List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inliers,
                                                                            inlierCounts,
                                                                            ratioItemsToCheck,

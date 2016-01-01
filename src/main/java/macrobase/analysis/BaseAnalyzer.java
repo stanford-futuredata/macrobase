@@ -6,7 +6,7 @@ abstract public class BaseAnalyzer {
     protected double MIN_SUPPORT = 0.001;
     protected double MIN_INLIER_RATIO = 1;
 
-    protected boolean forceUsePercentile = false;
+    protected boolean forceUsePercentile = true;
     protected boolean forceUseZScore = false;
 
     public void forceUsePercentile(boolean force) {

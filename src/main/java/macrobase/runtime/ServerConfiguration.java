@@ -1,33 +1,78 @@
 package macrobase.runtime;
 
+import com.google.common.collect.Lists;
 import io.dropwizard.Configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 public class ServerConfiguration extends Configuration {
-    @NotEmpty
-    private String template;
+    public static class PreLoadData {
+        @NotEmpty
+        private String baseQuery;
+        @NotEmpty
+        private String dbUrl;
 
-    @NotEmpty
-    private String defaultName = "Stranger";
+        @NotEmpty
+        private List<String> targetAttributes;
 
-    @JsonProperty
-    public String getTemplate() {
-        return template;
+        public PreLoadData(String baseQuery, String dbUrl, List<String> targetAttributes, List<String> targetHighMetrics, List<String> targetLowMetrics) {
+            this.baseQuery = baseQuery;
+            this.dbUrl = dbUrl;
+            this.targetAttributes = targetAttributes;
+            this.targetHighMetrics = targetHighMetrics;
+            this.targetLowMetrics = targetLowMetrics;
+        }
+
+        private List<String> targetHighMetrics;
+        private List<String> targetLowMetrics;
+
+        @JsonProperty
+        public String getBaseQuery() {
+            return baseQuery;
+        }
+
+        @JsonProperty
+        public String getDbUrl() {
+            return dbUrl;
+        }
+
+        @JsonProperty
+        public List<String> getTargetAttributes() {
+            return targetAttributes;
+        }
+
+        @JsonProperty
+        public List<String> getTargetHighMetrics() {
+            return targetHighMetrics;
+        }
+
+        @JsonProperty
+        public List<String> getTargetLowMetrics() {
+            return targetLowMetrics;
+        }
+
+        public PreLoadData() {};
     }
 
     @JsonProperty
-    public void setTemplate(String template) {
-        this.template = template;
+    private List<PreLoadData> preLoad;
+
+    private boolean doPreLoadData;
+
+
+    @JsonProperty
+    public List<PreLoadData> getPreLoad() {
+        return preLoad;
     }
 
     @JsonProperty
-    public String getDefaultName() {
-        return defaultName;
+    public boolean doPreLoadData() {
+        return doPreLoadData;
     }
 
-    @JsonProperty
-    public void setDefaultName(String name) {
-        this.defaultName = name;
-    }
 }
