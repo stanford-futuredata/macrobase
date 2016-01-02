@@ -62,8 +62,10 @@ public class StreamingFPGrowth {
 
         // todo: make more efficient
         private void decayWeights(FPTreeNode start, double decayWeight) {
-            for(Integer item : frequentItemCounts.keySet()) {
-                frequentItemCounts.put(item, frequentItemCounts.get(item)*decayWeight);
+            if(start == root) {
+                for (Integer item : frequentItemCounts.keySet()) {
+                    frequentItemCounts.put(item, frequentItemCounts.get(item) * decayWeight);
+                }
             }
 
             start.count *= decayWeight;
