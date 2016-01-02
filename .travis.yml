@@ -1,2 +1,4 @@
 language: java
 jdk: oraclejdk8
+notifications:
+  slack: stanford-futuredata:qmO6Keu8ifOyXHsmSQ97CeLH
