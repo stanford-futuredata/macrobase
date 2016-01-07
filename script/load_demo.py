@@ -15,7 +15,10 @@ if(len(sys.argv) > 2):
     user = sys.argv[2]
     password = sys.argv[3]
 
-conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "" + " user="+user if user else "" + " password="+password if password else "")
+conn = psycopg2.connect("dbname='postgres' host='localhost'" +
+                         (" port="+port if port else "") +
+                         (" user="+user if user else "") +
+                         (" password="+password if password else ""))
 
 cur = conn.cursor()
 
