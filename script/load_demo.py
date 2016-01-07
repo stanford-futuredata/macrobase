@@ -2,11 +2,20 @@ import random
 import psycopg2
 import sys
 
+
 port = None
 if(len(sys.argv) > 1):
     port = sys.argv[1]
 
-conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "")
+port = None
+user = None
+password = None
+if(len(sys.argv) > 2):
+    port = sys.argv[1]
+    user = sys.argv[2]
+    password = sys.argv[3]
+
+conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "" + " user="+user if user else "" + " password="+password if password else "")
 
 cur = conn.cursor()
 
