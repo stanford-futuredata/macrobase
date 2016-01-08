@@ -1,10 +1,10 @@
 taskName: testTasks
-targetAttributes: [device_id, state, model, firmware_version]
+targetAttributes: [sex]
 targetLowMetrics: []
-targetHighMetrics: [power_drain]
+targetHighMetrics: [income]
 
 dbUrl: postgres
-baseQuery: SELECT * FROM sensor_data_demo;
+baseQuery: SELECT * FROM marketing;
 
 minSupport: 0.01
 minInlierRatio: 1
