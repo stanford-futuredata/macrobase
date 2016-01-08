@@ -159,6 +159,11 @@ public class StreamingFPGrowth {
                     return;
                 }
 
+                if(children == null) {
+                    children = Lists.newArrayList(otherChildren);
+                    return;
+                }
+
                 // O(N^2); slow for large lists; consider optimizing
                 for(FPTreeNode otherChild : otherChildren) {
                     otherChild.parent = this;
