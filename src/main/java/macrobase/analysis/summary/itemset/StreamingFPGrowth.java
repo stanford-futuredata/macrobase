@@ -170,6 +170,8 @@ public class StreamingFPGrowth {
                     boolean matched = false;
                     for(FPTreeNode ourChild : children) {
                         if(otherChild.item == ourChild.item) {
+                            removeNodeFromHeaders(otherChild);
+
                             ourChild.count += otherChild.count;
                             ourChild.mergeChildren(otherChild.getChildren());
                             matched = true;
@@ -316,10 +318,13 @@ public class StreamingFPGrowth {
             }
 
             for(int item : itemsToDelete) {
+
+
                 frequentItemCounts.remove(item);
                 frequentItemOrder.remove(item);
 
                 FPTreeNode nodeToDelete = nodeHeaders.get(item);
+
                 while(nodeToDelete != null) {
                     nodeToDelete.parent.removeChild(nodeToDelete);
                     if(nodeToDelete.hasChildren()) {
@@ -570,6 +575,8 @@ public class StreamingFPGrowth {
         }
 
         private void removeNodeFromHeaders(FPTreeNode node) {
+            leafNodes.remove(node);
+
             if(node.getPrevLink() == null) {
                 assert(nodeHeaders.get(node.getItem()) == node);
                 nodeHeaders.put(node.getItem(), node.getNextLink());
@@ -601,7 +608,6 @@ public class StreamingFPGrowth {
 
                 assert(!leaf.hasChildren());
 
-                leafNodes.remove(leaf);
                 removeNodeFromHeaders(leaf);
 
                 removedNodes.add(leaf);
