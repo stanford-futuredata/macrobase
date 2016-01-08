@@ -169,6 +169,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         int tupleNo = 0;
+        long totUpdateTime = 0;
+        long totClassificationTime = 0;
+        long totSummarizationTime = 0;
 
         for(Datum d: data) {
             inputReservoir.insert(d);
@@ -178,11 +181,21 @@ public class StreamingAnalyzer extends BaseAnalyzer {
             } else if(tupleNo >= warmupCount) {
                 // todo: calling curtime so frequently might be bad...
                 long now = System.currentTimeMillis();
+                sw.start();
                 analysisUpdater.updateIfNecessary(now, tupleNo);
                 modelUpdater.updateIfNecessary(now, tupleNo);
+                sw.stop();
+                totUpdateTime += sw.elapsed(TimeUnit.MILLISECONDS);
+                sw.reset();
 
                 // classify, then insert into tree, etc.
+                sw.start();
                 double score = detector.score(d);
+                sw.stop();
+                totClassificationTime += sw.elapsed(TimeUnit.MILLISECONDS);
+                sw.reset();
+
+                sw.start();
                 if(scoreReservoir != null) {
                     scoreReservoir.insert(score);
                 }
@@ -195,16 +208,27 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 } else {
                     streamingSummarizer.markInlier(d);
                 }
+                sw.stop();
+                totSummarizationTime += sw.elapsed(TimeUnit.MILLISECONDS);
+                sw.reset();
             }
 
             tupleNo += 1;
         }
 
+        sw.start();
         List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
+        sw.stop();
+        totSummarizationTime += sw.elapsed(TimeUnit.MILLISECONDS);
+        sw.reset();
+
+        log.debug("...ended update (time: {}ms)!", totUpdateTime);
+        log.debug("...ended classification (time: {}ms)!", totClassificationTime);
+        log.debug("...ended summarization (time: {}ms)!", totSummarizationTime);
 
         //System.console().readLine("Finished! Press any key to continue");
 
-        return new AnalysisResult(0, 0, 0, 0, 0, isr);
+        return new AnalysisResult(0, 0, loadTime, totClassificationTime + totUpdateTime, totSummarizationTime, isr);
     }
 
     public void setWarmupCount(Integer warmupCount) {

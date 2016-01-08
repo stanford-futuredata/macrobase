@@ -45,6 +45,20 @@ def create_config_file(config_parameters, conf_file):
   with open(conf_file, 'w') as f:
     f.write(conf_contents)
 
+def parse_results(results_file):
+  times = dict()
+  with open(results_file, 'r') as f:
+    lines = f.read().split('\n')
+    for line in lines:
+      if line.startswith("DEBUG") or line.startswith("TRACE"):
+        if "time" in line:
+          line = line.split("...ended")[1].strip()
+          line_tokens = line.split()
+          time_type = line_tokens[0]
+          time = int(line_tokens[2][:-4])
+          times[time_type] = time
+  return times
+
 if __name__ == '__main__':
   for config_parameters in all_config_parameters:
     sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"])
@@ -52,6 +66,9 @@ if __name__ == '__main__':
     process_config_parameters(config_parameters)
     conf_file = "batch.conf" if config_parameters["isBatchJob"] else "streaming.conf"
     conf_file = os.path.join(sub_dir, conf_file)
+    results_file = os.path.join(sub_dir, "results.txt")
     create_config_file(config_parameters, conf_file)
     cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
-    os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s" % (cmd, conf_file))
+    os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
+    times = parse_results(results_file)
+    print config_parameters["taskName"], ":", times
