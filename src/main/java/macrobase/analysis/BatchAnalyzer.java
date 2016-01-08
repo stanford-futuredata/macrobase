@@ -92,6 +92,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
         sw.reset();
         log.debug("...ended summarization (time: {}ms)!", summarizeTime);
 
+        log.debug("Number of itemsets: {}", isr.size());
+
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
     }
 }

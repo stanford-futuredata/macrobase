@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -105,6 +106,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                           lowMetrics,
                                           highMetrics,
                                           baseQuery);
+        Collections.shuffle(data);
         sw.stop();
 
         long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -225,6 +227,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         log.debug("...ended update (time: {}ms)!", (totUpdateTime / 1000) + 1);
         log.debug("...ended classification (time: {}ms)!", (totClassificationTime / 1000) + 1);
         log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
+
+        log.debug("Number of itemsets: {}", isr.size());
 
         //System.console().readLine("Finished! Press any key to continue");
 

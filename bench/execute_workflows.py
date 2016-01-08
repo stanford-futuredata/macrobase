@@ -47,17 +47,21 @@ def create_config_file(config_parameters, conf_file):
 
 def parse_results(results_file):
   times = dict()
+  num_itemsets = 0
   with open(results_file, 'r') as f:
     lines = f.read().split('\n')
     for line in lines:
-      if line.startswith("DEBUG") or line.startswith("TRACE"):
+      if line.startswith("DEBUG"):
         if "time" in line:
           line = line.split("...ended")[1].strip()
           line_tokens = line.split()
           time_type = line_tokens[0]
           time = int(line_tokens[2][:-4])
           times[time_type] = time
-  return times
+        elif "itemsets" in line:
+          line = line.split("Number of itemsets:")[1].strip()
+          num_itemsets = int(line)
+  return times, num_itemsets
 
 if __name__ == '__main__':
   for config_parameters in all_config_parameters:
@@ -70,5 +74,6 @@ if __name__ == '__main__':
     create_config_file(config_parameters, conf_file)
     cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
     os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
-    times = parse_results(results_file)
-    print config_parameters["taskName"], ":", times
+    times, num_itemsets = parse_results(results_file)
+    print config_parameters["taskName"], "-->"
+    print "Times:", times, ", Number of itemsets:", num_itemsets
