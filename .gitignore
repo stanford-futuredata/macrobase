@@ -19,3 +19,9 @@ target/
 *.iml
 
 dependency-reduced-pom.xml
+/target
+
+
+.DS_Store
+
+src/main/java/macrobase/ingest/SQLLoader.java
