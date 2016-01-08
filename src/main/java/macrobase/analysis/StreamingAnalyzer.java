@@ -185,14 +185,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 analysisUpdater.updateIfNecessary(now, tupleNo);
                 modelUpdater.updateIfNecessary(now, tupleNo);
                 sw.stop();
-                totUpdateTime += sw.elapsed(TimeUnit.MILLISECONDS);
+                totUpdateTime += sw.elapsed(TimeUnit.MICROSECONDS);
                 sw.reset();
 
                 // classify, then insert into tree, etc.
                 sw.start();
                 double score = detector.score(d);
                 sw.stop();
-                totClassificationTime += sw.elapsed(TimeUnit.MILLISECONDS);
+                totClassificationTime += sw.elapsed(TimeUnit.MICROSECONDS);
                 sw.reset();
 
                 sw.start();
@@ -209,7 +209,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                     streamingSummarizer.markInlier(d);
                 }
                 sw.stop();
-                totSummarizationTime += sw.elapsed(TimeUnit.MILLISECONDS);
+                totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
                 sw.reset();
             }
 
@@ -219,12 +219,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         sw.start();
         List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
         sw.stop();
-        totSummarizationTime += sw.elapsed(TimeUnit.MILLISECONDS);
+        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
         sw.reset();
 
-        log.debug("...ended update (time: {}ms)!", totUpdateTime);
-        log.debug("...ended classification (time: {}ms)!", totClassificationTime);
-        log.debug("...ended summarization (time: {}ms)!", totSummarizationTime);
+        log.debug("...ended update (time: {}ms)!", (totUpdateTime / 1000) + 1);
+        log.debug("...ended classification (time: {}ms)!", (totClassificationTime / 1000) + 1);
+        log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
 
         //System.console().readLine("Finished! Press any key to continue");
 
