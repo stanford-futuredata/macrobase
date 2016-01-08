@@ -66,6 +66,7 @@ state = random.choice(states)
 model = random.choice(models)
 firmware_version = random.choice(firmwares)
 for i in range(0, int(readings*.01)+random.randint(1, 2042)):
+    r += 1
     power_drain = .8 + random.random()*.2
     if (state == "CA" and model == "M101" and firmware_version == "0.4"):
         temperature = 2 + random.random()*10
