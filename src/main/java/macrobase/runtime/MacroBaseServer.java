@@ -12,7 +12,9 @@ import macrobase.runtime.resources.AnalyzeResource;
 import macrobase.runtime.resources.RowSetResource;
 import macrobase.runtime.resources.SchemaResource;
 import macrobase.runtime.standalone.batch.MacroBaseBatchCommand;
+import macrobase.runtime.standalone.scoping.MacroBaseScopingCommand;
 import macrobase.runtime.standalone.streaming.MacroBaseStreamingCommand;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +32,13 @@ public class MacroBaseServer extends Application<ServerConfiguration> {
 
     @Override
     public void initialize(Bootstrap<ServerConfiguration> bootstrap) {
+    	
+    	System.out.println("*****Inside initalize");
+  
         bootstrap.addCommand(new MacroBaseBatchCommand());
         bootstrap.addCommand(new MacroBaseStreamingCommand());
+        bootstrap.addCommand(new MacroBaseScopingCommand());
+  
         bootstrap.addBundle(new AssetsBundle("/frontend", "/", "console.html"));
     }
 

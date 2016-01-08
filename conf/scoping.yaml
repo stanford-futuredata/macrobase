@@ -1,0 +1,22 @@
+taskName: testTasks
+targetAttributes: [device_id, state, model, firmware_version]
+targetLowMetrics: []
+targetHighMetrics: [power_drain]
+
+dbUrl: postgres
+baseQuery: SELECT * FROM sensor_data_demo;
+
+minSupport: 0.01
+minInlierRatio: 1
+
+useZScore: true
+zScore: 3.0
+
+usePercentile: false
+targetPercentile: 0.01
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE
