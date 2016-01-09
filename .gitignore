@@ -24,3 +24,8 @@ dependency-reduced-pom.xml
 cache/*
 sql_cache/*
 
+# Compiled python file
+*.pyc
+
+# Workload directory
+bench/workflows/*

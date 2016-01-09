@@ -1,37 +1,10 @@
 import os
 
+from config_parameters import all_config_parameters
+
 testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
-all_config_parameters = \
-[
-  {
-    "isBatchJob": True,
-    "taskName": "testTasks",
-    "targetAttributes": ["device_id", "state", "model", "firmware_version"],
-    "targetLowMetrics": [],
-    "targetHighMetrics": ["power_drain"],
-
-    "baseQuery": "SELECT * FROM sensor_data_demo;"
-  },
-  {
-    "isBatchJob": False,
-    "taskName": "testTasks2",
-    "targetAttributes": ["device_id", "state", "model", "firmware_version"],
-    "targetLowMetrics": [],
-    "targetHighMetrics": ["power_drain"],
-
-    "inputReservoirSize": 10000,
-    "scoreReservoirSize": 10000,
-    "inlierItemSummarySize": 1000,
-    "outlierItemSummarySize": 10000,
-    "summaryRefreshPeriod": 100000,
-    "modelRefreshPeriod": 10000,
-    "warmupCount": 1000,
-
-    "baseQuery": "SELECT * FROM sensor_data_demo;"
-  }
-]
 
 def process_config_parameters(config_parameters):
   for config_parameter_type in config_parameters:
