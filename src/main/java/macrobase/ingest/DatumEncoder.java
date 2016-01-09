@@ -14,14 +14,14 @@ import java.util.Set;
 
 public class DatumEncoder {
     private HashMap<Integer, String> attributeDimensionNameMap = new HashMap<>();
-    private HashMap<Integer, HashBiMap<String, Integer>> integerEncoding = new HashMap<>();
+    private HashMap<Integer, Map<String, Integer>> integerEncoding = new HashMap<>();
     private HashMap<Integer, Integer> integerToColumn = new HashMap<>();
 
     private Integer nextKey = 0;
 
     public void updateAttributeDimensions(Map<Integer, Integer> oldToNewRemapping) {
         HashMap<Integer, String> newAttributeDimensionNameMap = new HashMap<>();
-        HashMap<Integer, HashBiMap<String, Integer>> newIntegerEncoding = new HashMap<>();
+        HashMap<Integer, Map<String, Integer>> newIntegerEncoding = new HashMap<>();
         HashMap<Integer, Integer> newIntegerToColumn = new HashMap<>();
 
         for(Map.Entry<Integer, String> entry : attributeDimensionNameMap.entrySet()) {
@@ -32,7 +32,7 @@ public class DatumEncoder {
             newAttributeDimensionNameMap.put(dim, entry.getValue());
         }
 
-        for(Map.Entry<Integer, HashBiMap<String, Integer>> entry :
+        for(Map.Entry<Integer, Map<String, Integer>> entry :
                 integerEncoding.entrySet()) {
             int dim = entry.getKey();
             if(oldToNewRemapping.containsKey(dim)) {
@@ -63,7 +63,7 @@ public class DatumEncoder {
         }
 
         integerEncoding.clear();
-        for(Map.Entry<Integer, HashBiMap<String, Integer>> entry :
+        for(Map.Entry<Integer, Map<String, Integer>> entry :
                 other.integerEncoding.entrySet()) {
             integerEncoding.put(entry.getKey(), entry.getValue());
         }
@@ -85,7 +85,13 @@ public class DatumEncoder {
         int matchingColumn = integerToColumn.get(encodedAttr);
 
         String columnName = attributeDimensionNameMap.get(matchingColumn);
-        String columnValue = integerEncoding.get(matchingColumn).inverse().get(encodedAttr);
+        Map<String, Integer> columnEncoding = integerEncoding.get(matchingColumn);
+        String columnValue = null;
+        for(Map.Entry<String, Integer> ce : columnEncoding.entrySet()) {
+            if(ce.getValue() == encodedAttr) {
+                columnValue = ce.getKey();
+            }
+        }
 
         return new ColumnValue(columnName, columnValue);
     }
@@ -100,10 +106,10 @@ public class DatumEncoder {
     }
 
     public int getIntegerEncoding(int dimension, String attr) {
-        integerEncoding.computeIfAbsent(dimension, key -> HashBiMap.<String, Integer>create());
+        integerEncoding.computeIfAbsent(dimension, key -> new HashMap<>());
 
 
-        BiMap<String, Integer> dimensionMap = integerEncoding.get(dimension);
+        Map<String, Integer> dimensionMap = integerEncoding.get(dimension);
         Integer ret = dimensionMap.get(attr);
         if(ret == null) {
             ret = nextKey;

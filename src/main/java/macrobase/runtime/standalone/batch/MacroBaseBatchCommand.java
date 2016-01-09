@@ -5,6 +5,7 @@ import io.dropwizard.setup.Bootstrap;
 import macrobase.MacroBase;
 import macrobase.analysis.BatchAnalyzer;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.ingest.DiskCachingPostgresLoader;
 import macrobase.ingest.PostgresLoader;
 import macrobase.ingest.SQLLoader;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -22,7 +23,13 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
     protected void run(Bootstrap<BatchStandaloneConfiguration> bootstrap,
                        Namespace namespace,
                        BatchStandaloneConfiguration configuration) throws Exception {
-        SQLLoader loader = new PostgresLoader();
+
+        SQLLoader loader;
+        if(configuration.useDiskCache()) {
+            loader = new DiskCachingPostgresLoader(configuration.getDiskCacheDirectory());
+        } else {
+            loader = new PostgresLoader();
+        }
         loader.connect(configuration.getDbUrl());
 
         BatchAnalyzer analyzer = new BatchAnalyzer();

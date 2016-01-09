@@ -32,6 +32,11 @@ public class BaseStandaloneConfiguration extends Configuration {
     private Boolean usePercentile;
 
     @NotNull
+    private Boolean useDiskCache;
+
+    private String diskCacheDirectory;
+
+    @NotNull
     private Boolean useZScore;
 
     @NotNull
@@ -102,4 +107,11 @@ public class BaseStandaloneConfiguration extends Configuration {
     public boolean useZScore() {
         return useZScore;
     }
+
+
+    @JsonProperty
+    public Boolean useDiskCache() { return useDiskCache; }
+
+    @JsonProperty
+    public String getDiskCacheDirectory() { return diskCacheDirectory; }
 }

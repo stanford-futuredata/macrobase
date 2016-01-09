@@ -4,22 +4,19 @@ import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import macrobase.ingest.CachingPostgresLoader;
+import macrobase.ingest.MemoryCachingPostgresLoader;
 import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.PostgresLoader;
 import macrobase.ingest.SQLLoader;
 import macrobase.runtime.healthcheck.TemplateHealthCheck;
 import macrobase.runtime.resources.AnalyzeResource;
 import macrobase.runtime.resources.RowSetResource;
 import macrobase.runtime.resources.SchemaResource;
-import macrobase.runtime.resources.HelloResource;
 import macrobase.runtime.standalone.batch.MacroBaseBatchCommand;
 import macrobase.runtime.standalone.streaming.MacroBaseStreamingCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.List;
 
 public class MacroBaseServer extends Application<ServerConfiguration> {
     private static final Logger log = LoggerFactory.getLogger(MacroBaseServer.class);
@@ -45,7 +42,7 @@ public class MacroBaseServer extends Application<ServerConfiguration> {
     public void run(ServerConfiguration configuration,
                     Environment environment) throws Exception {
 
-        SQLLoader loader = new CachingPostgresLoader();
+        SQLLoader loader = new MemoryCachingPostgresLoader();
 
         if(configuration.doPreLoadData() && (!configuration.getPreLoad().isEmpty() || true)) {
             for(ServerConfiguration.PreLoadData pld : configuration.getPreLoad()) {

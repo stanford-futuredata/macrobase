@@ -17,6 +17,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +111,7 @@ public abstract class SQLLoader {
                                List<String> attributes,
                                List<String> lowMetrics,
                                List<String> highMetrics,
-                               String baseQuery) throws SQLException {
+                               String baseQuery) throws SQLException, IOException {
 
         String targetColumns = StreamSupport.stream(
                 Iterables.concat(attributes, lowMetrics, highMetrics).spliterator(), false)

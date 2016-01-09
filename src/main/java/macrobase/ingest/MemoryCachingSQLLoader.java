@@ -2,12 +2,10 @@ package macrobase.ingest;
 
 import com.google.common.collect.Sets;
 import macrobase.datamodel.Datum;
-import macrobase.ingest.result.RowSet;
-import macrobase.ingest.result.Schema;
-import macrobase.runtime.resources.RowSetResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,8 +18,8 @@ import java.util.Set;
  data processing.
  */
 
-abstract public class CachingSQLLoader extends SQLLoader {
-    private static final Logger log = LoggerFactory.getLogger(CachingSQLLoader.class);
+abstract public class MemoryCachingSQLLoader extends SQLLoader {
+    private static final Logger log = LoggerFactory.getLogger(MemoryCachingSQLLoader.class);
 
     private class DataCache {
         private final DatumEncoder encoder;
@@ -112,7 +110,7 @@ abstract public class CachingSQLLoader extends SQLLoader {
                                    List<String> attributes,
                                    List<String> lowMetrics,
                                    List<String> highMetrics,
-                                   String baseQuery) throws SQLException {
+                                   String baseQuery) throws SQLException, IOException {
         for(DataCache cached : cachedResults) {
             if(cached.getAttributes().equals(attributes) &&
                cached.getLowMetrics().equals(lowMetrics) &&
@@ -210,7 +208,7 @@ abstract public class CachingSQLLoader extends SQLLoader {
                                List<String> attributes,
                                List<String> lowMetrics,
                                List<String> highMetrics,
-                               String baseQuery) throws SQLException {
+                               String baseQuery) throws SQLException, IOException {
 
         while(true) {
             try {

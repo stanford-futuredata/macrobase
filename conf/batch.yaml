@@ -9,6 +9,9 @@ baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = 
 minSupport: 0.01
 minInlierRatio: 1
 
+useDiskCache: true
+diskCacheDirectory: cache
+
 useZScore: true
 zScore: 3.0
 

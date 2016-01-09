@@ -1,6 +1,6 @@
 package macrobase.ingest;
 
-public class CachingPostgresLoader extends CachingSQLLoader {
+public class MemoryCachingPostgresLoader extends MemoryCachingSQLLoader {
     @Override
     public String getDriverClass() {
         return "org.postgresql.Driver";

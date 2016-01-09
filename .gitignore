@@ -19,3 +19,8 @@ target/
 *.iml
 
 dependency-reduced-pom.xml
+
+*~
+cache/*
+sql_cache/*
+

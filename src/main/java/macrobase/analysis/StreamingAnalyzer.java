@@ -21,6 +21,7 @@ import macrobase.ingest.SQLLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
@@ -92,7 +93,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                               List<String> attributes,
                                               List<String> lowMetrics,
                                               List<String> highMetrics,
-                                              String baseQuery) throws SQLException {
+                                              String baseQuery) throws SQLException, IOException {
         DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();

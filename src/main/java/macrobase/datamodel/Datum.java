@@ -11,6 +11,8 @@ public class Datum implements HasMetrics {
     private List<Integer> attributes;
     private RealVector metrics;
 
+    public Datum() {}
+
     public Datum(List<Integer> attributes, RealVector metrics) {
         this.attributes = attributes;
         this.metrics = metrics;
