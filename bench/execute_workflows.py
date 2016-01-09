@@ -12,7 +12,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["power_drain"],
 
-    "baseQuery": "SELECT * FROM sensor_data;"
+    "baseQuery": "SELECT * FROM sensor_data_demo;"
   },
   {
     "isBatchJob": False,
@@ -29,7 +29,7 @@ all_config_parameters = \
     "modelRefreshPeriod": 10000,
     "warmupCount": 1000,
 
-    "baseQuery": "SELECT * FROM sensor_data;"
+    "baseQuery": "SELECT * FROM sensor_data_demo;"
   }
 ]
 
