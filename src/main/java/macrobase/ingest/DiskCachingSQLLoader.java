@@ -28,7 +28,7 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
 
     public DiskCachingSQLLoader(String fileDir) {
         File cacheDir = new File(fileDir);
-        if(!cacheDir.exists()) {
+        if (!cacheDir.exists()) {
             cacheDir.mkdirs();
         }
 
@@ -39,7 +39,10 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
         private DatumEncoder encoder;
         private List<Datum> data;
 
-        public CachedData() {};
+        public CachedData() {
+        }
+
+        ;
 
         public CachedData(DatumEncoder encoder, List<Datum> data) {
             this.encoder = encoder;
@@ -56,9 +59,9 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
     }
 
     private String convertFileName(List<String> attributes,
-                                    List<String> lowMetrics,
-                                    List<String> highMetrics,
-                                    String baseQuery) {
+                                   List<String> lowMetrics,
+                                   List<String> highMetrics,
+                                   String baseQuery) {
         return String.format("A-%s::L%s::H%s::BQ%s",
                              attributes.toString(),
                              lowMetrics.toString(),
@@ -67,17 +70,18 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
     }
 
     private void writeOutData(DatumEncoder encoder,
-                         List<String> attributes,
-                         List<String> lowMetrics,
-                         List<String> highMetrics,
-                         String baseQuery,
-                         List<Datum> data) throws IOException {
+                              List<String> attributes,
+                              List<String> lowMetrics,
+                              List<String> highMetrics,
+                              String baseQuery,
+                              List<Datum> data) throws IOException {
         CachedData d = new CachedData(encoder, data);
 
-        OutputStream outputStream = new SnappyOutputStream(new BufferedOutputStream(new FileOutputStream(fileDir+"/"+convertFileName(attributes,
-                                                                                                           lowMetrics,
-                                                                                                           highMetrics,
-                                                                                                           baseQuery))), 16384);
+        OutputStream outputStream = new SnappyOutputStream(
+                new BufferedOutputStream(new FileOutputStream(fileDir + "/" + convertFileName(attributes,
+                                                                                              lowMetrics,
+                                                                                              highMetrics,
+                                                                                              baseQuery))), 16384);
 
         Kryo kryo = new Kryo();
         Output output = new Output(outputStream);
@@ -86,15 +90,15 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
     }
 
     private List<Datum> readInData(DatumEncoder encoder,
-                              List<String> attributes,
-                              List<String> lowMetrics,
-                              List<String> highMetrics,
-                              String baseQuery) throws IOException {
-        File f = new File(fileDir+"/"+convertFileName(attributes,
-                                                                                                                            lowMetrics,
-                                                                                                                            highMetrics,
-                                                                                                                            baseQuery));
-        if(!f.exists()) {
+                                   List<String> attributes,
+                                   List<String> lowMetrics,
+                                   List<String> highMetrics,
+                                   String baseQuery) throws IOException {
+        File f = new File(fileDir + "/" + convertFileName(attributes,
+                                                          lowMetrics,
+                                                          highMetrics,
+                                                          baseQuery));
+        if (!f.exists()) {
             log.info("Data did not exist; going to read from SQL.");
             return null;
         }
@@ -118,9 +122,8 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
                                  String baseQuery) throws SQLException, IOException {
 
 
-
         List<Datum> data = readInData(encoder, attributes, lowMetrics, highMetrics, baseQuery);
-        if(data != null) {
+        if (data != null) {
             return data;
         }
 
