@@ -1,7 +1,11 @@
 taskName: testTasks
-targetAttributes: [sex]
+targetAttributes: [sex, marital_status, age]
 targetLowMetrics: []
 targetHighMetrics: [income]
+
+scopingAttributes: [sex, marital_status]
+minScopingSupport: 0.1
+
 
 dbUrl: postgres
 baseQuery: SELECT * FROM marketing;
@@ -10,7 +14,7 @@ minSupport: 0.01
 minInlierRatio: 1
 
 useZScore: true
-zScore: 3.0
+zScore: 10.0
 
 usePercentile: false
 targetPercentile: 0.01

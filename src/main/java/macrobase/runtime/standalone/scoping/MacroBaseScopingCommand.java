@@ -48,6 +48,8 @@ public class MacroBaseScopingCommand extends ConfiguredCommand<ScopingStandalone
         analyzer.forceUseZScore(configuration.useZScore());
 
         AnalysisResult result = analyzer.analyze(loader,
+        										 configuration.getScopingAttributes(),
+        										 configuration.getMinScopingSupport(),
                                                  configuration.getTargetAttributes(),
                                                  configuration.getTargetLowMetrics(),
                                                  configuration.getTargetHighMetrics(),
