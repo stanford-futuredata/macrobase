@@ -6,11 +6,14 @@ import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
+import macrobase.ingest.result.ColumnValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,16 +21,22 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ScopingAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(ScopingAnalyzer.class);
 
     public AnalysisResult analyze(SQLLoader loader,
+    							  List<String> scopingAttributes,
+    							  double minScopingSupport,
                                   List<String> attributes,
                                   List<String> lowMetrics,
                                   List<String> highMetrics,
                                   String baseQuery) throws SQLException {
-        DatumEncoder encoder = new DatumEncoder();
+    	exploreScoping(loader,scopingAttributes, minScopingSupport, attributes, lowMetrics, highMetrics , baseQuery);
+
+    	
+    	DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
 
@@ -78,6 +87,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         final int inlierSize = or.getInliers().size();
         final int outlierSize = or.getOutliers().size();
 
+        log.debug("Number of outliers " + outlierSize);
+        
         log.debug("Starting summarization...");
 
         sw.start();
@@ -93,5 +104,78 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         log.debug("...ended summarization (time: {}ms)!", summarizeTime);
 
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
+    }
+    
+    private void exploreScoping(SQLLoader loader,
+			  List<String> scopingAttributes,
+			  double minScopingSupport,
+              List<String> attributes,
+              List<String> lowMetrics,
+              List<String> highMetrics,
+              String baseQuery) throws SQLException{
+    	
+    	DatumEncoder encoder = new DatumEncoder();
+    	log.debug("Starting exploring scoping...");
+    	log.debug("Starting loading...");
+    	Stopwatch sw = Stopwatch.createUnstarted();
+        sw.start();
+        List<Datum> data = loader.getData(encoder,
+        								  scopingAttributes,
+                                          lowMetrics,
+                                          highMetrics,
+                                          baseQuery);
+        sw.stop();
+
+        long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        sw.reset();
+        log.debug("...ended loading (time: {}ms)!", loadTime);
+        
+        
+    	int metricsDimensions = data.get(0).getMetrics().getDimension();
+    	
+    	OutlierDetector detector;
+        if(metricsDimensions == 1) {
+            detector = new MAD();
+        } else {
+            detector = new MinCovDet(metricsDimensions);
+        }
+        
+        //option 1: iterate all possible scopings
+        
+        //option 2: use frequent itemset mining to only consider scopes whose support is above a thre
+        List<Set<Integer>> txns = new ArrayList<>();
+        for(int t = 0; t < data.size(); t++){
+        	Set<Integer> txn = new HashSet<Integer>();
+        	txn.addAll( data.get(t).getAttributes() );
+        	txns.add( txn );
+        }
+        FPGrowth fp = new FPGrowth();
+        List<ItemsetWithCount> itemsets = fp.getItemsets(txns, minScopingSupport);
+        for(ItemsetWithCount itemsetWithCount: itemsets){
+        	
+        	List<ColumnValue> columnValues = encoder.getColsFromAttrSet(itemsetWithCount.getItems());
+            System.err.println("Scoping: " + 
+             columnValues.stream().map(x -> x.getColumn() + "=" + x.getValue()).collect(Collectors.joining(","))
+            + " with count: " + itemsetWithCount.getCount()		
+            		);
+            
+            
+            
+        	List<Datum> scopedData = new ArrayList<Datum>();
+        	for(Datum datum: data){
+        		if(datum.getAttributes().containsAll(itemsetWithCount.getItems())){
+        			scopedData.add(datum);
+        		}
+        	}
+        	OutlierDetector.BatchResult or;
+            if(forceUsePercentile || (!forceUseZScore && TARGET_PERCENTILE > 0)) {
+                or = detector.classifyBatchByPercentile(scopedData, TARGET_PERCENTILE);
+            } else {
+                or = detector.classifyBatchByZScoreEquivalent(scopedData, ZSCORE);
+            }
+            
+            System.err.println("Outliers Count: " + or.getOutliers().size());
+        }
+        
     }
 }
