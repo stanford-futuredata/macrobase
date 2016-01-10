@@ -6,6 +6,16 @@ testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
 
+default_streaming_args = {
+  "inputReservoirSize": 10000,
+  "scoreReservoirSize": 10000,
+  "inlierItemSummarySize": 1000,
+  "outlierItemSummarySize": 10000,
+  "summaryRefreshPeriod": 100000,
+  "modelRefreshPeriod": 10000,
+  "warmupCount": 1000
+}
+
 def process_config_parameters(config_parameters):
   for config_parameter_type in config_parameters:
     if type(config_parameters[config_parameter_type]) == list:
@@ -37,7 +47,12 @@ def parse_results(results_file):
   return times, num_itemsets
 
 if __name__ == '__main__':
-  for config_parameters in all_config_parameters:
+  for config_parameters_raw in all_config_parameters:
+    config_parameters = {}
+    for key in default_streaming_args:
+      config_parameters[key] = default_streaming_args[key]
+    for key in config_parameters_raw:
+      config_parameters[key] = config_parameters_raw[key]
     sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"])
     os.system("mkdir -p %s" % sub_dir)
     process_config_parameters(config_parameters)
