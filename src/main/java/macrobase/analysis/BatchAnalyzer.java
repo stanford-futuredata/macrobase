@@ -48,7 +48,6 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         log.debug("...ended loading (time: {}ms)!", loadTime);
 
-        log.debug("Starting classification...");
         sw.start();
         OutlierDetector detector;
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
@@ -68,8 +67,6 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         long classifyTime = sw.elapsed(TimeUnit.MILLISECONDS);
         sw.reset();
-
-        log.debug("...ended classification (time: {}ms)!", classifyTime);
 
         // SUMMARY
 

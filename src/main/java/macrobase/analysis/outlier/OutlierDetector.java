@@ -4,6 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
 
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
@@ -12,6 +18,8 @@ import macrobase.datamodel.Datum;
  * Created by pbailis on 12/14/15.
  */
 public abstract class OutlierDetector {
+	private static final Logger log = LoggerFactory.getLogger(OutlierDetector.class);
+	
     public class BatchResult {
         private List<DatumWithScore> inliers;
         private List<DatumWithScore> outliers;
@@ -70,11 +78,24 @@ public abstract class OutlierDetector {
 
     public BatchResult classifyBatchByPercentile(List<Datum> data,
                                                  double percentile) {
+    	Stopwatch sw = Stopwatch.createUnstarted();
+    	log.debug("Starting training...");
+    	sw.start();
         train(data);
+        sw.stop();
+        long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        log.debug("...ended training (time: {}ms)!", trainTime);
+        
+        log.debug("Starting scoring...");
+        sw.reset();
+        sw.start();
         int splitPoint = (int)(data.size()-data.size()*percentile);
         List<DatumWithScore> scoredData = scoreBatch(data);
 
         scoredData.sort((a, b) -> a.getScore().compareTo(b.getScore()));
+        sw.stop();
+        long scoringTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        log.debug("...ended training (time: {}ms!", scoringTime);
 
         return new BatchResult(scoredData.subList(0, splitPoint),
                                scoredData.subList(splitPoint, scoredData.size()));
@@ -87,7 +108,17 @@ public abstract class OutlierDetector {
         List<DatumWithScore> inliers = new ArrayList<>();
         List<DatumWithScore> outliers = new ArrayList<>();
 
+        Stopwatch sw = Stopwatch.createUnstarted();
+    	log.debug("Starting training...");
+    	sw.start();
         train(data);
+        sw.stop();
+        long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        log.debug("...ended training (time: {}ms)!", trainTime);
+        
+        log.debug("Starting scoring...");
+        sw.reset();
+        sw.start();
 
         double thresh = cachedZScoreEquivalents.computeIfAbsent(zscore, k -> getZScoreEquivalent(zscore));
 
@@ -101,6 +132,9 @@ public abstract class OutlierDetector {
                 inliers.add(dws);
             }
         }
+        sw.stop();
+        long scoringTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        log.debug("...ended scoring (time: {}ms!", scoringTime);
         return new BatchResult(inliers, outliers);
     }
 }
