@@ -47,10 +47,6 @@ public abstract class SQLLoader {
         DataSourceFactory factory = new DataSourceFactory();
         factory.setDriverClass(getDriverClass());
         factory.setUrl(getJDBCUrlPrefix()+pgUrl);
-        
-        factory.setUser("postgres");
-        factory.setPassword("123456");
-        
         source = factory.build(MacroBase.metrics, "postgres");
         connection = source.getConnection();
     }
