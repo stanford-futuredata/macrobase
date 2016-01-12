@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import com.codahale.metrics.Counter;
 import macrobase.MacroBase;
 import macrobase.datamodel.Datum;
 import macrobase.datamodel.HasMetrics;
@@ -18,6 +19,8 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.SingularMatrixException;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.commons.math3.stat.correlation.Covariance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +35,8 @@ public class MinCovDet extends OutlierDetector  {
     private final Timer covarianceComputation = MacroBase.metrics.timer(name(MinCovDet.class, "covarianceComputation"));
     private final Timer determinantComputation = MacroBase.metrics.timer(name(MinCovDet.class, "determinantComputation"));
     private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
+    private final Counter singularCovariances = MacroBase.metrics.counter(name(MinCovDet.class, "singularCovariances"));
+
 
     class MetricsWithScore implements HasMetrics {
         private RealVector metrics;
@@ -67,6 +72,8 @@ public class MinCovDet extends OutlierDetector  {
     private double stoppingDelta = 1e-3;
 
     private RealMatrix cov;
+    private RealMatrix inverseCov;
+
     private RealVector mean;
 
     // efficient only when k << allData.size()
@@ -99,16 +106,15 @@ public class MinCovDet extends OutlierDetector  {
     }
 
     public static double getMahalanobis(RealVector mean,
-                                        RealMatrix cov,
+                                        RealMatrix inverseCov,
                                         RealVector vec) {
         // sqrt((vec-mean)^T S^-1 (vec-mean))
         RealMatrix vecT = new Array2DRowRealMatrix(vec.toArray());
         RealMatrix meanT = new Array2DRowRealMatrix(mean.toArray());
         RealMatrix vecSubtractMean = vecT.subtract(meanT);
 
-        RealMatrix covInverse = new LUDecomposition(cov).getSolver().getInverse();
         return Math.sqrt(vecSubtractMean.transpose()
-                                 .multiply(covInverse)
+                                 .multiply(inverseCov)
                                  .multiply(vecSubtractMean).getEntry(0, 0));
     }
 
@@ -149,7 +155,7 @@ public class MinCovDet extends OutlierDetector  {
         for(int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
             scores.add(new MetricsWithScore(d.getMetrics(),
-                                            getMahalanobis(mean, cov, d.getMetrics()),
+                                            getMahalanobis(mean, inverseCov, d.getMetrics()),
                                             i));
         }
 
@@ -161,6 +167,15 @@ public class MinCovDet extends OutlierDetector  {
     // helper method
     public static double getDeterminant(RealMatrix cov) {
         return (new LUDecomposition(cov)).getDeterminant();
+    }
+
+    private void updateInverseCovariance() {
+        try {
+            inverseCov = new LUDecomposition(cov).getSolver().getInverse();
+        } catch (SingularMatrixException e) {
+            singularCovariances.inc();
+            inverseCov = new SingularValueDecomposition(cov).getSolver().getInverse();
+        }
     }
 
     @Override
@@ -182,6 +197,7 @@ public class MinCovDet extends OutlierDetector  {
 
         context = covarianceComputation.time();
         cov = getCovariance(initialSubset);
+        updateInverseCovariance();
         context.stop();
 
         context = determinantComputation.time();
@@ -202,6 +218,7 @@ public class MinCovDet extends OutlierDetector  {
 
             context = covarianceComputation.time();
             cov = getCovariance(newH);
+            updateInverseCovariance();
             context.stop();
 
             context = determinantComputation.time();
@@ -219,13 +236,14 @@ public class MinCovDet extends OutlierDetector  {
             stepNo++;
         }
 
+
         log.trace("mean: {}", mean);
         log.trace("cov: {}", cov);
     }
 
     @Override
     public double score(Datum datum) {
-        return getMahalanobis(mean, cov, datum.getMetrics());
+        return getMahalanobis(mean, inverseCov, datum.getMetrics());
     }
 
     @Override
