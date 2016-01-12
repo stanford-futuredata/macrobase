@@ -26,7 +26,8 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["data_count_minutes", "data_count_accel_samples",
                           "data_count_netloc_samples", "data_count_gps_samples",
-                          "distance_mapmatched_km", "distance_gps_km"],
+                          "distance_mapmatched_km", "distance_gps_km",
+                          "battery_drain_rate_per_hour"],
 
     "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 100000;"
   },
