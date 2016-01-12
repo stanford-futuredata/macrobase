@@ -7,14 +7,27 @@ testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
 
-default_streaming_args = {
+default_args = {
+  "minInlierRatio": 1.0,
+  "minSupport": 0.001,
+
+  "usePercentile": "true",
+  "targetPercentile": 0.01,
+  "useZScore": "false",
+  "zScore": 3.0,
+
   "inputReservoirSize": 10000,
   "scoreReservoirSize": 10000,
   "inlierItemSummarySize": 1000,
   "outlierItemSummarySize": 10000,
   "summaryRefreshPeriod": 100000,
   "modelRefreshPeriod": 10000,
-  "warmupCount": 1000
+
+  "useRealTimePeriod": "false",
+  "useTupleCountPeriod": "true",
+
+  "warmupCount": 1000,
+  "decayRate": 0.01
 }
 
 def process_config_parameters(config_parameters):
@@ -50,8 +63,8 @@ def parse_results(results_file):
 if __name__ == '__main__':
   for config_parameters_raw in all_config_parameters:
     config_parameters = {}
-    for key in default_streaming_args:
-      config_parameters[key] = default_streaming_args[key]
+    for key in default_args:
+      config_parameters[key] = default_args[key]
     for key in config_parameters_raw:
       config_parameters[key] = config_parameters_raw[key]
     sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
