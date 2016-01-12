@@ -129,6 +129,9 @@ public abstract class SQLLoader {
 
         List<Datum> ret = Lists.newArrayList();
 
+        RealVector metricWiseMinVec = new ArrayRealVector(lowMetrics.size()+highMetrics.size());
+        RealVector metricWiseMaxVec = new ArrayRealVector(lowMetrics.size()+highMetrics.size());
+
         while(rs.next()) {
             List<Integer> attrList = new ArrayList<>(attributes.size());
 
@@ -141,15 +144,55 @@ public abstract class SQLLoader {
             int vecPos = 0;
 
             for(; i <= attributes.size()+lowMetrics.size(); ++i) {
-                metricVec.setEntry(vecPos++, Math.pow(Math.max(rs.getDouble(i), 0.1), -1));
+                double val = Math.pow(Math.max(rs.getDouble(i), 0.1), -1);
+                metricVec.setEntry(vecPos, val);
+
+                if(metricWiseMinVec.getEntry(vecPos) > val) {
+                    metricWiseMinVec.setEntry(vecPos, val);
+                }
+
+                if(metricWiseMaxVec.getEntry(vecPos) < val) {
+                    metricWiseMaxVec.setEntry(vecPos, val);
+                }
+
+                vecPos += 1;
             }
 
             for(; i <= attributes.size()+lowMetrics.size()+highMetrics.size(); ++i) {
-                metricVec.setEntry(vecPos++, rs.getDouble(i));
+                double val = rs.getDouble(i);
+                metricVec.setEntry(vecPos, val);
+
+                if(metricWiseMinVec.getEntry(vecPos) > val) {
+                    metricWiseMinVec.setEntry(vecPos, val);
+                }
+
+                if(metricWiseMaxVec.getEntry(vecPos) < val) {
+                    metricWiseMaxVec.setEntry(vecPos, val);
+                }
+
+                vecPos += 1;
             }
 
-
             ret.add(new Datum(attrList, metricVec));
+        }
+
+        // normalize data
+        for(Datum d : ret) {
+            // ebeDivide returns a copy; avoid a copy at the expense of ugly code
+            RealVector metrics = d.getMetrics();
+            for(int dim = 0; dim < metrics.getDimension(); ++dim) {
+                double dimMin = metricWiseMinVec.getEntry(dim);
+                double dimMax = metricWiseMaxVec.getEntry(dim);
+
+                if(dimMax - dimMin == 0) {
+                    log.warn("No difference between min and max in dimension {}!", dim);
+                    metrics.setEntry(dim, 0);
+                    continue;
+                }
+
+                double cur = metrics.getEntry(dim);
+                metrics.setEntry(dim, (cur - dimMin)/(dimMax - dimMin));
+            }
         }
 
         return ret;
