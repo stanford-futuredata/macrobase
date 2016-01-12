@@ -161,6 +161,10 @@ public class StreamingFPGrowth {
 
                 if(children == null) {
                     children = Lists.newArrayList(otherChildren);
+                    for(FPTreeNode child : otherChildren) {
+                        child.parent = this;
+                    }
+
                     return;
                 }
 
