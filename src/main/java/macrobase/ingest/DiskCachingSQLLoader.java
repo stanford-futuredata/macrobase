@@ -62,11 +62,12 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
                                    List<String> lowMetrics,
                                    List<String> highMetrics,
                                    String baseQuery) {
-        return String.format("A-%s::L%s::H%s::BQ%s",
+        int hashCode = String.format("A-%s::L%s::H%s::BQ%s",
                              attributes.toString(),
                              lowMetrics.toString(),
                              highMetrics.toString(),
-                             baseQuery).replace(" ", "_");
+                             baseQuery).replace(" ", "_").hashCode();
+         return Integer.toString(hashCode);
     }
 
     private void writeOutData(DatumEncoder encoder,
