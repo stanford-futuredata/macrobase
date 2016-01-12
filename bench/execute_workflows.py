@@ -1,6 +1,7 @@
 import os
 
 from config_parameters import all_config_parameters
+from time import strftime
 
 testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
@@ -53,7 +54,7 @@ if __name__ == '__main__':
       config_parameters[key] = default_streaming_args[key]
     for key in config_parameters_raw:
       config_parameters[key] = config_parameters_raw[key]
-    sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"])
+    sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
     os.system("mkdir -p %s" % sub_dir)
     process_config_parameters(config_parameters)
     conf_file = "batch.conf" if config_parameters["isBatchJob"] else "streaming.conf"
