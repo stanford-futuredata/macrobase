@@ -14,6 +14,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.ColumnValue;
+import macrobase.ingest.result.Schema.SchemaColumn;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,21 @@ public class ScopingAnalyzer extends BaseAnalyzer {
                                   List<String> lowMetrics,
                                   List<String> highMetrics,
                                   String baseQuery) throws SQLException {
-    	exploreScoping(loader,scopingAttributes, minScopingSupport, attributes, lowMetrics, highMetrics , baseQuery);
+    	
+    	//use all attributes to scope
+    	List<String> scopingAttributesFinal = scopingAttributes;
+    	if(scopingAttributes.size() == 0){
+    		scopingAttributesFinal = new ArrayList<String>();
+    		List<SchemaColumn> schemaColumns = loader.getSchema(baseQuery).getColumns();
+    		for(SchemaColumn sc: schemaColumns){
+    			String scAttri = sc.getName();
+    			if(!lowMetrics.contains(scAttri) && !highMetrics.contains(scAttri)){
+    				scopingAttributesFinal.add(scAttri);
+    			}
+    		}
+    	}
+    	
+    	exploreScoping(loader,scopingAttributesFinal, minScopingSupport, attributes, lowMetrics, highMetrics , baseQuery);
 
     	
     	DatumEncoder encoder = new DatumEncoder();
@@ -154,14 +169,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         for(ItemsetWithCount itemsetWithCount: itemsets){
         	
         	List<ColumnValue> columnValues = encoder.getColsFromAttrSet(itemsetWithCount.getItems());
-            System.err.println("Scoping: " + 
-             columnValues.stream().map(x -> x.getColumn() + "=" + x.getValue()).collect(Collectors.joining(","))
-            + " with count: " + itemsetWithCount.getCount()		
-            		);
-            
-            
-            
-        	List<Datum> scopedData = new ArrayList<Datum>();
+            List<Datum> scopedData = new ArrayList<Datum>();
         	for(Datum datum: data){
         		if(datum.getAttributes().containsAll(itemsetWithCount.getItems())){
         			scopedData.add(datum);
@@ -173,8 +181,14 @@ public class ScopingAnalyzer extends BaseAnalyzer {
             } else {
                 or = detector.classifyBatchByZScoreEquivalent(scopedData, ZSCORE);
             }
+            if(or.getOutliers().size() != 0){
+            	System.err.println("Scoping: " + 
+                        columnValues.stream().map(x -> x.getColumn() + "=" + x.getValue()).collect(Collectors.joining(","))
+                       + " with count: " + itemsetWithCount.getCount()		
+                       		);
+                System.err.println("Outliers Count: " + or.getOutliers().size());
+            }
             
-            System.err.println("Outliers Count: " + or.getOutliers().size());
         }
         
     }

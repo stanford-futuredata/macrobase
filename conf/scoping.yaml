@@ -3,8 +3,8 @@ targetAttributes: [sex, marital_status, age]
 targetLowMetrics: []
 targetHighMetrics: [income]
 
-scopingAttributes: [sex, marital_status]
-minScopingSupport: 0.1
+scopingAttributes: []
+minScopingSupport: 0.2
 
 
 dbUrl: postgres
