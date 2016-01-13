@@ -33,6 +33,18 @@ default_args = {
   "stoppingDeltaMCD": 0.001
 }
 
+sweeping_parameters = {
+  "alphaMCD": [1.0, .95, .75, .5, .25, .1, .05, .01],
+  "stoppingDeltaMCD": [1.0, 0.1, 0.01, 0.001, 0.0001],
+  "inputReservoirSize": [100, 1000, 10000, 100000],
+  "summaryRefreshPeriod": [10, 100, 1000, 10000, 100000],
+  "modelRefreshPeriod": [10, 100, 1000, 10000, 100000],
+
+  "minSupport": [1.0, 0.1, 0.01, 0.001],
+  "minInlierRatio": [1.0, 0.1, 0.01, 0.001],
+  "targetPercentile": [0.1, 0.01, 0.001, 0.0001]
+}
+
 def process_config_parameters(config_parameters):
   for config_parameter_type in config_parameters:
     if type(config_parameters[config_parameter_type]) == list:
@@ -63,13 +75,20 @@ def parse_results(results_file):
           num_itemsets = int(line)
   return times, num_itemsets
 
-if __name__ == '__main__':
+def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
+  if sweeping_parameter_name is not None:
+    print "Running all workloads with", sweeping_parameter_name, "=", sweeping_parameter_value
+  else:
+    print "Running all workloads with default parameters"
+  print
   for config_parameters_raw in all_config_parameters:
     config_parameters = {}
     for key in default_args:
       config_parameters[key] = default_args[key]
     for key in config_parameters_raw:
       config_parameters[key] = config_parameters_raw[key]
+    if sweeping_parameter_name is not None:
+      config_parameters[sweeping_parameter_name] = sweeping_parameter_value
     sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
     os.system("mkdir -p %s" % sub_dir)
     process_config_parameters(config_parameters)
@@ -82,3 +101,10 @@ if __name__ == '__main__':
     times, num_itemsets = parse_results(results_file)
     print config_parameters["taskName"], "-->"
     print "Times:", times, ", Number of itemsets:", num_itemsets
+  print
+
+if __name__ == '__main__':
+  run_all_workloads()
+  for sweeping_parameter_name in sweeping_parameters:
+    for sweeping_parameter_value in sweeping_parameters[sweeping_parameter_name]:
+      run_all_workloads(sweeping_parameter_name, sweeping_parameter_value)
