@@ -104,6 +104,11 @@ public class MinCovDet extends OutlierDetector  {
         this(dataDim);
         this.alpha = alpha;
     }
+    
+    public MinCovDet(int dataDim, double alpha, double stoppingDelta) {
+    	this(dataDim, alpha);
+    	this.stoppingDelta = stoppingDelta;
+    }
 
     public static double getMahalanobis(RealVector mean,
                                         RealMatrix inverseCov,

@@ -51,6 +51,8 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
 
         analyzer.forceUsePercentile(configuration.usePercentile());
         analyzer.forceUseZScore(configuration.useZScore());
+        analyzer.setAlphaMCD(configuration.getAlphaMCD());
+        analyzer.setStoppingDeltaMCD(configuration.getStoppingDeltaMCD());
 
         AnalysisResult result = analyzer.analyze(loader,
                                                  configuration.getTargetAttributes(),

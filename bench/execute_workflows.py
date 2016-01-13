@@ -27,7 +27,10 @@ default_args = {
   "useTupleCountPeriod": "true",
 
   "warmupCount": 1000,
-  "decayRate": 0.01
+  "decayRate": 0.01,
+
+  "alphaMCD": 0.5,
+  "stoppingDeltaMCD": 0.001
 }
 
 def process_config_parameters(config_parameters):

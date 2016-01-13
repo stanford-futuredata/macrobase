@@ -31,8 +31,10 @@ useRealTimePeriod: false
 useTupleCountPeriod: true
 
 warmupCount: 1000
-
 decayRate: .01
+
+alphaMCD: 0.5
+stoppingDeltaMCD: 0.001
 
 logging:
   level: INFO

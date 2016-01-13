@@ -8,6 +8,9 @@ abstract public class BaseAnalyzer {
 
     protected boolean forceUsePercentile = true;
     protected boolean forceUseZScore = false;
+    
+    protected double alphaMCD = 0.5;
+    protected double stoppingDeltaMCD = 1e-3;
 
     public void forceUsePercentile(boolean force) {
         forceUsePercentile = force;
@@ -31,5 +34,13 @@ abstract public class BaseAnalyzer {
 
     public void setMinInlierRatio(double minInlierRatio) {
         MIN_INLIER_RATIO = minInlierRatio;
+    }
+    
+    public void setAlphaMCD(double alphaMCD) {
+    	this.alphaMCD = alphaMCD;
+    }
+    
+    public void setStoppingDeltaMCD(double stoppingDeltaMCD) {
+    	this.stoppingDeltaMCD = stoppingDeltaMCD;
     }
 }

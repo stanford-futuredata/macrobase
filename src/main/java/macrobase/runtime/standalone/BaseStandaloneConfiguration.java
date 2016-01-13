@@ -47,6 +47,12 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     @NotEmpty
     private String baseQuery;
+    
+    @NotNull
+    private Double alphaMCD;
+    
+    @NotNull
+    private Double stoppingDeltaMCD;
 
     @JsonProperty
     public String getTaskName() {
@@ -107,7 +113,16 @@ public class BaseStandaloneConfiguration extends Configuration {
     public boolean useZScore() {
         return useZScore;
     }
+    
+    @JsonProperty
+    public double getAlphaMCD() {
+    	return alphaMCD;
+    }
 
+    @JsonProperty
+    public double getStoppingDeltaMCD() {
+    	return stoppingDeltaMCD;
+    }
 
     @JsonProperty
     public Boolean useDiskCache() { return useDiskCache; }

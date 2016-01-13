@@ -122,7 +122,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         if(metricsDimensions == 1) {
             detector = new MAD();
         } else {
-            detector = new MinCovDet(metricsDimensions);
+            detector = new MinCovDet(metricsDimensions, alphaMCD, stoppingDeltaMCD);
         }
 
         ExponentiallyBiasedAChao<Datum> inputReservoir =
