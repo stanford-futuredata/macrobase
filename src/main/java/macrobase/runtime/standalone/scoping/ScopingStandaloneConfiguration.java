@@ -12,7 +12,7 @@ import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 
 public class ScopingStandaloneConfiguration extends BaseStandaloneConfiguration {
 
-	 @NotEmpty
+	
 	 private List<String> scopingAttributes;
 	 
 	 @JsonProperty
