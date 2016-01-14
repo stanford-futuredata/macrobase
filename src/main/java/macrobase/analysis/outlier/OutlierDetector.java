@@ -1,11 +1,13 @@
 package macrobase.analysis.outlier;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,22 +51,16 @@ public abstract class OutlierDetector {
         return score >= thresh;
     }
 
-    private Map<Double, Double> cachedPercentileEquivalents = new HashMap<>();
+    private List<Double> recentScoresSorted;
 
-    public void clearScorePercentileCache() {
-        cachedPercentileEquivalents.clear();
+    public void updateRecentScoreList(List<Double> recentScores) {
+        recentScoresSorted = Lists.newArrayList(recentScores);
+        Collections.sort(recentScoresSorted);
     }
 
     public boolean isPercentileOutlier(double score,
-                                       double targetPercentile,
-                                       List<Double> recentScores) {
-        Double thresh = cachedPercentileEquivalents.get(targetPercentile);
-        if(thresh == null) {
-            recentScores.sort((a, b) -> a.compareTo(b));
-            thresh = recentScores.get((int)(targetPercentile*recentScores.size()));
-            cachedPercentileEquivalents.put(targetPercentile, thresh);
-        }
-
+                                       double targetPercentile) {
+        double thresh = recentScoresSorted.get((int)(targetPercentile*recentScoresSorted.size()));
         return score >= thresh;
     }
 

@@ -181,6 +181,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
             if(tupleNo == warmupCount) {
                 detector.train(inputReservoir.getReservoir());
+                for(Datum id : inputReservoir.getReservoir()) {
+                    scoreReservoir.insert(detector.score(id));
+                }
+                detector.updateRecentScoreList(scoreReservoir.getReservoir());
             } else if(tupleNo >= warmupCount) {
                 // todo: calling curtime so frequently might be bad...
                 long now = System.currentTimeMillis();
@@ -205,8 +209,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
                 if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
                    forceUsePercentile && detector.isPercentileOutlier(score,
-                                                                      TARGET_PERCENTILE,
-                                                                      scoreReservoir.getReservoir())) {
+                                                                      TARGET_PERCENTILE)) {
                     streamingSummarizer.markOutlier(d);
                 } else {
                     streamingSummarizer.markInlier(d);
