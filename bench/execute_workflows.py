@@ -12,7 +12,7 @@ default_args = {
   "minSupport": 0.001,
 
   "usePercentile": "true",
-  "targetPercentile": 0.01,
+  "targetPercentile": 0.99,
   "useZScore": "false",
   "zScore": 3.0,
 

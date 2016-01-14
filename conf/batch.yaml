@@ -16,7 +16,7 @@ useZScore: false
 zScore: 3.0
 
 usePercentile: true
-targetPercentile: 0.01
+targetPercentile: 0.99
 
 alphaMCD: 0.5
 stoppingDeltaMCD: 0.001
