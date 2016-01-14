@@ -58,11 +58,11 @@ public abstract class OutlierDetector {
     public boolean isPercentileOutlier(double score,
                                        double targetPercentile,
                                        List<Double> recentScores) {
-        Double thresh = cachedPercentileEquivalents.get(score);
+        Double thresh = cachedPercentileEquivalents.get(targetPercentile);
         if(thresh == null) {
             recentScores.sort((a, b) -> a.compareTo(b));
             thresh = recentScores.get((int)(targetPercentile*recentScores.size()));
-            cachedPercentileEquivalents.put(score, thresh);
+            cachedPercentileEquivalents.put(targetPercentile, thresh);
         }
 
         return score >= thresh;
