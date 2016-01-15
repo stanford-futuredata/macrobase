@@ -143,16 +143,16 @@ abstract public class MemoryCachingSQLLoader extends SQLLoader {
                      checkMatchingBaseQuery(cached.getBaseQuery(), baseQuery)) {
                 log.debug("Returning (subset of metrics) cached data!");
 
-
                 // mapping from old metric to new metric
                 HashMap<Integer, Integer> oldToNewAttributeDimension = new HashMap<>();
-                int newAttributeIndex = 0;
+                int newAttributeIndex = 1;
                 for(String attribute : attributes) {
-                    int oldIndex = cached.getAttributes().indexOf(attribute);
+                    int oldIndex = cached.getAttributes().indexOf(attribute)+1;
                     oldToNewAttributeDimension.put(oldIndex, newAttributeIndex);
                     newAttributeIndex++;
                 }
 
+                encoder.copy(cached.getEncoder());
                 encoder.updateAttributeDimensions(oldToNewAttributeDimension);
 
                 // mapping from old metric to new metric

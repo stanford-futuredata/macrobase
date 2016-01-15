@@ -1,10 +1,8 @@
 package macrobase.ingest;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
-
 import macrobase.ingest.result.ColumnValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class DatumEncoder {
+    private static final Logger log = LoggerFactory.getLogger(DatumEncoder.class);
+
     private HashMap<Integer, String> attributeDimensionNameMap = new HashMap<>();
     private HashMap<Integer, Map<String, Integer>> integerEncoding = new HashMap<>();
     private HashMap<Integer, Integer> integerToColumn = new HashMap<>();
@@ -27,27 +27,24 @@ public class DatumEncoder {
         for(Map.Entry<Integer, String> entry : attributeDimensionNameMap.entrySet()) {
             int dim = entry.getKey();
             if(oldToNewRemapping.containsKey(dim)) {
-                dim = oldToNewRemapping.get(dim);
+                newAttributeDimensionNameMap.put(oldToNewRemapping.get(dim), entry.getValue());
             }
-            newAttributeDimensionNameMap.put(dim, entry.getValue());
         }
 
         for(Map.Entry<Integer, Map<String, Integer>> entry :
                 integerEncoding.entrySet()) {
             int dim = entry.getKey();
             if(oldToNewRemapping.containsKey(dim)) {
-                dim = oldToNewRemapping.get(dim);
+                newIntegerEncoding.put(oldToNewRemapping.get(dim), entry.getValue());
             }
-            newIntegerEncoding.put(dim, entry.getValue());
         }
 
         for(Map.Entry<Integer, Integer> entry :
                 integerToColumn.entrySet()) {
-            int dim = entry.getKey();
+            int dim = entry.getValue();
             if(oldToNewRemapping.containsKey(dim)) {
-                dim = oldToNewRemapping.get(dim);
+                newIntegerToColumn.put(entry.getKey(), oldToNewRemapping.get(entry.getValue()));
             }
-            newIntegerToColumn.put(dim, entry.getValue());
         }
 
         attributeDimensionNameMap = newAttributeDimensionNameMap;
