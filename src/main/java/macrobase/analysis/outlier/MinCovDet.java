@@ -150,10 +150,7 @@ public class MinCovDet extends OutlierDetector  {
         return (new Covariance(ret)).getCovarianceMatrix();
     }
 
-    private List<MetricsWithScore> findKClosest(int k,
-                                          List<? extends HasMetrics> data,
-                                          RealVector mean,
-                                          RealMatrix cov) {
+    private List<MetricsWithScore> findKClosest(int k, List<? extends HasMetrics> data) {
         // todo: change back to guava priority queue
         List<MetricsWithScore> scores = new ArrayList<>();
 
@@ -162,6 +159,10 @@ public class MinCovDet extends OutlierDetector  {
             scores.add(new MetricsWithScore(d.getMetrics(),
                                             getMahalanobis(mean, inverseCov, d.getMetrics()),
                                             i));
+        }
+
+        if(scores.size() < k) {
+            return scores;
         }
 
         scores.sort((a, b) -> a.getScore().compareTo(b.getScore()));
@@ -214,7 +215,7 @@ public class MinCovDet extends OutlierDetector  {
         // now take C-steps
         while(true) {
             context = findKClosest.time();
-            List<? extends HasMetrics> newH = findKClosest(h, data, mean, cov);
+            List<? extends HasMetrics> newH = findKClosest(h, data);
             context.stop();
 
             context = meanComputation.time();
