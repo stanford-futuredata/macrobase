@@ -4,7 +4,7 @@ package macrobase.summary.count;
  * Created by pbailis on 12/24/15.
  */
 
-import macrobase.analysis.summary.count.SpaceSaving;
+import macrobase.analysis.summary.count.SpaceSavingList;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -13,7 +13,7 @@ public class SpaceSavingTest {
 
     @Test
     public void simpleTest() {
-        SpaceSaving ss = new SpaceSaving(10);
+        SpaceSavingList ss = new SpaceSavingList(10);
         ss.observe(1);
         ss.observe(1);
         ss.observe(1);
@@ -33,7 +33,7 @@ public class SpaceSavingTest {
 
     @Test
     public void overflowTest() {
-        SpaceSaving ss = new SpaceSaving(10);
+        SpaceSavingList ss = new SpaceSavingList(10);
 
         for(int i = 0; i < 10; ++i) {
             ss.observe(i);

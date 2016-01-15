@@ -7,8 +7,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SpaceSaving extends ApproximateCount {
-    private static final Logger log = LoggerFactory.getLogger(SpaceSaving.class);
+public class SpaceSavingList extends ApproximateCount {
+    private static final Logger log = LoggerFactory.getLogger(SpaceSavingList.class);
 
     Map<Integer, CounterToken> digest = new HashMap<>();
     CounterGroup groupHead = null;
@@ -414,7 +414,7 @@ public class SpaceSaving extends ApproximateCount {
         log.debug("****");
     }
 
-    public SpaceSaving(int maxSize) {
+    public SpaceSavingList(int maxSize) {
         this.maxSize = maxSize;
     }
 }
