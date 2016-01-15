@@ -46,9 +46,17 @@ def parse_output_file(filename):
         parsed_results[parameter_type][workload_name][parameter_value] = (times, itemsets)
   return parsed_results
 
+def get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type):
+  if timing_type == 'Total':
+    tot_time = 0.0
+    for timing_type_prime in timing_types:
+      tot_time += parsed_results[parameter_type][workload_name][parameter_value][0][timing_type_prime.lower()]
+    return tot_time
+  return parsed_results[parameter_type][workload_name][parameter_value][0][timing_type.lower()]
+
 def plot_graphs(parsed_results):
   for parameter_type in parsed_results:
-    for timing_type in timing_types:
+    for timing_type in timing_types + ['Total']:
       plt.cla()
       plt.xscale('log')
       handles = list()
@@ -59,16 +67,16 @@ def plot_graphs(parsed_results):
         values = list()
         for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
           try:
-            values.append(parsed_results[parameter_type][workload_name][parameter_value][0][timing_type.lower()])
+            values.append(get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type))
             keys.append(parameter_value)
           except:
             continue
         handle, = plt.plot(keys, values, label=workload_name)
         handles.append(handle)
-      lgd = plt.legend(handles=handles, loc=(0.18, -0.65))
+      lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
       plt.xlabel(parameter_type)
       plt.ylabel(timing_type + " time (in milliseconds)")
-      plt.savefig(parameter_type + "_" + timing_type + '.png', bbox_extra_artists=(lgd,), bbox_inches='tight')
+      plt.savefig(parameter_type + "_" + timing_type + '.pdf', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
 if __name__ == '__main__':
   parsed_results = parse_output_file("parameter_sweep.out")
