@@ -1,14 +1,13 @@
 package macrobase.summary.itemset;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import macrobase.analysis.summary.itemset.Apriori;
 import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.StreamingFPGrowth;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,15 +142,14 @@ public class StreamingFPGrowthTest {
         assertEquals(apItemsets.size(), itemsets.size());
     }
 
-    @Ignore
     @Test
     public void stress() {
         StreamingFPGrowth fp = new StreamingFPGrowth(.001);
-        Random random = new Random();
+        Random random = new Random(0);
         int cnt = 0;
 
         Map<Integer, Double> frequentItems = new HashMap<>();
-        for(cnt = 0; cnt <= 100000000; ++cnt) {
+        for(cnt = 0; cnt <= 1000; ++cnt) {
             int itemSetSize = random.nextInt(100);
             Set<Integer> itemSet = new HashSet<>(itemSetSize);
             for(int i = 0; i < itemSetSize; ++i) {
@@ -161,7 +159,7 @@ public class StreamingFPGrowthTest {
 
             fp.insertTransactionStreamingFalseNegative(itemSet);
 
-            if(cnt % 1000 == 0) {
+            if(cnt % 20 == 0) {
                 int toDecay = random.nextInt(frequentItems.size());
                 for(int i = 0; i < toDecay; ++i) {
                     frequentItems.remove(frequentItems.keySet().toArray()[random.nextInt(frequentItems.size())]);
