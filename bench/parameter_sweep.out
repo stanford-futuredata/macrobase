@@ -1,0 +1,1716 @@
+Running all workloads with default parameters
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 489, 'training': 287, 'loading': 347} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 496, 'training': 276, 'loading': 334} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 48, 'summarization': 595, 'training': 762, 'loading': 388} , Number of itemsets: 1591
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 285, 'training': 173, 'loading': 335} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 563, 'training': 487, 'loading': 380} , Number of itemsets: 78
+milanTelecomComplex -->
+Times: {'scoring': 43, 'summarization': 410, 'training': 680, 'loading': 351} , Number of itemsets: 43
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10648, 'training': 178, 'loading': 464} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 44225, 'training': 188, 'loading': 568} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4285, 'training': 266, 'loading': 470} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14925, 'training': 272, 'loading': 527} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 5835, 'training': 776, 'loading': 378} , Number of itemsets: 1517
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6724, 'training': 136, 'loading': 377} , Number of itemsets: 374
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 391, 'summarization': 5525, 'training': 2620, 'loading': 391} , Number of itemsets: 225
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 170, 'training': 58, 'loading': 355} , Number of itemsets: 24
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 253, 'summarization': 5334, 'training': 608, 'loading': 376} , Number of itemsets: 381
+milanTelecomComplexStreaming -->
+Times: {'scoring': 318, 'summarization': 7984, 'training': 657, 'loading': 366} , Number of itemsets: 634
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 259, 'training': 88, 'loading': 504} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 411, 'training': 108, 'loading': 594} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5251, 'training': 133, 'loading': 507} , Number of itemsets: 144
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5017, 'training': 130, 'loading': 534} , Number of itemsets: 85
+
+Running all workloads with stoppingDeltaMCD = 1.0
+
+testTasks -->
+Times: {'scoring': 6, 'summarization': 483, 'training': 280, 'loading': 364} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 494, 'training': 271, 'loading': 364} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 609, 'training': 787, 'loading': 407} , Number of itemsets: 1492
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 292, 'training': 158, 'loading': 333} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 34, 'summarization': 399, 'training': 773, 'loading': 398} , Number of itemsets: 61
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 392, 'training': 661, 'loading': 371} , Number of itemsets: 44
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11327, 'training': 189, 'loading': 494} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 58, 'summarization': 43861, 'training': 187, 'loading': 563} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4282, 'training': 265, 'loading': 495} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 5, 'summarization': 14873, 'training': 264, 'loading': 521} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7300, 'training': 354, 'loading': 387} , Number of itemsets: 682
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5515, 'training': 126, 'loading': 369} , Number of itemsets: 0
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 448, 'summarization': 6664, 'training': 3426, 'loading': 413} , Number of itemsets: 244
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 198, 'training': 58, 'loading': 346} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 201, 'summarization': 5538, 'training': 517, 'loading': 406} , Number of itemsets: 434
+milanTelecomComplexStreaming -->
+Times: {'scoring': 363, 'summarization': 8368, 'training': 657, 'loading': 383} , Number of itemsets: 434
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 210, 'training': 137, 'loading': 504} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 412, 'training': 109, 'loading': 593} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4655, 'training': 137, 'loading': 492} , Number of itemsets: 138
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5282, 'training': 133, 'loading': 556} , Number of itemsets: 71
+
+Running all workloads with stoppingDeltaMCD = 0.1
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 479, 'training': 287, 'loading': 358} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 508, 'training': 274, 'loading': 355} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 49, 'summarization': 649, 'training': 762, 'loading': 392} , Number of itemsets: 1841
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 304, 'training': 148, 'loading': 341} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 29, 'summarization': 454, 'training': 502, 'loading': 381} , Number of itemsets: 73
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 405, 'training': 653, 'loading': 353} , Number of itemsets: 52
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11285, 'training': 188, 'loading': 488} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 63, 'summarization': 44301, 'training': 184, 'loading': 552} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 4342, 'training': 286, 'loading': 498} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 8, 'summarization': 14806, 'training': 289, 'loading': 556} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6241, 'training': 592, 'loading': 363} , Number of itemsets: 1255
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6426, 'training': 130, 'loading': 372} , Number of itemsets: 383
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 365, 'summarization': 7165, 'training': 1809, 'loading': 400} , Number of itemsets: 180
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 185, 'training': 59, 'loading': 355} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 215, 'summarization': 5461, 'training': 490, 'loading': 395} , Number of itemsets: 427
+milanTelecomComplexStreaming -->
+Times: {'scoring': 367, 'summarization': 8466, 'training': 641, 'loading': 406} , Number of itemsets: 453
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 271, 'training': 99, 'loading': 491} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 455, 'training': 111, 'loading': 588} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5030, 'training': 132, 'loading': 534} , Number of itemsets: 128
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5187, 'training': 131, 'loading': 553} , Number of itemsets: 77
+
+Running all workloads with stoppingDeltaMCD = 0.01
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 488, 'training': 290, 'loading': 355} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 6, 'summarization': 500, 'training': 265, 'loading': 352} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 582, 'training': 789, 'loading': 408} , Number of itemsets: 1433
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 288, 'training': 152, 'loading': 344} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 547, 'training': 475, 'loading': 366} , Number of itemsets: 120
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 492, 'training': 662, 'loading': 385} , Number of itemsets: 71
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11549, 'training': 199, 'loading': 494} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 61, 'summarization': 43551, 'training': 189, 'loading': 578} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 4215, 'training': 287, 'loading': 467} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14506, 'training': 269, 'loading': 471} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6728, 'training': 536, 'loading': 392} , Number of itemsets: 783
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6504, 'training': 129, 'loading': 373} , Number of itemsets: 638
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 408, 'summarization': 7219, 'training': 1937, 'loading': 400} , Number of itemsets: 334
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 205, 'training': 61, 'loading': 355} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 230, 'summarization': 5334, 'training': 652, 'loading': 399} , Number of itemsets: 433
+milanTelecomComplexStreaming -->
+Times: {'scoring': 348, 'summarization': 8041, 'training': 579, 'loading': 395} , Number of itemsets: 269
+campaignExpendituresSimpleStreaming -->
+Times: {'summarization': 289, 'training': 87, 'loading': 491} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 413, 'training': 115, 'loading': 588} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4601, 'training': 142, 'loading': 500} , Number of itemsets: 139
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4764, 'training': 130, 'loading': 537} , Number of itemsets: 91
+
+Running all workloads with stoppingDeltaMCD = 0.001
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 502, 'training': 291, 'loading': 351} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 9, 'summarization': 505, 'training': 284, 'loading': 362} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 627, 'training': 781, 'loading': 391} , Number of itemsets: 1396
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 292, 'training': 164, 'loading': 332} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 32, 'summarization': 481, 'training': 479, 'loading': 376} , Number of itemsets: 70
+milanTelecomComplex -->
+Times: {'scoring': 43, 'summarization': 487, 'training': 639, 'loading': 367} , Number of itemsets: 103
+campaignExpendituresSimple -->
+Times: {'scoring': 3, 'summarization': 11353, 'training': 182, 'loading': 472} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 58, 'summarization': 43775, 'training': 195, 'loading': 667} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4219, 'training': 266, 'loading': 503} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14506, 'training': 263, 'loading': 560} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6110, 'training': 411, 'loading': 386} , Number of itemsets: 529
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5848, 'training': 125, 'loading': 373} , Number of itemsets: 256
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 370, 'summarization': 7004, 'training': 4851, 'loading': 393} , Number of itemsets: 156
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 186, 'training': 64, 'loading': 363} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 194, 'summarization': 5515, 'training': 612, 'loading': 391} , Number of itemsets: 607
+milanTelecomComplexStreaming -->
+Times: {'scoring': 348, 'summarization': 8219, 'training': 591, 'loading': 372} , Number of itemsets: 190
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 256, 'training': 82, 'loading': 510} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 416, 'training': 110, 'loading': 587} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5151, 'training': 139, 'loading': 490} , Number of itemsets: 136
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4896, 'training': 142, 'loading': 541} , Number of itemsets: 74
+
+Running all workloads with stoppingDeltaMCD = 0.0001
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 477, 'training': 279, 'loading': 377} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 6, 'summarization': 502, 'training': 263, 'loading': 344} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 636, 'training': 785, 'loading': 392} , Number of itemsets: 2059
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 292, 'training': 150, 'loading': 335} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 508, 'training': 479, 'loading': 369} , Number of itemsets: 60
+milanTelecomComplex -->
+Times: {'scoring': 40, 'summarization': 388, 'training': 659, 'loading': 379} , Number of itemsets: 64
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11287, 'training': 205, 'loading': 487} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 58, 'summarization': 43430, 'training': 195, 'loading': 610} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4210, 'training': 269, 'loading': 462} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14935, 'training': 279, 'loading': 549} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'summarization': 5408, 'loading': 364} , Number of itemsets: 686
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6969, 'training': 127, 'loading': 374} , Number of itemsets: 277
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 385, 'summarization': 5561, 'training': 2051, 'loading': 394} , Number of itemsets: 94
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 189, 'training': 60, 'loading': 353} , Number of itemsets: 25
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 180, 'summarization': 5307, 'training': 607, 'loading': 390} , Number of itemsets: 260
+milanTelecomComplexStreaming -->
+Times: {'scoring': 330, 'summarization': 8499, 'training': 654, 'loading': 403} , Number of itemsets: 263
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 282, 'training': 86, 'loading': 490} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 426, 'training': 137, 'loading': 683} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5381, 'training': 132, 'loading': 501} , Number of itemsets: 130
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4903, 'training': 134, 'loading': 538} , Number of itemsets: 77
+
+Running all workloads with alphaMCD = 1.0
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 433, 'training': 291, 'loading': 368} , Number of itemsets: 1
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 620, 'training': 770, 'loading': 399} , Number of itemsets: 1381
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 306, 'training': 152, 'loading': 343} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 573, 'training': 499, 'loading': 382} , Number of itemsets: 77
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 380, 'training': 659, 'loading': 366} , Number of itemsets: 41
+campaignExpendituresSimple -->
+Times: {'scoring': 5, 'summarization': 10632, 'training': 190, 'loading': 476} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 45004, 'training': 185, 'loading': 569} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 4299, 'training': 287, 'loading': 472} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14614, 'training': 261, 'loading': 575} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6597, 'training': 239, 'loading': 374} , Number of itemsets: 428
+cmtDatasetSimpleStreaming -->
+Times: {'summarization': 6504, 'training': 129, 'loading': 375} , Number of itemsets: 241
+cmtDatasetComplexStreaming -->
+Times: {'loading': 403} , Number of itemsets: 0
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 186, 'training': 59, 'loading': 367} , Number of itemsets: 24
+milanTelecomSimpleStreaming -->
+Times: {'loading': 412} , Number of itemsets: 0
+milanTelecomComplexStreaming -->
+Times: {'loading': 377} , Number of itemsets: 0
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 330, 'training': 87, 'loading': 478} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 2, 'summarization': 396, 'training': 110, 'loading': 684} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4679, 'training': 134, 'loading': 495} , Number of itemsets: 143
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4677, 'training': 132, 'loading': 529} , Number of itemsets: 61
+
+Running all workloads with alphaMCD = 0.95
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 482, 'training': 307, 'loading': 376} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 488, 'training': 270, 'loading': 357} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 579, 'training': 781, 'loading': 403} , Number of itemsets: 1776
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 286, 'training': 163, 'loading': 358} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 32, 'summarization': 475, 'training': 501, 'loading': 399} , Number of itemsets: 65
+milanTelecomComplex -->
+Times: {'scoring': 40, 'summarization': 470, 'training': 656, 'loading': 361} , Number of itemsets: 41
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11398, 'training': 189, 'loading': 475} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 66, 'summarization': 44599, 'training': 187, 'loading': 552} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 5, 'summarization': 4290, 'training': 264, 'loading': 498} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 5, 'summarization': 14656, 'training': 270, 'loading': 538} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7556, 'training': 657, 'loading': 364} , Number of itemsets: 1929
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6238, 'training': 125, 'loading': 362} , Number of itemsets: 278
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 409, 'summarization': 6257, 'training': 566, 'loading': 413} , Number of itemsets: 746
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 198, 'training': 63, 'loading': 350} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 257, 'summarization': 5449, 'training': 537, 'loading': 384} , Number of itemsets: 435
+milanTelecomComplexStreaming -->
+Times: {'scoring': 340, 'summarization': 8399, 'training': 707, 'loading': 376} , Number of itemsets: 408
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 247, 'training': 86, 'loading': 503} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'training': 142, 'loading': 648} , Number of itemsets: 0
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5297, 'training': 137, 'loading': 491} , Number of itemsets: 139
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4203, 'training': 131, 'loading': 524} , Number of itemsets: 86
+
+Running all workloads with alphaMCD = 0.75
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 495, 'training': 285, 'loading': 354} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 428, 'training': 260, 'loading': 355} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 635, 'training': 785, 'loading': 378} , Number of itemsets: 1515
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 291, 'training': 169, 'loading': 337} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 31, 'summarization': 462, 'training': 741, 'loading': 369} , Number of itemsets: 65
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 483, 'training': 639, 'loading': 387} , Number of itemsets: 61
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11267, 'training': 177, 'loading': 506} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 59, 'summarization': 43193, 'training': 191, 'loading': 564} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4303, 'training': 263, 'loading': 500} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14462, 'training': 268, 'loading': 524} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6129, 'training': 571, 'loading': 393} , Number of itemsets: 1129
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6410, 'training': 142, 'loading': 362} , Number of itemsets: 320
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 384, 'summarization': 7364, 'training': 1435, 'loading': 395} , Number of itemsets: 124
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 193, 'training': 58, 'loading': 358} , Number of itemsets: 21
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 235, 'summarization': 4954, 'training': 608, 'loading': 392} , Number of itemsets: 654
+milanTelecomComplexStreaming -->
+Times: {'scoring': 374, 'summarization': 8459, 'training': 722, 'loading': 377} , Number of itemsets: 421
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 310, 'training': 89, 'loading': 502} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 425, 'training': 115, 'loading': 580} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'summarization': 5129, 'training': 135, 'loading': 491} , Number of itemsets: 139
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4214, 'training': 129, 'loading': 554} , Number of itemsets: 55
+
+Running all workloads with alphaMCD = 0.5
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 491, 'training': 287, 'loading': 346} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 425, 'training': 271, 'loading': 371} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 572, 'training': 767, 'loading': 402} , Number of itemsets: 1511
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 288, 'training': 161, 'loading': 348} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 470, 'training': 510, 'loading': 392} , Number of itemsets: 62
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 400, 'training': 666, 'loading': 372} , Number of itemsets: 70
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11498, 'training': 192, 'loading': 507} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 58, 'summarization': 43411, 'training': 186, 'loading': 563} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4296, 'training': 269, 'loading': 484} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14663, 'training': 266, 'loading': 540} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7483, 'training': 641, 'loading': 371} , Number of itemsets: 1930
+cmtDatasetSimpleStreaming -->
+Times: {'training': 137, 'loading': 374} , Number of itemsets: 0
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 376, 'summarization': 7162, 'training': 1985, 'loading': 400} , Number of itemsets: 665
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 178, 'training': 62, 'loading': 358} , Number of itemsets: 25
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 237, 'summarization': 5331, 'training': 534, 'loading': 394} , Number of itemsets: 175
+milanTelecomComplexStreaming -->
+Times: {'scoring': 355, 'summarization': 8526, 'training': 650, 'loading': 378} , Number of itemsets: 435
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 272, 'training': 86, 'loading': 479} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 408, 'training': 107, 'loading': 592} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4908, 'training': 140, 'loading': 511} , Number of itemsets: 134
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5118, 'training': 136, 'loading': 544} , Number of itemsets: 83
+
+Running all workloads with alphaMCD = 0.25
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 483, 'training': 271, 'loading': 368} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 438, 'training': 262, 'loading': 386} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 49, 'summarization': 652, 'training': 761, 'loading': 398} , Number of itemsets: 1678
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 287, 'training': 158, 'loading': 347} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 564, 'training': 488, 'loading': 373} , Number of itemsets: 113
+milanTelecomComplex -->
+Times: {'scoring': 44, 'summarization': 476, 'training': 648, 'loading': 358} , Number of itemsets: 52
+campaignExpendituresSimple -->
+Times: {'scoring': 3, 'summarization': 11256, 'training': 185, 'loading': 483} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 43633, 'training': 182, 'loading': 568} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4274, 'training': 256, 'loading': 470} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14646, 'training': 267, 'loading': 530} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6347, 'training': 503, 'loading': 373} , Number of itemsets: 536
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6720, 'training': 127, 'loading': 376} , Number of itemsets: 286
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 378, 'summarization': 5623, 'training': 3948, 'loading': 410} , Number of itemsets: 790
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 174, 'training': 60, 'loading': 371} , Number of itemsets: 25
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 200, 'summarization': 4784, 'training': 540, 'loading': 396} , Number of itemsets: 426
+milanTelecomComplexStreaming -->
+Times: {'scoring': 309, 'summarization': 7997, 'training': 690, 'loading': 383} , Number of itemsets: 277
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 295, 'training': 92, 'loading': 498} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 410, 'training': 192, 'loading': 593} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5297, 'training': 132, 'loading': 496} , Number of itemsets: 140
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5241, 'training': 136, 'loading': 549} , Number of itemsets: 60
+
+Running all workloads with alphaMCD = 0.1
+
+testTasks -->
+Times: {'scoring': 6, 'summarization': 466, 'training': 276, 'loading': 386} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 486, 'training': 279, 'loading': 350} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 619, 'training': 767, 'loading': 395} , Number of itemsets: 1431
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 280, 'training': 146, 'loading': 351} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 25, 'summarization': 575, 'training': 494, 'loading': 396} , Number of itemsets: 76
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 482, 'training': 644, 'loading': 372} , Number of itemsets: 74
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11425, 'training': 187, 'loading': 497} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 59, 'summarization': 44373, 'training': 185, 'loading': 579} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4230, 'training': 269, 'loading': 469} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14660, 'training': 266, 'loading': 526} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 2, 'summarization': 7996, 'training': 392, 'loading': 375} , Number of itemsets: 487
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 6965, 'training': 132, 'loading': 369} , Number of itemsets: 391
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 440, 'summarization': 7066, 'training': 3593, 'loading': 391} , Number of itemsets: 756
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 194, 'training': 58, 'loading': 349} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 196, 'summarization': 5398, 'training': 466, 'loading': 384} , Number of itemsets: 439
+milanTelecomComplexStreaming -->
+Times: {'scoring': 337, 'summarization': 8323, 'training': 493, 'loading': 402} , Number of itemsets: 289
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 313, 'training': 85, 'loading': 486} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 426, 'training': 110, 'loading': 598} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4960, 'training': 140, 'loading': 514} , Number of itemsets: 122
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4368, 'training': 130, 'loading': 536} , Number of itemsets: 108
+
+Running all workloads with alphaMCD = 0.05
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 432, 'training': 282, 'loading': 360} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 517, 'training': 278, 'loading': 355} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 615, 'training': 776, 'loading': 380} , Number of itemsets: 1381
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 306, 'training': 154, 'loading': 338} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 541, 'training': 505, 'loading': 382} , Number of itemsets: 64
+milanTelecomComplex -->
+Times: {'scoring': 39, 'summarization': 477, 'training': 1094, 'loading': 367} , Number of itemsets: 48
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11533, 'training': 195, 'loading': 472} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 64, 'summarization': 43962, 'training': 182, 'loading': 584} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4281, 'training': 277, 'loading': 483} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 7, 'summarization': 14576, 'training': 278, 'loading': 541} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7842, 'training': 209, 'loading': 378} , Number of itemsets: 324
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6983, 'training': 127, 'loading': 363} , Number of itemsets: 328
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 390, 'summarization': 5625, 'training': 1976, 'loading': 400} , Number of itemsets: 399
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 180, 'training': 64, 'loading': 371} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 265, 'summarization': 4674, 'training': 417, 'loading': 430} , Number of itemsets: 414
+milanTelecomComplexStreaming -->
+Times: {'scoring': 320, 'summarization': 8354, 'training': 600, 'loading': 372} , Number of itemsets: 280
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 266, 'training': 90, 'loading': 480} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 413, 'training': 114, 'loading': 655} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4949, 'training': 133, 'loading': 487} , Number of itemsets: 133
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5576, 'training': 138, 'loading': 542} , Number of itemsets: 87
+
+Running all workloads with alphaMCD = 0.01
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 488, 'training': 311, 'loading': 351} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 484, 'training': 278, 'loading': 360} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 632, 'training': 760, 'loading': 395} , Number of itemsets: 1386
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 281, 'training': 153, 'loading': 346} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 555, 'training': 502, 'loading': 370} , Number of itemsets: 76
+milanTelecomComplex -->
+Times: {'scoring': 43, 'summarization': 473, 'training': 670, 'loading': 383} , Number of itemsets: 56
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11291, 'training': 190, 'loading': 482} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 62, 'summarization': 43015, 'training': 182, 'loading': 656} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4320, 'training': 263, 'loading': 480} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 5, 'summarization': 14721, 'training': 266, 'loading': 544} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7660, 'training': 668, 'loading': 360} , Number of itemsets: 1931
+cmtDatasetSimpleStreaming -->
+Times: {'summarization': 6978, 'training': 135, 'loading': 369} , Number of itemsets: 375
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 371, 'summarization': 6889, 'training': 3010, 'loading': 393} , Number of itemsets: 219
+accidentsSimpleStreaming -->
+Times: {'summarization': 177, 'training': 58, 'loading': 348} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 190, 'summarization': 5431, 'training': 580, 'loading': 382} , Number of itemsets: 432
+milanTelecomComplexStreaming -->
+Times: {'scoring': 341, 'summarization': 7436, 'training': 638, 'loading': 372} , Number of itemsets: 631
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 256, 'training': 87, 'loading': 492} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 415, 'training': 112, 'loading': 598} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4609, 'training': 133, 'loading': 500} , Number of itemsets: 135
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4639, 'training': 131, 'loading': 542} , Number of itemsets: 45
+
+Running all workloads with modelRefreshPeriod = 10
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 485, 'training': 308, 'loading': 362} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 499, 'training': 277, 'loading': 339} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 645, 'training': 765, 'loading': 391} , Number of itemsets: 1978
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 308, 'training': 148, 'loading': 355} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 31, 'summarization': 469, 'training': 776, 'loading': 372} , Number of itemsets: 117
+milanTelecomComplex -->
+Times: {'scoring': 40, 'summarization': 477, 'training': 675, 'loading': 377} , Number of itemsets: 57
+campaignExpendituresSimple -->
+Times: {'scoring': 3, 'summarization': 11367, 'training': 198, 'loading': 488} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 56, 'summarization': 43584, 'training': 201, 'loading': 662} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4257, 'training': 277, 'loading': 488} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 5, 'summarization': 14696, 'training': 283, 'loading': 539} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 9623, 'training': 173052, 'loading': 386} , Number of itemsets: 719
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 7353, 'training': 28273, 'loading': 390} , Number of itemsets: 224
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 434, 'summarization': 15918, 'training': 2078642, 'loading': 391} , Number of itemsets: 143
+accidentsSimpleStreaming -->
+Times: {'scoring': 4, 'summarization': 253, 'training': 8811, 'loading': 356} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 215, 'summarization': 13422, 'training': 353343, 'loading': 391} , Number of itemsets: 416
+milanTelecomComplexStreaming -->
+Times: {'scoring': 453, 'summarization': 12697, 'training': 401192, 'loading': 390} , Number of itemsets: 444
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 345, 'training': 20349, 'loading': 488} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 536, 'training': 31052, 'loading': 674} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6753, 'training': 28659, 'loading': 504} , Number of itemsets: 133
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 2, 'summarization': 6080, 'training': 27401, 'loading': 555} , Number of itemsets: 52
+
+Running all workloads with modelRefreshPeriod = 100
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 447, 'training': 297, 'loading': 349} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 9, 'summarization': 536, 'training': 283, 'loading': 345} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 629, 'training': 788, 'loading': 393} , Number of itemsets: 1836
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 295, 'training': 161, 'loading': 339} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 26, 'summarization': 515, 'training': 484, 'loading': 375} , Number of itemsets: 66
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 486, 'training': 689, 'loading': 377} , Number of itemsets: 52
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11559, 'training': 190, 'loading': 480} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 59, 'summarization': 42825, 'training': 197, 'loading': 659} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4344, 'training': 280, 'loading': 477} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14796, 'training': 274, 'loading': 535} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6119, 'training': 8886, 'loading': 366} , Number of itemsets: 448
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 7994, 'training': 3048, 'loading': 387} , Number of itemsets: 301
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 374, 'summarization': 7936, 'training': 202166, 'loading': 401} , Number of itemsets: 247
+accidentsSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 139, 'training': 1068, 'loading': 359} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 462, 'summarization': 8390, 'training': 36386, 'loading': 393} , Number of itemsets: 416
+milanTelecomComplexStreaming -->
+Times: {'scoring': 348, 'summarization': 6958, 'training': 42381, 'loading': 372} , Number of itemsets: 440
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 280, 'training': 1625, 'loading': 494} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 390, 'training': 2807, 'loading': 585} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4374, 'training': 2941, 'loading': 508} , Number of itemsets: 142
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 6587, 'training': 2885, 'loading': 535} , Number of itemsets: 69
+
+Running all workloads with modelRefreshPeriod = 1000
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 476, 'training': 278, 'loading': 348} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 495, 'training': 266, 'loading': 371} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 645, 'training': 772, 'loading': 404} , Number of itemsets: 1894
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 286, 'training': 154, 'loading': 347} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 28, 'summarization': 541, 'training': 496, 'loading': 379} , Number of itemsets: 63
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 469, 'training': 673, 'loading': 348} , Number of itemsets: 63
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11360, 'training': 191, 'loading': 473} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 61, 'summarization': 43195, 'training': 192, 'loading': 575} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4282, 'training': 267, 'loading': 486} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14625, 'training': 271, 'loading': 538} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6188, 'training': 3280, 'loading': 371} , Number of itemsets: 905
+cmtDatasetSimpleStreaming -->
+Times: {'summarization': 5542, 'loading': 366} , Number of itemsets: 638
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 358, 'summarization': 6989, 'training': 22839, 'loading': 408} , Number of itemsets: 769
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 136, 'training': 234, 'loading': 357} , Number of itemsets: 24
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 186, 'summarization': 5166, 'training': 4488, 'loading': 397} , Number of itemsets: 429
+milanTelecomComplexStreaming -->
+Times: {'scoring': 309, 'summarization': 7914, 'training': 5077, 'loading': 370} , Number of itemsets: 628
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 220, 'training': 305, 'loading': 481} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 425, 'training': 376, 'loading': 567} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4448, 'training': 430, 'loading': 500} , Number of itemsets: 136
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4752, 'training': 435, 'loading': 542} , Number of itemsets: 69
+
+Running all workloads with modelRefreshPeriod = 10000
+
+testTasks -->
+Times: {'scoring': 9, 'summarization': 486, 'training': 298, 'loading': 354} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 503, 'training': 266, 'loading': 354} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 588, 'training': 789, 'loading': 382} , Number of itemsets: 2063
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 287, 'training': 161, 'loading': 338} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 26, 'summarization': 556, 'training': 489, 'loading': 398} , Number of itemsets: 75
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 376, 'training': 653, 'loading': 364} , Number of itemsets: 61
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10560, 'training': 186, 'loading': 488} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 63, 'summarization': 43323, 'training': 177, 'loading': 642} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4243, 'training': 258, 'loading': 492} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14663, 'training': 259, 'loading': 555} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 5846, 'training': 494, 'loading': 381} , Number of itemsets: 1143
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6918, 'training': 122, 'loading': 393} , Number of itemsets: 176
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 431, 'summarization': 6652, 'training': 2314, 'loading': 399} , Number of itemsets: 361
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 194, 'training': 59, 'loading': 356} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 519, 'summarization': 5095, 'training': 610, 'loading': 392} , Number of itemsets: 649
+milanTelecomComplexStreaming -->
+Times: {'scoring': 333, 'summarization': 8556, 'training': 639, 'loading': 379} , Number of itemsets: 229
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 298, 'training': 82, 'loading': 512} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 398, 'training': 119, 'loading': 588} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5448, 'training': 137, 'loading': 488} , Number of itemsets: 149
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4573, 'training': 129, 'loading': 548} , Number of itemsets: 67
+
+Running all workloads with modelRefreshPeriod = 100000
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 500, 'training': 289, 'loading': 347} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 500, 'training': 273, 'loading': 348} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 622, 'training': 781, 'loading': 388} , Number of itemsets: 1553
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 288, 'training': 151, 'loading': 342} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 556, 'training': 504, 'loading': 376} , Number of itemsets: 76
+milanTelecomComplex -->
+Times: {'scoring': 39, 'summarization': 391, 'training': 659, 'loading': 374} , Number of itemsets: 42
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11263, 'training': 184, 'loading': 491} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 62, 'summarization': 44269, 'training': 183, 'loading': 587} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4306, 'training': 265, 'loading': 469} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14766, 'training': 277, 'loading': 588} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6134, 'training': 40, 'loading': 381} , Number of itemsets: 966
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5592, 'training': 1, 'loading': 355} , Number of itemsets: 0
+cmtDatasetComplexStreaming -->
+Times: {'training': 1, 'loading': 398} , Number of itemsets: 0
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 71, 'training': 1, 'loading': 365} , Number of itemsets: 0
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 181, 'summarization': 3872, 'training': 1, 'loading': 398} , Number of itemsets: 0
+milanTelecomComplexStreaming -->
+Times: {'scoring': 331, 'summarization': 5652, 'training': 1, 'loading': 362} , Number of itemsets: 0
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 220, 'training': 2, 'loading': 506} , Number of itemsets: 0
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 240, 'training': 2, 'loading': 588} , Number of itemsets: 0
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4298, 'training': 1, 'loading': 523} , Number of itemsets: 0
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 3956, 'training': 1, 'loading': 562} , Number of itemsets: 0
+
+Running all workloads with targetPercentile = 0.1
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 537, 'training': 274, 'loading': 360} , Number of itemsets: 8
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 536, 'training': 283, 'loading': 361} , Number of itemsets: 913
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 664, 'training': 773, 'loading': 386} , Number of itemsets: 1997
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 346, 'training': 154, 'loading': 347} , Number of itemsets: 32
+milanTelecomSimple -->
+Times: {'scoring': 32, 'summarization': 511, 'training': 747, 'loading': 397} , Number of itemsets: 181
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 520, 'training': 657, 'loading': 368} , Number of itemsets: 151
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 6879, 'training': 188, 'loading': 474} , Number of itemsets: 3
+campaignExpendituresComplex -->
+Times: {'scoring': 54, 'summarization': 4908, 'training': 187, 'loading': 656} , Number of itemsets: 352
+fedDisbursementsSimple -->
+Times: {'scoring': 5, 'summarization': 2005, 'training': 252, 'loading': 477} , Number of itemsets: 915
+fedDisbursementsComplex -->
+Times: {'scoring': 8, 'summarization': 2714, 'training': 282, 'loading': 559} , Number of itemsets: 2537
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7434, 'training': 533, 'loading': 368} , Number of itemsets: 800
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6359, 'training': 130, 'loading': 368} , Number of itemsets: 640
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 392, 'summarization': 7161, 'training': 2911, 'loading': 404} , Number of itemsets: 431
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 197, 'training': 60, 'loading': 357} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 199, 'summarization': 5455, 'training': 490, 'loading': 384} , Number of itemsets: 410
+milanTelecomComplexStreaming -->
+Times: {'scoring': 320, 'summarization': 8103, 'training': 646, 'loading': 378} , Number of itemsets: 241
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 289, 'training': 88, 'loading': 500} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 424, 'training': 106, 'loading': 705} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4758, 'training': 132, 'loading': 493} , Number of itemsets: 143
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4742, 'training': 135, 'loading': 542} , Number of itemsets: 57
+
+Running all workloads with targetPercentile = 0.01
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 480, 'training': 288, 'loading': 375} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 498, 'training': 266, 'loading': 386} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 632, 'training': 776, 'loading': 396} , Number of itemsets: 1504
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 277, 'training': 162, 'loading': 353} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 26, 'summarization': 540, 'training': 465, 'loading': 362} , Number of itemsets: 62
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 373, 'training': 671, 'loading': 395} , Number of itemsets: 69
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11396, 'training': 180, 'loading': 482} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 59, 'summarization': 44202, 'training': 190, 'loading': 639} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4272, 'training': 266, 'loading': 490} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14772, 'training': 262, 'loading': 539} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 2, 'summarization': 6295, 'training': 771, 'loading': 390} , Number of itemsets: 1517
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6552, 'training': 124, 'loading': 370} , Number of itemsets: 361
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 427, 'summarization': 7165, 'training': 3084, 'loading': 397} , Number of itemsets: 775
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 192, 'training': 58, 'loading': 380} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 234, 'summarization': 5526, 'training': 594, 'loading': 388} , Number of itemsets: 330
+milanTelecomComplexStreaming -->
+Times: {'scoring': 389, 'summarization': 8342, 'training': 662, 'loading': 371} , Number of itemsets: 448
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 308, 'training': 86, 'loading': 476} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 434, 'training': 106, 'loading': 664} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4875, 'training': 134, 'loading': 520} , Number of itemsets: 144
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4717, 'training': 133, 'loading': 547} , Number of itemsets: 55
+
+Running all workloads with targetPercentile = 0.001
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 202, 'training': 288, 'loading': 348} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 6, 'summarization': 232, 'training': 266, 'loading': 357} , Number of itemsets: 108
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 382, 'training': 774, 'loading': 399} , Number of itemsets: 1301
+accidentsSimple -->
+Times: {'scoring': 2, 'summarization': 166, 'training': 165, 'loading': 346} , Number of itemsets: 14
+milanTelecomSimple -->
+Times: {'scoring': 28, 'summarization': 226, 'training': 488, 'loading': 385} , Number of itemsets: 67
+milanTelecomComplex -->
+Times: {'scoring': 39, 'summarization': 199, 'training': 1056, 'loading': 365} , Number of itemsets: 57
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 800, 'training': 198, 'loading': 493} , Number of itemsets: 156
+campaignExpendituresComplex -->
+Times: {'scoring': 78, 'summarization': 3277, 'training': 191, 'loading': 577} , Number of itemsets: 1657
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 867, 'training': 274, 'loading': 491} , Number of itemsets: 552
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 2601, 'training': 265, 'loading': 544} , Number of itemsets: 2515
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6318, 'training': 432, 'loading': 371} , Number of itemsets: 593
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6910, 'training': 139, 'loading': 379} , Number of itemsets: 515
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 421, 'summarization': 7393, 'training': 1021, 'loading': 402} , Number of itemsets: 278
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 206, 'training': 64, 'loading': 387} , Number of itemsets: 24
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 481, 'summarization': 5457, 'training': 589, 'loading': 381} , Number of itemsets: 423
+milanTelecomComplexStreaming -->
+Times: {'scoring': 322, 'summarization': 8671, 'training': 650, 'loading': 379} , Number of itemsets: 435
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 266, 'training': 95, 'loading': 511} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 433, 'training': 116, 'loading': 591} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5120, 'training': 143, 'loading': 487} , Number of itemsets: 130
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4235, 'training': 125, 'loading': 572} , Number of itemsets: 57
+
+Running all workloads with targetPercentile = 0.0001
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 150, 'training': 274, 'loading': 368} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 170, 'training': 300, 'loading': 369} , Number of itemsets: 25
+cmtDatasetComplex -->
+Times: {'scoring': 47, 'summarization': 261, 'training': 780, 'loading': 391} , Number of itemsets: 66
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 114, 'training': 156, 'loading': 341} , Number of itemsets: 3
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 169, 'training': 493, 'loading': 366} , Number of itemsets: 18
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 165, 'training': 656, 'loading': 384} , Number of itemsets: 11
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 306, 'training': 190, 'loading': 482} , Number of itemsets: 17
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 687, 'training': 196, 'loading': 678} , Number of itemsets: 206
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 329, 'training': 263, 'loading': 492} , Number of itemsets: 65
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 613, 'training': 266, 'loading': 522} , Number of itemsets: 280
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 8393, 'training': 659, 'loading': 374} , Number of itemsets: 1930
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 6792, 'training': 129, 'loading': 383} , Number of itemsets: 404
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 409, 'summarization': 6307, 'training': 4217, 'loading': 398} , Number of itemsets: 2420
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 182, 'training': 64, 'loading': 369} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 193, 'summarization': 5452, 'training': 604, 'loading': 426} , Number of itemsets: 401
+milanTelecomComplexStreaming -->
+Times: {'scoring': 359, 'summarization': 8325, 'training': 669, 'loading': 370} , Number of itemsets: 204
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 312, 'training': 84, 'loading': 505} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 436, 'training': 133, 'loading': 700} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5664, 'training': 132, 'loading': 483} , Number of itemsets: 119
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4929, 'training': 133, 'loading': 578} , Number of itemsets: 68
+
+Running all workloads with minInlierRatio = 1.0
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 450, 'training': 280, 'loading': 365} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 436, 'training': 288, 'loading': 353} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 616, 'training': 783, 'loading': 403} , Number of itemsets: 1410
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 288, 'training': 152, 'loading': 331} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 551, 'training': 480, 'loading': 385} , Number of itemsets: 76
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 472, 'training': 659, 'loading': 352} , Number of itemsets: 54
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11384, 'training': 189, 'loading': 484} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 55, 'summarization': 44307, 'training': 184, 'loading': 647} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4324, 'training': 267, 'loading': 481} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14844, 'training': 263, 'loading': 552} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7217, 'training': 424, 'loading': 364} , Number of itemsets: 603
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6021, 'training': 127, 'loading': 369} , Number of itemsets: 468
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 405, 'summarization': 7014, 'training': 3428, 'loading': 400} , Number of itemsets: 361
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 184, 'training': 62, 'loading': 371} , Number of itemsets: 24
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 193, 'summarization': 5544, 'training': 507, 'loading': 386} , Number of itemsets: 171
+milanTelecomComplexStreaming -->
+Times: {'scoring': 324, 'summarization': 8055, 'training': 676, 'loading': 371} , Number of itemsets: 453
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 250, 'training': 91, 'loading': 514} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 412, 'training': 103, 'loading': 652} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4787, 'training': 131, 'loading': 489} , Number of itemsets: 138
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4592, 'training': 135, 'loading': 546} , Number of itemsets: 106
+
+Running all workloads with minInlierRatio = 0.1
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 489, 'training': 290, 'loading': 352} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 424, 'training': 266, 'loading': 361} , Number of itemsets: 1172
+cmtDatasetComplex -->
+Times: {'scoring': 47, 'summarization': 729, 'training': 782, 'loading': 381} , Number of itemsets: 9222
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 268, 'training': 146, 'loading': 348} , Number of itemsets: 75
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 479, 'training': 495, 'loading': 395} , Number of itemsets: 115
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 475, 'training': 656, 'loading': 359} , Number of itemsets: 176
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10775, 'training': 180, 'loading': 489} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 56, 'summarization': 49782, 'training': 181, 'loading': 563} , Number of itemsets: 25353
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 6139, 'training': 269, 'loading': 477} , Number of itemsets: 3992
+fedDisbursementsComplex -->
+Times: {'scoring': 5, 'summarization': 19443, 'training': 274, 'loading': 560} , Number of itemsets: 19561
+testTasksStreaming -->
+Times: {'scoring': 2, 'summarization': 6000, 'training': 717, 'loading': 367} , Number of itemsets: 1801
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 7407, 'training': 133, 'loading': 393} , Number of itemsets: 597
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 416, 'summarization': 6124, 'training': 3055, 'loading': 389} , Number of itemsets: 2476
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 246, 'training': 66, 'loading': 375} , Number of itemsets: 67
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 252, 'summarization': 5379, 'training': 642, 'loading': 405} , Number of itemsets: 619
+milanTelecomComplexStreaming -->
+Times: {'scoring': 354, 'summarization': 8545, 'training': 637, 'loading': 381} , Number of itemsets: 599
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 248, 'training': 85, 'loading': 498} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 402, 'training': 112, 'loading': 575} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5427, 'training': 138, 'loading': 488} , Number of itemsets: 142
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4317, 'training': 134, 'loading': 544} , Number of itemsets: 84
+
+Running all workloads with minInlierRatio = 0.01
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 427, 'training': 301, 'loading': 350} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 525, 'training': 286, 'loading': 359} , Number of itemsets: 1176
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 748, 'training': 786, 'loading': 391} , Number of itemsets: 12782
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 255, 'training': 153, 'loading': 363} , Number of itemsets: 75
+milanTelecomSimple -->
+Times: {'scoring': 28, 'summarization': 424, 'training': 500, 'loading': 380} , Number of itemsets: 181
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 561, 'training': 657, 'loading': 357} , Number of itemsets: 112
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10686, 'training': 192, 'loading': 500} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 59, 'summarization': 50549, 'training': 192, 'loading': 649} , Number of itemsets: 25377
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 6172, 'training': 276, 'loading': 483} , Number of itemsets: 3992
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 19333, 'training': 261, 'loading': 584} , Number of itemsets: 19561
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6448, 'training': 606, 'loading': 372} , Number of itemsets: 1930
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6397, 'training': 133, 'loading': 380} , Number of itemsets: 651
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 370, 'summarization': 5657, 'training': 2215, 'loading': 389} , Number of itemsets: 2586
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 244, 'training': 69, 'loading': 351} , Number of itemsets: 67
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 765, 'summarization': 5339, 'training': 634, 'loading': 415} , Number of itemsets: 649
+milanTelecomComplexStreaming -->
+Times: {'scoring': 400, 'summarization': 8890, 'training': 649, 'loading': 378} , Number of itemsets: 628
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 284, 'training': 89, 'loading': 498} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 430, 'training': 104, 'loading': 687} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4816, 'training': 141, 'loading': 504} , Number of itemsets: 144
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5384, 'training': 139, 'loading': 560} , Number of itemsets: 76
+
+Running all workloads with minInlierRatio = 0.001
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 423, 'training': 275, 'loading': 363} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 6, 'summarization': 429, 'training': 260, 'loading': 359} , Number of itemsets: 1176
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 727, 'training': 770, 'loading': 397} , Number of itemsets: 13014
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 273, 'training': 161, 'loading': 333} , Number of itemsets: 75
+milanTelecomSimple -->
+Times: {'scoring': 32, 'summarization': 488, 'training': 753, 'loading': 392} , Number of itemsets: 117
+milanTelecomComplex -->
+Times: {'scoring': 39, 'summarization': 456, 'training': 642, 'loading': 378} , Number of itemsets: 76
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11404, 'training': 192, 'loading': 479} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 55, 'summarization': 50141, 'training': 203, 'loading': 557} , Number of itemsets: 25377
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 6184, 'training': 270, 'loading': 494} , Number of itemsets: 3992
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 19437, 'training': 264, 'loading': 546} , Number of itemsets: 19561
+testTasksStreaming -->
+Times: {'scoring': 2, 'summarization': 6308, 'training': 746, 'loading': 377} , Number of itemsets: 1929
+cmtDatasetSimpleStreaming -->
+Times: {'training': 129, 'loading': 395} , Number of itemsets: 0
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 384, 'summarization': 6256, 'training': 2396, 'loading': 394} , Number of itemsets: 2530
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 238, 'training': 67, 'loading': 363} , Number of itemsets: 67
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 245, 'summarization': 5165, 'training': 631, 'loading': 387} , Number of itemsets: 653
+milanTelecomComplexStreaming -->
+Times: {'scoring': 328, 'summarization': 8183, 'training': 736, 'loading': 383} , Number of itemsets: 634
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 265, 'training': 86, 'loading': 490} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 418, 'training': 114, 'loading': 585} , Number of itemsets: 29
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5419, 'training': 136, 'loading': 499} , Number of itemsets: 147
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5257, 'training': 138, 'loading': 546} , Number of itemsets: 77
+
+Running all workloads with inputReservoirSize = 100
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 489, 'training': 289, 'loading': 363} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 6, 'summarization': 512, 'training': 265, 'loading': 360} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 49, 'summarization': 649, 'training': 772, 'loading': 407} , Number of itemsets: 1943
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 291, 'training': 165, 'loading': 335} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 26, 'summarization': 579, 'training': 508, 'loading': 373} , Number of itemsets: 75
+milanTelecomComplex -->
+Times: {'scoring': 43, 'summarization': 406, 'training': 678, 'loading': 371} , Number of itemsets: 54
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10592, 'training': 188, 'loading': 530} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 61, 'summarization': 44649, 'training': 208, 'loading': 579} , Number of itemsets: 23024
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14489, 'training': 257, 'loading': 548} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6426, 'training': 331, 'loading': 390} , Number of itemsets: 762
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6961, 'training': 75, 'loading': 382} , Number of itemsets: 377
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 761, 'summarization': 5561, 'training': 111, 'loading': 402} , Number of itemsets: 358
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 211, 'training': 24, 'loading': 354} , Number of itemsets: 25
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 238, 'summarization': 5455, 'training': 159, 'loading': 409} , Number of itemsets: 180
+milanTelecomComplexStreaming -->
+Times: {'scoring': 420, 'summarization': 8729, 'training': 259, 'loading': 385} , Number of itemsets: 422
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 300, 'training': 50, 'loading': 547} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 463, 'training': 82, 'loading': 679} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5179, 'training': 79, 'loading': 467} , Number of itemsets: 108
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5915, 'training': 83, 'loading': 553} , Number of itemsets: 93
+
+Running all workloads with inputReservoirSize = 1000
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 500, 'training': 296, 'loading': 352} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 518, 'training': 320, 'loading': 350} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 588, 'training': 817, 'loading': 415} , Number of itemsets: 1466
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 283, 'training': 157, 'loading': 372} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 33, 'summarization': 494, 'training': 763, 'loading': 433} , Number of itemsets: 64
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 396, 'training': 674, 'loading': 381} , Number of itemsets: 70
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11473, 'training': 188, 'loading': 493} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 56, 'summarization': 44108, 'training': 195, 'loading': 660} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 5, 'summarization': 4298, 'training': 261, 'loading': 481} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14469, 'training': 261, 'loading': 529} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'loading': 362} , Number of itemsets: 0
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6142, 'training': 81, 'loading': 373} , Number of itemsets: 424
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 395, 'summarization': 7563, 'training': 230, 'loading': 399} , Number of itemsets: 138
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 198, 'training': 27, 'loading': 349} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 198, 'summarization': 5651, 'training': 377, 'loading': 382} , Number of itemsets: 433
+milanTelecomComplexStreaming -->
+Times: {'scoring': 323, 'summarization': 8275, 'training': 291, 'loading': 372} , Number of itemsets: 446
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 277, 'training': 52, 'loading': 483} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 439, 'training': 75, 'loading': 591} , Number of itemsets: 29
+fedDisbursementsSimpleStreaming -->
+Times: {'summarization': 5256, 'training': 82, 'loading': 481} , Number of itemsets: 141
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 2, 'summarization': 4342, 'training': 77, 'loading': 552} , Number of itemsets: 83
+
+Running all workloads with inputReservoirSize = 10000
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 508, 'training': 282, 'loading': 364} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 429, 'training': 286, 'loading': 359} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 47, 'summarization': 626, 'training': 803, 'loading': 397} , Number of itemsets: 1305
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 278, 'training': 152, 'loading': 349} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 30, 'summarization': 478, 'training': 1274, 'loading': 389} , Number of itemsets: 64
+milanTelecomComplex -->
+Times: {'scoring': 41, 'summarization': 391, 'training': 676, 'loading': 368} , Number of itemsets: 65
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10629, 'training': 202, 'loading': 494} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 43677, 'training': 193, 'loading': 567} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 4254, 'training': 279, 'loading': 467} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14786, 'training': 269, 'loading': 532} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7413, 'training': 356, 'loading': 408} , Number of itemsets: 655
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6703, 'training': 130, 'loading': 357} , Number of itemsets: 252
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 365, 'summarization': 6710, 'training': 465, 'loading': 406} , Number of itemsets: 336
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 189, 'training': 64, 'loading': 371} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 224, 'summarization': 5513, 'training': 628, 'loading': 392} , Number of itemsets: 408
+milanTelecomComplexStreaming -->
+Times: {'scoring': 331, 'summarization': 7664, 'training': 912, 'loading': 367} , Number of itemsets: 242
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 325, 'training': 86, 'loading': 486} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 428, 'training': 110, 'loading': 587} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 5937, 'training': 142, 'loading': 502} , Number of itemsets: 142
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4582, 'training': 135, 'loading': 547} , Number of itemsets: 82
+
+Running all workloads with inputReservoirSize = 100000
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 435, 'training': 276, 'loading': 356} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 507, 'training': 283, 'loading': 354} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 653, 'training': 771, 'loading': 387} , Number of itemsets: 1849
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 290, 'training': 152, 'loading': 346} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 33, 'summarization': 493, 'training': 745, 'loading': 373} , Number of itemsets: 110
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 396, 'training': 662, 'loading': 376} , Number of itemsets: 57
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11282, 'training': 192, 'loading': 472} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 56, 'summarization': 43765, 'training': 186, 'loading': 552} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 5, 'summarization': 4289, 'training': 275, 'loading': 502} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14497, 'training': 280, 'loading': 485} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 8092, 'training': 655, 'loading': 373} , Number of itemsets: 761
+cmtDatasetSimpleStreaming -->
+Times: {'summarization': 7914, 'training': 318, 'loading': 364} , Number of itemsets: 0
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 426, 'summarization': 7834, 'training': 17443, 'loading': 390} , Number of itemsets: 2695
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 139, 'training': 164, 'loading': 359} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 190, 'summarization': 5398, 'training': 2146, 'loading': 386} , Number of itemsets: 373
+milanTelecomComplexStreaming -->
+Times: {'scoring': 331, 'summarization': 8385, 'training': 2309, 'loading': 372} , Number of itemsets: 555
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 276, 'training': 197, 'loading': 498} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 449, 'training': 233, 'loading': 592} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6683, 'training': 312, 'loading': 488} , Number of itemsets: 137
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 6936, 'training': 330, 'loading': 553} , Number of itemsets: 98
+
+Running all workloads with minSupport = 1.0
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 479, 'training': 301, 'loading': 378} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 477, 'training': 268, 'loading': 349} , Number of itemsets: 0
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 497, 'training': 765, 'loading': 393} , Number of itemsets: 0
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 278, 'training': 182, 'loading': 341} , Number of itemsets: 0
+milanTelecomSimple -->
+Times: {'scoring': 34, 'summarization': 406, 'training': 742, 'loading': 389} , Number of itemsets: 0
+milanTelecomComplex -->
+Times: {'scoring': 43, 'summarization': 395, 'training': 641, 'loading': 361} , Number of itemsets: 0
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10270, 'training': 193, 'loading': 503} , Number of itemsets: 1
+campaignExpendituresComplex -->
+Times: {'scoring': 61, 'summarization': 4073, 'training': 188, 'loading': 667} , Number of itemsets: 1
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 773, 'training': 254, 'loading': 482} , Number of itemsets: 0
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 1031, 'training': 255, 'loading': 524} , Number of itemsets: 0
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6833, 'training': 74, 'loading': 398} , Number of itemsets: 0
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6828, 'training': 75, 'loading': 370} , Number of itemsets: 0
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 378, 'summarization': 5597, 'training': 2670, 'loading': 405} , Number of itemsets: 0
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 65, 'training': 50, 'loading': 372} , Number of itemsets: 0
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 186, 'summarization': 4347, 'training': 365, 'loading': 379} , Number of itemsets: 0
+milanTelecomComplexStreaming -->
+Times: {'scoring': 334, 'summarization': 6947, 'training': 598, 'loading': 393} , Number of itemsets: 0
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 270, 'training': 82, 'loading': 519} , Number of itemsets: 0
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 254, 'training': 93, 'loading': 577} , Number of itemsets: 0
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5071, 'training': 111, 'loading': 498} , Number of itemsets: 0
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4243, 'training': 112, 'loading': 543} , Number of itemsets: 0
+
+Running all workloads with minSupport = 0.1
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 484, 'training': 300, 'loading': 359} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 420, 'training': 261, 'loading': 361} , Number of itemsets: 6
+cmtDatasetComplex -->
+Times: {'scoring': 46, 'summarization': 499, 'training': 788, 'loading': 381} , Number of itemsets: 28
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 278, 'training': 159, 'loading': 351} , Number of itemsets: 8
+milanTelecomSimple -->
+Times: {'scoring': 26, 'summarization': 515, 'training': 1026, 'loading': 381} , Number of itemsets: 1
+milanTelecomComplex -->
+Times: {'scoring': 40, 'summarization': 494, 'training': 660, 'loading': 356} , Number of itemsets: 2
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10417, 'training': 191, 'loading': 486} , Number of itemsets: 1
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 4705, 'training': 187, 'loading': 572} , Number of itemsets: 2
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 742, 'training': 276, 'loading': 477} , Number of itemsets: 0
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 906, 'training': 271, 'loading': 549} , Number of itemsets: 0
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6509, 'training': 72, 'loading': 384} , Number of itemsets: 0
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 7150, 'training': 80, 'loading': 363} , Number of itemsets: 5
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 415, 'summarization': 6195, 'training': 1836, 'loading': 429} , Number of itemsets: 0
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 140, 'training': 57, 'loading': 354} , Number of itemsets: 1
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 185, 'summarization': 4666, 'training': 350, 'loading': 393} , Number of itemsets: 1
+milanTelecomComplexStreaming -->
+Times: {'scoring': 314, 'summarization': 7671, 'training': 530, 'loading': 380} , Number of itemsets: 1
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 305, 'training': 86, 'loading': 489} , Number of itemsets: 1
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 334, 'training': 101, 'loading': 652} , Number of itemsets: 1
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 5346, 'training': 106, 'loading': 504} , Number of itemsets: 0
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 2, 'summarization': 4508, 'training': 108, 'loading': 550} , Number of itemsets: 0
+
+Running all workloads with minSupport = 0.01
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 432, 'training': 307, 'loading': 350} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 438, 'training': 279, 'loading': 366} , Number of itemsets: 70
+cmtDatasetComplex -->
+Times: {'scoring': 45, 'summarization': 521, 'training': 759, 'loading': 379} , Number of itemsets: 239
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 284, 'training': 149, 'loading': 329} , Number of itemsets: 23
+milanTelecomSimple -->
+Times: {'scoring': 25, 'summarization': 579, 'training': 510, 'loading': 371} , Number of itemsets: 47
+milanTelecomComplex -->
+Times: {'scoring': 40, 'summarization': 497, 'training': 654, 'loading': 355} , Number of itemsets: 68
+campaignExpendituresSimple -->
+Times: {'scoring': 3, 'summarization': 10283, 'training': 183, 'loading': 503} , Number of itemsets: 1
+campaignExpendituresComplex -->
+Times: {'scoring': 67, 'summarization': 5771, 'training': 190, 'loading': 643} , Number of itemsets: 5
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 1023, 'training': 273, 'loading': 478} , Number of itemsets: 34
+fedDisbursementsComplex -->
+Times: {'scoring': 7, 'summarization': 1233, 'training': 263, 'loading': 553} , Number of itemsets: 95
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6484, 'training': 94, 'loading': 414} , Number of itemsets: 24
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6634, 'training': 77, 'loading': 370} , Number of itemsets: 21
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 402, 'summarization': 5443, 'training': 3541, 'loading': 383} , Number of itemsets: 34
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 185, 'training': 66, 'loading': 363} , Number of itemsets: 19
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 236, 'summarization': 4422, 'training': 411, 'loading': 398} , Number of itemsets: 7
+milanTelecomComplexStreaming -->
+Times: {'scoring': 354, 'summarization': 8269, 'training': 504, 'loading': 376} , Number of itemsets: 2
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 278, 'training': 92, 'loading': 493} , Number of itemsets: 1
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 437, 'training': 153, 'loading': 603} , Number of itemsets: 9
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5714, 'training': 116, 'loading': 495} , Number of itemsets: 0
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4706, 'training': 129, 'loading': 559} , Number of itemsets: 0
+
+Running all workloads with minSupport = 0.001
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 465, 'training': 297, 'loading': 378} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 9, 'summarization': 457, 'training': 308, 'loading': 379} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 48, 'summarization': 603, 'training': 807, 'loading': 399} , Number of itemsets: 1991
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 285, 'training': 145, 'loading': 374} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 31, 'summarization': 481, 'training': 506, 'loading': 392} , Number of itemsets: 65
+milanTelecomComplex -->
+Times: {'scoring': 43, 'summarization': 416, 'training': 687, 'loading': 392} , Number of itemsets: 79
+campaignExpendituresSimple -->
+Times: {'scoring': 5, 'summarization': 10749, 'training': 207, 'loading': 534} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 64, 'summarization': 47243, 'training': 213, 'loading': 692} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 5, 'summarization': 4310, 'training': 261, 'loading': 496} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 7, 'summarization': 15210, 'training': 284, 'loading': 562} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 8172, 'training': 286, 'loading': 383} , Number of itemsets: 582
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6509, 'training': 138, 'loading': 429} , Number of itemsets: 640
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 375, 'summarization': 6160, 'training': 4546, 'loading': 415} , Number of itemsets: 336
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 198, 'training': 76, 'loading': 398} , Number of itemsets: 22
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 212, 'summarization': 5410, 'training': 1008, 'loading': 416} , Number of itemsets: 179
+milanTelecomComplexStreaming -->
+Times: {'scoring': 370, 'summarization': 8355, 'training': 676, 'loading': 409} , Number of itemsets: 446
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 327, 'training': 103, 'loading': 510} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 441, 'training': 133, 'loading': 700} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 4657, 'training': 147, 'loading': 503} , Number of itemsets: 132
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4581, 'training': 164, 'loading': 790} , Number of itemsets: 61
+
+Running all workloads with summaryRefreshPeriod = 10
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 521, 'training': 315, 'loading': 409} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 9, 'summarization': 552, 'training': 323, 'loading': 355} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 49, 'summarization': 631, 'training': 820, 'loading': 431} , Number of itemsets: 1606
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 283, 'training': 160, 'loading': 352} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 559, 'training': 524, 'loading': 409} , Number of itemsets: 77
+milanTelecomComplex -->
+Times: {'scoring': 47, 'summarization': 482, 'training': 674, 'loading': 403} , Number of itemsets: 57
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 10851, 'training': 200, 'loading': 504} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 49456, 'training': 195, 'loading': 661} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 7, 'summarization': 4307, 'training': 265, 'loading': 567} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 8, 'summarization': 15284, 'training': 283, 'loading': 583} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 2, 'summarization': 7758, 'training': 110779, 'loading': 391} , Number of itemsets: 9755
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 8505, 'training': 64112, 'loading': 403} , Number of itemsets: 2912
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 414, 'summarization': 7060, 'training': 72739, 'loading': 438} , Number of itemsets: 4730
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 1679, 'training': 1325, 'loading': 388} , Number of itemsets: 19
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 232, 'summarization': 5410, 'training': 130441, 'loading': 404} , Number of itemsets: 7803
+milanTelecomComplexStreaming -->
+Times: {'scoring': 361, 'summarization': 9196, 'training': 64705, 'loading': 410} , Number of itemsets: 4595
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 7, 'summarization': 51216, 'training': 7420355, 'loading': 496} , Number of itemsets: 36859
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 3, 'summarization': 66820, 'training': 517994, 'loading': 670} , Number of itemsets: 35314
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 5, 'summarization': 59326, 'training': 619834, 'loading': 485} , Number of itemsets: 48747
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 8, 'summarization': 169697, 'training': 900409, 'loading': 553} , Number of itemsets: 181172
+
+Running all workloads with summaryRefreshPeriod = 100
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 478, 'training': 277, 'loading': 367} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 8, 'summarization': 530, 'training': 312, 'loading': 347} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 653, 'training': 778, 'loading': 411} , Number of itemsets: 2343
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 293, 'training': 143, 'loading': 345} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 574, 'training': 498, 'loading': 372} , Number of itemsets: 69
+milanTelecomComplex -->
+Times: {'scoring': 44, 'summarization': 396, 'training': 641, 'loading': 366} , Number of itemsets: 68
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11395, 'training': 195, 'loading': 488} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 43200, 'training': 191, 'loading': 596} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4262, 'training': 271, 'loading': 468} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14770, 'training': 260, 'loading': 529} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 7424, 'training': 32536, 'loading': 373} , Number of itemsets: 1950
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 8132, 'training': 5374, 'loading': 362} , Number of itemsets: 1098
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 378, 'summarization': 7600, 'training': 4946, 'loading': 405} , Number of itemsets: 1343
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 385, 'training': 287, 'loading': 349} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 194, 'summarization': 5141, 'training': 13336, 'loading': 373} , Number of itemsets: 466
+milanTelecomComplexStreaming -->
+Times: {'scoring': 379, 'summarization': 9215, 'training': 7318, 'loading': 386} , Number of itemsets: 232
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 2825, 'training': 1969, 'loading': 498} , Number of itemsets: 150
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4798, 'training': 3567, 'loading': 599} , Number of itemsets: 83
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 10800, 'training': 16153, 'loading': 493} , Number of itemsets: 2198
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 10054, 'training': 17776, 'loading': 526} , Number of itemsets: 2792
+
+Running all workloads with summaryRefreshPeriod = 1000
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 478, 'training': 306, 'loading': 343} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 500, 'training': 276, 'loading': 351} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 651, 'training': 775, 'loading': 398} , Number of itemsets: 2068
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 294, 'training': 155, 'loading': 350} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 552, 'training': 492, 'loading': 388} , Number of itemsets: 66
+milanTelecomComplex -->
+Times: {'scoring': 42, 'summarization': 488, 'training': 665, 'loading': 363} , Number of itemsets: 77
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11348, 'training': 180, 'loading': 472} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 60, 'summarization': 43518, 'training': 196, 'loading': 563} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4249, 'training': 259, 'loading': 489} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14657, 'training': 267, 'loading': 533} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 8247, 'training': 3762, 'loading': 376} , Number of itemsets: 1929
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 8074, 'training': 547, 'loading': 368} , Number of itemsets: 322
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 376, 'summarization': 7426, 'training': 2094, 'loading': 397} , Number of itemsets: 1330
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 214, 'training': 110, 'loading': 348} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 205, 'summarization': 5040, 'training': 2823, 'loading': 388} , Number of itemsets: 435
+milanTelecomComplexStreaming -->
+Times: {'scoring': 373, 'summarization': 8879, 'training': 1851, 'loading': 381} , Number of itemsets: 279
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 1053, 'training': 280, 'loading': 492} , Number of itemsets: 3
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 1311, 'training': 561, 'loading': 654} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 8418, 'training': 534, 'loading': 488} , Number of itemsets: 313
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 8076, 'training': 509, 'loading': 546} , Number of itemsets: 173
+
+Running all workloads with summaryRefreshPeriod = 10000
+
+testTasks -->
+Times: {'scoring': 7, 'summarization': 434, 'training': 284, 'loading': 361} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 501, 'training': 261, 'loading': 355} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 614, 'training': 782, 'loading': 397} , Number of itemsets: 1060
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 289, 'training': 157, 'loading': 361} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 421, 'training': 1045, 'loading': 381} , Number of itemsets: 62
+milanTelecomComplex -->
+Times: {'scoring': 40, 'summarization': 470, 'training': 635, 'loading': 365} , Number of itemsets: 71
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11499, 'training': 178, 'loading': 484} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 59, 'summarization': 44436, 'training': 184, 'loading': 571} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4295, 'training': 266, 'loading': 497} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 15066, 'training': 261, 'loading': 543} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 8056, 'training': 816, 'loading': 361} , Number of itemsets: 1255
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 7963, 'training': 173, 'loading': 360} , Number of itemsets: 479
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 387, 'summarization': 6354, 'training': 2598, 'loading': 418} , Number of itemsets: 270
+accidentsSimpleStreaming -->
+Times: {'summarization': 195, 'loading': 346} , Number of itemsets: 26
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 216, 'summarization': 5528, 'training': 1043, 'loading': 406} , Number of itemsets: 372
+milanTelecomComplexStreaming -->
+Times: {'scoring': 325, 'summarization': 8000, 'training': 1121, 'loading': 369} , Number of itemsets: 242
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 2, 'summarization': 467, 'training': 127, 'loading': 492} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 564, 'training': 163, 'loading': 604} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 6520, 'training': 207, 'loading': 503} , Number of itemsets: 144
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 5921, 'training': 211, 'loading': 557} , Number of itemsets: 56
+
+Running all workloads with summaryRefreshPeriod = 100000
+
+testTasks -->
+Times: {'scoring': 8, 'summarization': 486, 'training': 302, 'loading': 356} , Number of itemsets: 1
+cmtDatasetSimple -->
+Times: {'scoring': 7, 'summarization': 484, 'training': 260, 'loading': 352} , Number of itemsets: 680
+cmtDatasetComplex -->
+Times: {'scoring': 44, 'summarization': 608, 'training': 774, 'loading': 386} , Number of itemsets: 1510
+accidentsSimple -->
+Times: {'scoring': 3, 'summarization': 286, 'training': 152, 'loading': 368} , Number of itemsets: 31
+milanTelecomSimple -->
+Times: {'scoring': 27, 'summarization': 563, 'training': 498, 'loading': 391} , Number of itemsets: 109
+milanTelecomComplex -->
+Times: {'scoring': 46, 'summarization': 494, 'training': 649, 'loading': 378} , Number of itemsets: 67
+campaignExpendituresSimple -->
+Times: {'scoring': 4, 'summarization': 11399, 'training': 196, 'loading': 487} , Number of itemsets: 1875
+campaignExpendituresComplex -->
+Times: {'scoring': 57, 'summarization': 44297, 'training': 196, 'loading': 632} , Number of itemsets: 23024
+fedDisbursementsSimple -->
+Times: {'scoring': 6, 'summarization': 4233, 'training': 264, 'loading': 489} , Number of itemsets: 3109
+fedDisbursementsComplex -->
+Times: {'scoring': 6, 'summarization': 14666, 'training': 264, 'loading': 582} , Number of itemsets: 15052
+testTasksStreaming -->
+Times: {'scoring': 1, 'summarization': 6982, 'training': 670, 'loading': 368} , Number of itemsets: 1930
+cmtDatasetSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 7438, 'training': 128, 'loading': 370} , Number of itemsets: 246
+cmtDatasetComplexStreaming -->
+Times: {'scoring': 403, 'summarization': 5892, 'training': 1148, 'loading': 394} , Number of itemsets: 382
+accidentsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 187, 'training': 74, 'loading': 376} , Number of itemsets: 23
+milanTelecomSimpleStreaming -->
+Times: {'scoring': 261, 'summarization': 5281, 'training': 672, 'loading': 381} , Number of itemsets: 245
+milanTelecomComplexStreaming -->
+Times: {'scoring': 356, 'summarization': 8327, 'training': 621, 'loading': 374} , Number of itemsets: 443
+campaignExpendituresSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 304, 'training': 86, 'loading': 489} , Number of itemsets: 2
+campaignExpendituresComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 434, 'training': 105, 'loading': 608} , Number of itemsets: 30
+fedDisbursementsSimpleStreaming -->
+Times: {'scoring': 1, 'summarization': 5456, 'training': 133, 'loading': 488} , Number of itemsets: 142
+fedDisbursementsComplexStreaming -->
+Times: {'scoring': 1, 'summarization': 4504, 'training': 127, 'loading': 545} , Number of itemsets: 90
+
