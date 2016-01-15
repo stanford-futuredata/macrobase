@@ -29,3 +29,9 @@ sql_cache/*
 
 # Workload directory
 bench/workflows/*
+
+# Plots
+*.png
+
+# Annoying Mac file
+*.DS_Store
