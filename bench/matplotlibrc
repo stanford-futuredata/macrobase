@@ -1,0 +1,36 @@
+backend: MacOSX
+
+ps.useafm: True
+pdf.use14corefonts: True
+text.usetex: True
+
+text.latex.preamble: \usepackage{siunitx} \sisetup{detect-all} \usepackage{helvet} \usepackage{sansmath} \sansmath
+
+legend.fontsize: small
+# legend.frameon: True
+legend.numpoints: 1
+legend.labelspacing  : 0.25
+legend.borderpad     : 0.25
+legend.handlelength  : 1
+
+# text.dvipnghack : True
+# font.size: 11
+# font.weight : bold
+# font.family: sans-serif
+# font.serif: Computer Modern Roman
+# font.sans-serif: Helvetica
+# text.latex.preamble: \usepackage{sfmath}
+
+figure.figsize: 4, 2
+figure.subplot.top: .94
+figure.subplot.bottom: .12
+figure.subplot.right: .97
+figure.subplot.left: .15
+lines.markersize  : 8
+lines.markeredgewidth: 2
+lines.linewidth: 2
+
+# grid.color: black
+# grid.linestyle: :
+# grid.linewidth: 1  
+# axes.grid : True
