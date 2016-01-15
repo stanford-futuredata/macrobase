@@ -16,7 +16,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["data_count_minutes"],
 
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 100000;"
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -29,7 +29,7 @@ all_config_parameters = \
                           "distance_mapmatched_km", "distance_gps_km",
                           "battery_drain_rate_per_hour"],
 
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 100000;"
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -38,7 +38,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["number_of_casualties"],
 
-    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;"
+    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -47,7 +47,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["sms_in_activity", "sms_out_activity"],
 
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;"
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -57,7 +57,7 @@ all_config_parameters = \
     "targetHighMetrics": ["sms_in_activity", "sms_out_activity", "call_in_activity",
                           "call_out_activity", "internet_traffic_activity"],
 
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;"
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -66,7 +66,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["contb_receipt_amt"],
 
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;"
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -76,7 +76,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["contb_receipt_amt"],
 
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;"
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -85,7 +85,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["dis_amo"],
 
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;"
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;"
   },
   {
     "isBatchJob": True,
@@ -94,7 +94,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["dis_amo"],
 
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;"
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -112,7 +112,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["data_count_minutes"],
 
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 100000;"
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -124,7 +124,7 @@ all_config_parameters = \
                           "data_count_netloc_samples", "data_count_gps_samples",
                           "distance_mapmatched_km", "distance_gps_km"],
 
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 100000;"
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -133,7 +133,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["number_of_casualties"],
 
-    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;"
+    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -142,7 +142,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["sms_in_activity", "sms_out_activity"],
 
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;"
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -152,7 +152,7 @@ all_config_parameters = \
     "targetHighMetrics": ["sms_in_activity", "sms_out_activity", "call_in_activity",
                           "call_out_activity", "internet_traffic_activity"],
 
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;"
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -161,7 +161,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["contb_receipt_amt"],
 
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;"
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -171,7 +171,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["contb_receipt_amt"],
 
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;"
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -180,7 +180,7 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["dis_amo"],
 
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;"
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;"
   },
   {
     "isBatchJob": False,
@@ -189,6 +189,6 @@ all_config_parameters = \
     "targetLowMetrics": [],
     "targetHighMetrics": ["dis_amo"],
 
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;"
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;"
   },
 ]
