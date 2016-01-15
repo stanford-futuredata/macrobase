@@ -155,6 +155,8 @@ public class StreamingFPGrowth {
             }
 
             public void mergeChildren(List<FPTreeNode> otherChildren) {
+                assert(!hasChildren() || !leafNodes.contains(this));
+
                 if(otherChildren == null) {
                     return;
                 }
@@ -164,6 +166,7 @@ public class StreamingFPGrowth {
                     for(FPTreeNode child : otherChildren) {
                         child.parent = this;
                     }
+                    leafNodes.remove(this);
 
                     return;
                 }
@@ -178,6 +181,7 @@ public class StreamingFPGrowth {
 
                             ourChild.count += otherChild.count;
                             ourChild.mergeChildren(otherChild.getChildren());
+
                             matched = true;
                             break;
                         }
@@ -187,7 +191,6 @@ public class StreamingFPGrowth {
                         children.add(otherChild);
                     }
                 }
-
             }
 
             // insert the transaction at this node starting with transaction[currentIndex]
@@ -322,8 +325,6 @@ public class StreamingFPGrowth {
             }
 
             for(int item : itemsToDelete) {
-
-
                 frequentItemCounts.remove(item);
                 frequentItemOrder.remove(item);
 
@@ -335,13 +336,7 @@ public class StreamingFPGrowth {
                         nodeToDelete.parent.mergeChildren(nodeToDelete.children);
                     }
 
-                    if(leafNodes.contains(nodeToDelete)) {
-                        leafNodes.remove(nodeToDelete);
-
-                        if(nodeToDelete.parent != root) {
-                            leafNodes.add(nodeToDelete.parent);
-                        }
-                    }
+                    leafNodes.remove(nodeToDelete);
 
                     nodeToDelete = nodeToDelete.getNextLink();
                 }
@@ -601,6 +596,10 @@ public class StreamingFPGrowth {
             for(int i = 0; i < leavesToInspect.size(); ++i) {
                 FPTreeNode leaf = leavesToInspect.get(i);
 
+                if(leaf == root) {
+                    continue;
+                }
+
                 if(removedNodes.contains(leaf) || sortedNodes.contains(leaf)) {
                     continue;
                 }
@@ -637,12 +636,13 @@ public class StreamingFPGrowth {
                     toInsert.add(node.getItem());
 
                     node.decrementCount(leafCount);
-                    if(node.getCount() == 0) {
+                    // this node no longer has support, so remove it...
+                    if(node.getCount() == 0 && !node.hasChildren()) {
                         removedNodes.add(node);
                         removeNodeFromHeaders(node);
                         node.getParent().removeChild(node);
+                    // still has support but is unsorted, so we'd better check it out
                     } else if(!node.hasChildren() && !sortedNodes.contains(node)) {
-                        // need to inspect this node too
                         leavesToInspect.add(node);
                     }
 
