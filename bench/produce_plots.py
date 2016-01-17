@@ -54,7 +54,7 @@ def get_time(parsed_results, parameter_type, workload_name, parameter_value, tim
     return tot_time
   return parsed_results[parameter_type][workload_name][parameter_value][0][timing_type.lower()]
 
-def plot_graphs(parsed_results):
+def plot_time_graphs(parsed_results):
   for parameter_type in parsed_results:
     for timing_type in timing_types + ['Total']:
       plt.cla()
@@ -78,6 +78,30 @@ def plot_graphs(parsed_results):
       plt.ylabel(timing_type + " time (in milliseconds)")
       plt.savefig(parameter_type + "_" + timing_type + '.pdf', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+def plot_itemset_graphs(parsed_results):
+  for parameter_type in parsed_results:
+    plt.cla()
+    plt.xscale('log')
+    handles = list()
+    for workload_name in parsed_results[parameter_type]:
+      if workload_name not in workloads_to_be_plotted:
+        continue
+      keys = list()
+      values = list()
+      for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
+        try:
+          values.append(parsed_results[parameter_type][workload_name][parameter_value][1])
+          keys.append(parameter_value)
+        except:
+          continue
+      handle, = plt.plot(keys, values, label=workload_name)
+      handles.append(handle)
+    lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
+    plt.xlabel(parameter_type)
+    plt.ylabel("Number of itemsets")
+    plt.savefig(parameter_type + "_Itemsets.pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
+
 if __name__ == '__main__':
   parsed_results = parse_output_file("parameter_sweep.out")
-  plot_graphs(parsed_results)
+  plot_time_graphs(parsed_results)
+  plot_itemset_graphs(parsed_results)
