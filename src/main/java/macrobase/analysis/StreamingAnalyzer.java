@@ -172,7 +172,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         int tupleNo = 0;
-        long totTrainingTime = 0;
+        long totODTrainingTime = 0;
+        long totSummarizationTrainingTime = 0;
         long totScoringTime = 0;
         long totSummarizationTime = 0;
 
@@ -188,11 +189,17 @@ public class StreamingAnalyzer extends BaseAnalyzer {
             } else if(tupleNo >= warmupCount) {
                 // todo: calling curtime so frequently might be bad...
                 long now = System.currentTimeMillis();
+
                 sw.start();
                 analysisUpdater.updateIfNecessary(now, tupleNo);
+                sw.stop();
+                sw.reset();
+                totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
+
+                sw.start();
                 modelUpdater.updateIfNecessary(now, tupleNo);
                 sw.stop();
-                totTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
+                totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
                 sw.reset();
 
                 // classify, then insert into tree, etc.
@@ -228,7 +235,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
         sw.reset();
 
-        log.debug("...ended training (time: {}ms)!", (totTrainingTime / 1000) + 1);
+        log.debug("...ended OD training (time: {}ms)!", (totODTrainingTime / 1000) + 1);
+        log.debug("...ended summarization training (time: {}ms)!", (totSummarizationTrainingTime / 1000) + 1);
         log.debug("...ended scoring (time: {}ms)!", (totScoringTime / 1000) + 1);
         log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
 
@@ -236,7 +244,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         //System.console().readLine("Finished! Press any key to continue");
 
-        return new AnalysisResult(0, 0, loadTime, totScoringTime + totTrainingTime, totSummarizationTime, isr);
+        return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, isr);
     }
 
     public void setWarmupCount(Integer warmupCount) {
