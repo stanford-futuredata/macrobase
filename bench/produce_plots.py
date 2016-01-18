@@ -94,7 +94,7 @@ def plot_itemset_graphs(parsed_results):
           keys.append(parameter_value)
         except:
           continue
-      handle, = plt.plot(keys, values, label=workload_name)
+      handle, = plt.plot(keys, values, label=workload_name, marker='o')
       handles.append(handle)
     lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
     plt.xlabel(parameter_type)
