@@ -139,7 +139,6 @@ public class MinCovDet extends OutlierDetector  {
     }
 
     private RealMatrix getCovariance(List<? extends HasMetrics> data) {
-        int p = data.iterator().next().getMetrics().getDimension();
         RealMatrix ret = new Array2DRowRealMatrix(data.size(), p);
         int idx = 0;
         for(HasMetrics d : data) {
@@ -194,7 +193,7 @@ public class MinCovDet extends OutlierDetector  {
 
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
-        List<? extends HasMetrics> initialSubset = chooseKRandom(data, p + 1);
+        List<? extends HasMetrics> initialSubset = chooseKRandom(data, h);
         context.stop();
 
         context = meanComputation.time();
