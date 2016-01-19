@@ -69,9 +69,9 @@ def parse_results(results_file):
       if line.startswith("DEBUG"):
         if "time" in line:
           line = line.split("...ended")[1].strip()
-          line_tokens = line.split()
-          time_type = line_tokens[0]
-          time = int(line_tokens[2][:-4])
+          line_tokens = line.split("(")
+          time_type = line_tokens[0].strip()
+          time = int(line_tokens[1][6:-4])
           times[time_type] = time
         elif "itemsets" in line:
           line = line.split("Number of itemsets:")[1].strip()
