@@ -53,15 +53,15 @@ public class FastButBigSpaceSaving extends ApproximateCount {
 
         log.trace("Decaying; {} items stored", counts.size());
 
-        Set<Map.Entry<Integer, Double>> frozenEntrySet = Sets.newHashSet(counts.entrySet());
-
-        for(Map.Entry<Integer, Double> entry : frozenEntrySet) {
+        for(Map.Entry<Integer, Double> entry : counts.entrySet()) {
             double newValue = entry.getValue()*by;
             counts.put(entry.getKey(), newValue);
 
         }
 
         if(counts.size() > maxStableSize) {
+            Set<Map.Entry<Integer, Double>> frozenEntrySet = Sets.newHashSet(counts.entrySet());
+
             // find the <maxStableSize>th value
             double threshValue = Ordering.natural().greatestOf(counts.values(), maxStableSize).get(maxStableSize-1);
             prevEpochMin = threshValue;
