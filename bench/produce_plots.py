@@ -28,10 +28,11 @@ def parse_output_file(filename):
       if "Running all workloads" in line:
         parameters_description = line.split("Running all workloads with ")[1].strip()
       if "Times" in line:
-        [times, itemsets] = line.split(" , ")
+        [times, itemsets, iterations] = line.split(" , ")
         split_point = times.find(": ")
         times = eval(times[split_point+2:])
         itemsets = int(itemsets.split(": ")[1])
+        iterations = int(iterations.split(": ")[1])
         workload_name = lines[i-1].split("-->")[0].strip()
         try:
           [parameter_type, parameter_value] = parameters_description.split(" = ")
@@ -43,7 +44,7 @@ def parse_output_file(filename):
           parsed_results[parameter_type][workload_name] = dict()
         if workload_name not in parsed_results[parameter_type]:
           parsed_results[parameter_type][workload_name] = dict()
-        parsed_results[parameter_type][workload_name][parameter_value] = (times, itemsets)
+        parsed_results[parameter_type][workload_name][parameter_value] = (times, itemsets, iterations)
   return parsed_results
 
 def get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type):
@@ -78,7 +79,7 @@ def plot_time_graphs(parsed_results):
       plt.ylabel(timing_type + " time (in milliseconds)")
       plt.savefig(parameter_type + "_" + timing_type + '.pdf', bbox_extra_artists=(lgd,), bbox_inches='tight')
 
-def plot_itemset_graphs(parsed_results):
+def plot_aux_graphs(parsed_results, idx, ylabel, modifier):
   for parameter_type in parsed_results:
     plt.cla()
     plt.xscale('log')
@@ -90,7 +91,7 @@ def plot_itemset_graphs(parsed_results):
       values = list()
       for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
         try:
-          values.append(parsed_results[parameter_type][workload_name][parameter_value][1])
+          values.append(parsed_results[parameter_type][workload_name][parameter_value][idx])
           keys.append(parameter_value)
         except:
           continue
@@ -99,9 +100,10 @@ def plot_itemset_graphs(parsed_results):
     lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
     plt.xlabel(parameter_type)
     plt.ylabel("Number of itemsets")
-    plt.savefig(parameter_type + "_Itemsets.pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(parameter_type + "_" + modifier + ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
 if __name__ == '__main__':
   parsed_results = parse_output_file("parameter_sweep.out")
   plot_time_graphs(parsed_results)
-  plot_itemset_graphs(parsed_results)
+  plot_aux_graphs(parsed_results, 1, "Number of itemsets", "Itemsets")
+  plot_aux_graphs(parsed_results, 2, "Number of iterations in MCD step", "IterationsMCD")

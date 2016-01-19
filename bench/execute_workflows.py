@@ -63,6 +63,7 @@ def create_config_file(config_parameters, conf_file):
 def parse_results(results_file):
   times = dict()
   num_itemsets = 0
+  num_iterations = 0
   with open(results_file, 'r') as f:
     lines = f.read().split('\n')
     for line in lines:
@@ -76,7 +77,10 @@ def parse_results(results_file):
         elif "itemsets" in line:
           line = line.split("Number of itemsets:")[1].strip()
           num_itemsets = int(line)
-  return times, num_itemsets
+        elif "iterations" in line:
+          line = line.split("Number of iterations in MCD step:")[1].strip()
+          num_iterations = int(line)
+  return times, num_itemsets, num_iterations
 
 def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
@@ -101,9 +105,9 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
     create_config_file(config_parameters, conf_file)
     cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
     os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
-    times, num_itemsets = parse_results(results_file)
+    times, num_itemsets, num_iterations = parse_results(results_file)
     print config_parameters["taskName"], "-->"
-    print "Times:", times, ", Number of itemsets:", num_itemsets
+    print "Times:", times, ", Number of itemsets:", num_itemsets, ", Number of iterations:", num_iterations
   print
 
 if __name__ == '__main__':
