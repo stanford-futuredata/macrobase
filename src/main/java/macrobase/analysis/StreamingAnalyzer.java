@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -177,6 +178,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         long totScoringTime = 0;
         long totSummarizationTime = 0;
 
+        for (int i = 0; i < 1000; i++) {
         for(Datum d: data) {
             inputReservoir.insert(d);
 
@@ -241,10 +243,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
 
         log.debug("Number of itemsets: {}", isr.size());
+        
+        }
 
         //System.console().readLine("Finished! Press any key to continue");
 
-        return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, isr);
+        return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, new ArrayList<ItemsetResult>());
     }
 
     public void setWarmupCount(Integer warmupCount) {

@@ -31,7 +31,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<StreamingStanda
             loader = new PostgresLoader();
         }
 
-        loader.connect(configuration.getDbUrl());
+        // loader.connect(configuration.getDbUrl());
 
         StreamingAnalyzer analyzer = new StreamingAnalyzer();
         analyzer.setMinInlierRatio(configuration.getMinInlierRatio());

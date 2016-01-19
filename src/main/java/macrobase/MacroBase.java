@@ -27,6 +27,7 @@ public class MacroBase
 
     public static void main( String[] args ) throws Exception
     {
+    	System.console().readLine();
         System.out.println("Welcome to\n" +
                            "  _   _   _   _   _   _   _   _   _  \n" +
                            " / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ \n" +
@@ -36,5 +37,6 @@ public class MacroBase
         //benchmark();
 
         MacroBaseServer.main(args);
+        System.console().readLine();
     }
 }
