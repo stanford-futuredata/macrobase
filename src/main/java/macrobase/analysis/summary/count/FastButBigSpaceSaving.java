@@ -87,11 +87,11 @@ public class FastButBigSpaceSaving extends ApproximateCount {
         Double value = counts.get(item);
         if (value == null) {
             value = prevEpochMin + count;
+            totalCount += prevEpochMin + count;
         } else {
            value += count;
+           totalCount += count;
         }
-
-        totalCount += value;
 
         counts.put(item, value);
     }
