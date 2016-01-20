@@ -34,6 +34,10 @@ def parse_output_file(filename):
         itemsets_line = lines[i+1].split(" , ")
         iterations_line = lines[i+2].split(" , ")
 
+        itemsets_list_line = lines[i+3]
+        itemsets_list_str = itemsets_list_line.replace("Union of all itemsets:", "")
+        itemsets_list = eval(itemsets_list_str)
+
         itemsets_mean = float(itemsets_line[0].split(": ")[1])
         itemsets_stddev = float(itemsets_line[1].split(": ")[1])
 
@@ -51,7 +55,7 @@ def parse_output_file(filename):
           parsed_results[parameter_type][workload_name] = dict()
         if workload_name not in parsed_results[parameter_type]:
           parsed_results[parameter_type][workload_name] = dict()
-        parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev))
+        parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list)
   return parsed_results
 
 def get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type):
@@ -127,11 +131,42 @@ def plot_aux_graphs(parsed_results, idx, ylabel, modifier):
       handles.append(handle)
     lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
     plt.xlabel(parameter_type)
-    plt.ylabel("Number of itemsets")
+    plt.ylabel(ylabel)
     plt.savefig(parameter_type + "_" + modifier + ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+def plot_recall_precision(parsed_results):
+  for parameter_type in parsed_results:
+    plt.cla()
+    plt.xscale('log')
+    handles = list()
+    for workload_name in parsed_results[parameter_type]:
+      if workload_name not in workloads_to_be_plotted:
+        continue
+      keys = list()
+      recall_values = list()
+      precision_values = list()
+      for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
+        try:
+          itemsets = parsed_results[parameter_type][workload_name][parameter_value][3]
+          ground_truth_itemsets = parsed_results[parameter_type][workload_name.replace("Streaming", "")][parameter_value][3]
+          (precision, recall) = compute_precision_and_recall(itemsets, ground_truth_itemsets)
+          recall_values.append(recall)
+          precision_values.append(precision)
+          keys.append(parameter_value)
+        except:
+          continue
+      handle, = plt.plot(keys, recall_values, label=(workload_name + " (Recall)") , marker='o')
+      handles.append(handle)
+      handle, = plt.plot(keys, precision_values, label=(workload_name + " (Precision)"), marker='o')
+      handles.append(handle)
+    lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
+    plt.xlabel(parameter_type)
+    plt.ylabel("Precision / Recall")
+    plt.savefig(parameter_type + "_Precision&Recall.pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
+
 if __name__ == '__main__':
-  parsed_results = parse_output_file("parameter_sweep.out")
+  parsed_results = parse_output_file("results.txt")
   plot_time_graphs(parsed_results)
   plot_aux_graphs(parsed_results, 1, "Number of itemsets", "Itemsets")
   plot_aux_graphs(parsed_results, 2, "Number of iterations in MCD step", "IterationsMCD")
+  plot_recall_precision(parsed_results)
