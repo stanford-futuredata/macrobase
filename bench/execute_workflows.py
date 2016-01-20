@@ -66,9 +66,11 @@ def parse_results(results_file):
   times = dict()
   num_itemsets = 0
   num_iterations = 0
+  itemsets = list()
   with open(results_file, 'r') as f:
     lines = f.read().split('\n')
-    for line in lines:
+    for i in xrange(len(lines)):
+      line = lines[i]
       if line.startswith("DEBUG"):
         if "time" in line:
           line = line.split("...ended")[1].strip()
@@ -82,7 +84,18 @@ def parse_results(results_file):
         elif "iterations" in line:
           line = line.split("Number of iterations in MCD step:")[1].strip()
           num_iterations = int(line)
-  return times, num_itemsets, num_iterations
+      if "Columns" in line:
+        j = i + 1
+        itemset = dict()
+        while lines[j].strip() != '':
+          itemset_str = lines[j].lstrip()
+          [itemset_type, itemset_value] = itemset_str.split(": ")
+          if itemset_type != "" and itemset_value != "":
+            itemset[itemset_type] = itemset_value
+          j += 1
+        if itemset != {}:
+          itemsets.append(itemset)
+  return times, num_itemsets, num_iterations, itemsets
 
 def get_stats(value_list):
   value_list = [float(value) for value in value_list]
@@ -116,10 +129,11 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
     all_times = dict()
     all_num_itemsets = list()
     all_num_iterations = list()
+    all_itemsets = set()
 
     for i in xrange(NUM_RUNS_PER_WORKFLOW):
       os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
-      times, num_itemsets, num_iterations = parse_results(results_file)
+      times, num_itemsets, num_iterations, itemsets = parse_results(results_file)
 
       for time_type in times:
         if time_type not in all_times:
@@ -128,6 +142,8 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
 
       all_num_itemsets.append(num_itemsets)
       all_num_iterations.append(num_iterations)
+      for itemset in itemsets:
+        all_itemsets.add(frozenset(itemset.items()))
 
     mean_and_stddev_times = dict()
     for time_type in all_times:
@@ -139,6 +155,7 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
     print "Times:", mean_and_stddev_times
     print "Mean number of itemsets:", mean_num_itemsets, ", Stddev number of itemsets:", stddev_num_itemsets
     print "Mean number of iterations:", mean_num_iterations, ", Stddev number of iterations:", stddev_num_iterations
+    print "Union of all itemsets:", list(all_itemsets)
   print
 
 if __name__ == '__main__':
