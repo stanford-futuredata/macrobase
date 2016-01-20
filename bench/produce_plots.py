@@ -1,14 +1,14 @@
 import matplotlib.pyplot as plt
 
 workloads_to_be_plotted = [
-  "cmtDatasetSimple",
-  "cmtDatasetComplex",
-  "milanTelecomSimple",
-  "milanTelecomComplex",
-  "campaignExpendituresSimple",
-  "campaignExpendituresComplex",
-  "fedDisbursementsSimple",
-  "fedDisbursementsComplex"
+  "cmtDatasetSimpleStreaming",
+  "cmtDatasetComplexStreaming",
+  "milanTelecomSimpleStreaming",
+  "milanTelecomComplexStreaming",
+  "campaignExpendituresSimpleStreaming",
+  "campaignExpendituresComplexStreaming",
+  "fedDisbursementsSimpleStreaming",
+  "fedDisbursementsComplexStreaming"
 ]
 
 timing_types = [
@@ -61,6 +61,21 @@ def get_time(parsed_results, parameter_type, workload_name, parameter_value, tim
       tot_time += parsed_results[parameter_type][workload_name][parameter_value][0][timing_type_prime.lower()][0]
     return (tot_time, 0.0)
   return parsed_results[parameter_type][workload_name][parameter_value][0][timing_type.lower()]
+
+def compute_precision_and_recall(itemsets, ground_truth_itemsets):
+  num_correct = 0
+  for itemset in itemsets:
+    if itemset in ground_truth_itemsets:
+      num_correct += 1
+  precision = float(num_correct) / float(len(itemsets))
+
+  num_correct = 0
+  for itemset in ground_truth_itemsets:
+    if itemset in itemsets:
+      num_correct += 1
+  recall = float(num_correct) / float(len(ground_truth_itemsets))
+
+  return precision, recall
 
 def plot_time_graphs(parsed_results):
   for parameter_type in parsed_results:
