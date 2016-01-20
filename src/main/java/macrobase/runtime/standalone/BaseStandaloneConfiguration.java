@@ -11,6 +11,16 @@ import java.util.List;
  * Created by pbailis on 12/24/15.
  */
 public class BaseStandaloneConfiguration extends Configuration {
+
+    public enum DetectorType {
+        MAD,
+        MCD,
+        ZSCORE
+    }
+
+    @JsonProperty
+    private DetectorType outlierDetectorType;
+
     @NotEmpty
     private String taskName;
 
@@ -98,6 +108,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     public double getMinSupport() {
         return minSupport;
     }
+
+    @JsonProperty
+    public DetectorType getDetectorType() { return outlierDetectorType; }
 
     @JsonProperty
     public double getMinInlierRatio() {

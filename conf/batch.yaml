@@ -3,6 +3,9 @@ targetAttributes: [userid]
 targetLowMetrics: [data_count_minutes]
 targetHighMetrics: []
 
+# MAD, MCD, ZSCORE
+outlierDetectorType: MCD
+
 dbUrl: postgres
 baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
 

@@ -1,16 +1,30 @@
 package macrobase.analysis;
 
+import macrobase.analysis.outlier.MAD;
+import macrobase.analysis.outlier.MinCovDet;
+import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.outlier.ZScore;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 abstract public class BaseAnalyzer {
+    private static final Logger log = LoggerFactory.getLogger(BaseAnalyzer.class);
+
     protected double ZSCORE = 3;
     protected double TARGET_PERCENTILE = 0.01;
     protected double MIN_SUPPORT = 0.001;
     protected double MIN_INLIER_RATIO = 1;
+
+    protected BaseStandaloneConfiguration.DetectorType detectorType;
 
     protected boolean forceUsePercentile = true;
     protected boolean forceUseZScore = false;
     
     protected double alphaMCD = 0.5;
     protected double stoppingDeltaMCD = 1e-3;
+
+    public void setDetectorType(BaseStandaloneConfiguration.DetectorType detectorType) { this.detectorType = detectorType; }
 
     public void forceUsePercentile(boolean force) {
         forceUsePercentile = force;
@@ -42,5 +56,30 @@ abstract public class BaseAnalyzer {
     
     public void setStoppingDeltaMCD(double stoppingDeltaMCD) {
     	this.stoppingDeltaMCD = stoppingDeltaMCD;
+    }
+
+    protected OutlierDetector constructDetector(int metricsDimensions) {
+        if(detectorType == null) {
+            if (metricsDimensions == 1) {
+                log.info("By default: using MAD detector for dimension 1 metric.");
+                return new MAD();
+            } else {
+                log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
+                return new MinCovDet(metricsDimensions);
+            }
+        } else {
+            if(detectorType == BaseStandaloneConfiguration.DetectorType.MAD) {
+                log.info("Using MAD detector.");
+                return new MAD();
+            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.MCD) {
+                log.info("Using MCD detector.");
+                return new MinCovDet(metricsDimensions);
+            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.ZSCORE) {
+                log.info("Using ZScore detector.");
+                return new ZScore();
+            } else {
+                throw new RuntimeException("Unhandled detector class!"+ detectorType);
+            }
+        }
     }
 }

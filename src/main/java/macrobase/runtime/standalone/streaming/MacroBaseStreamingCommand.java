@@ -62,6 +62,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<StreamingStanda
         analyzer.forceUsePercentile(configuration.usePercentile());
         analyzer.forceUseZScore(configuration.useZScore());
 
+        analyzer.setDetectorType(configuration.getDetectorType());
         analyzer.setDecayRate(configuration.getDecayRate());
         analyzer.setInputReservoirSize(configuration.getInputReservoirSize());
         analyzer.setScoreReservoirSize(configuration.getScoreReservoirSize());

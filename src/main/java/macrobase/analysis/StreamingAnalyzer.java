@@ -117,13 +117,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         //System.console().readLine("waiting to start (press a key)");
 
-        OutlierDetector detector;
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
-        if(metricsDimensions == 1) {
-            detector = new MAD();
-        } else {
-            detector = new MinCovDet(metricsDimensions, alphaMCD, stoppingDeltaMCD);
-        }
+        OutlierDetector detector = constructDetector(metricsDimensions);
 
         ExponentiallyBiasedAChao<Datum> inputReservoir =
                 new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);

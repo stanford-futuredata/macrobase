@@ -5,6 +5,7 @@ import com.google.common.base.Stopwatch;
 import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.outlier.ZScore;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -12,6 +13,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,13 +51,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
         log.debug("...ended loading (time: {}ms)!", loadTime);
 
         sw.start();
-        OutlierDetector detector;
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
-        if(metricsDimensions == 1) {
-            detector = new MAD();
-        } else {
-            detector = new MinCovDet(metricsDimensions);
-        }
+        OutlierDetector detector = constructDetector(metricsDimensions);
 
         OutlierDetector.BatchResult or;
         if(forceUsePercentile || (!forceUseZScore && TARGET_PERCENTILE > 0)) {
