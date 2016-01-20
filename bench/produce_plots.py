@@ -28,11 +28,18 @@ def parse_output_file(filename):
       if "Running all workloads" in line:
         parameters_description = line.split("Running all workloads with ")[1].strip()
       if "Times" in line:
-        [times, itemsets, iterations] = line.split(" , ")
-        split_point = times.find(": ")
-        times = eval(times[split_point+2:])
-        itemsets = int(itemsets.split(": ")[1])
-        iterations = int(iterations.split(": ")[1])
+        split_point = line.find(": ")
+        times = eval(line[split_point+2:])
+
+        itemsets_line = lines[i+1].split(" , ")
+        iterations_line = lines[i+2].split(" , ")
+
+        itemsets_mean = float(itemsets_line[0].split(": ")[1])
+        itemsets_stddev = float(itemsets_line[1].split(": ")[1])
+
+        iterations_mean = float(iterations_line[0].split(": ")[1])
+        iterations_stddev = float(iterations_line[1].split(": ")[1])
+
         workload_name = lines[i-1].split("-->")[0].strip()
         try:
           [parameter_type, parameter_value] = parameters_description.split(" = ")
@@ -44,15 +51,15 @@ def parse_output_file(filename):
           parsed_results[parameter_type][workload_name] = dict()
         if workload_name not in parsed_results[parameter_type]:
           parsed_results[parameter_type][workload_name] = dict()
-        parsed_results[parameter_type][workload_name][parameter_value] = (times, itemsets, iterations)
+        parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev))
   return parsed_results
 
 def get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type):
   if timing_type == 'Total':
     tot_time = 0.0
     for timing_type_prime in timing_types:
-      tot_time += parsed_results[parameter_type][workload_name][parameter_value][0][timing_type_prime.lower()]
-    return tot_time
+      tot_time += parsed_results[parameter_type][workload_name][parameter_value][0][timing_type_prime.lower()][0]
+    return (tot_time, 0.0)
   return parsed_results[parameter_type][workload_name][parameter_value][0][timing_type.lower()]
 
 def plot_time_graphs(parsed_results):
@@ -66,13 +73,16 @@ def plot_time_graphs(parsed_results):
           continue
         keys = list()
         values = list()
+        stddevs = list()
         for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
           try:
-            values.append(get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type))
+            value, stddev = get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type)
+            values.append(value)
+            stddevs.append(stddev)
             keys.append(parameter_value)
           except:
             continue
-        handle, = plt.plot(keys, values, label=workload_name, marker='o')
+        handle = plt.errorbar(keys, values, yerr=stddevs, label=workload_name, marker='o')
         handles.append(handle)
       lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
       plt.xlabel(parameter_type)
@@ -89,13 +99,16 @@ def plot_aux_graphs(parsed_results, idx, ylabel, modifier):
         continue
       keys = list()
       values = list()
+      stddevs = list()
       for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
         try:
-          values.append(parsed_results[parameter_type][workload_name][parameter_value][idx])
+          (value, stddev) = parsed_results[parameter_type][workload_name][parameter_value][idx]
+          values.append(value)
+          stddevs.append(stddev)
           keys.append(parameter_value)
         except:
           continue
-      handle, = plt.plot(keys, values, label=workload_name, marker='o')
+      handle = plt.errorbar(keys, values, yerr=stddevs, label=workload_name, marker='o')
       handles.append(handle)
     lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
     plt.xlabel(parameter_type)
