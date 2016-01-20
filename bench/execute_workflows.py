@@ -142,7 +142,6 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
   print
 
 if __name__ == '__main__':
-  run_all_workloads()
   for sweeping_parameter_name in sweeping_parameters:
     for sweeping_parameter_value in sweeping_parameters[sweeping_parameter_name]:
       run_all_workloads(sweeping_parameter_name, sweeping_parameter_value)
