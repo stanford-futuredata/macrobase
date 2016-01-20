@@ -7,6 +7,8 @@ testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
 
+NUM_RUNS_PER_WORKFLOW = 5
+
 default_args = {
   "minInlierRatio": 1.0,
   "minSupport": 0.001,
@@ -82,6 +84,12 @@ def parse_results(results_file):
           num_iterations = int(line)
   return times, num_itemsets, num_iterations
 
+def get_stats(value_list):
+  value_list = [float(value) for value in value_list]
+  mean = sum(value_list) / len(value_list)
+  stddev = (sum([(value - mean)**2 for value in value_list]) / len(value_list)) ** 0.5
+  return mean, stddev
+
 def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
     print "Running all workloads with", sweeping_parameter_name, "=", sweeping_parameter_value
@@ -104,10 +112,33 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
     results_file = os.path.join(sub_dir, "results.txt")
     create_config_file(config_parameters, conf_file)
     cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
-    os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
-    times, num_itemsets, num_iterations = parse_results(results_file)
+
+    all_times = dict()
+    all_num_itemsets = list()
+    all_num_iterations = list()
+
+    for i in xrange(NUM_RUNS_PER_WORKFLOW):
+      os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
+      times, num_itemsets, num_iterations = parse_results(results_file)
+
+      for time_type in times:
+        if time_type not in all_times:
+          all_times[time_type] = list()
+        all_times[time_type].append(times[time_type])
+
+      all_num_itemsets.append(num_itemsets)
+      all_num_iterations.append(num_iterations)
+
+    mean_and_stddev_times = dict()
+    for time_type in all_times:
+      mean_and_stddev_times[time_type] = get_stats(all_times[time_type])
+    mean_num_itemsets, stddev_num_itemsets = get_stats(all_num_itemsets)
+    mean_num_iterations, stddev_num_iterations = get_stats(all_num_iterations)
+
     print config_parameters["taskName"], "-->"
-    print "Times:", times, ", Number of itemsets:", num_itemsets, ", Number of iterations:", num_iterations
+    print "Times:", mean_and_stddev_times
+    print "Mean number of itemsets:", mean_num_itemsets, ", Stddev number of itemsets:", stddev_num_itemsets
+    print "Mean number of iterations:", mean_num_iterations, ", Stddev number of iterations:", stddev_num_iterations
   print
 
 if __name__ == '__main__':
