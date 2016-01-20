@@ -36,18 +36,18 @@ default_args = {
 }
 
 sweeping_parameters = {
-  "alphaMCD": [1.0, .95, .75, .5, .25, .1, .05, .01, .001],
-  "stoppingDeltaMCD": [1.0, 0.1, 0.01, 0.001, 0.0001],
-  "inputReservoirSize": [1, 5, 10, 100, 500, 1000, 4000, 10000, 100000],
-  "scoreReservoirSize": [1, 5, 10, 100, 500, 1000, 4000, 10000, 100000],
-  "summaryRefreshPeriod": [10, 100, 1000, 10000, 100000, 1, 5],
-  "modelRefreshPeriod": [10, 100, 1000, 10000, 100000, 1, 5],
+  "alphaMCD": [1.0, 0.5, 0.05],
+  "stoppingDeltaMCD": [1.0, 0.01, 0.0001],
+  "inputReservoirSize": [1, 100, 500, 10000, 100000],
+  "scoreReservoirSize": [1, 100, 500, 10000, 100000],
+  "summaryRefreshPeriod": [10, 1000, 100000],
+  "modelRefreshPeriod": [10, 1000, 100000],
 
-  "minSupport": [1.0, 0.1, 0.01, 0.001, 0.5, 0.8, 0.05],
-  "minInlierRatio": [1.0, 0.1, 0.01, 0.001, 0.5, 0.8, 2.0, 5.0, 10.0, 50.0],
-  "targetPercentile": [0.9, 0.99, 0.999, 0.5, 0.1, 0.01],
+  "minSupport": [1.0, 0.5, 0.05, 0.001],
+  "minInlierRatio": [1.0, 2.0, 5.0, 50.0],
+  "targetPercentile": [0.5, 0.9, 0.999],
 
-  "warmupCount": [1, 5, 10, 50, 100, 500, 1000, 10000, 100000]
+  "warmupCount": [1, 50, 10000, 100000]
 }
 
 def process_config_parameters(config_parameters):
