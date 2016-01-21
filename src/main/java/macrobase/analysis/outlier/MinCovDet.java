@@ -212,7 +212,7 @@ public class MinCovDet extends OutlierDetector  {
         int stepNo = 1;
 
         // now take C-steps
-        int numIterations = 0;
+        int numIterations = 1;
         while(true) {
             context = findKClosest.time();
             List<? extends HasMetrics> newH = findKClosest(h, data);
