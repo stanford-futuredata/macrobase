@@ -17,6 +17,7 @@ hs_err_pid*
 .idea/
 target/
 *.iml
+*.sw[op]
 
 dependency-reduced-pom.xml
 
@@ -35,3 +36,6 @@ bench/workflows/*
 
 # Annoying Mac file
 *.DS_Store
+
+# custom configuration
+conf/custom

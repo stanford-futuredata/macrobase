@@ -46,6 +46,7 @@ public class MacroBaseServer extends Application<ServerConfiguration> {
 
         if(configuration.doPreLoadData() && (!configuration.getPreLoad().isEmpty() || true)) {
             for(ServerConfiguration.PreLoadData pld : configuration.getPreLoad()) {
+                loader.setDatabaseCredentials(pld.getDbUser(), pld.getDbPassword());
                 try {
                     log.info("Pre-loading {} from {}...", pld.getBaseQuery(), pld.getDbUrl());
                     loader.connect(pld.getDbUrl());

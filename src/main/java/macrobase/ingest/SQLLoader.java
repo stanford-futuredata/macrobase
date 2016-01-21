@@ -35,6 +35,8 @@ public abstract class SQLLoader {
     private ManagedDataSource source;
 
     private Connection connection;
+    private String dbUser;
+    private String dbPassword;
 
     private String removeLimit(String sql) {
         return sql.replaceAll("LIMIT\\s\\d+", "");
@@ -44,10 +46,22 @@ public abstract class SQLLoader {
         return sql.replaceAll(";", "").replaceAll("'", "''");
     }
 
+    public void setDatabaseCredentials(String user, String password) {
+        this.dbUser = user;
+        this.dbPassword = password;
+    }
+
     public void connect(String pgUrl) throws SQLException {
         DataSourceFactory factory = new DataSourceFactory();
+
         factory.setDriverClass(getDriverClass());
         factory.setUrl(getJDBCUrlPrefix()+pgUrl);
+
+        if (this.dbUser != null && this.dbPassword != null) {
+            factory.setUser(this.dbUser);
+            factory.setPassword(this.dbPassword);
+        }
+
         source = factory.build(MacroBase.metrics, "postgres");
         connection = source.getConnection();
     }

@@ -14,18 +14,25 @@ public class ServerConfiguration extends Configuration {
     public static class PreLoadData {
         @NotEmpty
         private String baseQuery;
+
         @NotEmpty
         private String dbUrl;
+
+        private String dbUser;
+
+        private String dbPassword;
 
         @NotEmpty
         private List<String> targetAttributes;
 
-        public PreLoadData(String baseQuery, String dbUrl, List<String> targetAttributes, List<String> targetHighMetrics, List<String> targetLowMetrics) {
+        public PreLoadData(String baseQuery, String dbUrl, List<String> targetAttributes, List<String> targetHighMetrics, List<String> targetLowMetrics, String dbUser, String dbPassword) {
             this.baseQuery = baseQuery;
             this.dbUrl = dbUrl;
             this.targetAttributes = targetAttributes;
             this.targetHighMetrics = targetHighMetrics;
             this.targetLowMetrics = targetLowMetrics;
+            this.dbUser = dbUser;
+            this.dbPassword = dbPassword;
         }
 
         private List<String> targetHighMetrics;
@@ -34,6 +41,16 @@ public class ServerConfiguration extends Configuration {
         @JsonProperty
         public String getBaseQuery() {
             return baseQuery;
+        }
+
+        @JsonProperty
+        public String getDbUser() {
+            return dbUser;
+        }
+
+        @JsonProperty
+        public String getDbPassword() {
+          return dbPassword;
         }
 
         @JsonProperty
