@@ -82,14 +82,12 @@ public class MinCovDet extends OutlierDetector  {
 
         List<Datum> ret = new ArrayList<>();
         Set<Integer> alreadyChosen = new HashSet<>();
-        int remaining = k;
-        while(remaining > 0) {
+        while(ret.size() < k) {
             int idx = random.nextInt(allData.size());
             if(!alreadyChosen.contains(idx)) {
                 alreadyChosen.add(idx);
                 ret.add(allData.get(idx));
             }
-            remaining -= 1;
         }
 
         assert(ret.size() == k);
@@ -113,14 +111,28 @@ public class MinCovDet extends OutlierDetector  {
     public static double getMahalanobis(RealVector mean,
                                         RealMatrix inverseCov,
                                         RealVector vec) {
-        // sqrt((vec-mean)^T S^-1 (vec-mean))
-        RealMatrix vecT = new Array2DRowRealMatrix(vec.toArray());
-        RealMatrix meanT = new Array2DRowRealMatrix(mean.toArray());
-        RealMatrix vecSubtractMean = vecT.subtract(meanT);
+        final int dim = mean.getDimension();
+        double[] vecMinusMean = new double[dim];
 
-        return Math.sqrt(vecSubtractMean.transpose()
-                                 .multiply(inverseCov)
-                                 .multiply(vecSubtractMean).getEntry(0, 0));
+        for(int d = 0; d < dim; ++d) {
+            vecMinusMean[d] = vec.getEntry(d) - mean.getEntry(d);
+        }
+
+        double[] intermediate = new double[dim];
+
+        // vecMinusMean times inverseCov
+        for(int col = 0; col < dim; ++col) {
+            for (int d = 0; d < dim; ++d) {
+                intermediate[col] += inverseCov.getEntry(d, col)*vecMinusMean[d];
+            }
+        }
+
+        double ret = 0;
+        for(int d = 0; d < dim; ++d) {
+            ret += intermediate[d]*vecMinusMean[d];
+        }
+
+        return Math.sqrt(ret);
     }
 
     private RealVector getMean(List<? extends HasMetrics> data) {
@@ -253,6 +265,18 @@ public class MinCovDet extends OutlierDetector  {
     @Override
     public double score(Datum datum) {
         return getMahalanobis(mean, inverseCov, datum.getMetrics());
+    }
+
+    public RealMatrix getCovariance() {
+        return cov;
+    }
+
+    public RealMatrix getInverseCovariance() {
+        return inverseCov;
+    }
+
+    public RealVector getMean() {
+        return mean;
     }
 
     @Override
