@@ -34,6 +34,9 @@ bench/workflows/*
 # Plots
 *.pdf
 
+# Results files
+*.out
+
 # Annoying Mac file
 *.DS_Store
 
