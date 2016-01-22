@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import sys
 
 workloads_to_be_plotted = [
   "cmtDatasetSimpleStreaming",
@@ -81,7 +82,7 @@ def compute_precision_and_recall(itemsets, ground_truth_itemsets):
 
   return precision, recall
 
-def plot_time_graphs(parsed_results):
+def plot_time_graphs(parsed_results, plots_dir):
   for parameter_type in parsed_results:
     for timing_type in timing_types + ['Total']:
       try:
@@ -107,11 +108,11 @@ def plot_time_graphs(parsed_results):
         lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
         plt.xlabel(parameter_type)
         plt.ylabel(timing_type + " time (in milliseconds)")
-        plt.savefig(parameter_type + "_" + timing_type + '.pdf', bbox_extra_artists=(lgd,), bbox_inches='tight')
+        plt.savefig(plots_dir + "/ " + parameter_type + "_" + timing_type + '.pdf', bbox_extra_artists=(lgd,), bbox_inches='tight')
       except:
         continue
 
-def plot_aux_graphs(parsed_results, idx, ylabel, modifier):
+def plot_aux_graphs(parsed_results, idx, ylabel, modifier, plots_dir):
   for parameter_type in parsed_results:
     plt.cla()
     plt.xscale('log')
@@ -135,9 +136,9 @@ def plot_aux_graphs(parsed_results, idx, ylabel, modifier):
     lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
     plt.xlabel(parameter_type)
     plt.ylabel(ylabel)
-    plt.savefig(parameter_type + "_" + modifier + ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(plots_dir + "/" + parameter_type + "_" + modifier + ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
-def plot_recall_precision(parsed_results, idx, ylabel, modifier):
+def plot_recall_precision(parsed_results, idx, ylabel, modifier, plots_dir):
   for parameter_type in parsed_results:
     plt.cla()
     plt.xscale('log')
@@ -161,12 +162,15 @@ def plot_recall_precision(parsed_results, idx, ylabel, modifier):
     lgd = plt.legend(handles=handles, loc=(0.0, -1.5))
     plt.xlabel(parameter_type)
     plt.ylabel(ylabel)
-    plt.savefig(parameter_type + "_" + modifier + ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(plots_dir + "/" + parameter_type + "_" + modifier + ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
 if __name__ == '__main__':
-  parsed_results = parse_output_file("parameter_sweep.out")
-  plot_time_graphs(parsed_results)
-  plot_aux_graphs(parsed_results, 1, "Number of itemsets", "Itemsets")
-  plot_aux_graphs(parsed_results, 2, "Number of iterations in MCD step", "IterationsMCD")
-  plot_recall_precision(parsed_results, 0, "Precision", "Precision")
-  plot_recall_precision(parsed_results, 1, "Recall", "Recall")
+  if (len(sys.argv) < 3):
+    print "Incorrect usage: python %s <output_file> <plot_directory>" % sys.argv[0]
+    exit(-1)
+  parsed_results = parse_output_file(sys.argv[1])
+  plot_time_graphs(parsed_results, sys.argv[2])
+  plot_aux_graphs(parsed_results, 1, "Number of itemsets", "Itemsets", sys.argv[2])
+  plot_aux_graphs(parsed_results, 2, "Number of iterations in MCD step", "IterationsMCD", sys.argv[2])
+  plot_recall_precision(parsed_results, 0, "Precision", "Precision", sys.argv[2])
+  plot_recall_precision(parsed_results, 1, "Recall", "Recall", sys.argv[2])
