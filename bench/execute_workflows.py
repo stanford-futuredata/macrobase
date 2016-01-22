@@ -89,6 +89,47 @@ def get_stats(value_list):
   stddev = (sum([(value - mean)**2 for value in value_list]) / len(value_list)) ** 0.5
   return mean, stddev
 
+def run_workload(config_parameters):
+  sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
+  os.system("mkdir -p %s" % sub_dir)
+  process_config_parameters(config_parameters)
+  conf_file = "batch.conf" if config_parameters["isBatchJob"] else "streaming.conf"
+  conf_file = os.path.join(sub_dir, conf_file)
+  results_file = os.path.join(sub_dir, "results.txt")
+  create_config_file(config_parameters, conf_file)
+  cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
+
+  all_times = dict()
+  all_num_itemsets = list()
+  all_num_iterations = list()
+  all_itemsets = set()
+
+  for i in xrange(NUM_RUNS_PER_WORKFLOW):
+    os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
+    times, num_itemsets, num_iterations, itemsets = parse_results(results_file)
+
+    for time_type in times:
+      if time_type not in all_times:
+        all_times[time_type] = list()
+      all_times[time_type].append(times[time_type])
+
+    all_num_itemsets.append(num_itemsets)
+    all_num_iterations.append(num_iterations)
+    for itemset in itemsets:
+      all_itemsets.add(frozenset(itemset.items()))
+
+  mean_and_stddev_times = dict()
+  for time_type in all_times:
+    mean_and_stddev_times[time_type] = get_stats(all_times[time_type])
+  mean_num_itemsets, stddev_num_itemsets = get_stats(all_num_itemsets)
+  mean_num_iterations, stddev_num_iterations = get_stats(all_num_iterations)
+
+  print config_parameters["taskName"], "-->"
+  print "Times:", mean_and_stddev_times
+  print "Mean number of itemsets:", mean_num_itemsets, ", Stddev number of itemsets:", stddev_num_itemsets
+  print "Mean number of iterations:", mean_num_iterations, ", Stddev number of iterations:", stddev_num_iterations
+  print "Union of all itemsets:", list(all_itemsets)
+
 def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
     print "Running all workloads with", sweeping_parameter_name, "=", sweeping_parameter_value
@@ -103,45 +144,8 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
       config_parameters[key] = config_parameters_raw[key]
     if sweeping_parameter_name is not None:
       config_parameters[sweeping_parameter_name] = sweeping_parameter_value
-    sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
-    os.system("mkdir -p %s" % sub_dir)
-    process_config_parameters(config_parameters)
-    conf_file = "batch.conf" if config_parameters["isBatchJob"] else "streaming.conf"
-    conf_file = os.path.join(sub_dir, conf_file)
-    results_file = os.path.join(sub_dir, "results.txt")
-    create_config_file(config_parameters, conf_file)
-    cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
 
-    all_times = dict()
-    all_num_itemsets = list()
-    all_num_iterations = list()
-    all_itemsets = set()
-
-    for i in xrange(NUM_RUNS_PER_WORKFLOW):
-      os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
-      times, num_itemsets, num_iterations, itemsets = parse_results(results_file)
-
-      for time_type in times:
-        if time_type not in all_times:
-          all_times[time_type] = list()
-        all_times[time_type].append(times[time_type])
-
-      all_num_itemsets.append(num_itemsets)
-      all_num_iterations.append(num_iterations)
-      for itemset in itemsets:
-        all_itemsets.add(frozenset(itemset.items()))
-
-    mean_and_stddev_times = dict()
-    for time_type in all_times:
-      mean_and_stddev_times[time_type] = get_stats(all_times[time_type])
-    mean_num_itemsets, stddev_num_itemsets = get_stats(all_num_itemsets)
-    mean_num_iterations, stddev_num_iterations = get_stats(all_num_iterations)
-
-    print config_parameters["taskName"], "-->"
-    print "Times:", mean_and_stddev_times
-    print "Mean number of itemsets:", mean_num_itemsets, ", Stddev number of itemsets:", stddev_num_itemsets
-    print "Mean number of iterations:", mean_num_iterations, ", Stddev number of iterations:", stddev_num_iterations
-    print "Union of all itemsets:", list(all_itemsets)
+    run_workload(config_parameters)
   print
 
 if __name__ == '__main__':
