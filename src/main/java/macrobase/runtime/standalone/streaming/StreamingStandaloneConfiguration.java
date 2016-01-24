@@ -13,6 +13,8 @@ public class StreamingStandaloneConfiguration extends BaseStandaloneConfiguratio
     @NotNull
     private Integer summaryRefreshPeriod;
 
+    private Boolean traceRuntime = false;
+
     @NotNull
     private Boolean useRealTimePeriod;
 
@@ -75,4 +77,7 @@ public class StreamingStandaloneConfiguration extends BaseStandaloneConfiguratio
 
     @JsonProperty
     public Integer getOutlierItemSummarySize() { return outlierItemSummarySize; }
+
+    @JsonProperty
+    public Boolean traceRuntime() { return traceRuntime; }
 }

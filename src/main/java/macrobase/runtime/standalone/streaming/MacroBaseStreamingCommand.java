@@ -75,6 +75,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<StreamingStanda
         analyzer.setOutlierItemSummarySize(configuration.getOutlierItemSummarySize());
         analyzer.setMinSupportOutlier(configuration.getMinSupport());
         analyzer.setMinRatio(configuration.getMinInlierRatio());
+        analyzer.setTracing(configuration.traceRuntime());
         
         analyzer.setAlphaMCD(configuration.getAlphaMCD());
         analyzer.setStoppingDeltaMCD(configuration.getStoppingDeltaMCD());

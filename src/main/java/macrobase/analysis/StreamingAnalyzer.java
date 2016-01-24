@@ -81,6 +81,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         this.minRatio = minRatio;
     }
 
+    public void setTracing(boolean doTrace) {
+        this.doTrace = doTrace;
+    }
+
     public void setOutlierItemSummarySize(Integer outlierItemSummarySize) {
         this.outlierItemSummarySize = outlierItemSummarySize;
     }
@@ -88,6 +92,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     public void setInlierItemSummarySize(Integer inlierItemSummarySize) {
         this.inlierItemSummarySize = inlierItemSummarySize;
     }
+
+    boolean doTrace;
+
+    int tupleNo = 0;
+    long totODTrainingTime = 0;
+    long totSummarizationTrainingTime = 0;
+    long totScoringTime = 0;
+    long totSummarizationTime = 0;
 
     public AnalysisResult analyzeOnePass(SQLLoader loader,
                                               List<String> attributes,
@@ -168,11 +180,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                                          streamingSummarizer);
         }
 
-        int tupleNo = 0;
-        long totODTrainingTime = 0;
-        long totSummarizationTrainingTime = 0;
-        long totScoringTime = 0;
-        long totSummarizationTime = 0;
+        tupleNo = 0;
+        totODTrainingTime = 0;
+        totSummarizationTrainingTime = 0;
+        totScoringTime = 0;
+        totSummarizationTime = 0;
 
         for(Datum d: data) {
             inputReservoir.insert(d);
@@ -184,43 +196,28 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 }
                 detector.updateRecentScoreList(scoreReservoir.getReservoir());
             } else if(tupleNo >= warmupCount) {
-                // todo: calling curtime so frequently might be bad...
-                long now = System.currentTimeMillis();
-
-                sw.start();
-                analysisUpdater.updateIfNecessary(now, tupleNo);
-                sw.stop();
-                sw.reset();
-                totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-
-                sw.start();
-                modelUpdater.updateIfNecessary(now, tupleNo);
-                sw.stop();
-                totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-                sw.reset();
-
-                // classify, then insert into tree, etc.
-                sw.start();
-                double score = detector.score(d);
-                sw.stop();
-                totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
-                sw.reset();
-
-                sw.start();
-                if(scoreReservoir != null) {
-                    scoreReservoir.insert(score);
-                }
-
-                if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-                   forceUsePercentile && detector.isPercentileOutlier(score,
-                                                                      TARGET_PERCENTILE)) {
-                    streamingSummarizer.markOutlier(d);
+                if(doTrace) {
+                    innerLoopTracing(sw, detector, scoreReservoir, streamingSummarizer, analysisUpdater, modelUpdater, d);
                 } else {
-                    streamingSummarizer.markInlier(d);
+                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
+
+                    analysisUpdater.updateIfNecessary(now, tupleNo);
+                    modelUpdater.updateIfNecessary(now, tupleNo);
+                    double score = detector.score(d);
+
+                    if(scoreReservoir != null) {
+                        scoreReservoir.insert(score);
+                    }
+
+                    if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
+                       forceUsePercentile && detector.isPercentileOutlier(score,
+                                                                          TARGET_PERCENTILE)) {
+                        streamingSummarizer.markOutlier(d);
+                    } else {
+                        streamingSummarizer.markInlier(d);
+                    }
                 }
-                sw.stop();
-                totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
-                sw.reset();
+
             }
 
             tupleNo += 1;
@@ -245,9 +242,47 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         log.debug("Number of itemsets: {}", isr.size());
 
-        //System.console().readLine("Finished! Press any key to continue");
-
         return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, isr);
+    }
+
+    private void innerLoopTracing(Stopwatch sw, OutlierDetector detector, ExponentiallyBiasedAChao<Double> scoreReservoir, ExponentiallyDecayingEmergingItemsets streamingSummarizer, AbstractPeriodicUpdater analysisUpdater, AbstractPeriodicUpdater modelUpdater, Datum d) {
+        // todo: calling curtime so frequently might be bad...
+        long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
+
+        sw.start();
+        analysisUpdater.updateIfNecessary(now, tupleNo);
+        sw.stop();
+        sw.reset();
+        totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
+
+        sw.start();
+        modelUpdater.updateIfNecessary(now, tupleNo);
+        sw.stop();
+        totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
+        sw.reset();
+
+        // classify, then insert into tree, etc.
+        sw.start();
+        double score = detector.score(d);
+        sw.stop();
+        totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
+        sw.reset();
+
+        sw.start();
+        if(scoreReservoir != null) {
+            scoreReservoir.insert(score);
+        }
+
+        if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
+           forceUsePercentile && detector.isPercentileOutlier(score,
+                                                              TARGET_PERCENTILE)) {
+            streamingSummarizer.markOutlier(d);
+        } else {
+            streamingSummarizer.markInlier(d);
+        }
+        sw.stop();
+        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
+        sw.reset();
     }
 
     public void setWarmupCount(Integer warmupCount) {
