@@ -190,11 +190,15 @@ public class StreamingAnalyzer extends BaseAnalyzer {
             inputReservoir.insert(d);
 
             if(tupleNo == warmupCount) {
+            	sw.start();
                 detector.train(inputReservoir.getReservoir());
                 for(Datum id : inputReservoir.getReservoir()) {
                     scoreReservoir.insert(detector.score(id));
                 }
                 detector.updateRecentScoreList(scoreReservoir.getReservoir());
+                sw.stop();
+                sw.reset();
+                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
             } else if(tupleNo >= warmupCount) {
                 if(doTrace) {
                     innerLoopTracing(sw, detector, scoreReservoir, streamingSummarizer, analysisUpdater, modelUpdater, d);
