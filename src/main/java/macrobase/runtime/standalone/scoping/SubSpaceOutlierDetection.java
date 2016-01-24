@@ -2,6 +2,7 @@ package macrobase.runtime.standalone.scoping;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import macrobase.datamodel.Datum;
 
 /**
@@ -47,30 +49,78 @@ public class SubSpaceOutlierDetection {
 	 * @param data
 	 * @return
 	 */
-	public Set<ScopeOutlier> run(List<Datum> data){
+	public List<SubSpaceOutlier> run(List<Datum> data){
 		
-		log.debug("Step1: find one-dimensional dense scopes");
+		List<SubSpaceOutlier> allOutliers = new ArrayList<SubSpaceOutlier>();
+		
+		log.debug("Find one-dimensional dense scopes");
 		
 		int totalDimensions = data.get(0).getAttributes().size() + data.get(0).getMetrics().getDimension();
-		
 		List<SubSpace> oneDimensionDenseSubSpaces = findOneDimensionDenseScopes(data);
 		
+		List<SubSpace> previousLevel = oneDimensionDenseSubSpaces;
+	
 		for(int level = 2; level <= totalDimensions; level++){
 			
+			log.debug("Find %s-dimensional dense scopes",level);
+			List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);
+			previousLevel = denseSubSpaces;
+			
+			
+			log.debug("Find %s-dimensional outlier scopes",level);
+			List<SubSpaceOutlier> outlierSubSpaces = findOutlierSubSpaceOneLevelUp(previousLevel,data);
+			allOutliers.addAll(outlierSubSpaces);
+			
+		
 		}
 		
-		return null;
+		return allOutliers;
 		
 	}
 	
-	
-	private List<SubSpace> findDenseSubSpaceOneLevelUp(List<SubSpace> denseSubSpaces){
+	/**
+	 * Given the dense subspaces of previous level, 
+	 * find next level subspaces with dense 
+	 * @param denseSubSpaces
+	 * @param data
+	 * @return
+	 */
+	private List<SubSpace> findDenseSubSpaceOneLevelUp(List<SubSpace> denseSubSpaces, List<Datum> data){
 		
-		return null;
+		//sort the subspaces by their dimensions
+		List<SubSpace> denseSubspacesByDimensions = new ArrayList<>(denseSubSpaces);
+	    Collections.sort(denseSubspacesByDimensions, new SubSpace.DimensionComparator());
+
+	    //find out dense candidate subspaces 
+	    List<SubSpace> result = new ArrayList<SubSpace>();
+		
+	    for(int i = 0; i < denseSubspacesByDimensions.size(); i++ ){
+	    	for(int j = i +1; j < denseSubspacesByDimensions.size(); j++){
+	    		SubSpace s1 = denseSubspacesByDimensions.get(i);
+	    		SubSpace s2 = denseSubspacesByDimensions.get(j);
+	    		SubSpace joined = s1.join(s2, data.size(), frequentDensity);
+	    		
+	    		if(joined!=null){
+	    			result.add(joined);
+	    		}
+	    	}
+	    }
+	    
+	    
+		return result;
 	}
 	
-	private List<SubSpace> findOutlierSubSpaceOneLevelUp(List<SubSpace> denseSubSpaces){
-		return null;
+	/**
+	 * Given the dense subspaces of previous level, 
+	 * find next level subspaces with outliers 
+	 * @param denseSubSpaces
+	 * @param data
+	 * @return
+	 */
+	private List<SubSpaceOutlier> findOutlierSubSpaceOneLevelUp(List<SubSpace> denseSubSpaces, List<Datum> data){
+		List<SubSpaceOutlier> result = new ArrayList<SubSpaceOutlier>();
+		
+		return result;
 	}
 	
 	/**
@@ -170,7 +220,8 @@ public class SubSpaceOutlierDetection {
 					Unit unit = new Unit(dimension, interval);
 					result.add(unit);
 				}else{
-					Interval interval = new Interval(dimension, start, max);
+					//make the max a little bit larger
+					Interval interval = new Interval(dimension, start, max + Double.MIN_VALUE);
 					Unit unit = new Unit(dimension, interval);
 					result.add(unit);
 				}
