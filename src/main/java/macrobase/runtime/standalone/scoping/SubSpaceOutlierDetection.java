@@ -62,16 +62,15 @@ public class SubSpaceOutlierDetection {
 	
 		for(int level = 2; level <= totalDimensions; level++){
 			
-			log.debug("Find %s-dimensional dense scopes",level);
+			log.debug("Find " + level + "  dimensional dense scopes");
 			List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);
-			previousLevel = denseSubSpaces;
 			
-			
-			log.debug("Find %s-dimensional outlier scopes",level);
+			log.debug("Find " + level + "  dimensional outlier scopes");
 			List<SubSpaceOutlier> outlierSubSpaces = findOutlierSubSpaceOneLevelUp(previousLevel,data);
 			allOutliers.addAll(outlierSubSpaces);
-			
 		
+			//level-up
+			previousLevel = denseSubSpaces;
 		}
 		
 		return allOutliers;
@@ -100,7 +99,7 @@ public class SubSpaceOutlierDetection {
 	    		SubSpace s2 = denseSubspacesByDimensions.get(j);
 	    		SubSpace joined = s1.join(s2, data.size(), frequentDensity);
 	    		
-	    		if(joined!=null){
+	    		if(joined != null){
 	    			result.add(joined);
 	    		}
 	    	}
@@ -118,10 +117,85 @@ public class SubSpaceOutlierDetection {
 	 * @return
 	 */
 	private List<SubSpaceOutlier> findOutlierSubSpaceOneLevelUp(List<SubSpace> denseSubSpaces, List<Datum> data){
+		
+		//all outlier subspaces
 		List<SubSpaceOutlier> result = new ArrayList<SubSpaceOutlier>();
+		
+		
+		
+		//sort the subspaces by their dimensions
+		List<SubSpace> denseSubspacesByDimensions = new ArrayList<>(denseSubSpaces);
+	    Collections.sort(denseSubspacesByDimensions, new SubSpace.DimensionComparator());
+
+	    for(int i = 0; i < denseSubspacesByDimensions.size(); i++ ){
+	    	for(int j = i +1; j < denseSubspacesByDimensions.size(); j++){
+	    		
+	    		SubSpace s1 = denseSubspacesByDimensions.get(i);
+	    		SubSpace s2 = denseSubspacesByDimensions.get(j);
+	    		
+	    		List<Integer> newDimensions = s1.joinedDimensions(s2);
+	    		if(newDimensions == null)
+	    			continue;
+	    		
+	    		SubSpaceOutlier subSpaceOutlier = null; 
+	    		
+	    		List<Unit> denseUnits1 = s1.getDenseUnits();
+	    		List<Unit> denseUnits2 = s2.getDenseUnits();
+	    		
+	    		for(Unit u1: denseUnits1){
+	    			for(Unit u2: denseUnits2){
+	    				Unit newUnit = u1.join(u2);
+	    				if(newUnit == null)
+	    					continue;
+	    				if(newUnit.isSparse(data.size(), outlierDensity)){
+	    					//This is a Sparse new unit, check if every sub-unit is dense
+	    					if(checkSubUnitDensity(newUnit,denseSubSpaces)){
+	    						if(subSpaceOutlier == null)
+	    							subSpaceOutlier = new SubSpaceOutlier(newDimensions);
+	    						subSpaceOutlier.addOutlierUnit(newUnit);
+	    					}
+	    				}
+	    			}
+	    		}
+	    		
+	    		if(subSpaceOutlier != null)
+	    			result.add(subSpaceOutlier);
+	    		
+	    	}
+	    }
 		
 		return result;
 	}
+	
+	/**
+	 * Check if all sub-units of this newUnit are dense, return true if yes
+	 * @param newUnit
+	 * @param denseSubSpaces
+	 * @return
+	 */
+	private boolean checkSubUnitDensity(Unit newUnit, List<SubSpace> denseSubSpaces){
+		
+		List<Unit> subUnits = newUnit.getImmediateSubUnits();
+		
+		for(Unit subUnit: subUnits){
+			boolean denseSubUnit = false;
+			for(SubSpace subSpace: denseSubSpaces){
+				if(subUnit.getDimensions().equals(subSpace.getDimensions())){
+					continue;
+				}
+				if(subSpace.getDenseUnits().contains(subUnit)){
+					denseSubUnit = true;
+					break;
+				}
+			}
+			if(denseSubUnit == false)
+				return false;
+		}
+		
+		return true;
+	}
+	
+	
 	
 	/**
 	 * Find one dimensional subspace with dense scopes

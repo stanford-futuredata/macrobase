@@ -45,16 +45,54 @@ public class SubSpace {
 		this.dimensions = dimensions;
 	}
 	
+	public List<Integer> getDimensions(){
+		return dimensions;
+	}
+	
 	/**
-	 * Joins this subspace with the specified subspace. The join is only
-	 * successful if both subspaces have the first k-1 dimensions in common (where
-	 * k is the number of dimensions)
+	 * Return 
 	 * @param other
 	 * @param total
 	 * @param tau
 	 * @return
 	 */
 	public SubSpace join(SubSpace other,int total, double tau){
+		
+		List<Integer> newDimensions = joinedDimensions(other);
+		
+		if(newDimensions == null)
+			return null;
+		
+		//now start to join the dense units
+		SubSpace result = new SubSpace(newDimensions);
+		for(Unit u1: getDenseUnits()){
+			for(Unit u2: other.getDenseUnits()){
+				Unit newUnit = u1.join(u2);
+				if(newUnit == null)
+					continue;
+				if(newUnit.isDense(total, tau)){
+					result.addDenseUnit(newUnit);
+				}
+			}
+		}
+		
+		//only interested in SubSpace that contains dense units
+		if(result.denseUnits == null || result.denseUnits.size() == 0)
+			return null;
+		return result;
+		
+	}
+	
+	/**
+	 * Joins this subspace with the specified subspace. The join is only
+	 * successful if both subspaces have the first k-1 dimensions in common (where
+	 * k is the number of dimensions).
+	 * 
+	 * Return null is not successful
+	 * @param other
+	 * @return
+	 */
+	public List<Integer> joinedDimensions(SubSpace other){
 		//check the dimensions first
 		if(dimensions.size() != other.dimensions.size())
 			return null;
@@ -80,25 +118,7 @@ public class SubSpace {
 			newDimensions.add(lastDimension2);
 			newDimensions.add(lastDimension1);
 		}
-		
-		
-		
-		//now start to join the dense units
-		SubSpace result = new SubSpace(newDimensions);
-		for(Unit u1: getDenseUnits()){
-			for(Unit u2: other.getDenseUnits()){
-				Unit newUnit = u1.join(u2);
-				if(newUnit.isDense(total, tau)){
-					result.addDenseUnit(newUnit);
-				}
-			}
-		}
-		
-		//only interested in SubSpace that contains dense units
-		if(result.denseUnits == null || result.denseUnits.size() == 0)
-			return null;
-		return result;
-		
+		return newDimensions;
 	}
 	
 	
