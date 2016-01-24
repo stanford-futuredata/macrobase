@@ -18,6 +18,9 @@ public class SubSpaceOutlier {
 	List<Unit> outlierUnits;
 	
 	
+	public SubSpaceOutlier(List<Integer> dimensions){
+		this.dimensions = dimensions;
+	}
 	
 	
 	public List<Unit> getOutlierUnits(){

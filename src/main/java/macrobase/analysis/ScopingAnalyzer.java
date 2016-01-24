@@ -15,6 +15,8 @@ import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.Schema.SchemaColumn;
+import macrobase.runtime.standalone.scoping.SubSpaceOutlier;
+import macrobase.runtime.standalone.scoping.SubSpaceOutlierDetection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,25 @@ public class ScopingAnalyzer extends BaseAnalyzer {
                                   List<String> highMetrics,
                                   String baseQuery) throws SQLException {
     	
+    	//Need to determine categorical attributes and numerical attributes
+    	List<String> categoricalAttributes = new ArrayList<String>();
+    	List<String> numericalAttributes = new ArrayList<String>();
+    	List<SchemaColumn> schemaColumns = loader.getSchema(baseQuery).getColumns();
+		for(SchemaColumn sc: schemaColumns){
+			String scAttri = sc.getName();
+			String type = sc.getType();
+			System.out.println(scAttri + "\t" + type); 
+			if(type.equals("varchar"))
+				categoricalAttributes.add(scAttri);
+			if(type.equals("float8"))
+				numericalAttributes.add(scAttri);
+			
+		}
+		exploreSubSpaceOutlierDetection(loader, categoricalAttributes, numericalAttributes, baseQuery);
+    	if(true)
+    		return null;
     	//use all attributes to scope
+    	/*
     	List<String> scopingAttributesFinal = scopingAttributes;
     	if(scopingAttributes.size() == 0){
     		scopingAttributesFinal = new ArrayList<String>();
@@ -49,7 +69,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
     	}
     	
     	exploreScoping(loader,scopingAttributesFinal, minScopingSupport, attributes, lowMetrics, highMetrics , baseQuery);
-
+		*/
     	
     	DatumEncoder encoder = new DatumEncoder();
 
@@ -121,6 +141,45 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
     }
     
+    private void exploreSubSpaceOutlierDetection(SQLLoader loader,
+    		List<String> categoricalAttributes,
+    		List<String> numericalAttributes,
+    		String baseQuery) throws SQLException{
+    	
+    	
+    	DatumEncoder encoder = new DatumEncoder();
+    	log.debug("Starting loading...");
+    	Stopwatch sw = Stopwatch.createUnstarted();
+        sw.start();
+        List<Datum> data = loader.getData(encoder,
+        								  categoricalAttributes,
+        								  numericalAttributes,
+                                          new ArrayList<String>(),
+                                          baseQuery);
+        sw.stop();
+
+        long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
+        sw.reset();
+        log.debug("...ended loading (time: {}ms)!", loadTime);
+        
+        log.debug("Starting subSpace outlier detection...");
+        SubSpaceOutlierDetection subSpaceOutlierDetection = new SubSpaceOutlierDetection(10,0.1,0.001);
+        List<SubSpaceOutlier> subSpaceOutliers = subSpaceOutlierDetection.run(data);
+    }
+    
+    
+    /**
+     * Use frequent itemset mining to mine for frequent scopes based on categorical attributes
+     * For each frequent scope, run the outlier detection MAD/MCD
+     * @param loader
+     * @param scopingAttributes
+     * @param minScopingSupport
+     * @param attributes
+     * @param lowMetrics
+     * @param highMetrics
+     * @param baseQuery
+     * @throws SQLException
+     */
     private void exploreScoping(SQLLoader loader,
 			  List<String> scopingAttributes,
 			  double minScopingSupport,
