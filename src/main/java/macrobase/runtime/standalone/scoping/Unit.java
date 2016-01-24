@@ -37,6 +37,10 @@ public class Unit {
 	}
 	
 	
+	public Unit(SortedMap<Integer,Interval> dimension2Interval){
+		this.dimension2Interval = dimension2Interval;
+	}
+	
 	public List<Integer> getDimensions(){
 		List<Integer> result = new ArrayList<Integer>();
 		for(Integer k: dimension2Interval.keySet()){
@@ -95,5 +99,45 @@ public class Unit {
 			return true;
 		else
 			return false;
+	}
+	
+	/**
+	 * Join this unit with other unit, can only be joined if the first (k-1) dimensions
+	 * are the same, and the last one is different.
+	 * 
+	 * It is the caller's responsibiilty to ensure that
+	 * @param other
+	 * @return
+	 */
+	public Unit join(Unit other){
+		
+		SortedMap<Integer,Interval> newDimension2Interval = new TreeMap<Integer,Interval>();
+		for(Integer i: dimension2Interval.keySet()){
+			newDimension2Interval.put(i, dimension2Interval.get(i));
+		}
+		
+		newDimension2Interval.put(other.dimension2Interval.lastKey(),
+				other.dimension2Interval.get(other.dimension2Interval.lastKey()));
+		
+		Unit newUnit = new Unit(newDimension2Interval);
+		
+		//merge two sorted tids
+		int index1 = 0;
+		int index2 = 0;
+		while(index1 < tids.size() && index2 < other.tids.size()){
+			int tid1 = tids.get(index1);
+			int tid2 = other.tids.get(index2);
+			if(tid1 == tid2){
+				newUnit.addTIDs(tid1);
+				index1++;
+				index2++;
+			}else if(tid1 < tid2){
+				index1++;
+			}else{
+				index2++;
+			}
+		}
+		
+		return newUnit;
 	}
 }
