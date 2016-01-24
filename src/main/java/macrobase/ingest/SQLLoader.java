@@ -57,8 +57,10 @@ public abstract class SQLLoader {
         factory.setDriverClass(getDriverClass());
         factory.setUrl(getJDBCUrlPrefix()+pgUrl);
 
-        if (this.dbUser != null && this.dbPassword != null) {
+        if (this.dbUser != null) {
             factory.setUser(this.dbUser);
+        }
+        if (this.dbPassword != null) {
             factory.setPassword(this.dbPassword);
         }
 
