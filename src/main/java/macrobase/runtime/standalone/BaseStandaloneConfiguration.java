@@ -27,6 +27,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     @NotEmpty
     private String dbUrl;
 
+    private String dbUser;
+    private String dbPassword;
+
     @NotEmpty
     private List<String> targetAttributes;
 
@@ -87,6 +90,16 @@ public class BaseStandaloneConfiguration extends Configuration {
     @JsonProperty
     public String getDbUrl() {
         return dbUrl;
+    }
+
+    @JsonProperty
+    public String getDbUser() {
+        return dbUser;
+    }
+
+    @JsonProperty
+    public String getDbPassword() {
+        return dbPassword;
     }
 
     @JsonProperty

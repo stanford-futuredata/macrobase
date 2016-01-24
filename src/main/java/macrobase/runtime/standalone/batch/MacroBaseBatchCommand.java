@@ -30,6 +30,8 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
         } else {
             loader = new PostgresLoader();
         }
+
+        loader.setDatabaseCredentials(configuration.getDbUser(), configuration.getDbPassword());
         loader.connect(configuration.getDbUrl());
 
         BatchAnalyzer analyzer = new BatchAnalyzer();
