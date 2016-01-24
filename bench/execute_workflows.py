@@ -89,7 +89,7 @@ def get_stats(value_list):
   stddev = (sum([(value - mean)**2 for value in value_list]) / len(value_list)) ** 0.5
   return mean, stddev
 
-def run_workload(config_parameters):
+def run_workload(config_parameters, print_itemsets=True):
   sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
   os.system("mkdir -p %s" % sub_dir)
   process_config_parameters(config_parameters)
@@ -128,7 +128,8 @@ def run_workload(config_parameters):
   print "Times:", mean_and_stddev_times
   print "Mean number of itemsets:", mean_num_itemsets, ", Stddev number of itemsets:", stddev_num_itemsets
   print "Mean number of iterations:", mean_num_iterations, ", Stddev number of iterations:", stddev_num_iterations
-  print "Union of all itemsets:", list(all_itemsets)
+  if print_itemsets:
+    print "Union of all itemsets:", list(all_itemsets)
 
 def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
