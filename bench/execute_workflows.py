@@ -52,6 +52,7 @@ def parse_results(results_file):
   times = dict()
   num_itemsets = 0
   num_iterations = 0
+  tuples_per_second = 0.0
   itemsets = list()
   with open(results_file, 'r') as f:
     lines = f.read().split('\n')
@@ -70,6 +71,9 @@ def parse_results(results_file):
         elif "iterations" in line:
           line = line.split("Number of iterations in MCD step:")[1].strip()
           num_iterations = int(line)
+        elif "Tuples / second" in line:
+          line = line.split("Tuples / second = ")[1]
+          tuples_per_second = float(line.split("tuples / second")[0].strip())
       if "Columns" in line:
         j = i + 1
         itemset = dict()
@@ -81,7 +85,7 @@ def parse_results(results_file):
           j += 1
         if itemset != {}:
           itemsets.append(itemset)
-  return times, num_itemsets, num_iterations, itemsets
+  return times, num_itemsets, num_iterations, itemsets, tuples_per_second
 
 def get_stats(value_list):
   value_list = [float(value) for value in value_list]
@@ -103,10 +107,11 @@ def run_workload(config_parameters, print_itemsets=True):
   all_num_itemsets = list()
   all_num_iterations = list()
   all_itemsets = set()
+  all_tuples_per_second = list()
 
   for i in xrange(NUM_RUNS_PER_WORKFLOW):
     os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
-    times, num_itemsets, num_iterations, itemsets = parse_results(results_file)
+    times, num_itemsets, num_iterations, itemsets, tuples_per_second = parse_results(results_file)
 
     for time_type in times:
       if time_type not in all_times:
@@ -117,12 +122,14 @@ def run_workload(config_parameters, print_itemsets=True):
     all_num_iterations.append(num_iterations)
     for itemset in itemsets:
       all_itemsets.add(frozenset(itemset.items()))
+    all_tuples_per_second.append(tuples_per_second)
 
   mean_and_stddev_times = dict()
   for time_type in all_times:
     mean_and_stddev_times[time_type] = get_stats(all_times[time_type])
   mean_num_itemsets, stddev_num_itemsets = get_stats(all_num_itemsets)
   mean_num_iterations, stddev_num_iterations = get_stats(all_num_iterations)
+  mean_tuples_per_second, stddev_tuples_per_second = get_stats(all_tuples_per_second)
 
   print config_parameters["taskName"], "-->"
   print "Times:", mean_and_stddev_times
@@ -130,6 +137,7 @@ def run_workload(config_parameters, print_itemsets=True):
   print "Mean number of iterations:", mean_num_iterations, ", Stddev number of iterations:", stddev_num_iterations
   if print_itemsets:
     print "Union of all itemsets:", list(all_itemsets)
+  print "Mean tuples / second:", mean_tuples_per_second, ", Stddev tuples / second:", stddev_tuples_per_second
 
 def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
