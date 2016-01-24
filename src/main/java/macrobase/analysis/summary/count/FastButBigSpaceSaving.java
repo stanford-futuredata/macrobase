@@ -1,12 +1,17 @@
 package macrobase.analysis.summary.count;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 /*
@@ -60,18 +65,19 @@ public class FastButBigSpaceSaving extends ApproximateCount {
         }
 
         if(counts.size() > maxStableSize) {
-            Set<Map.Entry<Integer, Double>> frozenEntrySet = Sets.newHashSet(counts.entrySet());
+            List<Map.Entry<Integer, Double>> a = Lists.newArrayList(counts.entrySet());
+            a.sort((e1, e2) -> e1.getValue().compareTo(e2.getValue()));
 
-            // find the <maxStableSize>th value
-            double threshValue = Ordering.natural().greatestOf(counts.values(), maxStableSize).get(maxStableSize-1);
-            prevEpochMin = threshValue;
+            double prevVal = -1;
+            int toRemove = counts.size() - maxStableSize;
 
-            log.trace("Pruning! Minimum threshold for count is {} ({})", threshValue, threshold);
+            log.trace("Removing {} items from counts", toRemove);
 
-            for(Map.Entry<Integer, Double> entry : frozenEntrySet) {
-                if(entry.getValue() < threshValue) {
-                    counts.remove(entry.getKey());
-                }
+            for(int i = 0; i < toRemove; ++i) {
+                Map.Entry<Integer, Double> entry = a.get(i);
+                counts.remove(entry.getKey());
+                assert (prevVal < entry.getValue());
+                prevVal = entry.getValue();
             }
         }
 
