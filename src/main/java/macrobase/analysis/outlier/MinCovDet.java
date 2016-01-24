@@ -118,21 +118,20 @@ public class MinCovDet extends OutlierDetector  {
             vecMinusMean[d] = vec.getEntry(d) - mean.getEntry(d);
         }
 
-        double[] intermediate = new double[dim];
+        double diagSum = 0, nonDiagSum = 0;
 
-        // vecMinusMean times inverseCov
-        for(int col = 0; col < dim; ++col) {
-            for (int d = 0; d < dim; ++d) {
-                intermediate[col] += inverseCov.getEntry(d, col)*vecMinusMean[d];
+        for(int d1 = 0; d1 < dim; ++d1) {
+            for(int d2 = d1; d2 < dim; ++d2) {
+                double v = vecMinusMean[d1]*vecMinusMean[d2]*inverseCov.getEntry(d1, d2);
+                if(d1 == d2) {
+                    diagSum += v;
+                } else {
+                    nonDiagSum += v;
+                }
             }
         }
 
-        double ret = 0;
-        for(int d = 0; d < dim; ++d) {
-            ret += intermediate[d]*vecMinusMean[d];
-        }
-
-        return Math.sqrt(ret);
+        return Math.sqrt(diagSum+2*nonDiagSum);
     }
 
     private RealVector getMean(List<? extends HasMetrics> data) {
