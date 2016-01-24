@@ -103,7 +103,7 @@ public class Unit {
 	
 	/**
 	 * Join this unit with other unit, can only be joined if the first (k-1) dimensions
-	 * are the same, and the last one is different.
+	 * have the same interval, and the last dimension has different interval
 	 * 
 	 * It is the caller's responsibiilty to ensure that
 	 * @param other
@@ -112,13 +112,32 @@ public class Unit {
 	public Unit join(Unit other){
 		
 		SortedMap<Integer,Interval> newDimension2Interval = new TreeMap<Integer,Interval>();
-		for(Integer i: dimension2Interval.keySet()){
-			newDimension2Interval.put(i, dimension2Interval.get(i));
+		
+		
+		List<Integer> dimensions1 = getDimensions();
+		List<Integer> dimensions2 = other.getDimensions();
+		if(dimensions1.size() != dimensions2.size())
+			return null;
+		
+		for(int i = 0; i < dimensions1.size(); i++){
+			int dimension1 = dimensions1.get(i);
+			int dimension2 = dimensions2.get(i);
+			Interval interval1 = dimension2Interval.get(dimension1);
+			Interval interval2 = other.dimension2Interval.get(dimension2);
+		
+			if(i !=dimensions1.size() - 1 ){
+				if(dimension1 != dimension2)
+					return null;
+					if(interval1 != interval2)
+					return null;
+				newDimension2Interval.put(dimension1, interval1);
+			}else{
+					newDimension2Interval.put(dimension1, interval1);
+				newDimension2Interval.put(dimension2, interval2);
+			}
+			
 		}
-		
-		newDimension2Interval.put(other.dimension2Interval.lastKey(),
-				other.dimension2Interval.get(other.dimension2Interval.lastKey()));
-		
+	
 		Unit newUnit = new Unit(newDimension2Interval);
 		
 		//merge two sorted tids
