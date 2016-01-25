@@ -73,6 +73,7 @@ public class MinCovDet extends OutlierDetector  {
 
     private RealMatrix cov;
     private RealMatrix inverseCov;
+    private double inverseCovSum;
 
     private RealVector mean;
 
@@ -133,6 +134,22 @@ public class MinCovDet extends OutlierDetector  {
 
         return Math.sqrt(diagSum+2*nonDiagSum);
     }
+    
+    public static double getMahalanobisApproximate(RealVector mean,
+    											   double inverseCovSum,
+    											   RealVector vec) {
+    	final int dim = mean.getDimension();
+    	
+    	double maxDimensionSquared = 0;
+    	for(int d = 0; d < dim; ++d) {
+    		double dimensionSquared = Math.pow(vec.getEntry(d) - mean.getEntry(d), 2);
+    		if (dimensionSquared > maxDimensionSquared) {
+    			maxDimensionSquared = dimensionSquared;
+    		}
+    	}
+    	
+    	return maxDimensionSquared * inverseCovSum;
+    }
 
     private RealVector getMean(List<? extends HasMetrics> data) {
         RealVector vec = null;
@@ -191,6 +208,12 @@ public class MinCovDet extends OutlierDetector  {
         } catch (SingularMatrixException e) {
             singularCovariances.inc();
             inverseCov = new SingularValueDecomposition(cov).getSolver().getInverse();
+        }
+        inverseCovSum = 0.0;
+        for (int row = 0; row < inverseCov.getRowDimension(); row++) {
+        	for (int col = 0; col < inverseCov.getColumnDimension(); col++) {
+        		inverseCovSum += inverseCov.getEntry(row, col);
+        	}
         }
     }
 
@@ -264,6 +287,14 @@ public class MinCovDet extends OutlierDetector  {
     @Override
     public double score(Datum datum) {
         return getMahalanobis(mean, inverseCov, datum.getMetrics());
+    }
+    
+    @Override
+    public boolean isScoreLessThanK(Datum datum, double threshold) {
+    	if (getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()) > threshold) {
+    		return getMahalanobis(mean, inverseCov, datum.getMetrics()) < threshold;
+    	}
+    	return true;
     }
 
     public RealMatrix getCovariance() {

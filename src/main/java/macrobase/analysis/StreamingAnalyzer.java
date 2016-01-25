@@ -203,14 +203,19 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
                     analysisUpdater.updateIfNecessary(now, tupleNo);
                     modelUpdater.updateIfNecessary(now, tupleNo);
-                    double score = detector.score(d);
+                    /* double score = detector.score(d);
 
                     if(scoreReservoir != null) {
                         scoreReservoir.insert(score);
-                    }
+                    } */
+                    
+                    /* Score only if we're using Z Score; don't use if we're looking for percentile outliers. */
+                    double score = 0;
+                    if (forceUseZScore)
+                    	score = detector.score(d);
 
                     if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-                       forceUsePercentile && detector.isPercentileOutlier(score,
+                       forceUsePercentile && detector.isPercentileOutlier(d,
                                                                           TARGET_PERCENTILE)) {
                         streamingSummarizer.markOutlier(d);
                     } else {
@@ -261,9 +266,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
         sw.reset();
 
+        double score = 0;
         // classify, then insert into tree, etc.
         sw.start();
-        double score = detector.score(d);
+        if (forceUseZScore)
+        	score = detector.score(d);
         sw.stop();
         totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
         sw.reset();
@@ -274,7 +281,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-           forceUsePercentile && detector.isPercentileOutlier(score,
+           forceUsePercentile && detector.isPercentileOutlier(d,
                                                               TARGET_PERCENTILE)) {
             streamingSummarizer.markOutlier(d);
         } else {

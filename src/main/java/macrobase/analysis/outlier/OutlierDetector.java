@@ -57,11 +57,15 @@ public abstract class OutlierDetector {
         recentScoresSorted = Lists.newArrayList(recentScores);
         Collections.sort(recentScoresSorted);
     }
+    
+    public boolean isScoreLessThanK(Datum datum, double threshold) {
+    	return score(datum) < threshold;
+    }
 
-    public boolean isPercentileOutlier(double score,
+    public boolean isPercentileOutlier(Datum datum,
                                        double targetPercentile) {
         double thresh = recentScoresSorted.get((int)(targetPercentile*recentScoresSorted.size()));
-        return score >= thresh;
+        return !isScoreLessThanK(datum, thresh);
     }
 
     private List<DatumWithScore> scoreBatch(List<Datum> data) {
