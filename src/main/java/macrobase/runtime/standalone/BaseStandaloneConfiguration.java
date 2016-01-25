@@ -15,7 +15,8 @@ public class BaseStandaloneConfiguration extends Configuration {
     public enum DetectorType {
         MAD,
         MCD,
-        ZSCORE
+        ZSCORE,
+        KDE
     }
 
     @JsonProperty
