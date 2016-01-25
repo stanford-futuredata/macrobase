@@ -47,10 +47,12 @@ public class ScopingAnalyzer extends BaseAnalyzer {
 			System.out.println(scAttri + "\t" + type); 
 			if(type.equals("varchar"))
 				categoricalAttributes.add(scAttri);
-			if(type.equals("float8"))
+			if(type.equals("float8") || type.equals("numeric") || type.equals("int4"))
 				numericalAttributes.add(scAttri);
 			
 		}
+		log.debug("Categorical attributes are: " + categoricalAttributes.toString());
+		log.debug("Numerical attributes are: " + numericalAttributes.toString());
 		exploreSubSpaceOutlierDetection(loader, categoricalAttributes, numericalAttributes, baseQuery);
     	if(true)
     		return null;
