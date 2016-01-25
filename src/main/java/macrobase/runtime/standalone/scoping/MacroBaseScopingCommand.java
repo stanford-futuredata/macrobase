@@ -48,12 +48,16 @@ public class MacroBaseScopingCommand extends ConfiguredCommand<ScopingStandalone
         analyzer.forceUseZScore(configuration.useZScore());
 
         AnalysisResult result = analyzer.analyze(loader,
-        										 configuration.getScopingAttributes(),
-        										 configuration.getMinScopingSupport(),
                                                  configuration.getTargetAttributes(),
                                                  configuration.getTargetLowMetrics(),
                                                  configuration.getTargetHighMetrics(),
-                                                 configuration.getBaseQuery());
+                                                 configuration.getBaseQuery(),
+                                                 //the following is for scoping
+                                                 configuration.getCategoricalAttributes(),
+                                                 configuration.getNumericalAttributes(),
+                                                 configuration.getNumInterval(),
+                                                 configuration.getMinFrequentSubSpaceRatio(),
+                                                 configuration.getMaxSparseSubSpaceRatio());
         if(result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));
