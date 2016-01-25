@@ -182,4 +182,14 @@ public class SubSpace {
 
 		}
 	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Dense Units are: ");
+		for(Unit unit: denseUnits){
+			sb.append(unit.toString());
+		}
+		return sb.toString();
+	}
 }

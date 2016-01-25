@@ -3,6 +3,7 @@ package macrobase.runtime.standalone.scoping;
 import java.util.*;
 
 import macrobase.datamodel.Datum;
+import macrobase.ingest.DatumEncoder;
 
 /**
  * 
@@ -234,6 +235,34 @@ public class Unit {
 				return false;
 		}
 		return true;
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("{ ");
+		for(Integer dimension: dimension2Interval.keySet()){
+			sb.append(dimension2Interval.get(dimension).toString());
+		}
+		sb.append(" }");
+		return sb.toString();
+	}
+	
+	/**
+	 * Provide a human-readable print of the Unit
+	 * @param encoder
+	 * @return
+	 */
+	public String print(DatumEncoder encoder){
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("{ ");
+		for(Integer dimension: dimension2Interval.keySet()){
+			sb.append(dimension2Interval.get(dimension).print(encoder));
+		}
+		sb.append(" }");
+		return sb.toString();
+		
 	}
 	
 }

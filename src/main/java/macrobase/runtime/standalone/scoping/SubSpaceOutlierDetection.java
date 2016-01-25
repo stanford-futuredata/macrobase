@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import macrobase.datamodel.Datum;
+import macrobase.ingest.DatumEncoder;
 
 /**
  * @author xuchu
@@ -37,11 +38,22 @@ public class SubSpaceOutlierDetection {
 	 */
 	private double outlierDensity;
 	
-	public SubSpaceOutlierDetection(int numIntervals, double frequentDensity, double outlierDensity){
+	
+	
+	private DatumEncoder encoder;
+	List<String> categoricalAttributes;
+	List<String> numericalAttributes;
+	
+	public SubSpaceOutlierDetection(int numIntervals, double frequentDensity, double outlierDensity,
+			DatumEncoder encoder,
+			List<String> categoricalAttributes,
+			List<String> numericalAttributes){
 		this.numIntervals = numIntervals;
 		this.frequentDensity = frequentDensity;
 		this.outlierDensity = outlierDensity;
-		
+		this.encoder = encoder;
+		this.categoricalAttributes = categoricalAttributes;
+		this.numericalAttributes = numericalAttributes;
 	}
 	
 	/**
@@ -73,9 +85,17 @@ public class SubSpaceOutlierDetection {
 			previousLevel = denseSubSpaces;
 		}
 		
+		for(SubSpaceOutlier outlier: allOutliers){
+			System.err.println(outlier.print(encoder));
+		}
+		
+		
 		return allOutliers;
 		
 	}
+	
+	
+	
 	
 	/**
 	 * Given the dense subspaces of previous level, 
@@ -180,7 +200,7 @@ public class SubSpaceOutlierDetection {
 		for(Unit subUnit: subUnits){
 			boolean denseSubUnit = false;
 			for(SubSpace subSpace: denseSubSpaces){
-				if(subUnit.getDimensions().equals(subSpace.getDimensions())){
+				if(!subUnit.getDimensions().equals(subSpace.getDimensions())){
 					continue;
 				}
 				if(subSpace.getDenseUnits().contains(subUnit)){
@@ -263,7 +283,7 @@ public class SubSpaceOutlierDetection {
 				distinctValues.add(datum.getAttributes().get(dimension));
 			}
 			for(Integer value: distinctValues){
-				Interval interval = new Interval(dimension,value);
+				Interval interval = new Interval(dimension,categoricalAttributes.get(dimension),value);
 				Unit unit = new Unit(dimension, interval);
 				result.add(unit);
 			}
@@ -289,13 +309,13 @@ public class SubSpaceOutlierDetection {
 			double start = min;
 			for(int i = 0; i < numIntervals; i++){
 				if(i != numIntervals - 1){
-					Interval interval = new Interval(dimension, start, start + step);
+					Interval interval = new Interval(dimension,numericalAttributes.get(dimension - categoricalDimensions), start, start + step);
 					start += step;
 					Unit unit = new Unit(dimension, interval);
 					result.add(unit);
 				}else{
 					//make the max a little bit larger
-					Interval interval = new Interval(dimension, start, max + Double.MIN_VALUE);
+					Interval interval = new Interval(dimension, numericalAttributes.get(dimension - categoricalDimensions),start, max + 0.000001);
 					Unit unit = new Unit(dimension, interval);
 					result.add(unit);
 				}

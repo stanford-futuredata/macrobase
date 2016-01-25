@@ -153,8 +153,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         sw.start();
         List<Datum> data = loader.getData(encoder,
         								  categoricalAttributes,
+        								  new ArrayList<String>(),
         								  numericalAttributes,
-                                          new ArrayList<String>(),
                                           baseQuery);
         sw.stop();
 
@@ -163,7 +163,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         log.debug("...ended loading (time: {}ms)!", loadTime);
         
         log.debug("Starting subSpace outlier detection...");
-        SubSpaceOutlierDetection subSpaceOutlierDetection = new SubSpaceOutlierDetection(10,0.1,0.001);
+        SubSpaceOutlierDetection subSpaceOutlierDetection = 
+        		new SubSpaceOutlierDetection(9,0.1,0.005,encoder,categoricalAttributes,numericalAttributes);
         List<SubSpaceOutlier> subSpaceOutliers = subSpaceOutlierDetection.run(data);
     }
     
