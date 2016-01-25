@@ -1,10 +1,9 @@
 package macrobase.analysis;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.MinCovDet;
-import macrobase.analysis.outlier.OutlierDetector;
-import macrobase.analysis.outlier.ZScore;
+import macrobase.analysis.outlier.*;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
+import org.apache.commons.math3.linear.BlockRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +59,19 @@ abstract public class BaseAnalyzer {
 
     protected OutlierDetector constructDetector(int metricsDimensions) {
         if(detectorType == null) {
+            if (metricsDimensions < 100) {
+                log.info("Using KDE detector.");
+                BlockRealMatrix bandwidth = new BlockRealMatrix(metricsDimensions, metricsDimensions);
+                for (int row = 0; row < metricsDimensions; row++) {
+                    for (int column = 0; column < row; column++) {
+                        bandwidth.setEntry(row, column, 0);
+                        bandwidth.setEntry(column, row, 0);
+                    }
+                    bandwidth.setEntry(row, row, 1);
+                }
+                return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, bandwidth);
+            }
+
             if (metricsDimensions == 1) {
                 log.info("By default: using MAD detector for dimension 1 metric.");
                 return new MAD();

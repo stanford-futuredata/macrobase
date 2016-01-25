@@ -145,8 +145,8 @@ public abstract class SQLLoader {
 
         List<Datum> ret = Lists.newArrayList();
 
-        RealVector metricWiseMinVec = new ArrayRealVector(lowMetrics.size()+highMetrics.size());
-        RealVector metricWiseMaxVec = new ArrayRealVector(lowMetrics.size()+highMetrics.size());
+        RealVector metricWiseMinVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
+        RealVector metricWiseMaxVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
 
         while(rs.next()) {
             List<Integer> attrList = new ArrayList<>(attributes.size());
@@ -156,10 +156,10 @@ public abstract class SQLLoader {
                 attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
             }
 
-            RealVector metricVec = new ArrayRealVector(lowMetrics.size()+highMetrics.size());
+            RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
             int vecPos = 0;
 
-            for(; i <= attributes.size()+lowMetrics.size(); ++i) {
+            for(; i <= attributes.size() + lowMetrics.size(); ++i) {
                 double val = Math.pow(Math.max(rs.getDouble(i), 0.1), -1);
                 metricVec.setEntry(vecPos, val);
 
@@ -174,7 +174,7 @@ public abstract class SQLLoader {
                 vecPos += 1;
             }
 
-            for(; i <= attributes.size()+lowMetrics.size()+highMetrics.size(); ++i) {
+            for(; i <= attributes.size() + lowMetrics.size() + highMetrics.size(); ++i) {
                 double val = rs.getDouble(i);
                 metricVec.setEntry(vecPos, val);
 
