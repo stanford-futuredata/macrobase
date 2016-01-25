@@ -296,6 +296,8 @@ public class MinCovDet extends OutlierDetector  {
     @Override
     public boolean isScoreLessThanK(Datum datum, double threshold) {
     	if (getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()) > threshold) {
+    		log.debug("Approximate distance: {}, True distance: {}", getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()),
+    				getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()));
     		setNumTimesMahalanobisCalled(getNumTimesMahalanobisCalled() + 1);
     		return getMahalanobis(mean, inverseCov, datum.getMetrics()) < threshold;
     	}
