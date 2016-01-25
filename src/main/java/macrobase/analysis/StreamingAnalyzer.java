@@ -17,6 +17,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -244,6 +245,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
         log.debug("...ended total (time: {}ms)!", (tsw.elapsed(TimeUnit.MICROSECONDS) / 1000) + 1);
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
+        
+        if (detectorType == BaseStandaloneConfiguration.DetectorType.MCD) {
+        	log.debug("getMahalanobis called {} times", ((MinCovDet) detector).getNumTimesMahalanobisCalled());
+        }
 
         log.debug("Number of itemsets: {}", isr.size());
 

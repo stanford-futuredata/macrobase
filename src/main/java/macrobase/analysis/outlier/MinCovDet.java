@@ -74,6 +74,7 @@ public class MinCovDet extends OutlierDetector  {
     private RealMatrix cov;
     private RealMatrix inverseCov;
     private double inverseCovSum;
+    private int numTimesMahalanobisCalled;
 
     private RealVector mean;
 
@@ -97,16 +98,19 @@ public class MinCovDet extends OutlierDetector  {
 
     public MinCovDet(int dataDim) {
         this.p = dataDim;
+        this.numTimesMahalanobisCalled = 0;
     }
 
     public MinCovDet(int dataDim, double alpha) {
         this(dataDim);
         this.alpha = alpha;
+        this.numTimesMahalanobisCalled = 0;
     }
     
     public MinCovDet(int dataDim, double alpha, double stoppingDelta) {
     	this(dataDim, alpha);
     	this.stoppingDelta = stoppingDelta;
+    	this.numTimesMahalanobisCalled = 0;
     }
 
     public static double getMahalanobis(RealVector mean,
@@ -292,6 +296,7 @@ public class MinCovDet extends OutlierDetector  {
     @Override
     public boolean isScoreLessThanK(Datum datum, double threshold) {
     	if (getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()) > threshold) {
+    		setNumTimesMahalanobisCalled(getNumTimesMahalanobisCalled() + 1);
     		return getMahalanobis(mean, inverseCov, datum.getMetrics()) < threshold;
     	}
     	return true;
@@ -317,4 +322,12 @@ public class MinCovDet extends OutlierDetector  {
         // https://en.wikipedia.org/wiki/Mahalanobis_distance#Normal_distributions
         return (new ChiSquaredDistribution(p)).inverseCumulativeProbability(cdf);
     }
+
+	public int getNumTimesMahalanobisCalled() {
+		return numTimesMahalanobisCalled;
+	}
+
+	public void setNumTimesMahalanobisCalled(int numTimesMahalanobisCalled) {
+		this.numTimesMahalanobisCalled = numTimesMahalanobisCalled;
+	}
 }

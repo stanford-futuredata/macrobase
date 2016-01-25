@@ -62,9 +62,11 @@ abstract public class BaseAnalyzer {
         if(detectorType == null) {
             if (metricsDimensions == 1) {
                 log.info("By default: using MAD detector for dimension 1 metric.");
+                detectorType = BaseStandaloneConfiguration.DetectorType.MAD;
                 return new MAD();
             } else {
                 log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
+                detectorType = BaseStandaloneConfiguration.DetectorType.MCD;
                 return new MinCovDet(metricsDimensions);
             }
         } else {
