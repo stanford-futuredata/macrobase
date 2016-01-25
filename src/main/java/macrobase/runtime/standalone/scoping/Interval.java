@@ -1,5 +1,6 @@
 package macrobase.runtime.standalone.scoping;
 
+import macrobase.ingest.DatumEncoder;
 
 /**
  * @author xuchu
@@ -11,11 +12,17 @@ package macrobase.runtime.standalone.scoping;
 public class Interval {
 
 	private int dimension;
+	private String columnName;
+	
+
+
+	private boolean isNumericalInterval;
 	
 	private double min;
 	private double max; 
 	
 	private int value;
+	
 	
 	/**
 	 * Create a numerical interval
@@ -23,10 +30,12 @@ public class Interval {
 	 * @param min
 	 * @param max
 	 */
-	public Interval(int dimension, double min, double max) {
+	public Interval(int dimension, String columnName, double min, double max) {
 	    this.setDimension(dimension);
+	    this.setColumnName(columnName);
 	    this.setMin(min);
 	    this.setMax(max);
+	    isNumericalInterval = true;
 	}
 	
 	/**
@@ -34,11 +43,21 @@ public class Interval {
 	 * @param dimension
 	 * @param value
 	 */
-	public Interval(int dimension, int value){
+	public Interval(int dimension, String columnName, int value){
 		this.setDimension(dimension);
+		this.setColumnName(columnName);
 		this.setValue(value);
+		isNumericalInterval = false;
 	}
 
+	public String getColumnName() {
+		return columnName;
+	}
+
+	public void setColumnName(String columnName) {
+		this.columnName = columnName;
+	}
+	
 	public int getDimension() {
 		return dimension;
 	}
@@ -98,4 +117,27 @@ public class Interval {
 			return false;
 	}
 	
+	@Override
+	public String toString(){
+		if(isNumericalInterval){
+			return "< " + dimension + " [" + min + "," + max + ") > ";
+		}else{
+			return "< " + dimension + " [" + value + "] > ";
+		}
+	}
+	
+	/**
+	 * Provide a human-readable print of the Interval
+	 * @param encoder
+	 * @return
+	 */
+	public String print(DatumEncoder encoder){
+		
+		if(isNumericalInterval){
+			return "< " + columnName + " " + '\u2208' + " [" + min + "," + max + ") > ";
+		}else{
+			return "< " + columnName + " = " + encoder.getAttribute(value).getValue() + " > ";
+		}
+		
+	}
 }

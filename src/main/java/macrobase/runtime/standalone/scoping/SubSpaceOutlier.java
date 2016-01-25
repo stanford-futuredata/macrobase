@@ -1,7 +1,12 @@
 package macrobase.runtime.standalone.scoping;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import macrobase.ingest.DatumEncoder;
+import macrobase.ingest.result.ColumnValue;
 
 public class SubSpaceOutlier {
 	/**
@@ -46,4 +51,31 @@ public class SubSpaceOutlier {
 		outlierUnits.add(unit);
 		
 	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Outlier Units are: ");
+		for(Unit unit: outlierUnits){
+			sb.append(unit.toString());
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * Provide a human-readable print of the outlier
+	 * @param encoder
+	 * @return
+	 */
+	public String print(DatumEncoder encoder){
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("Outlier Units are: ");
+		for(Unit unit: outlierUnits){
+			sb.append(unit.print(encoder));
+		}
+		return sb.toString();
+		
+	}
+	
 }
