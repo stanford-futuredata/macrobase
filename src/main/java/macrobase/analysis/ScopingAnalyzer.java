@@ -30,30 +30,43 @@ public class ScopingAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(ScopingAnalyzer.class);
 
     public AnalysisResult analyze(SQLLoader loader,
-    							  List<String> scopingAttributes,
-    							  double minScopingSupport,
                                   List<String> attributes,
                                   List<String> lowMetrics,
                                   List<String> highMetrics,
-                                  String baseQuery) throws SQLException {
+                                  String baseQuery,
+                                  List<String> categoricalAttributes,
+                                  List<String> numericalAttributes, 
+                                  int numInterval,
+                                  double minFrequentSubSpaceRatio,
+                                  double maxSparseSubSpaceRatio
+    			) throws SQLException {
     	
     	//Need to determine categorical attributes and numerical attributes
-    	List<String> categoricalAttributes = new ArrayList<String>();
-    	List<String> numericalAttributes = new ArrayList<String>();
-    	List<SchemaColumn> schemaColumns = loader.getSchema(baseQuery).getColumns();
-		for(SchemaColumn sc: schemaColumns){
-			String scAttri = sc.getName();
-			String type = sc.getType();
-			System.out.println(scAttri + "\t" + type); 
-			if(type.equals("varchar"))
-				categoricalAttributes.add(scAttri);
-			if(type.equals("float8") || type.equals("numeric") || type.equals("int4"))
-				numericalAttributes.add(scAttri);
-			
-		}
+    	
+    	if(categoricalAttributes.size() == 0 && numericalAttributes.size() == 0){
+    		categoricalAttributes = new ArrayList<String>();
+        	numericalAttributes = new ArrayList<String>();
+        	List<SchemaColumn> schemaColumns = loader.getSchema(baseQuery).getColumns();
+    		for(SchemaColumn sc: schemaColumns){
+    			String scAttri = sc.getName();
+    			String type = sc.getType();
+    			System.out.println(scAttri + "\t" + type); 
+    			if(type.equals("varchar"))
+    				categoricalAttributes.add(scAttri);
+    			if(type.equals("float8") || type.equals("numeric") || type.equals("int4"))
+    				numericalAttributes.add(scAttri);
+    			
+    		}
+    	}
+    	
 		log.debug("Categorical attributes are: " + categoricalAttributes.toString());
 		log.debug("Numerical attributes are: " + numericalAttributes.toString());
-		exploreSubSpaceOutlierDetection(loader, categoricalAttributes, numericalAttributes, baseQuery);
+		exploreSubSpaceOutlierDetection(loader, baseQuery, 
+				categoricalAttributes, 
+				numericalAttributes ,
+				numInterval,
+				 minFrequentSubSpaceRatio,
+                 maxSparseSubSpaceRatio);
     	if(true)
     		return null;
     	//use all attributes to scope
@@ -144,9 +157,13 @@ public class ScopingAnalyzer extends BaseAnalyzer {
     }
     
     private void exploreSubSpaceOutlierDetection(SQLLoader loader,
+    		String baseQuery,
     		List<String> categoricalAttributes,
     		List<String> numericalAttributes,
-    		String baseQuery) throws SQLException{
+    		 int numInterval,
+    		double minFrequentSubSpaceRatio,
+            double maxSparseSubSpaceRatio
+    		) throws SQLException{
     	
     	
     	DatumEncoder encoder = new DatumEncoder();
@@ -166,7 +183,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         
         log.debug("Starting subSpace outlier detection...");
         SubSpaceOutlierDetection subSpaceOutlierDetection = 
-        		new SubSpaceOutlierDetection(9,0.1,0.005,encoder,categoricalAttributes,numericalAttributes);
+        		new SubSpaceOutlierDetection(numInterval,minFrequentSubSpaceRatio,maxSparseSubSpaceRatio,encoder,categoricalAttributes,numericalAttributes);
         List<SubSpaceOutlier> subSpaceOutliers = subSpaceOutlierDetection.run(data);
     }
     

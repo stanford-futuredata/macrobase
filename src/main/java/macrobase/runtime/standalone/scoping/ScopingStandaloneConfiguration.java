@@ -13,18 +13,40 @@ import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 public class ScopingStandaloneConfiguration extends BaseStandaloneConfiguration {
 
 	
-	 private List<String> scopingAttributes;
+	 private List<String> categoricalAttributes;
 	 
 	 @JsonProperty
-     public List<String> getScopingAttributes() {
-        return scopingAttributes;
+     public List<String> getCategoricalAttributes() {
+        return categoricalAttributes;
 	 }
 	 
-	 @NotNull
-	 private Double minScopingSupport;
+	 private List<String> numericalAttributes;
 	 
 	 @JsonProperty
-     public double getMinScopingSupport() {
-        return minScopingSupport;
+     public List<String> getNumericalAttributes() {
+        return numericalAttributes;
+	 }
+	 
+	 private Integer numInterval;
+	 
+	 @JsonProperty
+     public int getNumInterval() {
+        return numInterval;
+     }
+	 
+	 @NotNull
+	 private Double minFrequentSubSpaceRatio;
+	 
+	 @JsonProperty
+     public double getMinFrequentSubSpaceRatio() {
+        return minFrequentSubSpaceRatio;
+     }
+	 
+	 @NotNull
+	 private Double maxSparseSubSpaceRatio;
+	 
+	 @JsonProperty
+     public double getMaxSparseSubSpaceRatio() {
+        return maxSparseSubSpaceRatio;
      }
 }

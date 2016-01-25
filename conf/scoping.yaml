@@ -3,9 +3,11 @@ targetAttributes: [sex, marital_status, age]
 targetLowMetrics: []
 targetHighMetrics: [income]
 
-scopingAttributes: []
-minScopingSupport: 0.2
-
+categoricalAttributes: []
+numericalAttributes: []
+numInterval: 10
+minFrequentSubSpaceRatio: 0.1
+maxSparseSubSpaceRatio: 0.001
 
 dbUrl: postgres
 baseQuery: SELECT * FROM marketing;
