@@ -2,14 +2,8 @@ import matplotlib.pyplot as plt
 import sys
 
 workloads_to_be_plotted = [
-  "cmtDatasetSimpleStreaming",
-  "cmtDatasetComplexStreaming",
-  "milanTelecomSimpleStreaming",
-  "milanTelecomComplexStreaming",
-  "campaignExpendituresSimpleStreaming",
-  "campaignExpendituresComplexStreaming",
-  "fedDisbursementsSimpleStreaming",
-  "fedDisbursementsComplexStreaming"
+  "testTasks",
+  "testTasksStreaming"
 ]
 
 timing_types = [
@@ -48,15 +42,17 @@ def parse_output_file(filename):
         workload_name = lines[i-1].split("-->")[0].strip()
         try:
           [parameter_type, parameter_value] = parameters_description.split(" = ")
+          if parameter_type not in parsed_results:
+            parsed_results[parameter_type] = dict()
+            parsed_results[parameter_type][workload_name] = dict()
+          if workload_name not in parsed_results[parameter_type]:
+            parsed_results[parameter_type][workload_name] = dict()
+          parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list)
         except:
-          continue
-        parameter_value = float(parameter_value)
-        if parameter_type not in parsed_results:
-          parsed_results[parameter_type] = dict()
-          parsed_results[parameter_type][workload_name] = dict()
-        if workload_name not in parsed_results[parameter_type]:
-          parsed_results[parameter_type][workload_name] = dict()
-        parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list)
+          parameter_type = parameters_description
+          if parameter_type not in parsed_results:
+            parsed_results[parameter_type] = dict()
+          parsed_results[parameter_type][workload_name] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list)
   return parsed_results
 
 def get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type):
@@ -84,6 +80,8 @@ def compute_precision_and_recall(itemsets, ground_truth_itemsets):
 
 def plot_time_graphs(parsed_results, plots_dir):
   for parameter_type in parsed_results:
+    if parameter_type == "defaultParameters":
+      continue
     for timing_type in timing_types + ['Total']:
       try:
         plt.cla()
@@ -114,6 +112,8 @@ def plot_time_graphs(parsed_results, plots_dir):
 
 def plot_aux_graphs(parsed_results, idx, ylabel, modifier, plots_dir):
   for parameter_type in parsed_results:
+    if parameter_type == "defaultParameters":
+      continue
     plt.cla()
     plt.xscale('log')
     handles = list()
@@ -140,6 +140,8 @@ def plot_aux_graphs(parsed_results, idx, ylabel, modifier, plots_dir):
 
 def plot_recall_precision(parsed_results, idx, ylabel, modifier, plots_dir):
   for parameter_type in parsed_results:
+    if parameter_type == "defaultParameters":
+      continue
     plt.cla()
     plt.xscale('log')
     handles = list()
@@ -151,7 +153,7 @@ def plot_recall_precision(parsed_results, idx, ylabel, modifier, plots_dir):
       for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
         try:
           itemsets = parsed_results[parameter_type][workload_name][parameter_value][3]
-          ground_truth_itemsets = parsed_results[parameter_type][workload_name.replace("Streaming", "")][parameter_value][3]
+          ground_truth_itemsets = parsed_results["defaultParameters"][workload_name][3]
           value = compute_precision_and_recall(itemsets, ground_truth_itemsets)[idx]
           values.append(value)
           keys.append(parameter_value)

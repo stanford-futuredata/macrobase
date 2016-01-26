@@ -143,7 +143,7 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
   if sweeping_parameter_name is not None:
     print "Running all workloads with", sweeping_parameter_name, "=", sweeping_parameter_value
   else:
-    print "Running all workloads with default parameters"
+    print "Running all workloads with defaultParameters"
   print
   for config_parameters_raw in all_config_parameters:
     config_parameters = {}
@@ -158,6 +158,7 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
   print
 
 if __name__ == '__main__':
+  run_all_workloads()
   for sweeping_parameter_name in sweeping_parameters:
     for sweeping_parameter_value in sweeping_parameters[sweeping_parameter_name]:
       run_all_workloads(sweeping_parameter_name, sweeping_parameter_value)
