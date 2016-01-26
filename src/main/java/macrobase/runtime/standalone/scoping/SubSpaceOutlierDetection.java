@@ -74,25 +74,24 @@ public class SubSpaceOutlierDetection {
 	
 		for(int level = 2; level <= totalDimensions; level++){
 			
-			log.debug("Find " + level + "  dimensional dense scopes");
-			List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);
-			
-			for(SubSpace denseSubSpace: denseSubSpaces){
-				log.debug("\t Dimensions: " + denseSubSpace.getDimensions().toString());
-				log.debug("\t Num Dense Units: " + denseSubSpace.getDenseUnits().size());
-
-			}
-			
 			log.debug("Find " + level + "  dimensional outlier scopes");
 			List<SubSpaceOutlier> outlierSubSpaces = findOutlierSubSpaceOneLevelUp(previousLevel,data);
 			allOutliers.addAll(outlierSubSpaces);
-		
-			//level-up
-			previousLevel = denseSubSpaces;
 			
 			for(SubSpaceOutlier outlier: outlierSubSpaces){
 				System.err.println(outlier.print(encoder));
 			}
+			
+
+			//test only three levels for now
+			if(level == 3)
+				break;
+			
+			log.debug("Find " + level + "  dimensional dense scopes");
+			List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);
+		
+			//level-up
+			previousLevel = denseSubSpaces;
 			
 		}
 		

@@ -72,7 +72,7 @@ public class SubSpaceOutlier {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Outlier Units are: ");
 		for(Unit unit: outlierUnits){
-			sb.append(unit.print(encoder));
+			sb.append(unit.print(encoder) +  " has number outlier tuples: " + unit.getTIDs().size());
 		}
 		return sb.toString();
 		
