@@ -29,7 +29,7 @@ default_args = {
   "useRealTimePeriod": "false",
   "useTupleCountPeriod": "true",
 
-  "warmupCount": 1000,
+  "warmupCount": 50000,
   "decayRate": 0.01,
 
   "alphaMCD": 0.5,

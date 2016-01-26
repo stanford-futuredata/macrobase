@@ -73,7 +73,7 @@ public class MinCovDet extends OutlierDetector  {
 
     private RealMatrix cov;
     private RealMatrix inverseCov;
-    private double inverseCovSum;
+    private double inverseCovSumSquared;
     private int numTimesMahalanobisCalled;
 
     private RealVector mean;
@@ -140,19 +140,23 @@ public class MinCovDet extends OutlierDetector  {
     }
     
     public static double getMahalanobisApproximate(RealVector mean,
-    											   double inverseCovSum,
+    											   double inverseCovSumSquared,
     											   RealVector vec) {
     	final int dim = mean.getDimension();
+        double[] vecMinusMean = new double[dim];
+
+        for (int d = 0; d < dim; ++d) {
+          vecMinusMean[d] = vec.getEntry(d) - mean.getEntry(d);
+        }
     	
-    	double maxDimensionSquared = 0;
-    	for(int d = 0; d < dim; ++d) {
-    		double dimensionSquared = Math.pow(vec.getEntry(d) - mean.getEntry(d), 2);
-    		if (dimensionSquared > maxDimensionSquared) {
-    			maxDimensionSquared = dimensionSquared;
-    		}
+    	double vecPairSquaredSum = 0;
+    	for(int d1 = 0; d1 < dim; ++d1) {
+                for(int d2 = 0; d2 < dim; ++d2) {
+                	vecPairSquaredSum += Math.pow((vecMinusMean[d1] * vecMinusMean[d2]), 2);
+                }
     	}
     	
-    	return Math.sqrt(maxDimensionSquared * inverseCovSum);
+    	return Math.sqrt(Math.sqrt(vecPairSquaredSum) * inverseCovSumSquared);
     }
 
     private RealVector getMean(List<? extends HasMetrics> data) {
@@ -213,12 +217,14 @@ public class MinCovDet extends OutlierDetector  {
             singularCovariances.inc();
             inverseCov = new SingularValueDecomposition(cov).getSolver().getInverse();
         }
-        inverseCovSum = 0.0;
+        inverseCovSumSquared = 0.0;
         for (int row = 0; row < inverseCov.getRowDimension(); row++) {
         	for (int col = 0; col < inverseCov.getColumnDimension(); col++) {
-        		inverseCovSum += inverseCov.getEntry(row, col);
+                        double inverseCovEntry = inverseCov.getEntry(row, col);
+        		inverseCovSumSquared += (inverseCovEntry * inverseCovEntry);
         	}
         }
+        inverseCovSumSquared = Math.sqrt(inverseCovSumSquared);
     }
 
     @Override
@@ -295,10 +301,8 @@ public class MinCovDet extends OutlierDetector  {
     
     @Override
     public boolean isScoreLessThanK(Datum datum, double threshold) {
-    	if (getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()) > threshold) {
-    		log.debug("Approximate distance: {}, True distance: {}", getMahalanobisApproximate(mean, inverseCovSum, datum.getMetrics()),
-    				getMahalanobis(mean, inverseCov, datum.getMetrics()));
-    		setNumTimesMahalanobisCalled(getNumTimesMahalanobisCalled() + 1);
+    	if (getMahalanobisApproximate(mean, inverseCovSumSquared, datum.getMetrics()) > threshold) {
+    	 	setNumTimesMahalanobisCalled(getNumTimesMahalanobisCalled() + 1);
     		return getMahalanobis(mean, inverseCov, datum.getMetrics()) < threshold;
     	}
     	return true;
