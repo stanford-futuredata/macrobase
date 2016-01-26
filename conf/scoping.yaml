@@ -7,7 +7,7 @@ categoricalAttributes: []
 numericalAttributes: []
 numInterval: 10
 minFrequentSubSpaceRatio: 0.1
-maxSparseSubSpaceRatio: 0.001
+maxSparseSubSpaceRatio: 0.005
 
 dbUrl: postgres
 baseQuery: SELECT * FROM marketing;
