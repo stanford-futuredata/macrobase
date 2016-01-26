@@ -152,7 +152,7 @@ public class MinCovDet extends OutlierDetector  {
     		}
     	}
     	
-    	return maxDimensionSquared * inverseCovSum;
+    	return Math.sqrt(maxDimensionSquared * inverseCovSum);
     }
 
     private RealVector getMean(List<? extends HasMetrics> data) {
