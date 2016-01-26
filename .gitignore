@@ -30,6 +30,7 @@ sql_cache/*
 
 # Workload directory
 bench/workflows/*
+bench/custom_configurations/
 
 # Plots
 *.pdf

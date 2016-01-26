@@ -1,8 +1,10 @@
+import argparse
+import json
 import os
 
-from config_parameters import all_config_parameters
 from sweeping_parameters import sweeping_parameters
 from time import strftime
+
 
 testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
@@ -17,6 +19,8 @@ default_args = {
   "usePercentile": "true",
   "targetPercentile": 0.99,
   "useZScore": "false",
+  "dbUser": os.getenv('USER', None),
+  "dbPassword": None,
   "zScore": 3.0,
 
   "inputReservoirSize": 10000,
@@ -41,12 +45,14 @@ def process_config_parameters(config_parameters):
     if type(config_parameters[config_parameter_type]) == list:
       config_parameters[config_parameter_type] = ", ".join([str(para) for para in config_parameters[config_parameter_type]])
 
+
 def create_config_file(config_parameters, conf_file):
   template_conf_file = batch_template_conf_file if config_parameters["isBatchJob"] else streaming_template_conf_file
   template_conf_contents = open(template_conf_file, 'r').read()
   conf_contents = template_conf_contents % config_parameters
   with open(conf_file, 'w') as f:
     f.write(conf_contents)
+
 
 def parse_results(results_file):
   times = dict()
@@ -110,7 +116,14 @@ def run_workload(config_parameters, print_itemsets=True):
   all_tuples_per_second = list()
 
   for i in xrange(NUM_RUNS_PER_WORKFLOW):
-    os.system("cd ..; java ${JAVA_OPTS} -cp \"src/main/resources/:target/classes:target/lib/*:target/dependency/*\" macrobase.MacroBase %s %s > %s" % (cmd, conf_file, results_file))
+    macrobase_cmd = '''java ${{JAVA_OPTS}} \\
+        -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
+        macrobase.MacroBase {cmd} {conf_file} \\
+        > {results_file}'''.format(
+        cmd=cmd, conf_file=conf_file, results_file=results_file)
+    print 'running the following command:'
+    print macrobase_cmd
+    os.system("cd ..; %s" % macrobase_cmd)
     times, num_itemsets, num_iterations, itemsets, tuples_per_second = parse_results(results_file)
 
     for time_type in times:
@@ -139,16 +152,23 @@ def run_workload(config_parameters, print_itemsets=True):
     print "Union of all itemsets:", list(all_itemsets)
   print "Mean tuples / second:", mean_tuples_per_second, ", Stddev tuples / second:", stddev_tuples_per_second
 
-def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=None):
+
+def run_all_workloads(configurations,
+                      script_arguments={},
+                      sweeping_parameter_name=None,
+                      sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
     print "Running all workloads with", sweeping_parameter_name, "=", sweeping_parameter_value
   else:
     print "Running all workloads with defaultParameters"
   print
-  for config_parameters_raw in all_config_parameters:
+  for config_parameters_raw in configurations:
     config_parameters = {}
     for key in default_args:
       config_parameters[key] = default_args[key]
+    for key, arg in script_arguments.iteritems():
+      if arg is not None and key in default_args:
+        config_parameters[key] = arg
     for key in config_parameters_raw:
       config_parameters[key] = config_parameters_raw[key]
     if sweeping_parameter_name is not None:
@@ -157,8 +177,38 @@ def run_all_workloads(sweeping_parameter_name=None, sweeping_parameter_value=Non
     run_workload(config_parameters)
   print
 
+
+def _add_camel_case_argument(parser, argument, **kwargs):
+  """
+  Add an argument with a destination attribute being camel cased version of the
+  argument instead of underscore separated version.
+  """
+  camel_case_str = ''.join([substr.title() if index != 0 else substr
+                            for index, substr in enumerate(
+                                argument.strip('-').split('-'))])
+  parser.add_argument(argument, dest=camel_case_str, **kwargs)
+
+
+def parse_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--configurations-file',
+                      type=argparse.FileType('r'),
+                      default='all_configuration_parameters.json',
+                      help='File with a list of configuration parameters')
+  _add_camel_case_argument(parser, '--db-user')
+  _add_camel_case_argument(parser, '--db-password')
+  args = parser.parse_args()
+  args.configurations = json.load(args.configurations_file)
+  return args
+
+
 if __name__ == '__main__':
-  run_all_workloads()
+  args = parse_args()
+  run_all_workloads(args.configurations,
+                    script_arguments=vars(args))
   for sweeping_parameter_name in sweeping_parameters:
     for sweeping_parameter_value in sweeping_parameters[sweeping_parameter_name]:
-      run_all_workloads(sweeping_parameter_name, sweeping_parameter_value)
+      run_all_workloads(args.configurations,
+                        script_arguments=vars(args),
+                        sweeping_parameter_name=sweeping_parameter_name,
+                        sweeping_parameter_value=sweeping_parameter_value)
