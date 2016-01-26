@@ -2,7 +2,6 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.ZScore;

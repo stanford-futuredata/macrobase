@@ -60,7 +60,7 @@ def parse_results(results_file):
     for i in xrange(len(lines)):
       line = lines[i]
       if line.startswith("DEBUG"):
-        if "time" in line:
+        if "time" in line and "times" not in line:
           line = line.split("...ended")[1].strip()
           line_tokens = line.split("(")
           time_type = line_tokens[0].strip()
@@ -76,7 +76,7 @@ def parse_results(results_file):
           line = line.split("Tuples / second = ")[1]
           tuples_per_second = float(line.split("tuples / second")[0].strip())
         elif "getMahalanobis called" in line:
-          line = line.split("getMahalanobis called ").strip()
+          line = line.split("getMahalanobis called ")[1].strip()
           num_times_md_called = int(line.split()[0])
       if "Columns" in line:
         j = i + 1
