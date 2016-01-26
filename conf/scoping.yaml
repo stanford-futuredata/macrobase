@@ -3,14 +3,14 @@ targetAttributes: [sex, marital_status, age]
 targetLowMetrics: []
 targetHighMetrics: [income]
 
-categoricalAttributes: []
-numericalAttributes: []
-numInterval: 10
-minFrequentSubSpaceRatio: 0.1
-maxSparseSubSpaceRatio: 0.005
+categoricalAttributes : [ hubway_id, bike_nr, subsc_type, gender, zip_code]
+numericalAttributes: [duration]
+numInterval: 20
+minFrequentSubSpaceRatio: 0.5
+maxSparseSubSpaceRatio: 0.03
 
 dbUrl: postgres
-baseQuery: SELECT * FROM marketing;
+baseQuery: SELECT * FROM hubway_trips;
 
 minSupport: 0.01
 minInlierRatio: 1

@@ -54,6 +54,10 @@ public class Unit {
 		return result;
 	}
 	
+	public List<Integer> getTIDs(){
+		return tids;
+	}
+	
 	/**
 	 * Determine if the unit contains the tuple
 	 * @param datum
