@@ -146,12 +146,7 @@ public class FPGrowth {
 
         public void setFrequentCounts(Map<Integer, Double> counts) {
             frequentItemCounts = counts;
-            List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
-            sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
-                    .compareTo(frequentItemCounts.get(i2.getKey())));
-            for(int i = 0; i < sortedItemCounts.size(); ++i) {
-                frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
-            }
+            sortFrequentItems();
         }
 
         public void insertFrequentItems(List<Set<Integer>> transactions,
@@ -170,6 +165,10 @@ public class FPGrowth {
                 }
             }
 
+            sortFrequentItems();
+        }
+
+        private void sortFrequentItems() {
             // we have to materialize a canonical order so that items with equal counts
             // are consistently ordered when they are sorted during transaction insertion
             List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
@@ -408,7 +407,13 @@ public class FPGrowth {
     }
 
     public List<ItemsetWithCount> getItemsets(List<Set<Integer>> transactions,
-                                           Double support) {
+                                              Double support) {
+        return getItemsets(transactions, null, support);
+    }
+
+    public List<ItemsetWithCount> getItemsets(List<Set<Integer>> transactions,
+                                              Map<Integer, Double> initialCounts,
+                                              Double support) {
         FPTree fp = new FPTree();
         int countRequiredForSupport = (int)(support*transactions.size());
         log.debug("count required: {}", countRequiredForSupport);
@@ -416,6 +421,12 @@ public class FPGrowth {
         long st = System.currentTimeMillis();
 
         Timer.Context context = singleItemCounts.time();
+        if(initialCounts == null) {
+            fp.insertFrequentItems(transactions, countRequiredForSupport);
+        } else {
+            fp.setFrequentCounts(initialCounts);
+        }
+
         fp.insertFrequentItems(transactions, countRequiredForSupport);
         context.stop();
         context = insertTransactions.time();
@@ -445,11 +456,18 @@ public class FPGrowth {
             Set<Integer> targetItems,
             List<ItemsetWithCount> toCount) {
         FPTree countTree = new FPTree();
-        for(Integer i : targetItems) {
-            initialCounts.remove(i);
+
+        Map<Integer, Double> frequentCounts = new HashMap<>();
+
+        for (Integer i : targetItems) {
+            Double initialCount = initialCounts.get(i);
+            if(initialCount == null) {
+                initialCount = 0.;
+            }
+            frequentCounts.put(i, initialCount);
         }
 
-        countTree.setFrequentCounts(initialCounts);
+        countTree.setFrequentCounts(frequentCounts);
         countTree.insertDatum(transactions);
 
         List<ItemsetWithCount> ret = new ArrayList<>();

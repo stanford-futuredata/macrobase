@@ -40,26 +40,33 @@ public class FPGrowthEmerging {
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
 
+        Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
+
         int supportCountRequired = (int)(outliers.size()*minSupport);
 
         for(DatumWithScore d : outliers) {
             Set<Integer> txn = null;
 
             for(int i : d.getDatum().getAttributes()) {
-                Number outlierCount = outlierCounts.get(i);
-                if(outlierCount.doubleValue() >= supportCountRequired) {
+                double outlierCount = outlierCounts.get(i);
+                if(outlierCount >= supportCountRequired) {
                     Number inlierCount = inlierCounts.get(i);
 
                     double outlierInlierRatio;
                     if(inlierCount == null || inlierCount.doubleValue() == 0) {
                         outlierInlierRatio = Double.POSITIVE_INFINITY;
                     } else {
-                        outlierInlierRatio = (outlierCount.doubleValue()/outliers.size())/(inlierCount.doubleValue()/inliers.size());
+                        outlierInlierRatio = (outlierCount/outliers.size())/(inlierCount.doubleValue()/inliers.size());
                     }
                     if(outlierInlierRatio > minRatio) {
                         if(txn == null) {
                             txn = new HashSet<>();
                         }
+
+                        if(!supportedOutlierCounts.containsKey(i)) {
+                            supportedOutlierCounts.put(i, outlierCount);
+                        }
+
                         txn.add(i);
                     }
                 }
@@ -73,7 +80,7 @@ public class FPGrowthEmerging {
 
         context = outlierFPGrowth.time();
         FPGrowth fpg = new FPGrowth();
-        List<ItemsetWithCount> iwc = fpg.getItemsets(outlierTransactions, minSupport);
+        List<ItemsetWithCount> iwc = fpg.getItemsets(outlierTransactions, supportedOutlierCounts, minSupport);
         context.stop();
 
         context = inlierRatio.time();
@@ -122,10 +129,10 @@ public class FPGrowthEmerging {
 
         // check the ratios of any itemsets we just marked
         FPGrowth inlierTree = new FPGrowth();
-        int newSize = Math.min(inliers.size(), outliers.size()*100);
-        log.debug("Truncating inliers (size {}) to size {} (outlier size: {})",
-                  inliers.size(), newSize, outliers.size());
-        inliers = inliers.subList(0, newSize);
+        //int newSize = Math.min(inliers.size(), outliers.size()*100);
+        //log.debug("Truncating inliers (size {}) to size {} (outlier size: {})",
+        //          inliers.size(), newSize, outliers.size());
+        //inliers = inliers.subList(0, newSize);
         List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inliers,
                                                                            inlierCounts,
                                                                            ratioItemsToCheck,
