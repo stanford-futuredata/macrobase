@@ -255,15 +255,15 @@ public class FPGrowth {
                     if(pattern.contains(curNode.getItem())) {
                         itemsToFind -= 1;
                     }
-                    curNode = curNode.getParent();
 
                     if(itemsToFind == 0) {
-                        count += pathHead.count;
+                        count += curNode.count;
                         break;
                     }
 
-                    curNode = curNode.getNextLink();
+                    curNode = curNode.getParent();
                 }
+                pathHead = pathHead.getNextLink();
             }
 
             return count;
