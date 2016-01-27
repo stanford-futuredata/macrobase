@@ -34,7 +34,9 @@ default_args = {
   "decayRate": 0.01,
 
   "alphaMCD": 0.5,
-  "stoppingDeltaMCD": 0.001
+  "stoppingDeltaMCD": 0.001,
+
+  "samplingRate": 1.0
 }
 
 
@@ -127,8 +129,6 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         macrobase.MacroBase {cmd} {conf_file} \\
         > {results_file}'''.format(
         cmd=cmd, conf_file=conf_file, results_file=results_file)
-    print 'running the following command:'
-    print macrobase_cmd
     os.system("cd ..; %s" % macrobase_cmd)
     times, num_itemsets, num_iterations, itemsets, tuples_per_second = parse_results(results_file)
 

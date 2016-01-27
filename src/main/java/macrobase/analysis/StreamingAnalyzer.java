@@ -2,8 +2,6 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -26,6 +24,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.Random;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(StreamingAnalyzer.class);
@@ -110,6 +109,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         Stopwatch sw = Stopwatch.createUnstarted();
         Stopwatch tsw = Stopwatch.createUnstarted();
+        
+        Random random = new Random();
 
         // OUTLIER ANALYSIS
 
@@ -218,6 +219,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                                                           TARGET_PERCENTILE)) {
                         streamingSummarizer.markOutlier(d);
                     } else {
+                    	if (random.nextDouble() > samplingRate)
+                    		continue;
                         streamingSummarizer.markInlier(d);
                     }
                 }

@@ -40,7 +40,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
       "build_version",
@@ -58,7 +58,8 @@
       "data_count_gps_samples",
       "distance_mapmatched_km",
       "distance_gps_km"
-    ]
+    ],
+    "samplingRate": 0.01
   },
   {
     "targetLowMetrics": [],

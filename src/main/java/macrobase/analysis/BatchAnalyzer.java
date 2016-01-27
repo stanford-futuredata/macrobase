@@ -38,11 +38,20 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         log.debug("Starting loading...");
         sw.start();
-        List<Datum> data = loader.getData(encoder,
+        List<Datum> rawData = loader.getData(encoder,
                                           attributes,
                                           lowMetrics,
                                           highMetrics,
                                           baseQuery);
+        
+        Random random = new Random();
+        
+        List<Datum> data = new ArrayList<Datum> ();
+        for (Datum datum : rawData) {
+        	if (random.nextDouble() > samplingRate)
+        		continue;
+        	data.add(datum);
+        }
         sw.stop();
 
         long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -88,7 +97,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
         sw.stop();
         tsw.stop();
         
-        double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
+        double tuplesPerSecond = ((double) rawData.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
         tuplesPerSecond *= 1000000;
         
         long summarizeTime = sw.elapsed(TimeUnit.MILLISECONDS);
