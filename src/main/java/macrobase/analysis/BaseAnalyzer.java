@@ -2,7 +2,7 @@ package macrobase.analysis;
 
 import macrobase.analysis.outlier.*;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
-import org.apache.commons.math3.linear.BlockRealMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,14 +78,9 @@ abstract public class BaseAnalyzer {
                 return new ZScore();
             } else if(detectorType == BaseStandaloneConfiguration.DetectorType.KDE) {
             	log.info("Using KDE detector.");
-            	BlockRealMatrix bandwidth = new BlockRealMatrix(metricsDimensions, metricsDimensions);
-                for (int row = 0; row < metricsDimensions; row++) {
-                    for (int column = 0; column < row; column++) {
-                        bandwidth.setEntry(row, column, 0);
-                        bandwidth.setEntry(column, row, 0);
-                    }
-                    bandwidth.setEntry(row, row, 1);
-                }
+                double matrix_scale = 0.1;  // Scale identity matrix by this much
+                RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
+                bandwidth = bandwidth.scalarMultiply(matrix_scale);
                 return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, bandwidth);
             } else {
                 throw new RuntimeException("Unhandled detector class!"+ detectorType);

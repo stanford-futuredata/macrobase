@@ -9,8 +9,6 @@ testing_dir = "workflows"
 batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
 
-NUM_RUNS_PER_WORKFLOW = 5
-
 default_args = {
   "minInlierRatio": 3.0,
   "minSupport": 0.001,
@@ -38,6 +36,7 @@ default_args = {
   "alphaMCD": 0.5,
   "stoppingDeltaMCD": 0.001
 }
+
 
 def process_config_parameters(config_parameters):
   for config_parameter_type in config_parameters:
@@ -92,13 +91,15 @@ def parse_results(results_file):
           itemsets.append(itemset)
   return times, num_itemsets, num_iterations, itemsets, tuples_per_second
 
+
 def get_stats(value_list):
   value_list = [float(value) for value in value_list]
   mean = sum(value_list) / len(value_list)
   stddev = (sum([(value - mean)**2 for value in value_list]) / len(value_list)) ** 0.5
   return mean, stddev
 
-def run_workload(config_parameters, print_itemsets=True):
+
+def run_workload(config_parameters, number_of_runs, print_itemsets=True):
   sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
   os.system("mkdir -p %s" % sub_dir)
   process_config_parameters(config_parameters)
@@ -114,7 +115,7 @@ def run_workload(config_parameters, print_itemsets=True):
   all_itemsets = set()
   all_tuples_per_second = list()
 
-  for i in xrange(NUM_RUNS_PER_WORKFLOW):
+  for i in xrange(number_of_runs):
     macrobase_cmd = '''java ${{JAVA_OPTS}} \\
         -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
         macrobase.MacroBase {cmd} {conf_file} \\
@@ -152,8 +153,7 @@ def run_workload(config_parameters, print_itemsets=True):
   print "Mean tuples / second:", mean_tuples_per_second, ", Stddev tuples / second:", stddev_tuples_per_second
 
 
-def run_all_workloads(configurations,
-                      script_arguments={},
+def run_all_workloads(configurations, defaults, number_of_runs,
                       sweeping_parameter_name=None,
                       sweeping_parameter_value=None):
   if sweeping_parameter_name is not None:
@@ -161,19 +161,14 @@ def run_all_workloads(configurations,
   else:
     print "Running all workloads with defaultParameters"
   print
+
   for config_parameters_raw in configurations:
-    config_parameters = {}
-    for key in default_args:
-      config_parameters[key] = default_args[key]
-    for key, arg in script_arguments.iteritems():
-      if arg is not None and key in default_args:
-        config_parameters[key] = arg
-    for key in config_parameters_raw:
-      config_parameters[key] = config_parameters_raw[key]
+    config_parameters = defaults.copy()
+    config_parameters.update(config_parameters_raw)
     if sweeping_parameter_name is not None:
       config_parameters[sweeping_parameter_name] = sweeping_parameter_value
 
-    run_workload(config_parameters)
+    run_workload(config_parameters, number_of_runs)
   print
 
 
@@ -198,6 +193,11 @@ def parse_args():
                       type=argparse.FileType('r'),
                       default='conf/sweeping_parameters.json',
                       help='File with a dictionary of sweeping parameters')
+  parser.add_argument('--number-of-runs', default=5, type=int,
+                      help='Number of times to run a workload with same '
+                           'parameters.')
+  parser.add_argument('--compile', action='store_true',
+                      help='Run mvn compile before running java code.')
   _add_camel_case_argument(parser, '--db-user')
   _add_camel_case_argument(parser, '--db-password')
   args = parser.parse_args()
@@ -208,11 +208,21 @@ def parse_args():
 
 if __name__ == '__main__':
   args = parse_args()
-  run_all_workloads(args.configurations,
-                    script_arguments=vars(args))
+
+  if args.compile:
+    status = os.system('cd .. && mvn compile')
+    if status != 0:
+      os._exit(status)
+
+  # Update default values if script argument is provided
+  defaults = default_args.copy()
+  for key, default_override in vars(args).items():
+    if default_override is not None and key in defaults:
+      defaults[key] = default_override
+
+  run_all_workloads(args.configurations, defaults, args.number_of_runs)
   for parameter_name, values in args.sweeping_parameters.iteritems():
     for parameter_value in values:
-      run_all_workloads(args.configurations,
-                        script_arguments=vars(args),
+      run_all_workloads(args.configurations, defaults, args.number_of_runs,
                         sweeping_parameter_name=parameter_name,
                         sweeping_parameter_value=parameter_value)

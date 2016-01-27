@@ -11,7 +11,7 @@ def run_all_workloads(configurations):
       config_parameters[key] = default_args[key]
     for key in dashboard_config_parameters:
       config_parameters[key] = dashboard_config_parameters[key]
-    run_workload(config_parameters, print_itemsets=False)
+    run_workload(config_parameters, 5, print_itemsets=False)
 
 
 def parse_args():
