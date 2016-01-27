@@ -209,8 +209,11 @@ public class FPGrowth {
             for(DatumWithScore d : datums) {
                 List<Integer> filtered = d.getDatum().getAttributes().stream().filter(
                         i -> frequentItemCounts.containsKey(i)).collect(Collectors.toList());
-                filtered.sort((i1, i2) -> frequentItemOrder.get(i2).compareTo(frequentItemOrder.get(i1)));
-                root.insertTransaction(filtered, 0, 1);
+
+                if(!filtered.isEmpty()) {
+                    filtered.sort((i1, i2) -> frequentItemOrder.get(i2).compareTo(frequentItemOrder.get(i1)));
+                    root.insertTransaction(filtered, 0, 1);
+                }
             }
         }
 
@@ -406,16 +409,32 @@ public class FPGrowth {
         }
     }
 
-    public List<ItemsetWithCount> getItemsets(List<Set<Integer>> transactions,
-                                              Double support) {
-        return getItemsets(transactions, null, support);
+
+
+
+
+    public List<ItemsetWithCount> getItemsetsWithSupportRatio(List<Set<Integer>> transactions,
+                                                              Double supportRatio) {
+        return getItemsetsWithSupportRatio(transactions, null, supportRatio);
     }
 
-    public List<ItemsetWithCount> getItemsets(List<Set<Integer>> transactions,
-                                              Map<Integer, Double> initialCounts,
-                                              Double support) {
+    public List<ItemsetWithCount> getItemsetsWithSupportRatio(List<Set<Integer>> transactions,
+                                                              Map<Integer, Double> initialCounts,
+                                                              Double supportRatio) {
+        return getItemsetsWithSupportCount(transactions, initialCounts, supportRatio*transactions.size());
+    }
+
+    public List<ItemsetWithCount> getItemsetsWithSupportCount(List<Set<Integer>> transactions,
+                                                              Double supportCount) {
+        return getItemsetsWithSupportCount(transactions, null, supportCount);
+
+    }
+
+    public List<ItemsetWithCount> getItemsetsWithSupportCount(List<Set<Integer>> transactions,
+                                                              Map<Integer, Double> initialCounts,
+                                                              Double supportCount) {
         FPTree fp = new FPTree();
-        int countRequiredForSupport = (int)(support*transactions.size());
+        int countRequiredForSupport = supportCount.intValue();
         log.debug("count required: {}", countRequiredForSupport);
 
         long st = System.currentTimeMillis();

@@ -49,7 +49,7 @@ public class FPGrowthTest {
 
         FPGrowth fp = new FPGrowth();
 
-        List<ItemsetWithCount> itemsets = fp.getItemsets(txns, .6);
+        List<ItemsetWithCount> itemsets = fp.getItemsetsWithSupportRatio(txns, .6);
 
         //printItemsets(itemsets);
 
@@ -66,7 +66,7 @@ public class FPGrowthTest {
 
         FPGrowth fp = new FPGrowth();
 
-        List<ItemsetWithCount> itemsets = fp.getItemsets(txns, .2);
+        List<ItemsetWithCount> itemsets = fp.getItemsetsWithSupportRatio(txns, .2);
 
         Apriori ap = new Apriori();
         Set<ItemsetWithCount> api = ap.getItemsets(txns, .2);
@@ -99,7 +99,7 @@ public class FPGrowthTest {
 
         FPGrowth fp = new FPGrowth();
 
-        List<ItemsetWithCount> itemsets = fp.getItemsets(txns, .7);
+        List<ItemsetWithCount> itemsets = fp.getItemsetsWithSupportRatio(txns, .7);
 
         //printItemsets(itemsets);
 
@@ -126,7 +126,7 @@ public class FPGrowthTest {
 
         FPGrowth fp = new FPGrowth();
 
-        List<ItemsetWithCount> itemsets = fp.getItemsets(txns, .01);
+        List<ItemsetWithCount> itemsets = fp.getItemsetsWithSupportRatio(txns, .01);
 
         List<Set<Integer>> apil = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
         Set<Set<Integer>> dupdetector = new HashSet<>();

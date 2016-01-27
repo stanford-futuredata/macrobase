@@ -7,7 +7,6 @@ import macrobase.analysis.summary.itemset.FPGrowth;
 import macrobase.analysis.summary.itemset.StreamingFPGrowth;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,7 @@ public class StreamingFPGrowthTest {
 
         fp.buildTree(allTxns);
         List<ItemsetWithCount> itemsets;
-        //itemsets = fp.getItemsets();
+        //itemsets = fp.getItemsetsWithSupportRatio();
 
         //printItemsets(itemsets);
 
@@ -69,7 +68,7 @@ public class StreamingFPGrowthTest {
 
         FPGrowth apriori = new FPGrowth();
 
-        List<ItemsetWithCount> apItemsets = apriori.getItemsets(allTxns, .2);
+        List<ItemsetWithCount> apItemsets = apriori.getItemsetsWithSupportRatio(allTxns, .2);
 
         System.out.println("MISSING SETS");
         Set<Set<Integer>> apis = apItemsets.stream().map(i -> i.getItems()).collect(Collectors.toSet());
@@ -112,7 +111,7 @@ public class StreamingFPGrowthTest {
 
         fp.buildTree(allTxns);
         List<ItemsetWithCount> itemsets;
-        //itemsets = fp.getItemsets();
+        //itemsets = fp.getItemsetsWithSupportRatio();
 
         //printItemsets(itemsets);
 
