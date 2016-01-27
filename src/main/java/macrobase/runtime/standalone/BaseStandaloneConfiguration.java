@@ -67,6 +67,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     
     @NotNull
     private Double stoppingDeltaMCD;
+    
+    @NotNull
+    private Double samplingRate;
 
     @JsonProperty
     public String getTaskName() {
@@ -156,4 +159,9 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     @JsonProperty
     public String getDiskCacheDirectory() { return diskCacheDirectory; }
+
+    @JsonProperty
+	public Double getSamplingRate() {
+		return samplingRate;
+	}
 }

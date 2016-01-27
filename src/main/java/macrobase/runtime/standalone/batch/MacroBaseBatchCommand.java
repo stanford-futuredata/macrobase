@@ -40,6 +40,7 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
         analyzer.setMinSupport(configuration.getMinSupport());
         analyzer.setTargetPercentile(configuration.getTargetPercentile());
         analyzer.setZScore(configuration.getzScore());
+        analyzer.setSamplingRate(configuration.getSamplingRate());
 
         // todo: either use a single boolean or check this
         // at parse time

@@ -22,6 +22,8 @@ abstract public class BaseAnalyzer {
     
     protected double alphaMCD = 0.5;
     protected double stoppingDeltaMCD = 1e-3;
+    
+    protected double samplingRate = 1.0;
 
     public void setDetectorType(BaseStandaloneConfiguration.DetectorType detectorType) { this.detectorType = detectorType; }
 
@@ -55,6 +57,10 @@ abstract public class BaseAnalyzer {
     
     public void setStoppingDeltaMCD(double stoppingDeltaMCD) {
     	this.stoppingDeltaMCD = stoppingDeltaMCD;
+    }
+    
+    public void setSamplingRate(double samplingRate) {
+    	this.samplingRate = samplingRate;
     }
 
     protected OutlierDetector constructDetector(int metricsDimensions) {

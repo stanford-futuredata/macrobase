@@ -24,6 +24,8 @@ targetPercentile: 0.99
 alphaMCD: 0.5
 stoppingDeltaMCD: 0.001
 
+samplingRate: 1.0
+
 logging:
   level: INFO
 
