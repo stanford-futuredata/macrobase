@@ -13,7 +13,7 @@ streaming_template_conf_file = "streaming_template.conf"
 NUM_RUNS_PER_WORKFLOW = 5
 
 default_args = {
-  "minInlierRatio": 1.0,
+  "minInlierRatio": 3.0,
   "minSupport": 0.001,
 
   "usePercentile": "true",
@@ -25,15 +25,15 @@ default_args = {
 
   "inputReservoirSize": 10000,
   "scoreReservoirSize": 10000,
-  "inlierItemSummarySize": 1000,
+  "inlierItemSummarySize": 10000,
   "outlierItemSummarySize": 10000,
   "summaryRefreshPeriod": 100000,
-  "modelRefreshPeriod": 10000,
+  "modelRefreshPeriod": 100000,
 
   "useRealTimePeriod": "false",
   "useTupleCountPeriod": "true",
 
-  "warmupCount": 1000,
+  "warmupCount": 50000,
   "decayRate": 0.01,
 
   "alphaMCD": 0.5,
