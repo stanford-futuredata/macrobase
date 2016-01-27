@@ -2,10 +2,7 @@ package macrobase.analysis.outlier;
 
 import macrobase.datamodel.Datum;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.EigenDecomposition;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +50,14 @@ public class KDE extends OutlierDetector {
     public KDE(Kernel kernel, RealMatrix bandwidth) {
         this.kernel = kernel;
         this.bandwidth = bandwidth;
-        RealMatrix inverseBandwidth = MatrixUtils.blockInverse(bandwidth, (bandwidth.getColumnDimension() - 1 )/2);
+        RealMatrix inverseBandwidth;
+        if (bandwidth.getColumnDimension() > 1) {
+            inverseBandwidth = MatrixUtils.blockInverse(bandwidth, (bandwidth.getColumnDimension() - 1) / 2);
+        } else {
+            // Manually invert size 1 x 1 matrix, because block Inverse requires dimensions > 1
+            inverseBandwidth = bandwidth.copy();
+            inverseBandwidth.setEntry(0, 0, 1.0/inverseBandwidth.getEntry(0, 0));
+        }
         this.bandwidthToNegativeHalf = (new EigenDecomposition(inverseBandwidth)).getSquareRoot();
     }
 
