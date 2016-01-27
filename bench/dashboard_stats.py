@@ -18,7 +18,7 @@ def parse_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('--configurations-file',
                       type=argparse.FileType('r'),
-                      default='all_dashboard_configuration_parameters.json',
+                      default='conf/all_dashboard_configuration_parameters.json',
                       help='File with a list of configuration parameters')
   args = parser.parse_args()
   args.configurations = json.load(args.configurations_file)

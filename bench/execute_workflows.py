@@ -2,7 +2,6 @@ import argparse
 import json
 import os
 
-from sweeping_parameters import sweeping_parameters
 from time import strftime
 
 
@@ -193,12 +192,17 @@ def parse_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('--configurations-file',
                       type=argparse.FileType('r'),
-                      default='all_configuration_parameters.json',
+                      default='conf/all_configuration_parameters.json',
                       help='File with a list of configuration parameters')
+  parser.add_argument('--sweeping-parameters-file',
+                      type=argparse.FileType('r'),
+                      default='conf/sweeping_parameters.json',
+                      help='File with a dictionary of sweeping parameters')
   _add_camel_case_argument(parser, '--db-user')
   _add_camel_case_argument(parser, '--db-password')
   args = parser.parse_args()
   args.configurations = json.load(args.configurations_file)
+  args.sweeping_parameters = json.load(args.sweeping_parameters_file)
   return args
 
 
@@ -206,9 +210,9 @@ if __name__ == '__main__':
   args = parse_args()
   run_all_workloads(args.configurations,
                     script_arguments=vars(args))
-  for sweeping_parameter_name in sweeping_parameters:
-    for sweeping_parameter_value in sweeping_parameters[sweeping_parameter_name]:
+  for parameter_name, values in args.sweeping_parameters.iteritems():
+    for parameter_value in values:
       run_all_workloads(args.configurations,
                         script_arguments=vars(args),
-                        sweeping_parameter_name=sweeping_parameter_name,
-                        sweeping_parameter_value=sweeping_parameter_value)
+                        sweeping_parameter_name=parameter_name,
+                        sweeping_parameter_value=parameter_value)

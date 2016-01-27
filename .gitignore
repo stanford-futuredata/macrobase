@@ -30,7 +30,7 @@ sql_cache/*
 
 # Workload directory
 bench/workflows/*
-bench/custom_configurations/
+bench/conf/custom/
 
 # Plots
 *.pdf
@@ -42,4 +42,4 @@ bench/custom_configurations/
 *.DS_Store
 
 # custom configuration
-conf/custom
+conf/custom/
