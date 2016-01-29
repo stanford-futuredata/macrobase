@@ -40,6 +40,13 @@ def parse_output_file(filename):
         iterations_stddev = float(iterations_line[1].split(": ")[1])
 
         workload_name = lines[i-1].split("-->")[0].strip()
+
+        tps_line = lines[i+4]
+        tps_line = tps_line.split(" , ")
+
+        tps_mean = float(tps_line[0].split(": ")[1])
+        tps_stddev = float(tps_line[1].split(": ")[1])
+
         try:
           [parameter_type, parameter_value] = parameters_description.split(" = ")
           if parameter_type not in parsed_results:
@@ -47,12 +54,12 @@ def parse_output_file(filename):
             parsed_results[parameter_type][workload_name] = dict()
           if workload_name not in parsed_results[parameter_type]:
             parsed_results[parameter_type][workload_name] = dict()
-          parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list)
+          parsed_results[parameter_type][workload_name][parameter_value] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list, (tps_mean, tps_stddev))
         except:
           parameter_type = parameters_description
           if parameter_type not in parsed_results:
             parsed_results[parameter_type] = dict()
-          parsed_results[parameter_type][workload_name] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list)
+          parsed_results[parameter_type][workload_name] = (times, (itemsets_mean, itemsets_stddev), (iterations_mean, iterations_stddev), itemsets_list, (tps_mean, tps_stddev))
   return parsed_results
 
 def get_time(parsed_results, parameter_type, workload_name, parameter_value, timing_type):
@@ -176,3 +183,4 @@ if __name__ == '__main__':
   plot_aux_graphs(parsed_results, 2, "Number of iterations in MCD step", "IterationsMCD", sys.argv[2])
   plot_recall_precision(parsed_results, 0, "Precision", "Precision", sys.argv[2])
   plot_recall_precision(parsed_results, 1, "Recall", "Recall", sys.argv[2])
+  plot_aux_graphs(parsed_results, 4, "Throughput in tuples/sec", "Tps", sys.argv[2])
