@@ -102,6 +102,12 @@ def get_stats(value_list):
 def run_workload(config_parameters, number_of_runs, print_itemsets=True):
   sub_dir = os.path.join(os.getcwd(), testing_dir, config_parameters["taskName"], strftime("%m-%d-%H:%M:%S"))
   os.system("mkdir -p %s" % sub_dir)
+  # For now, we only run metrics with MCD and MAD: MCD for dimensionalities greater
+  # than 1, MAD otherwise.
+  if len(config_parameters["targetHighMetrics"]) + len(config_parameters["targetLowMetrics"]) > 1:
+    config_parameters["outlierDetectorType"] = "MCD"
+  else:
+    config_parameters["outlierDetectorType"] = "MAD"
   process_config_parameters(config_parameters)
   conf_file = "batch.conf" if config_parameters["isBatchJob"] else "streaming.conf"
   conf_file = os.path.join(sub_dir, conf_file)
