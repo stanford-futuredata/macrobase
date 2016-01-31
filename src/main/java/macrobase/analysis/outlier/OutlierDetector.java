@@ -91,7 +91,7 @@ public abstract class OutlierDetector {
         scoredData.sort((a, b) -> a.getScore().compareTo(b.getScore()));
         sw.stop();
         long scoringTime = sw.elapsed(TimeUnit.MILLISECONDS);
-        log.debug("...ended scoring (time: {}ms!", scoringTime);
+        log.debug("...ended scoring (time: {}ms)!", scoringTime);
 
         return new BatchResult(scoredData.subList(0, splitPoint),
                                scoredData.subList(splitPoint, scoredData.size()));
@@ -130,7 +130,7 @@ public abstract class OutlierDetector {
         }
         sw.stop();
         long scoringTime = sw.elapsed(TimeUnit.MILLISECONDS);
-        log.debug("...ended scoring (time: {}ms!", scoringTime);
+        log.debug("...ended scoring (time: {}ms)!", scoringTime);
         return new BatchResult(inliers, outliers);
     }
 }
