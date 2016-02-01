@@ -138,22 +138,22 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
             macrobase.MacroBase {cmd} {conf_file} \\
             > {results_file}'''.format(
             cmd=cmd, conf_file=conf_file, results_file=results_file)
-    print 'running the following command:'
-    print macrobase_cmd
-    os.system("cd ..; %s" % macrobase_cmd)
-    (times, num_itemsets, num_iterations, itemsets,
-        tuples_per_second) = parse_results(results_file)
+        print 'running the following command:'
+        print macrobase_cmd
+        os.system("cd ..; %s" % macrobase_cmd)
+        (times, num_itemsets, num_iterations, itemsets,
+            tuples_per_second) = parse_results(results_file)
 
-    for time_type in times:
-        if time_type not in all_times:
-            all_times[time_type] = list()
-        all_times[time_type].append(times[time_type])
+        for time_type in times:
+            if time_type not in all_times:
+                all_times[time_type] = list()
+            all_times[time_type].append(times[time_type])
 
-    all_num_itemsets.append(num_itemsets)
-    all_num_iterations.append(num_iterations)
-    for itemset in itemsets:
-        all_itemsets.add(frozenset(itemset.items()))
-    all_tuples_per_second.append(tuples_per_second)
+        all_num_itemsets.append(num_itemsets)
+        all_num_iterations.append(num_iterations)
+        for itemset in itemsets:
+            all_itemsets.add(frozenset(itemset.items()))
+        all_tuples_per_second.append(tuples_per_second)
 
     mean_and_stddev_times = dict()
     for time_type in all_times:
