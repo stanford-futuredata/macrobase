@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import sys
 
 workloads_to_be_plotted = [
+    "cmtDatasetComplex",
+    "campaignExpendituresComplex",
     "cmtDatasetComplexStreaming",
     "campaignExpendituresComplexStreaming"
 ]
@@ -97,13 +99,22 @@ def compute_precision_and_recall(itemsets, ground_truth_itemsets):
     for itemset in itemsets:
         if itemset in ground_truth_itemsets:
             num_correct += 1
-    precision = float(num_correct) / float(len(itemsets))
+    if (len(itemsets) == 0):
+        if (len(ground_truth_itemsets) == 0):
+            precision = 1.0
+        else:
+            precision = 0.0
+    else:
+        precision = float(num_correct) / float(len(itemsets))
 
     num_correct = 0
     for itemset in ground_truth_itemsets:
         if itemset in itemsets:
             num_correct += 1
-    recall = float(num_correct) / float(len(ground_truth_itemsets))
+    if (len(ground_truth_itemsets) == 0):
+        recall = 1.0
+    else:
+        recall = float(num_correct) / float(len(ground_truth_itemsets))
 
     return precision, recall
 
