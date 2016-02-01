@@ -213,14 +213,14 @@ def _add_camel_case_argument(parser, argument, **kwargs):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--configurations-file',
+    parser.add_argument('--workflow-config',
                         type=argparse.FileType('r'),
-                        default='conf/all_configuration_parameters.json',
-                        help='File with a list of configuration parameters')
-    parser.add_argument('--sweeping-parameters-file',
+                        default='conf/workflow_config.json',
+                        help='File with a list of parameters for workflow')
+    parser.add_argument('--sweeping-parameters-config',
                         type=argparse.FileType('r'),
-                        default='conf/sweeping_parameters.json',
-                        help='File with a dictionary of sweeping parameters')
+                        default='conf/sweeping_parameters_config.json',
+                        help='File with a dictionary of parameters to sweep')
     parser.add_argument('--number-of-runs', default=5, type=int,
                         help='Number of times to run a workload with same '
                              'parameters.')
@@ -229,8 +229,8 @@ def parse_args():
     _add_camel_case_argument(parser, '--db-user')
     _add_camel_case_argument(parser, '--db-password')
     args = parser.parse_args()
-    args.configurations = json.load(args.configurations_file)
-    args.sweeping_parameters = json.load(args.sweeping_parameters_file)
+    args.workflows = json.load(args.workflow_config)
+    args.sweeping_parameters = json.load(args.sweeping_parameters_config)
     return args
 
 
@@ -248,10 +248,10 @@ if __name__ == '__main__':
         if default_override is not None and key in defaults:
             defaults[key] = default_override
 
-    run_all_workloads(args.configurations, defaults, args.number_of_runs)
+    run_all_workloads(args.workflows, defaults, args.number_of_runs)
     for parameter_name, values in args.sweeping_parameters.iteritems():
         for parameter_value in values:
-            run_all_workloads(args.configurations, defaults,
+            run_all_workloads(args.workflows, defaults,
                               args.number_of_runs,
                               sweeping_parameter_name=parameter_name,
                               sweeping_parameter_value=parameter_value)

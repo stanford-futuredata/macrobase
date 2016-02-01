@@ -16,14 +16,14 @@ def run_all_workloads(configurations):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--configurations-file',
+    parser.add_argument('--dashboard-config',
                         type=argparse.FileType('r'),
-                        default='conf/all_dashboard_configuration_parameters.json',
+                        default='conf/dashboard_config.json',
                         help='File with a list of configuration parameters')
     args = parser.parse_args()
-    args.configurations = json.load(args.configurations_file)
+    args.workflows = json.load(args.dashboard_config)
     return args
 
 if __name__ == '__main__':
     args = parse_args()
-    run_all_workloads(args.configurations)
+    run_all_workloads(args.workflows)
