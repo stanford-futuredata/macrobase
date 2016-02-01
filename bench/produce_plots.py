@@ -1,19 +1,6 @@
+import argparse
+import json
 import matplotlib.pyplot as plt
-import sys
-
-workloads_to_be_plotted = [
-    "cmtDatasetComplex",
-    "campaignExpendituresComplex",
-    "cmtDatasetComplexStreaming",
-    "campaignExpendituresComplexStreaming"
-]
-
-timing_types = [
-    'Loading',
-    'Summarization',
-    'Scoring',
-    'Training'
-]
 
 
 def parse_output_file(filename):
@@ -83,7 +70,8 @@ def get_time(parsed_results,
              parameter_type,
              workload_name,
              parameter_value,
-             timing_type):
+             timing_type,
+             timing_types):
     if timing_type == 'Total':
         tot_time = 0.0
         for timing_type_prime in timing_types:
@@ -119,7 +107,7 @@ def compute_precision_and_recall(itemsets, ground_truth_itemsets):
     return precision, recall
 
 
-def plot_time_graphs(parsed_results, plots_dir):
+def plot_time_graphs(parsed_results, plots_dir, timing_types, workloads):
     print "Plotting Time graphs..."
     for timing_type in timing_types + ['Total']:
         key_value_pairs = dict()
@@ -128,7 +116,7 @@ def plot_time_graphs(parsed_results, plots_dir):
                 continue
             key_value_pairs[parameter_type] = dict()
             for workload_name in parsed_results[parameter_type]:
-                if workload_name not in workloads_to_be_plotted:
+                if workload_name not in workloads:
                     continue
                 key_value_pairs[parameter_type][workload_name] = dict()
                 for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
@@ -137,7 +125,8 @@ def plot_time_graphs(parsed_results, plots_dir):
                                                    parameter_type,
                                                    workload_name,
                                                    parameter_value,
-                                                   timing_type)
+                                                   timing_type,
+                                                   timing_types)
                         key_value_pairs[parameter_type][workload_name][parameter_value] = \
                             (value, stddev)
                     except:
@@ -151,7 +140,7 @@ def plot_time_graphs(parsed_results, plots_dir):
     print "...done!"
 
 
-def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir):
+def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir, workloads):
     print "Plotting %s graphs..." % file_suffix
     key_value_pairs = dict()
     for parameter_type in parsed_results:
@@ -159,7 +148,7 @@ def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir):
             continue
         key_value_pairs[parameter_type] = dict()
         for workload_name in parsed_results[parameter_type]:
-            if workload_name not in workloads_to_be_plotted:
+            if workload_name not in workloads:
                 continue
             key_value_pairs[parameter_type][workload_name] = dict()
             for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
@@ -175,7 +164,7 @@ def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir):
     print "...done!"
 
 
-def plot_recall_precision(parsed_results, idx, ylabel, plots_dir):
+def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads):
     print "Plotting %s graphs..." % ylabel
     key_value_pairs = dict()
     for parameter_type in parsed_results:
@@ -183,7 +172,7 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir):
             continue
         key_value_pairs[parameter_type] = dict()
         for workload_name in parsed_results[parameter_type]:
-            if workload_name not in workloads_to_be_plotted:
+            if workload_name not in workloads:
                 continue
             key_value_pairs[parameter_type][workload_name] = dict()
             for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
@@ -211,8 +200,6 @@ def plot(key_value_pairs, ylabel, plots_dir, file_suffix, plot_errorbars):
         plt.xscale('log')
         handles = list()
         for workload_name in key_value_pairs[parameter_type]:
-            if workload_name not in workloads_to_be_plotted:
-                continue
             keys = list()
             values = list()
             if plot_errorbars:
@@ -242,21 +229,44 @@ def plot(key_value_pairs, ylabel, plots_dir, file_suffix, plot_errorbars):
             plt.savefig(plots_dir + "/" + parameter_type + "_" + file_suffix +
                         ".pdf", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output-file',
+                        required=True,
+                        help='Output file from which plots need to be generated.')
+    parser.add_argument('--plot-directory',
+                        required=True,
+                        help='Directory to dump plots in.')
+    parser.add_argument('--plotting-config',
+                        type=argparse.FileType('r'),
+                        default='conf/plotting_config.json',
+                        help='File with a dictionary of plotting-specific parameters.')
+    parser.add_argument('--compile', action='store_true',
+                        help='Run mvn compile before running java code.')
+    args = parser.parse_args()
+    args.plotting_parameters = json.load(args.plotting_config)
+    return args
+
 if __name__ == '__main__':
-    if (len(sys.argv) < 3):
-        print "Incorrect usage: python %s <output_file> <plot_directory>" % (
-            sys.argv[0])
-        exit(-1)
-    parsed_results = parse_output_file(sys.argv[1])
-    plot_time_graphs(parsed_results, sys.argv[2])
+    args = parse_args()
+
+    timing_types = args.plotting_parameters["timingTypes"]
+    workloads = args.plotting_parameters["workloads"]
+
+    parsed_results = parse_output_file(args.output_file)
+    plot_time_graphs(parsed_results, args.plot_directory, timing_types, workloads)
     plot_aux_graphs(
-        parsed_results, 1, "Number of itemsets", "Itemsets", sys.argv[2])
+        parsed_results, 1, "Number of itemsets", "Itemsets", args.plot_directory,
+        workloads)
     plot_aux_graphs(
         parsed_results, 2, "Number of iterations in MCD step",
         "IterationsMCD",
-        sys.argv[2])
+        args.plot_directory,
+        workloads)
     plot_recall_precision(
-        parsed_results, 0, "Precision", sys.argv[2])
-    plot_recall_precision(parsed_results, 1, "Recall", sys.argv[2])
+        parsed_results, 0, "Precision", args.plot_directory, workloads)
+    plot_recall_precision(parsed_results, 1, "Recall", args.plot_directory,
+        workloads)
     plot_aux_graphs(
-        parsed_results, 4, "Throughput in tuples/sec", "Tps", sys.argv[2])
+        parsed_results, 4, "Throughput in tuples/sec", "Tps", args.plot_directory,
+        workloads)

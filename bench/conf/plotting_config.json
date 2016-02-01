@@ -1,0 +1,12 @@
+{
+  "workloads": [
+    "cmtDatasetComplexStreaming",
+    "campaignExpendituresComplexStreaming"
+  ],
+  "timingTypes": [
+    "Loading",
+    "Summarization",
+    "Scoring",
+    "Training"
+  ]
+}
