@@ -25,10 +25,6 @@ class RetrainingProcedure {
                                     ExponentiallyDecayingEmergingItemsets itemsets) {
         log.trace("Updating models.");
 
-        Timer.Context it = itemsetTimer.time();
-        itemsets.updateModelsNoDecay();
-        it.stop();
-
         Timer.Context rt = trainingTimer.time();
         detector.train(inputReservoir.getReservoir());
         rt.stop();
