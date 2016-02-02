@@ -1,5 +1,6 @@
 package macrobase.analysis;
 
+import com.codahale.metrics.MetricRegistryListener;
 import macrobase.analysis.outlier.*;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -8,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 abstract public class BaseAnalyzer {
+
     private static final Logger log = LoggerFactory.getLogger(BaseAnalyzer.class);
 
     protected double ZSCORE = 3;
@@ -22,6 +24,16 @@ abstract public class BaseAnalyzer {
     
     protected double alphaMCD = 0.5;
     protected double stoppingDeltaMCD = 1e-3;
+
+    protected BaseStandaloneConfiguration serverConfiguration;
+
+    public BaseAnalyzer() {
+        serverConfiguration = null;
+    }
+
+    public BaseAnalyzer(BaseStandaloneConfiguration configuration) {
+        serverConfiguration = configuration;
+    }
 
     public void setDetectorType(BaseStandaloneConfiguration.DetectorType detectorType) { this.detectorType = detectorType; }
 

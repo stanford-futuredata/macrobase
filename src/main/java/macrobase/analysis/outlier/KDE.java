@@ -1,14 +1,19 @@
 package macrobase.analysis.outlier;
 
+import com.google.gson.Gson;
 import macrobase.datamodel.Datum;
-import org.apache.commons.lang3.SystemUtils;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import org.apache.commons.math3.linear.*;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class KDE extends OutlierDetector {
+
 
     public enum Kernel {
         EPANECHNIKOV_MULTIPLICATIVE;
@@ -46,6 +51,7 @@ public class KDE extends OutlierDetector {
     private RealMatrix bandwidth; // symmetric and positive definite
     private RealMatrix bandwidthToNegativeHalf;
     private double scoreScalingFactor;
+    private double[] allScores;
 
     public KDE(Kernel kernel, RealMatrix bandwidth) {
         this.kernel = kernel;
@@ -88,5 +94,6 @@ public class KDE extends OutlierDetector {
     public double getZScoreEquivalent(double zscore) {
         throw new RuntimeException("ZScore equivalence is not implemented yet.");
     }
+
 
 }

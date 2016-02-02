@@ -1,3 +1,4 @@
+#!/bin/sh
 conf_file=${1:-"conf/macrobase.yaml"}
 
 set -x

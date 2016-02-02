@@ -2,13 +2,13 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.MinCovDet;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import macrobase.analysis.outlier.OutlierDetector;
-import macrobase.analysis.outlier.ZScore;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
@@ -17,13 +17,21 @@ import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class BatchAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(BatchAnalyzer.class);
+
+    public BatchAnalyzer() {
+        super();
+    }
+
+    public BatchAnalyzer(BaseStandaloneConfiguration configuration) {
+        super(configuration);
+    }
 
     public AnalysisResult analyze(SQLLoader loader,
                                   List<String> attributes,
@@ -57,6 +65,10 @@ public class BatchAnalyzer extends BaseAnalyzer {
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
         OutlierDetector detector = constructDetector(metricsDimensions);
 
+        if (serverConfiguration.getStoreScoreDistribution() != null ) {
+            detector.storeScoresInFile(serverConfiguration.getStoreScoreDistribution());
+        }
+
         OutlierDetector.BatchResult or;
         if(forceUsePercentile || (!forceUseZScore && TARGET_PERCENTILE > 0)) {
             or = detector.classifyBatchByPercentile(data, TARGET_PERCENTILE);
@@ -67,6 +79,29 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         long classifyTime = sw.elapsed(TimeUnit.MILLISECONDS);
         sw.reset();
+
+        // Dump scored results into a file if requested.
+        if (serverConfiguration.getStoreScoreDistribution() != null) {
+
+            Gson gson = new GsonBuilder()
+                    .enableComplexMapKeySerialization()
+                    .serializeNulls()
+                    .setPrettyPrinting()
+                    .setVersion(1.0)
+                    .create();
+            final File dir = new File("scores");
+            dir.mkdirs();
+            try (PrintStream out = new PrintStream(new File(dir, serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
+                out.println(gson.toJson(or));
+            }
+
+            try (PrintStream out = new PrintStream(new File(dir, "outliers_" + serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
+                out.println(gson.toJson(or.getOutliers()));
+            }
+            try (PrintStream out = new PrintStream(new File(dir, "inliers_" + serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
+                out.println(gson.toJson(or.getInliers()));
+            }
+        }
 
         // SUMMARY
 

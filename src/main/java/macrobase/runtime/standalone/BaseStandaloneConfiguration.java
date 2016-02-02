@@ -68,6 +68,8 @@ public class BaseStandaloneConfiguration extends Configuration {
     @NotNull
     private Double stoppingDeltaMCD;
 
+    private String storeScoreDistribution;  // Output scores to the following file.
+
     @JsonProperty
     public String getTaskName() {
         return taskName;
@@ -156,4 +158,9 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     @JsonProperty
     public String getDiskCacheDirectory() { return diskCacheDirectory; }
+
+    @JsonProperty
+    public String getStoreScoreDistribution() {
+        return storeScoreDistribution;
+    }
 }

@@ -21,7 +21,14 @@ import macrobase.datamodel.Datum;
  */
 public abstract class OutlierDetector {
 	private static final Logger log = LoggerFactory.getLogger(OutlierDetector.class);
-	
+
+
+    protected String scoreFile;
+
+    public void storeScoresInFile(String filename) {
+        this.scoreFile = filename;
+    }
+
     public class BatchResult {
         private List<DatumWithScore> inliers;
         private List<DatumWithScore> outliers;

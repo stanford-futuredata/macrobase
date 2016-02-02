@@ -34,7 +34,7 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
         loader.setDatabaseCredentials(configuration.getDbUser(), configuration.getDbPassword());
         loader.connect(configuration.getDbUrl());
 
-        BatchAnalyzer analyzer = new BatchAnalyzer();
+        BatchAnalyzer analyzer = new BatchAnalyzer(configuration);
         analyzer.setDetectorType(configuration.getDetectorType());
         analyzer.setMinInlierRatio(configuration.getMinInlierRatio());
         analyzer.setMinSupport(configuration.getMinSupport());
