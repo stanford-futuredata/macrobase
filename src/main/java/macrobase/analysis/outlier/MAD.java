@@ -5,6 +5,7 @@ import static com.codahale.metrics.MetricRegistry.name;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.codahale.metrics.Counter;
 import macrobase.MacroBase;
 import macrobase.datamodel.Datum;
 
@@ -22,6 +23,9 @@ public class MAD extends OutlierDetector {
     private final Timer medianComputation = MacroBase.metrics.timer(name(MAD.class, "medianComputation"));
     private final Timer residualComputation = MacroBase.metrics.timer(name(MAD.class, "residualComputation"));
     private final Timer residualMedianComputation = MacroBase.metrics.timer(name(MAD.class, "residualMedianComputation"));
+    private final Counter zeroMADs = MacroBase.metrics.counter(name(MAD.class, "zeroMADs"));
+
+    private final double trimmedMeanFallback = 0.05;
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
@@ -58,6 +62,20 @@ public class MAD extends OutlierDetector {
         } else {
             MAD = residuals.get((int) Math.ceil(data.size() / 2));
         }
+
+        if(MAD == 0){
+            zeroMADs.inc();
+            int lowerTrimmedMeanIndex = (int)(residuals.size()*trimmedMeanFallback);
+            int upperTrimmedMeanIndex = (int)(residuals.size()*(1-trimmedMeanFallback));
+            log.trace("MAD was zero; using trimmed means of residuals ({})", trimmedMeanFallback);
+            double sum = 0;
+            for(int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
+                sum += residuals.get(i);
+            }
+            MAD = sum/(upperTrimmedMeanIndex-lowerTrimmedMeanIndex);
+            assert(MAD != 0);
+        }
+
         context.stop();
 
         log.trace("trained! median is {}, MAD is {}", median, MAD);
