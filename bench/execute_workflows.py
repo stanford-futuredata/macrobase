@@ -34,7 +34,9 @@ default_args = {
   "decayRate": 0.01,
 
   "alphaMCD": 0.5,
-  "stoppingDeltaMCD": 0.001
+  "stoppingDeltaMCD": 0.001,
+
+  "numThreads": 1
 }
 
 

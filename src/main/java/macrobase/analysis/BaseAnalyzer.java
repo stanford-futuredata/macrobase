@@ -24,6 +24,8 @@ abstract public class BaseAnalyzer {
     
     protected double alphaMCD = 0.5;
     protected double stoppingDeltaMCD = 1e-3;
+    
+    protected int numThreads;
 
     protected BaseStandaloneConfiguration serverConfiguration;
 
@@ -67,6 +69,14 @@ abstract public class BaseAnalyzer {
     
     public void setStoppingDeltaMCD(double stoppingDeltaMCD) {
     	this.stoppingDeltaMCD = stoppingDeltaMCD;
+    }
+    
+    public void setNumThreads(int numThreads) {
+    	this.numThreads = numThreads;
+    }
+    
+    public int getNumThreads() {
+    	return this.numThreads;
     }
 
     protected OutlierDetector constructDetector(int metricsDimensions) {

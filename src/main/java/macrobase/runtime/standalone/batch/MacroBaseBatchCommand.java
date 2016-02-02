@@ -56,6 +56,8 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
         analyzer.forceUseZScore(configuration.useZScore());
         analyzer.setAlphaMCD(configuration.getAlphaMCD());
         analyzer.setStoppingDeltaMCD(configuration.getStoppingDeltaMCD());
+        
+        analyzer.setNumThreads(configuration.getNumThreads());
 
         AnalysisResult result = analyzer.analyze(loader,
                                                  configuration.getTargetAttributes(),

@@ -79,6 +79,8 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<StreamingStanda
         
         analyzer.setAlphaMCD(configuration.getAlphaMCD());
         analyzer.setStoppingDeltaMCD(configuration.getStoppingDeltaMCD());
+        
+        analyzer.setNumThreads(configuration.getNumThreads());
 
         AnalysisResult result = analyzer.analyzeOnePass(loader,
                                                              configuration.getTargetAttributes(),

@@ -67,6 +67,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     
     @NotNull
     private Double stoppingDeltaMCD;
+    
+    @NotNull
+    private Integer numThreads;
 
     private String storeScoreDistribution;  // Output scores to the following file.
 
@@ -162,5 +165,10 @@ public class BaseStandaloneConfiguration extends Configuration {
     @JsonProperty
     public String getStoreScoreDistribution() {
         return storeScoreDistribution;
+    }
+    
+    @JsonProperty
+    public int getNumThreads() {
+    	return numThreads;
     }
 }
