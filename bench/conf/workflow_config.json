@@ -16,12 +16,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
-      "build_version",
-      "app_version",
-      "deviceid"
+      "userid"
     ],
     "taskName": "cmtDatasetSimple",
     "targetHighMetrics": [
@@ -30,7 +28,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
       "build_version",
@@ -53,12 +51,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
-      "road_surface_conditions",
-      "urban_or_rural_area",
-      "speed_limit"
+      "road_surface_conditions"
     ],
     "taskName": "accidentsSimple",
     "targetHighMetrics": [
@@ -67,21 +63,33 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
-      "square_id",
-      "country_code"
+      "road_surface_conditions",
+      "urban_or_rural_area",
+      "speed_limit"
     ],
-    "taskName": "milanTelecomSimple",
+    "taskName": "accidentsComplex",
     "targetHighMetrics": [
-      "sms_in_activity",
-      "sms_out_activity"
+      "number_of_casualties"
     ]
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "isBatchJob": true,
+    "targetAttributes": [
+      "square_id"
+    ],
+    "taskName": "milanTelecomSimple",
+    "targetHighMetrics": [
+	"call_in_activity"
+    ]
+  },
+  {
+    "targetLowMetrics": [],
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
       "square_id",
@@ -98,11 +106,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
-      "cand_nm",
-      "contbr_nm"
+      "cand_nm"
     ],
     "taskName": "campaignExpendituresSimple",
     "targetHighMetrics": [
@@ -111,7 +118,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
       "cand_nm",
@@ -127,12 +134,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
-      "can_id",
-      "com_id",
-      "rec_nam"
+      "can_id"
     ],
     "taskName": "fedDisbursementsSimple",
     "targetHighMetrics": [
@@ -141,7 +146,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
       "can_id",
@@ -172,12 +177,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
-      "build_version",
-      "app_version",
-      "deviceid"
+      "userid"
     ],
     "taskName": "cmtDatasetSimpleStreaming",
     "targetHighMetrics": [
@@ -186,7 +189,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
       "build_version",
@@ -203,40 +206,50 @@
       "data_count_netloc_samples",
       "data_count_gps_samples",
       "distance_mapmatched_km",
-      "distance_gps_km"
+      "Distance_gps_km"
     ]
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
-      "road_surface_conditions",
-      "urban_or_rural_area",
-      "speed_limit"
+      "road_surface_conditions"
     ],
     "taskName": "accidentsSimpleStreaming",
     "targetHighMetrics": [
       "number_of_casualties"
     ]
   },
-  {
+ {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
-      "square_id",
-      "country_code"
+      "road_surface_conditions",
+      "urban_or_rural_area",
+      "speed_limit"
     ],
-    "taskName": "milanTelecomSimpleStreaming",
+    "taskName": "accidentsComplexStreaming",
     "targetHighMetrics": [
-      "sms_in_activity",
-      "sms_out_activity"
+      "number_of_casualties"
     ]
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM milan_telecom LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "isBatchJob": false,
+    "targetAttributes": [
+      "square_id"
+    ],
+    "taskName": "milanTelecomSimpleStreaming",
+    "targetHighMetrics": [
+	"call_in_activity"
+    ]
+  },
+  {
+    "targetLowMetrics": [],
+    "baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
       "square_id",
@@ -253,11 +266,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
-      "cand_nm",
-      "contbr_nm"
+      "cand_nm"
     ],
     "taskName": "campaignExpendituresSimpleStreaming",
     "targetHighMetrics": [
@@ -266,7 +278,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
       "cand_nm",
@@ -282,12 +294,10 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
-      "can_id",
-      "com_id",
-      "rec_nam"
+      "can_id"
     ],
     "taskName": "fedDisbursementsSimpleStreaming",
     "targetHighMetrics": [
@@ -296,7 +306,7 @@
   },
   {
     "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 1000000;",
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
       "can_id",
