@@ -48,17 +48,20 @@ public class ExponentiallyDecayingEmergingItemsets {
     private final ApproximateCount inlierCountSummary;
     private final StreamingFPGrowth outlierPatternSummary;
     private final StreamingFPGrowth inlierPatternSummary = new StreamingFPGrowth(0);
+    private final int attributeDimension;
 
     public ExponentiallyDecayingEmergingItemsets(int inlierSummarySize,
                                                  int outlierSummarySize,
                                                  double minSupportOutlier,
                                                  double minRatio,
-                                                 double exponentialDecayRate) {
+                                                 double exponentialDecayRate,
+                                                 int attributeDimension) {
         this.sizeOutlierSS = outlierSummarySize;
         this.sizeInlierSS = inlierSummarySize;
         this.minSupportOutlier = minSupportOutlier;
         this.minRatio = minRatio;
         this.exponentialDecayRate = exponentialDecayRate;
+        this.attributeDimension = attributeDimension;
 
         outlierCountSummary = new FastButBigSpaceSaving(outlierSummarySize);
         inlierCountSummary = new FastButBigSpaceSaving(inlierSummarySize);
@@ -79,6 +82,10 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     private void updateModels(boolean doDecay) {
+        if(attributeDimension == 1) {
+            return;
+        }
+
         Map<Integer, Double> outlierCounts = this.outlierCountSummary.getCounts();
         Map<Integer, Double> inlierCounts = this.inlierCountSummary.getCounts();
 
@@ -122,16 +129,60 @@ public class ExponentiallyDecayingEmergingItemsets {
 
     public void markOutlier(Datum outlier) {
         outlierCountSummary.observe(outlier.getAttributes());
-        outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.getAttributes());
+
+        if(attributeDimension > 1) {
+            outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.getAttributes());
+        }
     }
 
     // TODO: don't track *all* inliers
     public void markInlier(Datum inlier) {
         inlierCountSummary.observe(inlier.getAttributes());
-        inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
+        if(attributeDimension > 1) {
+            inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
+        }
+    }
+
+    private List<ItemsetResult> getSingleItemItemsets(DatumEncoder encoder) {
+        int supportCountRequired = (int)(this.outlierCountSummary.getTotalCount()*minSupportOutlier);
+
+        List<ItemsetResult> ret = new ArrayList<>();
+        Map<Integer, Double> inlierCounts = inlierCountSummary.getCounts();
+        Map<Integer, Double> outlierCounts = outlierCountSummary.getCounts();
+
+
+        for(Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
+            if(outlierCount.getValue() < supportCountRequired) {
+                continue;
+            }
+
+            Double inlierCount = inlierCounts.get(outlierCount.getKey());
+
+            double ratio;
+
+            if(inlierCount != null) {
+                ratio = (outlierCount.getValue()/ this.outlierCountSummary.getTotalCount() /
+                         (inlierCount/ this.inlierCountSummary.getTotalCount()));
+            } else {
+                ratio = Double.POSITIVE_INFINITY;
+            }
+
+            if(ratio > minRatio) {
+                ret.add(new ItemsetResult(outlierCount.getValue() / outlierCountSummary.getTotalCount(),
+                                          inlierCount,
+                                          ratio,
+                                          encoder.getColsFromAttr(outlierCount.getKey())));
+            }
+        }
+
+        return ret;
     }
 
     public List<ItemsetResult> getItemsets(DatumEncoder encoder) {
+        if(attributeDimension == 1) {
+            return getSingleItemItemsets(encoder);
+        }
+
         List<ItemsetWithCount> iwc = outlierPatternSummary.getItemsets();
 
         iwc.sort((x, y) -> x.getCount() != y.getCount() ?

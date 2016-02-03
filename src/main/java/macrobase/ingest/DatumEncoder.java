@@ -102,6 +102,14 @@ public class DatumEncoder {
         return ret;
     }
 
+
+    public List<ColumnValue> getColsFromAttr(Integer item) {
+        List<ColumnValue> ret = new ArrayList<>();
+        ret.add(getAttribute(item));
+
+        return ret;
+    }
+
     public int getIntegerEncoding(int dimension, String attr) {
         integerEncoding.computeIfAbsent(dimension, key -> new HashMap<>());
 

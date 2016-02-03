@@ -148,7 +148,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                                           outlierItemSummarySize,
                                                           minSupportOutlier,
                                                           minRatio,
-                                                          decayRate);
+                                                          decayRate,
+                                                          attributes.size());
 
         AbstractPeriodicUpdater analysisUpdater;
         if(useRealTimePeriod) {
