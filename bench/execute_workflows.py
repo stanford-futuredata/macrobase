@@ -59,6 +59,7 @@ def parse_results(results_file):
     num_itemsets = 0
     num_iterations = 0
     tuples_per_second = 0.0
+    tuples_per_second_no_itemset_mining = 0.0
     itemsets = list()
     with open(results_file, 'r') as f:
         lines = f.read().split('\n')
@@ -78,6 +79,10 @@ def parse_results(results_file):
                     line = line.split(
                         "Number of iterations in MCD step:")[1].strip()
                     num_iterations = int(line)
+                elif "Tuples / second w/o itemset mining" in line:
+                    line = line.split("Tuples / second w/o itemset mining = ")[1]
+                    tuples_per_second_no_itemset_mining = float(
+                        line.split("tuples / second")[0].strip())
                 elif "Tuples / second" in line:
                     line = line.split("Tuples / second = ")[1]
                     tuples_per_second = float(
@@ -93,7 +98,8 @@ def parse_results(results_file):
                     j += 1
                 if itemset != {}:
                     itemsets.append(itemset)
-    return times, num_itemsets, num_iterations, itemsets, tuples_per_second
+    return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
+            tuples_per_second_no_itemset_mining)
 
 
 def get_stats(value_list):
@@ -131,6 +137,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     all_num_iterations = list()
     all_itemsets = set()
     all_tuples_per_second = list()
+    all_tuples_per_second_no_itemset_mining = list()
 
     for i in xrange(number_of_runs):
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
@@ -142,7 +149,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print macrobase_cmd
         os.system("cd ..; %s" % macrobase_cmd)
         (times, num_itemsets, num_iterations, itemsets,
-            tuples_per_second) = parse_results(results_file)
+            tuples_per_second, tuples_per_second_no_itemset_mining) = parse_results(results_file)
 
         for time_type in times:
             if time_type not in all_times:
@@ -154,6 +161,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         for itemset in itemsets:
             all_itemsets.add(frozenset(itemset.items()))
         all_tuples_per_second.append(tuples_per_second)
+        all_tuples_per_second_no_itemset_mining.append(tuples_per_second_no_itemset_mining)
 
     mean_and_stddev_times = dict()
     for time_type in all_times:
@@ -162,6 +170,8 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     mean_num_iterations, stddev_num_iterations = get_stats(all_num_iterations)
     mean_tuples_per_second, stddev_tuples_per_second = \
         get_stats(all_tuples_per_second)
+    mean_tps_no_itemset_mining, stddev_tps_no_itemset_mining = \
+        get_stats(all_tuples_per_second_no_itemset_mining)
 
     print config_parameters["taskName"], "-->"
     print "Times:", mean_and_stddev_times
@@ -177,6 +187,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
 
     print "Mean tuples / second:", mean_tuples_per_second,
     print ", Stddev tuples / second:", stddev_tuples_per_second
+
+    print "Mean tuples / second w/o itemset mining:", mean_tps_no_itemset_mining,
+    print ", Stddev tuples / second w/o itemset mining:", stddev_tps_no_itemset_mining
 
 
 def run_all_workloads(configurations, defaults, number_of_runs,
