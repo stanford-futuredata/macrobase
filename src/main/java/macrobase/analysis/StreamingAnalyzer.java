@@ -110,6 +110,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         Stopwatch sw = Stopwatch.createUnstarted();
         Stopwatch tsw = Stopwatch.createUnstarted();
+        Stopwatch tsw2 = Stopwatch.createUnstarted();
 
         // OUTLIER ANALYSIS
 
@@ -130,6 +131,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         //System.console().readLine("waiting to start (press a key)");
         tsw.start();
+        tsw2.start();
 
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
         OutlierDetector detector = constructDetector(metricsDimensions);
@@ -227,6 +229,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
             tupleNo += 1;
         }
+        tsw2.stop();
 
         sw.start();
         List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
@@ -244,6 +247,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
         log.debug("...ended total (time: {}ms)!", (tsw.elapsed(TimeUnit.MICROSECONDS) / 1000) + 1);
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
+
+        tuplesPerSecond = ((double) data.size()) / ((double) tsw2.elapsed(TimeUnit.MICROSECONDS));
+        tuplesPerSecond *= 1000000;
+        log.debug("Tuples / second w/o itemset mining = {} tuples / second", tuplesPerSecond);
 
         log.debug("Number of itemsets: {}", isr.size());
 
