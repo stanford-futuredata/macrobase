@@ -58,9 +58,9 @@ def create_config_file(config_parameters, conf_file):
 
 def parse_results(results_file):
     times = dict()
-    num_itemsets = 0
-    num_iterations = 0
-    tuples_per_second = 0.0
+    num_itemsets = list()
+    num_iterations = list()
+    tuples_per_second = list()
     itemsets = list()
     with open(results_file, 'r') as f:
         lines = f.read().split('\n')
@@ -72,18 +72,20 @@ def parse_results(results_file):
                     line_tokens = line.split("(")
                     time_type = line_tokens[0].strip()
                     time = int(line_tokens[1][6:-4])
-                    times[time_type] = time
+                    if time_type not in times:
+                        times[time_type] = list()
+                    times[time_type].append(time)
                 elif "itemsets" in line:
                     line = line.split("Number of itemsets:")[1].strip()
-                    num_itemsets = int(line)
+                    num_itemsets.append(int(line))
                 elif "iterations" in line:
                     line = line.split(
                         "Number of iterations in MCD step:")[1].strip()
-                    num_iterations = int(line)
+                    num_iterations.append(int(line))
                 elif "Tuples / second" in line:
                     line = line.split("Tuples / second = ")[1]
-                    tuples_per_second = float(
-                        line.split("tuples / second")[0].strip())
+                    tuples_per_second.append(float(
+                        line.split("tuples / second")[0].strip()))
             if "Columns" in line:
                 j = i + 1
                 itemset = dict()
@@ -95,6 +97,10 @@ def parse_results(results_file):
                     j += 1
                 if itemset != {}:
                     itemsets.append(itemset)
+    times = [sum(times[time_type]) / len(times[time_type]) for time_type in times]
+    num_itemsets = sum(num_itemsets) / len(num_itemsets)
+    num_iterations = sum(num_iterations) / len(num_iterations)
+    tuples_per_second = sum(tuples_per_second) / len(tuples_per_second)
     return times, num_itemsets, num_iterations, itemsets, tuples_per_second
 
 
