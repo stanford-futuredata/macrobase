@@ -39,6 +39,12 @@ def parse_output_file(filename):
                 tps_mean = float(tps_line[0].split(": ")[1])
                 tps_stddev = float(tps_line[1].split(": ")[1])
 
+                net_tps_line = lines[i + 5]
+                net_tps_line = net_tps_line.split(" , ")
+
+                net_tps_mean = float(net_tps_line[0].split(": ")[1])
+                net_tps_stddev = float(net_tps_line[1].split(": ")[1])
+
                 try:
                     [parameter_type, parameter_value] = \
                         parameters_description.split(" = ")
@@ -52,7 +58,8 @@ def parse_output_file(filename):
                         (itemsets_mean, itemsets_stddev),
                         (iterations_mean, iterations_stddev),
                         itemsets_list,
-                        (tps_mean, tps_stddev))
+                        (tps_mean, tps_stddev),
+                        (net_tps_mean, net_tps_stddev))
                 except:
                     parameter_type = parameters_description
                     if parameter_type not in parsed_results:
@@ -62,7 +69,8 @@ def parse_output_file(filename):
                         (itemsets_mean, itemsets_stddev),
                         (iterations_mean, iterations_stddev),
                         itemsets_list,
-                        (tps_mean, tps_stddev))
+                        (tps_mean, tps_stddev),
+                        (net_tps_mean, net_tps_stddev))
     return parsed_results
 
 
@@ -263,10 +271,13 @@ if __name__ == '__main__':
         "IterationsMCD",
         args.plot_directory,
         workloads)
-    plot_recall_precision(
-        parsed_results, 0, "Precision", args.plot_directory, workloads)
+    plot_recall_precision(parsed_results, 0, "Precision", args.plot_directory,
+        workloads)
     plot_recall_precision(parsed_results, 1, "Recall", args.plot_directory,
         workloads)
     plot_aux_graphs(
-        parsed_results, 4, "Throughput in tuples/sec", "Tps", args.plot_directory,
-        workloads)
+        parsed_results, 4, "Throughput in tuples/sec (sum of per-thread throughputs)",
+        "Tps", args.plot_directory, workloads)
+    plot_aux_graphs(
+        parsed_results, 5, "Net throughput in tuples / sec", "NetTps",
+        args.plot_directory, workloads)

@@ -62,6 +62,7 @@ def parse_results(results_file):
     num_iterations = list()
     tuples_per_second = list()
     itemsets = list()
+    net_tuples_per_second = 0
     with open(results_file, 'r') as f:
         lines = f.read().split('\n')
         for i in xrange(len(lines)):
@@ -86,6 +87,10 @@ def parse_results(results_file):
                     line = line.split("Tuples / second = ")[1]
                     tuples_per_second.append(float(
                         line.split("tuples / second")[0].strip()))
+                elif "Net tuples / second" in line:
+                    line = line.split("Net tuples / second = ")[1]
+                    net_tuples_per_second = float(
+                        line.split("tuples / second")[0].strip())
             if "Columns" in line:
                 j = i + 1
                 itemset = dict()
@@ -97,11 +102,12 @@ def parse_results(results_file):
                     j += 1
                 if itemset != {}:
                     itemsets.append(itemset)
-    times = [sum(times[time_type]) / len(times[time_type]) for time_type in times]
-    num_itemsets = sum(num_itemsets) / len(num_itemsets)
-    num_iterations = sum(num_iterations) / len(num_iterations)
-    tuples_per_second = sum(tuples_per_second) / len(tuples_per_second)
-    return times, num_itemsets, num_iterations, itemsets, tuples_per_second
+    times = {time_type : (sum(times[time_type]) / len(times[time_type])) for time_type in times}
+    num_itemsets = sum(num_itemsets) / len(num_itemsets) if len(num_itemsets) > 0 else 0
+    num_iterations = sum(num_iterations) / len(num_iterations) if len(num_iterations) > 0 else 0
+    tuples_per_second = sum(tuples_per_second) if len(tuples_per_second) > 0 else 0.0
+    return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
+            net_tuples_per_second)
 
 
 def get_stats(value_list):
@@ -139,6 +145,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     all_num_iterations = list()
     all_itemsets = set()
     all_tuples_per_second = list()
+    all_net_tuples_per_second = list()
 
     for i in xrange(number_of_runs):
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
@@ -150,7 +157,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print macrobase_cmd
         os.system("cd ..; %s" % macrobase_cmd)
         (times, num_itemsets, num_iterations, itemsets,
-            tuples_per_second) = parse_results(results_file)
+            tuples_per_second, net_tuples_per_second) = parse_results(results_file)
 
         for time_type in times:
             if time_type not in all_times:
@@ -162,6 +169,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         for itemset in itemsets:
             all_itemsets.add(frozenset(itemset.items()))
         all_tuples_per_second.append(tuples_per_second)
+        all_net_tuples_per_second.append(net_tuples_per_second)
 
     mean_and_stddev_times = dict()
     for time_type in all_times:
@@ -170,6 +178,8 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     mean_num_iterations, stddev_num_iterations = get_stats(all_num_iterations)
     mean_tuples_per_second, stddev_tuples_per_second = \
         get_stats(all_tuples_per_second)
+    mean_net_tuples_per_second, stddev_net_tuples_per_second = \
+        get_stats(all_net_tuples_per_second)
 
     print config_parameters["taskName"], "-->"
     print "Times:", mean_and_stddev_times
@@ -185,6 +195,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
 
     print "Mean tuples / second:", mean_tuples_per_second,
     print ", Stddev tuples / second:", stddev_tuples_per_second
+
+    print "Mean net tuples / second:", mean_net_tuples_per_second,
+    print ", Stddev net tuples / second:", stddev_net_tuples_per_second
 
 
 def run_all_workloads(configurations, defaults, number_of_runs,
