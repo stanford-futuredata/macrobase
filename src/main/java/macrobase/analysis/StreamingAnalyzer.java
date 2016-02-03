@@ -289,6 +289,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         List<Thread> threads = new ArrayList<Thread>();
         List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
         
+        Stopwatch tsw = Stopwatch.createUnstarted();
+        tsw.start();
+        
         List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
         for (int i = 0; i < numThreads; i++) {
         	RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
@@ -306,6 +309,13 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         		isr.add(itemsetResult);
         	}
         }
+        
+        tsw.stop();
+        
+        double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
+        tuplesPerSecond *= 1000000;
+        
+        log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
         return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, isr);
     }
