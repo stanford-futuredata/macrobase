@@ -59,7 +59,9 @@ public class BatchAnalyzer extends BaseAnalyzer {
         log.debug("...ended loading (time: {}ms)!", loadTime);
         
         Stopwatch tsw = Stopwatch.createUnstarted();
+        Stopwatch tsw2 = Stopwatch.createUnstarted();
         tsw.start();
+        tsw2.start();
 
         sw.start();
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
@@ -103,6 +105,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
             }
         }
 
+        tsw2.stop();
+
         // SUMMARY
 
         @SuppressWarnings("unused")
@@ -133,6 +137,10 @@ public class BatchAnalyzer extends BaseAnalyzer {
         log.debug("Number of itemsets: {}", isr.size());
         log.debug("...ended total (time: {}ms)!", (tsw.elapsed(TimeUnit.MICROSECONDS) / 1000) + 1);
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
+
+        tuplesPerSecond = ((double) data.size()) / ((double) tsw2.elapsed(TimeUnit.MICROSECONDS));
+        tuplesPerSecond *= 1000000;
+        log.debug("Tuples / second w/o itemset mining = {} tuples / second", tuplesPerSecond);
 
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
     }
