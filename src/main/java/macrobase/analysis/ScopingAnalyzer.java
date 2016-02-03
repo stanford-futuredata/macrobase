@@ -67,8 +67,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
 				numInterval,
 				 minFrequentSubSpaceRatio,
                  maxSparseSubSpaceRatio);
-    	if(true)
-    		return null;
+    	
     	//use all attributes to scope
     	/*
     	List<String> scopingAttributesFinal = scopingAttributes;
