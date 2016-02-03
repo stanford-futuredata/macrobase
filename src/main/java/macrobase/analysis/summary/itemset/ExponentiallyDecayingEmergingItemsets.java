@@ -60,8 +60,8 @@ public class ExponentiallyDecayingEmergingItemsets {
         this.minRatio = minRatio;
         this.exponentialDecayRate = exponentialDecayRate;
 
-        outlierCountSummary = new FastButBigSpaceSaving(minSupportOutlier*.01); //new SpaceSavingList(sizeOutlierSS);
-        inlierCountSummary = new FastButBigSpaceSaving(minSupportOutlier*.01);//new SpaceSavingList(sizeInlierSS);
+        outlierCountSummary = new FastButBigSpaceSaving(outlierSummarySize);
+        inlierCountSummary = new FastButBigSpaceSaving(inlierSummarySize);
         outlierPatternSummary = new StreamingFPGrowth(minSupportOutlier);
     }
 

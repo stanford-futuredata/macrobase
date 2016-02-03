@@ -1,18 +1,12 @@
 package macrobase.analysis.summary.count;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.MinMaxPriorityQueue;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
 
 /*
  Maintains probabilistic heavy-hitters:
@@ -41,15 +35,12 @@ public class FastButBigSpaceSaving extends ApproximateCount {
 
     private HashMap<Integer, Double> counts = new HashMap<>();
     private double totalCount = 0;
-    private final double threshold;
     private final int maxStableSize;
 
-    private double prevEpochMin = 0;
+    private double prevEpochMaxEvicted = 0;
 
-    // threshold == totalCount*threshold;
-    public FastButBigSpaceSaving(double threshold) {
-        this.threshold = threshold;
-        maxStableSize = (int)(1/threshold);
+    public FastButBigSpaceSaving(int maxStableSize) {
+        this.maxStableSize = maxStableSize;
     }
 
     @Override
@@ -73,15 +64,20 @@ public class FastButBigSpaceSaving extends ApproximateCount {
 
             log.trace("Removing {} items from counts", toRemove);
 
+            prevEpochMaxEvicted = Double.MIN_VALUE;
+
             for(int i = 0; i < toRemove; ++i) {
                 Map.Entry<Integer, Double> entry = a.get(i);
                 counts.remove(entry.getKey());
-                assert (prevVal < entry.getValue());
-                prevVal = entry.getValue();
+                if(entry.getValue() > prevEpochMaxEvicted) {
+                    prevEpochMaxEvicted = entry.getValue();
+                }
             }
         }
 
-        log.trace("Finished pruning; new size is {}", counts.size());
+        log.trace("Finished pruning; new size is {}; max evicted is {}",
+                  counts.size(),
+                  prevEpochMaxEvicted);
     }
 
     public HashMap<Integer, Double> getCounts() {
@@ -92,8 +88,8 @@ public class FastButBigSpaceSaving extends ApproximateCount {
     public void observe(Integer item, double count) {
         Double value = counts.get(item);
         if (value == null) {
-            value = prevEpochMin + count;
-            totalCount += prevEpochMin + count;
+            value = prevEpochMaxEvicted + count;
+            totalCount += prevEpochMaxEvicted + count;
         } else {
            value += count;
            totalCount += count;
