@@ -179,8 +179,10 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     public List<ItemsetResult> getItemsets(DatumEncoder encoder) {
+        List<ItemsetResult> singleItemsets =  getSingleItemItemsets(encoder);
+
         if(attributeDimension == 1) {
-            return getSingleItemItemsets(encoder);
+            return singleItemsets;
         }
 
         List<ItemsetWithCount> iwc = outlierPatternSummary.getItemsets();
@@ -191,7 +193,7 @@ public class ExponentiallyDecayingEmergingItemsets {
 
         Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
-        List<ItemsetResult> ret = new ArrayList<>();
+        List<ItemsetResult> ret = singleItemsets;
 
         Set<Integer> prevSet = null;
         Double prevCount = -1.;
@@ -202,28 +204,10 @@ public class ExponentiallyDecayingEmergingItemsets {
                 }
             }
 
-
             prevCount = i.getCount();
             prevSet = i.getItems();
 
-
-            if(i.getItems().size() == 1) {
-                double ratio = 0;
-                int item = i.getItems().iterator().next();
-                double inlierCount = inlierCountSummary.getCount(item);
-
-                if(inlierCount > 0) {
-                    ratio = (outlierCountSummary.getCount(item)/ outlierCountSummary.getTotalCount())/
-                            (inlierCount/ inlierCountSummary.getTotalCount());
-                } else {
-                    ratio = Double.POSITIVE_INFINITY;
-                }
-
-                ret.add(new ItemsetResult(i.getCount()/ outlierCountSummary.getTotalCount(),
-                                          i.getCount(),
-                                          ratio,
-                                          encoder.getColsFromAttrSet(i.getItems())));
-            } else {
+            if(i.getItems().size() != 1) {
                 ratioItemsToCheck.addAll(i.getItems());
                 ratioSetsToCheck.add(i);
             }
