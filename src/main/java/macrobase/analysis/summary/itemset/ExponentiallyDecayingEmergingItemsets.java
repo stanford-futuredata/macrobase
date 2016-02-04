@@ -169,7 +169,7 @@ public class ExponentiallyDecayingEmergingItemsets {
 
             if(ratio > minRatio) {
                 ret.add(new ItemsetResult(outlierCount.getValue() / outlierCountSummary.getTotalCount(),
-                                          inlierCount,
+                                          outlierCount.getValue(),
                                           ratio,
                                           encoder.getColsFromAttr(outlierCount.getKey())));
             }
