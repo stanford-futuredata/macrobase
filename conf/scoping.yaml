@@ -12,6 +12,7 @@ maxSparseSubSpaceRatio: 0.005
 dbUrl: postgres
 baseQuery: SELECT * FROM marketing;
 
+
 minSupport: 0.01
 minInlierRatio: 1
 

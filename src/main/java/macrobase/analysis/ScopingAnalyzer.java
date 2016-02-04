@@ -41,6 +41,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
                                   double minFrequentSubSpaceRatio,
                                   double maxSparseSubSpaceRatio
     			) throws SQLException, IOException {
+
     	
     	//Need to determine categorical attributes and numerical attributes
     	
@@ -68,7 +69,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
 				numInterval,
 				 minFrequentSubSpaceRatio,
                  maxSparseSubSpaceRatio);
-    	
+
     	//use all attributes to scope
     	/*
     	List<String> scopingAttributesFinal = scopingAttributes;
