@@ -13,7 +13,7 @@ abstract public class BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(BaseAnalyzer.class);
 
     protected double ZSCORE = 3;
-    protected double TARGET_PERCENTILE = 0.01;
+    protected double TARGET_PERCENTILE = 0.99;
     protected double MIN_SUPPORT = 0.001;
     protected double MIN_INLIER_RATIO = 1;
 
