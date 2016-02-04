@@ -117,7 +117,7 @@ public class FPGrowthEmerging {
                 } else {
                     ratio = Double.POSITIVE_INFINITY;
                 }
-
+                
                 ret.add(new ItemsetResult(i.getCount()/(double)outliers.size(),
                                           i.getCount(),
                                           ratio,

@@ -22,7 +22,7 @@ import java.util.List;
 
 
 public abstract class DiskCachingSQLLoader extends SQLLoader {
-    private static final Logger log = LoggerFactory.getLogger(MemoryCachingSQLLoader.class);
+    private static final Logger log = LoggerFactory.getLogger(DiskCachingSQLLoader.class);
 
     private final String fileDir;
 

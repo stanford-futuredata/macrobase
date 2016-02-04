@@ -33,8 +33,6 @@ public class MacroBase
                            "( m | a | c | r | o | b | a | s | e )\n" +
                            " \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \n");
 
-        //benchmark();
-
         MacroBaseServer.main(args);
     }
 }

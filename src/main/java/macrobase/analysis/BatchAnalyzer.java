@@ -67,7 +67,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
         OutlierDetector detector = constructDetector(metricsDimensions);
 
-        if (serverConfiguration.getStoreScoreDistribution() != null ) {
+        if (serverConfiguration != null && serverConfiguration.getStoreScoreDistribution() != null ) {
             detector.storeScoresInFile(serverConfiguration.getStoreScoreDistribution());
         }
 
@@ -83,7 +83,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
         sw.reset();
 
         // Dump scored results into a file if requested.
-        if (serverConfiguration.getStoreScoreDistribution() != null) {
+        if (serverConfiguration != null && serverConfiguration.getStoreScoreDistribution() != null) {
 
             Gson gson = new GsonBuilder()
                     .enableComplexMapKeySerialization()

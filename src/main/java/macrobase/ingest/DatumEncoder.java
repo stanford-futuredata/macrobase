@@ -19,39 +19,6 @@ public class DatumEncoder {
 
     private Integer nextKey = 0;
 
-    public void updateAttributeDimensions(Map<Integer, Integer> oldToNewRemapping) {
-        HashMap<Integer, String> newAttributeDimensionNameMap = new HashMap<>();
-        HashMap<Integer, Map<String, Integer>> newIntegerEncoding = new HashMap<>();
-        HashMap<Integer, Integer> newIntegerToColumn = new HashMap<>();
-
-        for(Map.Entry<Integer, String> entry : attributeDimensionNameMap.entrySet()) {
-            int dim = entry.getKey();
-            if(oldToNewRemapping.containsKey(dim)) {
-                newAttributeDimensionNameMap.put(oldToNewRemapping.get(dim), entry.getValue());
-            }
-        }
-
-        for(Map.Entry<Integer, Map<String, Integer>> entry :
-                integerEncoding.entrySet()) {
-            int dim = entry.getKey();
-            if(oldToNewRemapping.containsKey(dim)) {
-                newIntegerEncoding.put(oldToNewRemapping.get(dim), entry.getValue());
-            }
-        }
-
-        for(Map.Entry<Integer, Integer> entry :
-                integerToColumn.entrySet()) {
-            int dim = entry.getValue();
-            if(oldToNewRemapping.containsKey(dim)) {
-                newIntegerToColumn.put(entry.getKey(), oldToNewRemapping.get(entry.getValue()));
-            }
-        }
-
-        attributeDimensionNameMap = newAttributeDimensionNameMap;
-        integerEncoding = newIntegerEncoding;
-        integerToColumn = newIntegerToColumn;
-    }
-
     // kind of a hack...
     public void copy(DatumEncoder other) {
         attributeDimensionNameMap.clear();
