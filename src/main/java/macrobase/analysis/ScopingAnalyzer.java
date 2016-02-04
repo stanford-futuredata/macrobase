@@ -21,6 +21,7 @@ import macrobase.runtime.standalone.scoping.SubSpaceOutlierDetection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
                                   int numInterval,
                                   double minFrequentSubSpaceRatio,
                                   double maxSparseSubSpaceRatio
-    			) throws SQLException {
+    			) throws SQLException, IOException {
     	
     	//Need to determine categorical attributes and numerical attributes
     	
@@ -162,7 +163,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
     		 int numInterval,
     		double minFrequentSubSpaceRatio,
             double maxSparseSubSpaceRatio
-    		) throws SQLException{
+    		) throws SQLException, IOException{
     	
     	
     	DatumEncoder encoder = new DatumEncoder();
@@ -199,6 +200,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
      * @param baseQuery
      * @throws SQLException
      */
+    /*
     private void exploreScoping(SQLLoader loader,
 			  List<String> scopingAttributes,
 			  double minScopingSupport,
@@ -270,4 +272,5 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         }
         
     }
+    */
 }
