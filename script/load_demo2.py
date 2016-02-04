@@ -24,7 +24,7 @@ attributes = [
   ["CA", "MA", "NY", "WY", "AR", "NV", "PA", "WA", "WI"]
 ]
 
-conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "")
+conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "" + " user=postgres password=mamikonyan")
 cur = conn.cursor()
 
 print "Creating table..."
