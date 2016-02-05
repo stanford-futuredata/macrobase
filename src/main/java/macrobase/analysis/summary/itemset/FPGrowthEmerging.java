@@ -27,18 +27,62 @@ public class FPGrowthEmerging {
     @SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
 
+    private List<ItemsetResult> getSingletonItemsets(List<DatumWithScore> inliers,
+                                                     List<DatumWithScore> outliers,
+                                                     double minSupport,
+                                                     double minRatio,
+                                                     DatumEncoder encoder) {
+        int supportCountRequired = (int)(outliers.size()*minSupport);
+
+        List<ItemsetResult> ret = new ArrayList<>();
+
+        Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
+        Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
+
+        for(Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
+            if(outlierCount.getValue() < supportCountRequired) {
+                continue;
+            }
+
+            Double inlierCount = inlierCounts.get(outlierCount.getKey());
+
+            double ratio;
+
+            if(inlierCount != null) {
+                ratio = (outlierCount.getValue()/ outliers.size()) /
+                         (inlierCount/ inliers.size());
+            } else {
+                ratio = Double.POSITIVE_INFINITY;
+            }
+
+            if(ratio > minRatio) {
+                ret.add(new ItemsetResult(outlierCount.getValue() / outliers.size(),
+                                          outlierCount.getValue(),
+                                          ratio,
+                                          encoder.getColsFromAttr(outlierCount.getKey())));
+            }
+        }
+
+        return ret;
+    }
+
     public List<ItemsetResult> getEmergingItemsetsWithMinSupport(List<DatumWithScore> inliers,
                                                                  List<DatumWithScore> outliers,
                                                                  double minSupport,
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
+        if(inliers.get(0).getDatum().getAttributes().size() == 1) {
+            return getSingletonItemsets(inliers, outliers, minSupport, minRatio, encoder);
+        }
+
         Context context = singleItemCounts.time();
         // TODO: truncate inliers!
         ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
 
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
+
 
         Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
 

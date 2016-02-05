@@ -48,6 +48,7 @@ def parse_output_file(filename):
                 try:
                     [parameter_type, parameter_value] = \
                         parameters_description.split(" = ")
+                    parameter_value = float(parameter_value)
                     if parameter_type not in parsed_results:
                         parsed_results[parameter_type] = dict()
                         parsed_results[parameter_type][workload_name] = dict()
@@ -115,7 +116,7 @@ def compute_precision_and_recall(itemsets, ground_truth_itemsets):
     return precision, recall
 
 
-def plot_time_graphs(parsed_results, plots_dir, timing_types, workloads):
+def plot_time_graphs(parsed_results, plots_dir, timing_types, workloads, is_xscale_log):
     print "Plotting Time graphs..."
     for timing_type in timing_types + ['Total']:
         key_value_pairs = dict()
@@ -144,11 +145,12 @@ def plot_time_graphs(parsed_results, plots_dir, timing_types, workloads):
              timing_type + " time (in milliseconds",
              plots_dir,
              timing_type,
-             True)
+             True,
+             is_xscale_log)
     print "...done!"
 
 
-def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir, workloads):
+def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir, workloads, is_xscale_log):
     print "Plotting %s graphs..." % file_suffix
     key_value_pairs = dict()
     for parameter_type in parsed_results:
@@ -168,11 +170,11 @@ def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir, workloa
                 except:
                     continue
 
-    plot(key_value_pairs, ylabel, plots_dir, file_suffix, True)
+    plot(key_value_pairs, ylabel, plots_dir, file_suffix, True, is_xscale_log)
     print "...done!"
 
 
-def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads):
+def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads, is_xscale_log):
     print "Plotting %s graphs..." % ylabel
     key_value_pairs = dict()
     for parameter_type in parsed_results:
@@ -196,16 +198,17 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads):
                 except:
                     continue
 
-    plot(key_value_pairs, ylabel, plots_dir, ylabel, False)
+    plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
     print "...done!"
 
 
-def plot(key_value_pairs, ylabel, plots_dir, file_suffix, plot_errorbars):
+def plot(key_value_pairs, ylabel, plots_dir, file_suffix, plot_errorbars, is_xscale_log):
     for parameter_type in key_value_pairs:
         if parameter_type == "defaultParameters":
             continue
         plt.cla()
-        plt.xscale('log')
+        if is_xscale_log:
+            plt.xscale('log')
         handles = list()
         for workload_name in key_value_pairs[parameter_type]:
             keys = list()
@@ -262,22 +265,25 @@ if __name__ == '__main__':
     workloads = args.plotting_parameters["workloads"]
 
     parsed_results = parse_output_file(args.output_file)
-    plot_time_graphs(parsed_results, args.plot_directory, timing_types, workloads)
+    plot_time_graphs(parsed_results, args.plot_directory, timing_types, workloads, False)
     plot_aux_graphs(
         parsed_results, 1, "Number of itemsets", "Itemsets", args.plot_directory,
-        workloads)
+        workloads,
+        False)
     plot_aux_graphs(
         parsed_results, 2, "Number of iterations in MCD step",
         "IterationsMCD",
         args.plot_directory,
-        workloads)
-    plot_recall_precision(
-        parsed_results, 0, "Precision", args.plot_directory, workloads)
+        workloads, False)
+    plot_recall_precision(parsed_results, 0, "Precision", args.plot_directory,
+        workloads,
+        False)
     plot_recall_precision(parsed_results, 1, "Recall", args.plot_directory,
-        workloads)
+        workloads,
+        False)
     plot_aux_graphs(
         parsed_results, 4, "Throughput in tuples/sec", "Tps", args.plot_directory,
-        workloads)
+        workloads, False)
     plot_aux_graphs(
         parsed_results, 5, "Throughput in tuples/sec w/o itemset mining",
-        "TpsNoMining", args.plot_directory, workloads)
+        "TpsNoMining", args.plot_directory, workloads, False)
