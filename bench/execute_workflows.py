@@ -128,7 +128,6 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
     conf_file = os.path.join(sub_dir, conf_file)
-    results_file = os.path.join(sub_dir, "results.txt")
     create_config_file(config_parameters, conf_file)
     cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
 
@@ -140,6 +139,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     all_tuples_per_second_no_itemset_mining = list()
 
     for i in xrange(number_of_runs):
+        results_file = os.path.join(sub_dir, "results%d.txt" % i)
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
             -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
             macrobase.MacroBase {cmd} {conf_file} \\
