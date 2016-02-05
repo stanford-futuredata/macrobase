@@ -37,7 +37,7 @@ categoricalAttributes : []
 numericalAttributes: []
 numInterval: 9
 minFrequentSubSpaceRatio: 0.1
-maxSparseSubSpaceRatio: 0.005
+maxSparseSubSpaceRatio: 0.01
 
 
 

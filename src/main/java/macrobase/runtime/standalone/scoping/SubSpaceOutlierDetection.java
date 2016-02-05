@@ -56,54 +56,69 @@ public class SubSpaceOutlierDetection {
 		this.numericalAttributes = numericalAttributes;
 	}
 	
+	
 	/**
-	 * find the set of scope outliers on the data
+	 * find the set of scope outliers on the data. 
 	 * @param data
 	 * @return
 	 */
-	public List<SubSpaceOutlier> run(List<Datum> data){
-		
-		List<SubSpaceOutlier> allOutliers = new ArrayList<SubSpaceOutlier>();
-		
-		log.debug("Find one-dimensional dense scopes");
+	public List<SubSpaceOutlier> run2(List<Datum> data){
+		List<SubSpaceOutlier> result = new ArrayList<SubSpaceOutlier>();
 		
 		int totalDimensions = data.get(0).getAttributes().size() + data.get(0).getMetrics().getDimension();
+		log.debug("Find one-dimensional dense scopes on all attributes");
 		List<SubSpace> oneDimensionDenseSubSpaces = findOneDimensionDenseScopes(data);
 		
-		List<SubSpace> previousLevel = oneDimensionDenseSubSpaces;
-	
-		for(int level = 2; level <= totalDimensions; level++){
+		int metricDimension = -1;
+		
+		for(metricDimension = 0; metricDimension < totalDimensions; metricDimension++){
+			log.debug("Use metric attribute " + metricDimension );
 			
-			log.debug("Find " + level + "  dimensional outlier scopes");
-			List<SubSpaceOutlier> outlierSubSpaces = findOutlierSubSpaceOneLevelUp(previousLevel,data);
-			allOutliers.addAll(outlierSubSpaces);
+			if(metricDimension != 13)
+				continue;
 			
-			for(SubSpaceOutlier outlier: outlierSubSpaces){
-				System.err.println(outlier.print(encoder));
+			List<Integer> metricDimensions = new ArrayList<Integer>();
+			metricDimensions.add(metricDimension);
+			Collection<Unit> metricDimensionsUnits = initOneDimensionalUnits(data,metricDimension);
+			
+			List<SubSpace> previousLevel = new ArrayList<SubSpace>();
+			
+			for(SubSpace ss: oneDimensionDenseSubSpaces){
+				//consider subspace that doesn't contain metric dimension
+				if(ss.getDimensions().contains(metricDimension))
+					continue;
+				
+				previousLevel.add(ss);
+				ss.initializeMetricDimension(metricDimensions, metricDimensionsUnits);
 			}
 			
-
-			//test only three levels for now
-			if(level == 3)
-				break;
-			
-			log.debug("Find " + level + "  dimensional dense scopes");
-			List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);
-		
-			//level-up
-			previousLevel = denseSubSpaces;
+			for(int level = 2; level <= totalDimensions - 1; level++){
+				
+				//identify scope outlier
+				for(SubSpace ss: previousLevel){
+					SubSpaceOutlier so = ss.identifyScopeOutlier(data.size(), outlierDensity);
+					if(so == null)
+						continue;
+					
+					System.err.println(  so.print(encoder) );
+					result.add(so);
+				}
+				
+				List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);
+				
+				//level-up
+				previousLevel = denseSubSpaces;
+			}
 			
 		}
 		
-		
-		//for(SubSpaceOutlier outlier: allOutliers){
-		//	System.err.println(outlier.print(encoder));
-		//}
-		
-		
-		return allOutliers;
+		return result;
 		
 	}
+	
+	
+	
+	
 	
 	
 	
@@ -140,91 +155,7 @@ public class SubSpaceOutlierDetection {
 		return result;
 	}
 	
-	/**
-	 * Given the dense subspaces of previous level, 
-	 * find next level subspaces with outliers 
-	 * @param denseSubSpaces
-	 * @param data
-	 * @return
-	 */
-	private List<SubSpaceOutlier> findOutlierSubSpaceOneLevelUp(List<SubSpace> denseSubSpaces, List<Datum> data){
-		
-		//all outlier subspaces
-		List<SubSpaceOutlier> result = new ArrayList<SubSpaceOutlier>();
-		
-		
-		
-		//sort the subspaces by their dimensions
-		List<SubSpace> denseSubspacesByDimensions = new ArrayList<>(denseSubSpaces);
-	    Collections.sort(denseSubspacesByDimensions, new SubSpace.DimensionComparator());
 
-	    for(int i = 0; i < denseSubspacesByDimensions.size(); i++ ){
-	    	for(int j = i +1; j < denseSubspacesByDimensions.size(); j++){
-	    		
-	    		SubSpace s1 = denseSubspacesByDimensions.get(i);
-	    		SubSpace s2 = denseSubspacesByDimensions.get(j);
-	    		
-	    		List<Integer> newDimensions = s1.joinedDimensions(s2);
-	    		if(newDimensions == null)
-	    			continue;
-	    		
-	    		SubSpaceOutlier subSpaceOutlier = null; 
-	    		
-	    		List<Unit> denseUnits1 = s1.getDenseUnits();
-	    		List<Unit> denseUnits2 = s2.getDenseUnits();
-	    		
-	    		for(Unit u1: denseUnits1){
-	    			for(Unit u2: denseUnits2){
-	    				Unit newUnit = u1.join(u2);
-	    				if(newUnit == null)
-	    					continue;
-	    				if(newUnit.isSparse(data.size(), outlierDensity)){
-	    					//This is a Sparse new unit, check if every sub-unit is dense
-	    					if(checkSubUnitDensity(newUnit,denseSubSpaces)){
-	    						if(subSpaceOutlier == null)
-	    							subSpaceOutlier = new SubSpaceOutlier(newDimensions);
-	    						subSpaceOutlier.addOutlierUnit(newUnit);
-	    					}
-	    				}
-	    			}
-	    		}
-	    		
-	    		if(subSpaceOutlier != null)
-	    			result.add(subSpaceOutlier);
-	    		
-	    	}
-	    }
-		
-		return result;
-	}
-	
-	/**
-	 * Check if all sub-units of this newUnit are dense, return true if yes
-	 * @param newUnit
-	 * @param denseSubSpaces
-	 * @return
-	 */
-	private boolean checkSubUnitDensity(Unit newUnit, List<SubSpace> denseSubSpaces){
-		
-		List<Unit> subUnits = newUnit.getImmediateSubUnits();
-		
-		for(Unit subUnit: subUnits){
-			boolean denseSubUnit = false;
-			for(SubSpace subSpace: denseSubSpaces){
-				if(!subUnit.getDimensions().equals(subSpace.getDimensions())){
-					continue;
-				}
-				if(subSpace.getDenseUnits().contains(subUnit)){
-					denseSubUnit = true;
-					break;
-				}
-			}
-			if(denseSubUnit == false)
-				return false;
-		}
-		
-		return true;
-	}
 	
 	
 	
@@ -236,15 +167,7 @@ public class SubSpaceOutlierDetection {
 	private List<SubSpace> findOneDimensionDenseScopes(List<Datum> data){
 		
 		Collection<Unit> oneDimensionalUnits = initOneDimensionalUnits(data);
-		//add the support tids of units
-		for(int t = 0; t < data.size(); t++){
-			Datum datum = data.get(t);
-			for(Unit unit: oneDimensionalUnits){
-				if(unit.containDatum(datum)){
-					unit.addTIDs(t);
-				}
-			}
-		}
+		
 		//find out the dense one dimensional units
 		Map<Integer,List<Unit>> dimension2OneDimensionalDenseUnits = new HashMap<Integer, List<Unit>>();
 		for(Unit unit: oneDimensionalUnits){
@@ -285,10 +208,19 @@ public class SubSpaceOutlierDetection {
 		int numericalDimensions = data.get(0).getMetrics().getDimension();
 		int totalDimensions = categoricalDimensions +numericalDimensions ;
 		
-		int dimension = 0;
+		for(int dimension = 0; dimension < totalDimensions; dimension++){
+			result.addAll( initOneDimensionalUnits(data,dimension) );
+		}
+		return result;
+	}
+	
+	private Collection<Unit> initOneDimensionalUnits(List<Datum> data, int dimension){
+		int categoricalDimensions = data.get(0).getAttributes().size();
 		
-		//categorical dimensions, one distinct value per interval
-		for(dimension = 0; dimension < categoricalDimensions; dimension++){
+		
+		Collection<Unit> result = new ArrayList<Unit>();
+		
+		if(dimension < categoricalDimensions){
 			HashSet<Integer> distinctValues = new HashSet<Integer>();
 			for(Datum datum: data){
 				distinctValues.add(datum.getAttributes().get(dimension));
@@ -298,11 +230,7 @@ public class SubSpaceOutlierDetection {
 				Unit unit = new Unit(dimension, interval);
 				result.add(unit);
 			}
-			
-		}
-		
-		//numerical dimensions
-		for(; dimension < totalDimensions; dimension++){
+		}else{
 			double min = Double.MAX_VALUE;
 			double max = Double.MIN_VALUE;
 			//find out the min, max
@@ -333,6 +261,19 @@ public class SubSpaceOutlierDetection {
 				
 			}
 		}
+		
+		
+		//add the support tids of units
+		for(int t = 0; t < data.size(); t++){
+			Datum datum = data.get(t);
+			for(Unit unit: result){
+				if(unit.containDatum(datum)){
+					unit.addTIDs(t);
+				}
+			}
+		}
+				
+				
 		return result;
 	}
 }

@@ -1,8 +1,12 @@
 package macrobase.runtime.standalone.scoping;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,18 +22,27 @@ public class SubSpace {
 
 	
 	/**
-	 * A list of ordered dimensions this subspace has
+	 * A list of ordered dimensions this subspace has, these are scoping dimensions;
 	 */
 	List<Integer> dimensions;
 	
 	
 	/**
-	 * A list of dense units this subspace has
+	 * A list of dense units this subspace has on the scoping dimensions
 	 */
 	List<Unit> denseUnits;
 	
 	
+	/**
+	 * The metric dimensions
+	 */
+	List<Integer> metricDimensions;
 	
+	
+	/**
+	 * The following fields are specific to an outlier detection method, right now it is count-based
+	 */
+	Map<Unit,HashMap<Unit,List<Integer>>>  denseUnit2metricUnit2MergedTIDs = new HashMap<Unit,HashMap<Unit,List<Integer>>>();
 	
 	
 	/**
@@ -73,6 +86,11 @@ public class SubSpace {
 				if(newUnit.isDense(total, tau)){
 					result.addDenseUnit(newUnit);
 				}
+				
+				
+				//join the metric unit part
+				HashMap<Unit,List<Integer>> metricUnit2MergedTIDs = joinMetricUnit(denseUnit2metricUnit2MergedTIDs.get(u1),other.denseUnit2metricUnit2MergedTIDs.get(u2));
+				result.denseUnit2metricUnit2MergedTIDs.put(newUnit, metricUnit2MergedTIDs);
 			}
 		}
 		
@@ -192,4 +210,131 @@ public class SubSpace {
 		}
 		return sb.toString();
 	}
+	
+	
+	//The following methods are outlier detection methods specific
+	
+	/**
+	 * Initialize metric dimension related fields
+	 * @param metricDimension
+	 * @param metricInterval2TIDs
+	 */
+	public void initializeMetricDimension(List<Integer> metricDimensions, Collection<Unit> metricUnits){
+		this.metricDimensions = metricDimensions;
+			
+		if(denseUnits == null)
+			return;
+		
+		for(Unit denseUnit: denseUnits){
+			List<Integer> tids1 = denseUnit.getTIDs();
+			
+			HashMap<Unit,List<Integer>> metricUnit2MergedTIDs = new HashMap<Unit,List<Integer>>();
+			
+			for(Unit metricUnit: metricUnits){
+				List<Integer> tids2 = metricUnit.getTIDs();
+				
+				List<Integer> mergedTIDs = mergeTIDs(tids1,tids2);
+				
+				if(mergedTIDs.size() == 0)
+					continue;
+				
+				metricUnit2MergedTIDs.put(metricUnit, mergedTIDs);
+				
+			}
+			
+			denseUnit2metricUnit2MergedTIDs.put(denseUnit, metricUnit2MergedTIDs);
+		}
+	}
+	
+	/**
+	 * Join the metric unit, when joining two dense units
+	 * @param metricUnit2MergedTIDs1
+	 * @param metricUnit2MergedTIDs2
+	 * @return
+	 */
+	private HashMap<Unit,List<Integer>> joinMetricUnit(HashMap<Unit,List<Integer>> metricUnit2MergedTIDs1, HashMap<Unit,List<Integer>> metricUnit2MergedTIDs2){
+		HashMap<Unit,List<Integer>> result = new HashMap<Unit, List<Integer>>();
+	
+		for(Unit metricUnit: metricUnit2MergedTIDs1.keySet()){
+			if(!metricUnit2MergedTIDs2.containsKey(metricUnit))
+				continue;
+			
+			List<Integer> tids1 = metricUnit2MergedTIDs1.get(metricUnit);
+			List<Integer> tids2 = metricUnit2MergedTIDs2.get(metricUnit);
+			
+			List<Integer> mergedTIDs = mergeTIDs(tids1,tids2);
+			if(mergedTIDs.size() != 0){
+				result.put(metricUnit, mergedTIDs);
+			}
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Sorted merge
+	 * @param tids1
+	 * @param tids2
+	 * @return
+	 */
+	private List<Integer> mergeTIDs(List<Integer> tids1, List<Integer> tids2){
+		List<Integer> result = new ArrayList<Integer>();
+		//merge two sorted tids
+		int index1 = 0;
+		int index2 = 0;
+		while(index1 < tids1.size() && index2 < tids2.size()){
+			int tid1 = tids1.get(index1);
+			int tid2 = tids2.get(index2);
+			if(tid1 == tid2){
+				result.add(tid1);
+				index1++;
+				index2++;
+			}else if(tid1 < tid2){
+				index1++;
+			}else{
+				index2++;
+			}
+		}
+		return result;
+	}
+	
+	
+	/**
+	 * Identify the scope outlier, whose support is less than tau
+	 * @param tau
+	 * @return
+	 */
+	public SubSpaceOutlier identifyScopeOutlier(int total, double tau){
+		SubSpaceOutlier scopeOutlier = new SubSpaceOutlier(dimensions,metricDimensions);
+		
+		for(Unit denseUnit: denseUnits){
+			
+			HashSet<Unit> outlierUnits = new HashSet<Unit>();
+			
+			for(Unit metricUnit: denseUnit2metricUnit2MergedTIDs.get(denseUnit).keySet()){
+				
+				List<Integer> tids = denseUnit2metricUnit2MergedTIDs.get(denseUnit).get(metricUnit);
+				
+				double density = (double) tids.size() / total;
+				
+				if(tids.size() != 0 && density <= tau){
+					scopeOutlier.addScopeOutlier(denseUnit, metricUnit);
+					
+					outlierUnits.add(metricUnit);
+				}
+				
+			}
+			
+			//remove outlier units
+			for(Unit outlierUnit: outlierUnits){
+				denseUnit2metricUnit2MergedTIDs.get(denseUnit).remove(outlierUnit);
+			}
+		}
+		
+		if(scopeOutlier.hasOutliers())
+			return scopeOutlier;
+		else
+			return null;
+	}
+	
 }
