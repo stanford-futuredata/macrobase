@@ -59,7 +59,8 @@
     "taskName": "accidentsSimple",
     "targetHighMetrics": [
       "number_of_casualties"
-    ]
+    ],
+    "minInlierRatio": 1.0
   },
   {
     "targetLowMetrics": [],
@@ -73,7 +74,8 @@
     "taskName": "accidentsComplex",
     "targetHighMetrics": [
       "number_of_casualties"
-    ]
+    ],
+    "minInlierRatio": 1.0
   },
   {
     "targetLowMetrics": [],
@@ -219,7 +221,8 @@
     "taskName": "accidentsSimpleStreaming",
     "targetHighMetrics": [
       "number_of_casualties"
-    ]
+    ],
+    "minInlierRatio": 1.0
   },
  {
     "targetLowMetrics": [],
@@ -233,8 +236,9 @@
     "taskName": "accidentsComplexStreaming",
     "targetHighMetrics": [
       "number_of_casualties"
-    ]
-  },
+    ],
+   "minInlierRatio": 1.0
+ },
   {
     "targetLowMetrics": [],
     "baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
