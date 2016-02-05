@@ -98,8 +98,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         log.debug("Starting subSpace outlier detection...");
         SubSpaceOutlierDetection subSpaceOutlierDetection = 
         		new SubSpaceOutlierDetection(numInterval,minFrequentSubSpaceRatio,maxSparseSubSpaceRatio,encoder,categoricalAttributes,numericalAttributes);
-        //List<SubSpaceOutlier> subSpaceOutliers = subSpaceOutlierDetection.run(data);
-        List<SubSpaceOutlier> scopeOutliers = subSpaceOutlierDetection.run2(data);
+        List<SubSpaceOutlier> scopeOutliers = subSpaceOutlierDetection.run(data);
     }
     
     

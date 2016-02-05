@@ -3,6 +3,7 @@ package macrobase.runtime.standalone.scoping;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
+import macrobase.runtime.standalone.scoping.SubSpaceOutlier.ScopeOutlier;
 
 /**
  * @author xuchu
@@ -62,7 +64,7 @@ public class SubSpaceOutlierDetection {
 	 * @param data
 	 * @return
 	 */
-	public List<SubSpaceOutlier> run2(List<Datum> data){
+	public List<SubSpaceOutlier> run(List<Datum> data){
 		List<SubSpaceOutlier> result = new ArrayList<SubSpaceOutlier>();
 		
 		int totalDimensions = data.get(0).getAttributes().size() + data.get(0).getMetrics().getDimension();
@@ -100,7 +102,7 @@ public class SubSpaceOutlierDetection {
 					if(so == null)
 						continue;
 					
-					System.err.println(  so.print(encoder) );
+					//System.err.println(  so.print(encoder) );
 					result.add(so);
 				}
 				
@@ -112,11 +114,25 @@ public class SubSpaceOutlierDetection {
 			
 		}
 		
+		rankSubSpaceOutliers(result);
 		return result;
 		
 	}
 	
 	
+	public void rankSubSpaceOutliers(List<SubSpaceOutlier> subSpaceOutliers){
+		List<ScopeOutlier> sos = new ArrayList<ScopeOutlier>(); 
+		
+		for(SubSpaceOutlier subSpaceOutlier: subSpaceOutliers){
+			sos.addAll(subSpaceOutlier.getScopeOutliers());
+		}
+		
+		Collections.sort(sos,new SubSpaceOutlier.ScopeOutlierComparator());
+		
+		for(ScopeOutlier so: sos){
+			System.err.println(  so.print(encoder)  + so.getScore());
+		}
+	}
 	
 	
 	

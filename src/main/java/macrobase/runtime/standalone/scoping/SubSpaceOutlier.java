@@ -1,6 +1,7 @@
 package macrobase.runtime.standalone.scoping;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,6 +48,10 @@ public class SubSpaceOutlier {
 		return true;
 	}
 	
+	public List<ScopeOutlier> getScopeOutliers(){
+		return scopeOutliers;
+	}
+	
 	/**
 	 * Provide a human-readable print of the outlier
 	 * @param encoder
@@ -68,13 +73,52 @@ public class SubSpaceOutlier {
 		Unit scopeUnit;
 		Unit outlierUnit;
 		
+		List<Integer> inlinerTIDs;
+		List<Integer> outlierTIDs;
+		double score;
+		
 		public ScopeOutlier(Unit scopeUnit, Unit outlierUnit){
 			this.scopeUnit = scopeUnit;
 			this.outlierUnit = outlierUnit;
+			
+			inlinerTIDs = new ArrayList<Integer>();
+			outlierTIDs = new ArrayList<Integer>();
+			
+			for(Integer tid: scopeUnit.getTIDs()){
+				if(outlierUnit.getTIDs().contains(tid)){
+					outlierTIDs.add(tid);
+				}else{
+					inlinerTIDs.add(tid);
+				}
+			}
+			//the smaller, the better
+			score = (double)outlierTIDs.size() / inlinerTIDs.size();
 		}
+		
+		public double getScore(){
+			return score;
+		}
+		
+		
 		
 		public String print(DatumEncoder encoder){
 			return "Scope: " + scopeUnit.print(encoder) + " Outlier: " + outlierUnit.print(encoder);
 		}
+		
+		
+	}
+	public static class ScopeOutlierComparator implements Comparator<ScopeOutlier> {
+
+		@Override
+		public int compare(ScopeOutlier o1, ScopeOutlier o2) {
+			if(o1.getScore() > o2.getScore())
+				return 1;
+			else if(o1.getScore() < o2.getScore())
+				return -1;
+			else
+				return 0;
+		}
+	
+		
 	}
 }
