@@ -143,7 +143,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
             -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
             macrobase.MacroBase {cmd} {conf_file} \\
-            > {results_file}'''.format(
+            > {results_file} 2>&1'''.format(
             cmd=cmd, conf_file=conf_file, results_file=results_file)
         print 'running the following command:'
         print macrobase_cmd
