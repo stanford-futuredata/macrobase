@@ -39,6 +39,9 @@ def parse_args():
   source_group.add_argument('--table', default='car_data_demo')
 
   parser.add_argument('--metrics', nargs=2, required=True)
+  parser.add_argument('--labels',
+                      help='Labels for labeled data (different colors on the '
+                           'plot)')
   add_db_args(parser)
   args = parser.parse_args()
   if args.csv is None:
@@ -50,7 +53,7 @@ if __name__ == '__main__':
   args = parse_args()
   if args.csv is None:
     cursor = args.db_connection.cursor()
-    cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+    cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")  # noqa
     print cursor.fetchall()
     sql = """
       SELECT {select} FROM {table};
@@ -60,5 +63,18 @@ if __name__ == '__main__':
     data = pd.DataFrame(cursor.fetchall(), columns=colnames)
   else:
     data = pd.read_csv(args.csv)
-  plt.scatter(data[args.metrics[0]], data[args.metrics[1]])
+
+  if args.labels:
+    interesting_data = data[[args.metrics[0], args.metrics[1], args.labels]]
+    different_labels = set(data[args.labels])
+    colors = "grcmykwb"
+    assert len(different_labels) <= len(colors)
+    for label, color in zip(different_labels, colors):
+      df = interesting_data.query('{column} == "{label}"'.format(
+                                  column=args.labels, label=label))
+      plt.scatter(df[args.metrics[0]], df[args.metrics[1]],
+                  c=color, label=label)
+  plt.xlabel(args.metrics[0])
+  plt.ylabel(args.metrics[1])
+  plt.legend()
   plt.show()
