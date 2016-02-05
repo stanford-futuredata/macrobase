@@ -47,10 +47,7 @@ public class MacroBaseScopingCommand extends ConfiguredCommand<ScopingStandalone
         analyzer.forceUsePercentile(configuration.usePercentile());
         analyzer.forceUseZScore(configuration.useZScore());
 
-        AnalysisResult result = analyzer.analyze(loader,
-                                                 configuration.getTargetAttributes(),
-                                                 configuration.getTargetLowMetrics(),
-                                                 configuration.getTargetHighMetrics(),
+        analyzer.analyze(loader,
                                                  configuration.getBaseQuery(),
                                                  //the following is for scoping
                                                  configuration.getCategoricalAttributes(),
@@ -58,13 +55,10 @@ public class MacroBaseScopingCommand extends ConfiguredCommand<ScopingStandalone
                                                  configuration.getNumInterval(),
                                                  configuration.getMinFrequentSubSpaceRatio(),
                                                  configuration.getMaxSparseSubSpaceRatio());
-        if(result.getItemSets().size() > 1000) {
-            log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
-            result.setItemSets(result.getItemSets().subList(0, 1000));
-        }
+        
 
         MacroBase.reporter.report();
 
-        log.info("Result: {}", result.prettyPrint());
+        
     }
 }

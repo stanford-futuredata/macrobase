@@ -1,29 +1,43 @@
 taskName: testTasks
-targetAttributes: [sex, marital_status, age]
-targetLowMetrics: []
-targetHighMetrics: [income]
+targetAttributes: [userid]
+targetLowMetrics: [data_count_minutes]
+targetHighMetrics: []
 
-categoricalAttributes : []
-numericalAttributes: []
-numInterval: 9
-minFrequentSubSpaceRatio: 0.1
-maxSparseSubSpaceRatio: 0.005
+# MAD, MCD, ZSCORE
+outlierDetectorType: MCD
 
 dbUrl: postgres
 baseQuery: SELECT * FROM marketing;
 
-
 minSupport: 0.01
 minInlierRatio: 1
 
-useZScore: true
-zScore: 10.0
+useDiskCache: true
+diskCacheDirectory: cache
 
-usePercentile: false
-targetPercentile: 0.01
+useZScore: false
+zScore: 3.0
+
+usePercentile: true
+targetPercentile: 0.99
+
+alphaMCD: 0.5
+stoppingDeltaMCD: 0.001
 
 logging:
   level: INFO
 
   loggers:
     "macrobase": TRACE
+
+
+
+# The following configurations are for scoping
+categoricalAttributes : []
+numericalAttributes: []
+numInterval: 9
+minFrequentSubSpaceRatio: 0.1
+maxSparseSubSpaceRatio: 0.005
+
+
+
