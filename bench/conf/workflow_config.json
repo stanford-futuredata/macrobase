@@ -73,7 +73,9 @@
     ],
     "taskName": "accidentsComplex",
     "targetHighMetrics": [
-      "number_of_casualties"
+      "number_of_casualties",
+      "accident_severity",
+      "number_of_vehicles"
     ],
     "minInlierRatio": 1.0
   },
@@ -235,7 +237,9 @@
     ],
     "taskName": "accidentsComplexStreaming",
     "targetHighMetrics": [
-      "number_of_casualties"
+      "number_of_casualties",
+      "accident_severity",
+      "number_of_vehicles"
     ],
    "minInlierRatio": 1.0
  },
