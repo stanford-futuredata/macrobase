@@ -96,12 +96,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     boolean doTrace;
 
-    int tupleNo = 0;
-    long totODTrainingTime = 0;
-    long totSummarizationTrainingTime = 0;
-    long totScoringTime = 0;
-    long totSummarizationTime = 0;
-    
     class RunnableStreamingAnalysis implements Runnable {
     	List<Datum> data;
     	List<String> attributes;
@@ -126,8 +120,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     		return itemsetResults;
     	}
     	
-		@Override
-		public void run() {
+        @Override
+	public void run() {
+                int tupleNo = 0;
+                long totODTrainingTime = 0;
+                long totSummarizationTrainingTime = 0;
+                long totScoringTime = 0;
+                long totSummarizationTime = 0;
+
 	        Stopwatch sw = Stopwatch.createUnstarted();
 	        Stopwatch tsw = Stopwatch.createUnstarted();
 
@@ -203,9 +203,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                sw.reset();
 	                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
 	            } else if(tupleNo >= warmupCount) {
-	                if(doTrace) {
-	                    innerLoopTracing(sw, detector, scoreReservoir, streamingSummarizer, analysisUpdater, modelUpdater, d);
-	                } else {
 	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
 	                    analysisUpdater.updateIfNecessary(now, tupleNo);
@@ -223,8 +220,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                    } else {
 	                        streamingSummarizer.markInlier(d);
 	                    }
-	                }
-
 	            }
 
 	            tupleNo += 1;
@@ -317,47 +312,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
-        return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, isr);
-    }
-
-    private void innerLoopTracing(Stopwatch sw, OutlierDetector detector, ExponentiallyBiasedAChao<Double> scoreReservoir, ExponentiallyDecayingEmergingItemsets streamingSummarizer, AbstractPeriodicUpdater analysisUpdater, AbstractPeriodicUpdater modelUpdater, Datum d) {
-        // todo: calling curtime so frequently might be bad...
-        long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
-
-        sw.start();
-        analysisUpdater.updateIfNecessary(now, tupleNo);
-        sw.stop();
-        sw.reset();
-        totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-
-        sw.start();
-        modelUpdater.updateIfNecessary(now, tupleNo);
-        sw.stop();
-        totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
-
-        // classify, then insert into tree, etc.
-        sw.start();
-        double score = detector.score(d);
-        sw.stop();
-        totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
-
-        sw.start();
-        if(scoreReservoir != null) {
-            scoreReservoir.insert(score);
-        }
-
-        if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-           forceUsePercentile && detector.isPercentileOutlier(score,
-                                                              TARGET_PERCENTILE)) {
-            streamingSummarizer.markOutlier(d);
-        } else {
-            streamingSummarizer.markInlier(d);
-        }
-        sw.stop();
-        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
+        return new AnalysisResult(0, 0, 0, 0, 0, isr);
     }
 
     public void setWarmupCount(Integer warmupCount) {
