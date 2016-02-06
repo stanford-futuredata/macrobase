@@ -87,7 +87,7 @@ public class KDE extends OutlierDetector {
             double _diff = kernel.density(this.bandwidthToNegativeHalf.operate(difference));
             _score += _diff;
         }
-        return _score * this.scoreScalingFactor;
+        return - _score * this.scoreScalingFactor;
     }
 
     @Override

@@ -5,9 +5,8 @@ import io.dropwizard.setup.Bootstrap;
 import macrobase.MacroBase;
 import macrobase.analysis.BatchAnalyzer;
 import macrobase.analysis.result.AnalysisResult;
-import macrobase.ingest.DiskCachingPostgresLoader;
-import macrobase.ingest.PostgresLoader;
-import macrobase.ingest.SQLLoader;
+import macrobase.ingest.*;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +23,10 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
                        Namespace namespace,
                        BatchStandaloneConfiguration configuration) throws Exception {
 
-        SQLLoader loader;
-        if(configuration.useDiskCache()) {
+        DataLoader loader;
+        if (configuration.getDataLoaderType() == BaseStandaloneConfiguration.DataLoaderType.CSV_LOADER) {
+            loader = new CsvLoader();
+        } else if(configuration.useDiskCache()) {
             loader = new DiskCachingPostgresLoader(configuration.getDiskCacheDirectory());
         } else {
             loader = new PostgresLoader();

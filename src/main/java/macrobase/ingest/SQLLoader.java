@@ -25,7 +25,7 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public abstract class SQLLoader {
+public abstract class SQLLoader extends DataLoader{
     abstract public String getDriverClass();
     abstract public String getJDBCUrlPrefix();
 

@@ -10,6 +10,7 @@ import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 
@@ -33,7 +34,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
         super(configuration);
     }
 
-    public AnalysisResult analyze(SQLLoader loader,
+    public AnalysisResult analyze(DataLoader loader,
                                   List<String> attributes,
                                   List<String> lowMetrics,
                                   List<String> highMetrics,
@@ -91,7 +92,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
                     .setPrettyPrinting()
                     .setVersion(1.0)
                     .create();
-            final File dir = new File("scores");
+            final File dir = new File("target/scores");
             dir.mkdirs();
             try (PrintStream out = new PrintStream(new File(dir, serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
                 out.println(gson.toJson(or));
