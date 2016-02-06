@@ -7,7 +7,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import psycopg2
-import sys
 
 
 def add_db_args(parser):
@@ -49,7 +48,11 @@ def parse_args():
                       help='Labels for labeled data (different colors on the '
                            'plot)')
   parser.add_argument('--miscellaneous-cutoff', type=float, default=0.001,
-                      help='Part of the data, that should a label have in order to be show in the plot')
+                      help='Part of the data, that should a label have in '
+                           'order to be show in the plot')
+  parser.add_argument('--do-not-scale-down', action='store_false',
+                      dest='scale_down')
+  parser.add_argument('--scale-down', action='store_true')
   add_db_args(parser)
   args = parser.parse_args()
   if args.csv is None:
@@ -121,7 +124,8 @@ if __name__ == '__main__':
       plt.hist(data[args.histogram], args.histogram_bins,
                label=args.histogram)
     plt.xlabel(args.histogram)
-    plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
+    if args.scale_down:
+      plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
 
   plt.legend()
   plt.show()
