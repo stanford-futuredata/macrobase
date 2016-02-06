@@ -95,6 +95,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     boolean doTrace;
+    int numRuns = 40;
 
     class RunnableStreamingAnalysis implements Runnable {
     	List<Datum> data;
@@ -189,6 +190,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        totScoringTime = 0;
 	        totSummarizationTime = 0;
 
+                for (int i = 0; i < numRuns; i++) {
 	        for(Datum d: data) {
 	            inputReservoir.insert(d);
 
@@ -224,6 +226,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
 	            tupleNo += 1;
 	        }
+                }
 
 	        sw.start();
 	        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
@@ -232,7 +235,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        sw.reset();
 	        tsw.stop();
 	        
-	        double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
+	        double tuplesPerSecond = ((double) data.size() * numRuns) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
 	        tuplesPerSecond *= 1000000;
 			
 	        log.debug("...ended OD training (time: {}ms)!", (totODTrainingTime / 1000) + 1);
@@ -307,7 +310,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         tsw.stop();
         
-        double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
+        double tuplesPerSecond = ((double) data.size() * numRuns) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
         tuplesPerSecond *= 1000000;
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
