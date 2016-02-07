@@ -35,6 +35,15 @@ public class KDE extends OutlierDetector {
             }
         }
 
+        public double secondMoment(int dimension) {
+            switch (this) {
+                case EPANECHNIKOV_MULTIPLICATIVE:
+                    return Math.pow(0.2, dimension);
+                default:
+                    throw new RuntimeException("No second moment stored for this kernel");
+            }
+        }
+
         public double norm(int dimension) {
             switch (this) {
                 case EPANECHNIKOV_MULTIPLICATIVE:
@@ -52,10 +61,13 @@ public class KDE extends OutlierDetector {
     private double scoreScalingFactor;
     private double[] allScores;
     private Bandwidth bandwidthType;
+    private double proportionOfDataToUse;
 
     public KDE(Kernel kernel, Bandwidth bandwidthType) {
         this.kernel = kernel;
         this.bandwidthType = bandwidthType;
+        // Pick 1 % of the data, randomly
+        this.proportionOfDataToUse = 0.01;
     }
 
     /**
@@ -87,9 +99,12 @@ public class KDE extends OutlierDetector {
                         dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
                     }
                     Percentile quantile = new Percentile();
-                    double twentyfive = quantile.evaluate(dataIn1D, 25);
-                    double seventyfive = quantile.evaluate(dataIn1D, 75);
-                    double dimensional_bandwidth = (seventyfive - twentyfive) / standardNormalQunatileDifference;
+                    final double twentyfive = quantile.evaluate(dataIn1D, 25);
+                    final double seventyfive = quantile.evaluate(dataIn1D, 75);
+                    final double interQuantileDeviation = (seventyfive - twentyfive) / standardNormalQunatileDifference;
+                    final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
+                    final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
+                    double dimensional_bandwidth = Math.pow(constNumerator / constDenominator, 0.2) * interQuantileDeviation;
                     bandwidth.setEntry(d, d, dimensional_bandwidth);
                 }
                 break;
@@ -125,8 +140,7 @@ public class KDE extends OutlierDetector {
         Collections.shuffle(densityPopulation);
         double bandwidthDeterminantSqrt = Math.sqrt((new EigenDecomposition(bandwidth)).getDeterminant());
 
-        // pick 1% of the data (1/100 is a randomly chosen number)
-        this.densityPopulation = densityPopulation.subList(0, (int) (0.01 * densityPopulation.size()));
+        this.densityPopulation = densityPopulation.subList(0, (int) (this.proportionOfDataToUse * densityPopulation.size()));
         this.scoreScalingFactor = 1.0 / (bandwidthDeterminantSqrt * densityPopulation.size());
     }
 
