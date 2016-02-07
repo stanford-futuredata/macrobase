@@ -211,6 +211,7 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
 	    if(!init)
 	        configService.clearSchema();
 
+        response.data.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
 	    $scope.schemaCols = response.data;
 	    $scope.pg_url = $scope.postgresstr;
         $scope.spice = $scope.postgresstr;
