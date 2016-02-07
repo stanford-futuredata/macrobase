@@ -311,6 +311,8 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
             $scope.labelTime = response.data.labelTime
             $scope.summarizationTime = response.data.summarizationTime
             $scope.itemsets = response.data.itemSets
+
+            $scope.sortAnalysis("support");
 	    });
     }
     }
