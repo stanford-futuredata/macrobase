@@ -1,19 +1,18 @@
 package macrobase.analysis.outlier;
 
-import com.google.gson.Gson;
-import macrobase.datamodel.Datum;
-import macrobase.runtime.standalone.BaseStandaloneConfiguration;
-import org.apache.commons.math3.linear.*;
-
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import macrobase.datamodel.Datum;
+import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 public class KDE extends OutlierDetector {
 
+    public enum Bandwidth {
+        NORMAL_SCALE,
+        MANUAL
+    }
 
     public enum Kernel {
         EPANECHNIKOV_MULTIPLICATIVE;
@@ -52,10 +51,59 @@ public class KDE extends OutlierDetector {
     private RealMatrix bandwidthToNegativeHalf;
     private double scoreScalingFactor;
     private double[] allScores;
+    private Bandwidth bandwidthType;
 
-    public KDE(Kernel kernel, RealMatrix bandwidth) {
+    public KDE(Kernel kernel, Bandwidth bandwidthType) {
         this.kernel = kernel;
+        this.bandwidthType = bandwidthType;
+    }
+
+    /**
+     * Manually set bandwidth of KDE
+     * @param bandwidth
+     */
+    public void setBandwidth(RealMatrix bandwidth) {
         this.bandwidth = bandwidth;
+        calculateBandwidthAncillaries();
+    }
+
+    /**
+     * Calculates bandwidth matrix based on the data that KDE should run on
+     * @param data
+     */
+    private void setBandwidth(List<Datum> data) {
+        final int metricsDimensions = data.get(0).getMetrics().getDimension();
+        RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
+        // double matrix_scale = 0.1;  // Scale identity matrix by this much
+        // bandwidth = bandwidth.scalarMultiply(matrix_scale);
+        switch (bandwidthType) {
+            case NORMAL_SCALE:
+                final double standardNormalQunatileDifference = 1.349;
+                int dimensions = data.get(0).getMetrics().getDimension();
+                for (int d=0; d<dimensions; d++) {
+                    int size = data.size();
+                    double[] dataIn1D = new double[size];
+                    for (int i=0; i<size; i++) {
+                        dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
+                    }
+                    Percentile quantile = new Percentile();
+                    double twentyfive = quantile.evaluate(dataIn1D, 25);
+                    double seventyfive = quantile.evaluate(dataIn1D, 75);
+                    double dimensional_bandwidth = (seventyfive - twentyfive) / standardNormalQunatileDifference;
+                    bandwidth.setEntry(d, d, dimensional_bandwidth);
+                }
+                break;
+            case MANUAL:
+                break;
+        }
+
+        if (bandwidthType != Bandwidth.MANUAL) {
+            this.bandwidth = bandwidth;
+            this.calculateBandwidthAncillaries();
+        }
+    }
+
+    private void calculateBandwidthAncillaries() {
         RealMatrix inverseBandwidth;
         if (bandwidth.getColumnDimension() > 1) {
             inverseBandwidth = MatrixUtils.blockInverse(bandwidth, (bandwidth.getColumnDimension() - 1) / 2);
@@ -65,10 +113,13 @@ public class KDE extends OutlierDetector {
             inverseBandwidth.setEntry(0, 0, 1.0/inverseBandwidth.getEntry(0, 0));
         }
         this.bandwidthToNegativeHalf = (new EigenDecomposition(inverseBandwidth)).getSquareRoot();
+
     }
 
     @Override
     public void train(List<Datum> data) {
+        this.setBandwidth(data);
+
         // Very rudimentary sampling, write something better in the future.
         densityPopulation = new ArrayList<Datum>(data);
         Collections.shuffle(densityPopulation);
