@@ -43,7 +43,7 @@ public abstract class SQLLoader extends DataLoader{
     }
 
     private String removeSqlJunk(String sql) {
-        return sql.replaceAll(";", "").replaceAll("'", "''");
+        return sql.replaceAll(";", "");
     }
 
     public void setDatabaseCredentials(String user, String password) {
