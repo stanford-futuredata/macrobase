@@ -42,6 +42,10 @@ public class SubSpaceOutlierDetection extends OutlierDetector{
 	 */
 	private double outlierDensity;
 	
+	/**
+	 * maximum number of dimensions used for scoping
+	 */
+	private int maxScopeDimensions;
 	
 	
 	private DatumEncoder encoder;
@@ -57,13 +61,15 @@ public class SubSpaceOutlierDetection extends OutlierDetector{
 	public SubSpaceOutlierDetection(int numIntervals, double frequentDensity, double outlierDensity,
 			DatumEncoder encoder,
 			List<String> categoricalAttributes,
-			List<String> numericalAttributes){
+			List<String> numericalAttributes,
+			int maxScopeDimensions){
 		this.numIntervals = numIntervals;
 		this.frequentDensity = frequentDensity;
 		this.outlierDensity = outlierDensity;
 		this.encoder = encoder;
 		this.categoricalAttributes = categoricalAttributes;
 		this.numericalAttributes = numericalAttributes;
+		this.maxScopeDimensions = maxScopeDimensions;
 	}
 	
 	
@@ -117,9 +123,11 @@ public class SubSpaceOutlierDetection extends OutlierDetector{
 					SubSpaceOutlier so = ss.identifyScopeOutlier(data.size(), outlierDensity);
 					if(so == null)
 						continue;
-					
-					//System.err.println(  so.print(encoder) );
 					result.add(so);
+				}
+				
+				if(level > maxScopeDimensions){
+					break;
 				}
 				
 				List<SubSpace> denseSubSpaces = findDenseSubSpaceOneLevelUp(previousLevel,data);

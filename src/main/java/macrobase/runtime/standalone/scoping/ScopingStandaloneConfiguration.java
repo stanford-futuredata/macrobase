@@ -49,4 +49,11 @@ public class ScopingStandaloneConfiguration extends BaseStandaloneConfiguration 
      public double getMaxSparseSubSpaceRatio() {
         return maxSparseSubSpaceRatio;
      }
+	 
+	 @NotNull
+	 private Integer maxScopeDimensions;
+	 
+	 public int getMaxScopeDimensions(){
+		 return maxScopeDimensions;
+	 }
 }

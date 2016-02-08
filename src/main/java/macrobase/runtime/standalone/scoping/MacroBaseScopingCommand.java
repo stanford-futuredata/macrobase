@@ -54,7 +54,8 @@ public class MacroBaseScopingCommand extends ConfiguredCommand<ScopingStandalone
                                                  configuration.getNumericalAttributes(),
                                                  configuration.getNumInterval(),
                                                  configuration.getMinFrequentSubSpaceRatio(),
-                                                 configuration.getMaxSparseSubSpaceRatio());
+                                                 configuration.getMaxSparseSubSpaceRatio(),
+                                                 configuration.getMaxScopeDimensions());
         
 
         MacroBase.reporter.report();

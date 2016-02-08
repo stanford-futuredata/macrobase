@@ -38,7 +38,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
                                   List<String> numericalAttributes, 
                                   int numInterval,
                                   double minFrequentSubSpaceRatio,
-                                  double maxSparseSubSpaceRatio
+                                  double maxSparseSubSpaceRatio,
+                                  int maxScopeDimensions
     			) throws SQLException, IOException {
 
     	
@@ -67,7 +68,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
 				numericalAttributes ,
 				numInterval,
 				 minFrequentSubSpaceRatio,
-                 maxSparseSubSpaceRatio);
+                 maxSparseSubSpaceRatio,
+                 maxScopeDimensions);
 
     	
     }
@@ -78,7 +80,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
     		List<String> numericalAttributes,
     		 int numInterval,
     		double minFrequentSubSpaceRatio,
-            double maxSparseSubSpaceRatio
+            double maxSparseSubSpaceRatio,
+            int maxScopeDimensions
     		) throws SQLException, IOException{
     	
     	
@@ -102,7 +105,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         sw.start();
         
         SubSpaceOutlierDetection subSpaceOutlierDetection = 
-        		new SubSpaceOutlierDetection(numInterval,minFrequentSubSpaceRatio,maxSparseSubSpaceRatio,encoder,categoricalAttributes,numericalAttributes);
+        		new SubSpaceOutlierDetection(numInterval,minFrequentSubSpaceRatio,maxSparseSubSpaceRatio,encoder,categoricalAttributes,numericalAttributes,maxScopeDimensions);
         subSpaceOutlierDetection.run(data);
         List<ScopeOutlier> scopeOutliers = subSpaceOutlierDetection.getScopeOutliers();
         long subSpaceOutlierDetectionTime = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -117,7 +120,16 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         sw.start();
         
          
+        for(ScopeOutlier scopeOutlier: scopeOutliers){
+    		log.info("Scope Outlier: {}" , scopeOutlier.print(encoder));
+        }
+        
     	
+        //the following is for finding explanations for each scoped outlier
+        boolean findingExplanations = false;
+        if(findingExplanations == false)
+        	return;
+        
     	for(ScopeOutlier scopeOutlier: scopeOutliers){
     		Stopwatch sw2 = Stopwatch.createUnstarted();
     		
@@ -145,8 +157,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         	}
     		
     		
-    		log.info("Scope Outlier: {}" + scopeOutlier.print(encoder));
-        	sw2.start();
+    		sw2.start();
     		OutlierDetector.BatchResult or = subSpaceOutlierDetection.getBatchResult(explanationData, scopeOutlier);
     		FPGrowthEmerging fpg = new FPGrowthEmerging();
     		List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(or.getInliers(),
@@ -159,7 +170,7 @@ public class ScopingAnalyzer extends BaseAnalyzer {
             long summarizationTime = sw2.elapsed(TimeUnit.MILLISECONDS);
     		AnalysisResult result =  new AnalysisResult(or.getOutliers().size(), or.getInliers().size(), loadTime, subSpaceOutlierDetectionTime, summarizationTime, isr);
     		find_top_explanations(result);
-            //log.info("Result: {}", result.prettyPrint());
+            log.info("Result: {}", result.prettyPrint());
     		
     		
     		sw2.reset();
