@@ -89,6 +89,7 @@ public class SubSpace {
 				
 				
 				//join the metric unit part
+				result.metricDimensions = metricDimensions;
 				HashMap<Unit,List<Integer>> metricUnit2MergedTIDs = joinMetricUnit(denseUnit2metricUnit2MergedTIDs.get(u1),other.denseUnit2metricUnit2MergedTIDs.get(u2));
 				result.denseUnit2metricUnit2MergedTIDs.put(newUnit, metricUnit2MergedTIDs);
 			}

@@ -2,6 +2,7 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
+import macrobase.MacroBase;
 import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
@@ -16,6 +17,7 @@ import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.Schema.SchemaColumn;
 import macrobase.runtime.standalone.scoping.SubSpaceOutlier;
+import macrobase.runtime.standalone.scoping.SubSpaceOutlier.ScopeOutlier;
 import macrobase.runtime.standalone.scoping.SubSpaceOutlierDetection;
 
 import org.slf4j.Logger;
@@ -95,10 +97,92 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         sw.reset();
         log.debug("...ended loading (time: {}ms)!", loadTime);
         
+        
         log.debug("Starting subSpace outlier detection...");
+        sw.start();
+        
         SubSpaceOutlierDetection subSpaceOutlierDetection = 
         		new SubSpaceOutlierDetection(numInterval,minFrequentSubSpaceRatio,maxSparseSubSpaceRatio,encoder,categoricalAttributes,numericalAttributes);
-        List<SubSpaceOutlier> scopeOutliers = subSpaceOutlierDetection.run(data);
+        subSpaceOutlierDetection.run(data);
+        List<ScopeOutlier> scopeOutliers = subSpaceOutlierDetection.getScopeOutliers();
+        long subSpaceOutlierDetectionTime = sw.elapsed(TimeUnit.MILLISECONDS);
+       
+        sw.stop();
+        log.debug("...ended subSpace outlier detection (time: {}ms)!", subSpaceOutlierDetectionTime);
+        sw.reset();
+        
+        
+        
+        log.debug("Starting finding explanations for every subspace outlier...");
+        sw.start();
+        
+         
+    	
+    	for(ScopeOutlier scopeOutlier: scopeOutliers){
+    		Stopwatch sw2 = Stopwatch.createUnstarted();
+    		
+    		
+    		List<Integer> scopingDimensions = scopeOutlier.getScopingDimensions();
+        	List<Integer> metricDimensions = scopeOutlier.getMetricDimensions();
+        	
+        	//This is a hack, to use existing code for scoping outlier explanation
+        	//the explanation data uses the rest of the categorical attributes (excluding scoping and metric attributes)
+        	//as explanation attributes
+        	List<Datum> explanationData = new ArrayList<Datum>();
+        	for(int i = 0; i < data.size(); i++){
+        		HashSet<Integer> categoricalToKeep = new HashSet<Integer>();
+        		HashSet<Integer> metricToKeep = new HashSet<Integer>();
+        		for(int k = 0; k < categoricalAttributes.size(); k++){
+        			if(scopingDimensions.contains(k) || metricDimensions.contains(k)){
+        				continue;
+        			}else{
+        				categoricalToKeep.add(k);
+        			}
+        		}
+        		Datum d = new Datum(data.get(i), categoricalToKeep, metricToKeep);
+        		explanationData.add(d);
+        		
+        	}
+    		
+    		
+    		log.info("Scope Outlier: {}" + scopeOutlier.print(encoder));
+        	sw2.start();
+    		OutlierDetector.BatchResult or = subSpaceOutlierDetection.getBatchResult(explanationData, scopeOutlier);
+    		FPGrowthEmerging fpg = new FPGrowthEmerging();
+    		List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(or.getInliers(),
+                                                                            or.getOutliers(),
+                                                                            MIN_SUPPORT,
+                                                                            MIN_INLIER_RATIO,
+                                                                            encoder);
+            sw2.stop();
+           
+            long summarizationTime = sw2.elapsed(TimeUnit.MILLISECONDS);
+    		AnalysisResult result =  new AnalysisResult(or.getOutliers().size(), or.getInliers().size(), loadTime, subSpaceOutlierDetectionTime, summarizationTime, isr);
+    		find_top_explanations(result);
+            //log.info("Result: {}", result.prettyPrint());
+    		
+    		
+    		sw2.reset();
+        
+        }
+        
+        long subSpaceOutlierExplanationTime = sw.elapsed(TimeUnit.MILLISECONDS);
+       
+        sw.stop();
+        log.debug("...ended subSpace outlier detection (time: {}ms)!", subSpaceOutlierExplanationTime);
+        sw.reset();
+
+    }
+    
+    /**
+     * Finding explanations, either support or ratio are in top-10
+     * @param result
+     */
+    private void find_top_explanations(AnalysisResult result){
+    	if(result.getItemSets().size() > 10) {
+            log.warn("Very large result set! {}; truncating to 10", result.getItemSets().size());
+            result.setItemSets(result.getItemSets().subList(0, 10));
+        }
     }
     
     

@@ -13,6 +13,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.runtime.standalone.scoping.SubSpaceOutlier.ScopeOutlier;
@@ -21,7 +23,7 @@ import macrobase.runtime.standalone.scoping.SubSpaceOutlier.ScopeOutlier;
  * @author xuchu
  * Algorithm for finding outliers using subspace clustering (CLIQUE algorithm)
  */
-public class SubSpaceOutlierDetection {
+public class SubSpaceOutlierDetection extends OutlierDetector{
 
 	private static final Logger log = LoggerFactory.getLogger(SubSpaceOutlierDetection.class);
 
@@ -46,6 +48,12 @@ public class SubSpaceOutlierDetection {
 	List<String> categoricalAttributes;
 	List<String> numericalAttributes;
 	
+	
+	/**
+	 * This is the result of outlier detection
+	 */
+	private List<ScopeOutlier> scopeOutliers;
+	
 	public SubSpaceOutlierDetection(int numIntervals, double frequentDensity, double outlierDensity,
 			DatumEncoder encoder,
 			List<String> categoricalAttributes,
@@ -64,7 +72,7 @@ public class SubSpaceOutlierDetection {
 	 * @param data
 	 * @return
 	 */
-	public List<SubSpaceOutlier> run(List<Datum> data){
+	public void run(List<Datum> data){
 		List<SubSpaceOutlier> result = new ArrayList<SubSpaceOutlier>();
 		
 		int totalDimensions = data.get(0).getAttributes().size() + data.get(0).getMetrics().getDimension();
@@ -76,12 +84,20 @@ public class SubSpaceOutlierDetection {
 		for(metricDimension = 0; metricDimension < totalDimensions; metricDimension++){
 			log.debug("Use metric attribute " + metricDimension );
 			
-			if(metricDimension != 13)
-				continue;
 			
 			List<Integer> metricDimensions = new ArrayList<Integer>();
 			metricDimensions.add(metricDimension);
 			Collection<Unit> metricDimensionsUnits = initOneDimensionalUnits(data,metricDimension);
+			
+			//identify sparse units without any scoping, and remove them from consideration
+			HashSet<Unit> sparseMetricDimensionsUnits = new HashSet<Unit>();
+			for(Unit metricDimensionsUnit: metricDimensionsUnits){
+				if(metricDimensionsUnit.isSparse(data.size(), outlierDensity)){
+					sparseMetricDimensionsUnits.add(metricDimensionsUnit);
+				}
+			}
+			metricDimensionsUnits.removeAll(sparseMetricDimensionsUnits);
+			
 			
 			List<SubSpace> previousLevel = new ArrayList<SubSpace>();
 			
@@ -114,27 +130,24 @@ public class SubSpaceOutlierDetection {
 			
 		}
 		
-		rankSubSpaceOutliers(result);
-		return result;
+		
+		//sort the scope outliers
+		scopeOutliers = new ArrayList<ScopeOutlier>();
+		for(SubSpaceOutlier subSpaceOutlier: result){
+			scopeOutliers.addAll(subSpaceOutlier.getScopeOutliers());
+		}
+		Collections.sort(scopeOutliers,new SubSpaceOutlier.ScopeOutlierComparator());
 		
 	}
 	
 	
-	public void rankSubSpaceOutliers(List<SubSpaceOutlier> subSpaceOutliers){
-		List<ScopeOutlier> sos = new ArrayList<ScopeOutlier>(); 
-		
-		for(SubSpaceOutlier subSpaceOutlier: subSpaceOutliers){
-			sos.addAll(subSpaceOutlier.getScopeOutliers());
-		}
-		
-		Collections.sort(sos,new SubSpaceOutlier.ScopeOutlierComparator());
-		
-		for(ScopeOutlier so: sos){
-			System.err.println(  so.print(encoder)  + so.getScore());
-		}
+	
+	
+	
+	
+	public List<ScopeOutlier> getScopeOutliers(){
+		return scopeOutliers;
 	}
-	
-	
 	
 	
 	
@@ -291,5 +304,54 @@ public class SubSpaceOutlierDetection {
 				
 				
 		return result;
+	}
+
+	
+	public OutlierDetector.BatchResult getBatchResult(
+			List<Datum> explanationData,
+			ScopeOutlier scopeOutlier){
+		
+		OutlierDetector.BatchResult or;
+		
+		List<DatumWithScore> inliners = new ArrayList<DatumWithScore>();
+		List<DatumWithScore> outliers = new ArrayList<DatumWithScore>();
+		
+		List<Integer> outlierTIDs = scopeOutlier.getOutlierTIDs();
+		List<Integer> inlinerTIDs = scopeOutlier.getInlinerTIDs();
+		
+		for(int i = 0; i < explanationData.size(); i++){
+			DatumWithScore datumWithScore = new DatumWithScore(explanationData.get(i),0);
+			if(outlierTIDs.contains(i)){
+				outliers.add(datumWithScore);
+			}else if(inlinerTIDs.contains(i)){
+				inliners.add(datumWithScore);
+			}else{
+				
+			}
+		}
+		or = new OutlierDetector.BatchResult(inliners,outliers);
+		
+		return or;
+	}
+	
+
+	@Override
+	public void train(List<Datum> data) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public double score(Datum datum) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	@Override
+	public double getZScoreEquivalent(double zscore) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

@@ -2,14 +2,9 @@ package macrobase.runtime.standalone.scoping;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.result.ColumnValue;
 
 public class SubSpaceOutlier {
 	/**
@@ -29,6 +24,22 @@ public class SubSpaceOutlier {
 		this.scopingDimensions = scopingDimensions;
 		this.metricDimensions = metricDimensions;
 	
+	}
+	
+	/**
+	 * Get the scoping dimensions
+	 * @return
+	 */
+	public List<Integer> getScopingDimensions(){
+		return scopingDimensions;
+	}
+	
+	/**
+	 * Get the metric dimensions
+	 * @return
+	 */
+	public List<Integer> getMetricDimensions(){
+		return metricDimensions;
 	}
 	
 	/**
@@ -69,7 +80,7 @@ public class SubSpaceOutlier {
 	}
 	
 	
-	class ScopeOutlier{
+	public class ScopeOutlier{
 		Unit scopeUnit;
 		Unit outlierUnit;
 		
@@ -93,16 +104,32 @@ public class SubSpaceOutlier {
 			}
 			//the smaller, the better
 			score = (double)outlierTIDs.size() / inlinerTIDs.size();
+			
+			
 		}
 		
 		public double getScore(){
 			return score;
 		}
 		
+		public List<Integer> getInlinerTIDs(){
+			return inlinerTIDs;
+		}
 		
+		public List<Integer> getOutlierTIDs(){
+			return outlierTIDs;
+		}
 		
+		public List<Integer> getScopingDimensions(){
+			return scopingDimensions;
+		}
+	
+		public List<Integer> getMetricDimensions(){
+			return metricDimensions;
+		}
 		public String print(DatumEncoder encoder){
-			return "Scope: " + scopeUnit.print(encoder) + " Outlier: " + outlierUnit.print(encoder);
+			return "Scope: " + scopeUnit.print(encoder) + " Outlier: " + outlierUnit.print(encoder)
+			+ " NumInliners: " + inlinerTIDs.size() + " NumOutliers: " + outlierTIDs.size();
 		}
 		
 		
