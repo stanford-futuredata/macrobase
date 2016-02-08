@@ -33,7 +33,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<StreamingStanda
 
         loader.connect(configuration.getDbUrl());
 
-        StreamingAnalyzer analyzer = new StreamingAnalyzer();
+        StreamingAnalyzer analyzer = new StreamingAnalyzer(configuration);
         analyzer.setMinInlierRatio(configuration.getMinInlierRatio());
         analyzer.setMinSupport(configuration.getMinSupport());
         analyzer.setTargetPercentile(configuration.getTargetPercentile());

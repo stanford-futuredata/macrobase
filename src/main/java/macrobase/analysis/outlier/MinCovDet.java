@@ -9,9 +9,11 @@ import java.util.Random;
 import java.util.Set;
 
 import com.codahale.metrics.Counter;
+
 import macrobase.MacroBase;
 import macrobase.datamodel.Datum;
 import macrobase.datamodel.HasMetrics;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
+import com.google.common.collect.Lists;
 
 public class MinCovDet extends OutlierDetector  {
     private static final Logger log = LoggerFactory.getLogger(MinCovDet.class);
@@ -75,9 +78,10 @@ public class MinCovDet extends OutlierDetector  {
     private RealMatrix inverseCov;
 
     private RealVector mean;
+    private List<Datum> sampledData;
 
     // efficient only when k << allData.size()
-    private List<Datum> chooseKRandom(List<Datum> allData, final int k) {
+    private List<Datum> chooseKRandom(List<Datum> allData, final int k, List<Datum> otherCoreData) {
         assert(k < allData.size());
 
         List<Datum> ret = new ArrayList<>();
@@ -91,6 +95,15 @@ public class MinCovDet extends OutlierDetector  {
         }
 
         assert(ret.size() == k);
+        sampledData = Lists.newArrayList(ret);
+        
+        // Add other core data as well, if available
+        if (otherCoreData != null) {
+        	for (Datum datum : otherCoreData) {
+        		ret.add(datum);
+        	}
+        }
+
         return ret;
     }
 
@@ -195,7 +208,7 @@ public class MinCovDet extends OutlierDetector  {
     }
 
     @Override
-    public void train(List<Datum> data) {
+    public void train(List<Datum> data, Object additionalData) {
         // for now, only handle multivariate case...
         assert(data.iterator().next().getMetrics().getDimension() == p);
         assert(p > 1);
@@ -204,7 +217,14 @@ public class MinCovDet extends OutlierDetector  {
 
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
-        List<? extends HasMetrics> initialSubset = chooseKRandom(data, h);
+        List<? extends HasMetrics> initialSubset;
+        if (additionalData != null) {
+        	@SuppressWarnings("unchecked")
+			List<Datum> otherExamples = (List<Datum>) additionalData;
+        	initialSubset = chooseKRandom(data, h, otherExamples);
+        } else {
+        	initialSubset = chooseKRandom(data, h, null);
+        }
         context.stop();
 
         context = meanComputation.time();
@@ -277,6 +297,10 @@ public class MinCovDet extends OutlierDetector  {
     public RealVector getMean() {
         return mean;
     }
+    
+    public List<Datum> getSampledData() {
+    	return sampledData;
+    }
 
     @Override
     public double getZScoreEquivalent(double zscore) {
@@ -286,4 +310,9 @@ public class MinCovDet extends OutlierDetector  {
         // https://en.wikipedia.org/wiki/Mahalanobis_distance#Normal_distributions
         return (new ChiSquaredDistribution(p)).inverseCumulativeProbability(cdf);
     }
+
+	@Override
+	public DetectorType getDetectorType() {
+		return DetectorType.MCD;
+	}
 }

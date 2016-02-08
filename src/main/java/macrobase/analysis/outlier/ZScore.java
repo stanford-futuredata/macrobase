@@ -8,6 +8,7 @@ import com.codahale.metrics.Timer;
 
 import macrobase.MacroBase;
 import macrobase.datamodel.Datum;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
 public class ZScore extends OutlierDetector {
     private double mean;
@@ -17,7 +18,7 @@ public class ZScore extends OutlierDetector {
     private final Timer stddevComputation = MacroBase.metrics.timer(name(ZScore.class, "stddevComputation"));
 
     @Override
-    public void train(List<Datum> data) {
+    public void train(List<Datum> data, Object additionalData) {
         double sum = 0;
 
         Timer.Context context = meanComputation.time();
@@ -48,4 +49,9 @@ public class ZScore extends OutlierDetector {
         // z-score is identity since we're literally calculating the z-score
         return zscore;
     }
+
+	@Override
+	public DetectorType getDetectorType() {
+		return DetectorType.ZSCORE;
+	}
 }

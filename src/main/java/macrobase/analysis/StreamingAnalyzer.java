@@ -2,8 +2,6 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -17,6 +15,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
@@ -96,6 +96,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     boolean doTrace;
     int numRuns = 40;
+    
+    CopyOnWriteArrayList<Double> perThreadMedians;
+    
+    public StreamingAnalyzer(BaseStandaloneConfiguration configuration) 
+    {
+    	super(configuration);
+        perThreadMedians = new CopyOnWriteArrayList<Double> ();
+    }
 
     class RunnableStreamingAnalysis implements Runnable {
     	List<Datum> data;
@@ -105,16 +113,20 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	String baseQuery;
     	DatumEncoder encoder;
     	List<ItemsetResult> itemsetResults;
+    	
+    	int threadId;
 
     	RunnableStreamingAnalysis(List<Datum> data, List<String> attributes,
     			List<String> lowMetrics, List<String> highMetrics, String baseQuery,
-    			DatumEncoder encoder) {
+    			DatumEncoder encoder, int threadId) {
     		this.data = data;
     		this.attributes = attributes;
     		this.lowMetrics = lowMetrics;
     		this.highMetrics = highMetrics;
     		this.baseQuery = baseQuery;
     		this.encoder = encoder;
+    		
+    		this.threadId = threadId;
     	}
     	
     	public List<ItemsetResult> getItemsetResults() {
@@ -122,12 +134,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	}
     	
         @Override
-	public void run() {
-                int tupleNo = 0;
-                long totODTrainingTime = 0;
-                long totSummarizationTrainingTime = 0;
-                long totScoringTime = 0;
-                long totSummarizationTime = 0;
+        public void run() {
+        	int tupleNo = 0;
+        	long totODTrainingTime = 0;
+        	long totSummarizationTrainingTime = 0;
+        	long totScoringTime = 0;
+        	long totSummarizationTime = 0;
 
 	        Stopwatch sw = Stopwatch.createUnstarted();
 	        Stopwatch tsw = Stopwatch.createUnstarted();
@@ -189,22 +201,22 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        totSummarizationTrainingTime = 0;
 	        totScoringTime = 0;
 	        totSummarizationTime = 0;
-
-                for (int i = 0; i < numRuns; i++) {
-	        for(Datum d: data) {
-	            inputReservoir.insert(d);
-
-	            if(tupleNo == warmupCount) {
-	            	sw.start();
-	                detector.train(inputReservoir.getReservoir());
-	                for(Datum id : inputReservoir.getReservoir()) {
-	                    scoreReservoir.insert(detector.score(id));
-	                }
-	                detector.updateRecentScoreList(scoreReservoir.getReservoir());
-	                sw.stop();
-	                sw.reset();
-	                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
-	            } else if(tupleNo >= warmupCount) {
+	        
+	        for (int i = 0; i < numRuns; i++) {
+		        for(Datum d: data) {
+		            inputReservoir.insert(d);
+	
+		            if(tupleNo == warmupCount) {
+		            	sw.start();
+		                detector.train(inputReservoir.getReservoir(), null);
+		                for(Datum id : inputReservoir.getReservoir()) {
+		                    scoreReservoir.insert(detector.score(id));
+		                }
+		                detector.updateRecentScoreList(scoreReservoir.getReservoir());
+		                sw.stop();
+		                sw.reset();
+		                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
+		            } else if(tupleNo >= warmupCount) {
 	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
 	                    analysisUpdater.updateIfNecessary(now, tupleNo);
@@ -222,11 +234,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                    } else {
 	                        streamingSummarizer.markInlier(d);
 	                    }
-	            }
-
-	            tupleNo += 1;
-	        }
-                }
+		            }
+	
+		            tupleNo += 1;
+		        }
+		    }
 
 	        sw.start();
 	        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
@@ -294,7 +306,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         for (int i = 0; i < numThreads; i++) {
         	RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
         			dataPartitioned.get(i), attributes, lowMetrics, highMetrics,
-        			baseQuery, encoder);
+        			baseQuery, encoder, i);
         	Thread t = new Thread(rsa);
         	t.start();
         	threads.add(t);

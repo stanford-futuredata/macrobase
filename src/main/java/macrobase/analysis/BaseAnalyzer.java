@@ -1,8 +1,8 @@
 package macrobase.analysis;
 
-import com.codahale.metrics.MetricRegistryListener;
 import macrobase.analysis.outlier.*;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
+
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.slf4j.Logger;

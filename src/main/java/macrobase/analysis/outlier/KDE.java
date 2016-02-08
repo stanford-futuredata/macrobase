@@ -1,8 +1,11 @@
 package macrobase.analysis.outlier;
 
 import com.google.gson.Gson;
+
 import macrobase.datamodel.Datum;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
+
 import org.apache.commons.math3.linear.*;
 
 import java.io.FileNotFoundException;
@@ -68,7 +71,7 @@ public class KDE extends OutlierDetector {
     }
 
     @Override
-    public void train(List<Datum> data) {
+    public void train(List<Datum> data, Object additionalData) {
         // Very rudimentary sampling, write something better in the future.
         densityPopulation = new ArrayList<Datum>(data);
         Collections.shuffle(densityPopulation);
@@ -94,6 +97,11 @@ public class KDE extends OutlierDetector {
     public double getZScoreEquivalent(double zscore) {
         throw new RuntimeException("ZScore equivalence is not implemented yet.");
     }
+
+	@Override
+	public DetectorType getDetectorType() {
+		return DetectorType.KDE;
+	}
 
 
 }

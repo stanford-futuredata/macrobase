@@ -6,8 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.codahale.metrics.Counter;
+
 import macrobase.MacroBase;
 import macrobase.datamodel.Datum;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +33,14 @@ public class MAD extends OutlierDetector {
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
 
     @Override
-    public void train(List<Datum> data) {
+    public void train(List<Datum> data, Object additionalData) {
         Timer.Context context = medianComputation.time();
 
         assert (data.get(0).getMetrics().getDimension() == 1);
         data.sort((x, y) -> Double.compare(x.getMetrics().getEntry(0),
                                            y.getMetrics().getEntry(0)));
+        
+        double medianToBeUsed;
 
         if (data.size() % 2 == 0) {
             median = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
@@ -45,11 +49,17 @@ public class MAD extends OutlierDetector {
             median = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
         }
         context.stop();
+        
+        if (additionalData != null) {
+        	medianToBeUsed = (Double) additionalData;
+        } else {
+        	medianToBeUsed = median;
+        }
 
         context = residualComputation.time();
         List<Double> residuals = new ArrayList<>(data.size());
         for (Datum d : data) {
-            residuals.add(Math.abs(d.getMetrics().getEntry(0) - median));
+            residuals.add(Math.abs(d.getMetrics().getEntry(0) - medianToBeUsed));
         }
         context.stop();
 
@@ -93,4 +103,13 @@ public class MAD extends OutlierDetector {
         log.trace("setting zscore of {} threshold to {}", zscore, ret);
         return ret;
     }
+
+	@Override
+	public DetectorType getDetectorType() {
+		return DetectorType.MAD;
+	}
+	
+	public double getMedian() {
+		return median;
+	}
 }

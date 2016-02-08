@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ import com.google.common.base.Stopwatch;
 
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 
 /**
  * Created by pbailis on 12/14/15.
@@ -46,8 +48,10 @@ public abstract class OutlierDetector {
             return outliers;
         }
     }
+    
+    public abstract BaseStandaloneConfiguration.DetectorType getDetectorType();
 
-    public abstract void train(List<Datum> data);
+    public abstract void train(List<Datum> data, Object additionalData);
     public abstract double score(Datum datum);
     public abstract double getZScoreEquivalent(double zscore);
 
@@ -84,7 +88,7 @@ public abstract class OutlierDetector {
     	Stopwatch sw = Stopwatch.createUnstarted();
     	log.debug("Starting training...");
     	sw.start();
-        train(data);
+        train(data, null);
         sw.stop();
         long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended training (time: {}ms)!", trainTime);
@@ -114,7 +118,7 @@ public abstract class OutlierDetector {
         Stopwatch sw = Stopwatch.createUnstarted();
     	log.debug("Starting training...");
     	sw.start();
-        train(data);
+        train(data, null);
         sw.stop();
         long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended training (time: {}ms)!", trainTime);
