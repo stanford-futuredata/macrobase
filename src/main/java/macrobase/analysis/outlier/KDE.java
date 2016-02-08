@@ -11,6 +11,7 @@ public class KDE extends OutlierDetector {
 
     public enum Bandwidth {
         NORMAL_SCALE,
+        OVERSHMOOTHED,
         MANUAL
     }
 
@@ -108,6 +109,12 @@ public class KDE extends OutlierDetector {
                     bandwidth.setEntry(d, d, dimensional_bandwidth);
                 }
                 break;
+            case OVERSHMOOTHED:
+                final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
+                final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
+                final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
+                RealMatrix covariance = this.getCovariance(data);
+                this.bandwidth = covariance.scalarMultiply(covarianceScale);
             case MANUAL:
                 break;
         }

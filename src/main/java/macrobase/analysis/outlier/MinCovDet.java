@@ -149,17 +149,6 @@ public class MinCovDet extends OutlierDetector  {
         return vec.mapDivide(data.size());
     }
 
-    private RealMatrix getCovariance(List<? extends HasMetrics> data) {
-        RealMatrix ret = new Array2DRowRealMatrix(data.size(), p);
-        int idx = 0;
-        for(HasMetrics d : data) {
-            ret.setRow(idx, d.getMetrics().toArray());
-            idx += 1;
-        }
-
-        return (new Covariance(ret)).getCovarianceMatrix();
-    }
-
     private List<MetricsWithScore> findKClosest(int k, List<? extends HasMetrics> data) {
         // todo: change back to guava priority queue
         List<MetricsWithScore> scores = new ArrayList<>();
