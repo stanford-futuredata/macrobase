@@ -7,7 +7,7 @@ targetHighMetrics: []
 outlierDetectorType: MCD
 
 dbUrl: postgres
-baseQuery: SELECT * FROM uk_road_accidents;
+baseQuery: SELECT * FROM uk_road_accidents LIMIT 10000;
 
 minSupport: 0.01
 minInlierRatio: 1
