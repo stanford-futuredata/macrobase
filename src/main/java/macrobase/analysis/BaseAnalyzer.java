@@ -90,10 +90,7 @@ abstract public class BaseAnalyzer {
                 return new ZScore();
             } else if(detectorType == BaseStandaloneConfiguration.DetectorType.KDE) {
             	log.info("Using KDE detector.");
-                double matrix_scale = 0.0004;  // Scale identity matrix by this much
-                RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
-                bandwidth = bandwidth.scalarMultiply(matrix_scale);
-                return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, bandwidth);
+                return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
             } else {
                 throw new RuntimeException("Unhandled detector class!"+ detectorType);
             }

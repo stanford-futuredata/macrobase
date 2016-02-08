@@ -8,6 +8,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
+import macrobase.datamodel.HasMetrics;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.stat.correlation.Covariance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,5 +143,17 @@ public abstract class OutlierDetector {
         long scoringTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended scoring (time: {}ms)!", scoringTime);
         return new BatchResult(inliers, outliers);
+    }
+
+    protected RealMatrix getCovariance(List<? extends HasMetrics> data) {
+        int rank = data.get(0).getMetrics().getDimension();
+        RealMatrix ret = new Array2DRowRealMatrix(data.size(), rank);
+        int index = 0;
+        for(HasMetrics d : data) {
+            ret.setRow(index, d.getMetrics().toArray());
+            index += 1;
+        }
+
+        return (new Covariance(ret)).getCovarianceMatrix();
     }
 }

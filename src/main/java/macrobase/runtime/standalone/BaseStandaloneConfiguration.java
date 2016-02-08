@@ -2,6 +2,7 @@ package macrobase.runtime.standalone;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import macrobase.ingest.DataLoader;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -19,6 +20,11 @@ public class BaseStandaloneConfiguration extends Configuration {
         KDE
     }
 
+    public enum DataLoaderType {
+        CSV_LOADER,
+        SQL_LOADER
+    }
+
     @JsonProperty
     private DetectorType outlierDetectorType;
 
@@ -30,6 +36,8 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     private String dbUser;
     private String dbPassword;
+
+    private DataLoaderType dataLoaderType;
 
     @NotEmpty
     private List<String> targetAttributes;
@@ -124,6 +132,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     public double getMinSupport() {
         return minSupport;
     }
+
+    @JsonProperty
+    public DataLoaderType getDataLoaderType() { return dataLoaderType; }
 
     @JsonProperty
     public DetectorType getDetectorType() { return outlierDetectorType; }

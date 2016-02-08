@@ -1,19 +1,19 @@
 package macrobase.analysis.outlier;
 
-import com.google.gson.Gson;
-import macrobase.datamodel.Datum;
-import macrobase.runtime.standalone.BaseStandaloneConfiguration;
-import org.apache.commons.math3.linear.*;
-
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import macrobase.datamodel.Datum;
+import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 public class KDE extends OutlierDetector {
 
+    public enum Bandwidth {
+        NORMAL_SCALE,
+        OVERSHMOOTHED,
+        MANUAL
+    }
 
     public enum Kernel {
         EPANECHNIKOV_MULTIPLICATIVE;
@@ -36,6 +36,15 @@ public class KDE extends OutlierDetector {
             }
         }
 
+        public double secondMoment(int dimension) {
+            switch (this) {
+                case EPANECHNIKOV_MULTIPLICATIVE:
+                    return Math.pow(0.2, dimension);
+                default:
+                    throw new RuntimeException("No second moment stored for this kernel");
+            }
+        }
+
         public double norm(int dimension) {
             switch (this) {
                 case EPANECHNIKOV_MULTIPLICATIVE:
@@ -52,10 +61,71 @@ public class KDE extends OutlierDetector {
     private RealMatrix bandwidthToNegativeHalf;
     private double scoreScalingFactor;
     private double[] allScores;
+    private Bandwidth bandwidthType;
+    private double proportionOfDataToUse;
 
-    public KDE(Kernel kernel, RealMatrix bandwidth) {
+    public KDE(Kernel kernel, Bandwidth bandwidthType) {
         this.kernel = kernel;
+        this.bandwidthType = bandwidthType;
+        // Pick 1 % of the data, randomly
+        this.proportionOfDataToUse = 0.01;
+    }
+
+    /**
+     * Manually set bandwidth of KDE
+     * @param bandwidth
+     */
+    public void setBandwidth(RealMatrix bandwidth) {
         this.bandwidth = bandwidth;
+        calculateBandwidthAncillaries();
+    }
+
+    /**
+     * Calculates bandwidth matrix based on the data that KDE should run on
+     * @param data
+     */
+    private void setBandwidth(List<Datum> data) {
+        final int metricsDimensions = data.get(0).getMetrics().getDimension();
+        RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
+        // double matrix_scale = 0.1;  // Scale identity matrix by this much
+        // bandwidth = bandwidth.scalarMultiply(matrix_scale);
+        switch (bandwidthType) {
+            case NORMAL_SCALE:
+                final double standardNormalQunatileDifference = 1.349;
+                int dimensions = data.get(0).getMetrics().getDimension();
+                for (int d=0; d<dimensions; d++) {
+                    int size = data.size();
+                    double[] dataIn1D = new double[size];
+                    for (int i=0; i<size; i++) {
+                        dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
+                    }
+                    Percentile quantile = new Percentile();
+                    final double twentyfive = quantile.evaluate(dataIn1D, 25);
+                    final double seventyfive = quantile.evaluate(dataIn1D, 75);
+                    final double interQuantileDeviation = (seventyfive - twentyfive) / standardNormalQunatileDifference;
+                    final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
+                    final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
+                    double dimensional_bandwidth = Math.pow(constNumerator / constDenominator, 0.2) * interQuantileDeviation;
+                    bandwidth.setEntry(d, d, dimensional_bandwidth);
+                }
+                break;
+            case OVERSHMOOTHED:
+                final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
+                final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
+                final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
+                RealMatrix covariance = this.getCovariance(data);
+                this.bandwidth = covariance.scalarMultiply(covarianceScale);
+            case MANUAL:
+                break;
+        }
+
+        if (bandwidthType != Bandwidth.MANUAL) {
+            this.bandwidth = bandwidth;
+            this.calculateBandwidthAncillaries();
+        }
+    }
+
+    private void calculateBandwidthAncillaries() {
         RealMatrix inverseBandwidth;
         if (bandwidth.getColumnDimension() > 1) {
             inverseBandwidth = MatrixUtils.blockInverse(bandwidth, (bandwidth.getColumnDimension() - 1) / 2);
@@ -65,17 +135,19 @@ public class KDE extends OutlierDetector {
             inverseBandwidth.setEntry(0, 0, 1.0/inverseBandwidth.getEntry(0, 0));
         }
         this.bandwidthToNegativeHalf = (new EigenDecomposition(inverseBandwidth)).getSquareRoot();
+
     }
 
     @Override
     public void train(List<Datum> data) {
+        this.setBandwidth(data);
+
         // Very rudimentary sampling, write something better in the future.
         densityPopulation = new ArrayList<Datum>(data);
         Collections.shuffle(densityPopulation);
         double bandwidthDeterminantSqrt = Math.sqrt((new EigenDecomposition(bandwidth)).getDeterminant());
 
-        // pick 1% of the data (1/100 is a randomly chosen number)
-        this.densityPopulation = densityPopulation.subList(0, (int) (0.01 * densityPopulation.size()));
+        this.densityPopulation = densityPopulation.subList(0, (int) (this.proportionOfDataToUse * densityPopulation.size()));
         this.scoreScalingFactor = 1.0 / (bandwidthDeterminantSqrt * densityPopulation.size());
     }
 
@@ -87,7 +159,7 @@ public class KDE extends OutlierDetector {
             double _diff = kernel.density(this.bandwidthToNegativeHalf.operate(difference));
             _score += _diff;
         }
-        return _score * this.scoreScalingFactor;
+        return - _score * this.scoreScalingFactor;
     }
 
     @Override

@@ -130,6 +130,11 @@
       <version>3.2</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
       <groupId>com.esotericsoftware</groupId>
       <artifactId>kryo</artifactId>
       <version>3.0.3</version>

@@ -2,35 +2,13 @@
 Plots a scatter plot of 2 metrics provided.
 Data could be given from postgres or a csv file.
 """
+from matplotlib.colors import LogNorm
 import argparse
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
-import psycopg2
-import sys
-
-
-def add_db_args(parser):
-  parser.add_argument('--db-user', default='postgres')
-  parser.add_argument('--db-name', default='postgres')
-  parser.add_argument('--db-password')
-  parser.add_argument('--db-host', default='localhost')
-  parser.add_argument('--db-port', type=int)
-
-
-def set_db_connection(args):
-  def _parse_arg(**kwarg):
-    [(key, value)] = kwarg.items()
-    if value:
-      return "{key}='{value}'".format(key=key, value=value)
-    return ""
-
-  args.db_connection = psycopg2.connect(" ".join([
-    _parse_arg(dbname=args.db_name),
-    _parse_arg(port=args.db_port),
-    _parse_arg(user=args.db_user),
-    _parse_arg(password=args.db_password),
-    _parse_arg(host=args.db_host)]))
+from common import add_db_args
+from common import set_db_connection
 
 
 def parse_args():
@@ -43,18 +21,33 @@ def parse_args():
   plot_type_group = parser.add_mutually_exclusive_group(required=True)
   plot_type_group.add_argument('--scatter', nargs=2)
   plot_type_group.add_argument('--histogram')
+  plot_type_group.add_argument('--hist2d', nargs=2)
 
   parser.add_argument('--histogram-bins', type=int, default=100)
   parser.add_argument('--labels',
                       help='Labels for labeled data (different colors on the '
                            'plot)')
   parser.add_argument('--miscellaneous-cutoff', type=float, default=0.001,
-                      help='Part of the data, that should a label have in order to be show in the plot')
+                      help='Part of the data, that should a label have in '
+                           'order to be show in the plot')
+  parser.add_argument('--do-not-scale-down', action='store_false',
+                      dest='scale_down')
+  parser.add_argument('--scale-down', action='store_true')
   add_db_args(parser)
   args = parser.parse_args()
   if args.csv is None:
     set_db_connection(args)
   return args
+
+
+def _plot_hist2d(args):
+  plt.hist2d(data[args.hist2d[0]],
+             data[args.hist2d[1]],
+             bins=args.histogram_bins,
+             norm=LogNorm())
+  plt.colorbar()
+  plt.xlabel(args.hist2d[0])
+  plt.ylabel(args.hist2d[1])
 
 
 if __name__ == '__main__':
@@ -121,7 +114,10 @@ if __name__ == '__main__':
       plt.hist(data[args.histogram], args.histogram_bins,
                label=args.histogram)
     plt.xlabel(args.histogram)
-    plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
+    if args.scale_down:
+      plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
+  elif args.hist2d is not None:
+    _plot_hist2d(args)
 
   plt.legend()
   plt.show()

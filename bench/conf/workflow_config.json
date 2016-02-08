@@ -15,19 +15,17 @@
     ]
   },
   {
-    "targetLowMetrics": [],
+    "targetLowMetrics": [ "data_count_minutes" ],
     "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
       "userid"
     ],
     "taskName": "cmtDatasetSimple",
-    "targetHighMetrics": [
-      "data_count_minutes"
-    ]
+    "targetHighMetrics": []
   },
   {
-    "targetLowMetrics": [],
+    "targetLowMetrics": [ "data_count_minutes" ],
     "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": true,
     "targetAttributes": [
@@ -40,7 +38,6 @@
     ],
     "taskName": "cmtDatasetComplex",
     "targetHighMetrics": [
-      "data_count_minutes",
       "data_count_accel_samples",
       "data_count_netloc_samples",
       "data_count_gps_samples",
@@ -59,7 +56,8 @@
     "taskName": "accidentsSimple",
     "targetHighMetrics": [
       "number_of_casualties"
-    ]
+    ],
+    "minInlierRatio": 1.0
   },
   {
     "targetLowMetrics": [],
@@ -72,8 +70,11 @@
     ],
     "taskName": "accidentsComplex",
     "targetHighMetrics": [
-      "number_of_casualties"
-    ]
+      "number_of_casualties",
+      "accident_severity",
+      "number_of_vehicles"
+    ],
+    "minInlierRatio": 1.0
   },
   {
     "targetLowMetrics": [],
@@ -176,19 +177,17 @@
     ]
   },
   {
-    "targetLowMetrics": [],
+    "targetLowMetrics": [ "data_count_minutes" ],
     "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
       "userid"
     ],
     "taskName": "cmtDatasetSimpleStreaming",
-    "targetHighMetrics": [
-      "data_count_minutes"
-    ]
+    "targetHighMetrics": []
   },
   {
-    "targetLowMetrics": [],
+    "targetLowMetrics":  [ "data_count_minutes" ],
     "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
     "isBatchJob": false,
     "targetAttributes": [
@@ -201,7 +200,6 @@
     ],
     "taskName": "cmtDatasetComplexStreaming",
     "targetHighMetrics": [
-      "data_count_minutes",
       "data_count_accel_samples",
       "data_count_netloc_samples",
       "data_count_gps_samples",
@@ -219,7 +217,8 @@
     "taskName": "accidentsSimpleStreaming",
     "targetHighMetrics": [
       "number_of_casualties"
-    ]
+    ],
+    "minInlierRatio": 1.0
   },
  {
     "targetLowMetrics": [],
@@ -232,9 +231,12 @@
     ],
     "taskName": "accidentsComplexStreaming",
     "targetHighMetrics": [
-      "number_of_casualties"
-    ]
-  },
+      "number_of_casualties",
+      "accident_severity",
+      "number_of_vehicles"
+    ],
+   "minInlierRatio": 1.0
+ },
   {
     "targetLowMetrics": [],
     "baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
