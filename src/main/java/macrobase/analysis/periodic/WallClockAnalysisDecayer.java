@@ -29,7 +29,7 @@ public class WallClockAnalysisDecayer extends AbstractWallClockPeriodicUpdater {
     }
 
     @Override
-    void updatePeriod() {
+    void updatePeriod(Object additionalData) {
         log.trace("Decaying summarizers due to period: {} tuples processed", getCurrentPeriodTime());
 
         AnalysisDecayProcedure.updatePeriod(inputReservoir,

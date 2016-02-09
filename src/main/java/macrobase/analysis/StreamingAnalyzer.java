@@ -1,8 +1,11 @@
 package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 
 import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.outlier.MAD;
+import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
 import macrobase.analysis.periodic.AbstractPeriodicUpdater;
@@ -16,6 +19,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
+import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,11 +102,27 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     int numRuns = 40;
     
     CopyOnWriteArrayList<Double> perThreadMedians;
+    CopyOnWriteArrayList<List<Datum>> perThreadSampledData;
     
     public StreamingAnalyzer(BaseStandaloneConfiguration configuration) 
     {
     	super(configuration);
         perThreadMedians = new CopyOnWriteArrayList<Double> ();
+    }
+    
+    public static double getMedian(List<Double> data) {
+    	double median;
+
+        data.sort((x, y) -> Double.compare(x, y));
+        
+        if (data.size() % 2 == 0) {
+            median = (data.get(data.size() / 2 - 1) +
+                      data.get(data.size() / 2 + 1)) / 2;
+        } else {
+            median = data.get((int) Math.ceil(data.size() / 2));
+        }
+        
+        return median;
     }
 
     class RunnableStreamingAnalysis implements Runnable {
@@ -202,6 +222,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        totScoringTime = 0;
 	        totSummarizationTime = 0;
 	        
+	        Object additionalData = null;
+	        
 	        for (int i = 0; i < numRuns; i++) {
 		        for(Datum d: data) {
 		            inputReservoir.insert(d);
@@ -212,6 +234,13 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		                for(Datum id : inputReservoir.getReservoir()) {
 		                    scoreReservoir.insert(detector.score(id));
 		                }
+		                
+		                if (detector.getDetectorType() == DetectorType.MAD) {
+		                	perThreadMedians.set(threadId, ((MAD) detector).getMedian());
+		                } else if (detector.getDetectorType() == DetectorType.MCD) {
+		                	perThreadSampledData.set(threadId, ((MinCovDet) detector).getSampledData());
+		                }
+		                
 		                detector.updateRecentScoreList(scoreReservoir.getReservoir());
 		                sw.stop();
 		                sw.reset();
@@ -219,8 +248,30 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		            } else if(tupleNo >= warmupCount) {
 	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
-	                    analysisUpdater.updateIfNecessary(now, tupleNo);
-	                    modelUpdater.updateIfNecessary(now, tupleNo);
+	                    analysisUpdater.updateIfNecessary(now, tupleNo, null);
+	                    // If model is updated, then update the shared data
+	                    if (modelUpdater.updateIfNecessary(now, tupleNo, additionalData)) {
+	                    	if (detector.getDetectorType() == DetectorType.MAD) {
+			                	perThreadMedians.set(threadId, ((MAD) detector).getMedian());
+			                } else if (detector.getDetectorType() == DetectorType.MCD) {
+			                	perThreadSampledData.set(threadId, ((MinCovDet) detector).getSampledData());
+			                }
+	                    	
+	                    	if (detector.getDetectorType() == DetectorType.MAD) {
+		                    	List<Double> perThreadMediansCopy = Lists.newArrayList(perThreadMedians);
+		                    	additionalData = getMedian(perThreadMediansCopy);
+		                    } else if (detector.getDetectorType() == DetectorType.MCD) {
+		                    	List<Datum> sampledData = new ArrayList<Datum> ();
+		                    	for (int j = 0; j < numThreads; j++) {
+		                    		if (j != threadId) {
+		                    			for (Datum datum : perThreadSampledData.get(j)) {
+		                    				sampledData.add(datum);
+		                    			}
+		                    		}
+		                    	}
+		                    	additionalData = sampledData;
+		                    }
+	                    }
 	                    double score = detector.score(d);
 
 	                    if(scoreReservoir != null) {
@@ -295,6 +346,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         sw.reset();
 
         log.debug("...ended loading (time: {}ms)!", loadTime);
+        
+        for (int i = 0; i < numThreads; i++) {
+        	perThreadMedians.add(0.0);
+        	perThreadSampledData.add(new ArrayList<Datum> ());
+        }
         
         List<Thread> threads = new ArrayList<Thread>();
         List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();

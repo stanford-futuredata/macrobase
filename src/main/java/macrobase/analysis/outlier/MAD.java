@@ -31,23 +31,30 @@ public class MAD extends OutlierDetector {
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
+    
+    public static double getMedian(List<Datum> data) {
+    	double median;
 
-    @Override
-    public void train(List<Datum> data, Object additionalData) {
-        Timer.Context context = medianComputation.time();
-
-        assert (data.get(0).getMetrics().getDimension() == 1);
+    	assert (data.get(0).getMetrics().getDimension() == 1);
         data.sort((x, y) -> Double.compare(x.getMetrics().getEntry(0),
                                            y.getMetrics().getEntry(0)));
         
-        double medianToBeUsed;
-
         if (data.size() % 2 == 0) {
             median = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
                       data.get(data.size() / 2 + 1).getMetrics().getEntry(0)) / 2;
         } else {
             median = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
         }
+        
+        return median;
+    }
+
+    @Override
+    public void train(List<Datum> data, Object additionalData) {
+        Timer.Context context = medianComputation.time();
+        
+        double medianToBeUsed;
+        median = getMedian(data);
         context.stop();
         
         if (additionalData != null) {

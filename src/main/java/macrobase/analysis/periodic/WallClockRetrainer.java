@@ -26,11 +26,12 @@ public class WallClockRetrainer extends AbstractWallClockPeriodicUpdater {
     }
 
     @Override
-    void updatePeriod() {
+    void updatePeriod(Object additionalData) {
         log.trace("Retraining detectors due to period: {} tuples processed", getCurrentPeriodTime());
 
         RetrainingProcedure.updatePeriod(inputReservoir,
                                          detector,
-                                         itemsets);
+                                         itemsets,
+                                         additionalData);
     }
 }
