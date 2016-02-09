@@ -108,6 +108,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     {
     	super(configuration);
         perThreadMedians = new CopyOnWriteArrayList<Double> ();
+        perThreadSampledData = new CopyOnWriteArrayList<List<Datum>> ();
     }
     
     public static double getMedian(List<Double> data) {
