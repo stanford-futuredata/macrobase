@@ -118,7 +118,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         if (data.size() % 2 == 0) {
             median = (data.get(data.size() / 2 - 1) +
-                      data.get(data.size() / 2 + 1)) / 2;
+                      data.get(data.size() / 2)) / 2;
         } else {
             median = data.get((int) Math.ceil(data.size() / 2));
         }
