@@ -5,7 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from common import add_db_args
+from common import add_plot_limit_args
 from common import set_db_connection
+from common import set_plot_limits
 from matplotlib.colors import LogNorm
 
 
@@ -17,7 +19,7 @@ def parse_args():
   parser.add_argument('--estimates', type=argparse.FileType('r'),
                       help='File with inliers & outliers with their scores '
                            'outputted by macrobase')
-  parser.add_argument('--x-limits', nargs=2, type=int)
+  add_plot_limit_args(parser)
   parser.add_argument('--hist2d', choices=['inliers', 'outliers'],
                       help='Plots 2d histogram of outliers or inliers')
   add_db_args(parser)
@@ -103,6 +105,5 @@ if __name__ == '__main__':
     print [float(x) for x in data[args.columns[0]][:20]]
     (n, bins, patches) = plt.hist([float(x) for x in data[args.columns[0]]],
                                   args.histogram_bins)
-  if args.x_limits:
-    plt.xlim(args.x_limits)
+  set_plot_limits(plt, args)
   plt.show()

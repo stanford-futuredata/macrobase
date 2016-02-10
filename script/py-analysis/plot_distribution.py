@@ -8,7 +8,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 from common import add_db_args
+from common import add_plot_limit_args
 from common import set_db_connection
+from common import set_plot_limits
 
 
 def parse_args():
@@ -33,6 +35,7 @@ def parse_args():
   parser.add_argument('--do-not-scale-down', action='store_false',
                       dest='scale_down')
   parser.add_argument('--scale-down', action='store_true')
+  add_plot_limit_args(parser)
   add_db_args(parser)
   args = parser.parse_args()
   if args.csv is None:
@@ -120,4 +123,5 @@ if __name__ == '__main__':
     _plot_hist2d(args)
 
   plt.legend()
+  set_plot_limits(plt, args)
   plt.show()
