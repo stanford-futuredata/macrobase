@@ -66,7 +66,7 @@ public class SubSpace {
 	 * Return 
 	 * @param other
 	 * @param total
-	 * @param tau
+	 * @param tau the minimum threshold for a unit to be considered dense
 	 * @return
 	 */
 	public SubSpace join(SubSpace other,int total, double tau){
