@@ -48,6 +48,7 @@ def parse_output_file(filename):
                 try:
                     [parameter_type, parameter_value] = \
                         parameters_description.split(" = ")
+                    parameter_value = float(parameter_value)
                     if parameter_type not in parsed_results:
                         parsed_results[parameter_type] = dict()
                         parsed_results[parameter_type][workload_name] = dict()
