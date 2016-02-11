@@ -11,19 +11,20 @@ from common import set_plot_limits
 from matplotlib.colors import LogNorm
 
 
-def parse_args():
+def parse_args(*argument_list):
   parser = argparse.ArgumentParser()
   parser.add_argument('--table', default='car_data_demo')
   parser.add_argument('--columns', nargs=1)
-  parser.add_argument('--histogram-bins', default=10000, type=int)
+  parser.add_argument('--histogram-bins', default=100, type=int)
   parser.add_argument('--estimates', type=argparse.FileType('r'),
                       help='File with inliers & outliers with their scores '
                            'outputted by macrobase')
-  add_plot_limit_args(parser)
   parser.add_argument('--hist2d', choices=['inliers', 'outliers'],
                       help='Plots 2d histogram of outliers or inliers')
+  parser.add_argument('--savefig')
+  add_plot_limit_args(parser)
   add_db_args(parser)
-  args = parser.parse_args()
+  args = parser.parse_args(*argument_list)
   if args.estimates is None:
     set_db_connection(args)
   return args
@@ -47,18 +48,7 @@ def format_datum(datum_with_score):
   return data + [datum_with_score['score']]
 
 
-def _plot_hist2d(args):
-  plt.hist2d(data[args.hist2d[0]],
-             data[args.hist2d[1]],
-             bins=args.histogram_bins,
-             norm=LogNorm())
-  plt.colorbar()
-  plt.xlabel(args.hist2d[0])
-  plt.ylabel(args.hist2d[1])
-
-
-if __name__ == '__main__':
-  args = parse_args()
+def plot_estimator(args):
   if args.hist2d:
     estimates = json.load(args.estimates)
     data = np.array([format_datum(datum)
@@ -88,7 +78,6 @@ if __name__ == '__main__':
     # plt.scatter(X, scaledY)
     plt.plot(X, scaledY, color='magenta', label='est distribution', lw=1.1)
     plt.legend(loc='upper left')
-    plt.show()
   else:
     cursor = args.db_connection.cursor()
     cursor.execute("select relname from pg_class "
@@ -106,4 +95,13 @@ if __name__ == '__main__':
     (n, bins, patches) = plt.hist([float(x) for x in data[args.columns[0]]],
                                   args.histogram_bins)
   set_plot_limits(plt, args)
-  plt.show()
+  if args.savefig is not None:
+    plt.savefig(args.savefig, dpi=320)
+    plt.clf()
+  else:
+    plt.show()
+
+
+if __name__ == '__main__':
+  args = parse_args()
+  plot_estimator(args)

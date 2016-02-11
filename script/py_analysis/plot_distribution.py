@@ -13,7 +13,7 @@ from common import set_db_connection
 from common import set_plot_limits
 
 
-def parse_args():
+def parse_args(*argument_list):
   parser = argparse.ArgumentParser()
 
   source_group = parser.add_mutually_exclusive_group(required=True)
@@ -35,15 +35,18 @@ def parse_args():
   parser.add_argument('--do-not-scale-down', action='store_false',
                       dest='scale_down')
   parser.add_argument('--scale-down', action='store_true')
+  parser.add_argument('--savefig')
   add_plot_limit_args(parser)
   add_db_args(parser)
-  args = parser.parse_args()
+  args = parser.parse_args(*argument_list)
   if args.csv is None:
     set_db_connection(args)
   return args
 
 
-def _plot_hist2d(args):
+def _plot_hist2d(data, args):
+  args.data[args.hist2d[0]]
+  args.data[args.hist2d[1]]
   plt.hist2d(data[args.hist2d[0]],
              data[args.hist2d[1]],
              bins=args.histogram_bins,
@@ -53,8 +56,7 @@ def _plot_hist2d(args):
   plt.ylabel(args.hist2d[1])
 
 
-if __name__ == '__main__':
-  args = parse_args()
+def plot_distribution(args):
   if args.csv is None:
     cursor = args.db_connection.cursor()
     cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")  # noqa
@@ -67,6 +69,9 @@ if __name__ == '__main__':
     data = pd.DataFrame(cursor.fetchall(), columns=colnames)
   else:
     data = pd.read_csv(args.csv)
+
+  # Set args.data, so we can pass only args to functions
+  args.data = data
 
   data_size = data.shape[0]
 
@@ -120,8 +125,16 @@ if __name__ == '__main__':
     if args.scale_down:
       plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
   elif args.hist2d is not None:
-    _plot_hist2d(args)
+    _plot_hist2d(data, args)
 
   plt.legend()
   set_plot_limits(plt, args)
-  plt.show()
+  if args.savefig is not None:
+    plt.savefig(args.savefig, dpi=320)
+    plt.clf()
+  else:
+    plt.show()
+
+if __name__ == '__main__':
+  args = parse_args()
+  plot_distribution(args)
