@@ -2,8 +2,6 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -26,6 +24,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
@@ -45,6 +44,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     private double minRatio;
     private Integer outlierItemSummarySize;
     private Integer inlierItemSummarySize;
+    
+    private Semaphore startSemaphore;
+    private Semaphore endSemaphore;
 
     public void setModelRefreshPeriod(Integer modelRefreshPeriod) {
         this.modelRefreshPeriod = modelRefreshPeriod;
@@ -122,12 +124,19 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	}
     	
         @Override
-	public void run() {
-                int tupleNo = 0;
-                long totODTrainingTime = 0;
-                long totSummarizationTrainingTime = 0;
-                long totScoringTime = 0;
-                long totSummarizationTime = 0;
+        public void run() {
+            int tupleNo = 0;
+            long totODTrainingTime = 0;
+            long totSummarizationTrainingTime = 0;
+            long totScoringTime = 0;
+            long totSummarizationTime = 0;
+            
+            try {
+				startSemaphore.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
 	        Stopwatch sw = Stopwatch.createUnstarted();
 	        Stopwatch tsw = Stopwatch.createUnstarted();
@@ -248,6 +257,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        log.debug("Number of itemsets: {}", isr.size());
 	        
 	        this.itemsetResults = isr;
+	        endSemaphore.release();
 		}
     	
     }
@@ -287,6 +297,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         List<Thread> threads = new ArrayList<Thread>();
         List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
         
+        startSemaphore = new Semaphore(0);
+        endSemaphore = new Semaphore(0);
+        
         Stopwatch tsw = Stopwatch.createUnstarted();
         tsw.start();
         
@@ -300,9 +313,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	threads.add(t);
         	rsas.add(rsa);
         }
+        
+        startSemaphore.release(numThreads);
+        endSemaphore.acquire(numThreads);
 
         for (int i = 0; i < numThreads; i++) {
-        	threads.get(i).join();
         	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
         		isr.add(itemsetResult);
         	}
