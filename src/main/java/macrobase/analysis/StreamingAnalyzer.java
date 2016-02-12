@@ -97,7 +97,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     boolean doTrace;
-    int numRuns = 10000;
+    int numRuns = 100000;
 
     class RunnableStreamingAnalysis implements Runnable {
     	List<Datum> data;
@@ -107,16 +107,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	String baseQuery;
     	DatumEncoder encoder;
     	List<ItemsetResult> itemsetResults;
+        int numThreads;
 
-    	RunnableStreamingAnalysis(List<Datum> data, List<String> attributes,
-    			List<String> lowMetrics, List<String> highMetrics, String baseQuery,
-    			DatumEncoder encoder) {
-    		this.data = data;
-    		this.attributes = attributes;
-    		this.lowMetrics = lowMetrics;
-    		this.highMetrics = highMetrics;
-    		this.baseQuery = baseQuery;
-    		this.encoder = encoder;
+    	RunnableStreamingAnalysis(int numThreads) {
+                this.numThreads = numThreads;
     	}
     	
     	public List<ItemsetResult> getItemsetResults() {
@@ -125,158 +119,27 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	
         @Override
         public void run() {
-            int tupleNo = 0;
-            long totODTrainingTime = 0;
-            long totSummarizationTrainingTime = 0;
-            long totScoringTime = 0;
-            long totSummarizationTime = 0;
-            
+            int a = 1;
+            Stopwatch sw = Stopwatch.createUnstarted();
+            Stopwatch tsw = Stopwatch.createUnstarted();
+            tsw.start();
             try {
-				startSemaphore.acquire();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-	        Stopwatch sw = Stopwatch.createUnstarted();
-	        Stopwatch tsw = Stopwatch.createUnstarted();
-
-	        // OUTLIER ANALYSIS
-	        tsw.start();
-
-		sw.start();
-	        int metricsDimensions = lowMetrics.size() + highMetrics.size();
-	        OutlierDetector detector = constructDetector(metricsDimensions);
-
-	        ExponentiallyBiasedAChao<Datum> inputReservoir =
-	                new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
-
-	        ExponentiallyBiasedAChao<Double> scoreReservoir = null;
-
-	        if(forceUsePercentile) {
-	            scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
-	        }
-
-	        ExponentiallyDecayingEmergingItemsets streamingSummarizer =
-	                new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
-	                                                          outlierItemSummarySize,
-	                                                          minSupportOutlier,
-	                                                          minRatio,
-	                                                          decayRate);
-
-	        AbstractPeriodicUpdater analysisUpdater;
-	        if(useRealTimePeriod) {
-	            analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
-	                                                                 summaryPeriod,
-	                                                                 inputReservoir,
-	                                                                 scoreReservoir,
-	                                                                 detector,
-	                                                                 streamingSummarizer);
-	        } else {
-	            analysisUpdater = new TupleAnalysisDecayer(summaryPeriod,
-	                                                             inputReservoir,
-	                                                             scoreReservoir,
-	                                                             detector,
-	                                                             streamingSummarizer);
-	        }
-
-	        AbstractPeriodicUpdater modelUpdater;
-	        if(useRealTimePeriod) {
-	            modelUpdater = new WallClockRetrainer(System.currentTimeMillis(),
-	                                                        modelRefreshPeriod,
-	                                                        inputReservoir,
-	                                                        detector,
-	                                                        streamingSummarizer);
-	        } else {
-	            modelUpdater = new TupleBasedRetrainer(modelRefreshPeriod,
-	                                                         inputReservoir,
-	                                                         detector,
-	                                                         streamingSummarizer);
-	        }
-		sw.stop();
-		log.debug("...ended initialization (time: {}ms)!", (sw.elapsed(TimeUnit.MILLISECONDS)));
-		sw.reset();
-
-	        tupleNo = 0;
-	        totODTrainingTime = 0;
-	        totSummarizationTrainingTime = 0;
-	        totScoringTime = 0;
-	        totSummarizationTime = 0;
-
-                for (int i = 0; i < numRuns; i++) {
-	        for(Datum d: data) {
-	            inputReservoir.insert(d);
-
-	            if(tupleNo == warmupCount) {
-	            	sw.start();
-	                detector.train(inputReservoir.getReservoir());
-	                for(Datum id : inputReservoir.getReservoir()) {
-	                    scoreReservoir.insert(detector.score(id));
-	                }
-	                detector.updateRecentScoreList(scoreReservoir.getReservoir());
-	                sw.stop();
-	                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
-                        sw.reset();
-	            } else if(tupleNo >= warmupCount) {
-	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
-
-			    sw.start();
-	                    analysisUpdater.updateIfNecessary(now, tupleNo);
-	                    modelUpdater.updateIfNecessary(now, tupleNo);
-			    sw.stop();
-			    totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-			    sw.reset();
-
-			    sw.start();
-	                    double score = detector.score(d);
-
-	                    if(scoreReservoir != null) {
-	                        scoreReservoir.insert(score);
-	                    }
-			    sw.stop();
-			    totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
-			    sw.reset();
-
-			    sw.start();
-	                    if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-	                       forceUsePercentile && detector.isPercentileOutlier(score,
-	                                                                          TARGET_PERCENTILE)) {
-	                        streamingSummarizer.markOutlier(d);
-	                    } else {
-	                        streamingSummarizer.markInlier(d);
-	                    }
-			    sw.stop();
-			    totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-			    sw.reset();
-	            }
-
-	            tupleNo += 1;
-	        }
-                }
-
-	        sw.start();
-	        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
-	        sw.stop();
-	        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
-	        sw.reset();
-	        tsw.stop();
-	        
-	        double tuplesPerSecond = ((double) data.size() * numRuns) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
-	        tuplesPerSecond *= 1000000;
-			
-	        log.debug("...ended OD training (time: {}ms)!", (totODTrainingTime / 1000) + 1);
-	        log.debug("...ended summarization training (time: {}ms)!", (totSummarizationTrainingTime / 1000) + 1);
-	        log.debug("...ended scoring (time: {}ms)!", (totScoringTime / 1000) + 1);
-	        log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
-	        log.debug("...ended total (time: {}ms)!", (tsw.elapsed(TimeUnit.MICROSECONDS) / 1000) + 1);
-	        log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
-
-	        log.debug("Number of itemsets: {}", isr.size());
-	        
-	        this.itemsetResults = isr;
-	        endSemaphore.release();
-		}
-    	
+                startSemaphore.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            sw.start();
+            long numIterations = (1000000000 / numThreads);
+            for (long i = 0; i < numIterations; i++) {
+              a *= i;
+              a -= i;
+            }
+            sw.stop();
+            log.debug("Only-computation time: {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
+            endSemaphore.release();
+            tsw.stop();
+            log.debug("Total time: {}ms", tsw.elapsed(TimeUnit.MILLISECONDS));
+        }
     }
 
     public AnalysisResult analyzeOnePass(SQLLoader loader,
@@ -286,63 +149,26 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                               String baseQuery) throws SQLException, IOException, InterruptedException {
     	DatumEncoder encoder = new DatumEncoder();
 
-        Stopwatch sw = Stopwatch.createUnstarted();
-    	log.debug("Starting loading...");
-        sw.start();
-        List<Datum> data;
-		data = loader.getData(encoder,
-			                  attributes,
-			                  lowMetrics,
-			                  highMetrics,
-			                  baseQuery);
-	    Collections.shuffle(data);
-	    
-	    List<ArrayList<Datum>> dataPartitioned = new ArrayList<ArrayList<Datum>>(numThreads);
-	    for (int i = 0; i < numThreads; i++) {
-	    	dataPartitioned.add(new ArrayList<Datum> ());
-	    }
-	    for (int i = 0; i < data.size(); i++) {
-	    	dataPartitioned.get(i % numThreads).add(data.get(i));
-	    }
-        sw.stop();
+        Stopwatch tsw = Stopwatch.createUnstarted();
+    	tsw.start();
 
-        long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
-        sw.reset();
-
-        log.debug("...ended loading (time: {}ms)!", loadTime);
-        
-        List<Thread> threads = new ArrayList<Thread>();
-        List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
-        
         startSemaphore = new Semaphore(0);
         endSemaphore = new Semaphore(0);
-        
-        Stopwatch tsw = Stopwatch.createUnstarted();
-        tsw.start();
         
         List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
         for (int i = 0; i < numThreads; i++) {
         	RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
-        			dataPartitioned.get(i), attributes, lowMetrics, highMetrics,
-        			baseQuery, encoder);
+        			numThreads);
         	Thread t = new Thread(rsa);
         	t.start();
-        	threads.add(t);
-        	rsas.add(rsa);
         }
         
         startSemaphore.release(numThreads);
         endSemaphore.acquire(numThreads);
 
-        for (int i = 0; i < numThreads; i++) {
-        	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-        		isr.add(itemsetResult);
-        	}
-        }
-        
         tsw.stop();
         
-        double tuplesPerSecond = ((double) data.size() * numRuns) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
+        double tuplesPerSecond = (1000000000 / ((double) tsw.elapsed(TimeUnit.MICROSECONDS)));
         tuplesPerSecond *= 1000000;
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
