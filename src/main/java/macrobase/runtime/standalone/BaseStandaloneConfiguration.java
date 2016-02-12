@@ -25,6 +25,11 @@ public class BaseStandaloneConfiguration extends Configuration {
         SQL_LOADER
     }
 
+    public enum DataTransform {
+        ZERO_TO_ONE_SCALE,
+        IDENTITY
+    }
+
     @JsonProperty
     private DetectorType outlierDetectorType;
 
@@ -38,6 +43,8 @@ public class BaseStandaloneConfiguration extends Configuration {
     private String dbPassword;
 
     private DataLoaderType dataLoaderType;
+
+    private DataTransform dataTransform;
 
     @NotEmpty
     private List<String> targetAttributes;
@@ -140,6 +147,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     public DetectorType getDetectorType() { return outlierDetectorType; }
 
     @JsonProperty
+    public DataTransform getDataTransform() { return dataTransform; }
+
+    @JsonProperty
     public double getMinInlierRatio() {
         return minInlierRatio;
     }
@@ -153,7 +163,7 @@ public class BaseStandaloneConfiguration extends Configuration {
     public boolean useZScore() {
         return useZScore;
     }
-    
+
     @JsonProperty
     public double getAlphaMCD() {
     	return alphaMCD;

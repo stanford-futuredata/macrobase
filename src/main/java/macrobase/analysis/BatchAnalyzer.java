@@ -14,6 +14,7 @@ import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 
+import macrobase.ingest.transform.DataTransformation;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
                                   List<String> attributes,
                                   List<String> lowMetrics,
                                   List<String> highMetrics,
-                                  String baseQuery) throws SQLException, IOException {
+                                  String baseQuery,
+                                  DataTransformation dataTransformation) throws SQLException, IOException {
         DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
@@ -51,7 +53,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
                                           attributes,
                                           lowMetrics,
                                           highMetrics,
-                                          baseQuery);
+                                          baseQuery,
+                                          dataTransformation);
         sw.stop();
 
         long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);

@@ -10,6 +10,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
+import macrobase.ingest.transform.DataTransformation;
 import macrobase.runtime.resources.RowSetResource;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -127,7 +128,8 @@ public abstract class SQLLoader extends DataLoader{
                                List<String> attributes,
                                List<String> lowMetrics,
                                List<String> highMetrics,
-                               String baseQuery) throws SQLException, IOException {
+                               String baseQuery,
+                               DataTransformation dataTransformation) throws SQLException, IOException {
 
         String targetColumns = StreamSupport.stream(
                 Iterables.concat(attributes, lowMetrics, highMetrics).spliterator(), false)
@@ -145,8 +147,6 @@ public abstract class SQLLoader extends DataLoader{
 
         List<Datum> ret = Lists.newArrayList();
 
-        RealVector metricWiseMinVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-        RealVector metricWiseMaxVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
 
         while(rs.next()) {
             List<Integer> attrList = new ArrayList<>(attributes.size());
@@ -163,28 +163,12 @@ public abstract class SQLLoader extends DataLoader{
                 double val = Math.pow(Math.max(rs.getDouble(i), 0.1), -1);
                 metricVec.setEntry(vecPos, val);
 
-                if(metricWiseMinVec.getEntry(vecPos) > val) {
-                    metricWiseMinVec.setEntry(vecPos, val);
-                }
-
-                if(metricWiseMaxVec.getEntry(vecPos) < val) {
-                    metricWiseMaxVec.setEntry(vecPos, val);
-                }
-
                 vecPos += 1;
             }
 
             for(; i <= attributes.size() + lowMetrics.size() + highMetrics.size(); ++i) {
                 double val = rs.getDouble(i);
                 metricVec.setEntry(vecPos, val);
-
-                if(metricWiseMinVec.getEntry(vecPos) > val) {
-                    metricWiseMinVec.setEntry(vecPos, val);
-                }
-
-                if(metricWiseMaxVec.getEntry(vecPos) < val) {
-                    metricWiseMaxVec.setEntry(vecPos, val);
-                }
 
                 vecPos += 1;
             }
@@ -193,22 +177,8 @@ public abstract class SQLLoader extends DataLoader{
         }
 
         // normalize data
-        for(Datum d : ret) {
-            // ebeDivide returns a copy; avoid a copy at the expense of ugly code
-            RealVector metrics = d.getMetrics();
-            for(int dim = 0; dim < metrics.getDimension(); ++dim) {
-                double dimMin = metricWiseMinVec.getEntry(dim);
-                double dimMax = metricWiseMaxVec.getEntry(dim);
-
-                if(dimMax - dimMin == 0) {
-                    log.warn("No difference between min and max in dimension {}!", dim);
-                    metrics.setEntry(dim, 0);
-                    continue;
-                }
-
-                double cur = metrics.getEntry(dim);
-                metrics.setEntry(dim, (cur - dimMin)/(dimMax - dimMin));
-            }
+        if (dataTransformation != null ) {
+            dataTransformation.transform(ret);
         }
 
         return ret;

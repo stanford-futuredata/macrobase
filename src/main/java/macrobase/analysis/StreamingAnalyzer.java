@@ -18,6 +18,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 
+import macrobase.ingest.transform.ZeroToOneLinearTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                           attributes,
                                           lowMetrics,
                                           highMetrics,
-                                          baseQuery);
+                                          baseQuery,
+                                          new ZeroToOneLinearTransformation());
         Collections.shuffle(data);
         sw.stop();
 
