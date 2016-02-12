@@ -1,8 +1,9 @@
 macrobase:
-  taskName: CMT-100K-kde
+  taskName: CMT-100K-mcd
   baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 100000;
   targetHighMetrics: [data_count_minutes]
+  dataTransform: ZERO_TO_ONE_SCALE
   targetLowMetrics: []
   targetAttributes: [userid]
-  outlierDetectorType: KDE
+  outlierDetectorType: MCD
   dataLoaderType: SQL_LOADER
