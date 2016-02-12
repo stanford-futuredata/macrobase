@@ -8,13 +8,17 @@ from py_analysis.plot_distribution import parse_args as plot_dist_parse_args
 from py_analysis.plot_distribution import plot_distribution
 from py_analysis.plot_estimator import parse_args as plot_est_parse_args
 from py_analysis.plot_estimator import plot_estimator
+from py_analysis.common import add_macrobase_args_dest_camel
+from py_analysis.common import get_camel_db_args
 
 
-def run_macrobase(cmd='batch', conf='conf/batch.conf'):
-  macrobase_cmd = '''java -Xms128m -Xmx16G \\
+def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
+  extra_args = ' '.join(['-Ddw.{key}={value}'.format(key=key, value=value)
+		         for key, value in kwargs.items()])
+  macrobase_cmd = '''java {extra_args} -Xms128m -Xmx16G \\
       -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
       macrobase.MacroBase {cmd} {conf_file}'''.format(
-      cmd=cmd, conf_file=conf)
+      cmd=cmd, conf_file=conf, extra_args=extra_args)
   print 'running the following command:'
   print macrobase_cmd
   os.system(macrobase_cmd)
@@ -23,6 +27,7 @@ def run_macrobase(cmd='batch', conf='conf/batch.conf'):
 def parse_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('experiment_yaml', type=argparse.FileType('r'))
+  add_macrobase_args_dest_camel(parser)
   return parser.parse_args()
 
 
@@ -62,7 +67,6 @@ if __name__ == '__main__':
     plot_distribution(plot_args)
   else:
     print 'it has to be a synthetic experiment for now'
-    os._exit(1)
 
   with open('conf/batch.yaml', 'r') as infile:
     config = yaml.load(infile)
@@ -75,12 +79,18 @@ if __name__ == '__main__':
   with open(config_file, 'w') as config_yaml:
     config_yaml.write(yaml.dump(config))
 
-  run_macrobase(conf=config_file)
+  kwargs = get_camel_db_args(args)  
+  run_macrobase(conf=config_file, **kwargs)
 
-  estimator_args = plot_est_parse_args(
-      ['--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
-       '--hist2d', 'outliers',
-       '--savefig', _file('target', 'plots', '%s-outliers.png' % taskname),
-       '--x-limits', '1', '25',
-       '--y-limits', '1', '25'])
+  if len(config['targetHighMetrics']) == 1:
+    estimator_args = plot_est_parse_args(
+        ['--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
+         '--savefig', _file('target', 'plots', '%s-outliers.png' % taskname)])
+  elif len(config['targetHighMetrics']) == 2:
+    estimator_args = plot_est_parse_args(
+        ['--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
+         '--hist2d', 'outliers',
+         '--savefig', _file('target', 'plots', '%s-outliers.png' % taskname),
+         '--x-limits', '1', '25',
+         '--y-limits', '1', '25'])
   plot_estimator(estimator_args)
