@@ -1,0 +1,12 @@
+synthetic_data: |
+  --normal 8,18,1.5,40000 
+  --normal 18,9,2,-1.2,2.5,2,60000
+  --normal 15,16,1,1000
+  --normal 10,7,1.1,1100
+macrobase:
+  taskName: 2d_mcd_killer-kde
+  targetHighMetrics: [XX, YY]
+  targetLowMetrics: []
+  targetAttributes: [XX, YY]
+  outlierDetectorType: KDE
+  dataLoaderType: CSV_LOADER

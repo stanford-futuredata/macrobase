@@ -21,7 +21,7 @@ class DistributionAction(argparse.Action):
     setattr(namespace, self.dest, current_value)
 
 
-def parse_args():
+def parse_args(*argument_array):
   parser = argparse.ArgumentParser()
   subparsers = parser.add_subparsers(title='Dimensionality')
 
@@ -41,11 +41,11 @@ def parse_args():
 
   twoD.add_argument('--outfile', type=argparse.FileType('w'))
   twoD.set_defaults(dimensions=2)
-  args = parser.parse_args()
+  args = parser.parse_args(*argument_array)
   return args
 
-if __name__ == '__main__':
-  args = parse_args()
+
+def generate_distribution(args):
   header = []
   all_points = None
   if args.dimensions == 1:
@@ -82,3 +82,8 @@ if __name__ == '__main__':
       writer.writerow([x])
     else:
       writer.writerow(x)
+
+if __name__ == '__main__':
+  args = parse_args()
+  generate_distribution(args)
+  args.outfile.close()

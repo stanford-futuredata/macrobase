@@ -1,4 +1,19 @@
 import psycopg2
+import re
+
+
+def get_camel_db_args(args):
+  """
+  Returns a dictionary of all database arguments set by
+  add_db_args_camel_dest that were specified by the user.
+  """
+  return {arg: value for arg, value in vars(args).items()
+          if value is not None and re.search('^db[A-Z]', arg)}
+
+
+def add_macrobase_args_dest_camel(parser):
+  parser.add_argument('--db-url', dest='dbUrl')
+  parser.add_argument('--db-user', dest='dbUser')
 
 
 def add_db_args(parser):
@@ -22,3 +37,15 @@ def set_db_connection(args):
     _parse_arg(user=args.db_user),
     _parse_arg(password=args.db_password),
     _parse_arg(host=args.db_host)]))
+
+
+def add_plot_limit_args(parser):
+  parser.add_argument('--x-limits', nargs=2, type=int)
+  parser.add_argument('--y-limits', nargs=2, type=int)
+
+
+def set_plot_limits(plt, args):
+  if args.x_limits:
+    plt.xlim(args.x_limits)
+  if args.y_limits:
+    plt.ylim(args.y_limits)
