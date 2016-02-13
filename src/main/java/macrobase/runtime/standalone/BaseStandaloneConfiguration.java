@@ -2,6 +2,7 @@ package macrobase.runtime.standalone;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import macrobase.analysis.outlier.KDE;
 import macrobase.ingest.DataLoader;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -32,6 +33,8 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     @JsonProperty
     private DetectorType outlierDetectorType;
+
+    private KDE.Bandwidth kernelBandwidth;
 
     @NotEmpty
     private String taskName;
@@ -89,6 +92,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     public String getTaskName() {
         return taskName;
     }
+
+    @JsonProperty
+    public KDE.Bandwidth getKernelBandwidth() { return kernelBandwidth;}
 
     @JsonProperty
     public List<String> getTargetHighMetrics() {

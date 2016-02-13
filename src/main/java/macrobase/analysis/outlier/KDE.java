@@ -6,8 +6,12 @@ import java.util.List;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KDE extends OutlierDetector {
+
+    private static final Logger log = LoggerFactory.getLogger(MAD.class);
 
     public enum Bandwidth {
         NORMAL_SCALE,
@@ -76,6 +80,7 @@ public class KDE extends OutlierDetector {
      * @param bandwidth
      */
     public void setBandwidth(RealMatrix bandwidth) {
+        log.trace("Setting bandwidht matrix: {}", bandwidth);
         this.bandwidth = bandwidth;
         calculateBandwidthAncillaries();
     }
@@ -89,6 +94,7 @@ public class KDE extends OutlierDetector {
         RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
         // double matrix_scale = 0.1;  // Scale identity matrix by this much
         // bandwidth = bandwidth.scalarMultiply(matrix_scale);
+	log.info("runnign with bandwidthType: {}", bandwidthType);
         switch (bandwidthType) {
             case NORMAL_SCALE:
                 final double standardNormalQunatileDifference = 1.349;
@@ -113,15 +119,17 @@ public class KDE extends OutlierDetector {
                 final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
                 final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
                 final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
+		        log.info("covariance Scale: {}", covarianceScale);
                 RealMatrix covariance = this.getCovariance(data);
-                this.bandwidth = covariance.scalarMultiply(covarianceScale);
+	            log.info("Covarience of the data is: {}", covariance);
+                bandwidth = covariance.scalarMultiply(covarianceScale);
+	            log.info("Covarience of the data is: {}", covariance);
             case MANUAL:
                 break;
         }
 
         if (bandwidthType != Bandwidth.MANUAL) {
-            this.bandwidth = bandwidth;
-            this.calculateBandwidthAncillaries();
+            this.setBandwidth(bandwidth);
         }
     }
 

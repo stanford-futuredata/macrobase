@@ -2,18 +2,21 @@ import psycopg2
 import re
 
 
-def get_camel_db_args(args):
+def get_macrobase_camel_args(args):
   """
   Returns a dictionary of all database arguments set by
   add_db_args_camel_dest that were specified by the user.
   """
+  allowed_args = {'dbUrl', 'dbUser', 'outlierDetectorType', 'dataTransform'}
   return {arg: value for arg, value in vars(args).items()
-          if value is not None and re.search('^db[A-Z]', arg)}
+          if value is not None and arg in allowed_args}
 
 
 def add_macrobase_args_dest_camel(parser):
   parser.add_argument('--db-url', dest='dbUrl')
   parser.add_argument('--db-user', dest='dbUser')
+  parser.add_argument('--outlier-detector-type', dest='outlierDetectorType')
+  parser.add_argument('--data-transform', dest='dataTransform')
 
 
 def add_db_args(parser):

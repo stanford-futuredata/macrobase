@@ -9,7 +9,7 @@ from py_analysis.plot_distribution import plot_distribution
 from py_analysis.plot_estimator import parse_args as plot_est_parse_args
 from py_analysis.plot_estimator import plot_estimator
 from py_analysis.common import add_macrobase_args_dest_camel
-from py_analysis.common import get_camel_db_args
+from py_analysis.common import get_macrobase_camel_args
 
 
 def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
@@ -27,6 +27,7 @@ def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
 def parse_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('experiment_yaml', type=argparse.FileType('r'))
+  parser.add_argument('--remove-cached-data', action='store_true')
   add_macrobase_args_dest_camel(parser)
   return parser.parse_args()
 
@@ -47,6 +48,8 @@ def _makedirs_for_file(filename):
 
 if __name__ == '__main__':
   args = parse_args()
+  if args.remove_cached_data:
+    os.system('rm cache/*')
   experiment = yaml.load(args.experiment_yaml)
   taskname = experiment['macrobase']['taskName']
 
@@ -79,18 +82,21 @@ if __name__ == '__main__':
   with open(config_file, 'w') as config_yaml:
     config_yaml.write(yaml.dump(config))
 
-  kwargs = get_camel_db_args(args)  
+  kwargs = get_macrobase_camel_args(args)  
   run_macrobase(conf=config_file, **kwargs)
 
   if len(config['targetHighMetrics']) == 1:
-    estimator_args = plot_est_parse_args(
-        ['--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
-         '--savefig', _file('target', 'plots', '%s-outliers.png' % taskname)])
+    raw_args = [
+         '--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
+         '--savefig', _file('target', 'plots', '%s.png' % taskname)]
   elif len(config['targetHighMetrics']) == 2:
-    estimator_args = plot_est_parse_args(
-        ['--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
+    raw_args = [
+         '--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
          '--hist2d', 'outliers',
          '--savefig', _file('target', 'plots', '%s-outliers.png' % taskname),
          '--x-limits', '1', '25',
-         '--y-limits', '1', '25'])
+         '--y-limits', '1', '25']
+  estimator_args = plot_est_parse_args(raw_args)
+  print 'running following plot command:'
+  print 'python script/py_analysis/plot_estimator.py ' + ' '.join(raw_args)
   plot_estimator(estimator_args)

@@ -21,6 +21,7 @@ def parse_args(*argument_list):
                            'outputted by macrobase')
   parser.add_argument('--hist2d', choices=['inliers', 'outliers'],
                       help='Plots 2d histogram of outliers or inliers')
+  parser.add_argument('--legend-loc', default='best')
   parser.add_argument('--savefig')
   add_plot_limit_args(parser)
   add_db_args(parser)
@@ -48,6 +49,9 @@ def format_datum(datum_with_score):
   return data + [datum_with_score['score']]
 
 
+def _only_within(array, lower_limit, upper_limit):
+  return [x for x in array if x > lower_limit and x < upper_limit]
+
 def plot_estimator(args):
   if args.hist2d:
     estimates = json.load(args.estimates)
@@ -63,21 +67,36 @@ def plot_estimator(args):
     outliers = np.array([format_datum_1d(datum)
                          for datum in estimates['outliers']])
     inliers = np.array([format_datum_1d(datum) for datum in estimates['inliers']])
-    X, Y = zip(*sorted(itertools.chain(outliers, inliers),
-                       key=lambda datum: datum[0]))
+    combined_data = sorted(itertools.chain(outliers, inliers),
+                       	   key=lambda datum: datum[0])
+    print len(combined_data)
+    if args.x_limits:
+      data_in_limits = [point for point in combined_data
+                        if point[0] > args.x_limits[0] and point[0] < args.x_limits[1]]
+      print len(data_in_limits)
+    else:
+      data_in_limits = combined_data
+    X, Y = zip(*data_in_limits)
 
     # leading term is purely fiction.. it should be 1/bandwidth
-    scaling_factor = -50. * (outliers.shape[0] + inliers.shape[0]) / args.histogram_bins
+    scaling_factor = 50. * (outliers.shape[0] + inliers.shape[0]) / args.histogram_bins
+    sign = 1. if Y[0] > 0 else -1
+    scaling_factor *= sign
     scaledY = [scaling_factor * y for y in Y]
 
-    plt.hist([inliers[:, 0], outliers[:, 0]], args.histogram_bins,
+    if args.x_limits:
+      inliers_to_plot = _only_within(inliers[:, 0], args.x_limits[0], args.x_limits[1])
+      outliers_to_plot = _only_within(outliers[:, 0], args.x_limits[0], args.x_limits[1])
+    else:
+      inliers_to_plot, outliers_to_plot = inliers[:, 0], outliers[:, 0]
+    plt.hist([inliers_to_plot, outliers_to_plot], args.histogram_bins,
              histtype='bar',
              stacked=True,
              label=['inliers', 'outliers'],
              color=['blue', 'red'])
     # plt.scatter(X, scaledY)
     plt.plot(X, scaledY, color='magenta', label='est distribution', lw=1.1)
-    plt.legend(loc='upper left')
+    plt.legend(loc=args.legend_loc)
   else:
     cursor = args.db_connection.cursor()
     cursor.execute("select relname from pg_class "
@@ -96,7 +115,20 @@ def plot_estimator(args):
                                   args.histogram_bins)
   set_plot_limits(plt, args)
   if args.savefig is not None:
-    plt.savefig(args.savefig, dpi=320)
+    filename = args.savefig
+    modifiers = []
+    if args.hist2d:
+      modifiers.append('hist2d')
+    if args.estimates:
+      modifiers.append('estimates')
+    if args.x_limits:
+      modifiers.append('X=%d,%d' % tuple(args.x_limits))
+    if args.y_limits:
+      modifiers.append('Y=%d,%d' % tuple(args.y_limits))
+    name, ext = filename.rsplit('.')
+    new_filename = '{old_name}-{modifiers}.{ext}'.format(old_name=name, modifiers='-'.join(modifiers), ext=ext)
+    print 'saving figure to - ', new_filename
+    plt.savefig(new_filename, dpi=320)
     plt.clf()
   else:
     plt.show()
