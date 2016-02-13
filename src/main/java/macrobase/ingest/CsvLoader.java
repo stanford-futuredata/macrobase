@@ -31,7 +31,7 @@ public class CsvLoader extends DataLoader {
     }
 
     @Override
-    public List<Datum> getData(DatumEncoder encoder, List<String> attributes, List<String> lowMetrics, List<String> highMetrics, String baseQuery, DataTransformation dataTransformation) throws IOException {
+    public List<Datum> getData(DatumEncoder encoder, List<String> attributes, List<String> lowMetrics, List<String> highMetrics, List<String> auxiliaryAttributes, DataTransformation dataTransformation, String baseQuery) throws IOException {
         List<Datum> ret = Lists.newArrayList();
         System.out.println(attributes);
         System.out.println(lowMetrics);
