@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
+import macrobase.ingest.transform.DataTransformation;
 import macrobase.runtime.resources.RowSetResource;
 
 import java.io.File;
@@ -30,7 +31,7 @@ public class CsvLoader extends DataLoader {
     }
 
     @Override
-    public List<Datum> getData(DatumEncoder encoder, List<String> attributes, List<String> lowMetrics, List<String> highMetrics, String baseQuery) throws IOException {
+    public List<Datum> getData(DatumEncoder encoder, List<String> attributes, List<String> lowMetrics, List<String> highMetrics, List<String> auxiliaryAttributes, DataTransformation dataTransformation, String baseQuery) throws IOException {
         List<Datum> ret = Lists.newArrayList();
         System.out.println(attributes);
         System.out.println(lowMetrics);
@@ -54,6 +55,12 @@ public class CsvLoader extends DataLoader {
             }
             ret.add(new Datum(attrList, metricVec));
         }
+
+        // normalize data
+        if (dataTransformation != null ) {
+            dataTransformation.transform(ret);
+        }
+
         return ret;
     }
 

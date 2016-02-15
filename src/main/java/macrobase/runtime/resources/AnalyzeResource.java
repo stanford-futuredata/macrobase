@@ -4,11 +4,13 @@ import macrobase.MacroBase;
 import macrobase.analysis.BatchAnalyzer;
 import macrobase.ingest.SQLLoader;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.ingest.transform.ZeroToOneLinearTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/analyze")
@@ -39,7 +41,9 @@ public class AnalyzeResource {
                                                  request.attributes,
                                                  request.lowMetrics,
                                                  request.highMetrics,
-                                                 request.baseQuery);
+                                                 new ArrayList<>(),
+                                                 request.baseQuery,
+                                                 new ZeroToOneLinearTransformation());
         if(result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));

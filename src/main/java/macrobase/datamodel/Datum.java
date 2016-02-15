@@ -10,6 +10,7 @@ import java.util.Set;
 public class Datum implements HasMetrics {
     private List<Integer> attributes;
     private RealVector metrics;
+    private RealVector auxiliaries;
 
     public Datum() {}
 
@@ -47,5 +48,13 @@ public class Datum implements HasMetrics {
     @Override
     public RealVector getMetrics() {
         return metrics;
+    }
+
+    public RealVector getAuxiliaries() {
+        return this.auxiliaries;
+    }
+
+    public void setAuxiliaries(RealVector auxiliaries) {
+        this.auxiliaries = auxiliaries;
     }
 }

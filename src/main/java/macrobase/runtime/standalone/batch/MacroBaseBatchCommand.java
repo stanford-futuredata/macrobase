@@ -6,6 +6,8 @@ import macrobase.MacroBase;
 import macrobase.analysis.BatchAnalyzer;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.ingest.*;
+import macrobase.ingest.transform.DataTransformation;
+import macrobase.ingest.transform.ZeroToOneLinearTransformation;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
@@ -58,11 +60,20 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
         analyzer.setAlphaMCD(configuration.getAlphaMCD());
         analyzer.setStoppingDeltaMCD(configuration.getStoppingDeltaMCD());
 
+        DataTransformation transformation = null;
+        if (configuration.getDataTransform() == BaseStandaloneConfiguration.DataTransform.ZERO_TO_ONE_SCALE) {
+            transformation = new ZeroToOneLinearTransformation();
+        } else if (configuration.getDataTransform() == BaseStandaloneConfiguration.DataTransform.IDENTITY) {
+            transformation = null;
+        }
+
         AnalysisResult result = analyzer.analyze(loader,
                                                  configuration.getTargetAttributes(),
                                                  configuration.getTargetLowMetrics(),
                                                  configuration.getTargetHighMetrics(),
-                                                 configuration.getBaseQuery());
+                                                 configuration.getAuxiliaryAttributes(),
+                                                 configuration.getBaseQuery(),
+                                                 transformation);
         if(result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));

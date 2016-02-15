@@ -90,6 +90,10 @@ abstract public class BaseAnalyzer {
                 return new ZScore();
             } else if(detectorType == BaseStandaloneConfiguration.DetectorType.KDE) {
             	log.info("Using KDE detector.");
+                KDE.Bandwidth bandwidthType = serverConfiguration.getKernelBandwidth();
+                if (bandwidthType != null) {
+                    return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
+                }
                 return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
             } else {
                 throw new RuntimeException("Unhandled detector class!"+ detectorType);

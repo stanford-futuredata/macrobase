@@ -2,8 +2,6 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.MinCovDet;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -18,11 +16,13 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 
+import macrobase.ingest.transform.ZeroToOneLinearTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -117,10 +117,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         log.debug("Starting loading...");
         sw.start();
         List<Datum> data = loader.getData(encoder,
-                                          attributes,
-                                          lowMetrics,
-                                          highMetrics,
-                                          baseQuery);
+                attributes,
+                lowMetrics,
+                highMetrics,
+                new ArrayList<String>(),
+                new ZeroToOneLinearTransformation(), baseQuery);
         Collections.shuffle(data);
         sw.stop();
 

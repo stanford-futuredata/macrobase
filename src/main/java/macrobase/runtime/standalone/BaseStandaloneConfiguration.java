@@ -2,6 +2,7 @@ package macrobase.runtime.standalone;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import macrobase.analysis.outlier.KDE;
 import macrobase.ingest.DataLoader;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -25,8 +26,15 @@ public class BaseStandaloneConfiguration extends Configuration {
         SQL_LOADER
     }
 
+    public enum DataTransform {
+        ZERO_TO_ONE_SCALE,
+        IDENTITY
+    }
+
     @JsonProperty
     private DetectorType outlierDetectorType;
+
+    private KDE.Bandwidth kernelBandwidth;
 
     @NotEmpty
     private String taskName;
@@ -39,8 +47,12 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     private DataLoaderType dataLoaderType;
 
+    private DataTransform dataTransform;
+
     @NotEmpty
     private List<String> targetAttributes;
+
+    private List<String> auxiliaryAttributes;
 
     private List<String> targetHighMetrics;
 
@@ -81,6 +93,14 @@ public class BaseStandaloneConfiguration extends Configuration {
     @JsonProperty
     public String getTaskName() {
         return taskName;
+    }
+
+    @JsonProperty
+    public KDE.Bandwidth getKernelBandwidth() { return kernelBandwidth;}
+
+    @JsonProperty
+    public List<String> getAuxiliaryAttributes() {
+        return auxiliaryAttributes;
     }
 
     @JsonProperty
@@ -140,6 +160,9 @@ public class BaseStandaloneConfiguration extends Configuration {
     public DetectorType getDetectorType() { return outlierDetectorType; }
 
     @JsonProperty
+    public DataTransform getDataTransform() { return dataTransform; }
+
+    @JsonProperty
     public double getMinInlierRatio() {
         return minInlierRatio;
     }
@@ -153,7 +176,7 @@ public class BaseStandaloneConfiguration extends Configuration {
     public boolean useZScore() {
         return useZScore;
     }
-    
+
     @JsonProperty
     public double getAlphaMCD() {
     	return alphaMCD;
