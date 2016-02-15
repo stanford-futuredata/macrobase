@@ -100,21 +100,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     int numRuns = 100000;
 
     class RunnableStreamingAnalysis implements Runnable {
-    	List<Datum> data;
-    	List<String> attributes;
-    	List<String> lowMetrics;
-    	List<String> highMetrics;
-    	String baseQuery;
-    	DatumEncoder encoder;
-    	List<ItemsetResult> itemsetResults;
         int numThreads;
 
     	RunnableStreamingAnalysis(int numThreads) {
                 this.numThreads = numThreads;
-    	}
-    	
-    	public List<ItemsetResult> getItemsetResults() {
-    		return itemsetResults;
     	}
     	
         @Override
