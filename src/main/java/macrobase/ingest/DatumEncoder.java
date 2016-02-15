@@ -92,4 +92,8 @@ public class DatumEncoder {
 
         return ret;
     }
+    
+    public String getColumnNameGivenDimension(int dimension){
+    	return attributeDimensionNameMap.get(dimension);
+    }
 }

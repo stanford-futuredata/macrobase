@@ -1,0 +1,43 @@
+taskName: testTasks
+targetAttributes: [userid]
+targetLowMetrics: [data_count_minutes]
+targetHighMetrics: []
+
+# MAD, MCD, ZSCORE
+outlierDetectorType: MCD
+
+dbUrl: postgres
+baseQuery: SELECT * FROM uk_road_accidents LIMIT 10000;
+
+minSupport: 0.01
+minInlierRatio: 1
+
+useDiskCache: true
+diskCacheDirectory: cache
+
+useZScore: false
+zScore: 3.0
+
+usePercentile: true
+targetPercentile: 0.99
+
+alphaMCD: 0.5
+stoppingDeltaMCD: 0.001
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE
+
+
+
+# The following configurations are for scoping
+categoricalAttributes : [police_force, day_of_week, local_authority_district,local_authority_highway, n_1st_road_class, road_type, junction_detail, junction_control, n_2nd_road_class, pedestrian_crossinghuman_control, pedestrian_crossingphysical_facilities, light_conditions, weather_conditions, road_surface_conditions, special_conditions_at_site, carriageway_hazards, urban_or_rural_area, did_police_officer_attend_scene_of_accident]
+numericalAttributes: [accident_severity, number_of_vehicles, speed_limit]
+numInterval: 9
+minFrequentSubSpaceRatio: 0.1
+maxSparseSubSpaceRatio: 0.01
+maxScopeDimensions: 2
+
+

@@ -1,0 +1,143 @@
+package macrobase.runtime.standalone.scoping;
+
+import macrobase.ingest.DatumEncoder;
+
+/**
+ * @author xuchu
+ *
+ * This class represents the interval on one dimension
+ */
+
+
+public class Interval {
+
+	private int dimension;
+	private String columnName;
+	
+
+
+	private boolean isNumericalInterval;
+	
+	private double min;
+	private double max; 
+	
+	private int value;
+	
+	
+	/**
+	 * Create a numerical interval
+	 * @param dimension
+	 * @param min
+	 * @param max
+	 */
+	public Interval(int dimension, String columnName, double min, double max) {
+	    this.setDimension(dimension);
+	    this.setColumnName(columnName);
+	    this.setMin(min);
+	    this.setMax(max);
+	    isNumericalInterval = true;
+	}
+	
+	/**
+	 * Create a categorical interval
+	 * @param dimension
+	 * @param value
+	 */
+	public Interval(int dimension, String columnName, int value){
+		this.setDimension(dimension);
+		this.setColumnName(columnName);
+		this.setValue(value);
+		isNumericalInterval = false;
+	}
+
+	public String getColumnName() {
+		return columnName;
+	}
+
+	public void setColumnName(String columnName) {
+		this.columnName = columnName;
+	}
+	
+	public int getDimension() {
+		return dimension;
+	}
+
+	public void setDimension(int dimension) {
+		this.dimension = dimension;
+	}
+
+	public double getMin() {
+		return min;
+	}
+
+	public void setMin(double min) {
+		this.min = min;
+	}
+
+	public double getMax() {
+		return max;
+	}
+
+	public void setMax(double max) {
+		this.max = max;
+	}
+
+	public int getValue() {
+		return value;
+	}
+
+	public void setValue(int value) {
+		this.value = value;
+	}
+
+	/**
+	 * If the interval contains this double value
+	 * This function should only be invoked for numerical intervals
+	 * @param d
+	 * @return
+	 */
+	public boolean contains(double d){
+		if(d >= min && d < max){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	/**
+	 * If the interval contains this integer value
+	 * This function should only be invoked for categorical intervals
+	 * @param i
+	 * @return
+	 */
+	public boolean contains(int i){
+		if(value == i)
+			return true;
+		else
+			return false;
+	}
+	
+	@Override
+	public String toString(){
+		if(isNumericalInterval){
+			return "< " + dimension + " [" + min + "," + max + ") > ";
+		}else{
+			return "< " + dimension + " [" + value + "] > ";
+		}
+	}
+	
+	/**
+	 * Provide a human-readable print of the Interval
+	 * @param encoder
+	 * @return
+	 */
+	public String print(DatumEncoder encoder){
+		
+		if(isNumericalInterval){
+			return "< " + columnName + " " + '\u2208' + " [" + min + "," + max + ") > ";
+		}else{
+			return "< " + columnName + " = " + encoder.getAttribute(value).getValue() + " > ";
+		}
+		
+	}
+}
