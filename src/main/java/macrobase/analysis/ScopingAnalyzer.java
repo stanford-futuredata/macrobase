@@ -93,6 +93,8 @@ public class ScopingAnalyzer extends BaseAnalyzer {
         								  categoricalAttributes,
         								  new ArrayList<String>(),
         								  numericalAttributes,
+        								  new ArrayList<String>(),
+        								  null,
                                           baseQuery);
         sw.stop();
 
