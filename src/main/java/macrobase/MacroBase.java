@@ -37,9 +37,14 @@ public class MacroBase
 
     static class RunnableStreamingAnalysis implements Runnable {
         int numThreads;
+        int sharedDataArrayLength;
+        int[] sharedDataArray;
 
-        RunnableStreamingAnalysis(int numThreads) {
-                this.numThreads = numThreads;
+        RunnableStreamingAnalysis(int sharedDataArrayLength,
+                                  int numThreads) {
+            this.numThreads = numThreads;
+            this.sharedDataArray = new int[sharedDataArrayLength];
+            this.sharedDataArrayLength = sharedDataArrayLength;
         }
 
         @Override
@@ -54,12 +59,15 @@ public class MacroBase
                 e.printStackTrace();
             }
             sw.start();
-            long numIterations = (1000000000 / numThreads);
+            long numIterations = ((128 * 3) / numThreads);
             for (long i = 0; i < numIterations; i++) {
-              a *= i;
-              a -= i;
-              for (int j = 0; j < 10; j++)
-                a = (int) Math.pow(a, 1.1);
+              for (int j = 0; j < sharedDataArrayLength; j++) {
+                sharedDataArray[j] *= i;
+                sharedDataArray[j] -= i;
+                sharedDataArray[j] = (int) Math.pow(sharedDataArray[j], 2);
+                for (int k = 0; k < 10; k++)
+                  sharedDataArray[j] = (int) Math.pow(sharedDataArray[j], 1.1);
+              }
             }
             sw.stop();
             log.debug("Only-computation time: {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
@@ -79,30 +87,30 @@ public class MacroBase
 
         //benchmark();
 
-        Stopwatch tsw = Stopwatch.createUnstarted();
-        tsw.start();
+        int allNumThreads[] = {1, 2, 4, 8, 16, 24, 32};
+        for (int numThreads : allNumThreads) {
+          log.debug("Running experiment for numThreads = {}", numThreads);
 
-        startSemaphore = new Semaphore(0);
-        endSemaphore = new Semaphore(0);
+          Stopwatch tsw = Stopwatch.createUnstarted();
+          tsw.start();
 
-        int numThreads = 1;
+          startSemaphore = new Semaphore(0);
+          endSemaphore = new Semaphore(0);
 
-        for (int i = 0; i < numThreads; i++) {
-                RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
-                                numThreads);
-                Thread t = new Thread(rsa);
-                t.start();
+          for (int i = 0; i < numThreads; i++) {
+                  int sharedDataArrayLength = 10000000;
+                  RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
+                                  sharedDataArrayLength,
+                                  numThreads);
+                  Thread t = new Thread(rsa);
+                  t.start();
+          }
+
+          startSemaphore.release(numThreads);
+          endSemaphore.acquire(numThreads);
+
+          tsw.stop();
         }
-
-        startSemaphore.release(numThreads);
-        endSemaphore.acquire(numThreads);
-
-        tsw.stop();
-
-        double tuplesPerSecond = (1000000000 / ((double) tsw.elapsed(TimeUnit.MICROSECONDS)));
-        tuplesPerSecond *= 1000000;
-
-        log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
         // MacroBaseServer.main(args);
     }
