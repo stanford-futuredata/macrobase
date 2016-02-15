@@ -52,6 +52,8 @@ public class BaseStandaloneConfiguration extends Configuration {
     @NotEmpty
     private List<String> targetAttributes;
 
+    private List<String> auxiliaryAttributes;
+
     private List<String> targetHighMetrics;
 
     private List<String> targetLowMetrics;
@@ -95,6 +97,11 @@ public class BaseStandaloneConfiguration extends Configuration {
 
     @JsonProperty
     public KDE.Bandwidth getKernelBandwidth() { return kernelBandwidth;}
+
+    @JsonProperty
+    public List<String> getAuxiliaryAttributes() {
+        return auxiliaryAttributes;
+    }
 
     @JsonProperty
     public List<String> getTargetHighMetrics() {

@@ -20,8 +20,9 @@ public abstract class DataLoader {
                                         List<String> attributes,
                                         List<String> lowMetrics,
                                         List<String> highMetrics,
-                                        String baseQuery,
-                                        DataTransformation dataTransform)
+                                        List<String> auxiliaryAttributes,
+                                        DataTransformation dataTransform,
+                                        String baseQuery)
             throws SQLException, IOException;
 
     public abstract RowSet getRows(String baseQuery,

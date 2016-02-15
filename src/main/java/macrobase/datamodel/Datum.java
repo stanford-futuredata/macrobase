@@ -1,6 +1,7 @@
 package macrobase.datamodel;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Set;
 public class Datum implements HasMetrics {
     private List<Integer> attributes;
     private RealVector metrics;
+    private RealVector auxilaries;
 
     public Datum() {}
 
@@ -47,5 +49,13 @@ public class Datum implements HasMetrics {
     @Override
     public RealVector getMetrics() {
         return metrics;
+    }
+
+    public RealVector getAuxilaries() {
+        return this.auxilaries;
+    }
+
+    public void setAuxilaries(RealVector auxilaries) {
+        this.auxilaries = auxilaries;
     }
 }

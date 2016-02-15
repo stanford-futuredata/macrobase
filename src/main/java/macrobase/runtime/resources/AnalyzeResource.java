@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/analyze")
@@ -40,6 +41,7 @@ public class AnalyzeResource {
                                                  request.attributes,
                                                  request.lowMetrics,
                                                  request.highMetrics,
+                                                 new ArrayList<>(),
                                                  request.baseQuery,
                                                  new ZeroToOneLinearTransformation());
         if(result.getItemSets().size() > 1000) {

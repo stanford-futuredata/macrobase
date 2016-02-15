@@ -71,6 +71,7 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<BatchStandaloneConf
                                                  configuration.getTargetAttributes(),
                                                  configuration.getTargetLowMetrics(),
                                                  configuration.getTargetHighMetrics(),
+                                                 configuration.getAuxiliaryAttributes(),
                                                  configuration.getBaseQuery(),
                                                  transformation);
         if(result.getItemSets().size() > 1000) {

@@ -14,7 +14,7 @@ from py_analysis.plot_estimator import plot_estimator
 
 def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
   extra_args = ' '.join(['-Ddw.{key}={value}'.format(key=key, value=value)
-		         for key, value in kwargs.items()])
+                         for key, value in kwargs.items()])
   macrobase_cmd = '''java {extra_args} -Xms128m -Xmx16G \\
       -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
       macrobase.MacroBase {cmd} {conf_file}'''.format(
@@ -51,6 +51,11 @@ def _makedirs_for_file(filename):
 
 if __name__ == '__main__':
   args = parse_args()
+  if args.compile:
+    status = os.system('mvn compile')
+    if status != 0:
+      os._exit(status)
+
   if args.remove_cached_data:
     os.system('rm cache/*')
 

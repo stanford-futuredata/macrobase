@@ -121,6 +121,7 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
                                  List<String> attributes,
                                  List<String> lowMetrics,
                                  List<String> highMetrics,
+                                 List<String> auxiliaryAttributes,
                                  String baseQuery,
                                  DataTransformation dataTransformation) throws SQLException, IOException {
 
@@ -130,7 +131,7 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
             return data;
         }
 
-        data = super.getData(encoder, attributes, lowMetrics, highMetrics, baseQuery, dataTransformation);
+        data = super.getData(encoder, attributes, lowMetrics, highMetrics, auxiliaryAttributes, dataTransformation, baseQuery);
         log.info("Writing out loaded data...");
         writeOutData(encoder, attributes, lowMetrics, highMetrics, baseQuery, data);
         log.info("...done writing!");
@@ -143,9 +144,10 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
                                List<String> attributes,
                                List<String> lowMetrics,
                                List<String> highMetrics,
-                               String baseQuery,
-                               DataTransformation dataTransformation) throws SQLException, IOException {
+                               List<String> auxiliaryAttributes,
+                               DataTransformation dataTransformation,
+                               String baseQuery) throws SQLException, IOException {
 
-        return _getData(encoder, attributes, lowMetrics, highMetrics, baseQuery, dataTransformation);
+        return _getData(encoder, attributes, lowMetrics, highMetrics, auxiliaryAttributes, baseQuery, dataTransformation);
     }
 }

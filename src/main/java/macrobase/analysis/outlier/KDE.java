@@ -92,9 +92,7 @@ public class KDE extends OutlierDetector {
     private void setBandwidth(List<Datum> data) {
         final int metricsDimensions = data.get(0).getMetrics().getDimension();
         RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
-        // double matrix_scale = 0.1;  // Scale identity matrix by this much
-        // bandwidth = bandwidth.scalarMultiply(matrix_scale);
-	log.info("runnign with bandwidthType: {}", bandwidthType);
+	    log.info("running with bandwidthType: {}", bandwidthType);
         switch (bandwidthType) {
             case NORMAL_SCALE:
                 final double standardNormalQunatileDifference = 1.349;

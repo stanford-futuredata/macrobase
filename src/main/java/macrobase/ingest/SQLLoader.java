@@ -128,11 +128,13 @@ public abstract class SQLLoader extends DataLoader{
                                List<String> attributes,
                                List<String> lowMetrics,
                                List<String> highMetrics,
-                               String baseQuery,
-                               DataTransformation dataTransformation) throws SQLException, IOException {
+                               List<String> auxiliaryAttributes,
+                               DataTransformation dataTransformation,
+                               String baseQuery)
+        throws SQLException, IOException {
 
         String targetColumns = StreamSupport.stream(
-                Iterables.concat(attributes, lowMetrics, highMetrics).spliterator(), false)
+                Iterables.concat(attributes, lowMetrics, highMetrics, auxiliaryAttributes).spliterator(), false)
                 .collect(Collectors.joining(", "));
         String sql = String.format("SELECT %s FROM (%s) baseQuery",
                                    targetColumns,
@@ -173,7 +175,18 @@ public abstract class SQLLoader extends DataLoader{
                 vecPos += 1;
             }
 
-            ret.add(new Datum(attrList, metricVec));
+            Datum datum = new Datum(attrList, metricVec);
+
+            // Set auxilaries on the datum if user specified
+            if (auxiliaryAttributes.size() > 0) {
+                RealVector auxilaries = new ArrayRealVector(auxiliaryAttributes.size());
+                for (int j=0; j < auxiliaryAttributes.size(); ++j, ++i) {
+                    auxilaries.setEntry(j, rs.getDouble(i));
+                }
+                datum.setAuxilaries(auxilaries);
+            }
+
+            ret.add(datum);
         }
 
         // normalize data

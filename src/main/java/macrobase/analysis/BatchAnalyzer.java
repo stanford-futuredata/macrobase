@@ -8,11 +8,9 @@ import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
-import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.SQLLoader;
 
 import macrobase.ingest.transform.DataTransformation;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
@@ -39,6 +37,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
                                   List<String> attributes,
                                   List<String> lowMetrics,
                                   List<String> highMetrics,
+                                  List<String> auxiliaryAttributes,
                                   String baseQuery,
                                   DataTransformation dataTransformation) throws SQLException, IOException {
         DatumEncoder encoder = new DatumEncoder();
@@ -50,11 +49,12 @@ public class BatchAnalyzer extends BaseAnalyzer {
         log.debug("Starting loading...");
         sw.start();
         List<Datum> data = loader.getData(encoder,
-                                          attributes,
-                                          lowMetrics,
-                                          highMetrics,
-                                          baseQuery,
-                                          dataTransformation);
+                attributes,
+                lowMetrics,
+                highMetrics,
+                auxiliaryAttributes,
+                dataTransformation,
+                baseQuery);
         sw.stop();
 
         long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
