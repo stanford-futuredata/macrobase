@@ -1,0 +1,11 @@
+macrobase:
+  baseQuery: SELECT * FROM campaign_expenditures LIMIT 1000000;
+  targetHighMetrics:
+    - contb_receipt_amt
+  targetLowMetrics: []
+  targetAttributes:
+    - cand_nm
+  auxiliaryAttributes: []
+  kernelBandwidth: NORMAL_SCALE
+  dataTransform: IDENTITY
+  dataLoaderType: SQL_LOADER

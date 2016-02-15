@@ -82,6 +82,8 @@ def plot_estimator(args):
       plt.hist(X, args.histogram_bins,
                label=args.restrict_to)
     else:
+      inliers = list(inliers)
+      outliers = list(outliers)
       X1, _ = zip(*inliers)
       X2, _ = zip(*outliers)
       plt.hist([X1, X2], args.histogram_bins,
@@ -92,7 +94,7 @@ def plot_estimator(args):
 
     if args.plot_scores:
       # Plot the estimate
-      combined_X, scores = zip(*sorted(itertools.chain(X1, X2)))
+      combined_X, scores = zip(*sorted(itertools.chain(inliers, outliers)))
 
       # leading term is purely fiction.. it should be 1/bandwidth
       # scaling_factor = 50. * (outliers.shape[0] + inliers.shape[0]) / args.histogram_bins

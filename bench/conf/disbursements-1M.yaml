@@ -1,0 +1,14 @@
+macrobase:
+  baseQuery: SELECT * FROM fed_disbursements LIMIT 1000000;
+  targetHighMetrics: [dis_amo]
+  targetLowMetrics: []
+  targetAttributes:
+    - "can_id"
+    - "com_id"
+    - "rec_nam"
+    - "rec_zip"
+    - "com_nam"
+  auxiliaryAttributes: []
+  kernelBandwidth: NORMAL_SCALE
+  dataTransform: IDENTITY
+  dataLoaderType: SQL_LOADER
