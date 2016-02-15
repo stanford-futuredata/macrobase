@@ -57,9 +57,9 @@ def _extract_data(raw_data, label, columns, x_limits, y_limits):
   data = (_format_datum(datum, columns)
           for datum in raw_data[label])
   if x_limits:
-    data = (x for x in data if x[0] > args.x_limits[0] and x[0] < args.x_limits[1])
+    data = (x for x in data if x[0] > x_limits[0] and x[0] < x_limits[1])
   if y_limits:
-    data = (x for x in data if x[1] > args.y_limits[0] and x[1] < args.y_limits[1])
+    data = (x for x in data if x[1] > y_limits[0] and x[1] < y_limits[1])
   return data
 
 def plot_estimator(args):
