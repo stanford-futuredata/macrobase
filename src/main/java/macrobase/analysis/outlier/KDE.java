@@ -14,7 +14,20 @@ import org.slf4j.LoggerFactory;
 
 public class KDE extends OutlierDetector {
 
-    private static final Logger log = LoggerFactory.getLogger(MAD.class);
+    private static final Logger log = LoggerFactory.getLogger(KDE.class);
+    protected double bandwidthDeterminantSqrt;
+    protected KernelType kernelType;
+    protected Kernel kernel;
+    private List<Datum> densityPopulation;
+    protected RealMatrix bandwidth; // symmetric and positive definite
+    protected RealMatrix bandwidthToNegativeHalf;
+    private double scoreScalingFactor;
+    private double[] allScores;
+    private Bandwidth bandwidthType;
+    private double proportionOfDataToUse;
+
+    protected int metricsDimensions;
+
 
     public enum Bandwidth {
         NORMAL_SCALE,
@@ -34,18 +47,6 @@ public class KDE extends OutlierDetector {
             }
         }
     }
-
-    protected KernelType kernelType;
-    protected Kernel kernel;
-    private List<Datum> densityPopulation;
-    protected RealMatrix bandwidth; // symmetric and positive definite
-    protected RealMatrix bandwidthToNegativeHalf;
-    private double scoreScalingFactor;
-    private double[] allScores;
-    private Bandwidth bandwidthType;
-    private double proportionOfDataToUse;
-
-    protected int metricsDimensions;
 
     public KDE(KernelType kernel, Bandwidth bandwidthType) {
         this.kernelType = kernel;
@@ -120,7 +121,7 @@ public class KDE extends OutlierDetector {
             inverseBandwidth.setEntry(0, 0, 1.0/inverseBandwidth.getEntry(0, 0));
         }
         this.bandwidthToNegativeHalf = (new EigenDecomposition(inverseBandwidth)).getSquareRoot();
-
+        this.bandwidthDeterminantSqrt = Math.sqrt((new EigenDecomposition(bandwidth)).getDeterminant());
     }
 
     @Override
@@ -130,7 +131,6 @@ public class KDE extends OutlierDetector {
         // Very rudimentary sampling, write something better in the future.
         densityPopulation = new ArrayList<Datum>(data);
         Collections.shuffle(densityPopulation);
-        double bandwidthDeterminantSqrt = Math.sqrt((new EigenDecomposition(bandwidth)).getDeterminant());
 
         this.densityPopulation = densityPopulation.subList(0, (int) (this.proportionOfDataToUse * densityPopulation.size()));
         this.scoreScalingFactor = 1.0 / (bandwidthDeterminantSqrt * densityPopulation.size());

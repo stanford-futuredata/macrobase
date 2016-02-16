@@ -79,6 +79,7 @@ abstract public class BaseAnalyzer {
                 return new MinCovDet(metricsDimensions);
             }
         } else {
+            log.debug("{}", detectorType);
             if(detectorType == BaseStandaloneConfiguration.DetectorType.MAD) {
                 log.info("Using MAD detector.");
                 return new MAD();
@@ -96,12 +97,12 @@ abstract public class BaseAnalyzer {
                 }
                 return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
             } else if(detectorType == BaseStandaloneConfiguration.DetectorType.BINNED_KDE) {
-                log.info("Using Binned KDE detector.");
+                log.info("Using BinnedKDE detector.");
                 KDE.Bandwidth bandwidthType = serverConfiguration.getKernelBandwidth();
                 if (bandwidthType != null) {
                     return new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
                 }
-                return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
+                return new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
             } else {
                 throw new RuntimeException("Unhandled detector class!"+ detectorType);
             }
