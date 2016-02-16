@@ -76,6 +76,10 @@ public class MinCovDet extends OutlierDetector  {
 
     private RealVector mean;
 
+    public void seedRandom(long seed) {
+        random = new Random(seed);
+    }
+
     // efficient only when k << allData.size()
     private List<Datum> chooseKRandom(List<Datum> allData, final int k) {
         assert(k < allData.size());

@@ -9,7 +9,7 @@ public class ExponentiallyBiasedAChao<T> extends AChao<T> {
     private final double bias;
     public ExponentiallyBiasedAChao(int capacity, double bias) {
         super(capacity);
-        assert(bias > 0 && bias < 1);
+        assert(bias >= 0 && bias < 1);
         this.bias = bias;
     }
 

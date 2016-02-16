@@ -17,6 +17,8 @@ abstract public class BaseAnalyzer {
     protected double MIN_SUPPORT = 0.001;
     protected double MIN_INLIER_RATIO = 1;
 
+    protected Boolean seedRand = false;
+
     protected BaseStandaloneConfiguration.DetectorType detectorType;
 
     protected boolean forceUsePercentile = true;
@@ -26,6 +28,8 @@ abstract public class BaseAnalyzer {
     protected double stoppingDeltaMCD = 1e-3;
 
     protected BaseStandaloneConfiguration serverConfiguration;
+
+    public void setSeedRand(boolean doSeed) { seedRand = true; }
 
     public BaseAnalyzer() {
         serverConfiguration = null;
@@ -69,14 +73,18 @@ abstract public class BaseAnalyzer {
     	this.stoppingDeltaMCD = stoppingDeltaMCD;
     }
 
-    protected OutlierDetector constructDetector(int metricsDimensions) {
+    protected OutlierDetector constructDetector(int metricsDimensions, boolean seedRand) {
         if(detectorType == null) {
             if (metricsDimensions == 1) {
                 log.info("By default: using MAD detector for dimension 1 metric.");
                 return new MAD();
             } else {
                 log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
-                return new MinCovDet(metricsDimensions);
+                MinCovDet ret = new MinCovDet(metricsDimensions);
+                if(seedRand) {
+                    ret.seedRandom(0);
+                }
+                return ret;
             }
         } else {
             log.debug("{}", detectorType);
@@ -85,7 +93,11 @@ abstract public class BaseAnalyzer {
                 return new MAD();
             } else if(detectorType == BaseStandaloneConfiguration.DetectorType.MCD) {
                 log.info("Using MCD detector.");
-                return new MinCovDet(metricsDimensions);
+                MinCovDet ret = new MinCovDet(metricsDimensions);
+                if(seedRand) {
+                    ret.seedRandom(0);
+                }
+                return ret;
             } else if(detectorType == BaseStandaloneConfiguration.DetectorType.ZSCORE) {
                 log.info("Using ZScore detector.");
                 return new ZScore();

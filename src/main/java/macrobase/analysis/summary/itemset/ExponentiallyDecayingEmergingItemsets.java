@@ -146,6 +146,8 @@ public class ExponentiallyDecayingEmergingItemsets {
     private List<ItemsetResult> getSingleItemItemsets(DatumEncoder encoder) {
         int supportCountRequired = (int)(this.outlierCountSummary.getTotalCount()*minSupportOutlier);
 
+        log.debug("REQUIRED SUPPORT: {} {}", supportCountRequired, minSupportOutlier);
+
         List<ItemsetResult> ret = new ArrayList<>();
         Map<Integer, Double> inlierCounts = inlierCountSummary.getCounts();
         Map<Integer, Double> outlierCounts = outlierCountSummary.getCounts();

@@ -69,7 +69,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         sw.start();
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
-        OutlierDetector detector = constructDetector(metricsDimensions);
+        OutlierDetector detector = constructDetector(metricsDimensions, seedRand);
 
         if (serverConfiguration != null && serverConfiguration.getStoreScoreDistribution() != null ) {
             detector.storeScoresInFile(serverConfiguration.getStoreScoreDistribution());

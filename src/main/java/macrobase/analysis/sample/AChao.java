@@ -12,7 +12,11 @@ class AChao<T> {
     private final List<T> reservoir;
     double runningCount;
     private final int reservoirCapacity;
-    private final Random random = new Random();
+    private Random random = new Random();
+
+    public void setSeed(long seed) {
+        random = new Random(seed);
+    }
 
     public AChao(int capacity) {
         reservoir = new ArrayList<>();

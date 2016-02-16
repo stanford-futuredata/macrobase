@@ -13,6 +13,7 @@ import macrobase.analysis.periodic.WallClockAnalysisDecayer;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
 
@@ -25,25 +26,23 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(StreamingAnalyzer.class);
 
-    private Integer warmupCount;
-    private Integer inputReservoirSize;
-    private Integer scoreReservoirSize;
-    private Integer summaryPeriod;
-    private Boolean useRealTimePeriod;
-    @SuppressWarnings("unused")
-	private Boolean useTupleCountPeriod;
-    private double decayRate;
-    private Integer modelRefreshPeriod;
+    private Integer warmupCount = 10000;
+    private Integer inputReservoirSize = 10000;
+    private Integer scoreReservoirSize = 10000;
+    private Integer summaryPeriod = 100000;
+    private Boolean useRealTimePeriod = false;
+	private Boolean useTupleCountPeriod = true;
+    private double decayRate = .01;
+    private Integer modelRefreshPeriod = 100000;
 
-    private double minSupportOutlier;
-    private double minRatio;
-    private Integer outlierItemSummarySize;
-    private Integer inlierItemSummarySize;
+    private Integer outlierItemSummarySize = 100000;
+    private Integer inlierItemSummarySize = 100000;
 
     public void setModelRefreshPeriod(Integer modelRefreshPeriod) {
         this.modelRefreshPeriod = modelRefreshPeriod;
@@ -73,14 +72,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         this.decayRate = decayRate;
     }
 
-    public void setMinSupportOutlier(double minSupportOutlier) {
-        this.minSupportOutlier = minSupportOutlier;
-    }
-
-    public void setMinRatio(double minRatio) {
-        this.minRatio = minRatio;
-    }
-
     public void setTracing(boolean doTrace) {
         this.doTrace = doTrace;
     }
@@ -101,11 +92,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     long totScoringTime = 0;
     long totSummarizationTime = 0;
 
-    public AnalysisResult analyzeOnePass(SQLLoader loader,
-                                              List<String> attributes,
-                                              List<String> lowMetrics,
-                                              List<String> highMetrics,
-                                              String baseQuery) throws SQLException, IOException {
+    public AnalysisResult analyzeOnePass(DataLoader loader,
+                                         List<String> attributes,
+                                         List<String> lowMetrics,
+                                         List<String> highMetrics,
+                                         String baseQuery) throws SQLException, IOException {
         DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
@@ -122,7 +113,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 highMetrics,
                 new ArrayList<String>(),
                 new ZeroToOneLinearTransformation(), baseQuery);
-        Collections.shuffle(data);
+
+        if(!seedRand)
+            Collections.shuffle(data);
+        else
+            Collections.shuffle(data, new Random(0));
+
         sw.stop();
 
         long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -135,22 +131,29 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         tsw2.start();
 
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
-        OutlierDetector detector = constructDetector(metricsDimensions);
+        OutlierDetector detector = constructDetector(metricsDimensions, seedRand);
 
         ExponentiallyBiasedAChao<Datum> inputReservoir =
                 new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
+
+        if(seedRand) {
+            inputReservoir.setSeed(0);
+        }
 
         ExponentiallyBiasedAChao<Double> scoreReservoir = null;
 
         if(forceUsePercentile) {
             scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
+            if(seedRand) {
+                scoreReservoir.setSeed(0);
+            }
         }
 
         ExponentiallyDecayingEmergingItemsets streamingSummarizer =
                 new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
                                                           outlierItemSummarySize,
-                                                          minSupportOutlier,
-                                                          minRatio,
+                                                          MIN_SUPPORT,
+                                                          MIN_INLIER_RATIO,
                                                           decayRate,
                                                           attributes.size());
 

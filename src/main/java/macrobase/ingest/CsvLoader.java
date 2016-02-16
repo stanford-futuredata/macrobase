@@ -32,25 +32,31 @@ public class CsvLoader extends DataLoader {
 
     @Override
     public List<Datum> getData(DatumEncoder encoder, List<String> attributes, List<String> lowMetrics, List<String> highMetrics, List<String> auxiliaryAttributes, DataTransformation dataTransformation, String baseQuery) throws IOException {
+        for(Map.Entry<String, Integer> se : schema.entrySet()) {
+            encoder.recordAttributeName(se.getValue()+1, se.getKey());
+        }
+
         List<Datum> ret = Lists.newArrayList();
-        System.out.println(attributes);
-        System.out.println(lowMetrics);
-        System.out.println(highMetrics);
-        System.out.println(baseQuery);
         for (CSVRecord record : csvParser) {
             RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-            // TODO: implemnt lowMetrics
             int vecPos = 0;
+
+            for (String metric : lowMetrics) {
+                double val = Math.pow(Math.max(Double.parseDouble(record.get(metric)), 0.1), -1);
+                metricVec.setEntry(vecPos, val);
+                vecPos += 1;
+            }
+
             for (String metric : highMetrics) {
                 metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
                 vecPos += 1;
             }
+
             List<Integer> attrList = new ArrayList<>(attributes.size());
 
-            // I have no idea why is this code here...
             int i = 1;
             for(String attr : attributes) {
-                attrList.add(encoder.getIntegerEncoding(i, attr));
+                attrList.add(encoder.getIntegerEncoding(i, record.get(schema.get(attr))));
                 i += 1;
             }
             ret.add(new Datum(attrList, metricVec));
