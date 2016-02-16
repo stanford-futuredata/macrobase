@@ -41,6 +41,10 @@ public class ItemsetResult {
     public double getSupport() {
         return support;
     }
+    
+    public void addSupport(double supportIncrement) {
+    	support += supportIncrement;
+    }
 
     public double getNumRecords() {
         return numRecords;

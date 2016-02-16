@@ -18,6 +18,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.ingest.SQLLoader;
+import macrobase.ingest.result.ColumnValue;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
@@ -28,7 +29,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -360,6 +363,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         tsw.start();
         
         List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
+        Map<List<ColumnValue>, Integer> mapping = new HashMap<List<ColumnValue>, Integer> ();
         for (int i = 0; i < numThreads; i++) {
         	RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
         			dataPartitioned.get(i), attributes, lowMetrics, highMetrics,
@@ -373,7 +377,19 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         for (int i = 0; i < numThreads; i++) {
         	threads.get(i).join();
         	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-        		isr.add(itemsetResult);
+        		if (mapping.containsKey(itemsetResult.getItems())) {
+        			isr.get(mapping.get(itemsetResult.getItems())).addSupport(itemsetResult.getSupport());
+        		} else {
+        			mapping.put(itemsetResult.getItems(), isr.size());
+        			isr.add(itemsetResult);
+        		}
+        	}
+        }
+        
+        List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
+        for (ItemsetResult itemsetResult : isr) {
+        	if (itemsetResult.getSupport() >= (numThreads * minSupportOutlier)) {
+        		finalIsr.add(itemsetResult);
         	}
         }
         
@@ -384,7 +400,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
-        return new AnalysisResult(0, 0, 0, 0, 0, isr);
+        return new AnalysisResult(0, 0, 0, 0, 0, finalIsr);
     }
 
     public void setWarmupCount(Integer warmupCount) {
