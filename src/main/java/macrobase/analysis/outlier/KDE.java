@@ -56,6 +56,10 @@ public class KDE extends OutlierDetector {
         this.proportionOfDataToUse = 0.01;
     }
 
+    public void setProportionOfDataToUse(double ratio) {
+        this.proportionOfDataToUse = ratio;
+    }
+
     /**
      * Manually set bandwidth of KDE
      * @param bandwidth
