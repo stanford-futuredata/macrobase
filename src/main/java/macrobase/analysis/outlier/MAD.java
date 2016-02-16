@@ -40,7 +40,7 @@ public class MAD extends OutlierDetector {
 
         if (data.size() % 2 == 0) {
             median = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
-                      data.get(data.size() / 2 + 1).getMetrics().getEntry(0)) / 2;
+                      data.get(data.size() / 2).getMetrics().getEntry(0)) / 2;
         } else {
             median = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
         }
@@ -58,7 +58,7 @@ public class MAD extends OutlierDetector {
 
         if (data.size() % 2 == 0) {
             MAD = (residuals.get(data.size() / 2 - 1) +
-                   residuals.get(data.size() / 2 + 1)) / 2;
+                   residuals.get(data.size() / 2)) / 2;
         } else {
             MAD = residuals.get((int) Math.ceil(data.size() / 2));
         }
