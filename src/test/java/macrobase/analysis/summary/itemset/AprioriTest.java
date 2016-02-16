@@ -1,4 +1,4 @@
-package macrobase.summary.itemset;
+package macrobase.analysis.summary.itemset;
 
 import com.google.common.collect.Lists;
 

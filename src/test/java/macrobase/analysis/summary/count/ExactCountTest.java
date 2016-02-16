@@ -1,4 +1,4 @@
-package macrobase.summary.count;
+package macrobase.analysis.summary.count;
 
 import com.google.common.collect.Lists;
 import macrobase.analysis.summary.count.ExactCount;

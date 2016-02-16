@@ -1,6 +1,5 @@
-package macrobase.detector;
+package macrobase.analysis.outlier;
 
-import macrobase.analysis.outlier.MAD;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
@@ -49,7 +48,7 @@ public class MADTest {
 
 
         m.train(data);
-        log.debug("score is {}", m.score(data.get(data.size()-1)));
+        log.debug("score is {}", m.score(data.get(data.size() - 1)));
 
         assertEquals(5.0, m.score(data.get(data.size()-1)), 1e-5);
         assertEquals(5.0/1.4826,

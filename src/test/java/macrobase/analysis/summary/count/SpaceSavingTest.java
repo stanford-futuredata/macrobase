@@ -1,4 +1,4 @@
-package macrobase.summary.count;
+package macrobase.analysis.summary.count;
 
 /**
  * Created by pbailis on 12/24/15.

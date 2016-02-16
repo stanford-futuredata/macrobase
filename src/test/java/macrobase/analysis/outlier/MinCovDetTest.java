@@ -1,4 +1,4 @@
-package macrobase.detector;
+package macrobase.analysis.outlier;
 
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.datamodel.Datum;
