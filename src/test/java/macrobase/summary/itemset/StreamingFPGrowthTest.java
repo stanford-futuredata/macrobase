@@ -70,7 +70,6 @@ public class StreamingFPGrowthTest {
 
         List<ItemsetWithCount> apItemsets = apriori.getItemsetsWithSupportRatio(allTxns, .2);
 
-        System.out.println("MISSING SETS");
         Set<Set<Integer>> apis = apItemsets.stream().map(i -> i.getItems()).collect(Collectors.toSet());
 
         List<Set<Integer>> apil = apItemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
@@ -83,6 +82,7 @@ public class StreamingFPGrowthTest {
         }
 
 
+        /*
         Set<Set<Integer>> iss = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toSet());
 
         List<Set<Integer>> issl = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
@@ -97,6 +97,7 @@ public class StreamingFPGrowthTest {
         Set<Set<Integer>> diff = Sets.difference(apis, iss);
         log.debug("DIFF: {}\ndiff size: {}, fptree sets size: {}, fptree list size: {}", diff, diff.size(), apis.size(),
                   apItemsets.size());
+        */
 
         assertEquals(apItemsets.size(), itemsets.size());
     }
@@ -130,6 +131,7 @@ public class StreamingFPGrowthTest {
 
         Set<ItemsetWithCount> apItemsets = apriori.getItemsets(allTxns, .5);
 
+        /*
         System.out.printf("%d %d\n", itemsets.size(), apItemsets.size());
 
         System.out.println("FPTREE");
@@ -137,6 +139,7 @@ public class StreamingFPGrowthTest {
 
         System.out.println("APRIORI");
         printItemsets(Lists.newArrayList(apItemsets));
+        */
 
         assertEquals(apItemsets.size(), itemsets.size());
     }

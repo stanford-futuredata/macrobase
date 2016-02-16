@@ -24,8 +24,6 @@ public class SpaceSavingTest {
         ss.observe(2);
         ss.observe(3);
 
-        ss.debugPrint();
-
         assertEquals(4, ss.getCount(1), 0);
         assertEquals(2, ss.getCount(2), 0);
         assertEquals(3, ss.getCount(3), 0);
