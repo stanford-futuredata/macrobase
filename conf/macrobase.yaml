@@ -8,3 +8,4 @@ logging:
   # Logger-specific levels.
   loggers:
     "macrobase": TRACE
+

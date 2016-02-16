@@ -1,5 +1,6 @@
 package macrobase.runtime.resources;
 
+import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.RowSet;
 
@@ -13,7 +14,7 @@ import java.util.List;
 
 @Path("/rows")
 @Produces(MediaType.APPLICATION_JSON)
-public class RowSetResource {
+public class RowSetResource extends BaseResource {
     @SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
 
@@ -30,19 +31,17 @@ public class RowSetResource {
         }
     }
 
-    private SQLLoader loader;
-
-    public RowSetResource(SQLLoader _loader) {
-        loader = _loader;
+    public RowSetResource(MacroBaseConf conf) {
+        super(conf);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public RowSet getRows(RowSetRequest request) throws Exception {
-        loader.connect(request.pgUrl);
-        return loader.getRows(request.baseQuery,
-                              request.columnValues,
-                              request.limit,
-                              request.offset);
+        conf.set(MacroBaseConf.DB_NAME, request.pgUrl);
+        return getLoader().getRows(request.baseQuery,
+                                   request.columnValues,
+                                   request.limit,
+                                   request.offset);
     }
 }

@@ -1,28 +1,26 @@
-taskName: testTasks
-targetAttributes: [userid]
-targetLowMetrics: [data_count_minutes]
-targetHighMetrics: []
+macrobase.query.name: testTasks
+macrobase.loader.attributes: [userid]
+macrobase.loader.targetLowMetrics: [data_count_minutes]
+macrobase.loader.targetHighMetrics: []
 
-# MAD, MCD, ZSCORE
-outlierDetectorType: MCD
+macrobase.analysis.outlierDetectorType: MCD
 
-dbUrl: postgres
-baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
+macrobase.loader.db.dbUrl: postgres
+macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
 
-minSupport: 0.01
-minInlierRatio: 1
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 1
 
-useDiskCache: true
-diskCacheDirectory: cache
+macrobase.loader.db.cacheDirectory: cache
 
-useZScore: false
-zScore: 3.0
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
 
-usePercentile: true
-targetPercentile: 0.99
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
 
-alphaMCD: 0.5
-stoppingDeltaMCD: 0.001
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
 
 logging:
   level: INFO

@@ -28,7 +28,6 @@ public class KDE extends OutlierDetector {
 
     protected int metricsDimensions;
 
-
     public enum Bandwidth {
         NORMAL_SCALE,
         OVERSHMOOTHED,

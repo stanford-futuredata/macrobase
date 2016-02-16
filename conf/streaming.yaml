@@ -1,43 +1,42 @@
-taskName: testTasks
-targetAttributes: [userid, app_version]
-targetLowMetrics: [data_count_minutes]
-targetHighMetrics: []
+macrobase.query.name: testTasks
+macrobase.loader.attributes: [userid, app_version]
+macrobase.loader.targetLowMetrics: [data_count_minutes]
+macrobase.loader.targetHighMetrics: []
 
-# MAD, MCD, ZSCORE
-outlierDetectorType: MCD
+# MAD, MCD, zScore
+macrobase.analysis.outlierDetectorType: MCD
 
-dbUrl: postgres
-baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000000;
+macrobase.loader.db.dbUrl: postgres
+macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000000;
 
-minSupport: 0.001
-minInlierRatio: 1
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 1
 
-useDiskCache: true
-diskCacheDirectory: cache
+macrobase.loader.db.cacheDirectory: cache
 
-useZScore: false
-zScore: 3.0
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
 
-usePercentile: true
-targetPercentile: 0.99
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
 
-inputReservoirSize: 10000
-scoreReservoirSize: 10000
+macrobase.analysis.streaming.inputReservoirSize: 10000
+macrobase.analysis.streaming.scoreReservoirSize: 10000
 
-inlierItemSummarySize: 1000
-outlierItemSummarySize: 10000
+macrobase.analysis.streaming.inlierItemSummarySize: 1000
+macrobase.analysis.streaming.outlierItemSummarySize: 10000
 
-summaryRefreshPeriod: 100000
-modelRefreshPeriod: 10000
+macrobase.analysis.streaming.summaryUpdatePeriod: 100000
+macrobase.analysis.streaming.modelUpdatePeriod: 10000
 
-useRealTimePeriod: false
-useTupleCountPeriod: true
+macrobase.analysis.streaming.useRealTimePeriod: false
+macrobase.analysis.streaming.useTupleCountPeriod: true
 
-warmupCount: 1000
-decayRate: .01
+macrobase.analysis.streaming.warmupCount: 1000
+macrobase.analysis.streaming.decayRate: .01
 
-alphaMCD: 0.5
-stoppingDeltaMCD: 0.001
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
 
 logging:
   level: INFO

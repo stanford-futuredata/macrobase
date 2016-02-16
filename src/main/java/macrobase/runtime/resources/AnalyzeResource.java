@@ -2,6 +2,7 @@ package macrobase.runtime.resources;
 
 import macrobase.MacroBase;
 import macrobase.analysis.BatchAnalyzer;
+import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.SQLLoader;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.ingest.transform.ZeroToOneLinearTransformation;
@@ -15,7 +16,7 @@ import java.util.List;
 
 @Path("/analyze")
 @Produces(MediaType.APPLICATION_JSON)
-public class AnalyzeResource {
+public class AnalyzeResource extends BaseResource {
     private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
 
     static class AnalysisRequest {
@@ -26,24 +27,22 @@ public class AnalyzeResource {
         public List<String> lowMetrics;
     }
 
-    private SQLLoader loader;
-
-    public AnalyzeResource(SQLLoader _loader) {
-        loader = _loader;
+    public AnalyzeResource(MacroBaseConf conf) {
+        super(conf);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public AnalysisResult getAnalysis(AnalysisRequest request) throws Exception {
-        loader.connect(request.pgUrl);
-        BatchAnalyzer analyzer = new BatchAnalyzer();
-        AnalysisResult result = analyzer.analyze(loader,
-                                                 request.attributes,
-                                                 request.lowMetrics,
-                                                 request.highMetrics,
-                                                 new ArrayList<>(),
-                                                 request.baseQuery,
-                                                 new ZeroToOneLinearTransformation());
+        conf.set(MacroBaseConf.DB_URL, request.pgUrl);
+        conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
+        conf.set(MacroBaseConf.ATTRIBUTES, request.attributes);
+        conf.set(MacroBaseConf.HIGH_METRICS, request.highMetrics);
+        conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
+
+        BatchAnalyzer analyzer = new BatchAnalyzer(conf);
+        AnalysisResult result = analyzer.analyze();
+
         if(result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));

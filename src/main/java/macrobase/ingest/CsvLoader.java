@@ -1,6 +1,8 @@
 package macrobase.ingest;
 
 import com.google.common.collect.Lists;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
@@ -21,6 +23,13 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 public class CsvLoader extends DataLoader {
+    public CsvLoader(MacroBaseConf conf) throws ConfigurationException, IOException {
+        super(conf);
+
+        File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
+        csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        schema = csvParser.getHeaderMap();
+    }
 
     private CSVParser csvParser;
     private Map<String, Integer> schema;
@@ -31,7 +40,7 @@ public class CsvLoader extends DataLoader {
     }
 
     @Override
-    public List<Datum> getData(DatumEncoder encoder, List<String> attributes, List<String> lowMetrics, List<String> highMetrics, List<String> auxiliaryAttributes, DataTransformation dataTransformation, String baseQuery) throws IOException {
+    public List<Datum> getData(DatumEncoder encoder) {
         for(Map.Entry<String, Integer> se : schema.entrySet()) {
             encoder.recordAttributeName(se.getValue()+1, se.getKey());
         }
@@ -73,17 +82,5 @@ public class CsvLoader extends DataLoader {
     @Override
     public RowSet getRows(String baseQuery, List<RowSetResource.RowSetRequest.RowRequestPair> preds, int limit, int offset) throws IOException {
         return null;
-    }
-
-    @Override
-    public void connect(String source) throws IOException {
-        File csvFile = new File(source);
-        csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
-        schema = csvParser.getHeaderMap();
-    }
-
-    @Override
-    public void setDatabaseCredentials(String user, String password) {
-
     }
 }

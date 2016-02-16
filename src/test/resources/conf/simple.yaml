@@ -1,0 +1,7 @@
+this.is.a.double: 0.1
+this.is.an.integer: 100
+this.is.a.long: 10000000000000
+this.is.a.string: Test
+this.is.a.stringList: [T1, T2, T3, T4]
+this.is.a.stringList.without.spaces: [T1,T2,T3,T4]
+this.is.a.stringList.with.mixed.spaces: [T1, T2, T3,T4]

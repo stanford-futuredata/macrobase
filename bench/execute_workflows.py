@@ -10,31 +10,31 @@ batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
 
 default_args = {
-  "minInlierRatio": 3.0,
-  "minSupport": 0.001,
+  "macrobase.analysis.minOIRatio": 3.0,
+  "macrobase.analysis.minSupport": 0.001,
 
-  "usePercentile": "true",
-  "targetPercentile": 0.99,
-  "useZScore": "false",
-  "dbUser": os.getenv('USER', None),
-  "dbPassword": None,
-  "zScore": 3.0,
+  "macrobase.analysis.usePercentile": "true",
+  "macrobase.analysis.targetPercentile": 0.99,
+  "macrobase.analysis.useZScore": "false",
+  "macrobase.loader.db.user": os.getenv('USER', None),
+  "macrobase.loader.db.password": None,
+  "macrobase.analysis.zscore.threshold": 3.0,
 
-  "inputReservoirSize": 10000,
-  "scoreReservoirSize": 10000,
-  "inlierItemSummarySize": 10000,
-  "outlierItemSummarySize": 10000,
-  "summaryRefreshPeriod": 100000,
+  "macrobase.analysis.streaming.inputReservoirSize": 10000,
+  "macrobase.analysis.streaming.scoreReservoirSize": 10000,
+  "macrobase.analysis.streaming.inlierItemSummarySize": 10000,
+  "macrobase.analysis.streaming.outlierItemSummarySize": 10000,
+  "macrobase.analysis.streaming.summaryUpdatePeriod": 100000,
   "modelRefreshPeriod": 100000,
 
-  "useRealTimePeriod": "false",
+  "macrobase.analysis.streaming.useRealTimePeriod": "false",
   "useTupleCountPeriod": "true",
 
-  "warmupCount": 50000,
-  "decayRate": 0.01,
+  "macrobase.analysis.streaming.warmupCount": 50000,
+  "macrobase.analysis.streaming.decayRate": 0.01,
 
-  "alphaMCD": 0.5,
-  "stoppingDeltaMCD": 0.001
+  "macrobase.analysis.mcd.alpha": 0.5,
+  "macrobase.analysis.mcd.stoppingDelta": 0.001
 }
 
 
@@ -113,17 +113,17 @@ def get_stats(value_list):
 def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     sub_dir = os.path.join(os.getcwd(),
                            testing_dir,
-                           config_parameters["taskName"],
+                           config_parameters["macrobase.query.name"],
                            strftime("%m-%d-%H:%M:%S"))
     os.system("mkdir -p %s" % sub_dir)
     # For now, we only run metrics with MCD and MAD: MCD for
     # dimensionalities greater than 1, MAD otherwise.
-    dim = (len(config_parameters["targetHighMetrics"]) +
-           len(config_parameters["targetLowMetrics"]))
+    dim = (len(config_parameters["macrobase.loader.targetHighMetrics"]) +
+           len(config_parameters["macrobase.loader.targetLowMetrics"]))
     if dim > 1:
-        config_parameters["outlierDetectorType"] = "MCD"
+        config_parameters["macrobase.analysis.detectorType"] = "MCD"
     else:
-        config_parameters["outlierDetectorType"] = "MAD"
+        config_parameters["macrobase.analysis.detectorType"] = "MAD"
     process_config_parameters(config_parameters)
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
@@ -173,7 +173,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     mean_tps_no_itemset_mining, stddev_tps_no_itemset_mining = \
         get_stats(all_tuples_per_second_no_itemset_mining)
 
-    print config_parameters["taskName"], "-->"
+    print config_parameters["macrobase.query.name"], "-->"
     print "Times:", mean_and_stddev_times
 
     print "Mean number of itemsets:", mean_num_itemsets,

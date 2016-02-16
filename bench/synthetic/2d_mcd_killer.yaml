@@ -4,9 +4,9 @@ synthetic_data: |
   --normal 15,16,1,1000
   --normal 10,7,1.1,1100
 macrobase:
-  taskName: 2d_mcd_killer
-  targetHighMetrics: [XX, YY]
-  targetLowMetrics: []
-  targetAttributes: [XX, YY]
-  outlierDetectorType: MCD
-  dataLoaderType: CSV_LOADER
+  macrobase.query.name: 2d_mcd_killer
+  macrobase.loader.targetHighMetrics: [XX, YY]
+  macrobase.loader.targetLowMetrics: []
+  macrobase.loader.attributes: [XX, YY]
+  macrobase.analysis.detectorType: MCD
+  macrobase.loader.loaderType: CSV_LOADER

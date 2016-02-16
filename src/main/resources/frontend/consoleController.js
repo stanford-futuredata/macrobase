@@ -40,7 +40,7 @@ myApp.service('explorerService', function($localStorage) {
 
 myApp.service('configService', function($localStorage) {
     var defaults = {
-                           pgUrl: "postgres",
+                           pgUrl: "localhost",
                            baseQuery: "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000",
                            selectedTargets: { DEFAULT_CONFIG : {"attributes": ["userid"],"lowMetrics": ["data_count_minutes"] }}}
 

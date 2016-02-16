@@ -3,6 +3,8 @@ package macrobase.ingest;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.transform.DataTransformation;
 import org.slf4j.Logger;
@@ -27,23 +29,21 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
 
     private final String fileDir;
 
-    public DiskCachingSQLLoader(String fileDir) {
+    public DiskCachingSQLLoader(MacroBaseConf conf) throws ConfigurationException, SQLException {
+        super(conf);
+
+        fileDir = conf.getString(MacroBaseConf.DB_CACHE_DIR);
         File cacheDir = new File(fileDir);
         if (!cacheDir.exists()) {
             cacheDir.mkdirs();
         }
-
-        this.fileDir = fileDir;
     }
 
     private static class CachedData {
         private DatumEncoder encoder;
         private List<Datum> data;
 
-        public CachedData() {
-        }
-
-        ;
+        public CachedData() {}
 
         public CachedData(DatumEncoder encoder, List<Datum> data) {
             this.encoder = encoder;
@@ -117,37 +117,18 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
         return cachedData.getData();
     }
 
-    private List<Datum> _getData(DatumEncoder encoder,
-                                 List<String> attributes,
-                                 List<String> lowMetrics,
-                                 List<String> highMetrics,
-                                 List<String> auxiliaryAttributes,
-                                 String baseQuery,
-                                 DataTransformation dataTransformation) throws SQLException, IOException {
-
-
+    @Override
+    public List<Datum> getData(DatumEncoder encoder) throws SQLException, IOException {
         List<Datum> data = readInData(encoder, attributes, lowMetrics, highMetrics, baseQuery);
         if (data != null) {
             return data;
         }
 
-        data = super.getData(encoder, attributes, lowMetrics, highMetrics, auxiliaryAttributes, dataTransformation, baseQuery);
+        data = super.getData(encoder);
         log.info("Writing out loaded data...");
         writeOutData(encoder, attributes, lowMetrics, highMetrics, baseQuery, data);
         log.info("...done writing!");
 
         return data;
-    }
-
-    @Override
-    public List<Datum> getData(DatumEncoder encoder,
-                               List<String> attributes,
-                               List<String> lowMetrics,
-                               List<String> highMetrics,
-                               List<String> auxiliaryAttributes,
-                               DataTransformation dataTransformation,
-                               String baseQuery) throws SQLException, IOException {
-
-        return _getData(encoder, attributes, lowMetrics, highMetrics, auxiliaryAttributes, baseQuery, dataTransformation);
     }
 }

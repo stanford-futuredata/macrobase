@@ -23,9 +23,6 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Sets;
 
-/**
- * Created by pbailis on 12/26/15.
- */
 public class ExponentiallyDecayingEmergingItemsets {
     private static final Logger log = LoggerFactory.getLogger(ExponentiallyDecayingEmergingItemsets.class);
 

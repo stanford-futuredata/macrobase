@@ -6,6 +6,9 @@ import com.google.common.collect.Lists;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.ManagedDataSource;
 import macrobase.MacroBase;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
@@ -30,14 +33,42 @@ public abstract class SQLLoader extends DataLoader{
     abstract public String getDriverClass();
     abstract public String getJDBCUrlPrefix();
 
-    @SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(SQLLoader.class);
-
     private ManagedDataSource source;
 
-    private Connection connection;
-    private String dbUser;
-    private String dbPassword;
+    private final Connection connection;
+    private final String dbUrl;
+    private final String dbUser;
+    private final String dbPassword;
+    private final String dbName;
+
+    protected final String baseQuery;
+
+    public SQLLoader(MacroBaseConf conf) throws ConfigurationException, SQLException {
+        super(conf);
+
+        dbUser = conf.getString(MacroBaseConf.DB_USER, MacroBaseDefaults.DB_USER);
+        dbPassword = conf.getString(MacroBaseConf.DB_PASSWORD, MacroBaseDefaults.DB_PASSWORD);
+        dbName = conf.getString(MacroBaseConf.DB_NAME, MacroBaseDefaults.DB_NAME);
+        baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
+        dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
+
+        System.out.println(dbUrl+" "+dbName+" "+getJDBCUrlPrefix()+dbUrl);
+
+        DataSourceFactory factory = new DataSourceFactory();
+
+        factory.setDriverClass(getDriverClass());
+        factory.setUrl(String.format("%s//%s/%s", getJDBCUrlPrefix(), dbUrl, dbName));
+
+        if (dbUser != null) {
+            factory.setUser(this.dbUser);
+        }
+        if (dbPassword != null) {
+            factory.setPassword(dbPassword);
+        }
+
+        source = factory.build(MacroBase.metrics, dbName);
+        connection = source.getConnection();
+    }
 
     private String removeLimit(String sql) {
         return sql.replaceAll("LIMIT\\s\\d+", "");
@@ -45,28 +76,6 @@ public abstract class SQLLoader extends DataLoader{
 
     private String removeSqlJunk(String sql) {
         return sql.replaceAll(";", "");
-    }
-
-    public void setDatabaseCredentials(String user, String password) {
-        this.dbUser = user;
-        this.dbPassword = password;
-    }
-
-    public void connect(String pgUrl) throws SQLException {
-        DataSourceFactory factory = new DataSourceFactory();
-
-        factory.setDriverClass(getDriverClass());
-        factory.setUrl(getJDBCUrlPrefix()+pgUrl);
-
-        if (this.dbUser != null) {
-            factory.setUser(this.dbUser);
-        }
-        if (this.dbPassword != null) {
-            factory.setPassword(this.dbPassword);
-        }
-
-        source = factory.build(MacroBase.metrics, "postgres");
-        connection = source.getConnection();
     }
 
     public Schema getSchema(String baseQuery)
@@ -124,13 +133,8 @@ public abstract class SQLLoader extends DataLoader{
         return new RowSet(rows);
     }
 
-    public List<Datum> getData(DatumEncoder encoder,
-                               List<String> attributes,
-                               List<String> lowMetrics,
-                               List<String> highMetrics,
-                               List<String> auxiliaryAttributes,
-                               DataTransformation dataTransformation,
-                               String baseQuery)
+    @Override
+    public List<Datum> getData(DatumEncoder encoder)
         throws SQLException, IOException {
 
         String targetColumns = StreamSupport.stream(
@@ -190,9 +194,7 @@ public abstract class SQLLoader extends DataLoader{
         }
 
         // normalize data
-        if (dataTransformation != null ) {
-            dataTransformation.transform(ret);
-        }
+        dataTransformation.transform(ret);
 
         return ret;
     }

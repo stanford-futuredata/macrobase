@@ -1,18 +1,13 @@
 package macrobase.analysis;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import macrobase.analysis.result.AnalysisResult;
-import macrobase.analysis.summary.itemset.result.ItemsetResult;
-import macrobase.ingest.CsvLoader;
-import macrobase.ingest.result.ColumnValue;
-import macrobase.ingest.transform.ZeroToOneLinearTransformation;
+import macrobase.conf.MacroBaseConf;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -28,31 +23,32 @@ public class StreamingAnalyzerTest {
 
     @Test
     public void testMADAnalyzer() throws Exception {
-        StreamingAnalyzer analyzer = new StreamingAnalyzer();
-        analyzer.setAlphaMCD(.05);
-        analyzer.setTargetPercentile(.99);
-        analyzer.forceUsePercentile(true);
-        analyzer.setMinInlierRatio(1);
-        analyzer.setMinSupport(.02);
-        analyzer.setDecayRate(.01);
-        analyzer.setWarmupCount(10);
-        analyzer.useTupleCountDecay(true);
-        analyzer.setModelRefreshPeriod(50);
-        analyzer.setSummaryPeriod(50);
-        analyzer.setInputReservoirSize(10);
-        analyzer.setScoreReservoirSize(10);
-        analyzer.setInlierItemSummarySize(1000);
-        analyzer.setOutlierItemSummarySize(1000);
-        analyzer.setSeedRand(true);
+        MacroBaseConf conf = new MacroBaseConf();
+        conf.set(MacroBaseConf.TARGET_PERCENTILE, 0.99);
+        conf.set(MacroBaseConf.USE_PERCENTILE, true);
+        conf.set(MacroBaseConf.MIN_OI_RATIO, 1);
+        conf.set(MacroBaseConf.MIN_SUPPORT, .02);
+        conf.set(MacroBaseConf.RANDOM_SEED, 0);
+        conf.set(MacroBaseConf.DECAY_RATE, .01);
+        conf.set(MacroBaseConf.WARMUP_COUNT, 10);
+        conf.set(MacroBaseConf.USE_TUPLE_COUNT_PERIOD, true);
+        conf.set(MacroBaseConf.USE_REAL_TIME_PERIOD, false);
+        conf.set(MacroBaseConf.MODEL_UPDATE_PERIOD, 50);
+        conf.set(MacroBaseConf.SUMMARY_UPDATE_PERIOD, 50);
+        conf.set(MacroBaseConf.INPUT_RESERVOIR_SIZE, 10);
+        conf.set(MacroBaseConf.SCORE_RESERVOIR_SIZE, 10);
+        conf.set(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE, 1000);
+        conf.set(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE, 1000);
 
-        CsvLoader loader = new CsvLoader();
-        loader.connect("src/test/resources/data/simple.csv");
+        conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3", "A4"));
+        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A5"));
+        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "");
 
-        AnalysisResult ar = analyzer.analyzeOnePass(loader,
-                                                    Lists.newArrayList("A1", "A2", "A3", "A4"),
-                                                    Lists.newArrayList("A5"),
-                                                    Lists.newArrayList(),
-                                                    "");
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
+        conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+
+        AnalysisResult ar = (new StreamingAnalyzer(conf)).analyzeOnePass();
 
         assertEquals(1, ar.getItemSets().size());
         assertEquals(1, ar.getItemSets().get(0).getItems().size());
@@ -62,30 +58,35 @@ public class StreamingAnalyzerTest {
 
     @Test
     public void testMCDAnalyzer() throws Exception {
-        StreamingAnalyzer analyzer = new StreamingAnalyzer();
-        analyzer.setAlphaMCD(.05);
-        analyzer.setTargetPercentile(.99);
-        analyzer.forceUsePercentile(true);
-        analyzer.setMinInlierRatio(1);
-        analyzer.setMinSupport(.05);
-        analyzer.setDecayRate(.01);
-        analyzer.setWarmupCount(30);
-        analyzer.useTupleCountDecay(true);
-        analyzer.setModelRefreshPeriod(50);
-        analyzer.setSummaryPeriod(50);
-        analyzer.setInputReservoirSize(10);
-        analyzer.setScoreReservoirSize(10);
-        analyzer.setInlierItemSummarySize(1000);
-        analyzer.setOutlierItemSummarySize(1000);
-        analyzer.setSeedRand(true);
+        MacroBaseConf conf = new MacroBaseConf();
+        conf.set(MacroBaseConf.TARGET_PERCENTILE, 0.99);
+        conf.set(MacroBaseConf.USE_PERCENTILE, true);
+        conf.set(MacroBaseConf.MIN_OI_RATIO, 1);
+        conf.set(MacroBaseConf.MIN_SUPPORT, .05);
+        conf.set(MacroBaseConf.RANDOM_SEED, 0);
+        conf.set(MacroBaseConf.DECAY_RATE, .01);
+        conf.set(MacroBaseConf.WARMUP_COUNT, 30);
+        conf.set(MacroBaseConf.USE_TUPLE_COUNT_PERIOD, true);
+        conf.set(MacroBaseConf.USE_REAL_TIME_PERIOD, false);
+        conf.set(MacroBaseConf.MODEL_UPDATE_PERIOD, 50);
+        conf.set(MacroBaseConf.SUMMARY_UPDATE_PERIOD, 50);
+        conf.set(MacroBaseConf.INPUT_RESERVOIR_SIZE, 10);
+        conf.set(MacroBaseConf.SCORE_RESERVOIR_SIZE, 10);
+        conf.set(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE, 1000);
+        conf.set(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE, 1000);
 
-        CsvLoader loader = new CsvLoader();
-        loader.connect("src/test/resources/data/simple.csv");
-        AnalysisResult ar = analyzer.analyzeOnePass(loader,
-                                                    Lists.newArrayList("A1", "A2", "A3"),
-                                                    Lists.newArrayList("A4", "A5"),
-                                                    Lists.newArrayList(),
-                                                    "");
+        conf.set(MacroBaseConf.MCD_ALPHA, .05);
+        conf.set(MacroBaseConf.MCD_STOPPING_DELTA, 1e-3);
+
+        conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3"));
+        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A4", "A5"));
+        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "");
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
+        conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+
+        AnalysisResult ar = (new StreamingAnalyzer(conf)).analyzeOnePass();
 
         assertEquals(1, ar.getItemSets().size());
         assertEquals(1, ar.getItemSets().get(0).getItems().size());

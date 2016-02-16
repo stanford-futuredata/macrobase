@@ -9,6 +9,5 @@ import java.util.List;
  * It is used to transform data before training a model on it.
  */
 public abstract class DataTransformation {
-
     public abstract void transform(List<Datum> data);
 }

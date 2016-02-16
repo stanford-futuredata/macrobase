@@ -1,5 +1,7 @@
 package macrobase.runtime.resources;
 
+import macrobase.conf.MacroBaseConf;
+import macrobase.ingest.DataLoader;
 import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.Schema;
 
@@ -11,25 +13,22 @@ import javax.ws.rs.core.MediaType;
 
 @Path("/schema")
 @Produces(MediaType.APPLICATION_JSON)
-public class SchemaResource {
-    @SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
-
+public class SchemaResource extends BaseResource {
     static class SchemaRequest {
         public String pgUrl;
         public String baseQuery;
     }
 
-    private SQLLoader loader;
-
-    public SchemaResource(SQLLoader _loader) {
-        loader = _loader;
+    public SchemaResource(MacroBaseConf conf) {
+        super(conf);
     }
 
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     public Schema getSchema(SchemaRequest request) throws Exception {
-        loader.connect(request.pgUrl);
-        return loader.getSchema(request.baseQuery);
+        conf.set(MacroBaseConf.DB_URL, request.pgUrl);
+        conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
+
+        return getLoader().getSchema(request.baseQuery);
     }
 }

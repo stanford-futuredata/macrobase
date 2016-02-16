@@ -1,11 +1,11 @@
 macrobase:
-  baseQuery: SELECT * FROM campaign_expenditures LIMIT 1000000;
-  targetHighMetrics:
+  macrobase.loader.db.baseQuery: SELECT * FROM campaign_expenditures LIMIT 1000000;
+  macrobase.loader.targetHighMetrics:
     - contb_receipt_amt
-  targetLowMetrics: []
-  targetAttributes:
+  macrobase.loader.targetLowMetrics: []
+  macrobase.loader.attributes:
     - cand_nm
-  auxiliaryAttributes: []
+  macrobase.loader.auxiliaryAttributes: []
   kernelBandwidth: NORMAL_SCALE
-  dataTransform: IDENTITY
-  dataLoaderType: SQL_LOADER
+  macrobase.loader.transformType: IDENTITY
+  macrobase.loader.loaderType: SQL_LOADER

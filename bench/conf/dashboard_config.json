@@ -1,9 +1,9 @@
 [
   {
-    "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
     "isBatchJob": true,
-    "targetAttributes": [
+    "macrobase.loader.attributes": [
       "build_version",
       "app_version",
       "deviceid",
@@ -11,8 +11,8 @@
       "state",
       "hardware_model"
     ],
-    "taskName": "cmtDatasetComplex",
-    "targetHighMetrics": [
+    "macrobase.query.name": "cmtDatasetComplex",
+    "macrobase.loader.targetHighMetrics": [
       "data_count_minutes",
       "data_count_accel_samples",
       "data_count_netloc_samples",
@@ -23,26 +23,26 @@
     ]
   },
   {
-    "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
     "isBatchJob": true,
-    "targetAttributes": [
+    "macrobase.loader.attributes": [
       "cand_nm",
       "contbr_nm",
       "contbr_zip",
       "contbr_employer",
       "contbr_employer"
     ],
-    "taskName": "campaignExpendituresComplex",
-    "targetHighMetrics": [
+    "macrobase.query.name": "campaignExpendituresComplex",
+    "macrobase.loader.targetHighMetrics": [
       "contb_receipt_amt"
     ]
   },
   {
-    "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 1000000;",
     "isBatchJob": false,
-    "targetAttributes": [
+    "macrobase.loader.attributes": [
       "build_version",
       "app_version",
       "deviceid",
@@ -50,8 +50,8 @@
       "state",
       "hardware_model"
     ],
-    "taskName": "cmtDatasetComplexStreaming",
-    "targetHighMetrics": [
+    "macrobase.query.name": "cmtDatasetComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
       "data_count_minutes",
       "data_count_accel_samples",
       "data_count_netloc_samples",
@@ -61,18 +61,18 @@
     ]
   },
   {
-    "targetLowMetrics": [],
-    "baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 1000000;",
     "isBatchJob": false,
-    "targetAttributes": [
+    "macrobase.loader.attributes": [
       "cand_nm",
       "contbr_nm",
       "contbr_zip",
       "contbr_employer",
       "contbr_employer"
     ],
-    "taskName": "campaignExpendituresComplexStreaming",
-    "targetHighMetrics": [
+    "macrobase.query.name": "campaignExpendituresComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
       "contb_receipt_amt"
     ]
   }

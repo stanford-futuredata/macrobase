@@ -1,9 +1,9 @@
 macrobase:
-  baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id AND userid IS NOT NULL LIMIT 1000000;
-  targetHighMetrics: [data_count_minutes]
-  targetLowMetrics: []
-  targetAttributes: [userid]
-  auxiliaryAttributes: [battery_delay_from_drive_end_seconds]
+  macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id AND userid IS NOT NULL LIMIT 1000000;
+  macrobase.loader.targetHighMetrics: [data_count_minutes]
+  macrobase.loader.targetLowMetrics: []
+  macrobase.loader.attributes: [userid]
+  macrobase.loader.auxiliaryAttributes: [battery_delay_from_drive_end_seconds]
   kernelBandwidth: NORMAL_SCALE
-  dataTransform: IDENTITY
-  dataLoaderType: SQL_LOADER
+  macrobase.loader.transformType: IDENTITY
+  macrobase.loader.loaderType: SQL_LOADER

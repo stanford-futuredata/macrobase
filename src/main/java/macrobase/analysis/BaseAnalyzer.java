@@ -1,123 +1,126 @@
 package macrobase.analysis;
 
-import com.codahale.metrics.MetricRegistryListener;
 import macrobase.analysis.outlier.*;
-import macrobase.runtime.standalone.BaseStandaloneConfiguration;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseConf.DataLoaderType;
+import macrobase.conf.MacroBaseConf.DetectorType;
+import macrobase.conf.MacroBaseDefaults;
+import macrobase.ingest.CsvLoader;
+import macrobase.ingest.DataLoader;
+import macrobase.ingest.DiskCachingPostgresLoader;
+import macrobase.ingest.PostgresLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract public class BaseAnalyzer {
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
 
+public class BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(BaseAnalyzer.class);
 
-    protected double ZSCORE = 3;
-    protected double TARGET_PERCENTILE = 0.99;
-    protected double MIN_SUPPORT = 0.001;
-    protected double MIN_INLIER_RATIO = 1;
+    protected final Double zScore;
+    protected final Double targetPercentile;
+    protected final Double minSupport;
+    protected final Double minOIRatio;
+    protected final Long randomSeed;
+    protected final DetectorType detectorType;
+    protected final Boolean forceUsePercentile;
+    protected final Boolean forceUseZScore;
 
-    protected Boolean seedRand = false;
+    protected final Double mcdAlpha;
+    protected final Double mcdStoppingDelta;
 
-    protected BaseStandaloneConfiguration.DetectorType detectorType;
+    protected final KDE.Bandwidth kdeBandwidth;
+    protected final KDE.KernelType kdeKernelType;
 
-    protected boolean forceUsePercentile = true;
-    protected boolean forceUseZScore = false;
-    
-    protected double alphaMCD = 0.5;
-    protected double stoppingDeltaMCD = 1e-3;
+    protected final DataLoaderType dataLoaderType;
+    protected final List<String> attributes;
+    protected final List<String> lowMetrics;
+    protected final List<String> highMetrics;
 
-    protected BaseStandaloneConfiguration serverConfiguration;
+    protected final MacroBaseConf conf;
 
-    public void setSeedRand(boolean doSeed) { seedRand = true; }
+    protected final String queryName;
 
-    public BaseAnalyzer() {
-        serverConfiguration = null;
+    public BaseAnalyzer(MacroBaseConf conf) throws ConfigurationException {
+        this.conf = conf;
+
+        queryName = conf.getString(MacroBaseConf.QUERY_NAME, MacroBaseDefaults.QUERY_NAME);
+        log.debug("Running query {}", queryName);
+        log.debug("CONFIG:\n{}", conf.toString());
+
+        zScore = conf.getDouble(MacroBaseConf.ZSCORE, MacroBaseDefaults.ZSCORE);
+        targetPercentile = conf.getDouble(MacroBaseConf.TARGET_PERCENTILE, MacroBaseDefaults.TARGET_PERCENTILE);
+        minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
+        minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
+        randomSeed = conf.getLong(MacroBaseConf.RANDOM_SEED, MacroBaseDefaults.RANDOM_SEED);
+        detectorType = conf.getDetectorType();
+        forceUsePercentile = conf.getBoolean(MacroBaseConf.USE_PERCENTILE, MacroBaseDefaults.USE_PERCENTILE);
+        forceUseZScore = conf.getBoolean(MacroBaseConf.USE_ZSCORE, MacroBaseDefaults.USE_ZSCORE);
+
+        mcdAlpha = conf.getDouble(MacroBaseConf.MCD_ALPHA, MacroBaseDefaults.MCD_ALPHA);
+        mcdStoppingDelta = conf.getDouble(MacroBaseConf.MCD_STOPPING_DELTA, MacroBaseDefaults.MCD_STOPPING_DELTA);
+
+        kdeBandwidth = conf.getKDEBandwidth();
+        kdeKernelType = conf.getKDEKernelType();
+
+        dataLoaderType = conf.getDataLoaderType();
+        attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
+        lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
+        highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
     }
 
-    public BaseAnalyzer(BaseStandaloneConfiguration configuration) {
-        serverConfiguration = configuration;
+    public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {
+        if(conf.getDataLoaderType() == DataLoaderType.CSV_LOADER) {
+            return new CsvLoader(conf);
+        } else if(conf.getDataLoaderType() == DataLoaderType.POSTGRES_LOADER) {
+            return new PostgresLoader(conf);
+        } else if(conf.getDataLoaderType() == DataLoaderType.CACHING_POSTGRES_LOADER) {
+            return new DiskCachingPostgresLoader(conf);
+        }
+
+        throw new ConfigurationException(String.format("Unknown data loader type: %s", dataLoaderType));
     }
 
-    public void setDetectorType(BaseStandaloneConfiguration.DetectorType detectorType) { this.detectorType = detectorType; }
+    protected OutlierDetector constructDetector(Long randomSeed) {
+        int metricsDimensions = lowMetrics.size() + highMetrics.size();
 
-    public void forceUsePercentile(boolean force) {
-        forceUsePercentile = force;
-    }
-
-    public void forceUseZScore(boolean force) {
-        forceUseZScore = force;
-    }
-
-    public void setZScore(double zscore) {
-        ZSCORE = zscore;
-    }
-
-    public void setTargetPercentile(double targetPercentile) {
-        TARGET_PERCENTILE = targetPercentile;
-    }
-
-    public void setMinSupport(double minSupport) {
-        MIN_SUPPORT = minSupport;
-    }
-
-    public void setMinInlierRatio(double minInlierRatio) {
-        MIN_INLIER_RATIO = minInlierRatio;
-    }
-    
-    public void setAlphaMCD(double alphaMCD) {
-    	this.alphaMCD = alphaMCD;
-    }
-    
-    public void setStoppingDeltaMCD(double stoppingDeltaMCD) {
-    	this.stoppingDeltaMCD = stoppingDeltaMCD;
-    }
-
-    protected OutlierDetector constructDetector(int metricsDimensions, boolean seedRand) {
-        if(detectorType == null) {
-            if (metricsDimensions == 1) {
-                log.info("By default: using MAD detector for dimension 1 metric.");
-                return new MAD();
-            } else {
-                log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
-                MinCovDet ret = new MinCovDet(metricsDimensions);
-                if(seedRand) {
-                    ret.seedRandom(0);
+        switch (detectorType) {
+            case MAD_OR_MCD:
+                if (metricsDimensions == 1) {
+                    log.info("By default: using MAD detector for dimension 1 metric.");
+                    return new MAD();
+                } else {
+                    log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
+                    MinCovDet ret = new MinCovDet(metricsDimensions);
+                    if(randomSeed != null) {
+                        ret.seedRandom(randomSeed);
+                    }
+                    return ret;
                 }
-                return ret;
-            }
-        } else {
-            log.debug("{}", detectorType);
-            if(detectorType == BaseStandaloneConfiguration.DetectorType.MAD) {
+            case MAD:
                 log.info("Using MAD detector.");
                 return new MAD();
-            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.MCD) {
+            case MCD:
                 log.info("Using MCD detector.");
                 MinCovDet ret = new MinCovDet(metricsDimensions);
-                if(seedRand) {
-                    ret.seedRandom(0);
+                if(randomSeed != null) {
+                    ret.seedRandom(randomSeed);
                 }
                 return ret;
-            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.ZSCORE) {
+            case ZSCORE:
                 log.info("Using ZScore detector.");
                 return new ZScore();
-            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.KDE) {
-            	log.info("Using KDE detector.");
-                KDE.Bandwidth bandwidthType = serverConfiguration.getKernelBandwidth();
-                if (bandwidthType != null) {
-                    return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
-                }
-                return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
-            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.BINNED_KDE) {
+            case KDE:
+                log.info("Using KDE detector.");
+                return new KDE(kdeKernelType, kdeBandwidth);
+            case BINNED_KDE:
                 log.info("Using BinnedKDE detector.");
-                KDE.Bandwidth bandwidthType = serverConfiguration.getKernelBandwidth();
-                if (bandwidthType != null) {
-                    return new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
-                }
-                return new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
-            } else {
+                return new BinnedKDE(kdeKernelType, kdeBandwidth);
+            default:
                 throw new RuntimeException("Unhandled detector class!"+ detectorType);
-            }
         }
     }
 }

@@ -12,18 +12,18 @@ import macrobase.analysis.periodic.WallClockRetrainer;
 import macrobase.analysis.periodic.WallClockAnalysisDecayer;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
-import macrobase.ingest.SQLLoader;
 
-import macrobase.ingest.transform.ZeroToOneLinearTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -32,71 +32,40 @@ import java.util.concurrent.TimeUnit;
 public class StreamingAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(StreamingAnalyzer.class);
 
-    private Integer warmupCount = 10000;
-    private Integer inputReservoirSize = 10000;
-    private Integer scoreReservoirSize = 10000;
-    private Integer summaryPeriod = 100000;
-    private Boolean useRealTimePeriod = false;
-	private Boolean useTupleCountPeriod = true;
-    private double decayRate = .01;
-    private Integer modelRefreshPeriod = 100000;
+    //These are streaming-specific configuration parameters.
+    //Non-streaming-specific parameters are set in BaseAnalyzer.
+    private final Integer warmupCount;
+    private final Integer inputReservoirSize;
+    private final Integer scoreReservoirSize;
+    private final Integer summaryPeriod;
+    private final Boolean useRealTimePeriod;
+    private final Boolean useTupleCountPeriod;
+    private final Double decayRate;
+    private final Integer modelRefreshPeriod;
+    private final Integer outlierItemSummarySize;
+    private final Integer inlierItemSummarySize;
 
-    private Integer outlierItemSummarySize = 100000;
-    private Integer inlierItemSummarySize = 100000;
+    public StreamingAnalyzer(MacroBaseConf conf) throws ConfigurationException {
+        super(conf);
+        conf.sanityCheckStreaming();
 
-    public void setModelRefreshPeriod(Integer modelRefreshPeriod) {
-        this.modelRefreshPeriod = modelRefreshPeriod;
+        warmupCount = conf.getInt(MacroBaseConf.WARMUP_COUNT, MacroBaseDefaults.WARMUP_COUNT);
+        inputReservoirSize = conf.getInt(MacroBaseConf.INPUT_RESERVOIR_SIZE, MacroBaseDefaults.INPUT_RESERVOIR_SIZE);
+        scoreReservoirSize = conf.getInt(MacroBaseConf.SCORE_RESERVOIR_SIZE, MacroBaseDefaults.SCORE_RESERVOIR_SIZE);
+        summaryPeriod = conf.getInt(MacroBaseConf.SUMMARY_UPDATE_PERIOD, MacroBaseDefaults.SUMMARY_UPDATE_PERIOD);
+        useRealTimePeriod = conf.getBoolean(MacroBaseConf.USE_REAL_TIME_PERIOD,
+                                            MacroBaseDefaults.USE_REAL_TIME_PERIOD);
+        useTupleCountPeriod = conf.getBoolean(MacroBaseConf.USE_TUPLE_COUNT_PERIOD,
+                                              MacroBaseDefaults.USE_TUPLE_COUNT_PERIOD);
+        decayRate = conf.getDouble(MacroBaseConf.DECAY_RATE, MacroBaseDefaults.DECAY_RATE);
+        modelRefreshPeriod = conf.getInt(MacroBaseConf.MODEL_UPDATE_PERIOD, MacroBaseDefaults.MODEL_UPDATE_PERIOD);
+        outlierItemSummarySize = conf.getInt(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE,
+                                             MacroBaseDefaults.OUTLIER_ITEM_SUMMARY_SIZE);
+        inlierItemSummarySize = conf.getInt(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE,
+                                            MacroBaseDefaults.INLIER_ITEM_SUMMARY_SIZE);
     }
 
-    public void setInputReservoirSize(Integer inputReservoirSize) {
-        this.inputReservoirSize = inputReservoirSize;
-    }
-
-    public void setScoreReservoirSize(Integer scoreReservoirSize) {
-        this.scoreReservoirSize = scoreReservoirSize;
-    }
-
-    public void setSummaryPeriod(Integer summaryPeriod) {
-        this.summaryPeriod = summaryPeriod;
-    }
-
-    public void useRealTimeDecay(Boolean useRealTimeDecay) {
-        this.useRealTimePeriod = useRealTimeDecay;
-    }
-
-    public void useTupleCountDecay(Boolean useTupleCountDecay) {
-        this.useTupleCountPeriod = useTupleCountDecay;
-    }
-
-    public void setDecayRate(double decayRate) {
-        this.decayRate = decayRate;
-    }
-
-    public void setTracing(boolean doTrace) {
-        this.doTrace = doTrace;
-    }
-
-    public void setOutlierItemSummarySize(Integer outlierItemSummarySize) {
-        this.outlierItemSummarySize = outlierItemSummarySize;
-    }
-
-    public void setInlierItemSummarySize(Integer inlierItemSummarySize) {
-        this.inlierItemSummarySize = inlierItemSummarySize;
-    }
-
-    boolean doTrace;
-
-    int tupleNo = 0;
-    long totODTrainingTime = 0;
-    long totSummarizationTrainingTime = 0;
-    long totScoringTime = 0;
-    long totSummarizationTime = 0;
-
-    public AnalysisResult analyzeOnePass(DataLoader loader,
-                                         List<String> attributes,
-                                         List<String> lowMetrics,
-                                         List<String> highMetrics,
-                                         String baseQuery) throws SQLException, IOException {
+    public AnalysisResult analyzeOnePass() throws SQLException, IOException, ConfigurationException {
         DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
@@ -105,19 +74,17 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         // OUTLIER ANALYSIS
 
+        DataLoader loader = constructLoader();
+
         log.debug("Starting loading...");
         sw.start();
-        List<Datum> data = loader.getData(encoder,
-                attributes,
-                lowMetrics,
-                highMetrics,
-                new ArrayList<String>(),
-                new ZeroToOneLinearTransformation(), baseQuery);
+        List<Datum> data = loader.getData(encoder);
 
-        if(!seedRand)
+        if (randomSeed == null) {
             Collections.shuffle(data);
-        else
-            Collections.shuffle(data, new Random(0));
+        } else {
+            Collections.shuffle(data, new Random(randomSeed));
+        }
 
         sw.stop();
 
@@ -130,30 +97,29 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         tsw.start();
         tsw2.start();
 
-        int metricsDimensions = lowMetrics.size() + highMetrics.size();
-        OutlierDetector detector = constructDetector(metricsDimensions, seedRand);
+        OutlierDetector detector = constructDetector(randomSeed);
 
         ExponentiallyBiasedAChao<Datum> inputReservoir =
                 new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
 
-        if(seedRand) {
-            inputReservoir.setSeed(0);
+        if(randomSeed != null) {
+            inputReservoir.setSeed(randomSeed);
         }
 
         ExponentiallyBiasedAChao<Double> scoreReservoir = null;
 
         if(forceUsePercentile) {
             scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
-            if(seedRand) {
-                scoreReservoir.setSeed(0);
+            if(randomSeed != null) {
+                scoreReservoir.setSeed(randomSeed);
             }
         }
 
         ExponentiallyDecayingEmergingItemsets streamingSummarizer =
                 new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
                                                           outlierItemSummarySize,
-                                                          MIN_SUPPORT,
-                                                          MIN_INLIER_RATIO,
+                                                          minSupport,
+                                                          minOIRatio,
                                                           decayRate,
                                                           attributes.size());
 
@@ -187,11 +153,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                                          streamingSummarizer);
         }
 
-        tupleNo = 0;
-        totODTrainingTime = 0;
-        totSummarizationTrainingTime = 0;
-        totScoringTime = 0;
-        totSummarizationTime = 0;
+        int tupleNo = 0;
+        long totSummarizationTime = 0;
 
         for(Datum d: data) {
             inputReservoir.insert(d);
@@ -207,28 +170,23 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 sw.reset();
                 log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
             } else if(tupleNo >= warmupCount) {
-                if(doTrace) {
-                    innerLoopTracing(sw, detector, scoreReservoir, streamingSummarizer, analysisUpdater, modelUpdater, d);
-                } else {
-                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
+                long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
-                    analysisUpdater.updateIfNecessary(now, tupleNo);
-                    modelUpdater.updateIfNecessary(now, tupleNo);
-                    double score = detector.score(d);
+                analysisUpdater.updateIfNecessary(now, tupleNo);
+                modelUpdater.updateIfNecessary(now, tupleNo);
+                double score = detector.score(d);
 
-                    if(scoreReservoir != null) {
-                        scoreReservoir.insert(score);
-                    }
-
-                    if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-                       forceUsePercentile && detector.isPercentileOutlier(score,
-                                                                          TARGET_PERCENTILE)) {
-                        streamingSummarizer.markOutlier(d);
-                    } else {
-                        streamingSummarizer.markInlier(d);
-                    }
+                if(scoreReservoir != null) {
+                    scoreReservoir.insert(score);
                 }
 
+                if((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
+                   forceUsePercentile && detector.isPercentileOutlier(score,
+                                                                      targetPercentile)) {
+                    streamingSummarizer.markOutlier(d);
+                } else {
+                    streamingSummarizer.markInlier(d);
+                }
             }
 
             tupleNo += 1;
@@ -245,9 +203,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
         tuplesPerSecond *= 1000000;
 
-        log.debug("...ended OD training (time: {}ms)!", (totODTrainingTime / 1000) + 1);
-        log.debug("...ended summarization training (time: {}ms)!", (totSummarizationTrainingTime / 1000) + 1);
-        log.debug("...ended scoring (time: {}ms)!", (totScoringTime / 1000) + 1);
         log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
         log.debug("...ended total (time: {}ms)!", (tsw.elapsed(TimeUnit.MICROSECONDS) / 1000) + 1);
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
@@ -258,50 +213,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         log.debug("Number of itemsets: {}", isr.size());
 
-        return new AnalysisResult(0, 0, loadTime, totScoringTime + totODTrainingTime + totSummarizationTrainingTime, totSummarizationTime, isr);
-    }
-
-    private void innerLoopTracing(Stopwatch sw, OutlierDetector detector, ExponentiallyBiasedAChao<Double> scoreReservoir, ExponentiallyDecayingEmergingItemsets streamingSummarizer, AbstractPeriodicUpdater analysisUpdater, AbstractPeriodicUpdater modelUpdater, Datum d) {
-        // todo: calling curtime so frequently might be bad...
-        long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
-
-        sw.start();
-        analysisUpdater.updateIfNecessary(now, tupleNo);
-        sw.stop();
-        sw.reset();
-        totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-
-        sw.start();
-        modelUpdater.updateIfNecessary(now, tupleNo);
-        sw.stop();
-        totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
-
-        // classify, then insert into tree, etc.
-        sw.start();
-        double score = detector.score(d);
-        sw.stop();
-        totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
-
-        sw.start();
-        if(scoreReservoir != null) {
-            scoreReservoir.insert(score);
-        }
-
-        if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-           forceUsePercentile && detector.isPercentileOutlier(score,
-                                                              TARGET_PERCENTILE)) {
-            streamingSummarizer.markOutlier(d);
-        } else {
-            streamingSummarizer.markInlier(d);
-        }
-        sw.stop();
-        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
-    }
-
-    public void setWarmupCount(Integer warmupCount) {
-        this.warmupCount = warmupCount;
+        // todo: refactor this so we don't just return zero
+        return new AnalysisResult(0, 0, loadTime, 0, totSummarizationTime, isr);
     }
 }

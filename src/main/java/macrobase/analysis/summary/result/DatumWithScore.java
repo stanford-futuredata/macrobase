@@ -1,6 +1,5 @@
 package macrobase.analysis.summary.result;
 
-import com.google.gson.Gson;
 import macrobase.datamodel.Datum;
 
 public class DatumWithScore {

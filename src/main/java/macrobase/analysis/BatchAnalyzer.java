@@ -2,18 +2,16 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
-import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
 
 import macrobase.ingest.transform.DataTransformation;
-import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,36 +23,20 @@ import java.util.concurrent.TimeUnit;
 public class BatchAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(BatchAnalyzer.class);
 
-    public BatchAnalyzer() {
-        super();
+    public BatchAnalyzer(MacroBaseConf conf) throws ConfigurationException {
+        super(conf);
+        conf.sanityCheckBatch();
     }
 
-    public BatchAnalyzer(BaseStandaloneConfiguration configuration) {
-        super(configuration);
-    }
-
-    public AnalysisResult analyze(DataLoader loader,
-                                  List<String> attributes,
-                                  List<String> lowMetrics,
-                                  List<String> highMetrics,
-                                  List<String> auxiliaryAttributes,
-                                  String baseQuery,
-                                  DataTransformation dataTransformation) throws SQLException, IOException {
+    public AnalysisResult analyze() throws SQLException, IOException, ConfigurationException {
         DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
 
         // OUTLIER ANALYSIS
-
         log.debug("Starting loading...");
         sw.start();
-        List<Datum> data = loader.getData(encoder,
-                attributes,
-                lowMetrics,
-                highMetrics,
-                auxiliaryAttributes,
-                dataTransformation,
-                baseQuery);
+        List<Datum> data = constructLoader().getData(encoder);
         sw.stop();
 
         long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -68,53 +50,23 @@ public class BatchAnalyzer extends BaseAnalyzer {
         tsw2.start();
 
         sw.start();
-        int metricsDimensions = lowMetrics.size() + highMetrics.size();
-        OutlierDetector detector = constructDetector(metricsDimensions, seedRand);
 
-        if (serverConfiguration != null && serverConfiguration.getStoreScoreDistribution() != null ) {
-            detector.storeScoresInFile(serverConfiguration.getStoreScoreDistribution());
-        }
+        OutlierDetector detector = constructDetector(randomSeed);
 
         OutlierDetector.BatchResult or;
-        if(forceUsePercentile || (!forceUseZScore && TARGET_PERCENTILE > 0)) {
-            or = detector.classifyBatchByPercentile(data, TARGET_PERCENTILE);
+        if(forceUsePercentile || (!forceUseZScore && targetPercentile > 0)) {
+            or = detector.classifyBatchByPercentile(data, targetPercentile);
         } else {
-            or = detector.classifyBatchByZScoreEquivalent(data, ZSCORE);
+            or = detector.classifyBatchByZScoreEquivalent(data, zScore);
         }
         sw.stop();
 
         long classifyTime = sw.elapsed(TimeUnit.MILLISECONDS);
         sw.reset();
 
-        // Dump scored results into a file if requested.
-        if (serverConfiguration != null && serverConfiguration.getStoreScoreDistribution() != null) {
-
-            Gson gson = new GsonBuilder()
-                    .enableComplexMapKeySerialization()
-                    .serializeNulls()
-                    .setPrettyPrinting()
-                    .setVersion(1.0)
-                    .create();
-            final File dir = new File("target/scores");
-            dir.mkdirs();
-            try (PrintStream out = new PrintStream(new File(dir, serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
-                out.println(gson.toJson(or));
-            }
-
-            try (PrintStream out = new PrintStream(new File(dir, "outliers_" + serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
-                out.println(gson.toJson(or.getOutliers()));
-            }
-            try (PrintStream out = new PrintStream(new File(dir, "inliers_" + serverConfiguration.getStoreScoreDistribution()), "UTF-8")) {
-                out.println(gson.toJson(or.getInliers()));
-            }
-        }
-
         tsw2.stop();
 
         // SUMMARY
-
-        @SuppressWarnings("unused")
-		final int supportCountRequired = (int) MIN_SUPPORT*or.getOutliers().size();
 
         final int inlierSize = or.getInliers().size();
         final int outlierSize = or.getOutliers().size();
@@ -125,8 +77,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
         FPGrowthEmerging fpg = new FPGrowthEmerging();
         List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(or.getInliers(),
                                                                         or.getOutliers(),
-                                                                        MIN_SUPPORT,
-                                                                        MIN_INLIER_RATIO,
+                                                                        minSupport,
+                                                                        minOIRatio,
                                                                         encoder);
         sw.stop();
         tsw.stop();
