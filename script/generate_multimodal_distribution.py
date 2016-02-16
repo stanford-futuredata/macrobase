@@ -52,11 +52,11 @@ def generate_distribution(args):
     for name, mean, parameter, num_items in args.distributions:
       numpy_gen = getattr(np.random, name)
       numbers = numpy_gen(mean, parameter, num_items)
-      if all_points:
+      if all_points is not None:
         all_points = np.append(all_points, numbers)
       else:
         all_points = numbers
-    header.append('data')
+    header.append('XX')
   elif args.dimensions == 2:
     header = ['XX', 'YY']
     for distribution_params in args.distributions:

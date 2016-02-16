@@ -1,0 +1,11 @@
+synthetic_data: |
+  --normal 5,1,40000 
+  --normal 18,1.5,60000
+  --normal 12,1.1,1100
+macrobase:
+  taskName: 1d_mcd_killer-kde
+  targetHighMetrics: [XX]
+  targetLowMetrics: []
+  targetAttributes: [XX]
+  outlierDetectorType: KDE
+  dataLoaderType: CSV_LOADER

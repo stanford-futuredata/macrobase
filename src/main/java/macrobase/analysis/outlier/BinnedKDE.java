@@ -101,8 +101,8 @@ public class BinnedKDE extends KDE {
             }
 
             Arrays.sort(dataIn1D);
-            this.minimums[d] = dataIn1D[size-1];
-            this.maximums[d] = dataIn1D[0];
+            this.minimums[d] = dataIn1D[0];
+            this.maximums[d] = dataIn1D[size - 1];
             this.delta = (this.maximums[d] - this.minimums[d]) / numIntervals;
 
             for (int i=0; i<size; i++) {

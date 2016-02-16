@@ -98,10 +98,12 @@ def plot_estimator(args):
 
       # leading term is purely fiction.. it should be 1/bandwidth
       # scaling_factor = 50. * (outliers.shape[0] + inliers.shape[0]) / args.histogram_bins
-      scaling_factor = 1
+      scaling_factor = len(scores) * 24.638927471 / args.histogram_bins
       sign = 1. if scores[0] > 0 else -1
       scaling_factor *= sign
       scaled_scores = [scaling_factor * y for y in scores]
+      print scaled_scores[:100]
+      print scaling_factor
       plt.plot(combined_X, scaled_scores, color='magenta', label='est distribution', lw=1.1)
    
   elif dimensions == 2:
