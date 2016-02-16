@@ -18,7 +18,8 @@ public class BaseStandaloneConfiguration extends Configuration {
         MAD,
         MCD,
         ZSCORE,
-        KDE
+        KDE,
+        BINNED_KDE
     }
 
     public enum DataLoaderType {

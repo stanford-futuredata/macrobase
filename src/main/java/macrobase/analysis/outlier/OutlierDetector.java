@@ -21,11 +21,10 @@ import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 
 /**
- * Created by pbailis on 12/14/15.
+ * Abstract class for All outlier detection algorithms
  */
 public abstract class OutlierDetector {
 	private static final Logger log = LoggerFactory.getLogger(OutlierDetector.class);
-
 
     protected String scoreFile;
 

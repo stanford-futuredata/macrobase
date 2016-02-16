@@ -3,6 +3,9 @@ package macrobase.analysis.outlier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import macrobase.analysis.outlier.kernel.EpanchnikovMulticativeKernel;
+import macrobase.analysis.outlier.kernel.Kernel;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
@@ -19,58 +22,35 @@ public class KDE extends OutlierDetector {
         MANUAL
     }
 
-    public enum Kernel {
+    public enum KernelType {
         EPANECHNIKOV_MULTIPLICATIVE;
 
-        public double density(RealVector u) {
+        public Kernel constructKernel(int dimensions) {
             switch (this) {
                 case EPANECHNIKOV_MULTIPLICATIVE:
-                    double rtn = 1.0;
-                    final int d = u.getDimension();
-                    for (int i = 0; i < d; i++) {
-                        double i2 = u.getEntry(i) * u.getEntry(i);
-                        if (i2 > 1) {
-                            return 0;
-                        }
-                        rtn *= 1 - i2;
-                    }
-                    return Math.pow(0.75, d) * rtn;
+                    return new EpanchnikovMulticativeKernel(dimensions);
                 default:
-                    throw new RuntimeException("No kernel implemented");
-            }
-        }
-
-        public double secondMoment(int dimension) {
-            switch (this) {
-                case EPANECHNIKOV_MULTIPLICATIVE:
-                    return Math.pow(0.2, dimension);
-                default:
-                    throw new RuntimeException("No second moment stored for this kernel");
-            }
-        }
-
-        public double norm(int dimension) {
-            switch (this) {
-                case EPANECHNIKOV_MULTIPLICATIVE:
-                    return Math.pow(0.6, dimension);
-                default:
-                    throw new RuntimeException("No norm implemented for this kernel");
+                    throw new RuntimeException("Unexpected Kernel given");
             }
         }
     }
 
-    private Kernel kernel;
+    protected KernelType kernelType;
+    protected Kernel kernel;
     private List<Datum> densityPopulation;
-    private RealMatrix bandwidth; // symmetric and positive definite
-    private RealMatrix bandwidthToNegativeHalf;
+    protected RealMatrix bandwidth; // symmetric and positive definite
+    protected RealMatrix bandwidthToNegativeHalf;
     private double scoreScalingFactor;
     private double[] allScores;
     private Bandwidth bandwidthType;
     private double proportionOfDataToUse;
 
-    public KDE(Kernel kernel, Bandwidth bandwidthType) {
-        this.kernel = kernel;
+    protected int metricsDimensions;
+
+    public KDE(KernelType kernel, Bandwidth bandwidthType) {
+        this.kernelType = kernel;
         this.bandwidthType = bandwidthType;
+        this.kernel = this.kernelType.constructKernel(this.metricsDimensions);
         // Pick 1 % of the data, randomly
         this.proportionOfDataToUse = 0.01;
     }
@@ -89,15 +69,14 @@ public class KDE extends OutlierDetector {
      * Calculates bandwidth matrix based on the data that KDE should run on
      * @param data
      */
-    private void setBandwidth(List<Datum> data) {
-        final int metricsDimensions = data.get(0).getMetrics().getDimension();
+    protected void setBandwidth(List<Datum> data) {
+        this.metricsDimensions = data.get(0).getMetrics().getDimension();
         RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
 	    log.info("running with bandwidthType: {}", bandwidthType);
         switch (bandwidthType) {
             case NORMAL_SCALE:
                 final double standardNormalQunatileDifference = 1.349;
-                int dimensions = data.get(0).getMetrics().getDimension();
-                for (int d=0; d<dimensions; d++) {
+                for (int d=0; d<this.metricsDimensions; d++) {
                     int size = data.size();
                     double[] dataIn1D = new double[size];
                     for (int i=0; i<size; i++) {
@@ -107,15 +86,15 @@ public class KDE extends OutlierDetector {
                     final double twentyfive = quantile.evaluate(dataIn1D, 25);
                     final double seventyfive = quantile.evaluate(dataIn1D, 75);
                     final double interQuantileDeviation = (seventyfive - twentyfive) / standardNormalQunatileDifference;
-                    final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
-                    final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
+                    final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm1D();
+                    final double constDenominator = 3 * Math.pow(kernel.secondMoment1D(), 2) * data.size() * this.proportionOfDataToUse;
                     double dimensional_bandwidth = Math.pow(constNumerator / constDenominator, 0.2) * interQuantileDeviation;
                     bandwidth.setEntry(d, d, dimensional_bandwidth);
                 }
                 break;
             case OVERSHMOOTHED:
-                final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm(1);
-                final double constDenominator = 3 * Math.pow(kernel.secondMoment(1), 2) * data.size() * this.proportionOfDataToUse;
+                final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm1D();
+                final double constDenominator = 3 * Math.pow(kernel.secondMoment1D(), 2) * data.size() * this.proportionOfDataToUse;
                 final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
 		        log.info("covariance Scale: {}", covarianceScale);
                 RealMatrix covariance = this.getCovariance(data);

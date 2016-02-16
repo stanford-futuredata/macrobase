@@ -92,9 +92,16 @@ abstract public class BaseAnalyzer {
             	log.info("Using KDE detector.");
                 KDE.Bandwidth bandwidthType = serverConfiguration.getKernelBandwidth();
                 if (bandwidthType != null) {
-                    return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
+                    return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
                 }
-                return new KDE(KDE.Kernel.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
+                return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
+            } else if(detectorType == BaseStandaloneConfiguration.DetectorType.BINNED_KDE) {
+                log.info("Using Binned KDE detector.");
+                KDE.Bandwidth bandwidthType = serverConfiguration.getKernelBandwidth();
+                if (bandwidthType != null) {
+                    return new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, bandwidthType);
+                }
+                return new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
             } else {
                 throw new RuntimeException("Unhandled detector class!"+ detectorType);
             }
