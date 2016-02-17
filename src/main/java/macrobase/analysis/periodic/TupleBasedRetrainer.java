@@ -29,12 +29,11 @@ public class TupleBasedRetrainer extends AbstractTupleBasedPeriodicUpdater {
     }
 
     @Override
-    void updatePeriod(Object additionalData) {
+    void updatePeriod() {
         log.trace("Retraining models due to period: {} tuples processed", getCurrentTupleCount());
 
         RetrainingProcedure.updatePeriod(inputReservoir,
                                          detector,
-                                         itemsets,
-                                         additionalData);
+                                         itemsets);
     }
 }

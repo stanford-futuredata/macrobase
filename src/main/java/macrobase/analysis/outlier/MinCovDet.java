@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
-import com.google.common.collect.Lists;
 
 public class MinCovDet extends OutlierDetector  {
     private static final Logger log = LoggerFactory.getLogger(MinCovDet.class);
@@ -73,15 +72,19 @@ public class MinCovDet extends OutlierDetector  {
     private double alpha = .5;
     private Random random = new Random();
     private double stoppingDelta = 1e-3;
+    private int numSamples;
 
     private RealMatrix cov;
     private RealMatrix inverseCov;
+    
+    private RealMatrix localCov;
+    private RealMatrix inverseLocalCov;
 
     private RealVector mean;
-    private List<Datum> sampledData;
+    private RealVector localMean;
 
     // efficient only when k << allData.size()
-    private List<Datum> chooseKRandom(List<Datum> allData, final int k, List<Datum> otherCoreData) {
+    private List<Datum> chooseKRandom(List<Datum> allData, final int k) {
         assert(k < allData.size());
 
         List<Datum> ret = new ArrayList<>();
@@ -95,14 +98,6 @@ public class MinCovDet extends OutlierDetector  {
         }
 
         assert(ret.size() == k);
-        sampledData = Lists.newArrayList(ret);
-        
-        // Add other core data as well, if available
-        if (otherCoreData != null) {
-        	for (Datum datum : otherCoreData) {
-        		ret.add(datum);
-        	}
-        }
 
         return ret;
     }
@@ -180,7 +175,7 @@ public class MinCovDet extends OutlierDetector  {
         for(int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
             scores.add(new MetricsWithScore(d.getMetrics(),
-                                            getMahalanobis(mean, inverseCov, d.getMetrics()),
+                                            getMahalanobis(localMean, inverseLocalCov, d.getMetrics()),
                                             i));
         }
 
@@ -197,6 +192,15 @@ public class MinCovDet extends OutlierDetector  {
     public static double getDeterminant(RealMatrix cov) {
         return (new LUDecomposition(cov)).getDeterminant();
     }
+    
+    private void updateLocalInverseCovariance() {
+        try {
+            inverseLocalCov = new LUDecomposition(localCov).getSolver().getInverse();
+        } catch (SingularMatrixException e) {
+            singularCovariances.inc();
+            inverseLocalCov = new SingularValueDecomposition(localCov).getSolver().getInverse();
+        }
+    }
 
     private void updateInverseCovariance() {
         try {
@@ -208,36 +212,30 @@ public class MinCovDet extends OutlierDetector  {
     }
 
     @Override
-    public void train(List<Datum> data, Object additionalData) {
+    public void train(List<Datum> data) {
         // for now, only handle multivariate case...
         assert(data.iterator().next().getMetrics().getDimension() == p);
         assert(p > 1);
 
         int h = (int)Math.floor((data.size() + p + 1)*alpha);
+        numSamples = h;
 
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
-        List<? extends HasMetrics> initialSubset;
-        if (additionalData != null) {
-        	@SuppressWarnings("unchecked")
-			List<Datum> otherExamples = (List<Datum>) additionalData;
-        	initialSubset = chooseKRandom(data, h, otherExamples);
-        } else {
-        	initialSubset = chooseKRandom(data, h, null);
-        }
+        List<? extends HasMetrics> initialSubset = chooseKRandom(data, h);
         context.stop();
 
         context = meanComputation.time();
-        mean = getMean(initialSubset);
+        localMean = getMean(initialSubset);
         context.stop();
 
         context = covarianceComputation.time();
-        cov = getCovariance(initialSubset);
-        updateInverseCovariance();
+        localCov = getCovariance(initialSubset);
+        updateLocalInverseCovariance();
         context.stop();
 
         context = determinantComputation.time();
-        double det = getDeterminant(cov);
+        double det = getDeterminant(localCov);
         context.stop();
 
         int stepNo = 1;
@@ -250,16 +248,16 @@ public class MinCovDet extends OutlierDetector  {
             context.stop();
 
             context = meanComputation.time();
-            mean = getMean(newH);
+            localMean = getMean(newH);
             context.stop();
 
             context = covarianceComputation.time();
-            cov = getCovariance(newH);
-            updateInverseCovariance();
+            localCov = getCovariance(newH);
+            updateLocalInverseCovariance();
             context.stop();
 
             context = determinantComputation.time();
-            double newDet = getDeterminant(cov);
+            double newDet = getDeterminant(localCov);
             context.stop();
 
             double delta = det - newDet;
@@ -277,8 +275,8 @@ public class MinCovDet extends OutlierDetector  {
         
         log.debug("Number of iterations in MCD step: {}", numIterations);
 
-        log.trace("mean: {}", mean);
-        log.trace("cov: {}", cov);
+        log.trace("mean: {}", localMean);
+        log.trace("cov: {}", localCov);
     }
 
     @Override
@@ -286,22 +284,31 @@ public class MinCovDet extends OutlierDetector  {
         return getMahalanobis(mean, inverseCov, datum.getMetrics());
     }
 
-    public RealMatrix getCovariance() {
-        return cov;
+    public RealMatrix getLocalCovariance() {
+        return localCov;
     }
 
     public RealMatrix getInverseCovariance() {
         return inverseCov;
     }
 
-    public RealVector getMean() {
-        return mean;
+    public RealVector getLocalMean() {
+        return localMean;
     }
     
-    public List<Datum> getSampledData() {
-    	return sampledData;
+    public int getNumSamples() {
+    	return numSamples;
     }
-
+    
+    public void setCovariance(RealMatrix cov) {
+    	this.cov = cov;
+    	updateInverseCovariance();
+    }
+    
+    public void setMean(RealVector mean) {
+    	this.mean = mean;
+    }
+    
     @Override
     public double getZScoreEquivalent(double zscore) {
         // compute zscore to CDF

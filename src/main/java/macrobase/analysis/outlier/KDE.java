@@ -1,16 +1,10 @@
 package macrobase.analysis.outlier;
 
-import com.google.gson.Gson;
-
 import macrobase.datamodel.Datum;
-import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
 import org.apache.commons.math3.linear.*;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,7 +65,7 @@ public class KDE extends OutlierDetector {
     }
 
     @Override
-    public void train(List<Datum> data, Object additionalData) {
+    public void train(List<Datum> data) {
         // Very rudimentary sampling, write something better in the future.
         densityPopulation = new ArrayList<Datum>(data);
         Collections.shuffle(densityPopulation);

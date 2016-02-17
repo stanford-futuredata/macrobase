@@ -18,7 +18,7 @@ public class ZScore extends OutlierDetector {
     private final Timer stddevComputation = MacroBase.metrics.timer(name(ZScore.class, "stddevComputation"));
 
     @Override
-    public void train(List<Datum> data, Object additionalData) {
+    public void train(List<Datum> data) {
         double sum = 0;
 
         Timer.Context context = meanComputation.time();

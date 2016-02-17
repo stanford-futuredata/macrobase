@@ -22,6 +22,10 @@ import macrobase.ingest.result.ColumnValue;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration;
 import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,13 +109,17 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     int numRuns = 40;
     
     CopyOnWriteArrayList<Double> perThreadMedians;
-    CopyOnWriteArrayList<List<Datum>> perThreadSampledData;
+    CopyOnWriteArrayList<RealMatrix> perThreadCovarianceMatrices;
+    CopyOnWriteArrayList<RealVector> perThreadMeans;
+    CopyOnWriteArrayList<Integer> perThreadNumSamples;
     
     public StreamingAnalyzer(BaseStandaloneConfiguration configuration) 
     {
     	super(configuration);
         perThreadMedians = new CopyOnWriteArrayList<Double> ();
-        perThreadSampledData = new CopyOnWriteArrayList<List<Datum>> ();
+        perThreadCovarianceMatrices = new CopyOnWriteArrayList<RealMatrix> ();
+        perThreadMeans = new CopyOnWriteArrayList<RealVector> ();
+        perThreadNumSamples = new CopyOnWriteArrayList<Integer> ();
     }
     
     public static double getMedian(List<Double> data) {
@@ -225,24 +233,24 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        totSummarizationTrainingTime = 0;
 	        totScoringTime = 0;
 	        totSummarizationTime = 0;
-	        
-	        Object additionalData = null;
-	        
+	        	        
 	        for (int i = 0; i < numRuns; i++) {
 		        for(Datum d: data) {
 		            inputReservoir.insert(d);
 	
 		            if(tupleNo == warmupCount) {
 		            	sw.start();
-		                detector.train(inputReservoir.getReservoir(), null);
+		                detector.train(inputReservoir.getReservoir());
 		                for(Datum id : inputReservoir.getReservoir()) {
 		                    scoreReservoir.insert(detector.score(id));
 		                }
 		                
 		                if (detector.getDetectorType() == DetectorType.MAD) {
-		                	perThreadMedians.set(threadId, ((MAD) detector).getMedian());
+		                	perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
 		                } else if (detector.getDetectorType() == DetectorType.MCD) {
-		                	perThreadSampledData.set(threadId, ((MinCovDet) detector).getSampledData());
+		                	perThreadCovarianceMatrices.set(threadId, ((MinCovDet) detector).getLocalCovariance());
+		                	perThreadMeans.set(threadId, ((MinCovDet) detector).getLocalMean());
+		                	perThreadNumSamples.set(threadId, ((MinCovDet) detector).getNumSamples());
 		                }
 		                
 		                detector.updateRecentScoreList(scoreReservoir.getReservoir());
@@ -252,28 +260,43 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		            } else if(tupleNo >= warmupCount) {
 	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
-	                    analysisUpdater.updateIfNecessary(now, tupleNo, null);
+	                    analysisUpdater.updateIfNecessary(now, tupleNo);
 	                    // If model is updated, then update the shared data
-	                    if (modelUpdater.updateIfNecessary(now, tupleNo, additionalData)) {
+	                    if (modelUpdater.updateIfNecessary(now, tupleNo)) {
 	                    	if (detector.getDetectorType() == DetectorType.MAD) {
-			                	perThreadMedians.set(threadId, ((MAD) detector).getMedian());
+			                	perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
 			                } else if (detector.getDetectorType() == DetectorType.MCD) {
-			                	perThreadSampledData.set(threadId, ((MinCovDet) detector).getSampledData());
+			                	perThreadCovarianceMatrices.set(threadId, ((MinCovDet) detector).getLocalCovariance());
+			                	perThreadMeans.set(threadId, ((MinCovDet) detector).getLocalMean());
+			                	perThreadNumSamples.set(threadId, ((MinCovDet) detector).getNumSamples());
 			                }
 	                    	
 	                    	if (detector.getDetectorType() == DetectorType.MAD) {
 		                    	List<Double> perThreadMediansCopy = Lists.newArrayList(perThreadMedians);
-		                    	additionalData = getMedian(perThreadMediansCopy);
+		                    	double medianOfMedians = getMedian(perThreadMediansCopy);
+		                    	((MAD) detector).setMedian(medianOfMedians);
 		                    } else if (detector.getDetectorType() == DetectorType.MCD) {
-		                    	List<Datum> sampledData = new ArrayList<Datum> ();
-		                    	for (int j = 0; j < numThreads; j++) {
-		                    		if (j != threadId) {
-		                    			for (Datum datum : perThreadSampledData.get(j)) {
-		                    				sampledData.add(datum);
-		                    			}
-		                    		}
+		                    	RealMatrix covarianceMatrix = new Array2DRowRealMatrix(perThreadCovarianceMatrices.get(0).getData());
+		                    	RealVector mean = perThreadMeans.get(0);
+		                    	double numSamples1 = perThreadNumSamples.get(0);
+		                    	for (int j = 1; j < numThreads; j++) {
+		                    		// Update covariance matrices and means
+		                    		// First update covariance matrices
+		                    		covarianceMatrix.add(perThreadCovarianceMatrices.get(j));
+		                    		double numSamples2 = perThreadNumSamples.get(j);
+		                    		double numSamples = numSamples1 + numSamples2;
+		                    		RealVector mean2 = perThreadMeans.get(j);
+		                    		covarianceMatrix.add(mean.outerProduct(mean2).scalarMultiply((numSamples1 * numSamples2) / numSamples));
+
+		                    		// Now update means
+		                    		mean.mapMultiplyToSelf(numSamples1);
+		                    		mean2.mapMultiplyToSelf(numSamples2);
+		                    		mean = mean.add(mean2);
+		                    		mean.mapDivideToSelf(numSamples);
 		                    	}
-		                    	additionalData = sampledData;
+		                    	
+		                    	((MinCovDet) detector).setCovariance(covarianceMatrix);
+		                    	((MinCovDet) detector).setMean(mean);
 		                    }
 	                    }
 	                    double score = detector.score(d);
@@ -351,9 +374,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         log.debug("...ended loading (time: {}ms)!", loadTime);
         
+        int dim = data.get(0).getMetrics().getDimension();
         for (int i = 0; i < numThreads; i++) {
         	perThreadMedians.add(0.0);
-        	perThreadSampledData.add(new ArrayList<Datum> ());
+        	perThreadCovarianceMatrices.add(new Array2DRowRealMatrix(dim, dim));
+        	perThreadMeans.add(new ArrayRealVector(dim));
+        	perThreadNumSamples.add(0);
         }
         
         List<Thread> threads = new ArrayList<Thread>();

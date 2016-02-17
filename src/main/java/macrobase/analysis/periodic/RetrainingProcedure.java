@@ -21,12 +21,11 @@ class RetrainingProcedure {
 
     public static void updatePeriod(ExponentiallyBiasedAChao<Datum> inputReservoir,
                                     OutlierDetector detector,
-                                    ExponentiallyDecayingEmergingItemsets itemsets,
-                                    Object additionalData) {
+                                    ExponentiallyDecayingEmergingItemsets itemsets) {
         log.trace("Updating models.");
 
         Timer.Context rt = trainingTimer.time();
-        detector.train(inputReservoir.getReservoir(), additionalData);
+        detector.train(inputReservoir.getReservoir());
         rt.stop();
     }
 }

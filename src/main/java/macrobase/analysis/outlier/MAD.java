@@ -20,6 +20,7 @@ public class MAD extends OutlierDetector {
     private static final Logger log = LoggerFactory.getLogger(MAD.class);
 
     private double median;
+    private double localMedian;
     private double MAD;
 
     private final Timer medianComputation = MacroBase.metrics.timer(name(MAD.class, "medianComputation"));
@@ -41,7 +42,7 @@ public class MAD extends OutlierDetector {
         
         if (data.size() % 2 == 0) {
             median = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
-                      data.get(data.size() / 2 + 1).getMetrics().getEntry(0)) / 2;
+                      data.get(data.size() / 2).getMetrics().getEntry(0)) / 2;
         } else {
             median = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
         }
@@ -50,23 +51,16 @@ public class MAD extends OutlierDetector {
     }
 
     @Override
-    public void train(List<Datum> data, Object additionalData) {
+    public void train(List<Datum> data) {
         Timer.Context context = medianComputation.time();
         
-        double medianToBeUsed;
-        median = getMedian(data);
+        localMedian = getMedian(data);
         context.stop();
-        
-        if (additionalData != null) {
-        	medianToBeUsed = (Double) additionalData;
-        } else {
-        	medianToBeUsed = median;
-        }
 
         context = residualComputation.time();
         List<Double> residuals = new ArrayList<>(data.size());
         for (Datum d : data) {
-            residuals.add(Math.abs(d.getMetrics().getEntry(0) - medianToBeUsed));
+            residuals.add(Math.abs(d.getMetrics().getEntry(0) - localMedian));
         }
         context.stop();
 
@@ -116,7 +110,11 @@ public class MAD extends OutlierDetector {
 		return DetectorType.MAD;
 	}
 	
-	public double getMedian() {
-		return median;
+	public void setMedian(double median) {
+		this.median = median;
+	}
+	
+	public double getLocalMedian() {
+		return localMedian;
 	}
 }

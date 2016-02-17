@@ -51,7 +51,7 @@ public abstract class OutlierDetector {
     
     public abstract BaseStandaloneConfiguration.DetectorType getDetectorType();
 
-    public abstract void train(List<Datum> data, Object additionalData);
+    public abstract void train(List<Datum> data);
     public abstract double score(Datum datum);
     public abstract double getZScoreEquivalent(double zscore);
 
@@ -88,7 +88,7 @@ public abstract class OutlierDetector {
     	Stopwatch sw = Stopwatch.createUnstarted();
     	log.debug("Starting training...");
     	sw.start();
-        train(data, null);
+        train(data);
         sw.stop();
         long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended training (time: {}ms)!", trainTime);
@@ -118,7 +118,7 @@ public abstract class OutlierDetector {
         Stopwatch sw = Stopwatch.createUnstarted();
     	log.debug("Starting training...");
     	sw.start();
-        train(data, null);
+        train(data);
         sw.stop();
         long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended training (time: {}ms)!", trainTime);

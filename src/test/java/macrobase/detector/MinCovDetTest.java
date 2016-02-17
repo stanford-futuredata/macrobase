@@ -50,7 +50,7 @@ public class MinCovDetTest {
 
         MinCovDet trainer = new MinCovDet(dim);
 
-        trainer.train(testData, null);
+        trainer.train(testData);
 
         RealMatrix inverseCov = trainer.getInverseCovariance();
         RealVector mean = trainer.getMean();

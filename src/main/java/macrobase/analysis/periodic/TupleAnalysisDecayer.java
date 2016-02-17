@@ -28,7 +28,7 @@ public class TupleAnalysisDecayer extends AbstractTupleBasedPeriodicUpdater {
     }
 
     @Override
-    void updatePeriod(Object additionalData) {
+    void updatePeriod() {
         log.trace("Decaying summarizers due to period: {} tuples processed", getCurrentTupleCount());
 
         AnalysisDecayProcedure.updatePeriod(inputReservoir,
