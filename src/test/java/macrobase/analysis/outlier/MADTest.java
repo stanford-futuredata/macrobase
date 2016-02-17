@@ -19,7 +19,7 @@ public class MADTest {
         MAD m = new MAD();
 
         List<Datum> data = new ArrayList<>();
-        for(int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 100; ++i) {
             double[] sample = new double[1];
             sample[0] = i;
             data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
@@ -27,7 +27,7 @@ public class MADTest {
 
         m.train(data);
         assertEquals(1.98, m.score(data.get(0)), 1e-5);
-        assertEquals(1.98, m.score(data.get(data.size()-1)), 1e-5);
+        assertEquals(1.98, m.score(data.get(data.size() - 1)), 1e-5);
         assertEquals(0.02, m.score(data.get(50)), 1e-5);
     }
 
@@ -36,7 +36,7 @@ public class MADTest {
         MAD m = new MAD();
 
         List<Datum> data = new ArrayList<>();
-        for(int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10; ++i) {
             double[] sample = new double[1];
             sample[0] = i;
             data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
@@ -50,9 +50,9 @@ public class MADTest {
         m.train(data);
         log.debug("score is {}", m.score(data.get(data.size() - 1)));
 
-        assertEquals(5.0, m.score(data.get(data.size()-1)), 1e-5);
-        assertEquals(5.0/1.4826,
-                     m.getZScoreEquivalent(m.score(data.get(data.size()-1))),
+        assertEquals(5.0, m.score(data.get(data.size() - 1)), 1e-5);
+        assertEquals(5.0 / 1.4826,
+                     m.getZScoreEquivalent(m.score(data.get(data.size() - 1))),
                      1e-1);
     }
 }

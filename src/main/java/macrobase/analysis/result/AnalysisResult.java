@@ -41,7 +41,7 @@ public class AnalysisResult {
 
         final String sep = "-----\n\n";
         StringJoiner joiner = new StringJoiner(sep);
-        for(ItemsetResult result : itemSets) {
+        for (ItemsetResult result : itemSets) {
             joiner.add(result.prettyPrint());
         }
 
@@ -56,7 +56,9 @@ public class AnalysisResult {
         return numInliers;
     }
 
-    public long getLoadTime() { return loadTime; }
+    public long getLoadTime() {
+        return loadTime;
+    }
 
     public long getLabelTime() {
         return labelTime;

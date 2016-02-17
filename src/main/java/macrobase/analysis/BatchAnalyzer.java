@@ -43,7 +43,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
         sw.reset();
 
         log.debug("...ended loading (time: {}ms)!", loadTime);
-        
+
         Stopwatch tsw = Stopwatch.createUnstarted();
         Stopwatch tsw2 = Stopwatch.createUnstarted();
         tsw.start();
@@ -54,7 +54,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
         OutlierDetector detector = constructDetector(randomSeed);
 
         OutlierDetector.BatchResult or;
-        if(forceUsePercentile || (!forceUseZScore && targetPercentile > 0)) {
+        if (forceUsePercentile || (!forceUseZScore && targetPercentile > 0)) {
             or = detector.classifyBatchByPercentile(data, targetPercentile);
         } else {
             or = detector.classifyBatchByZScoreEquivalent(data, zScore);
@@ -82,10 +82,10 @@ public class BatchAnalyzer extends BaseAnalyzer {
                                                                         encoder);
         sw.stop();
         tsw.stop();
-        
+
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
         tuplesPerSecond *= 1000000;
-        
+
         long summarizeTime = sw.elapsed(TimeUnit.MILLISECONDS);
         sw.reset();
         log.debug("...ended summarization (time: {}ms)!", summarizeTime);

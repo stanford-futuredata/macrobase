@@ -73,11 +73,11 @@ public class BaseAnalyzer {
     }
 
     public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {
-        if(conf.getDataLoaderType() == DataLoaderType.CSV_LOADER) {
+        if (conf.getDataLoaderType() == DataLoaderType.CSV_LOADER) {
             return new CsvLoader(conf);
-        } else if(conf.getDataLoaderType() == DataLoaderType.POSTGRES_LOADER) {
+        } else if (conf.getDataLoaderType() == DataLoaderType.POSTGRES_LOADER) {
             return new PostgresLoader(conf);
-        } else if(conf.getDataLoaderType() == DataLoaderType.CACHING_POSTGRES_LOADER) {
+        } else if (conf.getDataLoaderType() == DataLoaderType.CACHING_POSTGRES_LOADER) {
             return new DiskCachingPostgresLoader(conf);
         }
 
@@ -95,7 +95,7 @@ public class BaseAnalyzer {
                 } else {
                     log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
                     MinCovDet ret = new MinCovDet(metricsDimensions);
-                    if(randomSeed != null) {
+                    if (randomSeed != null) {
                         ret.seedRandom(randomSeed);
                     }
                     return ret;
@@ -106,7 +106,7 @@ public class BaseAnalyzer {
             case MCD:
                 log.info("Using MCD detector.");
                 MinCovDet ret = new MinCovDet(metricsDimensions);
-                if(randomSeed != null) {
+                if (randomSeed != null) {
                     ret.seedRandom(randomSeed);
                 }
                 return ret;
@@ -120,7 +120,7 @@ public class BaseAnalyzer {
                 log.info("Using BinnedKDE detector.");
                 return new BinnedKDE(kdeKernelType, kdeBandwidth);
             default:
-                throw new RuntimeException("Unhandled detector class!"+ detectorType);
+                throw new RuntimeException("Unhandled detector class!" + detectorType);
         }
     }
 }

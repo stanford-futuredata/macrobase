@@ -19,8 +19,10 @@ public class StreamingFPGrowth {
     private static final Logger log = LoggerFactory.getLogger(StreamingFPGrowth.class);
     private final Timer fpMine = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "fpMine"));
     private final Timer restructureTree = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "restructureTree"));
-    private final Timer updateFrequentItemOrder = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "updateFrequentItemOrder"));
-    private final Timer insertFrequentItems = MacroBase.metrics.timer(name(StreamingFPGrowth.class, "insertFrequentItems"));
+    private final Timer updateFrequentItemOrder = MacroBase.metrics.timer(
+            name(StreamingFPGrowth.class, "updateFrequentItemOrder"));
+    private final Timer insertFrequentItems = MacroBase.metrics.timer(
+            name(StreamingFPGrowth.class, "insertFrequentItems"));
 
     StreamingFPTree fp = new StreamingFPTree();
     boolean needsRestructure = false;
@@ -48,7 +50,7 @@ public class StreamingFPGrowth {
         Set<FPTreeNode> sortedNodes = new HashSet<>();
 
         @SuppressWarnings("unused")
-		private void printTreeDebug() {
+        private void printTreeDebug() {
             log.debug("Frequent Item Counts:");
             frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %d", e.getKey(), e.getValue())));
 
@@ -62,14 +64,14 @@ public class StreamingFPGrowth {
 
         // todo: make more efficient
         private void decayWeights(FPTreeNode start, double decayWeight) {
-            if(start == root) {
+            if (start == root) {
                 for (Integer item : frequentItemCounts.keySet()) {
                     frequentItemCounts.put(item, frequentItemCounts.get(item) * decayWeight);
                 }
             }
 
             start.count *= decayWeight;
-            if(start.getChildren() != null) {
+            if (start.getChildren() != null) {
                 for (FPTreeNode child : start.getChildren()) {
                     decayWeights(child, decayWeight);
                 }
@@ -82,9 +84,9 @@ public class StreamingFPGrowth {
                       new String(new char[treeDepth]).replaceAll("\0", "\t"),
                       start.getItem(), start.getCount(),
                       sortedNodes.contains(start));
-            if(start.getChildren() != null) {
+            if (start.getChildren() != null) {
                 for (FPTreeNode child : start.getChildren()) {
-                    walkTree(child, treeDepth+1);
+                    walkTree(child, treeDepth + 1);
                 }
             }
         }
@@ -125,7 +127,7 @@ public class StreamingFPGrowth {
             }
 
             public void removeChild(FPTreeNode child) {
-                assert(children.contains(child));
+                assert (children.contains(child));
                 children.remove(child);
             }
 
@@ -155,15 +157,15 @@ public class StreamingFPGrowth {
             }
 
             public void mergeChildren(List<FPTreeNode> otherChildren) {
-                assert(!hasChildren() || !leafNodes.contains(this));
+                assert (!hasChildren() || !leafNodes.contains(this));
 
-                if(otherChildren == null) {
+                if (otherChildren == null) {
                     return;
                 }
 
-                if(children == null) {
+                if (children == null) {
                     children = Lists.newArrayList(otherChildren);
-                    for(FPTreeNode child : otherChildren) {
+                    for (FPTreeNode child : otherChildren) {
                         child.parent = this;
                     }
                     leafNodes.remove(this);
@@ -172,11 +174,11 @@ public class StreamingFPGrowth {
                 }
 
                 // O(N^2); slow for large lists; consider optimizing
-                for(FPTreeNode otherChild : otherChildren) {
+                for (FPTreeNode otherChild : otherChildren) {
                     otherChild.parent = this;
                     boolean matched = false;
-                    for(FPTreeNode ourChild : children) {
-                        if(otherChild.item == ourChild.item) {
+                    for (FPTreeNode ourChild : children) {
+                        if (otherChild.item == ourChild.item) {
                             removeNodeFromHeaders(otherChild);
 
                             ourChild.count += otherChild.count;
@@ -187,7 +189,7 @@ public class StreamingFPGrowth {
                         }
                     }
 
-                    if(!matched) {
+                    if (!matched) {
                         children.add(otherChild);
                     }
                 }
@@ -199,13 +201,13 @@ public class StreamingFPGrowth {
                                           int currentIndex,
                                           final double itemCount,
                                           boolean streaming) {
-                if(!streaming) {
+                if (!streaming) {
                     sortedNodes.add(this);
                 }
 
                 incrementCount(itemCount);
 
-                if(currentIndex == fullTransaction.size()) {
+                if (currentIndex == fullTransaction.size()) {
                     return;
                 }
 
@@ -213,37 +215,37 @@ public class StreamingFPGrowth {
 
                 FPTreeNode matchingChild = null;
 
-                if(children != null) {
-                    for(FPTreeNode child : children) {
-                        if(child.getItem() == currentItem) {
+                if (children != null) {
+                    for (FPTreeNode child : children) {
+                        if (child.getItem() == currentItem) {
                             matchingChild = child;
                             break;
                         }
                     }
                 }
 
-                if(matchingChild == null) {
+                if (matchingChild == null) {
                     matchingChild = new FPTreeNode(currentItem, this, 0);
 
-                    if(!streaming) {
+                    if (!streaming) {
                         sortedNodes.add(matchingChild);
                     }
 
                     FPTreeNode prevHeader = nodeHeaders.get(currentItem);
                     nodeHeaders.put(currentItem, matchingChild);
 
-                    if(prevHeader != null) {
+                    if (prevHeader != null) {
                         matchingChild.setNextLink(prevHeader);
                         prevHeader.setPrevLink(matchingChild);
                     }
 
-                    if(children == null) {
+                    if (children == null) {
                         children = new ArrayList<>();
                     }
 
                     children.add(matchingChild);
 
-                    if(currentIndex == fullTransaction.size() -1) {
+                    if (currentIndex == fullTransaction.size() - 1) {
                         leafNodes.add(matchingChild);
                     }
 
@@ -255,8 +257,8 @@ public class StreamingFPGrowth {
         }
 
         public int getSupport(Collection<Integer> pattern) {
-            for(Integer i : pattern) {
-                if(!frequentItemCounts.containsKey(i)) {
+            for (Integer i : pattern) {
+                if (!frequentItemCounts.containsKey(i)) {
                     return 0;
                 }
             }
@@ -266,16 +268,16 @@ public class StreamingFPGrowth {
 
             int count = 0;
             FPTreeNode pathHead = nodeHeaders.get(plist.get(0));
-            while(pathHead != null) {
+            while (pathHead != null) {
                 FPTreeNode curNode = pathHead;
                 int itemsToFind = plist.size();
 
-                while(curNode != null) {
-                    if(pattern.contains(curNode.getItem())) {
+                while (curNode != null) {
+                    if (pattern.contains(curNode.getItem())) {
                         itemsToFind -= 1;
                     }
 
-                    if(itemsToFind == 0) {
+                    if (itemsToFind == 0) {
                         count += pathHead.count;
                         break;
                     }
@@ -294,14 +296,14 @@ public class StreamingFPGrowth {
             Timer.Context context = insertFrequentItems.time();
 
             Map<Integer, Double> itemCounts = new HashMap<>();
-            for(Set<Integer> t : transactions) {
-                for(Integer item : t) {
+            for (Set<Integer> t : transactions) {
+                for (Integer item : t) {
                     itemCounts.compute(item, (k, v) -> v == null ? 1 : v + 1);
                 }
             }
 
-            for(Map.Entry<Integer, Double> e : itemCounts.entrySet()) {
-                if(e.getValue() >= countRequiredForSupport) {
+            for (Map.Entry<Integer, Double> e : itemCounts.entrySet()) {
+                if (e.getValue() >= countRequiredForSupport) {
                     frequentItemCounts.put(e.getKey(), e.getValue());
                 }
             }
@@ -311,7 +313,7 @@ public class StreamingFPGrowth {
             List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
             sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
                     .compareTo(frequentItemCounts.get(i2.getKey())));
-            for(int i = 0; i < sortedItemCounts.size(); ++i) {
+            for (int i = 0; i < sortedItemCounts.size(); ++i) {
                 frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
             }
 
@@ -319,19 +321,19 @@ public class StreamingFPGrowth {
         }
 
         private void deleteItems(Set<Integer> itemsToDelete) {
-            if(itemsToDelete == null) {
+            if (itemsToDelete == null) {
                 return;
             }
 
-            for(int item : itemsToDelete) {
+            for (int item : itemsToDelete) {
                 frequentItemCounts.remove(item);
                 frequentItemOrder.remove(item);
 
                 FPTreeNode nodeToDelete = nodeHeaders.get(item);
 
-                while(nodeToDelete != null) {
+                while (nodeToDelete != null) {
                     nodeToDelete.parent.removeChild(nodeToDelete);
-                    if(nodeToDelete.hasChildren()) {
+                    if (nodeToDelete.hasChildren()) {
                         nodeToDelete.parent.mergeChildren(nodeToDelete.children);
                     }
 
@@ -356,7 +358,7 @@ public class StreamingFPGrowth {
             List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
             sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i2.getKey())
                     .compareTo(frequentItemCounts.get(i1.getKey())));
-            for(int i = 0; i < sortedItemCounts.size(); ++i) {
+            for (int i = 0; i < sortedItemCounts.size(); ++i) {
                 frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
             }
 
@@ -367,14 +369,14 @@ public class StreamingFPGrowth {
                                                    int countRequiredForSupport) {
             Map<Integer, Double> itemCounts = new HashMap<>();
 
-            for(ItemsetWithCount i : patterns) {
-                for(Integer item : i.getItems()) {
+            for (ItemsetWithCount i : patterns) {
+                for (Integer item : i.getItems()) {
                     itemCounts.compute(item, (k, v) -> v == null ? i.getCount() : v + i.getCount());
                 }
             }
 
-            for(Map.Entry<Integer, Double> e : itemCounts.entrySet()) {
-                if(e.getValue() >= countRequiredForSupport) {
+            for (Map.Entry<Integer, Double> e : itemCounts.entrySet()) {
+                if (e.getValue() >= countRequiredForSupport) {
                     frequentItemCounts.put(e.getKey(), e.getValue());
                 }
             }
@@ -383,7 +385,7 @@ public class StreamingFPGrowth {
         }
 
         private void sortTransaction(List<Integer> txn, boolean isStreaming) {
-            if(!isStreaming) {
+            if (!isStreaming) {
                 txn.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
             } else {
                 txn.sort((i1, i2) ->
@@ -393,7 +395,7 @@ public class StreamingFPGrowth {
         }
 
         public void insertConditionalFrequentPatterns(List<ItemsetWithCount> patterns) {
-            for(ItemsetWithCount is : patterns) {
+            for (ItemsetWithCount is : patterns) {
                 reinsertBranch(is.getItems(), is.getCount(), root);
             }
         }
@@ -407,22 +409,23 @@ public class StreamingFPGrowth {
 
 
         public void insertTransactions(List<Set<Integer>> transactions, boolean streaming, boolean filterExistingFrequentItemsOnly) {
-            for(Set<Integer> t : transactions) {
+            for (Set<Integer> t : transactions) {
                 insertTransaction(t, streaming, filterExistingFrequentItemsOnly);
             }
         }
 
         public void insertTransaction(Collection<Integer> transaction, boolean streaming, boolean filterExistingFrequentItemsOnly) {
-            if(streaming && !filterExistingFrequentItemsOnly) {
+            if (streaming && !filterExistingFrequentItemsOnly) {
                 for (Integer item : transaction) {
                     frequentItemCounts.compute(item, (k, v) -> v == null ? 1 : v + 1);
                 }
             }
 
-            List<Integer> filtered = transaction.stream().filter(i -> frequentItemCounts.containsKey(i)).collect(Collectors.toList());
+            List<Integer> filtered = transaction.stream().filter(i -> frequentItemCounts.containsKey(i)).collect(
+                    Collectors.toList());
 
-            if(!filtered.isEmpty()) {
-                if(streaming && filterExistingFrequentItemsOnly) {
+            if (!filtered.isEmpty()) {
+                if (streaming && filterExistingFrequentItemsOnly) {
                     for (Integer item : filtered) {
                         frequentItemCounts.compute(item, (k, v) -> v == null ? 1 : v + 1);
                     }
@@ -441,48 +444,48 @@ public class StreamingFPGrowth {
             FPTreeNode curNode = root;
             FPTreeNode nodeOfBranching = null;
             Set<FPTreeNode> singlePathNodes = new HashSet<>();
-            while(true) {
-                if(curNode.count < supportCountRequired) {
+            while (true) {
+                if (curNode.count < supportCountRequired) {
                     break;
                 }
 
-                if(curNode.children != null && curNode.children.size() > 1) {
+                if (curNode.children != null && curNode.children.size() > 1) {
                     nodeOfBranching = curNode;
                     break;
                 }
 
-                if(curNode != root) {
+                if (curNode != root) {
                     singlePathNodes.add(curNode);
                 }
 
-                if(curNode.children == null || curNode.children.size() == 0) {
+                if (curNode.children == null || curNode.children.size() == 0) {
                     break;
                 } else {
                     curNode = curNode.children.get(0);
                 }
             }
 
-            for(Set<FPTreeNode> subset : Sets.powerSet(singlePathNodes)) {
-                if(subset.isEmpty()) {
+            for (Set<FPTreeNode> subset : Sets.powerSet(singlePathNodes)) {
+                if (subset.isEmpty()) {
                     continue;
                 }
 
                 double minSupportInSubset = -1;
                 Set<Integer> items = new HashSet<>();
-                for(FPTreeNode n : subset) {
+                for (FPTreeNode n : subset) {
                     items.add(n.getItem());
 
-                    if(minSupportInSubset == -1 || n.getCount() < minSupportInSubset) {
+                    if (minSupportInSubset == -1 || n.getCount() < minSupportInSubset) {
                         minSupportInSubset = n.getCount();
                     }
                 }
 
-                assert(minSupportInSubset >= supportCountRequired);
+                assert (minSupportInSubset >= supportCountRequired);
                 singlePathItemsets.add(new ItemsetWithCount(items, minSupportInSubset));
             }
 
             // the entire tree was a single path...
-            if(nodeOfBranching == null) {
+            if (nodeOfBranching == null) {
                 return singlePathItemsets;
             }
 
@@ -495,11 +498,11 @@ public class StreamingFPGrowth {
             // instead store the nodes to skip in a separate set
 
             Set<Integer> alreadyMinedItems = new HashSet<>();
-            for(FPTreeNode node : singlePathNodes) {
+            for (FPTreeNode node : singlePathNodes) {
                 alreadyMinedItems.add(node.getItem());
             }
 
-            for(Map.Entry<Integer, FPTreeNode> header : nodeHeaders.entrySet()) {
+            for (Map.Entry<Integer, FPTreeNode> header : nodeHeaders.entrySet()) {
                 if (alreadyMinedItems.contains(header.getKey())
                     || frequentItemCounts.get(header.getKey()) < supportCountRequired) {
                     continue;
@@ -550,7 +553,7 @@ public class StreamingFPGrowth {
                 }
             }
 
-            if(singlePathItemsets.isEmpty()) {
+            if (singlePathItemsets.isEmpty()) {
                 return branchingItemsets;
             }
 
@@ -560,8 +563,8 @@ public class StreamingFPGrowth {
             ret.addAll(singlePathItemsets);
             ret.addAll(branchingItemsets);
 
-            for(ItemsetWithCount i : singlePathItemsets) {
-                for(ItemsetWithCount j : branchingItemsets) {
+            for (ItemsetWithCount i : singlePathItemsets) {
+                for (ItemsetWithCount j : branchingItemsets) {
                     Set<Integer> combinedItems = new HashSet<>();
                     combinedItems.addAll(i.getItems());
                     combinedItems.addAll(j.getItems());
@@ -575,14 +578,14 @@ public class StreamingFPGrowth {
         private void removeNodeFromHeaders(FPTreeNode node) {
             leafNodes.remove(node);
 
-            if(node.getPrevLink() == null) {
-                assert(nodeHeaders.get(node.getItem()) == node);
+            if (node.getPrevLink() == null) {
+                assert (nodeHeaders.get(node.getItem()) == node);
                 nodeHeaders.put(node.getItem(), node.getNextLink());
             } else {
                 node.getPrevLink().setNextLink(node.getNextLink());
             }
 
-            if(node.getNextLink() != null) {
+            if (node.getNextLink() != null) {
                 node.getNextLink().setPrevLink(node.getPrevLink());
             }
         }
@@ -592,14 +595,14 @@ public class StreamingFPGrowth {
 
             List<FPTreeNode> leavesToInspect = Lists.newArrayList(leafNodes);
             Set<FPTreeNode> removedNodes = new HashSet<>();
-            for(int i = 0; i < leavesToInspect.size(); ++i) {
+            for (int i = 0; i < leavesToInspect.size(); ++i) {
                 FPTreeNode leaf = leavesToInspect.get(i);
 
-                if(leaf == root) {
+                if (leaf == root) {
                     continue;
                 }
 
-                if(removedNodes.contains(leaf) || sortedNodes.contains(leaf)) {
+                if (removedNodes.contains(leaf) || sortedNodes.contains(leaf)) {
                     continue;
                 }
 
@@ -608,7 +611,7 @@ public class StreamingFPGrowth {
 
                 toInsert.add(leaf.getItem());
 
-                assert(!leaf.hasChildren());
+                assert (!leaf.hasChildren());
 
                 removeNodeFromHeaders(leaf);
 
@@ -618,30 +621,30 @@ public class StreamingFPGrowth {
 
                 FPTreeNode node = leaf.getParent();
                 node.removeChild(leaf);
-                while(true) {
-                    if(node == root) {
+                while (true) {
+                    if (node == root) {
                         break;
                     }
 
                     int nodeOrder = frequentItemOrder.get(node.getItem());
-                    if(sortedNodes.contains(node) && nodeOrder < curLowestNodeOrder) {
+                    if (sortedNodes.contains(node) && nodeOrder < curLowestNodeOrder) {
                         break;
-                    } else if(nodeOrder < curLowestNodeOrder) {
+                    } else if (nodeOrder < curLowestNodeOrder) {
                         curLowestNodeOrder = nodeOrder;
                     }
 
-                    assert(!removedNodes.contains(node));
+                    assert (!removedNodes.contains(node));
 
                     toInsert.add(node.getItem());
 
                     node.decrementCount(leafCount);
                     // this node no longer has support, so remove it...
-                    if(node.getCount() == 0 && !node.hasChildren()) {
+                    if (node.getCount() == 0 && !node.hasChildren()) {
                         removedNodes.add(node);
                         removeNodeFromHeaders(node);
                         node.getParent().removeChild(node);
-                    // still has support but is unsorted, so we'd better check it out
-                    } else if(!node.hasChildren() && !sortedNodes.contains(node)) {
+                        // still has support but is unsorted, so we'd better check it out
+                    } else if (!node.hasChildren() && !sortedNodes.contains(node)) {
                         leavesToInspect.add(node);
                     }
 
@@ -692,21 +695,22 @@ public class StreamingFPGrowth {
     }
 
     public void buildTree(List<Set<Integer>> transactions) {
-        if(startedStreaming) {
+        if (startedStreaming) {
             throw new RuntimeException("Can't build a tree based on an already streaming tree...");
         }
 
-        int countRequiredForSupport = (int)(support*transactions.size());
+        int countRequiredForSupport = (int) (support * transactions.size());
 
         fp.insertFrequentItems(transactions, countRequiredForSupport);
         fp.insertTransactions(transactions, false, false);
     }
 
     public void decayAndResetFrequentItems(Map<Integer, Double> newFrequentItems, double decayRate) {
-        Set<Integer> toRemove = Sets.difference(fp.frequentItemOrder.keySet(), newFrequentItems.keySet()).immutableCopy();
+        Set<Integer> toRemove = Sets.difference(fp.frequentItemOrder.keySet(),
+                                                newFrequentItems.keySet()).immutableCopy();
         fp.frequentItemCounts = newFrequentItems;
         fp.updateFrequentItemOrder();
-        if(decayRate > 0) {
+        if (decayRate > 0) {
             fp.decayWeights(fp.root, (1 - decayRate));
         }
         restructureTree(toRemove);
@@ -714,19 +718,19 @@ public class StreamingFPGrowth {
 
     public List<ItemsetWithCount> getCounts(List<ItemsetWithCount> targets) {
         List<ItemsetWithCount> ret = new ArrayList<>(targets.size());
-        for(ItemsetWithCount target : targets) {
+        for (ItemsetWithCount target : targets) {
             ret.add(new ItemsetWithCount(target.getItems(), fp.getSupport(target.getItems())));
         }
         return ret;
     }
 
     public List<ItemsetWithCount> getItemsets() {
-        if(needsRestructure) {
+        if (needsRestructure) {
             restructureTree(null);
         }
 
         Timer.Context context = fpMine.time();
-        List<ItemsetWithCount> itemset = fp.mineItemsets((int)(fp.root.getCount()*support));
+        List<ItemsetWithCount> itemset = fp.mineItemsets((int) (fp.root.getCount() * support));
         context.stop();
 
         return itemset;

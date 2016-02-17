@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
+
 import static com.codahale.metrics.MetricRegistry.name;
 
 /**
@@ -17,8 +18,10 @@ import static com.codahale.metrics.MetricRegistry.name;
 class AnalysisDecayProcedure {
     private static final Logger log = LoggerFactory.getLogger(AnalysisDecayProcedure.class);
 
-    private static final Timer reservoirTimer = MacroBase.metrics.timer(name(AnalysisDecayProcedure.class, "reservoirAdvanceTime"));
-    private static final Timer itemsetTimer = MacroBase.metrics.timer(name(AnalysisDecayProcedure.class, "itemsetAdvanceTime"));
+    private static final Timer reservoirTimer = MacroBase.metrics.timer(
+            name(AnalysisDecayProcedure.class, "reservoirAdvanceTime"));
+    private static final Timer itemsetTimer = MacroBase.metrics.timer(
+            name(AnalysisDecayProcedure.class, "itemsetAdvanceTime"));
 
     public static void updatePeriod(ExponentiallyBiasedAChao<Datum> inputReservoir,
                                     ExponentiallyBiasedAChao<Double> scoreReservoir,
@@ -29,7 +32,7 @@ class AnalysisDecayProcedure {
         Timer.Context rt = reservoirTimer.time();
         inputReservoir.advancePeriod();
 
-        if(scoreReservoir != null) {
+        if (scoreReservoir != null) {
             scoreReservoir.advancePeriod();
             detector.updateRecentScoreList(scoreReservoir.getReservoir());
         }

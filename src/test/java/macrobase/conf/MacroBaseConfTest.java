@@ -58,7 +58,7 @@ public class MacroBaseConfTest {
         assertEquals(true, conf.getBoolean("bool", true));
         assertEquals((Integer) 1, conf.getInt("int", 1));
         assertEquals((Long) 1L, conf.getLong("long", 1L));
-        assertEquals((Double)0.01, conf.getDouble("double", 0.01));
+        assertEquals((Double) 0.01, conf.getDouble("double", 0.01));
         assertEquals("test", conf.getString("string", "test"));
         List<String> testList = Lists.newArrayList("A", "B", "C");
         assertArrayEquals(testList.toArray(), conf.getStringList("testList", testList).toArray());

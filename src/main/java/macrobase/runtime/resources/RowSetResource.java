@@ -16,7 +16,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class RowSetResource extends BaseResource {
     @SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
+    private static final Logger log = LoggerFactory.getLogger(SchemaResource.class);
 
     public static class RowSetRequest {
         public String pgUrl;

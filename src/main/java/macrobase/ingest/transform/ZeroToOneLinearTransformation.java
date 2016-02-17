@@ -22,14 +22,14 @@ public class ZeroToOneLinearTransformation extends DataTransformation {
 
 
         for (Datum d : data) {
-            for (int i=0; i<dimensions; i++) {
+            for (int i = 0; i < dimensions; i++) {
                 double val = d.getMetrics().getEntry(i);
 
-                if(metricWiseMinVec.getEntry(i) > val) {
+                if (metricWiseMinVec.getEntry(i) > val) {
                     metricWiseMinVec.setEntry(i, val);
                 }
 
-                if(metricWiseMaxVec.getEntry(i) < val) {
+                if (metricWiseMaxVec.getEntry(i) < val) {
                     metricWiseMaxVec.setEntry(i, val);
                 }
             }

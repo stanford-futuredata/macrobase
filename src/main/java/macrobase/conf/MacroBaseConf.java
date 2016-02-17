@@ -27,7 +27,7 @@ public class MacroBaseConf extends Configuration {
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
     public static final String DETECTOR_TYPE = "macrobase.analysis.detectorType";
 
-    public static final String WARMUP_COUNT  = "macrobase.analysis.streaming.warmupCount";
+    public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
     public static final String INPUT_RESERVOIR_SIZE = "macrobase.analysis.streaming.inputReservoirSize";
     public static final String SCORE_RESERVOIR_SIZE = "macrobase.analysis.streaming.scoreReservoirSize";
     public static final String SUMMARY_UPDATE_PERIOD = "macrobase.analysis.streaming.summaryUpdatePeriod";
@@ -60,7 +60,6 @@ public class MacroBaseConf extends Configuration {
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
 
-
     public enum DetectorType {
         MAD_OR_MCD,
         MAD,
@@ -85,7 +84,7 @@ public class MacroBaseConf extends Configuration {
 
     @JsonAnySetter
     public void set(String key, Object value) {
-        if(value instanceof List) {
+        if (value instanceof List) {
             value = ((List) value).stream().collect(Collectors.joining(","));
         }
 
@@ -97,7 +96,7 @@ public class MacroBaseConf extends Configuration {
     }
 
     public String getString(String key) throws ConfigurationException {
-        if(!_conf.containsKey(key)) {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
         return _conf.get(key);
@@ -108,105 +107,105 @@ public class MacroBaseConf extends Configuration {
     }
 
     public List<String> getStringList(String key) throws ConfigurationException {
-        if(!_conf.containsKey(key)) {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
         return getStringList(key, null);
     }
 
     public List<String> getStringList(String key, List<String> defaultValue) {
-        if(_conf.containsKey(key)) {
+        if (_conf.containsKey(key)) {
             return _conf.get(key).length() > 0 ? Arrays.asList(_conf.get(key).split(",[ ]*")) : new ArrayList<>();
         }
         return defaultValue;
     }
 
     public Double getDouble(String key) throws ConfigurationException {
-        if(!_conf.containsKey(key)) {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
         return getDouble(key, null);
     }
 
     public Double getDouble(String key, Double defaultValue) {
-        if(_conf.containsKey(key)) {
+        if (_conf.containsKey(key)) {
             return Double.parseDouble(_conf.get(key));
         }
         return defaultValue;
     }
 
     public Integer getInt(String key) throws ConfigurationException {
-        if(!_conf.containsKey(key)) {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
         return getInt(key, null);
     }
 
     public Integer getInt(String key, Integer defaultValue) {
-        if(_conf.containsKey(key)) {
+        if (_conf.containsKey(key)) {
             return Integer.parseInt(_conf.get(key));
         }
         return defaultValue;
     }
 
     public Long getLong(String key) throws ConfigurationException {
-        if(!_conf.containsKey(key)) {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
         return getLong(key, null);
     }
 
     public Long getLong(String key, Long defaultValue) {
-        if(_conf.containsKey(key)) {
+        if (_conf.containsKey(key)) {
             return Long.parseLong(_conf.get(key));
         }
         return defaultValue;
     }
 
     public Boolean getBoolean(String key) throws ConfigurationException {
-        if(!_conf.containsKey(key)) {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
         return getBoolean(key, null);
     }
 
     public Boolean getBoolean(String key, Boolean defaultValue) {
-        if(_conf.containsKey(key)) {
+        if (_conf.containsKey(key)) {
             return Boolean.parseBoolean(_conf.get(key));
         }
         return defaultValue;
     }
 
     public DataLoaderType getDataLoaderType() throws ConfigurationException {
-        if(!_conf.containsKey(DATA_LOADER_TYPE)) {
+        if (!_conf.containsKey(DATA_LOADER_TYPE)) {
             return MacroBaseDefaults.DATA_LOADER_TYPE;
         }
         return DataLoaderType.valueOf(_conf.get(DATA_LOADER_TYPE));
     }
 
     public DetectorType getDetectorType() throws ConfigurationException {
-        if(!_conf.containsKey(DETECTOR_TYPE)) {
+        if (!_conf.containsKey(DETECTOR_TYPE)) {
             return MacroBaseDefaults.DETECTOR_TYPE;
         }
         return DetectorType.valueOf(_conf.get(DETECTOR_TYPE));
     }
 
     public DataTransformType getDataTransform() throws ConfigurationException {
-        if(!_conf.containsKey(DATA_TRANSFORM_TYPE)) {
+        if (!_conf.containsKey(DATA_TRANSFORM_TYPE)) {
             return MacroBaseDefaults.DATA_TRANSFORM;
         }
         return DataTransformType.valueOf(_conf.get(DATA_TRANSFORM_TYPE));
     }
 
     public KDE.Bandwidth getKDEBandwidth() {
-        if(!_conf.containsKey(KDE_BANDWIDTH)) {
+        if (!_conf.containsKey(KDE_BANDWIDTH)) {
             return MacroBaseDefaults.KDE_BANDWIDTH;
         }
         return KDE.Bandwidth.valueOf(_conf.get(KDE_BANDWIDTH));
     }
 
     public KDE.KernelType getKDEKernelType() {
-        if(!_conf.containsKey(KDE_KERNEL_TYPE)) {
+        if (!_conf.containsKey(KDE_KERNEL_TYPE)) {
             return MacroBaseDefaults.KDE_KERNEL_TYPE;
         }
         return KDE.KernelType.valueOf(_conf.get(KDE_KERNEL_TYPE));
@@ -215,9 +214,9 @@ public class MacroBaseConf extends Configuration {
     @Override
     public String toString() {
         return _conf.entrySet().stream()
-                               .sorted((a, b) -> a.getKey().compareTo(b.getKey()))
-                               .map(e -> e.getKey() + ": " + e.getValue())
-                               .collect(Collectors.joining("\n"));
+                .sorted((a, b) -> a.getKey().compareTo(b.getKey()))
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining("\n"));
     }
 
     private void sanityCheckBase() throws ConfigurationException {

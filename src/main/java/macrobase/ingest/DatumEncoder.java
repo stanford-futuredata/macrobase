@@ -22,18 +22,18 @@ public class DatumEncoder {
     // kind of a hack...
     public void copy(DatumEncoder other) {
         attributeDimensionNameMap.clear();
-        for(Map.Entry<Integer, String> entry : other.attributeDimensionNameMap.entrySet()) {
+        for (Map.Entry<Integer, String> entry : other.attributeDimensionNameMap.entrySet()) {
             attributeDimensionNameMap.put(entry.getKey(), entry.getValue());
         }
 
         integerEncoding.clear();
-        for(Map.Entry<Integer, Map<String, Integer>> entry :
+        for (Map.Entry<Integer, Map<String, Integer>> entry :
                 other.integerEncoding.entrySet()) {
             integerEncoding.put(entry.getKey(), entry.getValue());
         }
 
         integerToColumn.clear();
-        for(Map.Entry<Integer, Integer> entry :
+        for (Map.Entry<Integer, Integer> entry :
                 other.integerToColumn.entrySet()) {
             integerToColumn.put(entry.getKey(), entry.getValue());
         }
@@ -51,8 +51,8 @@ public class DatumEncoder {
         String columnName = attributeDimensionNameMap.get(matchingColumn);
         Map<String, Integer> columnEncoding = integerEncoding.get(matchingColumn);
         String columnValue = null;
-        for(Map.Entry<String, Integer> ce : columnEncoding.entrySet()) {
-            if(ce.getValue() == encodedAttr) {
+        for (Map.Entry<String, Integer> ce : columnEncoding.entrySet()) {
+            if (ce.getValue() == encodedAttr) {
                 columnValue = ce.getKey();
             }
         }
@@ -62,7 +62,7 @@ public class DatumEncoder {
 
     public List<ColumnValue> getColsFromAttrSet(Set<Integer> attrs) {
         List<ColumnValue> ret = new ArrayList<>();
-        for(Integer item : attrs) {
+        for (Integer item : attrs) {
             ret.add(getAttribute(item));
         }
 
@@ -83,7 +83,7 @@ public class DatumEncoder {
 
         Map<String, Integer> dimensionMap = integerEncoding.get(dimension);
         Integer ret = dimensionMap.get(attr);
-        if(ret == null) {
+        if (ret == null) {
             ret = nextKey;
             integerToColumn.put(nextKey, dimension);
             dimensionMap.put(attr, ret);

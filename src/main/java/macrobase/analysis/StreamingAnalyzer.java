@@ -102,15 +102,15 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         ExponentiallyBiasedAChao<Datum> inputReservoir =
                 new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
 
-        if(randomSeed != null) {
+        if (randomSeed != null) {
             inputReservoir.setSeed(randomSeed);
         }
 
         ExponentiallyBiasedAChao<Double> scoreReservoir = null;
 
-        if(forceUsePercentile) {
+        if (forceUsePercentile) {
             scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
-            if(randomSeed != null) {
+            if (randomSeed != null) {
                 scoreReservoir.setSeed(randomSeed);
             }
         }
@@ -124,65 +124,65 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                                           attributes.size());
 
         AbstractPeriodicUpdater analysisUpdater;
-        if(useRealTimePeriod) {
+        if (useRealTimePeriod) {
             analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
-                                                                 summaryPeriod,
-                                                                 inputReservoir,
-                                                                 scoreReservoir,
-                                                                 detector,
-                                                                 streamingSummarizer);
+                                                           summaryPeriod,
+                                                           inputReservoir,
+                                                           scoreReservoir,
+                                                           detector,
+                                                           streamingSummarizer);
         } else {
             analysisUpdater = new TupleAnalysisDecayer(summaryPeriod,
-                                                             inputReservoir,
-                                                             scoreReservoir,
-                                                             detector,
-                                                             streamingSummarizer);
+                                                       inputReservoir,
+                                                       scoreReservoir,
+                                                       detector,
+                                                       streamingSummarizer);
         }
 
         AbstractPeriodicUpdater modelUpdater;
-        if(useRealTimePeriod) {
+        if (useRealTimePeriod) {
             modelUpdater = new WallClockRetrainer(System.currentTimeMillis(),
-                                                        modelRefreshPeriod,
-                                                        inputReservoir,
-                                                        detector,
-                                                        streamingSummarizer);
+                                                  modelRefreshPeriod,
+                                                  inputReservoir,
+                                                  detector,
+                                                  streamingSummarizer);
         } else {
             modelUpdater = new TupleBasedRetrainer(modelRefreshPeriod,
-                                                         inputReservoir,
-                                                         detector,
-                                                         streamingSummarizer);
+                                                   inputReservoir,
+                                                   detector,
+                                                   streamingSummarizer);
         }
 
         int tupleNo = 0;
         long totSummarizationTime = 0;
 
-        for(Datum d: data) {
+        for (Datum d : data) {
             inputReservoir.insert(d);
 
-            if(tupleNo == warmupCount) {
-            	sw.start();
+            if (tupleNo == warmupCount) {
+                sw.start();
                 detector.train(inputReservoir.getReservoir());
-                for(Datum id : inputReservoir.getReservoir()) {
+                for (Datum id : inputReservoir.getReservoir()) {
                     scoreReservoir.insert(detector.score(id));
                 }
                 detector.updateRecentScoreList(scoreReservoir.getReservoir());
                 sw.stop();
                 sw.reset();
                 log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
-            } else if(tupleNo >= warmupCount) {
+            } else if (tupleNo >= warmupCount) {
                 long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
                 analysisUpdater.updateIfNecessary(now, tupleNo);
                 modelUpdater.updateIfNecessary(now, tupleNo);
                 double score = detector.score(d);
 
-                if(scoreReservoir != null) {
+                if (scoreReservoir != null) {
                     scoreReservoir.insert(score);
                 }
 
-                if((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
-                   forceUsePercentile && detector.isPercentileOutlier(score,
-                                                                      targetPercentile)) {
+                if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
+                    forceUsePercentile && detector.isPercentileOutlier(score,
+                                                                       targetPercentile)) {
                     streamingSummarizer.markOutlier(d);
                 } else {
                     streamingSummarizer.markInlier(d);
@@ -199,7 +199,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
         sw.reset();
         tsw.stop();
-        
+
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
         tuplesPerSecond *= 1000000;
 

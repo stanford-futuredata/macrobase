@@ -13,9 +13,9 @@ public class BinnedKDETest {
 
     @Test
     public void simpleTest() {
-        KDE kde = new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSHMOOTHED);
+        KDE kde = new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSMOOTHED);
         List<Datum> data = new ArrayList<>();
-        for(int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 100; ++i) {
             double[] sample = new double[1];
             sample[0] = i;
             data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
@@ -24,6 +24,6 @@ public class BinnedKDETest {
         kde.train(data);
         assertEquals(kde.score(data.get(0)), -0.005083, 1e-5);
         assertEquals(kde.score(data.get(50)), -0.010001, 1e-5);
-        assertEquals(kde.score(data.get(data.size()-1)), -0.005083, 1e-5);
+        assertEquals(kde.score(data.get(data.size() - 1)), -0.005083, 1e-5);
     }
 }

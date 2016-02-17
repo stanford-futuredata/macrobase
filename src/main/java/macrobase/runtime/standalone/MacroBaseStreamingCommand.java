@@ -24,7 +24,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<MacroBaseConf> 
         StreamingAnalyzer analyzer = new StreamingAnalyzer(configuration);
 
         AnalysisResult result = analyzer.analyzeOnePass();
-        if(result.getItemSets().size() > 1000) {
+        if (result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));
         }

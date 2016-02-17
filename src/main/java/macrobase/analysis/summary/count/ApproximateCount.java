@@ -18,7 +18,7 @@ public abstract class ApproximateCount {
     abstract public double getCount(int item);
 
     public void observe(Collection<Integer> items) {
-        for(Integer item : items) {
+        for (Integer item : items) {
             observe(item, 1.0);
         }
     }

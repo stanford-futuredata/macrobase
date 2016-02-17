@@ -12,21 +12,18 @@ import com.codahale.metrics.MetricRegistry;
 
 /**
  * Hello world!
- *
  */
-public class MacroBase
-{
+public class MacroBase {
     public static final MetricRegistry metrics = new MetricRegistry();
     public static final ConsoleReporter reporter = ConsoleReporter.forRegistry(metrics)
-                                                    .convertRatesTo(TimeUnit.SECONDS)
-                                                    .convertDurationsTo(TimeUnit.MILLISECONDS)
-                                                    .build();
+            .convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS)
+            .build();
 
     @SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(MacroBase.class);
+    private static final Logger log = LoggerFactory.getLogger(MacroBase.class);
 
-    public static void main( String[] args ) throws Exception
-    {
+    public static void main(String[] args) throws Exception {
         System.out.println("Welcome to\n" +
                            "  _   _   _   _   _   _   _   _   _  \n" +
                            " / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ \n" +

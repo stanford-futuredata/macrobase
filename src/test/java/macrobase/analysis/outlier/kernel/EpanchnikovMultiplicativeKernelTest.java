@@ -2,9 +2,10 @@ package macrobase.analysis.outlier.kernel;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
-public class EpanchnikovMulticativeKernelTest {
+public class EpanchnikovMultiplicativeKernelTest {
 
     final double DOUBLE_ACCURACY = 0.00000000001;
 

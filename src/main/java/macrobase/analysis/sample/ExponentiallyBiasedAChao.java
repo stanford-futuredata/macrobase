@@ -7,9 +7,10 @@ package macrobase.analysis.sample;
  */
 public class ExponentiallyBiasedAChao<T> extends AChao<T> {
     private final double bias;
+
     public ExponentiallyBiasedAChao(int capacity, double bias) {
         super(capacity);
-        assert(bias >= 0 && bias < 1);
+        assert (bias >= 0 && bias < 1);
         this.bias = bias;
     }
 
@@ -18,7 +19,7 @@ public class ExponentiallyBiasedAChao<T> extends AChao<T> {
     }
 
     public void advancePeriod(int numPeriods) {
-        runningCount *= Math.pow(1-bias, numPeriods);
+        runningCount *= Math.pow(1 - bias, numPeriods);
     }
 
     public void insert(T ele) {

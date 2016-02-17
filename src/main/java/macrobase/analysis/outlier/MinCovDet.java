@@ -27,13 +27,14 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
 
-public class MinCovDet extends OutlierDetector  {
+public class MinCovDet extends OutlierDetector {
     private static final Logger log = LoggerFactory.getLogger(MinCovDet.class);
 
     private final Timer chooseKRandom = MacroBase.metrics.timer(name(MinCovDet.class, "chooseKRandom"));
     private final Timer meanComputation = MacroBase.metrics.timer(name(MinCovDet.class, "meanComputation"));
     private final Timer covarianceComputation = MacroBase.metrics.timer(name(MinCovDet.class, "covarianceComputation"));
-    private final Timer determinantComputation = MacroBase.metrics.timer(name(MinCovDet.class, "determinantComputation"));
+    private final Timer determinantComputation = MacroBase.metrics.timer(
+            name(MinCovDet.class, "determinantComputation"));
     private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
     private final Counter singularCovariances = MacroBase.metrics.counter(name(MinCovDet.class, "singularCovariances"));
 
@@ -82,19 +83,19 @@ public class MinCovDet extends OutlierDetector  {
 
     // efficient only when k << allData.size()
     private List<Datum> chooseKRandom(List<Datum> allData, final int k) {
-        assert(k < allData.size());
+        assert (k < allData.size());
 
         List<Datum> ret = new ArrayList<>();
         Set<Integer> alreadyChosen = new HashSet<>();
-        while(ret.size() < k) {
+        while (ret.size() < k) {
             int idx = random.nextInt(allData.size());
-            if(!alreadyChosen.contains(idx)) {
+            if (!alreadyChosen.contains(idx)) {
                 alreadyChosen.add(idx);
                 ret.add(allData.get(idx));
             }
         }
 
-        assert(ret.size() == k);
+        assert (ret.size() == k);
         return ret;
     }
 
@@ -106,10 +107,10 @@ public class MinCovDet extends OutlierDetector  {
         this(dataDim);
         this.alpha = alpha;
     }
-    
+
     public MinCovDet(int dataDim, double alpha, double stoppingDelta) {
-    	this(dataDim, alpha);
-    	this.stoppingDelta = stoppingDelta;
+        this(dataDim, alpha);
+        this.stoppingDelta = stoppingDelta;
     }
 
     public static double getMahalanobis(RealVector mean,
@@ -118,16 +119,16 @@ public class MinCovDet extends OutlierDetector  {
         final int dim = mean.getDimension();
         double[] vecMinusMean = new double[dim];
 
-        for(int d = 0; d < dim; ++d) {
+        for (int d = 0; d < dim; ++d) {
             vecMinusMean[d] = vec.getEntry(d) - mean.getEntry(d);
         }
 
         double diagSum = 0, nonDiagSum = 0;
 
-        for(int d1 = 0; d1 < dim; ++d1) {
-            for(int d2 = d1; d2 < dim; ++d2) {
-                double v = vecMinusMean[d1]*vecMinusMean[d2]*inverseCov.getEntry(d1, d2);
-                if(d1 == d2) {
+        for (int d1 = 0; d1 < dim; ++d1) {
+            for (int d2 = d1; d2 < dim; ++d2) {
+                double v = vecMinusMean[d1] * vecMinusMean[d2] * inverseCov.getEntry(d1, d2);
+                if (d1 == d2) {
                     diagSum += v;
                 } else {
                     nonDiagSum += v;
@@ -135,15 +136,15 @@ public class MinCovDet extends OutlierDetector  {
             }
         }
 
-        return Math.sqrt(diagSum+2*nonDiagSum);
+        return Math.sqrt(diagSum + 2 * nonDiagSum);
     }
 
     private RealVector getMean(List<? extends HasMetrics> data) {
         RealVector vec = null;
 
-        for(HasMetrics d : data) {
+        for (HasMetrics d : data) {
             RealVector dvec = d.getMetrics();
-            if(vec == null) {
+            if (vec == null) {
                 vec = dvec;
             } else {
                 vec = vec.add(dvec);
@@ -157,14 +158,14 @@ public class MinCovDet extends OutlierDetector  {
         // todo: change back to guava priority queue
         List<MetricsWithScore> scores = new ArrayList<>();
 
-        for(int i = 0; i < data.size(); ++i) {
+        for (int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
             scores.add(new MetricsWithScore(d.getMetrics(),
                                             getMahalanobis(mean, inverseCov, d.getMetrics()),
                                             i));
         }
 
-        if(scores.size() < k) {
+        if (scores.size() < k) {
             return scores;
         }
 
@@ -190,10 +191,10 @@ public class MinCovDet extends OutlierDetector  {
     @Override
     public void train(List<Datum> data) {
         // for now, only handle multivariate case...
-        assert(data.iterator().next().getMetrics().getDimension() == p);
-        assert(p > 1);
+        assert (data.iterator().next().getMetrics().getDimension() == p);
+        assert (p > 1);
 
-        int h = (int)Math.floor((data.size() + p + 1)*alpha);
+        int h = (int) Math.floor((data.size() + p + 1) * alpha);
 
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
@@ -217,7 +218,7 @@ public class MinCovDet extends OutlierDetector  {
 
         // now take C-steps
         int numIterations = 1;
-        while(true) {
+        while (true) {
             context = findKClosest.time();
             List<? extends HasMetrics> newH = findKClosest(h, data);
             context.stop();
@@ -237,17 +238,17 @@ public class MinCovDet extends OutlierDetector  {
 
             double delta = det - newDet;
 
-            if(newDet == 0 || delta < stoppingDelta) {
+            if (newDet == 0 || delta < stoppingDelta) {
                 break;
             }
 
             log.trace("Iteration {}: delta = {}; det = {}", stepNo, delta, newDet);
             det = newDet;
             stepNo++;
-            
+
             numIterations++;
         }
-        
+
         log.debug("Number of iterations in MCD step: {}", numIterations);
 
         log.trace("mean: {}", mean);

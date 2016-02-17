@@ -51,7 +51,7 @@ public class BatchAnalyzerTest {
         HashSet<String> toFindColumn = Sets.newHashSet("A1", "A2", "A3", "A4");
         HashSet<String> toFindValue = Sets.newHashSet("0", "1", "2", "3");
 
-        for(ColumnValue cv : ar.getItemSets().get(0).getItems()) {
+        for (ColumnValue cv : ar.getItemSets().get(0).getItems()) {
             assertTrue(toFindColumn.contains(cv.getColumn()));
             toFindColumn.remove(cv.getColumn());
             assertTrue(toFindValue.contains(cv.getValue()));
@@ -88,7 +88,7 @@ public class BatchAnalyzerTest {
         HashSet<String> toFindColumn = Sets.newHashSet("A1", "A2", "A3");
         HashSet<String> toFindValue = Sets.newHashSet("0", "1", "2");
 
-        for(ColumnValue cv : ar.getItemSets().get(0).getItems()) {
+        for (ColumnValue cv : ar.getItemSets().get(0).getItems()) {
             assertTrue(toFindColumn.contains(cv.getColumn()));
             toFindColumn.remove(cv.getColumn());
             assertTrue(toFindValue.contains(cv.getValue()));

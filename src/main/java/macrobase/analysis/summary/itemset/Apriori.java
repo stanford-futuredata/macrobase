@@ -9,12 +9,12 @@ public class Apriori {
     private Set<Set<Integer>> genCandidates(List<ItemsetWithCount> prevRound,
                                             int desiredSize) {
         Set<Set<Integer>> ret = new HashSet<>();
-        for(int i = 0; i < prevRound.size(); ++i) {
-            for(int j = i + 1; j < prevRound.size(); ++j) {
+        for (int i = 0; i < prevRound.size(); ++i) {
+            for (int j = i + 1; j < prevRound.size(); ++j) {
                 Set<Integer> combined = new HashSet<>();
                 combined.addAll(prevRound.get(i).getItems());
                 combined.addAll(prevRound.get(j).getItems());
-                if(combined.size() == desiredSize) {
+                if (combined.size() == desiredSize) {
                     ret.add(combined);
                 }
             }
@@ -31,35 +31,35 @@ public class Apriori {
 
         HashMap<Set<Integer>, Integer> candidateCounts = new HashMap<>();
 
-        for(int i = 0; i < transactions.size(); ++i) {
-            if(infrequentIndex.contains(i)) {
+        for (int i = 0; i < transactions.size(); ++i) {
+            if (infrequentIndex.contains(i)) {
                 continue;
             }
 
             Set<Integer> txn = transactions.get(i);
             boolean foundSupportInTxn = false;
-            for(Set<Integer> candidate : candidates) {
+            for (Set<Integer> candidate : candidates) {
                 boolean allFound = true;
-                for(Integer candidateItem : candidate) {
-                    if(!txn.contains(candidateItem)) {
+                for (Integer candidateItem : candidate) {
+                    if (!txn.contains(candidateItem)) {
                         allFound = false;
                         break;
                     }
                 }
 
-                if(allFound) {
-                    candidateCounts.compute(candidate, (k, v) -> v == null ? 1 : v + 1 );
+                if (allFound) {
+                    candidateCounts.compute(candidate, (k, v) -> v == null ? 1 : v + 1);
                     foundSupportInTxn = true;
                 }
             }
 
-            if(!foundSupportInTxn) {
+            if (!foundSupportInTxn) {
                 infrequentIndex.add(i);
             }
         }
 
-        for(Map.Entry<Set<Integer>, Integer> e : candidateCounts.entrySet()) {
-            if(e.getValue() >= minSupportCount) {
+        for (Map.Entry<Set<Integer>, Integer> e : candidateCounts.entrySet()) {
+            if (e.getValue() >= minSupportCount) {
                 ret.add(new ItemsetWithCount(e.getKey(), e.getValue()));
             }
         }
@@ -67,57 +67,57 @@ public class Apriori {
     }
 
     public Set<ItemsetWithCount> getItemsets(List<Set<Integer>> transactions,
-                                              Double support) {
+                                             Double support) {
         Set<ItemsetWithCount> ret = new HashSet<>();
 
-        int minSupportCount = (int)(support*transactions.size());
+        int minSupportCount = (int) (support * transactions.size());
 
         // first round candidates are all items; just count them
         HashMap<Integer, Integer> itemCounts = new HashMap<>();
-        for(Set<Integer> t : transactions) {
-            for(int i : t) {
-                itemCounts.compute(i, (k, v) -> v == null ? 1 : v+1);
+        for (Set<Integer> t : transactions) {
+            for (int i : t) {
+                itemCounts.compute(i, (k, v) -> v == null ? 1 : v + 1);
             }
         }
 
-        for(Map.Entry<Integer, Integer> e : itemCounts.entrySet()) {
-            if(e.getValue() >= minSupportCount) {
+        for (Map.Entry<Integer, Integer> e : itemCounts.entrySet()) {
+            if (e.getValue() >= minSupportCount) {
                 HashSet<Integer> singletonSet = new HashSet<>();
                 singletonSet.add(e.getKey());
                 ret.add(new ItemsetWithCount(singletonSet, e.getValue()));
             }
         }
 
-        if(ret.size() == 0) {
+        if (ret.size() == 0) {
             return ret;
         }
 
         // second round, don't explicitly construct pairs
         HashMap<Set<Integer>, Integer> pairCandidateCounts = new HashMap<>();
 
-        for(Set<Integer> t : transactions) {
+        for (Set<Integer> t : transactions) {
             List<Integer> txList = Lists.newArrayList(t);
-            for(int i = 0; i < t.size(); ++i) {
-                for(int j = i+1; j < t.size(); ++j) {
+            for (int i = 0; i < t.size(); ++i) {
+                for (int j = i + 1; j < t.size(); ++j) {
                     HashSet<Integer> pairSet = new HashSet<>();
                     pairSet.add(txList.get(i));
                     pairSet.add(txList.get(j));
-                    pairCandidateCounts.compute(pairSet, (k, v) -> v == null ? 1 : v+1);
+                    pairCandidateCounts.compute(pairSet, (k, v) -> v == null ? 1 : v + 1);
                 }
             }
         }
 
         List<ItemsetWithCount> pairItemsets = new ArrayList<>();
 
-        for(Map.Entry<Set<Integer>, Integer> e : pairCandidateCounts.entrySet()) {
-            if(e.getValue() >= minSupportCount) {
+        for (Map.Entry<Set<Integer>, Integer> e : pairCandidateCounts.entrySet()) {
+            if (e.getValue() >= minSupportCount) {
                 ItemsetWithCount ic = new ItemsetWithCount(e.getKey(), e.getValue());
                 ret.add(ic);
                 pairItemsets.add(ic);
             }
         }
 
-        if(pairItemsets.isEmpty()) {
+        if (pairItemsets.isEmpty()) {
             return ret;
         }
 
@@ -125,13 +125,13 @@ public class Apriori {
         Set<Integer> infrequentIndex = new HashSet<>();
 
         int newSize = 3;
-        while(true) {
+        while (true) {
             Set<Set<Integer>> candidates = genCandidates(prevRoundItemsets, newSize);
             prevRoundItemsets = filterItems(transactions,
                                             candidates,
                                             infrequentIndex,
                                             minSupportCount);
-            if(prevRoundItemsets.isEmpty()) {
+            if (prevRoundItemsets.isEmpty()) {
                 return ret;
             } else {
                 ret.addAll(prevRoundItemsets);

@@ -30,7 +30,7 @@ public class KDE extends OutlierDetector {
 
     public enum Bandwidth {
         NORMAL_SCALE,
-        OVERSHMOOTHED,
+        OVERSMOOTHED,
         MANUAL
     }
 
@@ -61,6 +61,7 @@ public class KDE extends OutlierDetector {
 
     /**
      * Manually set bandwidth of KDE
+     *
      * @param bandwidth
      */
     public void setBandwidth(RealMatrix bandwidth) {
@@ -71,19 +72,20 @@ public class KDE extends OutlierDetector {
 
     /**
      * Calculates bandwidth matrix based on the data that KDE should run on
+     *
      * @param data
      */
     protected void setBandwidth(List<Datum> data) {
         this.metricsDimensions = data.get(0).getMetrics().getDimension();
         RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
-	    log.info("running with bandwidthType: {}", bandwidthType);
+        log.info("running with bandwidthType: {}", bandwidthType);
         switch (bandwidthType) {
             case NORMAL_SCALE:
                 final double standardNormalQunatileDifference = 1.349;
-                for (int d=0; d<this.metricsDimensions; d++) {
+                for (int d = 0; d < this.metricsDimensions; d++) {
                     int size = data.size();
                     double[] dataIn1D = new double[size];
-                    for (int i=0; i<size; i++) {
+                    for (int i = 0; i < size; i++) {
                         dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
                     }
                     Percentile quantile = new Percentile();
@@ -91,20 +93,23 @@ public class KDE extends OutlierDetector {
                     final double seventyfive = quantile.evaluate(dataIn1D, 75);
                     final double interQuantileDeviation = (seventyfive - twentyfive) / standardNormalQunatileDifference;
                     final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm1D();
-                    final double constDenominator = 3 * Math.pow(kernel.secondMoment1D(), 2) * data.size() * this.proportionOfDataToUse;
-                    double dimensional_bandwidth = Math.pow(constNumerator / constDenominator, 0.2) * interQuantileDeviation;
+                    final double constDenominator = 3 * Math.pow(kernel.secondMoment1D(),
+                                                                 2) * data.size() * this.proportionOfDataToUse;
+                    double dimensional_bandwidth = Math.pow(constNumerator / constDenominator,
+                                                            0.2) * interQuantileDeviation;
                     bandwidth.setEntry(d, d, dimensional_bandwidth);
                 }
                 break;
-            case OVERSHMOOTHED:
+            case OVERSMOOTHED:
                 final double constNumerator = 8 * Math.pow(Math.PI, 0.5) * kernel.norm1D();
-                final double constDenominator = 3 * Math.pow(kernel.secondMoment1D(), 2) * data.size() * this.proportionOfDataToUse;
+                final double constDenominator = 3 * Math.pow(kernel.secondMoment1D(),
+                                                             2) * data.size() * this.proportionOfDataToUse;
                 final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
-		        log.info("covariance Scale: {}", covarianceScale);
+                log.info("covariance Scale: {}", covarianceScale);
                 RealMatrix covariance = this.getCovariance(data);
-	            log.info("Covarience of the data is: {}", covariance);
+                log.info("Covarience of the data is: {}", covariance);
                 bandwidth = covariance.scalarMultiply(covarianceScale);
-	            log.info("Covarience of the data is: {}", covariance);
+                log.info("Covarience of the data is: {}", covariance);
             case MANUAL:
                 break;
         }
@@ -121,7 +126,7 @@ public class KDE extends OutlierDetector {
         } else {
             // Manually invert size 1 x 1 matrix, because block Inverse requires dimensions > 1
             inverseBandwidth = bandwidth.copy();
-            inverseBandwidth.setEntry(0, 0, 1.0/inverseBandwidth.getEntry(0, 0));
+            inverseBandwidth.setEntry(0, 0, 1.0 / inverseBandwidth.getEntry(0, 0));
         }
         this.bandwidthToNegativeHalf = (new EigenDecomposition(inverseBandwidth)).getSquareRoot();
         this.bandwidthDeterminantSqrt = Math.sqrt((new EigenDecomposition(bandwidth)).getDeterminant());
@@ -135,19 +140,20 @@ public class KDE extends OutlierDetector {
         densityPopulation = new ArrayList<Datum>(data);
         Collections.shuffle(densityPopulation);
 
-        this.densityPopulation = densityPopulation.subList(0, (int) (this.proportionOfDataToUse * densityPopulation.size()));
+        this.densityPopulation = densityPopulation.subList(0,
+                                                           (int) (this.proportionOfDataToUse * densityPopulation.size()));
         this.scoreScalingFactor = 1.0 / (bandwidthDeterminantSqrt * densityPopulation.size());
     }
 
     @Override
     public double score(Datum datum) {
         double _score = 0.0;
-        for(int i = 0 ; i < densityPopulation.size(); i++) {
+        for (int i = 0; i < densityPopulation.size(); i++) {
             RealVector difference = datum.getMetrics().subtract(densityPopulation.get(i).getMetrics());
             double _diff = kernel.density(this.bandwidthToNegativeHalf.operate(difference));
             _score += _diff;
         }
-        return - _score * this.scoreScalingFactor;
+        return -_score * this.scoreScalingFactor;
     }
 
     @Override

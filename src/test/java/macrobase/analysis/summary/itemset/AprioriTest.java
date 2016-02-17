@@ -24,21 +24,20 @@ public class AprioriTest {
     }
 
     @SuppressWarnings("unused")
-	private void printItemsets(Set<ItemsetWithCount> itemsetsSet) {
+    private void printItemsets(Set<ItemsetWithCount> itemsetsSet) {
         List<ItemsetWithCount> itemsets = Lists.newArrayList(itemsetsSet);
 
-        itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
-        for(ItemsetWithCount i : itemsets) {
+        itemsets.sort((a, b) -> b.getItems().size() - a.getItems().size());
+        for (ItemsetWithCount i : itemsets) {
             System.out.format("\ncount %d, size %d\n", i.getCount(), i.getItems().size());
-            for(int item : i.getItems()) {
-                System.out.println((char)item);
+            for (int item : i.getItems()) {
+                System.out.println((char) item);
             }
         }
     }
 
     @Test
-    public void testFPFromPaper()
-    {
+    public void testFPFromPaper() {
         List<Set<Integer>> txns = new ArrayList<>();
         txns.add(intIfy("f, a, c, d, g, i, m, p"));
         txns.add(intIfy("a, b, c, f, l, m, o"));
@@ -56,8 +55,7 @@ public class AprioriTest {
     }
 
     @Test
-    public void simpleTest()
-    {
+    public void simpleTest() {
         List<Set<Integer>> txns = new ArrayList<>();
         txns.add(intIfy("a, b, c"));
         txns.add(intIfy("a, b"));

@@ -12,7 +12,8 @@ public class Datum implements HasMetrics {
     private RealVector metrics;
     private RealVector auxiliaries;
 
-    public Datum() {}
+    public Datum() {
+    }
 
     public Datum(List<Integer> attributes, RealVector metrics) {
         this.attributes = attributes;
@@ -24,8 +25,8 @@ public class Datum implements HasMetrics {
                  Set<Integer> metricDimensionsToKeep) {
         this.attributes = new ArrayList<>();
 
-        for(int i = 0; i < other.getAttributes().size(); ++i) {
-            if(attributesToKeep.contains(i)) {
+        for (int i = 0; i < other.getAttributes().size(); ++i) {
+            if (attributesToKeep.contains(i)) {
                 attributes.add(other.getAttributes().get(i));
             }
         }
@@ -33,8 +34,8 @@ public class Datum implements HasMetrics {
         metrics = new ArrayRealVector(metricDimensionsToKeep.size());
 
         int curIdx = 0;
-        for(int i = 0; i < other.metrics.getDimension(); ++i) {
-            if(metricDimensionsToKeep.contains(i)) {
+        for (int i = 0; i < other.metrics.getDimension(); ++i) {
+            if (metricDimensionsToKeep.contains(i)) {
                 metrics.setEntry(curIdx, other.getMetrics().getEntry(i));
                 curIdx++;
             }

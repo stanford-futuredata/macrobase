@@ -29,8 +29,9 @@ import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public abstract class SQLLoader extends DataLoader{
+public abstract class SQLLoader extends DataLoader {
     abstract public String getDriverClass();
+
     abstract public String getJDBCUrlPrefix();
 
     private ManagedDataSource source;
@@ -52,7 +53,7 @@ public abstract class SQLLoader extends DataLoader{
         baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
 
-        System.out.println(dbUrl+" "+dbName+" "+getJDBCUrlPrefix()+dbUrl);
+        System.out.println(dbUrl + " " + dbName + " " + getJDBCUrlPrefix() + dbUrl);
 
         DataSourceFactory factory = new DataSourceFactory();
 
@@ -86,7 +87,7 @@ public abstract class SQLLoader extends DataLoader{
 
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
 
-        for(int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
+        for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
             columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
                                                 rs.getMetaData().getColumnTypeName(i)));
         }
@@ -101,11 +102,11 @@ public abstract class SQLLoader extends DataLoader{
         Statement stmt = connection.createStatement();
         String sql = removeSqlJunk(removeLimit(baseQuery));
 
-        if(preds.size() > 0) {
+        if (preds.size() > 0) {
             StringJoiner sj = new StringJoiner(" AND ");
             preds.stream().forEach(e -> sj.add(String.format("%s = '%s'", e.column, e.value)));
 
-            if(!sql.toLowerCase().contains("where")) {
+            if (!sql.toLowerCase().contains("where")) {
                 sql += " WHERE ";
             } else {
                 sql += " AND ";
@@ -119,13 +120,13 @@ public abstract class SQLLoader extends DataLoader{
         ResultSet rs = stmt.executeQuery(sql);
 
         List<RowSet.Row> rows = Lists.newArrayList();
-        while(rs.next()) {
+        while (rs.next()) {
             List<ColumnValue> columnValues = Lists.newArrayList();
 
-            for(int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
+            for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
                 columnValues.add(
                         new ColumnValue(rs.getMetaData().getColumnName(i),
-                        rs.getString(i)));
+                                        rs.getString(i)));
             }
             rows.add(new RowSet.Row(columnValues));
         }
@@ -135,7 +136,7 @@ public abstract class SQLLoader extends DataLoader{
 
     @Override
     public List<Datum> getData(DatumEncoder encoder)
-        throws SQLException, IOException {
+            throws SQLException, IOException {
 
         String targetColumns = StreamSupport.stream(
                 Iterables.concat(attributes, lowMetrics, highMetrics, auxiliaryAttributes).spliterator(), false)
@@ -147,32 +148,32 @@ public abstract class SQLLoader extends DataLoader{
         ResultSet rs = stmt.executeQuery(sql);
 
 
-        for(int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
+        for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
             encoder.recordAttributeName(i, rs.getMetaData().getColumnName(i));
         }
 
         List<Datum> ret = Lists.newArrayList();
 
 
-        while(rs.next()) {
+        while (rs.next()) {
             List<Integer> attrList = new ArrayList<>(attributes.size());
 
             int i = 1;
-            for(; i <= attributes.size(); ++i) {
+            for (; i <= attributes.size(); ++i) {
                 attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
             }
 
             RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
             int vecPos = 0;
 
-            for(; i <= attributes.size() + lowMetrics.size(); ++i) {
+            for (; i <= attributes.size() + lowMetrics.size(); ++i) {
                 double val = Math.pow(Math.max(rs.getDouble(i), 0.1), -1);
                 metricVec.setEntry(vecPos, val);
 
                 vecPos += 1;
             }
 
-            for(; i <= attributes.size() + lowMetrics.size() + highMetrics.size(); ++i) {
+            for (; i <= attributes.size() + lowMetrics.size() + highMetrics.size(); ++i) {
                 double val = rs.getDouble(i);
                 metricVec.setEntry(vecPos, val);
 
@@ -184,7 +185,7 @@ public abstract class SQLLoader extends DataLoader{
             // Set auxilaries on the datum if user specified
             if (auxiliaryAttributes.size() > 0) {
                 RealVector auxilaries = new ArrayRealVector(auxiliaryAttributes.size());
-                for (int j=0; j < auxiliaryAttributes.size(); ++j, ++i) {
+                for (int j = 0; j < auxiliaryAttributes.size(); ++j, ++i) {
                     auxilaries.setEntry(j, rs.getDouble(i));
                 }
                 datum.setAuxiliaries(auxilaries);

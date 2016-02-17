@@ -21,16 +21,16 @@ public class ZScore extends OutlierDetector {
         double sum = 0;
 
         Timer.Context context = meanComputation.time();
-        for(Datum d : data) {
-            assert(d.getMetrics().getDimension() == 1);
+        for (Datum d : data) {
+            assert (d.getMetrics().getDimension() == 1);
             sum += d.getMetrics().getEntry(0);
         }
-        mean = sum/data.size();
+        mean = sum / data.size();
         context.stop();
 
         context = stddevComputation.time();
         double ss = 0;
-        for(Datum d : data) {
+        for (Datum d : data) {
             ss += Math.pow(mean - d.getMetrics().getEntry(0), 2);
         }
         std = Math.sqrt(ss / data.size());
@@ -40,7 +40,7 @@ public class ZScore extends OutlierDetector {
     @Override
     public double score(Datum datum) {
         double point = datum.getMetrics().getEntry(0);
-        return Math.abs(point-mean)/std;
+        return Math.abs(point - mean) / std;
     }
 
     @Override

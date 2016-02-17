@@ -11,8 +11,9 @@ import java.util.ArrayList;
 
 abstract public class BaseResource {
     protected final MacroBaseConf conf;
+
     public BaseResource(MacroBaseConf conf) {
-       this.conf = conf;
+        this.conf = conf;
     }
 
     protected SQLLoader getLoader() throws ConfigurationException, SQLException {

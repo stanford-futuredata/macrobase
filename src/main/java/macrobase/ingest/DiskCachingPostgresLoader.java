@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 public class DiskCachingPostgresLoader extends DiskCachingSQLLoader {
     public DiskCachingPostgresLoader(MacroBaseConf conf) throws ConfigurationException,
-                                                                SQLException {
+            SQLException {
         super(conf);
     }
 

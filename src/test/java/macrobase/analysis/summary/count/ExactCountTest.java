@@ -21,8 +21,8 @@ public class ExactCountTest {
         HashMap<Integer, Integer> truth = new HashMap<>();
 
         List<DatumWithScore> dws = new ArrayList<>();
-        for(int i = 0; i < 100; ++i) {
-            for(int j = 0; j < i; ++j) {
+        for (int i = 0; i < 100; ++i) {
+            for (int j = 0; j < i; ++j) {
                 dws.add(new DatumWithScore(new Datum(Lists.newArrayList(i), new ArrayRealVector()), 0));
                 truth.compute(i, (k, v) -> v == null ? 1 : v + 1);
             }
@@ -30,7 +30,7 @@ public class ExactCountTest {
 
         ec.count(dws);
 
-        for(Map.Entry<Integer, Double> cnt : ec.getCounts().entrySet()) {
+        for (Map.Entry<Integer, Double> cnt : ec.getCounts().entrySet()) {
             assertEquals(truth.get(cnt.getKey()), cnt.getValue(), 1e-10);
         }
     }

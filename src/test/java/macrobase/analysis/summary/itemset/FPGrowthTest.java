@@ -25,19 +25,18 @@ public class FPGrowthTest {
     }
 
     @SuppressWarnings("unused")
-	private void printItemsets(List<ItemsetWithCount> itemsets) {
-        itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
-        for(ItemsetWithCount i : itemsets) {
+    private void printItemsets(List<ItemsetWithCount> itemsets) {
+        itemsets.sort((a, b) -> b.getItems().size() - a.getItems().size());
+        for (ItemsetWithCount i : itemsets) {
             System.out.format("\ncount %f, size %d\n", i.getCount(), i.getItems().size());
-            for(int item : i.getItems()) {
-                System.out.println((char)item);
+            for (int item : i.getItems()) {
+                System.out.println((char) item);
             }
         }
     }
 
     @Test
-    public void testFPFromPaper()
-    {
+    public void testFPFromPaper() {
         List<Set<Integer>> txns = new ArrayList<>();
         txns.add(intIfy("f, a, c, d, g, i, m, p"));
         txns.add(intIfy("a, b, c, f, l, m, o"));
@@ -55,8 +54,7 @@ public class FPGrowthTest {
     }
 
     @Test
-    public void testFPLonger()
-    {
+    public void testFPLonger() {
 
         List<Set<Integer>> txns = new ArrayList<>();
         txns.add(intIfy("f, a, c, d, g, i, m, p"));
@@ -74,8 +72,8 @@ public class FPGrowthTest {
         List<Set<Integer>> apil = api.stream().map(i -> i.getItems()).collect(Collectors.toList());
         Set<Set<Integer>> dupdetector = new HashSet<>();
 
-        for(Set<Integer> s : apil) {
-            if(!dupdetector.add(s)) {
+        for (Set<Integer> s : apil) {
+            if (!dupdetector.add(s)) {
                 log.warn("DUPLICATE APRIORI SET {}", s);
             }
         }
@@ -88,8 +86,7 @@ public class FPGrowthTest {
     }
 
     @Test
-    public void simpleTest()
-    {
+    public void simpleTest() {
         List<Set<Integer>> txns = new ArrayList<>();
         txns.add(intIfy("a, b, c"));
         txns.add(intIfy("a, b"));
@@ -105,8 +102,7 @@ public class FPGrowthTest {
     }
 
     @Test
-    public void dupTest()
-    {
+    public void dupTest() {
         List<Set<Integer>> txns = new ArrayList<>();
         txns.add(intIfy("a, c, d"));
         txns.add(intIfy("a, c, d, e"));
@@ -129,8 +125,8 @@ public class FPGrowthTest {
         List<Set<Integer>> apil = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
         Set<Set<Integer>> dupdetector = new HashSet<>();
 
-        for(Set<Integer> s : apil) {
-            if(!dupdetector.add(s)) {
+        for (Set<Integer> s : apil) {
+            if (!dupdetector.add(s)) {
                 log.warn("DUPLICATE FPTREE SET {}", s);
             }
         }

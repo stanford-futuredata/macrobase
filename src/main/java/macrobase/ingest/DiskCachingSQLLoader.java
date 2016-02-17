@@ -43,7 +43,8 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
         private DatumEncoder encoder;
         private List<Datum> data;
 
-        public CachedData() {}
+        public CachedData() {
+        }
 
         public CachedData(DatumEncoder encoder, List<Datum> data) {
             this.encoder = encoder;
@@ -64,11 +65,11 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
                                    List<String> highMetrics,
                                    String baseQuery) {
         int hashCode = String.format("A-%s::L%s::H%s::BQ%s",
-                             attributes.toString(),
-                             lowMetrics.toString(),
-                             highMetrics.toString(),
-                             baseQuery).replace(" ", "_").hashCode();
-         return Integer.toString(hashCode);
+                                     attributes.toString(),
+                                     lowMetrics.toString(),
+                                     highMetrics.toString(),
+                                     baseQuery).replace(" ", "_").hashCode();
+        return Integer.toString(hashCode);
     }
 
     private void writeOutData(DatumEncoder encoder,

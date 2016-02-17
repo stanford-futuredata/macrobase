@@ -22,18 +22,17 @@ public class StreamingFPGrowthTest {
     }
 
     private void printItemsets(List<ItemsetWithCount> itemsets) {
-        itemsets.sort((a, b) -> b.getItems().size()-a.getItems().size());
-        for(ItemsetWithCount i : itemsets) {
+        itemsets.sort((a, b) -> b.getItems().size() - a.getItems().size());
+        for (ItemsetWithCount i : itemsets) {
             System.out.format("\ncount %f, size %d\n", i.getCount(), i.getItems().size());
-            for(int item : i.getItems()) {
-                System.out.println((char)item);
+            for (int item : i.getItems()) {
+                System.out.println((char) item);
             }
         }
     }
 
     @Test
-    public void testFPFromPaper()
-    {
+    public void testFPFromPaper() {
         List<Set<Integer>> allTxns = new ArrayList<>();
         allTxns.add(intIfy("f, a, c, d, g, i, m, p"));
         allTxns.add(intIfy("a, b, c, f, l, m, o"));
@@ -70,8 +69,8 @@ public class StreamingFPGrowthTest {
         List<Set<Integer>> apil = apItemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
         Set<Set<Integer>> dupdetector = new HashSet<>();
 
-        for(Set<Integer> s : apil) {
-            if(!dupdetector.add(s)) {
+        for (Set<Integer> s : apil) {
+            if (!dupdetector.add(s)) {
                 log.warn("DUPLICATE FPTREE SET {}", s);
             }
         }
@@ -146,19 +145,19 @@ public class StreamingFPGrowthTest {
         int cnt = 0;
 
         Map<Integer, Double> frequentItems = new HashMap<>();
-        for(cnt = 0; cnt <= 1000; ++cnt) {
+        for (cnt = 0; cnt <= 1000; ++cnt) {
             int itemSetSize = random.nextInt(100);
             Set<Integer> itemSet = new HashSet<>(itemSetSize);
-            for(int i = 0; i < itemSetSize; ++i) {
+            for (int i = 0; i < itemSetSize; ++i) {
                 itemSet.add(random.nextInt(100));
                 frequentItems.compute(i, (k, v) -> v == null ? 1 : v + 1);
             }
 
             fp.insertTransactionStreamingFalseNegative(itemSet);
 
-            if(cnt % 20 == 0) {
+            if (cnt % 20 == 0) {
                 int toDecay = random.nextInt(frequentItems.size());
-                for(int i = 0; i < toDecay; ++i) {
+                for (int i = 0; i < toDecay; ++i) {
                     frequentItems.remove(frequentItems.keySet().toArray()[random.nextInt(frequentItems.size())]);
                 }
                 fp.decayAndResetFrequentItems(frequentItems, .95);

@@ -13,13 +13,13 @@ public class ExactCount {
     }
 
     public ExactCount count(List<DatumWithScore> data) {
-        for(DatumWithScore d : data) {
-            for(int i : d.getDatum().getAttributes()) {
+        for (DatumWithScore d : data) {
+            for (int i : d.getDatum().getAttributes()) {
                 Double curVal = counts.get(i);
-                if(curVal == null) {
+                if (curVal == null) {
                     curVal = 0.;
                 }
-                counts.put(i, curVal+1);
+                counts.put(i, curVal + 1);
             }
         }
 

@@ -49,13 +49,13 @@ public class FastButBigSpaceSaving extends ApproximateCount {
 
         log.trace("Decaying; {} items stored", counts.size());
 
-        for(Map.Entry<Integer, Double> entry : counts.entrySet()) {
-            double newValue = entry.getValue()*by;
+        for (Map.Entry<Integer, Double> entry : counts.entrySet()) {
+            double newValue = entry.getValue() * by;
             counts.put(entry.getKey(), newValue);
 
         }
 
-        if(counts.size() > maxStableSize) {
+        if (counts.size() > maxStableSize) {
             List<Map.Entry<Integer, Double>> a = Lists.newArrayList(counts.entrySet());
             a.sort((e1, e2) -> e1.getValue().compareTo(e2.getValue()));
 
@@ -66,10 +66,10 @@ public class FastButBigSpaceSaving extends ApproximateCount {
 
             prevEpochMaxEvicted = Double.MIN_VALUE;
 
-            for(int i = 0; i < toRemove; ++i) {
+            for (int i = 0; i < toRemove; ++i) {
                 Map.Entry<Integer, Double> entry = a.get(i);
                 counts.remove(entry.getKey());
-                if(entry.getValue() > prevEpochMaxEvicted) {
+                if (entry.getValue() > prevEpochMaxEvicted) {
                     prevEpochMaxEvicted = entry.getValue();
                 }
             }
@@ -91,8 +91,8 @@ public class FastButBigSpaceSaving extends ApproximateCount {
             value = prevEpochMaxEvicted + count;
             totalCount += prevEpochMaxEvicted + count;
         } else {
-           value += count;
-           totalCount += count;
+            value += count;
+            totalCount += count;
         }
 
         counts.put(item, value);
@@ -106,7 +106,7 @@ public class FastButBigSpaceSaving extends ApproximateCount {
     @Override
     public double getCount(int item) {
         Double ret = counts.get(item);
-        if(ret == null) {
+        if (ret == null) {
             return 0;
         }
 

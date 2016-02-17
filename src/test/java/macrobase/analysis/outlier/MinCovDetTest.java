@@ -20,8 +20,8 @@ import static org.junit.Assert.*;
  */
 public class MinCovDetTest {
     private static double getMahalanobisApache(RealVector mean,
-                                        RealMatrix inverseCov,
-                                        RealVector vec) {
+                                               RealMatrix inverseCov,
+                                               RealVector vec) {
         // sqrt((vec-mean)^T S^-1 (vec-mean))
         RealMatrix vecT = new Array2DRowRealMatrix(vec.toArray());
         RealMatrix meanT = new Array2DRowRealMatrix(mean.toArray());
@@ -40,9 +40,9 @@ public class MinCovDetTest {
 
         List<Datum> testData = new ArrayList<>();
 
-        for(int i = 0; i < nsamples; ++i) {
+        for (int i = 0; i < nsamples; ++i) {
             double[] sample = new double[dim];
-            for(int d = 0; d < dim; ++d) {
+            for (int d = 0; d < dim; ++d) {
                 sample[d] = d % 2 == 0 ? r.nextDouble() : r.nextGaussian();
             }
             testData.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
@@ -55,7 +55,7 @@ public class MinCovDetTest {
         RealMatrix inverseCov = trainer.getInverseCovariance();
         RealVector mean = trainer.getMean();
 
-        for(Datum d : testData) {
+        for (Datum d : testData) {
             assertEquals(trainer.score(d), getMahalanobisApache(mean, inverseCov, d.getMetrics()), 0.01);
         }
     }

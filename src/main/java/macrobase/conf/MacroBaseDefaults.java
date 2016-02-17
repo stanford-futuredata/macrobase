@@ -34,7 +34,7 @@ public class MacroBaseDefaults {
     public static final Double MCD_STOPPING_DELTA = 1e-3;
 
     // KDE defaults
-    public static final KDE.Bandwidth KDE_BANDWIDTH = KDE.Bandwidth.OVERSHMOOTHED;
+    public static final KDE.Bandwidth KDE_BANDWIDTH = KDE.Bandwidth.OVERSMOOTHED;
     public static final KDE.KernelType KDE_KERNEL_TYPE = KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE;
 
     // loader defaults
@@ -42,7 +42,7 @@ public class MacroBaseDefaults {
     public static final DetectorType DETECTOR_TYPE = DetectorType.MAD_OR_MCD;
     public static final DataTransformType DATA_TRANSFORM = DataTransformType.ZERO_TO_ONE_SCALE;
 
-    public static final String DB_USER = System.getProperty("user.name");;
+    public static final String DB_USER = System.getProperty("user.name");
     public static final String DB_PASSWORD = "";
     public static final String DB_NAME = "postgres";
     public static final String DB_URL = "localhost";

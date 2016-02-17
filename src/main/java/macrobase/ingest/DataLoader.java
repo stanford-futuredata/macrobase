@@ -33,9 +33,9 @@ public abstract class DataLoader {
         auxiliaryAttributes = conf.getStringList(MacroBaseConf.AUXILIARY_ATTRIBUTES, new ArrayList<>());
         MacroBaseConf.DataTransformType dataTransformType = conf.getDataTransform();
 
-        if(dataTransformType == MacroBaseConf.DataTransformType.ZERO_TO_ONE_SCALE) {
+        if (dataTransformType == MacroBaseConf.DataTransformType.ZERO_TO_ONE_SCALE) {
             dataTransformation = new ZeroToOneLinearTransformation();
-        } else if(dataTransformType == MacroBaseConf.DataTransformType.IDENTITY) {
+        } else if (dataTransformType == MacroBaseConf.DataTransformType.IDENTITY) {
             dataTransformation = new IdentityTransformation();
         } else {
             throw new ConfigurationException(String.format("no known data transformation %s", dataTransformType));

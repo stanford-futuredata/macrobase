@@ -28,7 +28,7 @@ class AChao<T> {
     }
 
     public void insertBatch(Collection<T> elements, double weight) {
-        for(T ele : elements) {
+        for (T ele : elements) {
             insert(ele, weight);
         }
     }
@@ -44,9 +44,9 @@ class AChao<T> {
     public void insert(T ele, double weight) {
         runningCount += weight;
 
-        if(reservoir.size() < reservoirCapacity) {
+        if (reservoir.size() < reservoirCapacity) {
             reservoir.add(ele);
-        } else if(random.nextDouble() < weight/ runningCount) {
+        } else if (random.nextDouble() < weight / runningCount) {
             reservoir.remove(random.nextInt(reservoirCapacity));
             reservoir.add(ele);
         }

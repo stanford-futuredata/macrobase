@@ -43,7 +43,7 @@ public class ScoreDumpDiagnostic extends ConfiguredCommand<MacroBaseConf> {
         }
 
         public void run() throws ConfigurationException, IOException, SQLException {
-            assert(conf.isSet(SCORE_DUMP_FILE_CONFIG_PARAM));
+            assert (conf.isSet(SCORE_DUMP_FILE_CONFIG_PARAM));
 
             DatumEncoder encoder = new DatumEncoder();
 

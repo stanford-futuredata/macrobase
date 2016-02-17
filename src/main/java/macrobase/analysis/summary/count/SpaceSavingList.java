@@ -16,7 +16,7 @@ public class SpaceSavingList extends ApproximateCount {
     private double totalCount;
 
     @SuppressWarnings("unused")
-	private void sanityCheck() {
+    private void sanityCheck() {
         CounterGroup curGroup = groupHead;
 
         HashSet<CounterToken> allTokens = new HashSet<>();
@@ -27,8 +27,8 @@ public class SpaceSavingList extends ApproximateCount {
 
         HashSet<CounterGroup> allGroups = new HashSet<>();
 
-        while(curGroup != null) {
-            if(allGroups.contains(curGroup)) {
+        while (curGroup != null) {
+            if (allGroups.contains(curGroup)) {
                 log.error("Duplicate group detected!");
             }
 
@@ -39,26 +39,24 @@ public class SpaceSavingList extends ApproximateCount {
 
             HashSet<CounterToken> groupTokens = new HashSet<>();
             HashSet<Integer> groupItems = new HashSet<>();
-            while(token != null) {
-                if(token.prev != prevToken) {
+            while (token != null) {
+                if (token.prev != prevToken) {
                     log.error("Broken backward pointer!");
                 }
 
-                if(token.group != curGroup) {
+                if (token.group != curGroup) {
                     log.error("Wrong group!");
                 }
 
-                if(groupTokens.contains(token)) {
+                if (groupTokens.contains(token)) {
                     log.error("Token ring detected!");
-                }
-                else if(allTokens.contains(token)) {
+                } else if (allTokens.contains(token)) {
                     log.error("Reused token detected!");
                 }
 
-                if(groupItems.contains(token.item)) {
+                if (groupItems.contains(token.item)) {
                     log.error("Item ring detected!");
-                }
-                else if(allItems.contains(token.item)) {
+                } else if (allItems.contains(token.item)) {
                     log.error("Reused item detected!");
                 }
 
@@ -102,34 +100,34 @@ public class SpaceSavingList extends ApproximateCount {
         }
 
         public void removeIfEmpty() {
-            if(tokenList != null) {
+            if (tokenList != null) {
                 return;
             }
 
-            if(next != null) {
+            if (next != null) {
                 next.prev = prev;
                 next.differential += differential;
             }
 
-            if(prev != null) {
+            if (prev != null) {
                 prev.next = next;
             } else {
-                assert(groupHead == this);
+                assert (groupHead == this);
                 groupHead = next;
             }
         }
 
         public void addCounter(CounterToken t) {
-            assert(tokenList != null);
+            assert (tokenList != null);
 
-            if(tokenList == null) {
-              tokenList = t;
+            if (tokenList == null) {
+                tokenList = t;
             } else {
-              t.next = tokenList;
-              t.next.prev = t;
-              t.prev = null;
+                t.next = tokenList;
+                t.next.prev = t;
+                t.prev = null;
 
-              tokenList = t;
+                tokenList = t;
             }
 
             t.group = this;
@@ -137,13 +135,13 @@ public class SpaceSavingList extends ApproximateCount {
 
         // returns replaced token
         public CounterToken replaceOneToken(CounterToken newToken) {
-            assert(tokenList != null);
+            assert (tokenList != null);
             CounterToken replaced = tokenList;
             tokenList = newToken;
             newToken.prev = null;
             newToken.next = replaced.next;
 
-            if(newToken.next != null) {
+            if (newToken.next != null) {
                 newToken.next.prev = newToken;
             }
 
@@ -154,21 +152,21 @@ public class SpaceSavingList extends ApproximateCount {
         public void removeToken(CounterToken token) {
 
 
-            if(token.prev != null) {
+            if (token.prev != null) {
                 token.prev.next = token.next;
             }
 
-            if(token.next != null) {
+            if (token.next != null) {
                 // head of list
-                if(tokenList == token) {
-                    assert(token.prev == null);
+                if (tokenList == token) {
+                    assert (token.prev == null);
                     tokenList = token.next;
                     token.next.prev = null;
                 } else {
                     token.next.prev = token.prev;
                 }
             } else {
-                if(tokenList == token) {
+                if (tokenList == token) {
                     tokenList = null;
                 }
             }
@@ -198,14 +196,14 @@ public class SpaceSavingList extends ApproximateCount {
     public double getCount(int item) {
         CounterToken token = digest.get(item);
 
-        if(token == null) {
+        if (token == null) {
             return 0;
         }
 
         CounterGroup group = token.group;
 
         double ret = 0L;
-        while(group != null) {
+        while (group != null) {
             ret += group.differential;
             group = group.prev;
         }
@@ -218,10 +216,10 @@ public class SpaceSavingList extends ApproximateCount {
         CounterGroup currentGroup = token.group;
 
         // we are at the end of the groups (highest count)
-        if(currentGroup.next == null) {
+        if (currentGroup.next == null) {
 
             // we are the only matching token
-            if(currentGroup.tokenList == token && token.next == null) {
+            if (currentGroup.tokenList == token && token.next == null) {
                 currentGroup.differential += by;
             }
             // insert a new token at the end
@@ -236,16 +234,16 @@ public class SpaceSavingList extends ApproximateCount {
             }
         }
         // perfect match on next group
-        else if(currentGroup.next.differential == by) {
+        else if (currentGroup.next.differential == by) {
             currentGroup.removeToken(token);
             currentGroup.next.addCounter(token);
         }
         // we are between current and current.next; insert a new token
-        else if(currentGroup.next != null && currentGroup.next.differential > by) {
+        else if (currentGroup.next != null && currentGroup.next.differential > by) {
             currentGroup.next.differential -= by;
 
             // if this is the only token in the list, just increment
-            if(currentGroup.tokenList == token && token.next == null) {
+            if (currentGroup.tokenList == token && token.next == null) {
                 currentGroup.differential += by;
             } else {
                 currentGroup.removeToken(token);
@@ -259,7 +257,7 @@ public class SpaceSavingList extends ApproximateCount {
             }
         }
         // we fall after the next token in line
-        else if(currentGroup.next != null && currentGroup.next.differential < by) {
+        else if (currentGroup.next != null && currentGroup.next.differential < by) {
             currentGroup.removeToken(token);
 
             insertNextMatchingGroup(currentGroup, token, by);
@@ -272,25 +270,25 @@ public class SpaceSavingList extends ApproximateCount {
         // find the group we want to insert ourselves after
         CounterGroup gteGroup = currentGroup.next;
         CounterGroup prevGroup = null;
-        while(remaining > 0 && gteGroup != null) {
+        while (remaining > 0 && gteGroup != null) {
             remaining -= gteGroup.differential;
             prevGroup = gteGroup;
             gteGroup = gteGroup.next;
-            assert(gteGroup == null || gteGroup.prev == prevGroup);
+            assert (gteGroup == null || gteGroup.prev == prevGroup);
         }
 
         // we should be the new tail node
-        if(remaining > 0) {
+        if (remaining > 0) {
             CounterGroup newGroup = new CounterGroup(remaining,
                                                      prevGroup,
                                                      null,
                                                      token);
-            if(prevGroup != null) {
+            if (prevGroup != null) {
                 prevGroup.next = newGroup;
             }
         }
         // we matched exactly!
-        else if(remaining == 0) {
+        else if (remaining == 0) {
             prevGroup.addCounter(token);
         }
         // insert ourselves before the last node we visited
@@ -303,7 +301,7 @@ public class SpaceSavingList extends ApproximateCount {
                                                      prevGroup,
                                                      token);
 
-            if(prevGroup == groupHead) {
+            if (prevGroup == groupHead) {
                 groupHead = newGroup;
                 prevGroup.prev = newGroup;
             } else {
@@ -319,11 +317,11 @@ public class SpaceSavingList extends ApproximateCount {
         totalCount += count;
 
         CounterToken token = digest.get(item);
-        if(token == null) {
+        if (token == null) {
             token = new CounterToken(item, null, null);
             digest.put(item, token);
 
-            if(digest.size() <= maxSize) {
+            if (digest.size() <= maxSize) {
                 // first group in the bunch
                 if (groupHead == null) {
                     groupHead = new CounterGroup(count,
@@ -333,11 +331,11 @@ public class SpaceSavingList extends ApproximateCount {
                 }
                 // insert the token at the appropriate position
                 else {
-                    if(count == groupHead.differential) {
+                    if (count == groupHead.differential) {
                         groupHead.addCounter(token);
                     }
                     // insert ourselves at the head of the list
-                    else if (count < groupHead.differential){
+                    else if (count < groupHead.differential) {
                         CounterGroup newGroup = new CounterGroup(count,
                                                                  null,
                                                                  groupHead,
@@ -345,8 +343,7 @@ public class SpaceSavingList extends ApproximateCount {
                         groupHead.differential -= count;
                         groupHead.prev = newGroup;
                         groupHead = newGroup;
-                    }
-                    else {
+                    } else {
                         insertNextMatchingGroup(groupHead, token, count);
                     }
                 }
@@ -368,10 +365,10 @@ public class SpaceSavingList extends ApproximateCount {
         CounterGroup curGroup = groupHead;
         Double currentCount = 0.;
 
-        while(curGroup != null) {
+        while (curGroup != null) {
             currentCount += curGroup.differential;
             CounterToken curToken = curGroup.tokenList;
-            while(curToken != null) {
+            while (curToken != null) {
                 ret.put(curToken.item, currentCount);
                 curToken = curToken.next;
             }
@@ -387,7 +384,7 @@ public class SpaceSavingList extends ApproximateCount {
         totalCount *= by;
 
         CounterGroup curGroup = groupHead;
-        while(curGroup != null) {
+        while (curGroup != null) {
             curGroup.differential *= by;
             curGroup = curGroup.next;
         }
@@ -397,14 +394,14 @@ public class SpaceSavingList extends ApproximateCount {
         double currentCount = 0;
         CounterGroup curGroup = groupHead;
         log.debug("****");
-        while(curGroup != null) {
+        while (curGroup != null) {
             currentCount += curGroup.differential;
             log.debug("at group {}", curGroup);
             log.debug("differential is {}, so far is {}",
                       curGroup.differential,
                       currentCount);
             CounterToken token = curGroup.tokenList;
-            while(token != null) {
+            while (token != null) {
                 log.debug("\t counter: {}", token.item);
                 token = token.next;
             }

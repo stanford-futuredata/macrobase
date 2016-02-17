@@ -24,7 +24,7 @@ import macrobase.datamodel.Datum;
  * Abstract class for All outlier detection algorithms
  */
 public abstract class OutlierDetector {
-	private static final Logger log = LoggerFactory.getLogger(OutlierDetector.class);
+    private static final Logger log = LoggerFactory.getLogger(OutlierDetector.class);
 
     public class BatchResult {
         private List<DatumWithScore> inliers;
@@ -45,7 +45,9 @@ public abstract class OutlierDetector {
     }
 
     public abstract void train(List<Datum> data);
+
     public abstract double score(Datum datum);
+
     public abstract double getZScoreEquivalent(double zscore);
 
     private Map<Double, Double> cachedZScoreEquivalents = new HashMap<>();
@@ -64,13 +66,13 @@ public abstract class OutlierDetector {
 
     public boolean isPercentileOutlier(double score,
                                        double targetPercentile) {
-        double thresh = recentScoresSorted.get((int)(targetPercentile*recentScoresSorted.size()));
+        double thresh = recentScoresSorted.get((int) (targetPercentile * recentScoresSorted.size()));
         return score >= thresh;
     }
 
     private List<DatumWithScore> scoreBatch(List<Datum> data) {
         List<DatumWithScore> ret = new ArrayList<>();
-        for(Datum d : data) {
+        for (Datum d : data) {
             ret.add(new DatumWithScore(d, score(d)));
         }
         return ret;
@@ -78,18 +80,18 @@ public abstract class OutlierDetector {
 
     public BatchResult classifyBatchByPercentile(List<Datum> data,
                                                  double percentile) {
-    	Stopwatch sw = Stopwatch.createUnstarted();
-    	log.debug("Starting training...");
-    	sw.start();
+        Stopwatch sw = Stopwatch.createUnstarted();
+        log.debug("Starting training...");
+        sw.start();
         train(data);
         sw.stop();
         long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended training (time: {}ms)!", trainTime);
-        
+
         log.debug("Starting scoring...");
         sw.reset();
         sw.start();
-        int splitPoint = (int)(data.size()*percentile);
+        int splitPoint = (int) (data.size() * percentile);
         List<DatumWithScore> scoredData = scoreBatch(data);
 
         scoredData.sort((a, b) -> a.getScore().compareTo(b.getScore()));
@@ -109,13 +111,13 @@ public abstract class OutlierDetector {
         List<DatumWithScore> outliers = new ArrayList<>();
 
         Stopwatch sw = Stopwatch.createUnstarted();
-    	log.debug("Starting training...");
-    	sw.start();
+        log.debug("Starting training...");
+        sw.start();
         train(data);
         sw.stop();
         long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
         log.debug("...ended training (time: {}ms)!", trainTime);
-        
+
         log.debug("Starting scoring...");
         sw.reset();
         sw.start();
@@ -142,7 +144,7 @@ public abstract class OutlierDetector {
         int rank = data.get(0).getMetrics().getDimension();
         RealMatrix ret = new Array2DRowRealMatrix(data.size(), rank);
         int index = 0;
-        for(HasMetrics d : data) {
+        for (HasMetrics d : data) {
             ret.setRow(index, d.getMetrics().toArray());
             index += 1;
         }

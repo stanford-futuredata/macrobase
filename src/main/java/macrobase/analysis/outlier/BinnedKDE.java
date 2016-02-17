@@ -2,6 +2,7 @@ package macrobase.analysis.outlier;
 
 import java.util.Arrays;
 import java.util.List;
+
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
@@ -44,9 +45,10 @@ public class BinnedKDE extends KDE {
         // TODO: now only supports 1D!!!!
         kernelWeights = new double[metricsDimensions][numBins];
 
-        double binsThatMatter = kernel.effectTiveSupportWidth1D() * Math.sqrt(this.bandwidth.getEntry(0, 0)) * this.numIntervals / (this.maximums[0] - this.minimums[0]);
+        double binsThatMatter = kernel.effectTiveSupportWidth1D() * Math.sqrt(
+                this.bandwidth.getEntry(0, 0)) * this.numIntervals / (this.maximums[0] - this.minimums[0]);
         log.debug("binsThatMatter: {}", binsThatMatter);
-        this.L = Math.min((int)binsThatMatter, this.numIntervals);
+        this.L = Math.min((int) binsThatMatter, this.numIntervals);
         log.debug("GOT L= {}", L);
 
         final double h = Math.sqrt(this.bandwidth.getEntry(0, 0));
@@ -60,16 +62,16 @@ public class BinnedKDE extends KDE {
         }
 
 
-        densityEstimates= new double[metricsDimensions][numBins];
-        for (int d=0; d < 1; d++) {
-            for (int j=0; j < numBins; ++j) {
-               for (int l=-this.L; l<=this.L; l++) {
-                   int binIndex = j - l;
-                   if (binIndex < 0 || binIndex >= numBins) {
-                       continue;
-                   }
-                   densityEstimates[d][j] += bins[d][binIndex] * kernelWeights[d][Math.abs(l)];
-               }
+        densityEstimates = new double[metricsDimensions][numBins];
+        for (int d = 0; d < 1; d++) {
+            for (int j = 0; j < numBins; ++j) {
+                for (int l = -this.L; l <= this.L; l++) {
+                    int binIndex = j - l;
+                    if (binIndex < 0 || binIndex >= numBins) {
+                        continue;
+                    }
+                    densityEstimates[d][j] += bins[d][binIndex] * kernelWeights[d][Math.abs(l)];
+                }
             }
         }
     }
@@ -77,26 +79,27 @@ public class BinnedKDE extends KDE {
     @Override
     public double score(Datum datum) {
         // TODO: now only supports 1D datum
-        for (int d=0; d < 1; d++) {
+        for (int d = 0; d < 1; d++) {
             double pointValue = datum.getMetrics().getEntry(d);
             double binDouble = (pointValue - this.minimums[d]) / delta;
-            return - densityEstimates[d][(int)binDouble];
+            return -densityEstimates[d][(int) binDouble];
         }
         return 0;
     }
 
     /**
      * Assigns data to bins (in all dimensions) using linear binning
+     *
      * @param data
      */
     private void linearAssignToBins(List<Datum> data) {
         this.bins = new double[metricsDimensions][numBins];
         this.minimums = new double[metricsDimensions];
         this.maximums = new double[metricsDimensions];
-        for (int d=0; d < this.metricsDimensions; ++d) {
+        for (int d = 0; d < this.metricsDimensions; ++d) {
             int size = data.size();
             double[] dataIn1D = new double[size];
-            for (int i=0; i<size; i++) {
+            for (int i = 0; i < size; i++) {
                 dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
             }
 
@@ -105,10 +108,10 @@ public class BinnedKDE extends KDE {
             this.maximums[d] = dataIn1D[size - 1];
             this.delta = (this.maximums[d] - this.minimums[d]) / numIntervals;
 
-            for (int i=0; i<size; i++) {
+            for (int i = 0; i < size; i++) {
                 double pointValue = data.get(i).getMetrics().getEntry(d);
                 double binDouble = (pointValue - this.minimums[d]) / delta;
-                int lowerBin = (int)binDouble;
+                int lowerBin = (int) binDouble;
                 // Assign weights to lower and upper bins linearly proportional to distances
                 this.bins[d][lowerBin] += binDouble - lowerBin;
                 this.bins[d][Math.min(lowerBin + 1, numBins - 1)] += 1 - (binDouble - lowerBin);

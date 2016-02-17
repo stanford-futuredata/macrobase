@@ -41,8 +41,8 @@ public class CsvLoader extends DataLoader {
 
     @Override
     public List<Datum> getData(DatumEncoder encoder) {
-        for(Map.Entry<String, Integer> se : schema.entrySet()) {
-            encoder.recordAttributeName(se.getValue()+1, se.getKey());
+        for (Map.Entry<String, Integer> se : schema.entrySet()) {
+            encoder.recordAttributeName(se.getValue() + 1, se.getKey());
         }
 
         List<Datum> ret = Lists.newArrayList();
@@ -64,7 +64,7 @@ public class CsvLoader extends DataLoader {
             List<Integer> attrList = new ArrayList<>(attributes.size());
 
             int i = 1;
-            for(String attr : attributes) {
+            for (String attr : attributes) {
                 attrList.add(encoder.getIntegerEncoding(i, record.get(schema.get(attr))));
                 i += 1;
             }
@@ -72,7 +72,7 @@ public class CsvLoader extends DataLoader {
         }
 
         // normalize data
-        if (dataTransformation != null ) {
+        if (dataTransformation != null) {
             dataTransformation.transform(ret);
         }
 

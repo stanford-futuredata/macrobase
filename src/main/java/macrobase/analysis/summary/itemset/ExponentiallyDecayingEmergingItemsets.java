@@ -33,9 +33,9 @@ public class ExponentiallyDecayingEmergingItemsets {
 
 
     @SuppressWarnings("unused")
-	private final int sizeOutlierSS;
+    private final int sizeOutlierSS;
     @SuppressWarnings("unused")
-	private final int sizeInlierSS;
+    private final int sizeInlierSS;
 
     private final double minSupportOutlier;
     private final double minRatio;
@@ -67,8 +67,13 @@ public class ExponentiallyDecayingEmergingItemsets {
 
     Map<Integer, Double> interestingItems;
 
-    public Double getInlierCount() { return inlierCountSummary.getTotalCount(); }
-    public Double getOutlierCount() { return outlierCountSummary.getTotalCount(); }
+    public Double getInlierCount() {
+        return inlierCountSummary.getTotalCount();
+    }
+
+    public Double getOutlierCount() {
+        return outlierCountSummary.getTotalCount();
+    }
 
     public void updateModelsNoDecay() {
         updateModels(false);
@@ -79,27 +84,27 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     private void updateModels(boolean doDecay) {
-        if(attributeDimension == 1) {
+        if (attributeDimension == 1) {
             return;
         }
 
         Map<Integer, Double> outlierCounts = this.outlierCountSummary.getCounts();
         Map<Integer, Double> inlierCounts = this.inlierCountSummary.getCounts();
 
-        int supportCountRequired = (int)(this.outlierCountSummary.getTotalCount()*minSupportOutlier);
+        int supportCountRequired = (int) (this.outlierCountSummary.getTotalCount() * minSupportOutlier);
 
         interestingItems = new HashMap<>();
 
-        for(Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
-            if(outlierCount.getValue() < supportCountRequired) {
+        for (Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
+            if (outlierCount.getValue() < supportCountRequired) {
                 continue;
             }
 
             Double inlierCount = inlierCounts.get(outlierCount.getKey());
 
-            if(inlierCount != null &&
-               ((outlierCount.getValue()/ this.outlierCountSummary.getTotalCount() /
-                 (inlierCount/ this.inlierCountSummary.getTotalCount()) < minRatio))) {
+            if (inlierCount != null &&
+                ((outlierCount.getValue() / this.outlierCountSummary.getTotalCount() /
+                  (inlierCount / this.inlierCountSummary.getTotalCount()) < minRatio))) {
                 continue;
             }
 
@@ -121,13 +126,13 @@ public class ExponentiallyDecayingEmergingItemsets {
         outlierCountSummary.multiplyAllCounts(1 - exponentialDecayRate);
         inlierCountSummary.multiplyAllCounts(1 - exponentialDecayRate);
 
-       updateModelsAndDecay();
+        updateModelsAndDecay();
     }
 
     public void markOutlier(Datum outlier) {
         outlierCountSummary.observe(outlier.getAttributes());
 
-        if(attributeDimension > 1) {
+        if (attributeDimension > 1) {
             outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.getAttributes());
         }
     }
@@ -135,13 +140,13 @@ public class ExponentiallyDecayingEmergingItemsets {
     // TODO: don't track *all* inliers
     public void markInlier(Datum inlier) {
         inlierCountSummary.observe(inlier.getAttributes());
-        if(attributeDimension > 1) {
+        if (attributeDimension > 1) {
             inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
         }
     }
 
     private List<ItemsetResult> getSingleItemItemsets(DatumEncoder encoder) {
-        int supportCountRequired = (int)(this.outlierCountSummary.getTotalCount()*minSupportOutlier);
+        int supportCountRequired = (int) (this.outlierCountSummary.getTotalCount() * minSupportOutlier);
 
         log.debug("REQUIRED SUPPORT: {} {}", supportCountRequired, minSupportOutlier);
 
@@ -150,8 +155,8 @@ public class ExponentiallyDecayingEmergingItemsets {
         Map<Integer, Double> outlierCounts = outlierCountSummary.getCounts();
 
 
-        for(Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
-            if(outlierCount.getValue() < supportCountRequired) {
+        for (Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
+            if (outlierCount.getValue() < supportCountRequired) {
                 continue;
             }
 
@@ -159,14 +164,14 @@ public class ExponentiallyDecayingEmergingItemsets {
 
             double ratio;
 
-            if(inlierCount != null) {
-                ratio = (outlierCount.getValue()/ this.outlierCountSummary.getTotalCount() /
-                         (inlierCount/ this.inlierCountSummary.getTotalCount()));
+            if (inlierCount != null) {
+                ratio = (outlierCount.getValue() / this.outlierCountSummary.getTotalCount() /
+                         (inlierCount / this.inlierCountSummary.getTotalCount()));
             } else {
                 ratio = Double.POSITIVE_INFINITY;
             }
 
-            if(ratio > minRatio) {
+            if (ratio > minRatio) {
                 ret.add(new ItemsetResult(outlierCount.getValue() / outlierCountSummary.getTotalCount(),
                                           outlierCount.getValue(),
                                           ratio,
@@ -178,9 +183,9 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     public List<ItemsetResult> getItemsets(DatumEncoder encoder) {
-        List<ItemsetResult> singleItemsets =  getSingleItemItemsets(encoder);
+        List<ItemsetResult> singleItemsets = getSingleItemItemsets(encoder);
 
-        if(attributeDimension == 1) {
+        if (attributeDimension == 1) {
             return singleItemsets;
         }
 
@@ -196,9 +201,9 @@ public class ExponentiallyDecayingEmergingItemsets {
 
         Set<Integer> prevSet = null;
         Double prevCount = -1.;
-        for(ItemsetWithCount i : iwc) {
-            if(i.getCount() == prevCount) {
-                if(prevSet != null && Sets.difference(i.getItems(), prevSet).size() == 0) {
+        for (ItemsetWithCount i : iwc) {
+            if (i.getCount() == prevCount) {
+                if (prevSet != null && Sets.difference(i.getItems(), prevSet).size() == 0) {
                     continue;
                 }
             }
@@ -206,7 +211,7 @@ public class ExponentiallyDecayingEmergingItemsets {
             prevCount = i.getCount();
             prevSet = i.getItems();
 
-            if(i.getItems().size() != 1) {
+            if (i.getItems().size() != 1) {
                 ratioItemsToCheck.addAll(i.getItems());
                 ratioSetsToCheck.add(i);
             }
@@ -215,20 +220,20 @@ public class ExponentiallyDecayingEmergingItemsets {
         // check the ratios of any itemsets we just marked
         List<ItemsetWithCount> matchingInlierCounts = inlierPatternSummary.getCounts(ratioSetsToCheck);
 
-        assert(matchingInlierCounts.size() == ratioSetsToCheck.size());
-        for(int i = 0; i < matchingInlierCounts.size(); ++i) {
+        assert (matchingInlierCounts.size() == ratioSetsToCheck.size());
+        for (int i = 0; i < matchingInlierCounts.size(); ++i) {
             ItemsetWithCount ic = matchingInlierCounts.get(i);
             ItemsetWithCount oc = ratioSetsToCheck.get(i);
 
             double ratio;
-            if(ic.getCount() > 0) {
-                ratio = (oc.getCount()/ outlierCountSummary.getTotalCount())/(ic.getCount()/ inlierCountSummary.getTotalCount());
+            if (ic.getCount() > 0) {
+                ratio = (oc.getCount() / outlierCountSummary.getTotalCount()) / (ic.getCount() / inlierCountSummary.getTotalCount());
             } else {
                 ratio = Double.POSITIVE_INFINITY;
             }
 
-            if(ratio >= minRatio) {
-                ret.add(new ItemsetResult(oc.getCount()/ outlierCountSummary.getTotalCount(),
+            if (ratio >= minRatio) {
+                ret.add(new ItemsetResult(oc.getCount() / outlierCountSummary.getTotalCount(),
                                           oc.getCount(),
                                           ratio,
                                           encoder.getColsFromAttrSet(oc.getItems())));

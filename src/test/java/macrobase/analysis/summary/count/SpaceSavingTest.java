@@ -33,7 +33,7 @@ public class SpaceSavingTest {
     public void overflowTest() {
         SpaceSavingList ss = new SpaceSavingList(10);
 
-        for(int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10; ++i) {
             ss.observe(i);
             assertEquals(1, ss.getCount(i), 0);
         }

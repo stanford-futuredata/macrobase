@@ -24,7 +24,7 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<MacroBaseConf> {
         BatchAnalyzer analyzer = new BatchAnalyzer(configuration);
 
         AnalysisResult result = analyzer.analyze();
-        if(result.getItemSets().size() > 1000) {
+        if (result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));
         }

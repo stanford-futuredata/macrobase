@@ -17,8 +17,10 @@ import static com.codahale.metrics.MetricRegistry.name;
 class RetrainingProcedure {
     private static final Logger log = LoggerFactory.getLogger(RetrainingProcedure.class);
 
-    private static final Timer trainingTimer = MacroBase.metrics.timer(name(RetrainingProcedure.class, "modelTrainingTime"));
-    private static final Timer itemsetTimer = MacroBase.metrics.timer(name(RetrainingProcedure.class, "itemsetAdvanceTime"));
+    private static final Timer trainingTimer = MacroBase.metrics.timer(
+            name(RetrainingProcedure.class, "modelTrainingTime"));
+    private static final Timer itemsetTimer = MacroBase.metrics.timer(
+            name(RetrainingProcedure.class, "itemsetAdvanceTime"));
 
     public static void updatePeriod(ExponentiallyBiasedAChao<Datum> inputReservoir,
                                     OutlierDetector detector,
