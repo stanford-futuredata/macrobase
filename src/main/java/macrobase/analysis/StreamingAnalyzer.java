@@ -241,9 +241,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		            if(tupleNo == warmupCount) {
 		            	sw.start();
 		                detector.train(inputReservoir.getReservoir());
-		                for(Datum id : inputReservoir.getReservoir()) {
-		                    scoreReservoir.insert(detector.score(id));
-		                }
 		                
 		                if (detector.getDetectorType() == DetectorType.MAD) {
 		                	perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
@@ -251,6 +248,13 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		                	perThreadCovarianceMatrices.set(threadId, ((MinCovDet) detector).getLocalCovariance());
 		                	perThreadMeans.set(threadId, ((MinCovDet) detector).getLocalMean());
 		                	perThreadNumSamples.set(threadId, ((MinCovDet) detector).getNumSamples());
+		                }
+		                
+		                ((MinCovDet) detector).setCovariance(((MinCovDet) detector).getLocalCovariance());
+                    	((MinCovDet) detector).setMean(((MinCovDet) detector).getLocalMean());
+		                
+		                for(Datum id : inputReservoir.getReservoir()) {
+		                    scoreReservoir.insert(detector.score(id));
 		                }
 		                
 		                detector.updateRecentScoreList(scoreReservoir.getReservoir());
