@@ -244,14 +244,16 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		                
 		                if (detector.getDetectorType() == DetectorType.MAD) {
 		                	perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
+		                	
+		                	((MAD) detector).setMedian(((MAD) detector).getLocalMedian());
 		                } else if (detector.getDetectorType() == DetectorType.MCD) {
 		                	perThreadCovarianceMatrices.set(threadId, ((MinCovDet) detector).getLocalCovariance());
 		                	perThreadMeans.set(threadId, ((MinCovDet) detector).getLocalMean());
 		                	perThreadNumSamples.set(threadId, ((MinCovDet) detector).getNumSamples());
+		                	
+		                	((MinCovDet) detector).setCovariance(((MinCovDet) detector).getLocalCovariance());
+	                    	((MinCovDet) detector).setMean(((MinCovDet) detector).getLocalMean());
 		                }
-		                
-		                ((MinCovDet) detector).setCovariance(((MinCovDet) detector).getLocalCovariance());
-                    	((MinCovDet) detector).setMean(((MinCovDet) detector).getLocalMean());
 		                
 		                for(Datum id : inputReservoir.getReservoir()) {
 		                    scoreReservoir.insert(detector.score(id));
