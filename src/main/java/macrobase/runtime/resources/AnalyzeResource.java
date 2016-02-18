@@ -39,6 +39,7 @@ public class AnalyzeResource extends BaseResource {
         conf.set(MacroBaseConf.ATTRIBUTES, request.attributes);
         conf.set(MacroBaseConf.HIGH_METRICS, request.highMetrics);
         conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
+        conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
         BatchAnalyzer analyzer = new BatchAnalyzer(conf);
         AnalysisResult result = analyzer.analyze();

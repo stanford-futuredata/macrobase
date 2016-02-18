@@ -38,7 +38,7 @@ public class RowSetResource extends BaseResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public RowSet getRows(RowSetRequest request) throws Exception {
-        conf.set(MacroBaseConf.DB_NAME, request.pgUrl);
+        conf.set(MacroBaseConf.DB_URL, request.pgUrl);
         return getLoader().getRows(request.baseQuery,
                                    request.columnValues,
                                    request.limit,
