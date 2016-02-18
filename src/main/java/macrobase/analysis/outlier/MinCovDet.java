@@ -38,18 +38,15 @@ public class MinCovDet extends OutlierDetector {
     private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
     private final Counter singularCovariances = MacroBase.metrics.counter(name(MinCovDet.class, "singularCovariances"));
 
-
     class MetricsWithScore implements HasMetrics {
         private RealVector metrics;
         private Double score;
         private Integer originalPosition;
 
         public MetricsWithScore(RealVector metrics,
-                                double score,
-                                Integer originalPosition) {
+                                double score) {
             this.metrics = metrics;
             this.score = score;
-            this.originalPosition = originalPosition;
         }
 
         public RealVector getMetrics() {
@@ -58,10 +55,6 @@ public class MinCovDet extends OutlierDetector {
 
         public Double getScore() {
             return score;
-        }
-
-        public Integer getOriginalPosition() {
-            return originalPosition;
         }
     }
 
@@ -155,14 +148,12 @@ public class MinCovDet extends OutlierDetector {
     }
 
     private List<MetricsWithScore> findKClosest(int k, List<? extends HasMetrics> data) {
-        // todo: change back to guava priority queue
         List<MetricsWithScore> scores = new ArrayList<>();
 
         for (int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
             scores.add(new MetricsWithScore(d.getMetrics(),
-                                            getMahalanobis(mean, inverseCov, d.getMetrics()),
-                                            i));
+                                            getMahalanobis(mean, inverseCov, d.getMetrics())));
         }
 
         if (scores.size() < k) {
