@@ -43,12 +43,15 @@ public class MacroBaseConf extends Configuration {
 
     public static final String KDE_BANDWIDTH = "macrobase.analysis.kde.bandwidth";
     public static final String KDE_KERNEL_TYPE = "macrobase.analysis.kde.kernelType";
+    public static final String BINNED_KDE_BINS = "macrobase.analysis.binnedKde.numBins";
+
+    public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
     public static final String DATA_TRANSFORM_TYPE = "macrobase.loader.transformType";
     public static final String DATA_LOADER_TYPE = "macrobase.loader.loaderType";
     public static final String ATTRIBUTES = "macrobase.loader.attributes";
-    public static final String HIGH_METRICS = "macrobase.loader.targetLowMetrics";
-    public static final String LOW_METRICS = "macrobase.loader.targetHighMetrics";
+    public static final String LOW_METRICS = "macrobase.loader.targetLowMetrics";
+    public static final String HIGH_METRICS = "macrobase.loader.targetHighMetrics";
     public static final String AUXILIARY_ATTRIBUTES = "macrobase.loader.auxiliaryAttributes";
 
     public static final String BASE_QUERY = "macrobase.loader.db.baseQuery";
@@ -59,6 +62,7 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
+
 
     public enum DetectorType {
         MAD_OR_MCD,

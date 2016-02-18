@@ -2,6 +2,8 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
@@ -66,6 +68,12 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         tsw2.stop();
 
+        // STORE RESULTS IF SPECIFIED
+
+        if (this.storeAnalysisResults != null) {
+            this.storeAnalysisResultsInJson(or);
+        }
+
         // SUMMARY
 
         final int inlierSize = or.getInliers().size();
@@ -99,5 +107,24 @@ public class BatchAnalyzer extends BaseAnalyzer {
         log.debug("Tuples / second w/o itemset mining = {} tuples / second", tuplesPerSecond);
 
         return new AnalysisResult(outlierSize, inlierSize, loadTime, classifyTime, summarizeTime, isr);
+    }
+
+    protected void storeAnalysisResultsInJson(OutlierDetector.BatchResult results) {
+        Gson gson = new GsonBuilder()
+                .enableComplexMapKeySerialization()
+                .serializeNulls()
+                .setPrettyPrinting()
+                .setVersion(1.0)
+                .create();
+        final File dir = new File("target/scores");
+        dir.mkdirs();
+        try (PrintStream out = new PrintStream(new File(dir, storeAnalysisResults),
+                "UTF-8")) {
+            out.println(gson.toJson(results));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -22,14 +22,16 @@ public class BinnedKDE extends KDE {
     private double[][] densityEstimates;
     private double[] minimums;
     private double[] maximums;
-    private final int numIntervals = 1000;
-    private final int numBins = numIntervals + 1;
+    private int numBins;
+    private int numIntervals;
 
     private int L;
     private double delta;
 
-    public BinnedKDE(KernelType kernelType, Bandwidth bandwidthType) {
+    public BinnedKDE(KernelType kernelType, Bandwidth bandwidthType, int numBins) {
         super(kernelType, bandwidthType);
+        this.numBins = numBins;
+        this.numIntervals = numBins - 1;
     }
 
     @Override
@@ -40,6 +42,7 @@ public class BinnedKDE extends KDE {
         this.linearAssignToBins(data);
         this.calculateKernelWeights(data);
     }
+
 
     private void calculateKernelWeights(List<Datum> data) {
         // TODO: now only supports 1D!!!!

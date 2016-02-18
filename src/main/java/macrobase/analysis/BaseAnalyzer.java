@@ -13,7 +13,7 @@ import macrobase.ingest.PostgresLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.*;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -35,6 +35,8 @@ public class BaseAnalyzer {
     protected final KDE.Bandwidth kdeBandwidth;
     protected final KDE.KernelType kdeKernelType;
 
+    protected final Integer binnedKDEBins;
+
     protected final DataLoaderType dataLoaderType;
     protected final List<String> attributes;
     protected final List<String> lowMetrics;
@@ -43,6 +45,8 @@ public class BaseAnalyzer {
     protected final MacroBaseConf conf;
 
     protected final String queryName;
+
+    protected final String storeAnalysisResults;
 
     public BaseAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
@@ -66,10 +70,14 @@ public class BaseAnalyzer {
         kdeBandwidth = conf.getKDEBandwidth();
         kdeKernelType = conf.getKDEKernelType();
 
+        binnedKDEBins = conf.getInt(MacroBaseConf.BINNED_KDE_BINS, MacroBaseDefaults.BINNED_KDE_BINS);
+
         dataLoaderType = conf.getDataLoaderType();
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
+
+        storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS, MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
     }
 
     public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {
@@ -118,9 +126,10 @@ public class BaseAnalyzer {
                 return new KDE(kdeKernelType, kdeBandwidth);
             case BINNED_KDE:
                 log.info("Using BinnedKDE detector.");
-                return new BinnedKDE(kdeKernelType, kdeBandwidth);
+                return new BinnedKDE(kdeKernelType, kdeBandwidth, binnedKDEBins);
             default:
                 throw new RuntimeException("Unhandled detector class!" + detectorType);
         }
     }
+
 }

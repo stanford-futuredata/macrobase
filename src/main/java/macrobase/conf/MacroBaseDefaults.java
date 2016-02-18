@@ -37,6 +37,12 @@ public class MacroBaseDefaults {
     public static final KDE.Bandwidth KDE_BANDWIDTH = KDE.Bandwidth.OVERSMOOTHED;
     public static final KDE.KernelType KDE_KERNEL_TYPE = KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE;
 
+    // BinnedKDE defaults
+    public static final Integer BINNED_KDE_BINS = 10000;
+
+    // Analysis results
+    public static final String STORE_ANALYSIS_RESULTS = null;
+
     // loader defaults
     public static final DataLoaderType DATA_LOADER_TYPE = DataLoaderType.POSTGRES_LOADER;
     public static final DetectorType DETECTOR_TYPE = DetectorType.MAD_OR_MCD;

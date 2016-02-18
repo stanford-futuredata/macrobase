@@ -8,4 +8,4 @@ macrobase:
   macrobase.loader.auxiliaryAttributes: []
   kernelBandwidth: NORMAL_SCALE
   macrobase.loader.transformType: IDENTITY
-  macrobase.loader.loaderType: SQL_LOADER
+  macrobase.loader.loaderType: POSTGRES_LOADER

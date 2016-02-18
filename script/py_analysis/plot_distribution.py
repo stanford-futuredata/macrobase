@@ -86,7 +86,7 @@ def plot_distribution(args):
         plt.scatter(df[args.scatter[0]], df[args.scatter[1]],
                     c=color, label=label)
     else:
-      plt.scatter(data[args.scatter[0]], df[args.scatter[1]],
+      plt.scatter(data[args.scatter[0]], data[args.scatter[1]],
                   c=color)
     plt.xlabel(args.scatter[0])
     plt.ylabel(args.scatter[1])

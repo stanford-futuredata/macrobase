@@ -1,22 +1,23 @@
+import argparse
 import psycopg2
 import re
 
 
-def get_macrobase_camel_args(args):
-  """
-  Returns a dictionary of all database arguments set by
-  add_db_args_camel_dest that were specified by the user.
-  """
-  allowed_args = {'dbUrl', 'dbUser', 'outlierDetectorType', 'dataTransform'}
-  return {arg: value for arg, value in vars(args).items()
-          if value is not None and arg in allowed_args}
+class MacrobaseArgAction(argparse.Action):
+  def __call__(self, parser, namespace, values, option_string=None):
+    arg = re.sub('_', '.', self.dest)
+    macrobase_args = getattr(namespace, 'macrobase_args', {})
+    macrobase_args[arg] = values
+    setattr(namespace, 'macrobase_args', macrobase_args)
 
 
-def add_macrobase_args_dest_camel(parser):
-  parser.add_argument('--db-url', dest='dbUrl')
-  parser.add_argument('--db-user', dest='dbUser')
-  parser.add_argument('--outlier-detector-type', dest='outlierDetectorType')
-  parser.add_argument('--data-transform', dest='dataTransform')
+def add_macrobase_args(parser):
+  parser.add_argument('--macrobase-loader-db-url', action=MacrobaseArgAction)
+  parser.add_argument('--macrobase-loader-db-user', action=MacrobaseArgAction)
+  parser.add_argument('--macrobase-analysis-detectorType',
+                      action=MacrobaseArgAction)
+  parser.add_argument('--macrobase-loader-transformType',
+                      action=MacrobaseArgAction)
 
 
 def add_db_args(parser):

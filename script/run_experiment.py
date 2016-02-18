@@ -4,16 +4,18 @@ import os
 import yaml
 from generate_multimodal_distribution import generate_distribution
 from generate_multimodal_distribution import parse_args as generator_parse_args
-from py_analysis.common import add_macrobase_args_dest_camel
-from py_analysis.common import get_macrobase_camel_args
+from py_analysis.common import add_macrobase_args
 from py_analysis.plot_distribution import parse_args as plot_dist_parse_args
 from py_analysis.plot_distribution import plot_distribution
 from py_analysis.plot_estimator import parse_args as plot_est_parse_args
 from py_analysis.plot_estimator import plot_estimator
 
+SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.analysis.results.store"
+HIGH_METRICS = "macrobase.loader.targetHighMetrics"
+
 
 def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
-  extra_args = ' '.join(['-Ddw.{key}={value}'.format(key=key, value=value)
+  extra_args = ' '.join(['-D{key}={value}'.format(key=key, value=value)
                          for key, value in kwargs.items()])
   macrobase_cmd = '''java {extra_args} -Xms128m -Xmx16G \\
       -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
@@ -31,7 +33,7 @@ def parse_args():
   parser.add_argument('--rename', help='Give a new name to the experiment')
   parser.add_argument('--compile', action='store_true',
                       help='Run mvn compile before running java code.')
-  add_macrobase_args_dest_camel(parser)
+  add_macrobase_args(parser)
   return parser.parse_args()
 
 
@@ -65,8 +67,8 @@ if __name__ == '__main__':
     experiment['macrobase']['taskName'] = args.rename
   else:
     experiment_name = os.path.basename(args.experiment_yaml.name).rsplit('.')[0]
-    if args.outlierDetectorType:
-      experiment_name = '%s-%s' % (experiment_name, args.outlierDetectorType)
+    if args.macrobase_args is not None and 'macrobase.analysis.detectorType' in args.macrobase_args:
+      experiment_name = '%s-%s' % (experiment_name, args.macrobase_args['macrobase.analysis.detectorType'])
     experiment['macrobase']['taskName'] = experiment_name
 
   taskname = experiment['macrobase']['taskName']
@@ -88,7 +90,6 @@ if __name__ == '__main__':
     figure_file = _file('target', 'plots', '%s-distribution.png' % taskname)
     raw_args = ['--csv', data_file,
                 '--savefig', figure_file]
-                # '--yscale', 'log']
 
     if dimensions == '2D':
       raw_args.extend(['--hist2d', 'XX', 'YY',
@@ -104,7 +105,7 @@ if __name__ == '__main__':
   with open('conf/batch.yaml', 'r') as infile:
     config = yaml.load(infile)
     config.update(experiment['macrobase'])
-    config['storeScoreDistribution'] = taskname + '.json'
+    config[SCORE_DUMP_FILE_CONFIG_PARAM] = taskname + '.json'
     if 'synthetic_data' in experiment:
       config['dbUrl'] = data_file
 
@@ -112,14 +113,14 @@ if __name__ == '__main__':
   with open(config_file, 'w') as config_yaml:
     config_yaml.write(yaml.dump(config))
 
-  kwargs = get_macrobase_camel_args(args)
+  kwargs = args.macrobase_args
   print kwargs
   run_macrobase(conf=config_file, **kwargs)
 
   raw_args = [
-       '--estimates', os.path.join('target', 'scores', config['storeScoreDistribution']),
+       '--estimates', os.path.join('target', 'scores', config[SCORE_DUMP_FILE_CONFIG_PARAM]),
        '--savefig']
-  if len(config['targetHighMetrics']) == 2:
+  if len(config[HIGH_METRICS]) == 2:
     raw_args.extend([
          '--restrict-to', 'outliers',
          '--x-limits', '1', '25',
