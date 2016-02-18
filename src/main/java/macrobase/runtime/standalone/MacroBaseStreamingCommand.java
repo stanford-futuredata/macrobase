@@ -21,6 +21,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<MacroBaseConf> 
     protected void run(Bootstrap<MacroBaseConf> bootstrap,
                        Namespace namespace,
                        MacroBaseConf configuration) throws Exception {
+        configuration.loadSystemProperties();
         StreamingAnalyzer analyzer = new StreamingAnalyzer(configuration);
 
         AnalysisResult result = analyzer.analyzeOnePass();

@@ -4,11 +4,7 @@ import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import macrobase.analysis.BaseAnalyzer;
 import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.DataLoader;
-import macrobase.ingest.PostgresLoader;
-import macrobase.ingest.SQLLoader;
 import macrobase.runtime.healthcheck.TemplateHealthCheck;
 import macrobase.runtime.resources.AnalyzeResource;
 import macrobase.runtime.resources.RowSetResource;
@@ -40,6 +36,7 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
     @Override
     public void run(MacroBaseConf configuration,
                     Environment environment) throws Exception {
+        configuration.loadSystemProperties();
         environment.jersey().register(new SchemaResource(configuration));
         environment.jersey().register(new RowSetResource(configuration));
         environment.jersey().register(new AnalyzeResource(configuration));

@@ -249,4 +249,11 @@ public class MacroBaseConf extends Configuration {
                                                            USE_TUPLE_COUNT_PERIOD));
         }
     }
+
+    public void loadSystemProperties() {
+        System.getProperties().stringPropertyNames()
+                .stream()
+                .filter(e -> e.startsWith("macrobase"))
+                .forEach(e -> set(e, System.getProperty(e)));
+    }
 }
