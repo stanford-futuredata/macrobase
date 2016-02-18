@@ -15,67 +15,6 @@ public class SpaceSavingList extends ApproximateCount {
     private final int maxSize;
     private double totalCount;
 
-    @SuppressWarnings("unused")
-    private void sanityCheck() {
-        CounterGroup curGroup = groupHead;
-
-        HashSet<CounterToken> allTokens = new HashSet<>();
-        HashSet<Integer> allItems = new HashSet<>();
-
-        HashMap<CounterToken, CounterGroup> tokenMap = new HashMap<>();
-
-
-        HashSet<CounterGroup> allGroups = new HashSet<>();
-
-        while (curGroup != null) {
-            if (allGroups.contains(curGroup)) {
-                log.error("Duplicate group detected!");
-            }
-
-            allGroups.add(curGroup);
-
-            CounterToken token = curGroup.tokenList;
-            CounterToken prevToken = null;
-
-            HashSet<CounterToken> groupTokens = new HashSet<>();
-            HashSet<Integer> groupItems = new HashSet<>();
-            while (token != null) {
-                if (token.prev != prevToken) {
-                    log.error("Broken backward pointer!");
-                }
-
-                if (token.group != curGroup) {
-                    log.error("Wrong group!");
-                }
-
-                if (groupTokens.contains(token)) {
-                    log.error("Token ring detected!");
-                } else if (allTokens.contains(token)) {
-                    log.error("Reused token detected!");
-                }
-
-                if (groupItems.contains(token.item)) {
-                    log.error("Item ring detected!");
-                } else if (allItems.contains(token.item)) {
-                    log.error("Reused item detected!");
-                }
-
-
-                groupTokens.add(token);
-                allTokens.add(token);
-                tokenMap.put(token, curGroup);
-
-                groupItems.add(token.item);
-                allItems.add(token.item);
-
-                prevToken = token;
-                token = token.next;
-            }
-
-            curGroup = curGroup.next;
-        }
-    }
-
     @Override
     public double getTotalCount() {
         return totalCount;

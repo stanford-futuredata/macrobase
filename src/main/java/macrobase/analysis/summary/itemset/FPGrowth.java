@@ -38,16 +38,15 @@ public class FPGrowth {
 
         protected Map<Integer, FPTreeNode> nodeHeaders = new HashMap<>();
 
-        @SuppressWarnings("unused")
-        private void printTreeDebug() {
+        protected void printTreeDebug() {
             log.debug("Frequent Item Counts:");
-            frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %d", e.getKey(), e.getValue())));
+            frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %f", e.getKey(), e.getValue())));
 
             walkTree(root, 1);
         }
 
         private void walkTree(FPTreeNode start, int treeDepth) {
-            log.debug(String.format("%s node: %d, count: %d",
+            log.debug(String.format("%s node: %d, count: %f",
                                     new String(new char[treeDepth]).replaceAll("\0", "\t"),
                                     start.getItem(), start.getCount()));
             if (start.getChildren() != null) {
@@ -247,6 +246,7 @@ public class FPGrowth {
             }
 
             List<Integer> plist = Lists.newArrayList(pattern);
+            // traverse bottom to top
             plist.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
 
             int count = 0;
@@ -261,7 +261,7 @@ public class FPGrowth {
                     }
 
                     if (itemsToFind == 0) {
-                        count += curNode.count;
+                        count += pathHead.count;
                         break;
                     }
 
@@ -431,6 +431,20 @@ public class FPGrowth {
     public List<ItemsetWithCount> getItemsetsWithSupportCount(List<Set<Integer>> transactions,
                                                               Map<Integer, Double> initialCounts,
                                                               Double supportCount) {
+        return getItemsetsWithSupportCount(transactions, initialCounts, supportCount, false);
+    }
+
+    protected FPTree constructTree(List<Set<Integer>> transactions, int supportCount) {
+        FPTree fp = new FPTree();
+        fp.insertFrequentItems(transactions, supportCount);
+        fp.insertTransactions(transactions);
+        return fp;
+    }
+
+    public List<ItemsetWithCount> getItemsetsWithSupportCount(List<Set<Integer>> transactions,
+                                                              Map<Integer, Double> initialCounts,
+                                                              Double supportCount,
+                                                              boolean printTreeDebug) {
         FPTree fp = new FPTree();
         int countRequiredForSupport = supportCount.intValue();
         log.debug("count required: {}", countRequiredForSupport);

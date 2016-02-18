@@ -1,5 +1,6 @@
 package macrobase.analysis.summary.itemset;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
@@ -120,7 +121,7 @@ public class FPGrowthTest {
 
         FPGrowth fp = new FPGrowth();
 
-        List<ItemsetWithCount> itemsets = fp.getItemsetsWithSupportRatio(txns, .01);
+        List<ItemsetWithCount> itemsets = fp.getItemsetsWithSupportCount(txns, null, .01 * txns.size(), true);
 
         List<Set<Integer>> apil = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toList());
         Set<Set<Integer>> dupdetector = new HashSet<>();
@@ -134,5 +135,30 @@ public class FPGrowthTest {
         //printItemsets(itemsets);
 
         assertEquals(dupdetector.size(), itemsets.size());
+    }
+
+    @Test
+    public void testGetSupport() {
+        List<Set<Integer>> txns = new ArrayList<>();
+        txns.add(intIfy("a, c, d"));
+        txns.add(intIfy("a, c, d, e"));
+        txns.add(intIfy("c"));
+        txns.add(intIfy("a"));
+        txns.add(intIfy("a"));
+        txns.add(intIfy("a"));
+        txns.add(intIfy("a"));
+        txns.add(intIfy("a"));
+        txns.add(intIfy("b"));
+        txns.add(intIfy("b"));
+        txns.add(intIfy("b"));
+        txns.add(intIfy("a, b, d"));
+        txns.add(intIfy("a, b, e, c"));
+
+        FPGrowth.FPTree fpt = new FPGrowth().constructTree(txns, 0);
+        fpt.printTreeDebug();
+
+        assertEquals(2, fpt.getSupport(intIfy("a, b")));
+        assertEquals(0, fpt.getSupport(intIfy("a, b, c, d")));
+
     }
 }

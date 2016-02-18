@@ -1,5 +1,6 @@
 package macrobase.analysis.summary.itemset;
 
+import com.google.common.collect.Lists;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -136,6 +137,13 @@ public class StreamingFPGrowthTest {
         */
 
         assertEquals(apItemsets.size(), itemsets.size());
+
+        fp.printTreeDebug();
+
+        assertEquals(2,
+                     fp.getCounts(
+                             Lists.newArrayList(new ItemsetWithCount(intIfy("a, b"), 1000)))
+                             .get(0).getCount(), 0);
     }
 
     @Test

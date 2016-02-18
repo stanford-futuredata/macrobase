@@ -77,7 +77,6 @@ public class FPGrowthEmerging {
         }
 
         Context context = singleItemCounts.time();
-        // TODO: truncate inliers!
         ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
 
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();

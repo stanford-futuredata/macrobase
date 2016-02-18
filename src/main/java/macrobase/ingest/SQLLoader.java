@@ -45,6 +45,10 @@ public abstract class SQLLoader extends DataLoader {
     protected final String baseQuery;
 
     public SQLLoader(MacroBaseConf conf) throws ConfigurationException, SQLException {
+        this(conf, null);
+    }
+
+    public SQLLoader(MacroBaseConf conf, Connection connection) throws ConfigurationException, SQLException {
         super(conf);
 
         dbUser = conf.getString(MacroBaseConf.DB_USER, MacroBaseDefaults.DB_USER);
@@ -53,22 +57,24 @@ public abstract class SQLLoader extends DataLoader {
         baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
 
-        System.out.println(dbUrl + " " + dbName + " " + getJDBCUrlPrefix() + dbUrl);
+        if(connection != null) {
+            this.connection = connection;
+        } else {
+            DataSourceFactory factory = new DataSourceFactory();
 
-        DataSourceFactory factory = new DataSourceFactory();
+            factory.setDriverClass(getDriverClass());
+            factory.setUrl(String.format("%s//%s/%s", getJDBCUrlPrefix(), dbUrl, dbName));
 
-        factory.setDriverClass(getDriverClass());
-        factory.setUrl(String.format("%s//%s/%s", getJDBCUrlPrefix(), dbUrl, dbName));
+            if (dbUser != null) {
+                factory.setUser(this.dbUser);
+            }
+            if (dbPassword != null) {
+                factory.setPassword(dbPassword);
+            }
 
-        if (dbUser != null) {
-            factory.setUser(this.dbUser);
+            source = factory.build(MacroBase.metrics, dbName);
+            this.connection = source.getConnection();
         }
-        if (dbPassword != null) {
-            factory.setPassword(dbPassword);
-        }
-
-        source = factory.build(MacroBase.metrics, dbName);
-        connection = source.getConnection();
     }
 
     private String removeLimit(String sql) {

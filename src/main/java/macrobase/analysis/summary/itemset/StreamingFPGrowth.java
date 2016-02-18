@@ -49,14 +49,13 @@ public class StreamingFPGrowth {
 
         Set<FPTreeNode> sortedNodes = new HashSet<>();
 
-        @SuppressWarnings("unused")
         private void printTreeDebug() {
             log.debug("Frequent Item Counts:");
-            frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %d", e.getKey(), e.getValue())));
+            frequentItemCounts.entrySet().forEach(e -> log.debug("{} {}", e.getKey(), e.getValue()));
 
             log.debug("Frequent Item Order:");
             frequentItemOrder.entrySet().forEach(
-                    e -> log.debug(String.format("%d: %d", e.getKey(), e.getValue())));
+                    e -> log.debug("{} {}", e.getKey(), e.getValue()));
 
 
             walkTree(root, 1);
@@ -264,7 +263,8 @@ public class StreamingFPGrowth {
             }
 
             List<Integer> plist = Lists.newArrayList(pattern);
-            plist.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
+            // traverse bottom to top
+            plist.sort((i1, i2) -> frequentItemOrder.get(i2).compareTo(frequentItemOrder.get(i1)));
 
             int count = 0;
             FPTreeNode pathHead = nodeHeaders.get(plist.get(0));
@@ -734,5 +734,9 @@ public class StreamingFPGrowth {
         context.stop();
 
         return itemset;
+    }
+
+    public void printTreeDebug() {
+        fp.printTreeDebug();
     }
 }
