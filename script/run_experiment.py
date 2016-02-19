@@ -2,6 +2,7 @@ import argparse
 import errno
 import os
 import yaml
+import sys
 from generate_multimodal_distribution import generate_distribution
 from generate_multimodal_distribution import parse_args as generator_parse_args
 from py_analysis.common import add_macrobase_args
@@ -12,6 +13,7 @@ from py_analysis.plot_estimator import plot_estimator
 
 SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.analysis.results.store"
 HIGH_METRICS = "macrobase.loader.targetHighMetrics"
+DETECTOR = "macrobase.analysis.detectorType"
 
 
 def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
@@ -23,7 +25,9 @@ def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
       cmd=cmd, conf_file=conf, extra_args=extra_args)
   print 'running the following command:'
   print macrobase_cmd
-  os.system(macrobase_cmd)
+  exit_status = os.system(macrobase_cmd)
+  if exit_status != 0:
+    sys.exit(exit_status)
 
 
 def parse_args():
@@ -31,6 +35,7 @@ def parse_args():
   parser.add_argument('experiment_yaml', type=argparse.FileType('r'))
   parser.add_argument('--remove-cached-data', action='store_true')
   parser.add_argument('--rename', help='Give a new name to the experiment')
+  parser.add_argument('--title-add', help='A title modifier')
   parser.add_argument('--compile', action='store_true',
                       help='Run mvn compile before running java code.')
   add_macrobase_args(parser)
@@ -51,6 +56,12 @@ def _makedirs_for_file(filename):
     if e.errno != errno.EEXIST:
       raise e
 
+
+def construct_title(config_dict, cmd_args, raw_plot_args):
+  if 'taskName' in config_dict:
+    return '{} ({})'.format(config_dict['taskName'], args.title_add)
+
+
 if __name__ == '__main__':
   args = parse_args()
   if args.compile:
@@ -66,9 +77,11 @@ if __name__ == '__main__':
   if args.rename is not None:
     experiment['macrobase']['taskName'] = args.rename
   else:
-    experiment_name = os.path.basename(args.experiment_yaml.name).rsplit('.')[0]
-    if args.macrobase_args is not None and 'macrobase.analysis.detectorType' in args.macrobase_args:
-      experiment_name = '%s-%s' % (experiment_name, args.macrobase_args['macrobase.analysis.detectorType'])
+    experiment_name = os.path.basename(
+        args.experiment_yaml.name).rsplit('.')[0]
+    if args.macrobase_args is not None and DETECTOR in args.macrobase_args:
+      experiment_name = '%s-%s' % (experiment_name,
+                                   args.macrobase_args[DETECTOR])
     experiment['macrobase']['taskName'] = experiment_name
 
   taskname = experiment['macrobase']['taskName']
@@ -83,7 +96,8 @@ if __name__ == '__main__':
         experiment['synthetic_data'].split() +
         ['--outfile', data_file])
     print 'generating distribution with args:'
-    print 'python script/generate_multimodal_distribution.py ' + ' '.join(raw_args)
+    print('python script/generate_multimodal_distribution.py ' +
+          ' '.join(raw_args))
     generate_args = generator_parse_args(raw_args)
     generate_distribution(generate_args)
 
@@ -96,7 +110,8 @@ if __name__ == '__main__':
                        '--x-limits', '1', '25'])
     elif dimensions == '1D':
       raw_args.extend(['--histogram', 'XX'])
-    print 'python script/py_analysis/plot_distribution.py ' + ' '.join(raw_args)
+    print ('python script/py_analysis/plot_distribution.py ' +
+           ' '.join(raw_args))
     plot_args = plot_dist_parse_args(raw_args)
     plot_distribution(plot_args)
   else:
@@ -117,15 +132,18 @@ if __name__ == '__main__':
   print kwargs
   run_macrobase(conf=config_file, **kwargs)
 
-  raw_args = [
-       '--estimates', os.path.join('target', 'scores', config[SCORE_DUMP_FILE_CONFIG_PARAM]),
-       '--savefig']
-  if len(config[HIGH_METRICS]) == 2:
-    raw_args.extend([
-         '--restrict-to', 'outliers',
-         '--x-limits', '1', '25',
-         '--y-limits', '1', '25'])
-  estimator_args = plot_est_parse_args(raw_args)
-  print 'running following plot command:'
-  print 'python script/py_analysis/plot_estimator.py ' + ' '.join(raw_args)
-  plot_estimator(estimator_args)
+  for script_dict in experiment.get('post_run', []):
+    [(script, raw_args)] = script_dict.items()
+    if script == 'plot_estimator':
+      script_args = raw_args.split() + [
+        '--estimates', os.path.join('target', 'scores',
+                                    config[SCORE_DUMP_FILE_CONFIG_PARAM]),
+        '--title', construct_title(config, args, raw_args)]
+      print 'running following plot command:'
+      print ('python script/py_analysis/plot_estimator.py ' +
+             ' '.join(script_args))
+      estimator_args = plot_est_parse_args(script_args)
+      try:
+        plot_estimator(estimator_args)
+      except:
+        pass

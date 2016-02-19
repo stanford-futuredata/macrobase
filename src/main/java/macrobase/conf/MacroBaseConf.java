@@ -41,7 +41,10 @@ public class MacroBaseConf extends Configuration {
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
 
-    public static final String KDE_BANDWIDTH = "macrobase.analysis.kde.bandwidth";
+    // Algorithm to use when choosing the bandwidth for the given data.
+    public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
+    // Multiplies the bandwidth that was gotten algorithmically by this given constant (double).
+    public static final String KDE_BANDWIDTH_MULTIPLIER = "macrobase.analysis.kde.bandwidthMultiplier";
     public static final String KDE_KERNEL_TYPE = "macrobase.analysis.kde.kernelType";
     public static final String BINNED_KDE_BINS = "macrobase.analysis.binnedKde.numBins";
 
@@ -201,11 +204,11 @@ public class MacroBaseConf extends Configuration {
         return DataTransformType.valueOf(_conf.get(DATA_TRANSFORM_TYPE));
     }
 
-    public KDE.Bandwidth getKDEBandwidth() {
-        if (!_conf.containsKey(KDE_BANDWIDTH)) {
-            return MacroBaseDefaults.KDE_BANDWIDTH;
+    public KDE.BandwidthAlgorithm getKDEBandwidth() {
+        if (!_conf.containsKey(KDE_BANDWIDTH_ALGORITHM)) {
+            return MacroBaseDefaults.KDE_BANDWIDTH_ALGORITHM;
         }
-        return KDE.Bandwidth.valueOf(_conf.get(KDE_BANDWIDTH));
+        return KDE.BandwidthAlgorithm.valueOf(_conf.get(KDE_BANDWIDTH_ALGORITHM));
     }
 
     public KDE.KernelType getKDEKernelType() {

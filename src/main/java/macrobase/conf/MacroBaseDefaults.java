@@ -34,7 +34,8 @@ public class MacroBaseDefaults {
     public static final Double MCD_STOPPING_DELTA = 1e-3;
 
     // KDE defaults
-    public static final KDE.Bandwidth KDE_BANDWIDTH = KDE.Bandwidth.OVERSMOOTHED;
+    public static final Double KDE_BANDWIDTH_MULTIPLIER = 1.0;
+    public static final KDE.BandwidthAlgorithm KDE_BANDWIDTH_ALGORITHM = KDE.BandwidthAlgorithm.OVERSMOOTHED;
     public static final KDE.KernelType KDE_KERNEL_TYPE = KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE;
 
     // BinnedKDE defaults

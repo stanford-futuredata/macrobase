@@ -23,12 +23,17 @@ public class KDE extends OutlierDetector {
     protected RealMatrix bandwidthToNegativeHalf;
     private double scoreScalingFactor;
     private double[] allScores;
-    private Bandwidth bandwidthType;
+    private BandwidthAlgorithm bandwidthAlgorithm;
     private double proportionOfDataToUse;
+    protected double algorithmicBandwidthMultiplier = 1.0;
 
     protected int metricsDimensions;
 
-    public enum Bandwidth {
+    public void setAlgorithmicBandwidthMultiplier(double multiplier) {
+        this.algorithmicBandwidthMultiplier = multiplier;
+    }
+
+    public enum BandwidthAlgorithm {
         NORMAL_SCALE,
         OVERSMOOTHED,
         MANUAL
@@ -47,9 +52,9 @@ public class KDE extends OutlierDetector {
         }
     }
 
-    public KDE(KernelType kernel, Bandwidth bandwidthType) {
+    public KDE(KernelType kernel, BandwidthAlgorithm bandwidthAlgorithm) {
         this.kernelType = kernel;
-        this.bandwidthType = bandwidthType;
+        this.bandwidthAlgorithm = bandwidthAlgorithm;
         this.kernel = this.kernelType.constructKernel(this.metricsDimensions);
         // Pick 1 % of the data, randomly
         this.proportionOfDataToUse = 0.01;
@@ -65,7 +70,7 @@ public class KDE extends OutlierDetector {
      * @param bandwidth
      */
     public void setBandwidth(RealMatrix bandwidth) {
-        log.trace("Setting bandwidht matrix: {}", bandwidth);
+        log.trace("Given bandwidth matrix: {}", bandwidth);
         this.bandwidth = bandwidth;
         calculateBandwidthAncillaries();
     }
@@ -78,8 +83,8 @@ public class KDE extends OutlierDetector {
     protected void setBandwidth(List<Datum> data) {
         this.metricsDimensions = data.get(0).getMetrics().getDimension();
         RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
-        log.info("running with bandwidthType: {}", bandwidthType);
-        switch (bandwidthType) {
+        log.debug("running with bandwidthAlgorithm: {}", bandwidthAlgorithm);
+        switch (bandwidthAlgorithm) {
             case NORMAL_SCALE:
                 final double standardNormalQunatileDifference = 1.349;
                 for (int d = 0; d < this.metricsDimensions; d++) {
@@ -114,7 +119,8 @@ public class KDE extends OutlierDetector {
                 break;
         }
 
-        if (bandwidthType != Bandwidth.MANUAL) {
+        if (bandwidthAlgorithm != BandwidthAlgorithm.MANUAL) {
+            bandwidth = bandwidth.scalarMultiply(this.algorithmicBandwidthMultiplier);
             this.setBandwidth(bandwidth);
         }
     }

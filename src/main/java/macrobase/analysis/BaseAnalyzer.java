@@ -32,7 +32,8 @@ public class BaseAnalyzer {
     protected final Double mcdAlpha;
     protected final Double mcdStoppingDelta;
 
-    protected final KDE.Bandwidth kdeBandwidth;
+    protected final KDE.BandwidthAlgorithm kdeBandwidthAlgorithm;
+    protected final Double kdeBandwidthMultiplier;
     protected final KDE.KernelType kdeKernelType;
 
     protected final Integer binnedKDEBins;
@@ -67,7 +68,8 @@ public class BaseAnalyzer {
         mcdAlpha = conf.getDouble(MacroBaseConf.MCD_ALPHA, MacroBaseDefaults.MCD_ALPHA);
         mcdStoppingDelta = conf.getDouble(MacroBaseConf.MCD_STOPPING_DELTA, MacroBaseDefaults.MCD_STOPPING_DELTA);
 
-        kdeBandwidth = conf.getKDEBandwidth();
+        kdeBandwidthAlgorithm = conf.getKDEBandwidth();
+        kdeBandwidthMultiplier = conf.getDouble(MacroBaseConf.KDE_BANDWIDTH_MULTIPLIER, MacroBaseDefaults.KDE_BANDWIDTH_MULTIPLIER);
         kdeKernelType = conf.getKDEKernelType();
 
         binnedKDEBins = conf.getInt(MacroBaseConf.BINNED_KDE_BINS, MacroBaseDefaults.BINNED_KDE_BINS);
@@ -123,10 +125,12 @@ public class BaseAnalyzer {
                 return new ZScore();
             case KDE:
                 log.info("Using KDE detector.");
-                return new KDE(kdeKernelType, kdeBandwidth);
+                KDE kde = new KDE(kdeKernelType, kdeBandwidthAlgorithm);
+                kde.setAlgorithmicBandwidthMultiplier(kdeBandwidthMultiplier);
+                return kde;
             case BINNED_KDE:
                 log.info("Using BinnedKDE detector.");
-                return new BinnedKDE(kdeKernelType, kdeBandwidth, binnedKDEBins);
+                return new BinnedKDE(kdeKernelType, kdeBandwidthAlgorithm, binnedKDEBins);
             default:
                 throw new RuntimeException("Unhandled detector class!" + detectorType);
         }

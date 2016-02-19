@@ -2,30 +2,33 @@ import argparse
 import itertools
 import json
 import matplotlib.pyplot as plt
-import numpy as np
 import os
-import pandas as pd
 from common import add_db_args
 from common import add_plot_limit_args
 from common import set_db_connection
 from common import set_plot_limits
 from matplotlib.colors import LogNorm
 
-SAVEFIG_INFER_VALUE='INFER_SAVEFIG_FILENAME'
+
+SAVEFIG_INFER_VALUE = 'INFER_SAVEFIG_FILENAME'
+
 
 def parse_args(*argument_list):
   parser = argparse.ArgumentParser()
-  parser.add_argument('--estimates', type=argparse.FileType('r'), required=True,
+  parser.add_argument('--estimates', type=argparse.FileType('r'),
+                      required=True,
                       help='File with inliers & outliers with their scores '
                            'outputted by macrobase')
   parser.add_argument('--histogram-bins', default=100, type=int)
   parser.add_argument('--restrict-to', choices=['inliers', 'outliers'],
                       help='Plots 2d histogram of outliers or inliers')
   parser.add_argument('--columns', nargs='+', default=['metrics.*'],
-		      help='Data to include in the plot')
+                      help='Data to include in the plot')
   parser.add_argument('--legend-loc', default='best')
-  parser.add_argument('--no-scores', action='store_false', default=True, dest='plot_scores')
-  parser.add_argument('--do-not-stack-hist', action='store_false', default=True, dest='stacked_hist')
+  parser.add_argument('--no-scores', action='store_false', default=True,
+                      dest='plot_scores')
+  parser.add_argument('--do-not-stack-hist', action='store_false',
+                      default=True, dest='stacked_hist')
   parser.add_argument('--savefig', nargs='?', const=SAVEFIG_INFER_VALUE)
   add_plot_limit_args(parser)
   add_db_args(parser)
@@ -39,7 +42,6 @@ def _format_datum(datum_with_score, columns):
   """
   columns is a list of selectors for the data
   """
-  selectors = [column.split('.') for column in columns]
   data = []
   for column in columns:
     klass, index = column.split('.')
@@ -50,7 +52,7 @@ def _format_datum(datum_with_score, columns):
       index = int(index)
       data.append(datum_with_score['datum'][klass]['data'][index])
   data.append(datum_with_score['score'])
-  return data 
+  return data
 
 
 def _extract_data(raw_data, label, columns, x_limits, y_limits):
@@ -62,6 +64,7 @@ def _extract_data(raw_data, label, columns, x_limits, y_limits):
     data = (x for x in data if x[1] > y_limits[0] and x[1] < y_limits[1])
   return data
 
+
 def plot_estimator(args):
   estimates = json.load(args.estimates)
 
@@ -69,15 +72,18 @@ def plot_estimator(args):
 
   y_limits = None if dimensions != 2 else args.y_limits
 
-  inliers = _extract_data(estimates, 'inliers', args.columns, args.x_limits, y_limits)
-  outliers = _extract_data(estimates, 'outliers', args.columns, args.x_limits, y_limits)
+  inliers = _extract_data(estimates, 'inliers', args.columns,
+                          args.x_limits, y_limits)
+  outliers = _extract_data(estimates, 'outliers', args.columns,
+                           args.x_limits, y_limits)
   all_data = itertools.chain(inliers, outliers)
 
   print 'plotting %d dimensional plot' % dimensions
 
   if dimensions == 1:
     if args.restrict_to:
-      data = _extract_data(estimates,  args.restrict_to, args.columns, args.x_limits, None)
+      data = _extract_data(estimates, args.restrict_to, args.columns,
+                           args.x_limits, None)
       X, _ = zip(*data)
       plt.hist(X, args.histogram_bins,
                label=args.restrict_to)
@@ -86,29 +92,28 @@ def plot_estimator(args):
       outliers = list(outliers)
       X1, _ = zip(*inliers)
       X2, _ = zip(*outliers)
-      plt.hist([X1, X2], args.histogram_bins,
-               histtype='bar',
-               stacked=args.stacked_hist,
-               label=['inliers', 'outliers'],
-               color=['blue', 'red'])
+      n, bins, patches = plt.hist([X1, X2], args.histogram_bins,
+                                  histtype='bar',
+                                  stacked=args.stacked_hist,
+                                  label=['inliers', 'outliers'],
+                                  color=['blue', 'red'])
+      bin_width = bins[1] - bins[0]
+      print 'plotted a curve with bin width =', bin_width
 
     if args.plot_scores:
       # Plot the estimate
       combined_X, scores = zip(*sorted(itertools.chain(inliers, outliers)))
-
-      # leading term is purely fiction.. it should be 1/bandwidth
-      # scaling_factor = 50. * (outliers.shape[0] + inliers.shape[0]) / args.histogram_bins
-      scaling_factor = len(scores) * 24.638927471 / args.histogram_bins
+      scaling_factor = bin_width * (len(estimates['inliers']) +
+                                    len(estimates['outliers']))
       sign = 1. if scores[0] > 0 else -1
       scaling_factor *= sign
       scaled_scores = [scaling_factor * y for y in scores]
-      print scaled_scores[:100]
-      print scaling_factor
-      plt.plot(combined_X, scaled_scores, color='magenta', label='est distribution', lw=1.1)
-   
+      plt.plot(combined_X, scaled_scores,
+               color='magenta', label='est distribution', lw=1.1)
   elif dimensions == 2:
     if args.restrict_to:
-      data = _extract_data(estimates,  args.restrict_to, args.columns, args.x_limits, args.y_limits)
+      data = _extract_data(estimates, args.restrict_to, args.columns,
+                           args.x_limits, args.y_limits)
     else:
       data = all_data
     X, Y, _ = zip(*data)
@@ -136,7 +141,8 @@ def plot_estimator(args):
     if args.y_limits:
       modifiers.append('Y=%d,%d' % tuple(args.y_limits))
     name, ext = filename.rsplit('.')
-    new_filename = '{old_name}-{modifiers}.{ext}'.format(old_name=name, modifiers='-'.join(modifiers), ext=ext)
+    new_filename = '{old_name}-{modifiers}.{ext}'.format(
+        old_name=name, modifiers='-'.join(modifiers), ext=ext)
     print 'saving figure to - ', new_filename
     plt.savefig(new_filename, dpi=320)
     plt.clf()

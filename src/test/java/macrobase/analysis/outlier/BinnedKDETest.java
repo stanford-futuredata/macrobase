@@ -13,7 +13,7 @@ public class BinnedKDETest {
 
     @Test
     public void simpleTest() {
-        KDE kde = new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSMOOTHED, 1000);
+        KDE kde = new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.BandwidthAlgorithm.OVERSMOOTHED, 1000);
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             double[] sample = new double[1];

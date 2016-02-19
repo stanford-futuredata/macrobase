@@ -14,6 +14,9 @@ class MacrobaseArgAction(argparse.Action):
 def add_macrobase_args(parser):
   parser.add_argument('--macrobase-loader-db-url', action=MacrobaseArgAction)
   parser.add_argument('--macrobase-loader-db-user', action=MacrobaseArgAction)
+  parser.add_argument('--macrobase-analysis-kde-bandwidthMultiplier',
+                      type=float,
+                      action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-detectorType',
                       action=MacrobaseArgAction)
   parser.add_argument('--macrobase-loader-transformType',
@@ -44,12 +47,17 @@ def set_db_connection(args):
 
 
 def add_plot_limit_args(parser):
-  parser.add_argument('--x-limits', nargs=2, type=int)
-  parser.add_argument('--y-limits', nargs=2, type=int)
+  parser.add_argument('--y-limits', nargs=2, type=float)
   parser.add_argument('--xscale')
+  parser.add_argument('--x-limits', nargs=2, type=float)
+  parser.add_argument('--xmax', type=float)
+  parser.add_argument('--xmin', type=float)
   parser.add_argument('--yscale')
   parser.add_argument('--xlabel')
   parser.add_argument('--ylabel')
+  parser.add_argument('--ymin', type=float)
+  parser.add_argument('--ymax', type=float)
+  parser.add_argument('--title')
 
 
 def set_plot_limits(plt, args):
@@ -57,6 +65,14 @@ def set_plot_limits(plt, args):
     plt.xlabel(args.xlabel)
   if args.ylabel:
     plt.ylabel(args.ylabel)
+  if args.xmin:
+    plt.xlim(xmin=args.xmin)
+  if args.xmax:
+    plt.xlim(xman=args.xman)
+  if args.ymin:
+    plt.ylim(ymin=args.ymin)
+  if args.ymax:
+    plt.ylim(ymax=args.ymax)
   if args.xscale:
     plt.xscale(args.xscale)
   if args.yscale:
@@ -65,3 +81,5 @@ def set_plot_limits(plt, args):
     plt.xlim(args.x_limits)
   if args.y_limits:
     plt.ylim(args.y_limits)
+  if args.title:
+    plt.title(args.title)

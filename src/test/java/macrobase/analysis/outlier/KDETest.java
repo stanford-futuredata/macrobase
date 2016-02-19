@@ -13,7 +13,7 @@ public class KDETest {
 
     @Test
     public void simpleTest() {
-        KDE kde = new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.Bandwidth.OVERSMOOTHED);
+        KDE kde = new KDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.BandwidthAlgorithm.OVERSMOOTHED);
         kde.setProportionOfDataToUse(1.0);
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {

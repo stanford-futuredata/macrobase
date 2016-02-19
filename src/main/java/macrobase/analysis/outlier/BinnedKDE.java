@@ -6,7 +6,6 @@ import java.util.List;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +27,8 @@ public class BinnedKDE extends KDE {
     private int L;
     private double delta;
 
-    public BinnedKDE(KernelType kernelType, Bandwidth bandwidthType, int numBins) {
-        super(kernelType, bandwidthType);
+    public BinnedKDE(KernelType kernelType, BandwidthAlgorithm bandwidthAlgorithm, int numBins) {
+        super(kernelType, bandwidthAlgorithm);
         this.numBins = numBins;
         this.numIntervals = numBins - 1;
     }

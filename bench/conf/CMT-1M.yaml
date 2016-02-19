@@ -5,5 +5,9 @@ macrobase:
   macrobase.loader.attributes: [userid]
   macrobase.loader.auxiliaryAttributes: [battery_delay_from_drive_end_seconds]
   kernelBandwidth: NORMAL_SCALE
-  macrobase.loader.transformType: IDENTITY
+  macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE
+  macrobase.analysis.binnedKde.numBins: 100000
   macrobase.loader.loaderType: POSTGRES_LOADER
+post_run:
+  - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --ymin 0.1"
+  - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --ymin 0.1 --x-limits 50 400"
