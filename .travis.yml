@@ -3,4 +3,4 @@ jdk: oraclejdk8
 notifications:
   slack: stanford-futuredata:qmO6Keu8ifOyXHsmSQ97CeLH
 after_success:
-  - mvn clean test jacoco:report coveralls:report
+  - mvn clean cobertura:cobertura coveralls:report
