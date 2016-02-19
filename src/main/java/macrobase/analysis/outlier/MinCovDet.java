@@ -274,7 +274,6 @@ public class MinCovDet extends OutlierDetector  {
         }
         
         log.debug("Number of iterations in MCD step: {}", numIterations);
-
         log.trace("mean: {}", localMean);
         log.trace("cov: {}", localCov);
     }

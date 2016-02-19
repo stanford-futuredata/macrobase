@@ -106,7 +106,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     boolean doTrace;
-    int numRuns = 40;
+    int numRuns = 1;
     
     CopyOnWriteArrayList<Double> perThreadMedians;
     CopyOnWriteArrayList<RealMatrix> perThreadCovarianceMatrices;
@@ -247,11 +247,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		                	
 		                	((MAD) detector).setMedian(((MAD) detector).getLocalMedian());
 		                } else if (detector.getDetectorType() == DetectorType.MCD) {
-		                	perThreadCovarianceMatrices.set(threadId, ((MinCovDet) detector).getLocalCovariance());
-		                	perThreadMeans.set(threadId, ((MinCovDet) detector).getLocalMean());
+		                	perThreadCovarianceMatrices.set(threadId, new Array2DRowRealMatrix(((MinCovDet) detector).getLocalCovariance().getData()));
+		                	perThreadMeans.set(threadId, new ArrayRealVector(((MinCovDet) detector).getLocalMean()));
 		                	perThreadNumSamples.set(threadId, ((MinCovDet) detector).getNumSamples());
 		                	
-		                	((MinCovDet) detector).setCovariance(((MinCovDet) detector).getLocalCovariance());
+		                	((MinCovDet) detector).setCovariance(new Array2DRowRealMatrix(((MinCovDet) detector).getLocalCovariance().getData()));
 	                    	((MinCovDet) detector).setMean(((MinCovDet) detector).getLocalMean());
 		                }
 		                
@@ -272,8 +272,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                    	if (detector.getDetectorType() == DetectorType.MAD) {
 			                	perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
 			                } else if (detector.getDetectorType() == DetectorType.MCD) {
-			                	perThreadCovarianceMatrices.set(threadId, ((MinCovDet) detector).getLocalCovariance());
-			                	perThreadMeans.set(threadId, ((MinCovDet) detector).getLocalMean());
+                                                perThreadCovarianceMatrices.set(threadId, new Array2DRowRealMatrix(((MinCovDet) detector).getLocalCovariance().getData()));
+                                         	perThreadMeans.set(threadId, new ArrayRealVector(((MinCovDet) detector).getLocalMean()));
 			                	perThreadNumSamples.set(threadId, ((MinCovDet) detector).getNumSamples());
 			                }
 	                    	
@@ -283,16 +283,16 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		                    	((MAD) detector).setMedian(medianOfMedians);
 		                    } else if (detector.getDetectorType() == DetectorType.MCD) {
 		                    	RealMatrix covarianceMatrix = new Array2DRowRealMatrix(perThreadCovarianceMatrices.get(0).getData());
-		                    	RealVector mean = perThreadMeans.get(0);
+		                    	RealVector mean = new ArrayRealVector(perThreadMeans.get(0));
 		                    	double numSamples1 = perThreadNumSamples.get(0);
 		                    	for (int j = 1; j < numThreads; j++) {
 		                    		// Update covariance matrices and means
 		                    		// First update covariance matrices
-		                    		covarianceMatrix.add(perThreadCovarianceMatrices.get(j));
+		                    		covarianceMatrix = covarianceMatrix.add(perThreadCovarianceMatrices.get(j));
 		                    		double numSamples2 = perThreadNumSamples.get(j);
 		                    		double numSamples = numSamples1 + numSamples2;
-		                    		RealVector mean2 = perThreadMeans.get(j);
-		                    		covarianceMatrix.add(mean.outerProduct(mean2).scalarMultiply((numSamples1 * numSamples2) / numSamples));
+		                    		RealVector mean2 = new ArrayRealVector(perThreadMeans.get(j));
+		                    		covarianceMatrix = covarianceMatrix.add(mean.outerProduct(mean2).scalarMultiply((numSamples1 * numSamples2) / numSamples));
 
 		                    		// Now update means
 		                    		mean.mapMultiplyToSelf(numSamples1);
@@ -409,21 +409,22 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         for (int i = 0; i < numThreads; i++) {
         	threads.get(i).join();
         	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-        		if (mapping.containsKey(itemsetResult.getItems())) {
+                        isr.add(itemsetResult);
+        		/* if (mapping.containsKey(itemsetResult.getItems())) {
         			isr.get(mapping.get(itemsetResult.getItems())).addSupport(itemsetResult.getSupport());
         		} else {
         			mapping.put(itemsetResult.getItems(), isr.size());
         			isr.add(itemsetResult);
-        		}
+        		} */
         	}
         }
         
-        List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
+        /* List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
         for (ItemsetResult itemsetResult : isr) {
-        	if (itemsetResult.getSupport() >= (numThreads * minSupportOutlier)) {
+        	if (itemsetResult.getSupport() >= (0.5 * numThreads * minSupportOutlier)) {
         		finalIsr.add(itemsetResult);
         	}
-        }
+        } */
         
         tsw.stop();
         
@@ -432,7 +433,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
-        return new AnalysisResult(0, 0, 0, 0, 0, finalIsr);
+        return new AnalysisResult(0, 0, 0, 0, 0, isr);
     }
 
     public void setWarmupCount(Integer warmupCount) {
