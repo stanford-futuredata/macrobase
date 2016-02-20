@@ -9,6 +9,11 @@ public class Datum implements HasMetrics {
     private RealVector metrics;
     private RealVector auxiliaries;
 
+    
+    private List<Integer> contextualDiscreteAttributes;
+    private RealVector contextualDoubleAttributes;
+    
+    
     public Datum() {
     }
 
@@ -16,11 +21,17 @@ public class Datum implements HasMetrics {
         this.attributes = attributes;
         this.metrics = metrics;
     }
+    
+    public Datum(List<Integer> attributes, RealVector metrics,List<Integer> contextualDiscreteAttributes,RealVector contextualDoubleAttributes) {
+        this.attributes = attributes;
+        this.metrics = metrics;
+        this.contextualDiscreteAttributes = contextualDiscreteAttributes;
+        this.contextualDoubleAttributes = contextualDoubleAttributes;
+    }
 
     public Integer getTime() {
         return null;
     }
-
     public List<Integer> getAttributes() {
         return attributes;
     }
@@ -44,4 +55,12 @@ public class Datum implements HasMetrics {
                 getMetrics().toString(), getAttributes().toString(),
                 String.valueOf(getAuxiliaries()));
     }
+    
+    public List<Integer> getContextualDiscreteAttributes(){
+    	return contextualDiscreteAttributes;
+    }
+    public RealVector getContextualDoubleAttributes(){
+    	return contextualDoubleAttributes;
+    }
+    
 }

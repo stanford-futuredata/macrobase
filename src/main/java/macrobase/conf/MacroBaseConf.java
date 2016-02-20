@@ -69,7 +69,13 @@ public class MacroBaseConf extends Configuration {
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
 
-
+    
+    public static final String CONTEXTUAL_SWITCH = "macrobase.analysis.contextual.switch";
+    public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
+    public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
+    public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
+    public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
+    
     public enum DetectorType {
         MAD_OR_MCD,
         MAD,

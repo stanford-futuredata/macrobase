@@ -264,3 +264,47 @@ the reservoir sorted).
   </td>
 </tr>
 </table>
+
+
+## Contextual Outlier Detection-specific parameters
+
+The following are contextual outlier detection-specific parameters.
+
+<table class="table">
+<tr><th>Name</th><th>Default</th><th>Meaning</th></tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.switch</code></td>
+  <td><code>false</code></td>
+  <td>
+  Controls whether to run contextual outlier detection or not
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.discreteAttributes</code></td>
+  <td><code>none</code></td>
+  <td>
+  The set of discrete contextual attributes. For every discrete attribute A, we generate contexts A = a, for every active domain value
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.doubleAttributes</code></td>
+  <td><code>none</code></td>
+  <td>
+  The set of double contextual attributes. For every double attribute A, we generate contexts A in [l,h) by discretizing the active domain into a list of intervals 
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.denseContextTau</code></td>
+  <td><code>0.5</code></td>
+  <td>
+  The minimum percentage of tuples required for a context to be considered
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.numIntervals</code></td>
+  <td><code>10</code></td>
+  <td>
+  The number of intervals for a double contextual attribute to be discretized into. Right now, it is equal width, i.e., every interval covers (max - min) / numInterval
+  </td>
+</tr>
+</table>
