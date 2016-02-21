@@ -17,4 +17,8 @@ public class TimeDatum extends Datum {
     public Integer getTime() {
         return time;
     }
+    
+    public String toString() {
+    	return String.format("time: %s, %s", getTime().toString(), super.toString());
+    }
 }

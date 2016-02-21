@@ -37,4 +37,11 @@ public class Datum implements HasMetrics {
     public void setAuxiliaries(RealVector auxiliaries) {
         this.auxiliaries = auxiliaries;
     }
+
+    public String toString() {
+        return String.format(
+                "metrics: %s, encoded attributes: %s, auxiliaries: %s",
+                getMetrics().toString(), getAttributes().toString(),
+                String.valueOf(getAuxiliaries()));
+    }
 }
