@@ -24,6 +24,8 @@ import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.commons.math3.stat.correlation.Covariance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.concurrent.TimeUnit;
+import com.google.common.base.Stopwatch;
 
 import com.codahale.metrics.Timer;
 
@@ -202,6 +204,9 @@ public class MinCovDet extends OutlierDetector  {
 
         int h = (int)Math.floor((data.size() + p + 1)*alpha);
 
+        Stopwatch sw = Stopwatch.createUnstarted();
+        sw.start();
+
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
         List<? extends HasMetrics> initialSubset = chooseKRandom(data, h);
@@ -254,6 +259,9 @@ public class MinCovDet extends OutlierDetector  {
             
             numIterations++;
         }
+
+        sw.stop();
+        log.debug("...ended MCD training (time: {}ms)!", sw.elapsed(TimeUnit.MICROSECONDS));
         
         log.debug("Number of iterations in MCD step: {}", numIterations);
 
