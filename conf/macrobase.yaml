@@ -9,3 +9,5 @@ logging:
   loggers:
     "macrobase": TRACE
 
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 1

@@ -10,7 +10,7 @@ macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000000;
 
 macrobase.analysis.minSupport: 0.001
-macrobase.analysis.minOIRatio: 1
+macrobase.analysis.minOIRatio: 3.0
 
 macrobase.loader.db.cacheDirectory: cache
 
