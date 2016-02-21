@@ -22,10 +22,11 @@ macrobase.loader.targetLowMetrics: []
 macrobase.loader.targetHighMetrics: [value]
 macrobase.loader.timeColumn: timestamp
 
-macrobase.analysis.detectorType: MOVING_AVERAGE
-
 macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM nab;
+macrobase.loader.transformType: IDENTITY
+
+macrobase.analysis.detectorType: MOVING_AVERAGE
 
 macrobase.analysis.minSupport: 0.001
 macrobase.analysis.minOIRatio: 1
@@ -35,7 +36,7 @@ macrobase.analysis.useZScore: false
 macrobase.analysis.usePercentile: true
 macrobase.analysis.targetPercentile: 0.99
 
-macrobase.analysis.timeseries.tupleWindow = 100
+macrobase.analysis.timeseries.tupleWindow: 100
 
 logging:
   level: INFO
@@ -50,6 +51,7 @@ mb_detector_name = 'macrobase_ma'
 def main():
     if len(sys.argv) != 2:
         print 'Usage: numenta_benchmark.py PATH_TO_NAB_ROOT'
+        sys.exit(1)
 
     with open(conf_file, 'w') as f:
         f.write(config)

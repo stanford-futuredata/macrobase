@@ -1,7 +1,7 @@
 package macrobase.analysis.outlier;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.Deque;
+import java.util.ArrayDeque;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
@@ -12,7 +12,7 @@ import macrobase.datamodel.Datum;
  * Simple moving average.
  */
 public class MovingAverage extends TimeSeriesOutlierDetector {
-    Queue<DatumWithInfo> window = new LinkedList<DatumWithInfo>();
+    Deque<DatumWithInfo> window = new ArrayDeque<DatumWithInfo>();
     int weightTotal;
     private RealVector windowSum;
 
@@ -66,7 +66,7 @@ public class MovingAverage extends TimeSeriesOutlierDetector {
     }
 
     private Datum getLatestDatum() {
-        return window.peek().getDatum();
+        return window.peekLast().getDatum();
     }
 
     @Override
