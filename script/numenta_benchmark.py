@@ -39,10 +39,10 @@ macrobase.analysis.targetPercentile: 0.99
 macrobase.analysis.timeseries.tupleWindow: 100
 
 logging:
-  level: INFO
+  level: WARN
 
   loggers:
-    "macrobase": TRACE
+    macrobase.analysis.outlier: DEBUG
 '''
 conf_file = '/tmp/macrobase_nab.conf'
 result_file = '/tmp/macrobase_results.out'
