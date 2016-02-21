@@ -22,7 +22,7 @@ macrobase.loader.targetLowMetrics: []
 macrobase.loader.targetHighMetrics: [value]
 macrobase.loader.timeColumn: timestamp
 
-macrobase.analysis.outlierDetectorType: MOVING_AVERAGE
+macrobase.analysis.detectorType: MOVING_AVERAGE
 
 macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM nab;
