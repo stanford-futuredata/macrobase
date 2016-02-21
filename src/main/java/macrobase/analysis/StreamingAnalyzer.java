@@ -97,7 +97,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     boolean doTrace;
-    int numRuns = 40;
+    int numRuns = 10000;
 
     class RunnableStreamingAnalysis implements Runnable {
     	List<Datum> data;
@@ -144,6 +144,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        // OUTLIER ANALYSIS
 	        tsw.start();
 
+		sw.start();
 	        int metricsDimensions = lowMetrics.size() + highMetrics.size();
 	        OutlierDetector detector = constructDetector(metricsDimensions);
 
@@ -192,6 +193,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                                                         detector,
 	                                                         streamingSummarizer);
 	        }
+		sw.stop();
+		log.debug("...ended initialization (time: {}ms)!", (sw.elapsed(TimeUnit.MILLISECONDS)));
+		sw.reset();
 
 	        tupleNo = 0;
 	        totODTrainingTime = 0;
@@ -211,19 +215,29 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                }
 	                detector.updateRecentScoreList(scoreReservoir.getReservoir());
 	                sw.stop();
-	                sw.reset();
 	                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
+                        sw.reset();
 	            } else if(tupleNo >= warmupCount) {
 	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
+			    sw.start();
 	                    analysisUpdater.updateIfNecessary(now, tupleNo);
 	                    modelUpdater.updateIfNecessary(now, tupleNo);
+			    sw.stop();
+			    totODTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
+			    sw.reset();
+
+			    sw.start();
 	                    double score = detector.score(d);
 
 	                    if(scoreReservoir != null) {
 	                        scoreReservoir.insert(score);
 	                    }
+			    sw.stop();
+			    totScoringTime += sw.elapsed(TimeUnit.MICROSECONDS);
+			    sw.reset();
 
+			    sw.start();
 	                    if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
 	                       forceUsePercentile && detector.isPercentileOutlier(score,
 	                                                                          TARGET_PERCENTILE)) {
@@ -231,6 +245,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                    } else {
 	                        streamingSummarizer.markInlier(d);
 	                    }
+			    sw.stop();
+			    totSummarizationTrainingTime += sw.elapsed(TimeUnit.MICROSECONDS);
+			    sw.reset();
 	            }
 
 	            tupleNo += 1;
