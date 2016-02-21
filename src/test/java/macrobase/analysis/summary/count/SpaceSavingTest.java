@@ -49,9 +49,9 @@ public class SpaceSavingTest {
     @Test
     public void decayTest() {
         final int N = 1000;
-        final int ITEMS = 100;
+        final int ITEMS = 20;
         final double DECAY = .5;
-        final int CAPACITY = 15;
+        final int CAPACITY = 12;
         final double EPSILON = 1.0/CAPACITY;
 
         SpaceSavingList ss = new SpaceSavingList(CAPACITY);
@@ -66,7 +66,7 @@ public class SpaceSavingTest {
 
             trueCnt.compute(item, (k, v) -> v == null ? 1 : v + 1);
 
-            if (i % 10 == 0) {
+            if (i % 20 == 0) {
                 ss.multiplyAllCounts(DECAY);
 
                 trueCnt.forEach((k, v) -> trueCnt.put(k, v*DECAY));

@@ -44,6 +44,9 @@ public class BatchAnalyzerTest {
         conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
+        conf.loadSystemProperties();
+        conf.sanityCheckBatch();
+
         AnalysisResult ar = (new BatchAnalyzer(conf)).analyze();
 
         assertEquals(1, ar.getItemSets().size());
@@ -80,6 +83,9 @@ public class BatchAnalyzerTest {
 
         conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+
+        conf.loadSystemProperties();
+        conf.sanityCheckBatch();
 
         AnalysisResult ar = (new BatchAnalyzer(conf)).analyze();
 

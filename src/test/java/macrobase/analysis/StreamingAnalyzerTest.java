@@ -48,7 +48,12 @@ public class StreamingAnalyzerTest {
         conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
+        conf.loadSystemProperties();
+        conf.sanityCheckStreaming();
+
         AnalysisResult ar = (new StreamingAnalyzer(conf)).analyzeOnePass();
+
+        ar.getItemSets().get(0).prettyPrint();
 
         assertEquals(1, ar.getItemSets().size());
         assertEquals(1, ar.getItemSets().get(0).getItems().size());
@@ -85,6 +90,9 @@ public class StreamingAnalyzerTest {
 
         conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+
+        conf.loadSystemProperties();
+        conf.sanityCheckStreaming();
 
         AnalysisResult ar = (new StreamingAnalyzer(conf)).analyzeOnePass();
 
