@@ -10,6 +10,7 @@ import macrobase.ingest.CsvLoader;
 import macrobase.ingest.DataLoader;
 import macrobase.ingest.DiskCachingPostgresLoader;
 import macrobase.ingest.PostgresLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,7 @@ public class BaseAnalyzer {
     protected final DetectorType detectorType;
     protected final Boolean forceUsePercentile;
     protected final Boolean forceUseZScore;
+    protected final Integer timeseriesTupleWindow;
 
     protected final Double mcdAlpha;
     protected final Double mcdStoppingDelta;
@@ -64,6 +66,7 @@ public class BaseAnalyzer {
         detectorType = conf.getDetectorType();
         forceUsePercentile = conf.getBoolean(MacroBaseConf.USE_PERCENTILE, MacroBaseDefaults.USE_PERCENTILE);
         forceUseZScore = conf.getBoolean(MacroBaseConf.USE_ZSCORE, MacroBaseDefaults.USE_ZSCORE);
+        timeseriesTupleWindow = conf.getInt(MacroBaseConf.TUPLE_WINDOW, MacroBaseDefaults.TUPLE_WINDOW);
 
         mcdAlpha = conf.getDouble(MacroBaseConf.MCD_ALPHA, MacroBaseDefaults.MCD_ALPHA);
         mcdStoppingDelta = conf.getDouble(MacroBaseConf.MCD_STOPPING_DELTA, MacroBaseDefaults.MCD_STOPPING_DELTA);
@@ -131,6 +134,9 @@ public class BaseAnalyzer {
             case BINNED_KDE:
                 log.info("Using BinnedKDE detector.");
                 return new BinnedKDE(kdeKernelType, kdeBandwidthAlgorithm, binnedKDEBins);
+            case MOVING_AVERAGE:
+                log.info("Using Moving Average detector.");
+                return new MovingAverage(timeseriesTupleWindow);
             default:
                 throw new RuntimeException("Unhandled detector class!" + detectorType);
         }

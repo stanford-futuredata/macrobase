@@ -10,6 +10,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.datamodel.TimeDatum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
@@ -26,8 +27,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import javax.annotation.Nullable;
 
 public abstract class SQLLoader extends DataLoader {
     abstract public String getDriverClass();
@@ -43,6 +47,8 @@ public abstract class SQLLoader extends DataLoader {
     private final String dbName;
 
     protected final String baseQuery;
+    
+    private static final String LIMIT_REGEX = "(LIMIT\\s\\d+)";
 
     public SQLLoader(MacroBaseConf conf) throws ConfigurationException, SQLException {
         this(conf, null);
@@ -78,7 +84,7 @@ public abstract class SQLLoader extends DataLoader {
     }
 
     private String removeLimit(String sql) {
-        return sql.replaceAll("LIMIT\\s\\d+", "");
+    	return sql.replaceAll(LIMIT_REGEX, "");
     }
 
     private String removeSqlJunk(String sql) {
@@ -105,6 +111,7 @@ public abstract class SQLLoader extends DataLoader {
                           List<RowSetResource.RowSetRequest.RowRequestPair> preds,
                           int limit,
                           int offset) throws SQLException {
+    	// TODO handle time column here
         Statement stmt = connection.createStatement();
         String sql = removeSqlJunk(removeLimit(baseQuery));
 
@@ -147,9 +154,16 @@ public abstract class SQLLoader extends DataLoader {
         String targetColumns = StreamSupport.stream(
                 Iterables.concat(attributes, lowMetrics, highMetrics, auxiliaryAttributes).spliterator(), false)
                 .collect(Collectors.joining(", "));
+        if (timeColumn != null) {
+            targetColumns += ", " + timeColumn;
+        }
         String sql = String.format("SELECT %s FROM (%s) baseQuery",
                                    targetColumns,
-                                   removeSqlJunk(baseQuery));
+                                   orderByTimeColumn(removeSqlJunk(baseQuery), timeColumn));
+        if (timeColumn != null) {
+            // Both nested and outer query need to be ordered
+            sql += " ORDER BY " + timeColumn;
+        }
         Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
 
@@ -162,48 +176,83 @@ public abstract class SQLLoader extends DataLoader {
 
 
         while (rs.next()) {
-            List<Integer> attrList = new ArrayList<>(attributes.size());
+            List<Integer> attrList = getAttrs(rs, encoder, 1);
+			RealVector metricVec = getMetrics(rs, attrList.size() + 1);
 
-            int i = 1;
-            for (; i <= attributes.size(); ++i) {
-                attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
+            Datum datum;
+            if (timeColumn == null) {
+                datum = new Datum(attrList, metricVec);
+            } else {
+                datum = new TimeDatum(rs.getInt(timeColumn), attrList, metricVec);
             }
-
-            RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-            int vecPos = 0;
-
-            for (; i <= attributes.size() + lowMetrics.size(); ++i) {
-                double val = Math.pow(Math.max(rs.getDouble(i), 0.1), -1);
-                metricVec.setEntry(vecPos, val);
-
-                vecPos += 1;
-            }
-
-            for (; i <= attributes.size() + lowMetrics.size() + highMetrics.size(); ++i) {
-                double val = rs.getDouble(i);
-                metricVec.setEntry(vecPos, val);
-
-                vecPos += 1;
-            }
-
-            Datum datum = new Datum(attrList, metricVec);
 
             // Set auxilaries on the datum if user specified
             if (auxiliaryAttributes.size() > 0) {
-                RealVector auxilaries = new ArrayRealVector(auxiliaryAttributes.size());
-                for (int j = 0; j < auxiliaryAttributes.size(); ++j, ++i) {
-                    auxilaries.setEntry(j, rs.getDouble(i));
-                }
+            	RealVector auxilaries = getAuxiliaries(rs, attrList.size() + metricVec.getDimension() + 1);
                 datum.setAuxiliaries(auxilaries);
             }
 
             ret.add(datum);
         }
 
-        // normalize data
+        // Normalize data
         dataTransformation.transform(ret);
 
         return ret;
+    }
+    
+    private List<Integer> getAttrs(ResultSet rs, DatumEncoder encoder, int rsStartIndex) throws SQLException {
+    	List<Integer> attrList = new ArrayList<>(attributes.size());
+        for (int i = rsStartIndex; i <= attributes.size(); ++i) {
+            attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
+        }
+        return attrList;
+	}
+
+	private RealVector getMetrics(ResultSet rs, int rsStartIndex)
+			throws SQLException {
+		RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
+		int vecPos = 0;
+
+		for (int i = 0; i < lowMetrics.size(); ++i, ++vecPos) {
+		    double val = Math.pow(Math.max(rs.getDouble(i + rsStartIndex), 0.1), -1);
+		    metricVec.setEntry(vecPos, val);
+		}
+		
+		rsStartIndex += lowMetrics.size();
+
+		for (int i = 0; i < highMetrics.size(); ++i, ++vecPos) {
+		    double val = rs.getDouble(i + rsStartIndex);
+		    metricVec.setEntry(vecPos, val);
+		}
+		return metricVec;
+	}
+
+	private RealVector getAuxiliaries(ResultSet rs,
+			int rsStartIndex) throws SQLException {
+		RealVector auxilaries = new ArrayRealVector(auxiliaryAttributes.size());
+		for (int i = 0; i < auxiliaryAttributes.size(); ++i) {
+		    auxilaries.setEntry(i, rs.getDouble(i + rsStartIndex));
+		}
+		return auxilaries;
+	}
+
+	// Shield your eyes, mere mortals, from this glorious hideousness.
+    private String orderByTimeColumn(String sql, @Nullable String timeColumn) {
+        if (timeColumn == null) {
+            return sql;
+        } else {
+            if (sql.toLowerCase().contains("order by")) {
+                throw new RuntimeException("baseQuery currently shouldn't contain ORDER BY if timeColumn is specified.");
+            }
+
+            String orderBy = " ORDER BY " + timeColumn;
+            if (Pattern.compile(LIMIT_REGEX).matcher(sql).find()) {
+                return sql.replaceAll(LIMIT_REGEX, orderBy + " $1");
+            } else {
+                return sql + orderBy;
+            }
+        }
     }
 
 }

@@ -60,11 +60,13 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
         }
     }
 
-    private String convertFileName(List<String> attributes,
+    private String convertFileName(String timeColumn,
+                                   List<String> attributes,
                                    List<String> lowMetrics,
                                    List<String> highMetrics,
                                    String baseQuery) {
-        int hashCode = String.format("A-%s::L%s::H%s::BQ%s",
+        int hashCode = String.format("T-%s::A-%s::L%s::H%s::BQ%s",
+        							 timeColumn,
                                      attributes.toString(),
                                      lowMetrics.toString(),
                                      highMetrics.toString(),
@@ -73,6 +75,7 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
     }
 
     private void writeOutData(DatumEncoder encoder,
+                              String timeColumn,
                               List<String> attributes,
                               List<String> lowMetrics,
                               List<String> highMetrics,
@@ -81,7 +84,8 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
         CachedData d = new CachedData(encoder, data);
 
         OutputStream outputStream = new SnappyOutputStream(
-                new BufferedOutputStream(new FileOutputStream(fileDir + "/" + convertFileName(attributes,
+                new BufferedOutputStream(new FileOutputStream(fileDir + "/" + convertFileName(timeColumn,
+                                                                                              attributes,
                                                                                               lowMetrics,
                                                                                               highMetrics,
                                                                                               baseQuery))), 16384);
@@ -93,11 +97,13 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
     }
 
     private List<Datum> readInData(DatumEncoder encoder,
+                                   String timeColumn,
                                    List<String> attributes,
                                    List<String> lowMetrics,
                                    List<String> highMetrics,
                                    String baseQuery) throws IOException {
-        File f = new File(fileDir + "/" + convertFileName(attributes,
+        File f = new File(fileDir + "/" + convertFileName(timeColumn,
+                                                          attributes,
                                                           lowMetrics,
                                                           highMetrics,
                                                           baseQuery));
@@ -120,14 +126,14 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
 
     @Override
     public List<Datum> getData(DatumEncoder encoder) throws SQLException, IOException {
-        List<Datum> data = readInData(encoder, attributes, lowMetrics, highMetrics, baseQuery);
+        List<Datum> data = readInData(encoder, timeColumn, attributes, lowMetrics, highMetrics, baseQuery);
         if (data != null) {
             return data;
         }
 
         data = super.getData(encoder);
         log.info("Writing out loaded data...");
-        writeOutData(encoder, attributes, lowMetrics, highMetrics, baseQuery, data);
+        writeOutData(encoder, timeColumn, attributes, lowMetrics, highMetrics, baseQuery, data);
         log.info("...done writing!");
 
         return data;
