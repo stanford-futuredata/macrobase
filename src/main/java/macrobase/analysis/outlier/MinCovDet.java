@@ -38,10 +38,9 @@ public class MinCovDet extends OutlierDetector {
     private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
     private final Counter singularCovariances = MacroBase.metrics.counter(name(MinCovDet.class, "singularCovariances"));
 
-    class MetricsWithScore implements HasMetrics {
+    static class MetricsWithScore implements HasMetrics {
         private RealVector metrics;
         private Double score;
-        private Integer originalPosition;
 
         public MetricsWithScore(RealVector metrics,
                                 double score) {
