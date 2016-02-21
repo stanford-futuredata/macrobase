@@ -41,7 +41,10 @@ public abstract class TimeSeriesOutlierDetector extends OutlierDetector {
         }
         currentTupleWindowSize++;
         addToWindow(datum);
-        return scoreWindow();
+
+        double score = scoreWindow();
+        System.out.println(datum.getTime() + "," + score);
+        return score;
     }
 
     @Override
