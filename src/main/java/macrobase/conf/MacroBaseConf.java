@@ -37,6 +37,8 @@ public class MacroBaseConf extends Configuration {
     public static final String MODEL_UPDATE_PERIOD = "macrobase.analysis.streaming.modelUpdatePeriod";
     public static final String OUTLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.outlierSummarySize";
     public static final String INLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.inlierItemSummarySize";
+    
+    public static final String TUPLE_WINDOW = "macrobase.analysis.timeseries.tupleWindow";
 
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
@@ -52,6 +54,7 @@ public class MacroBaseConf extends Configuration {
 
     public static final String DATA_TRANSFORM_TYPE = "macrobase.loader.transformType";
     public static final String DATA_LOADER_TYPE = "macrobase.loader.loaderType";
+    public static final String TIME_COLUMN = "macrobase.loader.timeColumn";
     public static final String ATTRIBUTES = "macrobase.loader.attributes";
     public static final String LOW_METRICS = "macrobase.loader.targetLowMetrics";
     public static final String HIGH_METRICS = "macrobase.loader.targetHighMetrics";
@@ -73,7 +76,8 @@ public class MacroBaseConf extends Configuration {
         MCD,
         ZSCORE,
         KDE,
-        BINNED_KDE
+        BINNED_KDE,
+        MOVING_AVERAGE
     }
 
     public enum DataLoaderType {

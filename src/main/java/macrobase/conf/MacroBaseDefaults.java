@@ -28,6 +28,9 @@ public class MacroBaseDefaults {
     public static final Integer MODEL_UPDATE_PERIOD = 100000;
     public static final Integer OUTLIER_ITEM_SUMMARY_SIZE = 100000;
     public static final Integer INLIER_ITEM_SUMMARY_SIZE = 100000;
+    
+    // timeseries defaults
+    public static final Integer TUPLE_WINDOW = 100;
 
     // MCD defaults
     public static final Double MCD_ALPHA = 0.5;
@@ -46,6 +49,7 @@ public class MacroBaseDefaults {
 
     // loader defaults
     public static final DataLoaderType DATA_LOADER_TYPE = DataLoaderType.POSTGRES_LOADER;
+    public static final String TIME_COLUMN = null;
     public static final DetectorType DETECTOR_TYPE = DetectorType.MAD_OR_MCD;
     public static final DataTransformType DATA_TRANSFORM = DataTransformType.ZERO_TO_ONE_SCALE;
 

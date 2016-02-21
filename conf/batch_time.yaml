@@ -1,0 +1,28 @@
+macrobase.query.name: testTasks
+macrobase.loader.attributes: [userid]
+macrobase.loader.targetLowMetrics: [data_count_minutes]
+macrobase.loader.targetHighMetrics: []
+macrobase.loader.timeColumn: timestamp
+
+macrobase.loader.db.cacheDirectory: cache
+macrobase.loader.db.dbUrl: postgres
+macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
+macrobase.loader.transformType: IDENTITY
+
+macrobase.analysis.outlierDetectorType: MOVING_AVERAGE
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 1
+
+macrobase.analysis.useZScore: false
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+macrobase.analysis.timeseries.tupleWindow: 100
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE

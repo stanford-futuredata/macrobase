@@ -1,11 +1,8 @@
 package macrobase.datamodel;
 
-import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class Datum implements HasMetrics {
     private List<Integer> attributes;
@@ -18,6 +15,10 @@ public class Datum implements HasMetrics {
     public Datum(List<Integer> attributes, RealVector metrics) {
         this.attributes = attributes;
         this.metrics = metrics;
+    }
+
+    public Integer getTime() {
+        return null;
     }
 
     public List<Integer> getAttributes() {
