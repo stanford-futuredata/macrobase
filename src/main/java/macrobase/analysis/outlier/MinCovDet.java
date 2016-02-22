@@ -9,7 +9,11 @@ import java.util.Random;
 import java.util.Set;
 
 import com.codahale.metrics.Counter;
+
 import macrobase.MacroBase;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.datamodel.HasMetrics;
 
@@ -91,18 +95,18 @@ public class MinCovDet extends OutlierDetector {
         return ret;
     }
 
-    public MinCovDet(int dataDim) {
-        this.p = dataDim;
-    }
-
-    public MinCovDet(int dataDim, double alpha) {
-        this(dataDim);
-        this.alpha = alpha;
-    }
-
-    public MinCovDet(int dataDim, double alpha, double stoppingDelta) {
-        this(dataDim, alpha);
-        this.stoppingDelta = stoppingDelta;
+    public MinCovDet(MacroBaseConf conf) {
+        super(conf);
+        try {
+            this.p = conf.getStringList(MacroBaseConf.LOW_METRICS).size() + conf.getStringList(MacroBaseConf.HIGH_METRICS).size();
+        } catch (ConfigurationException e) {
+            // Should never happen, but to avoid having to add throws
+            // declaration, we re-throw as RuntimeException.
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        this.alpha = conf.getDouble(MacroBaseConf.MCD_ALPHA, MacroBaseDefaults.MCD_ALPHA);
+        this.stoppingDelta = conf.getDouble(MacroBaseConf.MCD_STOPPING_DELTA, MacroBaseDefaults.MCD_STOPPING_DELTA);
     }
 
     public static double getMahalanobis(RealVector mean,

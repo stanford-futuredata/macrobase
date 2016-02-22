@@ -6,6 +6,7 @@ import java.util.ArrayDeque;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
 /*
@@ -34,8 +35,8 @@ public class MovingAverage extends TimeSeriesOutlierDetector {
         }
     }
 
-    public MovingAverage(int tupleWindowSize) {
-        super(tupleWindowSize);
+    public MovingAverage(MacroBaseConf conf) {
+        super(conf);
     }
 
     @Override

@@ -2,15 +2,18 @@ package macrobase.analysis.outlier;
 
 import java.util.List;
 
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
 public abstract class TimeSeriesOutlierDetector extends OutlierDetector {
     protected final int tupleWindowSize;
     private int currentTupleWindowSize;
 
-    public TimeSeriesOutlierDetector(int tupleWindowSize) {
+    public TimeSeriesOutlierDetector(MacroBaseConf conf) {
+        super(conf);
+        this.tupleWindowSize = conf.getInt(MacroBaseConf.TUPLE_WINDOW, MacroBaseDefaults.TUPLE_WINDOW);
         assert tupleWindowSize > 1;
-        this.tupleWindowSize = tupleWindowSize;
     }
 
     public abstract void addToWindow(Datum datum);

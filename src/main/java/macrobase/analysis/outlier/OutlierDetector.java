@@ -8,7 +8,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Lists;
+
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.HasMetrics;
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.Covariance;
@@ -43,6 +46,9 @@ public abstract class OutlierDetector {
             return outliers;
         }
     }
+    
+    // Constructor with this signature should be implemented by subclasses
+    public OutlierDetector(MacroBaseConf conf) {}
 
     public abstract void train(List<Datum> data);
 

@@ -3,7 +3,10 @@ package macrobase.analysis.outlier;
 import java.util.Arrays;
 import java.util.List;
 
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -27,10 +30,10 @@ public class BinnedKDE extends KDE {
     private int L;
     private double delta;
 
-    public BinnedKDE(KernelType kernelType, BandwidthAlgorithm bandwidthAlgorithm, int numBins) {
-        super(kernelType, bandwidthAlgorithm);
-        this.numBins = numBins;
-        this.numIntervals = numBins - 1;
+    public BinnedKDE(MacroBaseConf conf) {
+        super(conf);
+        this.numBins = conf.getInt(MacroBaseConf.BINNED_KDE_BINS, MacroBaseDefaults.BINNED_KDE_BINS);
+        this.numIntervals = this.numBins - 1;
     }
 
     @Override

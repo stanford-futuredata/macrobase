@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.codahale.metrics.Counter;
+
 import macrobase.MacroBase;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
 import org.slf4j.Logger;
@@ -30,6 +32,10 @@ public class MAD extends OutlierDetector {
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
+    
+    public MAD(MacroBaseConf conf) {
+        super(conf);
+    }
 
     @Override
     public void train(List<Datum> data) {

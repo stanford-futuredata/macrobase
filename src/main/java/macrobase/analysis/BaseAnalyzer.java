@@ -29,16 +29,6 @@ public class BaseAnalyzer {
     protected final DetectorType detectorType;
     protected final Boolean forceUsePercentile;
     protected final Boolean forceUseZScore;
-    protected final Integer timeseriesTupleWindow;
-
-    protected final Double mcdAlpha;
-    protected final Double mcdStoppingDelta;
-
-    protected final KDE.BandwidthAlgorithm kdeBandwidthAlgorithm;
-    protected final Double kdeBandwidthMultiplier;
-    protected final KDE.KernelType kdeKernelType;
-
-    protected final Integer binnedKDEBins;
 
     protected final DataLoaderType dataLoaderType;
     protected final List<String> attributes;
@@ -66,16 +56,6 @@ public class BaseAnalyzer {
         detectorType = conf.getDetectorType();
         forceUsePercentile = conf.getBoolean(MacroBaseConf.USE_PERCENTILE, MacroBaseDefaults.USE_PERCENTILE);
         forceUseZScore = conf.getBoolean(MacroBaseConf.USE_ZSCORE, MacroBaseDefaults.USE_ZSCORE);
-        timeseriesTupleWindow = conf.getInt(MacroBaseConf.TUPLE_WINDOW, MacroBaseDefaults.TUPLE_WINDOW);
-
-        mcdAlpha = conf.getDouble(MacroBaseConf.MCD_ALPHA, MacroBaseDefaults.MCD_ALPHA);
-        mcdStoppingDelta = conf.getDouble(MacroBaseConf.MCD_STOPPING_DELTA, MacroBaseDefaults.MCD_STOPPING_DELTA);
-
-        kdeBandwidthAlgorithm = conf.getKDEBandwidth();
-        kdeBandwidthMultiplier = conf.getDouble(MacroBaseConf.KDE_BANDWIDTH_MULTIPLIER, MacroBaseDefaults.KDE_BANDWIDTH_MULTIPLIER);
-        kdeKernelType = conf.getKDEKernelType();
-
-        binnedKDEBins = conf.getInt(MacroBaseConf.BINNED_KDE_BINS, MacroBaseDefaults.BINNED_KDE_BINS);
 
         dataLoaderType = conf.getDataLoaderType();
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
@@ -104,10 +84,10 @@ public class BaseAnalyzer {
             case MAD_OR_MCD:
                 if (metricsDimensions == 1) {
                     log.info("By default: using MAD detector for dimension 1 metric.");
-                    return new MAD();
+                    return new MAD(conf);
                 } else {
                     log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
-                    MinCovDet ret = new MinCovDet(metricsDimensions);
+                    MinCovDet ret = new MinCovDet(conf);
                     if (randomSeed != null) {
                         ret.seedRandom(randomSeed);
                     }
@@ -115,28 +95,26 @@ public class BaseAnalyzer {
                 }
             case MAD:
                 log.info("Using MAD detector.");
-                return new MAD();
+                return new MAD(conf);
             case MCD:
                 log.info("Using MCD detector.");
-                MinCovDet ret = new MinCovDet(metricsDimensions);
+                MinCovDet ret = new MinCovDet(conf);
                 if (randomSeed != null) {
                     ret.seedRandom(randomSeed);
                 }
                 return ret;
             case ZSCORE:
                 log.info("Using ZScore detector.");
-                return new ZScore();
+                return new ZScore(conf);
             case KDE:
                 log.info("Using KDE detector.");
-                KDE kde = new KDE(kdeKernelType, kdeBandwidthAlgorithm);
-                kde.setAlgorithmicBandwidthMultiplier(kdeBandwidthMultiplier);
-                return kde;
+                return new KDE(conf);
             case BINNED_KDE:
                 log.info("Using BinnedKDE detector.");
-                return new BinnedKDE(kdeKernelType, kdeBandwidthAlgorithm, binnedKDEBins);
+                return new BinnedKDE(conf);
             case MOVING_AVERAGE:
                 log.info("Using Moving Average detector.");
-                return new MovingAverage(timeseriesTupleWindow);
+                return new MovingAverage(conf);
             default:
                 throw new RuntimeException("Unhandled detector class!" + detectorType);
         }

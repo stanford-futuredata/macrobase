@@ -7,6 +7,7 @@ import java.util.List;
 import com.codahale.metrics.Timer;
 
 import macrobase.MacroBase;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
 public class ZScore extends OutlierDetector {
@@ -15,6 +16,10 @@ public class ZScore extends OutlierDetector {
 
     private final Timer meanComputation = MacroBase.metrics.timer(name(ZScore.class, "meanComputation"));
     private final Timer stddevComputation = MacroBase.metrics.timer(name(ZScore.class, "stddevComputation"));
+    
+    public ZScore(MacroBaseConf conf) {
+        super(conf);
+    }
 
     @Override
     public void train(List<Datum> data) {

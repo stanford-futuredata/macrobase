@@ -6,7 +6,10 @@ import java.util.List;
 
 import macrobase.analysis.outlier.kernel.EpanchnikovMulticativeKernel;
 import macrobase.analysis.outlier.kernel.Kernel;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.slf4j.Logger;
@@ -29,10 +32,6 @@ public class KDE extends OutlierDetector {
 
     protected int metricsDimensions;
 
-    public void setAlgorithmicBandwidthMultiplier(double multiplier) {
-        this.algorithmicBandwidthMultiplier = multiplier;
-    }
-
     public enum BandwidthAlgorithm {
         NORMAL_SCALE,
         OVERSMOOTHED,
@@ -52,9 +51,12 @@ public class KDE extends OutlierDetector {
         }
     }
 
-    public KDE(KernelType kernel, BandwidthAlgorithm bandwidthAlgorithm) {
-        this.kernelType = kernel;
-        this.bandwidthAlgorithm = bandwidthAlgorithm;
+    public KDE(MacroBaseConf conf) {
+        super(conf);
+        this.kernelType = conf.getKDEKernelType();
+        this.bandwidthAlgorithm = conf.getKDEBandwidth();
+        this.algorithmicBandwidthMultiplier = conf.getDouble(MacroBaseConf.KDE_BANDWIDTH_MULTIPLIER, MacroBaseDefaults.KDE_BANDWIDTH_MULTIPLIER);
+        
         this.kernel = this.kernelType.constructKernel(this.metricsDimensions);
         // Pick 1 % of the data, randomly
         this.proportionOfDataToUse = 0.01;
