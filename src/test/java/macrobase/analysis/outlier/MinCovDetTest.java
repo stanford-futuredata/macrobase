@@ -53,9 +53,9 @@ public class MinCovDetTest {
             testData.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
         }
 
-        MacroBaseConf conf = new MacroBaseConf(ImmutableMap.of(
-                MacroBaseConf.LOW_METRICS, new ArrayList<String>(),
-                MacroBaseConf.HIGH_METRICS, Arrays.asList(new String[dim])));
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.LOW_METRICS, new ArrayList<String>())
+                .set(MacroBaseConf.HIGH_METRICS, Arrays.asList(new String[dim]));
         MinCovDet trainer = new MinCovDet(conf);
 
         trainer.train(testData);

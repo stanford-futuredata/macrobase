@@ -17,9 +17,9 @@ public class KDETest {
 
     @Test
     public void simpleTest() {
-        MacroBaseConf conf = new MacroBaseConf(ImmutableMap.of(
-                MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE",
-                MacroBaseConf.KDE_BANDWIDTH_ALGORITHM, "OVERSMOOTHED"));
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
+                .set(MacroBaseConf.KDE_BANDWIDTH_ALGORITHM, "OVERSMOOTHED");
         KDE kde = new KDE(conf);
         kde.setProportionOfDataToUse(1.0);
         List<Datum> data = new ArrayList<>();

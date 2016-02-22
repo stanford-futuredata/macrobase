@@ -29,20 +29,18 @@ public class BatchAnalyzerTest {
 
     @Test
     public void testMADAnalyzer() throws Exception {
-        MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.TARGET_PERCENTILE, 0.99);
-        conf.set(MacroBaseConf.USE_PERCENTILE, true);
-        conf.set(MacroBaseConf.MIN_OI_RATIO, .01);
-        conf.set(MacroBaseConf.MIN_SUPPORT, .01);
-        conf.set(MacroBaseConf.RANDOM_SEED, 0);
-
-        conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3", "A4"));
-        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A5"));
-        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "");
-
-        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
-        conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
+                .set(MacroBaseConf.USE_PERCENTILE, true)
+                .set(MacroBaseConf.MIN_OI_RATIO, .01)
+                .set(MacroBaseConf.MIN_SUPPORT, .01)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3", "A4")) // loader
+                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A5"))
+                .set(MacroBaseConf.HIGH_METRICS, new ArrayList<>())
+                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
@@ -67,22 +65,20 @@ public class BatchAnalyzerTest {
 
     @Test
     public void testMCDAnalyzer() throws Exception {
-        MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.TARGET_PERCENTILE, 0.99);
-        conf.set(MacroBaseConf.USE_PERCENTILE, true);
-        conf.set(MacroBaseConf.MIN_OI_RATIO, .01);
-        conf.set(MacroBaseConf.MIN_SUPPORT, .01);
-        conf.set(MacroBaseConf.RANDOM_SEED, 0);
-        conf.set(MacroBaseConf.MCD_ALPHA, .05);
-        conf.set(MacroBaseConf.MCD_STOPPING_DELTA, 1e-3);
-
-        conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3"));
-        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A4", "A5"));
-        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "");
-
-        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER);
-        conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
+                .set(MacroBaseConf.USE_PERCENTILE, true)
+                .set(MacroBaseConf.MIN_OI_RATIO, .01)
+                .set(MacroBaseConf.MIN_SUPPORT, .01)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.MCD_ALPHA, .05)
+                .set(MacroBaseConf.MCD_STOPPING_DELTA, 1e-3)
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3")) // loader
+                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A4", "A5"))
+                .set(MacroBaseConf.HIGH_METRICS, new ArrayList<>())
+                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
