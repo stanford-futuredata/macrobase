@@ -18,6 +18,7 @@ import macrobase.runtime.standalone.BaseStandaloneConfiguration.DetectorType;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -142,7 +143,7 @@ public class MinCovDet extends OutlierDetector  {
         return Math.sqrt(diagSum+2*nonDiagSum);
     }
 
-    private RealVector getMean(List<? extends HasMetrics> data) {
+    public RealVector getMean(List<? extends HasMetrics> data) {
         RealVector vec = null;
 
         for(HasMetrics d : data) {
@@ -157,7 +158,7 @@ public class MinCovDet extends OutlierDetector  {
         return vec.mapDivide(data.size());
     }
 
-    private RealMatrix getCovariance(List<? extends HasMetrics> data) {
+    public RealMatrix getCovariance(List<? extends HasMetrics> data) {
         RealMatrix ret = new Array2DRowRealMatrix(data.size(), p);
         int idx = 0;
         for(HasMetrics d : data) {
@@ -165,8 +166,39 @@ public class MinCovDet extends OutlierDetector  {
             idx += 1;
         }
 
-        return (new Covariance(ret)).getCovarianceMatrix();
+        return (new Covariance(ret, false)).getCovarianceMatrix();
     }
+    
+    public static CovarianceMatrixAndMean
+		combineCovarianceMatrices(List<RealMatrix> covarianceMatrices,
+								  List<RealVector> means,
+							  	  List<Double> allNumSamples) {
+	RealMatrix covarianceMatrix = new Array2DRowRealMatrix(
+			covarianceMatrices.get(0).getData()).scalarMultiply(allNumSamples.get(0));
+	RealVector mean = new ArrayRealVector(means.get(0));
+	double numSamples1 = allNumSamples.get(0);
+	for (int j = 1; j < covarianceMatrices.size(); j++) {
+		// Update covariance matrices and means
+		// First update covariance matrices
+		covarianceMatrix = covarianceMatrix.add(
+				covarianceMatrices.get(j).scalarMultiply(allNumSamples.get(j)));
+		double numSamples2 = allNumSamples.get(j);
+		RealVector mean2 = new ArrayRealVector(means.get(j));
+		RealVector meanDifference = mean.subtract(mean2);
+		covarianceMatrix = covarianceMatrix.add(
+				meanDifference.outerProduct(meanDifference).scalarMultiply((numSamples1 * numSamples2) / (numSamples1 + numSamples2)));
+
+		// Now update means
+		mean.mapMultiplyToSelf(numSamples1);
+		mean2.mapMultiplyToSelf(numSamples2);
+		mean = mean.add(mean2);
+		mean.mapDivideToSelf(numSamples1 + numSamples2);
+		numSamples1 += numSamples2;
+	}
+	covarianceMatrix = covarianceMatrix.scalarMultiply(1.0 / numSamples1);
+	
+	return new CovarianceMatrixAndMean(mean, covarianceMatrix);
+}
 
     private List<MetricsWithScore> findKClosest(int k, List<? extends HasMetrics> data) {
         // todo: change back to guava priority queue

@@ -1,7 +1,9 @@
 package macrobase.detector;
 
+import macrobase.analysis.outlier.CovarianceMatrixAndMean;
 import macrobase.analysis.outlier.MinCovDet;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -31,6 +33,55 @@ public class MinCovDetTest {
                                  .multiply(inverseCov)
                                  .multiply(vecSubtractMean).getEntry(0, 0));
     }
+    
+    @Test
+    public void testParallelCovarianceAndMeanComputation() {
+    	int dim = 3;
+    	int nsamples = 10;
+    	int numPartitions = 2;
+    	Random r = new Random(0);
+    	
+    	MinCovDet trainer = new MinCovDet(dim);
+    	    	
+    	List<List<Datum>> testData = new ArrayList<List<Datum>>();
+    	List<RealMatrix> covarianceMatrices = new ArrayList<RealMatrix>();
+    	List<RealVector> means = new ArrayList<RealVector>();
+    	List<Double> allNumSamples = new ArrayList<Double>();
+    	for (int j = 0; j < numPartitions; j++) {
+    		testData.add(new ArrayList<Datum>());
+	    	for(int i = 0; i < nsamples; ++i) {
+	            double[] sample = new double[dim];
+	            for(int d = 0; d < dim; ++d) {
+	                sample[d] = d % 2 == 0 ? r.nextDouble() : r.nextGaussian();
+	            }
+	            testData.get(j).add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
+	        }
+	    	covarianceMatrices.add(trainer.getCovariance(testData.get(j)));
+	    	means.add(trainer.getMean(testData.get(j)));
+	    	allNumSamples.add((double) nsamples);
+    	}
+    	
+    	List<Datum> allTestData = new ArrayList<Datum>();
+    	for (int j = 0; j < numPartitions; j++) {
+    		for (Datum datum : testData.get(j)) {
+    			allTestData.add(datum);
+    		}
+    	}
+    	
+    	CovarianceMatrixAndMean res = MinCovDet.combineCovarianceMatrices(covarianceMatrices, means, allNumSamples);
+    	RealMatrix actualCovariance = trainer.getCovariance(allTestData);
+    	RealVector actualMean = trainer.getMean(allTestData);
+    	
+    	for (int d = 0; d < dim; d++) {
+    		assertTrue(Math.abs(res.getMean().getEntry(d) - actualMean.getEntry(d)) < 1e-4);
+    	}
+    	
+    	for (int d1 = 0; d1 < dim; d1++) {
+    		for (int d2 = 0; d2 < dim; d2++) {
+    			assertTrue(Math.abs(res.getCovarianceMatrix().getEntry(d1, d2) - actualCovariance.getEntry(d1, d2)) < 1e-4);
+    		}
+    	}
+    }
 
     @Test
     public void testMahalanobis() {
@@ -53,7 +104,7 @@ public class MinCovDetTest {
         trainer.train(testData);
 
         RealMatrix inverseCov = trainer.getInverseCovariance();
-        RealVector mean = trainer.getMean();
+        RealVector mean = trainer.getLocalMean();
 
         for(Datum d : testData) {
             assertEquals(trainer.score(d), getMahalanobisApache(mean, inverseCov, d.getMetrics()), 0.01);

@@ -3,6 +3,7 @@ package macrobase.analysis;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
+import macrobase.analysis.outlier.CovarianceMatrixAndMean;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.outlier.MinCovDet;
@@ -282,27 +283,21 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		                    	double medianOfMedians = getMedian(perThreadMediansCopy);
 		                    	((MAD) detector).setMedian(medianOfMedians);
 		                    } else if (detector.getDetectorType() == DetectorType.MCD) {
-		                    	RealMatrix covarianceMatrix = new Array2DRowRealMatrix(perThreadCovarianceMatrices.get(0).getData());
-		                    	RealVector mean = new ArrayRealVector(perThreadMeans.get(0));
-		                    	double numSamples1 = perThreadNumSamples.get(0);
-		                    	for (int j = 1; j < numThreads; j++) {
-		                    		// Update covariance matrices and means
-		                    		// First update covariance matrices
-		                    		covarianceMatrix = covarianceMatrix.add(perThreadCovarianceMatrices.get(j));
-		                    		double numSamples2 = perThreadNumSamples.get(j);
-		                    		double numSamples = numSamples1 + numSamples2;
-		                    		RealVector mean2 = new ArrayRealVector(perThreadMeans.get(j));
-		                    		covarianceMatrix = covarianceMatrix.add(mean.outerProduct(mean2).scalarMultiply((numSamples1 * numSamples2) / numSamples));
-
-		                    		// Now update means
-		                    		mean.mapMultiplyToSelf(numSamples1);
-		                    		mean2.mapMultiplyToSelf(numSamples2);
-		                    		mean = mean.add(mean2);
-		                    		mean.mapDivideToSelf(numSamples);
+		                    	List<RealMatrix> covarianceMatrices = new ArrayList<RealMatrix>();
+		                    	List<RealVector> means = new ArrayList<RealVector>();
+		                    	List<Double> allNumSamples = new ArrayList<Double>();
+		                    	
+		                    	for (int j = 0; j < numThreads; j++) {
+		                    		covarianceMatrices.add(perThreadCovarianceMatrices.get(j));
+		                    		means.add(perThreadMeans.get(j));
+		                    		allNumSamples.add((double) perThreadNumSamples.get(j));
 		                    	}
 		                    	
-		                    	((MinCovDet) detector).setCovariance(covarianceMatrix);
-		                    	((MinCovDet) detector).setMean(mean);
+		                    	CovarianceMatrixAndMean res = MinCovDet.combineCovarianceMatrices(covarianceMatrices,
+		                    																	  means, allNumSamples);
+		                    	
+		                    	((MinCovDet) detector).setCovariance(res.getCovarianceMatrix());
+		                    	((MinCovDet) detector).setMean(res.getMean());
 		                    }
 	                    }
 	                    double score = detector.score(d);
