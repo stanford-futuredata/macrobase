@@ -146,6 +146,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	String baseQuery;
     	DatumEncoder encoder;
     	List<ItemsetResult> itemsetResults;
+    	List<Datum> inliers;
+    	List<Datum> outliers;
     	
     	int threadId;
 
@@ -160,10 +162,21 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     		this.encoder = encoder;
     		
     		this.threadId = threadId;
+
+    		this.inliers = new ArrayList<Datum>();
+    		this.outliers = new ArrayList<Datum>();
     	}
     	
     	public List<ItemsetResult> getItemsetResults() {
     		return itemsetResults;
+    	}
+    	
+    	public List<Datum> getInliers() {
+    		return inliers;
+    	}
+    	
+    	public List<Datum> getOutliers() {
+    		return outliers;
     	}
     	
         @Override
@@ -310,8 +323,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                       forceUsePercentile && detector.isPercentileOutlier(score,
 	                                                                          TARGET_PERCENTILE)) {
 	                        streamingSummarizer.markOutlier(d);
+	                        outliers.add(d);
 	                    } else {
 	                        streamingSummarizer.markInlier(d);
+	                        inliers.add(d);
 	                    }
 		            }
 	
@@ -401,8 +416,16 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	rsas.add(rsa);
         }
 
+        List<Datum> allInliers = new ArrayList<Datum>();
+        List<Datum> allOutliers = new ArrayList<Datum>();
         for (int i = 0; i < numThreads; i++) {
         	threads.get(i).join();
+        	for (Datum inlier: rsas.get(i).getInliers()) {
+        		allInliers.add(inlier);
+        	}
+        	for (Datum outlier: rsas.get(i).getOutliers()) {
+        		allOutliers.add(outlier);
+        	}
         	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
                         isr.add(itemsetResult);
         		/* if (mapping.containsKey(itemsetResult.getItems())) {
@@ -412,6 +435,13 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         			isr.add(itemsetResult);
         		} */
         	}
+        }
+        
+        for (Datum d: allInliers) {
+        	log.debug("Inlier: {}", d.getMetrics().toArray().toString());
+        }
+        for (Datum d: allOutliers) {
+        	log.debug("Outlier: {}", d.getMetrics().toArray().toString());
         }
         
         /* List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
