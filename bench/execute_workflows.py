@@ -64,6 +64,8 @@ def parse_results(results_file):
     tuples_per_second = 0.0
     tuples_per_second_no_itemset_mining = 0.0
     itemsets = list()
+    outliers = list()
+    inliers = list()
     with open(results_file, 'r') as f:
         lines = f.read().split('\n')
         for i in xrange(len(lines)):
@@ -90,6 +92,16 @@ def parse_results(results_file):
                     line = line.split("Tuples / second = ")[1]
                     tuples_per_second = float(
                         line.split("tuples / second")[0].strip())
+                elif "Outlier:" in line:
+                    line = line.split("Outlier: ")[1]
+                    line = line.split()
+                    outlier = frozenset(eval(line))
+                    outliers.append(outlier)
+                elif "Inlier:" in line:
+                    line = line.split("Inlier: ")[1]
+                    line = line.split()
+                    inlier = frozenset(eval(line))
+                    inliers.append(inlier)
             if "Columns" in line:
                 j = i + 1
                 itemset = dict()
@@ -102,7 +114,7 @@ def parse_results(results_file):
                 if itemset != {}:
                     itemsets.append(itemset)
     return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
-            tuples_per_second_no_itemset_mining)
+            tuples_per_second_no_itemset_mining, outliers, inliers)
 
 
 def get_stats(value_list):
@@ -141,6 +153,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     all_tuples_per_second = list()
     all_tuples_per_second_no_itemset_mining = list()
 
+    outliers_first_pass = None
+    inliers_first_pass = None
+
     for i in xrange(number_of_runs):
         results_file = os.path.join(sub_dir, "results%d.txt" % i)
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
@@ -152,7 +167,14 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print macrobase_cmd
         os.system("cd ..; %s" % macrobase_cmd)
         (times, num_itemsets, num_iterations, itemsets,
-            tuples_per_second, tuples_per_second_no_itemset_mining) = parse_results(results_file)
+            tuples_per_second, tuples_per_second_no_itemset_mining,
+            outliers, inliers) = parse_results(results_file)
+
+        if outliers_first_pass is None:
+            outliers_first_pass = outliers
+
+        if inliers_first_pass is None:
+            inliers_first_pass = inliers
 
         for time_type in times:
             if time_type not in all_times:
@@ -193,6 +215,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
 
     print "Mean tuples / second w/o itemset mining:", mean_tps_no_itemset_mining,
     print ", Stddev tuples / second w/o itemset mining:", stddev_tps_no_itemset_mining
+
+    print "Inliers:", inliers
+    print "Outliers:", outliers
 
 
 def run_all_workloads(configurations, defaults, number_of_runs,
