@@ -36,9 +36,9 @@ public class MinCovDetTest {
     
     @Test
     public void testParallelCovarianceAndMeanComputation() {
-    	int dim = 3;
-    	int nsamples = 10;
-    	int numPartitions = 2;
+    	int dim = 100;
+    	int nsamples = 1000;
+    	int numPartitions = 10;
     	Random r = new Random(0);
     	
     	MinCovDet trainer = new MinCovDet(dim);
