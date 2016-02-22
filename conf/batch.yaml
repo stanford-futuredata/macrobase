@@ -22,6 +22,9 @@ macrobase.analysis.targetPercentile: 0.99
 macrobase.analysis.mcd.alpha: 0.5
 macrobase.analysis.mcd.stoppingDelta: 0.001
 
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
+macrobase.loader.db.cacheDirectory: sql_cache
+
 logging:
   level: INFO
 
