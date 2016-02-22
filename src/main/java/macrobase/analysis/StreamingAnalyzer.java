@@ -329,10 +329,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	t.start();
         	threads.add(t);
         	rsas.add(rsa);
+                startSemaphore.release(1);
+                endSemaphore.acquire(1);
         }
         
-        startSemaphore.release(numThreads);
-        endSemaphore.acquire(numThreads);
+        // startSemaphore.release(numThreads);
+        // endSemaphore.acquire(numThreads);
 
         for (int i = 0; i < numThreads; i++) {
         	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
