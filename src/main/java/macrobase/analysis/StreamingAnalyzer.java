@@ -437,9 +437,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	}
         }
         
-        for (Datum d: allInliers) {
-        	log.debug("Inlier: {}", d.getMetrics().toArray());
-        }
         for (Datum d: allOutliers) {
         	log.debug("Outlier: {}", d.getMetrics().toArray());
         }
