@@ -1,7 +1,9 @@
 package macrobase.analysis.outlier;
 
 import macrobase.analysis.summary.result.DatumWithScore;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
@@ -17,6 +19,9 @@ public class DetectorTest {
 
 
     private class DummyDetector extends OutlierDetector {
+        public DummyDetector(MacroBaseConf conf) {
+            super(conf);
+        }
 
         @Override
         public void train(List<Datum> data) { }
@@ -62,7 +67,7 @@ public class DetectorTest {
     public void testThresholdScoring() {
         List<Datum> data = generateTestData();
 
-        DummyDetector detector = new DummyDetector();
+        DummyDetector detector = new DummyDetector(new MacroBaseConf());
         OutlierDetector.BatchResult or = detector.classifyBatchByPercentile(data, PERCENTILE_THRESH);
         for (DatumWithScore d : or.getInliers()) {
             assertEquals(0, d.getDatum().getMetrics().getEntry(0), 0);
@@ -82,7 +87,7 @@ public class DetectorTest {
     public void testZScoreEquivalent() {
         List<Datum> data = generateTestData();
 
-        DummyDetector detector = new DummyDetector();
+        DummyDetector detector = new DummyDetector(new MacroBaseConf());
         OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(data, 3);
 
         for (DatumWithScore d : or.getInliers()) {

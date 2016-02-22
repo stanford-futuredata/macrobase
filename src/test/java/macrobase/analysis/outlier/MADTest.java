@@ -1,6 +1,8 @@
 package macrobase.analysis.outlier;
 
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -16,7 +18,7 @@ public class MADTest {
 
     @Test
     public void simpleTest() {
-        MAD m = new MAD();
+        MAD m = new MAD(new MacroBaseConf());
 
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
@@ -33,7 +35,7 @@ public class MADTest {
 
     @Test
     public void zScoreTest() {
-        MAD m = new MAD();
+        MAD m = new MAD(new MacroBaseConf());
 
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 10; ++i) {

@@ -93,6 +93,15 @@ public class MacroBaseConf extends Configuration {
 
     private Map<String, String> _conf = new HashMap<>();
 
+    public MacroBaseConf() {}
+
+    // Convenience initializer.
+    public MacroBaseConf(Map<String, ?> kvPairs) {
+        for (Map.Entry<String, ?> entry : kvPairs.entrySet()) {
+            set(entry.getKey(), entry.getValue());
+        }
+    }
+
     @JsonAnySetter
     public void set(String key, Object value) {
         if (value instanceof List) {

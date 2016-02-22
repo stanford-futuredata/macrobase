@@ -64,9 +64,9 @@ public class MinCovDet extends OutlierDetector {
     // p == dataset dimension
     private final int p;
     // H = alpha*(n+p+1)
-    private double alpha = .5;
+    private double alpha;
     private Random random = new Random();
-    private double stoppingDelta = 1e-3;
+    private double stoppingDelta;
 
     private RealMatrix cov;
     private RealMatrix inverseCov;

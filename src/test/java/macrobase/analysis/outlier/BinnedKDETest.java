@@ -1,8 +1,12 @@
 package macrobase.analysis.outlier;
 
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +17,11 @@ public class BinnedKDETest {
 
     @Test
     public void simpleTest() {
-        KDE kde = new BinnedKDE(KDE.KernelType.EPANECHNIKOV_MULTIPLICATIVE, KDE.BandwidthAlgorithm.OVERSMOOTHED, 1000);
+        MacroBaseConf conf = new MacroBaseConf(ImmutableMap.of(
+                MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE",
+                MacroBaseConf.KDE_BANDWIDTH_ALGORITHM, "OVERSMOOTHED",
+                MacroBaseConf.BINNED_KDE_BINS, 1000));
+        KDE kde = new BinnedKDE(conf);
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             double[] sample = new double[1];

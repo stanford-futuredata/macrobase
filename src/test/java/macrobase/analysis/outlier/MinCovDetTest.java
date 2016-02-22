@@ -1,14 +1,19 @@
 package macrobase.analysis.outlier;
 
 import macrobase.analysis.outlier.MinCovDet;
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -48,7 +53,10 @@ public class MinCovDetTest {
             testData.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
         }
 
-        MinCovDet trainer = new MinCovDet(dim);
+        MacroBaseConf conf = new MacroBaseConf(ImmutableMap.of(
+                MacroBaseConf.LOW_METRICS, new ArrayList<String>(),
+                MacroBaseConf.HIGH_METRICS, Arrays.asList(new String[dim])));
+        MinCovDet trainer = new MinCovDet(conf);
 
         trainer.train(testData);
 

@@ -1,6 +1,8 @@
 package macrobase.analysis.outlier;
 
+import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -16,7 +18,7 @@ public class ZScoreTest {
 
     @Test
     public void simpleTest() {
-        ZScore z = new ZScore();
+        ZScore z = new ZScore(new MacroBaseConf());
 
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
@@ -33,7 +35,7 @@ public class ZScoreTest {
 
     @Test
     public void zScoreEquivalentTest() {
-        ZScore z = new ZScore();
+        ZScore z = new ZScore(new MacroBaseConf());
         assertEquals(1, z.getZScoreEquivalent(1), 0);
         assertEquals(20, z.getZScoreEquivalent(20), 0);
     }

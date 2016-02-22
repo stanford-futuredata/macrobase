@@ -80,7 +80,7 @@ public class StreamingAnalyzerTest {
         conf.set(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE, 1000);
         conf.set(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE, 1000);
 
-        conf.set(MacroBaseConf.MCD_ALPHA, .05);
+        conf.set(MacroBaseConf.MCD_ALPHA, .5);
         conf.set(MacroBaseConf.MCD_STOPPING_DELTA, 1e-3);
 
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3"));
