@@ -63,6 +63,8 @@ def parse_results(results_file):
     tuples_per_second = list()
     itemsets = list()
     net_tuples_per_second = 0
+    outliers = list()
+    inliers = list()
     with open(results_file, 'r') as f:
         lines = f.read().split('\n')
         for i in xrange(len(lines)):
@@ -91,6 +93,16 @@ def parse_results(results_file):
                     line = line.split("Net tuples / second = ")[1]
                     net_tuples_per_second = float(
                         line.split("tuples / second")[0].strip())
+                elif "Outlier:" in line:
+                    line = line.split("Outlier: ")[1]
+                    line = line.split()
+                    outlier = frozenset(eval(line))
+                    outliers.append(outlier)
+                elif "Inlier:" in line:
+                    line = line.split("Inlier: ")[1]
+                    line = line.split()
+                    inlier = frozenset(eval(line))
+                    inliers.append(inlier)
             if "Columns" in line:
                 j = i + 1
                 itemset = dict()
@@ -107,7 +119,7 @@ def parse_results(results_file):
     num_iterations = sum(num_iterations) / len(num_iterations) if len(num_iterations) > 0 else 0
     tuples_per_second = sum(tuples_per_second) if len(tuples_per_second) > 0 else 0.0
     return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
-            net_tuples_per_second)
+            net_tuples_per_second, outliers, inliers)
 
 
 def get_stats(value_list):
@@ -147,6 +159,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     all_tuples_per_second = list()
     all_net_tuples_per_second = list()
 
+    outliers_first_pass = None
+    inliers_first_pass = None
+
     for i in xrange(number_of_runs):
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
             -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
@@ -157,7 +172,13 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print macrobase_cmd
         os.system("cd ..; %s" % macrobase_cmd)
         (times, num_itemsets, num_iterations, itemsets,
-            tuples_per_second, net_tuples_per_second) = parse_results(results_file)
+            tuples_per_second, net_tuples_per_second, outliers, inliers) = parse_results(results_file)
+
+        if outliers_first_pass is None:
+            outliers_first_pass = outliers
+
+        if inliers_first_pass is None:
+            inliers_first_pass = inliers
 
         for time_type in times:
             if time_type not in all_times:
@@ -198,6 +219,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
 
     print "Mean net tuples / second:", mean_net_tuples_per_second,
     print ", Stddev net tuples / second:", stddev_net_tuples_per_second
+
+    print "Inliers:", inliers
+    print "Outliers:", outliers
 
 
 def run_all_workloads(configurations, defaults, number_of_runs,
