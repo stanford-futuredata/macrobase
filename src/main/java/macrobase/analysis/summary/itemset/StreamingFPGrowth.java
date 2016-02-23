@@ -355,8 +355,8 @@ public class StreamingFPGrowth {
             // we have to materialize a canonical order so that items with equal counts
             // are consistently ordered when they are sorted during transaction insertion
             List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
-            sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i2.getKey())
-                    .compareTo(frequentItemCounts.get(i1.getKey())));
+            sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
+                    .compareTo(frequentItemCounts.get(i2.getKey())));
             for(int i = 0; i < sortedItemCounts.size(); ++i) {
                 frequentItemOrder.put(sortedItemCounts.get(i).getKey(), i);
             }
@@ -385,11 +385,11 @@ public class StreamingFPGrowth {
 
         private void sortTransaction(List<Integer> txn, boolean isStreaming) {
             if(!isStreaming) {
-                txn.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
+                txn.sort((i1, i2) -> frequentItemOrder.get(i2).compareTo(frequentItemOrder.get(i1)));
             } else {
                 txn.sort((i1, i2) ->
-                                 frequentItemOrder.compute(i1, (k, v) -> v == null ? -i1 : v)
-                                         .compareTo(frequentItemOrder.compute(i2, (k, v) -> v == null ? -i2 : v)));
+                                 frequentItemOrder.compute(i2, (k, v) -> v == null ? -i2 : v)
+                                         .compareTo(frequentItemOrder.compute(i1, (k, v) -> v == null ? -i1 : v)));
             }
         }
 
