@@ -97,7 +97,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     boolean doTrace;
-    int numRuns = 10000;
+    int numRuns = 40;
 
     class RunnableStreamingAnalysis implements Runnable {
     	List<Datum> data;
