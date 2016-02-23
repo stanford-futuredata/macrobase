@@ -255,6 +255,10 @@ public class StreamingFPGrowth {
         }
 
         public int getSupport(Collection<Integer> pattern) {
+          if(needsRestructure){
+             restructureTree(null);
+         }
+        	
             for(Integer i : pattern) {
                 if(!frequentItemCounts.containsKey(i)) {
                     return 0;
