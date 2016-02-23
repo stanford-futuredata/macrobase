@@ -148,6 +148,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	List<ItemsetResult> itemsetResults;
     	List<Datum> inliers;
     	List<Datum> outliers;
+
+        double totalTuplesCountAfterDecay;
     	
     	int threadId;
 
@@ -178,6 +180,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	public List<Datum> getOutliers() {
     		return outliers;
     	}
+
+        public double getTotalTuplesCountAfterDecay() {
+        	return totalTuplesCountAfterDecay;
+	}
     	
         @Override
         public void run() {
@@ -334,6 +340,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 		        }
 		    }
 
+		totalTuplesCountAfterDecay = streamingSummarizer.getInlierCount() + streamingSummarizer.getOutlierCount();
+
 	        sw.start();
 	        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
 	        sw.stop();
@@ -418,8 +426,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         List<Datum> allInliers = new ArrayList<Datum>();
         List<Datum> allOutliers = new ArrayList<Datum>();
+
+	double totalTuplesCountAfterDecay = 0.0;
+
         for (int i = 0; i < numThreads; i++) {
         	threads.get(i).join();
+                totalTuplesCountAfterDecay += rsas.get(i).getTotalTuplesCountAfterDecay();
         	for (Datum inlier: rsas.get(i).getInliers()) {
         		allInliers.add(inlier);
         	}
@@ -427,26 +439,27 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         		allOutliers.add(outlier);
         	}
         	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-                        isr.add(itemsetResult);
-        		/* if (mapping.containsKey(itemsetResult.getItems())) {
-        			isr.get(mapping.get(itemsetResult.getItems())).addSupport(itemsetResult.getSupport());
+                        // isr.add(itemsetResult);
+        		if (mapping.containsKey(itemsetResult.getItems())) {
+        			isr.get(mapping.get(itemsetResult.getItems())).addSupport(itemsetResult.getSupport() * dataPartitioned.get(i).size());
         		} else {
         			mapping.put(itemsetResult.getItems(), isr.size());
+                                itemsetResult.multiplySupport(dataPartitioned.get(i).size());
         			isr.add(itemsetResult);
-        		} */
+        		}
         	}
         }
         
-        for (Datum d: allOutliers) {
+        /* for (Datum d: allOutliers) {
         	log.debug("Outlier: {}", d.getMetrics().toArray());
-        }
+        } */
         
-        /* List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
+        List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
         for (ItemsetResult itemsetResult : isr) {
-        	if (itemsetResult.getSupport() >= (0.5 * numThreads * minSupportOutlier)) {
+        	if ((itemsetResult.getSupport() / data.size()) >= (minSupportOutlier)) {
         		finalIsr.add(itemsetResult);
         	}
-        } */
+        }
         
         tsw.stop();
         
@@ -455,7 +468,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
-        return new AnalysisResult(0, 0, 0, 0, 0, isr);
+        return new AnalysisResult(0, 0, 0, 0, 0, finalIsr);
     }
 
     public void setWarmupCount(Integer warmupCount) {

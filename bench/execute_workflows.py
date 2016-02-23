@@ -31,7 +31,7 @@ default_args = {
   "useTupleCountPeriod": "true",
 
   "warmupCount": 50000,
-  "decayRate": 0.01,
+  "decayRate": 1.0,
 
   "alphaMCD": 0.5,
   "stoppingDeltaMCD": 0.001,

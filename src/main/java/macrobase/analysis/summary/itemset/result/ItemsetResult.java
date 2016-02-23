@@ -41,6 +41,10 @@ public class ItemsetResult {
     public double getSupport() {
         return support;
     }
+
+    public void multiplySupport(double supportMultiplicativeFactor) {
+        support *= supportMultiplicativeFactor;
+    }
     
     public void addSupport(double supportIncrement) {
     	support += supportIncrement;
