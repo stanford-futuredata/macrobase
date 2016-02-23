@@ -33,7 +33,7 @@ public class FPGrowth {
         // used to calculate the order
         private Map<Integer, Double> frequentItemCounts = new HashMap<>();
 
-        // item order -- need canonical to break ties
+        // item order -- need canonical to break ties; 0 is smallest, N is largest
         private Map<Integer, Integer> frequentItemOrder = new HashMap<>();
 
         protected Map<Integer, FPTreeNode> nodeHeaders = new HashMap<>();
