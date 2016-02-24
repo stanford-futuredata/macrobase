@@ -45,6 +45,11 @@ def parse_output_file(filename):
                 net_tps_mean = float(net_tps_line[0].split(": ")[1])
                 net_tps_stddev = float(net_tps_line[1].split(": ")[1])
 
+                outliers_line = lines[i+7]
+                outliers_line = outliers_line.split(": ")[1]
+
+                outliers = eval(outliers_line)
+
                 try:
                     [parameter_type, parameter_value] = \
                         parameters_description.split(" = ")
@@ -60,7 +65,8 @@ def parse_output_file(filename):
                         (iterations_mean, iterations_stddev),
                         itemsets_list,
                         (tps_mean, tps_stddev),
-                        (net_tps_mean, net_tps_stddev))
+                        (net_tps_mean, net_tps_stddev),
+                        outliers)
                 except:
                     parameter_type = parameters_description
                     if parameter_type not in parsed_results:
@@ -71,7 +77,8 @@ def parse_output_file(filename):
                         (iterations_mean, iterations_stddev),
                         itemsets_list,
                         (tps_mean, tps_stddev),
-                        (net_tps_mean, net_tps_stddev))
+                        (net_tps_mean, net_tps_stddev),
+                        outliers)
     return parsed_results
 
 
@@ -112,6 +119,24 @@ def compute_precision_and_recall(itemsets, ground_truth_itemsets):
         recall = 1.0
     else:
         recall = float(num_correct) / float(len(ground_truth_itemsets))
+
+    return precision, recall
+
+
+def compute_precision_and_recall_od(outliers, ground_truth_outliers):
+    num_correct = 0
+    ground_truth_outliers_set = set(ground_truth_outliers)
+    for outlier in outliers:
+        if outlier in ground_truth_outliers_set:
+            num_correct += 1
+    precision = float(num_correct) / float(len(outliers))
+
+    num_correct = 0
+    outliers_set = set(outliers)
+    for outlier in ground_truth_outliers:
+        if outlier in outliers_set:
+            num_correct += 1
+    recall = float(num_correct) / float(len(ground_truth_outliers))
 
     return precision, recall
 
@@ -202,6 +227,34 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads, is_
     print "...done!"
 
 
+def plot_recall_precision_od(parsed_results, idx, ylabel, plots_dir, workloads, is_xscale_log):
+    print "Plotting %s graphs..." % ylabel
+    key_value_pairs = dict()
+    for parameter_type in parsed_results:
+        if parameter_type == "defaultParameters":
+            continue
+        key_value_pairs[parameter_type] = dict()
+        for workload_name in parsed_results[parameter_type]:
+            if workload_name not in workloads:
+                continue
+            key_value_pairs[parameter_type][workload_name] = dict()
+            for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
+                try:
+                    outliers = parsed_results[parameter_type][
+                        workload_name][parameter_value][6]
+                    ground_truth_outliers = parsed_results[
+                        "defaultParameters"][workload_name][6]
+                    value = compute_precision_and_recall_od(
+                            outliers, ground_truth_outliers)[idx]
+                    key_value_pairs[parameter_type][workload_name][parameter_value] = \
+                        value
+                except:
+                    continue
+
+    plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
+    print "...done!"
+
+
 def plot(key_value_pairs, ylabel, plots_dir, file_suffix, plot_errorbars, is_xscale_log):
     for parameter_type in key_value_pairs:
         if parameter_type == "defaultParameters":
@@ -281,6 +334,12 @@ if __name__ == '__main__':
     plot_recall_precision(parsed_results, 1, "Recall", args.plot_directory,
         workloads,
         False)
+    plot_recall_precision_od(parsed_results, 0, "PrecisionOD", args.plot_directory,
+                             workloads,
+                             False)
+    plot_recall_precision_od(parsed_results, 1, "RecallOD", args.plot_directory,
+                             workloads,
+                             False)
     plot_aux_graphs(
         parsed_results, 4, "Throughput in tuples/sec (sum of per-thread throughputs)",
         "Tps", args.plot_directory, workloads, False)
