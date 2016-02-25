@@ -110,9 +110,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     boolean doTrace;
     int numRuns = 1;
-	volatile boolean barrierReset = false;
 	CyclicBarrier barrier;
-	Object object = new Object();
     
     CopyOnWriteArrayList<Double> perThreadMedians;
     CopyOnWriteArrayList<RealMatrix> perThreadCovarianceMatrices;
@@ -296,17 +294,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 						if (modelUpdater.updateIfNecessary(now, tupleNo)) {
 							try {
 								barrier.await();
-								barrierReset = false;
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							} catch (BrokenBarrierException e) {
 								e.printStackTrace();
-							}
-							synchronized (object) {
-								if (!barrierReset) {
-									barrierReset = true;
-									barrier.reset();
-								}
 							}
 							if (detector.getDetectorType() == DetectorType.MAD) {
 								perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
@@ -470,9 +461,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	}
         }
         
-        /* for (Datum d: allOutliers) {
+        for (Datum d: allOutliers) {
         	log.debug("Outlier: {}", d.getMetrics().toArray());
-        } */
+        }
         
         List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
         for (ItemsetResult itemsetResult : isr) {

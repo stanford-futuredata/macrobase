@@ -43,7 +43,8 @@ class AChao<T> {
         if(reservoir.size() < reservoirCapacity) {
             reservoir.add(ele);
         } else if(random.nextDouble() < weight/ runningCount) {
-            reservoir.remove(random.nextInt(reservoirCapacity));
+            // reservoir.remove(random.nextInt(reservoirCapacity));
+            reservoir.remove(0);
             reservoir.add(ele);
         }
     }
