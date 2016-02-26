@@ -33,6 +33,10 @@ public class StreamingFPGrowth {
         this.support = support;
     }
 
+    public double getSupport(Collection<Integer> pattern) {
+        return fp.getSupport(pattern);
+    }
+
     class StreamingFPTree {
         private FPTreeNode root = new FPTreeNode(-1, null, 0);
         // used to calculate the order
@@ -79,12 +83,12 @@ public class StreamingFPGrowth {
 
         private void walkTree(FPTreeNode start, int treeDepth) {
             log.debug("{} node: {}, count: {}, sorted: {}",
-                      new String(new char[treeDepth]).replaceAll("\0", "\t"),
-                      start.getItem(), start.getCount(),
-                      sortedNodes.contains(start));
-            if(start.getChildren() != null) {
+                    new String(new char[treeDepth]).replaceAll("\0", "\t"),
+                    start.getItem(), start.getCount(),
+                    sortedNodes.contains(start));
+            if (start.getChildren() != null) {
                 for (FPTreeNode child : start.getChildren()) {
-                    walkTree(child, treeDepth+1);
+                    walkTree(child, treeDepth + 1);
                 }
             }
         }
@@ -254,10 +258,10 @@ public class StreamingFPGrowth {
             }
         }
 
-        public int getSupport(Collection<Integer> pattern) {
-          if(needsRestructure){
-             restructureTree(null);
-         }
+        public double getSupport(Collection<Integer> pattern) {
+            if(needsRestructure){
+                restructureTree(null);
+            }
         	
             for(Integer i : pattern) {
                 if(!frequentItemCounts.containsKey(i)) {
@@ -268,7 +272,7 @@ public class StreamingFPGrowth {
             List<Integer> plist = Lists.newArrayList(pattern);
             plist.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
 
-            int count = 0;
+            double count = 0.0;
             FPTreeNode pathHead = nodeHeaders.get(plist.get(0));
             while(pathHead != null) {
                 FPTreeNode curNode = pathHead;

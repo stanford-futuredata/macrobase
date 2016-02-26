@@ -15,6 +15,7 @@ import macrobase.analysis.periodic.TupleAnalysisDecayer;
 import macrobase.analysis.periodic.WallClockRetrainer;
 import macrobase.analysis.periodic.WallClockAnalysisDecayer;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
+import macrobase.analysis.summary.itemset.result.IntermediateItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
@@ -34,9 +35,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CyclicBarrier;
@@ -148,12 +150,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	List<String> highMetrics;
     	String baseQuery;
     	DatumEncoder encoder;
-    	List<ItemsetResult> itemsetResults;
+    	List<IntermediateItemsetResult> itemsetResults;
     	List<Datum> inliers;
     	List<Datum> outliers;
 
-        double totalTuplesCountAfterDecay;
-    	
+		ExponentiallyDecayingEmergingItemsets streamingSummarizer;
     	int threadId;
 
     	RunnableStreamingAnalysis(List<Datum> data, List<String> attributes,
@@ -172,7 +173,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     		this.outliers = new ArrayList<Datum>();
     	}
     	
-    	public List<ItemsetResult> getItemsetResults() {
+    	public List<IntermediateItemsetResult> getItemsetResults() {
     		return itemsetResults;
     	}
     	
@@ -184,9 +185,21 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     		return outliers;
     	}
 
-        public double getTotalTuplesCountAfterDecay() {
-        	return totalTuplesCountAfterDecay;
-	}
+        public double getTotalInlierCount() {
+			return streamingSummarizer.getInlierCount();
+		}
+
+		public double getTotalOutlierCount() {
+			return streamingSummarizer.getOutlierCount();
+		}
+
+		public double getInlierCount(Set<Integer> pattern) {
+			return streamingSummarizer.getInlierCount(pattern);
+		}
+
+		public double getOutlierCount(Set<Integer> pattern) {
+			return streamingSummarizer.getOutlierCount(pattern);
+		}
     	
         @Override
         public void run() {
@@ -214,7 +227,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	            scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
 	        }
 
-	        ExponentiallyDecayingEmergingItemsets streamingSummarizer =
+	       	streamingSummarizer =
 	                new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
 	                                                          outlierItemSummarySize,
 	                                                          minSupportOutlier,
@@ -349,10 +362,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 					tupleNo += 1;
 				}
 
-		totalTuplesCountAfterDecay = streamingSummarizer.getInlierCount() + streamingSummarizer.getOutlierCount();
-
 	        sw.start();
-	        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
+	        List<IntermediateItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
 	        sw.stop();
 	        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
 	        sw.reset();
@@ -376,10 +387,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     public AnalysisResult analyzeOnePass(SQLLoader loader,
-                                              List<String> attributes,
-                                              List<String> lowMetrics,
-                                              List<String> highMetrics,
-                                              String baseQuery) throws SQLException, IOException, InterruptedException {
+										 List<String> attributes,
+										 List<String> lowMetrics,
+										 List<String> highMetrics,
+										 String baseQuery) throws SQLException, IOException, InterruptedException {
     	DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
@@ -422,9 +433,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         Stopwatch tsw = Stopwatch.createUnstarted();
         tsw.start();
-        
-        List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
-        Map<List<ColumnValue>, Integer> mapping = new HashMap<List<ColumnValue>, Integer> ();
+
         for (int i = 0; i < numThreads; i++) {
         	RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
         			dataPartitioned.get(i), attributes, lowMetrics, highMetrics,
@@ -438,39 +447,42 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         List<Datum> allInliers = new ArrayList<Datum>();
         List<Datum> allOutliers = new ArrayList<Datum>();
 
-	double totalTuplesCountAfterDecay = 0.0;
+		double totalInlierCount = 0.0;
+		double totalOutlierCount = 0.0;
+		HashSet<Set<Integer>> itemsets = new HashSet<Set<Integer>> ();
 
         for (int i = 0; i < numThreads; i++) {
         	threads.get(i).join();
-                totalTuplesCountAfterDecay += rsas.get(i).getTotalTuplesCountAfterDecay();
+			totalInlierCount += rsas.get(i).getTotalInlierCount();
+			totalOutlierCount += rsas.get(i).getTotalOutlierCount();
         	for (Datum inlier: rsas.get(i).getInliers()) {
         		allInliers.add(inlier);
         	}
         	for (Datum outlier: rsas.get(i).getOutliers()) {
         		allOutliers.add(outlier);
         	}
-        	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-                        // isr.add(itemsetResult);
-        		if (mapping.containsKey(itemsetResult.getItems())) {
-        			isr.get(mapping.get(itemsetResult.getItems())).addSupport(itemsetResult.getSupport() * dataPartitioned.get(i).size());
-        		} else {
-        			mapping.put(itemsetResult.getItems(), isr.size());
-                                itemsetResult.multiplySupport(dataPartitioned.get(i).size());
-        			isr.add(itemsetResult);
-        		}
+        	for (IntermediateItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
+				Set<Integer> items = itemsetResult.getItems();
+				itemsets.add(items);
         	}
         }
-        
-        /* for (Datum d: allOutliers) {
-        	log.debug("Outlier: {}", d.getMetrics().toArray());
-        } */
-        
-        List<ItemsetResult> finalIsr = new ArrayList<ItemsetResult>();
-        for (ItemsetResult itemsetResult : isr) {
-        	if ((itemsetResult.getSupport() / data.size()) >= (minSupportOutlier)) {
-        		finalIsr.add(itemsetResult);
-        	}
-        }
+
+		List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
+		for (Set<Integer> itemset : itemsets) {
+			double outlierCount = 0.0;
+			double inlierCount = 0.0;
+			for (int i = 0; i < numThreads; i++) {
+				inlierCount += rsas.get(i).getInlierCount(itemset);
+				outlierCount += rsas.get(i).getOutlierCount(itemset);
+			}
+
+			double outlierSupport = outlierCount / totalOutlierCount;
+			double inlierSupport = inlierCount / totalInlierCount;
+			double ratio = outlierSupport / inlierSupport;
+			if (outlierSupport > minSupportOutlier && ratio > minRatio) {
+				isr.add(new ItemsetResult(outlierSupport, outlierCount, ratio, encoder.getColsFromAttrSet(itemset)));
+			}
+		}
         
         tsw.stop();
         
@@ -479,7 +491,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         log.debug("Net tuples / second = {} tuples / second", tuplesPerSecond);
 
-        return new AnalysisResult(0, 0, 0, 0, 0, finalIsr);
+        return new AnalysisResult(0, 0, 0, 0, 0, isr);
     }
 
     public void setWarmupCount(Integer warmupCount) {
