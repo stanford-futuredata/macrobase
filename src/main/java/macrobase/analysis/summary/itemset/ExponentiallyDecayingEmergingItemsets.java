@@ -190,23 +190,13 @@ public class ExponentiallyDecayingEmergingItemsets {
         List<ItemsetWithCount> matchingInlierCounts = inlierPatternSummary.getCounts(ratioSetsToCheck);
 
         assert(matchingInlierCounts.size() == ratioSetsToCheck.size());
-        for(int i = 0; i < matchingInlierCounts.size(); ++i) {
-            ItemsetWithCount ic = matchingInlierCounts.get(i);
+        for(int i = 0; i < ratioSetsToCheck.size(); ++i) {
             ItemsetWithCount oc = ratioSetsToCheck.get(i);
 
-            double ratio;
-            if(ic.getCount() > 0) {
-                ratio = (oc.getCount()/ outlierCountSummary.getTotalCount())/(ic.getCount()/ inlierCountSummary.getTotalCount());
-            } else {
-                ratio = Double.POSITIVE_INFINITY;
-            }
-
-            if(ratio >= minRatio) {
-                ret.add(new IntermediateItemsetResult(oc.getCount()/ outlierCountSummary.getTotalCount(),
-                                                      oc.getCount(),
-                                                      ratio,
-                                                      oc.getItems()));
-            }
+            ret.add(new IntermediateItemsetResult(oc.getCount()/ outlierCountSummary.getTotalCount(),
+                                                  oc.getCount(),
+                                                  0.0,
+                                                  oc.getItems()));
         }
 
         // finally sort one last time
