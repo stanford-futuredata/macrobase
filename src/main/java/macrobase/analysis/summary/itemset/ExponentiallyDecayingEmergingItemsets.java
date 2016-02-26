@@ -12,10 +12,11 @@ import java.util.Set;
 import macrobase.MacroBase;
 import macrobase.analysis.summary.count.ApproximateCount;
 import macrobase.analysis.summary.count.FastButBigSpaceSaving;
-import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.itemset.result.IntermediateItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
+import macrobase.ingest.result.ColumnValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +132,15 @@ public class ExponentiallyDecayingEmergingItemsets {
         inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
     }
 
-    public List<ItemsetResult> getItemsets(DatumEncoder encoder) {
+    public double getOutlierCount(Set<Integer> items) {
+        return outlierPatternSummary.getSupport(items);
+    }
+
+    public double getInlierCount(Set<Integer> items) {
+        return inlierPatternSummary.getSupport(items);
+    }
+
+    public List<IntermediateItemsetResult> getItemsets(DatumEncoder encoder) {
         List<ItemsetWithCount> iwc = outlierPatternSummary.getItemsets();
 
         iwc.sort((x, y) -> x.getCount() != y.getCount() ?
@@ -140,7 +149,7 @@ public class ExponentiallyDecayingEmergingItemsets {
 
         Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
-        List<ItemsetResult> ret = new ArrayList<>();
+        List<IntermediateItemsetResult> ret = new ArrayList<>();
 
         Set<Integer> prevSet = null;
         Double prevCount = -1.;
@@ -150,7 +159,6 @@ public class ExponentiallyDecayingEmergingItemsets {
                     continue;
                 }
             }
-
 
             prevCount = i.getCount();
             prevSet = i.getItems();
@@ -168,10 +176,10 @@ public class ExponentiallyDecayingEmergingItemsets {
                     ratio = Double.POSITIVE_INFINITY;
                 }
 
-                ret.add(new ItemsetResult(i.getCount()/ outlierCountSummary.getTotalCount(),
-                                          i.getCount(),
-                                          ratio,
-                                          encoder.getColsFromAttrSet(i.getItems())));
+                ret.add(new IntermediateItemsetResult(i.getCount()/ outlierCountSummary.getTotalCount(),
+                                                      i.getCount(),
+                                                      ratio,
+                                                      i.getItems()));
             } else {
                 ratioItemsToCheck.addAll(i.getItems());
                 ratioSetsToCheck.add(i);
@@ -194,10 +202,10 @@ public class ExponentiallyDecayingEmergingItemsets {
             }
 
             if(ratio >= minRatio) {
-                ret.add(new ItemsetResult(oc.getCount()/ outlierCountSummary.getTotalCount(),
-                                          oc.getCount(),
-                                          ratio,
-                                          encoder.getColsFromAttrSet(oc.getItems())));
+                ret.add(new IntermediateItemsetResult(oc.getCount()/ outlierCountSummary.getTotalCount(),
+                                                      oc.getCount(),
+                                                      ratio,
+                                                      oc.getItems()));
             }
         }
 

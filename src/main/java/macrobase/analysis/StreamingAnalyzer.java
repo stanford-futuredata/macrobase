@@ -11,6 +11,7 @@ import macrobase.analysis.periodic.TupleAnalysisDecayer;
 import macrobase.analysis.periodic.WallClockRetrainer;
 import macrobase.analysis.periodic.WallClockAnalysisDecayer;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
+import macrobase.analysis.summary.itemset.result.IntermediateItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
@@ -25,6 +26,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
@@ -106,23 +111,54 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     	List<String> highMetrics;
     	String baseQuery;
     	DatumEncoder encoder;
-    	List<ItemsetResult> itemsetResults;
+    	List<IntermediateItemsetResult> itemsetResults;
+    	List<Datum> inliers;
+    	List<Datum> outliers;
+
+		ExponentiallyDecayingEmergingItemsets streamingSummarizer;
+    	int threadId;
 
     	RunnableStreamingAnalysis(List<Datum> data, List<String> attributes,
     			List<String> lowMetrics, List<String> highMetrics, String baseQuery,
-    			DatumEncoder encoder) {
+    			DatumEncoder encoder, int threadId) {
     		this.data = data;
     		this.attributes = attributes;
     		this.lowMetrics = lowMetrics;
     		this.highMetrics = highMetrics;
     		this.baseQuery = baseQuery;
     		this.encoder = encoder;
+
+            this.threadId = threadId;
     	}
     	
-    	public List<ItemsetResult> getItemsetResults() {
+    	public List<IntermediateItemsetResult> getItemsetResults() {
     		return itemsetResults;
     	}
+
+    	public List<Datum> getInliers() {
+    		return inliers;
+    	}
     	
+    	public List<Datum> getOutliers() {
+    		return outliers;
+    	}
+
+        public double getTotalInlierCount() {
+			return streamingSummarizer.getInlierCount();
+		}
+
+		public double getTotalOutlierCount() {
+			return streamingSummarizer.getOutlierCount();
+		}
+
+		public double getInlierCount(Set<Integer> pattern) {
+			return streamingSummarizer.getInlierCount(pattern);
+		}
+
+		public double getOutlierCount(Set<Integer> pattern) {
+			return streamingSummarizer.getOutlierCount(pattern);
+		}
+
         @Override
         public void run() {
             int tupleNo = 0;
@@ -156,7 +192,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	            scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
 	        }
 
-	        ExponentiallyDecayingEmergingItemsets streamingSummarizer =
+	       	streamingSummarizer =
 	                new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
 	                                                          outlierItemSummarySize,
 	                                                          minSupportOutlier,
@@ -199,46 +235,48 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        totScoringTime = 0;
 	        totSummarizationTime = 0;
 
-                for (int i = 0; i < numRuns; i++) {
-	        for(Datum d: data) {
-	            inputReservoir.insert(d);
+            for (int i = 0; i < numRuns; i++) {
+                for(Datum d: data) {
+                    inputReservoir.insert(d);
 
-	            if(tupleNo == warmupCount) {
-	            	sw.start();
-	                detector.train(inputReservoir.getReservoir());
-	                for(Datum id : inputReservoir.getReservoir()) {
-	                    scoreReservoir.insert(detector.score(id));
-	                }
-	                detector.updateRecentScoreList(scoreReservoir.getReservoir());
-	                sw.stop();
-	                sw.reset();
-	                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
-	            } else if(tupleNo >= warmupCount) {
-	                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
+                    if(tupleNo == warmupCount) {
+                        sw.start();
+                        detector.train(inputReservoir.getReservoir());
+                        for(Datum id : inputReservoir.getReservoir()) {
+                            scoreReservoir.insert(detector.score(id));
+                        }
+                        detector.updateRecentScoreList(scoreReservoir.getReservoir());
+                        sw.stop();
+                        sw.reset();
+                        log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
+                    } else if(tupleNo >= warmupCount) {
+                            long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
-	                    analysisUpdater.updateIfNecessary(now, tupleNo);
-	                    modelUpdater.updateIfNecessary(now, tupleNo);
-	                    double score = detector.score(d);
+                            analysisUpdater.updateIfNecessary(now, tupleNo);
+                            modelUpdater.updateIfNecessary(now, tupleNo);
+                            double score = detector.score(d);
 
-	                    if(scoreReservoir != null) {
-	                        scoreReservoir.insert(score);
-	                    }
+                            if(scoreReservoir != null) {
+                                scoreReservoir.insert(score);
+                            }
 
-	                    if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
-	                       forceUsePercentile && detector.isPercentileOutlier(score,
-	                                                                          TARGET_PERCENTILE)) {
-	                        streamingSummarizer.markOutlier(d);
-	                    } else {
-	                        streamingSummarizer.markInlier(d);
-	                    }
-	            }
+                            if((forceUseZScore && detector.isZScoreOutlier(score, ZSCORE)) ||
+                               forceUsePercentile && detector.isPercentileOutlier(score,
+                                                                                  TARGET_PERCENTILE)) {
+                                streamingSummarizer.markOutlier(d);
+                                outliers.add(d);
+                            } else {
+                                streamingSummarizer.markInlier(d);
+                                inliers.add(d);
+                            }
+                    }
 
-	            tupleNo += 1;
-	        }
+                    tupleNo += 1;
                 }
+            }
 
 	        sw.start();
-	        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
+	        List<IntermediateItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
 	        sw.stop();
 	        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
 	        sw.reset();
@@ -263,10 +301,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     }
 
     public AnalysisResult analyzeOnePass(SQLLoader loader,
-                                              List<String> attributes,
-                                              List<String> lowMetrics,
-                                              List<String> highMetrics,
-                                              String baseQuery) throws SQLException, IOException, InterruptedException {
+										 List<String> attributes,
+										 List<String> lowMetrics,
+										 List<String> highMetrics,
+										 String baseQuery) throws SQLException, IOException, InterruptedException {
     	DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
@@ -302,12 +340,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         
         Stopwatch tsw = Stopwatch.createUnstarted();
         tsw.start();
-        
-        List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
+
         for (int i = 0; i < numThreads; i++) {
         	RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(
         			dataPartitioned.get(i), attributes, lowMetrics, highMetrics,
-        			baseQuery, encoder);
+        			baseQuery, encoder, i);
         	Thread t = new Thread(rsa);
         	t.start();
         	threads.add(t);
@@ -317,11 +354,46 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         startSemaphore.release(numThreads);
         endSemaphore.acquire(numThreads);
 
+
+        List<Datum> allInliers = new ArrayList<Datum>();
+        List<Datum> allOutliers = new ArrayList<Datum>();
+
+		double totalInlierCount = 0.0;
+		double totalOutlierCount = 0.0;
+		HashSet<Set<Integer>> itemsets = new HashSet<Set<Integer>> ();
+
         for (int i = 0; i < numThreads; i++) {
-        	for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-        		isr.add(itemsetResult);
+        	threads.get(i).join();
+			totalInlierCount += rsas.get(i).getTotalInlierCount();
+			totalOutlierCount += rsas.get(i).getTotalOutlierCount();
+        	for (Datum inlier: rsas.get(i).getInliers()) {
+        		allInliers.add(inlier);
+        	}
+        	for (Datum outlier: rsas.get(i).getOutliers()) {
+        		allOutliers.add(outlier);
+        	}
+        	for (IntermediateItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
+				Set<Integer> items = itemsetResult.getItems();
+				itemsets.add(items);
         	}
         }
+
+		List<ItemsetResult> isr = new ArrayList<ItemsetResult>();
+		for (Set<Integer> itemset : itemsets) {
+			double outlierCount = 0.0;
+			double inlierCount = 0.0;
+			for (int i = 0; i < numThreads; i++) {
+				inlierCount += rsas.get(i).getInlierCount(itemset);
+				outlierCount += rsas.get(i).getOutlierCount(itemset);
+			}
+
+			double outlierSupport = outlierCount / totalOutlierCount;
+			double inlierSupport = inlierCount / totalInlierCount;
+			double ratio = outlierSupport / inlierSupport;
+			if (outlierSupport > minSupportOutlier && ratio > minRatio) {
+				isr.add(new ItemsetResult(outlierSupport, outlierCount, ratio, encoder.getColsFromAttrSet(itemset)));
+			}
+		}
         
         tsw.stop();
         
