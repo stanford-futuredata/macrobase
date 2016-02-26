@@ -110,9 +110,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     boolean doTrace;
     int numRuns = 1;
-	volatile boolean barrierReset = false;
 	CyclicBarrier barrier;
-	Object object = new Object();
     
     CopyOnWriteArrayList<Double> perThreadMedians;
     CopyOnWriteArrayList<RealMatrix> perThreadCovarianceMatrices;
@@ -296,17 +294,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 						if (modelUpdater.updateIfNecessary(now, tupleNo)) {
 							try {
 								barrier.await();
-								barrierReset = false;
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							} catch (BrokenBarrierException e) {
 								e.printStackTrace();
-							}
-							synchronized (object) {
-								if (!barrierReset) {
-									barrierReset = true;
-									barrier.reset();
-								}
 							}
 							if (detector.getDetectorType() == DetectorType.MAD) {
 								perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
