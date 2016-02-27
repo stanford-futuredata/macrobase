@@ -180,6 +180,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	        // OUTLIER ANALYSIS
 	        tsw.start();
 
+		sw.start();
 	        int metricsDimensions = lowMetrics.size() + highMetrics.size();
 	        OutlierDetector detector = constructDetector(metricsDimensions);
 
@@ -228,13 +229,16 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 	                                                         detector,
 	                                                         streamingSummarizer);
 	        }
+		sw.stop();
+		log.debug("...ended initialization (time: {}ms)!", (sw.elapsed(TimeUnit.MILLISECONDS)));
+		sw.reset();
 
 	        tupleNo = 0;
 	        totODTrainingTime = 0;
 	        totSummarizationTrainingTime = 0;
 	        totScoringTime = 0;
 	        totSummarizationTime = 0;
-
+            
             for (int i = 0; i < numRuns; i++) {
                 for(Datum d: data) {
                     inputReservoir.insert(d);
@@ -349,10 +353,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	t.start();
         	threads.add(t);
         	rsas.add(rsa);
+                startSemaphore.release(1);
+                endSemaphore.acquire(1);
         }
         
-        startSemaphore.release(numThreads);
-        endSemaphore.acquire(numThreads);
+        // startSemaphore.release(numThreads);
+        // endSemaphore.acquire(numThreads);
 
 
         List<Datum> allInliers = new ArrayList<Datum>();
