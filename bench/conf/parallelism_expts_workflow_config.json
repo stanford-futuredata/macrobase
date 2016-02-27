@@ -1,0 +1,64 @@
+[
+  {
+    "targetLowMetrics": [],
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
+    "isBatchJob": false,
+    "targetAttributes": [
+      "userid"
+    ],
+    "taskName": "cmtDatasetSimpleStreaming",
+    "targetHighMetrics": [
+      "data_count_minutes"
+    ]
+  },
+  {
+    "targetLowMetrics": [],
+    "baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
+    "isBatchJob": false,
+    "targetAttributes": [
+      "build_version",
+      "app_version",
+      "deviceid",
+      "hardware_carrier",
+      "state",
+      "hardware_model"
+    ],
+    "taskName": "cmtDatasetComplexStreaming",
+    "targetHighMetrics": [
+      "data_count_minutes",
+      "data_count_accel_samples",
+      "data_count_netloc_samples",
+      "data_count_gps_samples",
+      "distance_mapmatched_km",
+      "distance_gps_km"
+    ]
+  },
+  {
+    "targetLowMetrics": [],
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "isBatchJob": false,
+    "targetAttributes": [
+      "can_id"
+    ],
+    "taskName": "fedDisbursementsSimpleStreaming",
+    "targetHighMetrics": [
+      "dis_amo"
+    ]
+  },
+  {
+    "targetLowMetrics": [],
+    "baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "isBatchJob": false,
+    "targetAttributes": [
+      "can_id",
+      "com_id",
+      "rec_nam",
+      "rec_zip",
+      "com_nam"
+    ],
+    "taskName": "fedDisbursementsComplexStreaming",
+    "targetHighMetrics": [
+      "dis_amo"
+    ]
+  }
+]
