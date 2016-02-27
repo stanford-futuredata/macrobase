@@ -112,7 +112,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     boolean doTrace;
     int numRuns = 1;
-	CyclicBarrier barrier;
     
     CopyOnWriteArrayList<Double> perThreadMedians;
     CopyOnWriteArrayList<RealMatrix> perThreadCovarianceMatrices;
@@ -305,13 +304,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 						analysisUpdater.updateIfNecessary(now, tupleNo);
 						// If model is updated, then update the shared data
 						if (modelUpdater.updateIfNecessary(now, tupleNo)) {
-							try {
-								barrier.await();
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							} catch (BrokenBarrierException e) {
-								e.printStackTrace();
-							}
 							if (detector.getDetectorType() == DetectorType.MAD) {
 								perThreadMedians.set(threadId, ((MAD) detector).getLocalMedian());
 							} else if (detector.getDetectorType() == DetectorType.MCD) {
@@ -426,8 +418,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         	perThreadNumSamples.add(0);
         }
 
-		barrier = new CyclicBarrier(numThreads);
-        
         List<Thread> threads = new ArrayList<Thread>();
         List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
         
