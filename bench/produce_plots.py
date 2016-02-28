@@ -1,6 +1,7 @@
 import argparse
 import json
 import matplotlib.pyplot as plt
+import os
 
 
 def parse_output_file(filename):
@@ -161,14 +162,18 @@ def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir, workloa
             if workload_name not in workloads:
                 continue
             key_value_pairs[parameter_type][workload_name] = dict()
+            print "%s-->" % workload_name
             for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
                 try:
                     (value, stddev) = parsed_results[parameter_type][
                         workload_name][parameter_value][idx]
+                    print file_suffix + " : " + str(int(parameter_value)) + " = " + str(value)
                     key_value_pairs[parameter_type][workload_name][parameter_value] = \
                         (value, stddev)
                 except:
                     continue
+            print
+            print
 
     plot(key_value_pairs, ylabel, plots_dir, file_suffix, True, is_xscale_log)
     print "...done!"
@@ -185,6 +190,7 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads, is_
             if workload_name not in workloads:
                 continue
             key_value_pairs[parameter_type][workload_name] = dict()
+            print "%s-->" % workload_name
             for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
                 try:
                     itemsets = parsed_results[parameter_type][
@@ -193,10 +199,13 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads, is_
                         "defaultParameters"][workload_name][3]
                     value = compute_precision_and_recall(
                         itemsets, ground_truth_itemsets)[idx]
+                    print ylabel + " : " + str(int(parameter_value)) + " = " + str(value)
                     key_value_pairs[parameter_type][workload_name][parameter_value] = \
                         value
                 except:
                     continue
+            print
+            print
 
     plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
     print "...done!"
@@ -265,6 +274,7 @@ if __name__ == '__main__':
     workloads = args.plotting_parameters["workloads"]
 
     parsed_results = parse_output_file(args.output_file)
+    os.system("mkdir -p %s" % args.plot_directory)
     plot_time_graphs(parsed_results, args.plot_directory, timing_types, workloads, False)
     plot_aux_graphs(
         parsed_results, 1, "Number of itemsets", "Itemsets", args.plot_directory,
