@@ -16,6 +16,8 @@ public class MacroBaseDefaults {
     public static final Long RANDOM_SEED = null;
     public static final Boolean USE_PERCENTILE = true;
     public static final Boolean USE_ZSCORE = false;
+    public static final Integer NUM_THREADS = 1;
+    public static final Integer NUM_RUNS = 1;
 
     // streaming defaults
     public static final Integer WARMUP_COUNT = 10000;
