@@ -1,0 +1,64 @@
+[
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "userid"
+    ],
+    "macrobase.query.name": "cmtDatasetSimpleStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "data_count_minutes"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "build_version",
+      "app_version",
+      "deviceid",
+      "hardware_carrier",
+      "state",
+      "hardware_model"
+    ],
+    "macrobase.query.name": "cmtDatasetComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "data_count_minutes",
+      "data_count_accel_samples",
+      "data_count_netloc_samples",
+      "data_count_gps_samples",
+      "distance_mapmatched_km",
+      "distance_gps_km"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "can_id"
+    ],
+    "macrobase.query.name": "fedDisbursementsSimpleStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "dis_amo"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "can_id",
+      "com_id",
+      "rec_nam",
+      "rec_zip",
+      "com_nam"
+    ],
+    "macrobase.query.name": "fedDisbursementsComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "dis_amo"
+    ]
+  }
+]

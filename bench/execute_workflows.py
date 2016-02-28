@@ -34,7 +34,10 @@ default_args = {
   "macrobase.analysis.streaming.decayRate": 0.01,
 
   "macrobase.analysis.mcd.alpha": 0.5,
-  "macrobase.analysis.mcd.stoppingDelta": 0.001
+  "macrobase.analysis.mcd.stoppingDelta": 0.001,
+
+  "macrobase.analysis.numRuns": 1,
+  "macrobase.analysis.numThreads": 1
 }
 
 

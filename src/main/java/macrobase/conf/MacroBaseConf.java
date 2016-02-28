@@ -26,6 +26,8 @@ public class MacroBaseConf extends Configuration {
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
     public static final String DETECTOR_TYPE = "macrobase.analysis.detectorType";
+    public static final String NUM_THREADS = "macrobase.analysis.numThreads";
+    public static final String NUM_RUNS = "macrobase.analysis.numRuns";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
     public static final String INPUT_RESERVOIR_SIZE = "macrobase.analysis.streaming.inputReservoirSize";

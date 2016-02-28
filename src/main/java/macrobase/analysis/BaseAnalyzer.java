@@ -29,6 +29,8 @@ public class BaseAnalyzer {
     protected final DetectorType detectorType;
     protected final Boolean forceUsePercentile;
     protected final Boolean forceUseZScore;
+    protected final Integer numThreads;
+    protected final Integer numRuns;
 
     protected final DataLoaderType dataLoaderType;
     protected final List<String> attributes;
@@ -63,6 +65,8 @@ public class BaseAnalyzer {
         detectorType = conf.getDetectorType();
         forceUsePercentile = conf.getBoolean(MacroBaseConf.USE_PERCENTILE, MacroBaseDefaults.USE_PERCENTILE);
         forceUseZScore = conf.getBoolean(MacroBaseConf.USE_ZSCORE, MacroBaseDefaults.USE_ZSCORE);
+        numThreads = conf.getInt(MacroBaseConf.NUM_THREADS, MacroBaseDefaults.NUM_THREADS);
+        numRuns = conf.getInt(MacroBaseConf.NUM_RUNS, MacroBaseDefaults.NUM_RUNS);
 
         dataLoaderType = conf.getDataLoaderType();
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);

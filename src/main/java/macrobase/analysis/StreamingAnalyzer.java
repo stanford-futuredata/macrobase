@@ -24,9 +24,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
@@ -44,6 +46,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     private final Integer modelRefreshPeriod;
     private final Integer outlierItemSummarySize;
     private final Integer inlierItemSummarySize;
+
+    private final Semaphore startSemaphore;
+    private final Semaphore endSemaphore;
 
     public StreamingAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         super(conf);
@@ -63,157 +68,187 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                              MacroBaseDefaults.OUTLIER_ITEM_SUMMARY_SIZE);
         inlierItemSummarySize = conf.getInt(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE,
                                             MacroBaseDefaults.INLIER_ITEM_SUMMARY_SIZE);
+
+        startSemaphore = new Semaphore(0);
+        endSemaphore = new Semaphore(0);
     }
 
-    public AnalysisResult analyzeOnePass() throws SQLException, IOException, ConfigurationException {
+    class RunnableStreamingAnalysis implements Runnable {
+        List<Datum> data;
+        DatumEncoder encoder;
+
+        List<ItemsetResult> itemsetResults;
+
+        RunnableStreamingAnalysis(List<Datum> data, DatumEncoder encoder) {
+            this.data = data;
+            this.encoder = encoder;
+        }
+
+        public List<ItemsetResult> getItemsetResults() {
+            return itemsetResults;
+        }
+
+        @Override
+        public void run() {
+            try {
+                startSemaphore.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Start semaphore interrupted");
+            }
+
+            OutlierDetector detector = constructDetector(randomSeed);
+
+            ExponentiallyBiasedAChao<Datum> inputReservoir =
+                    new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
+
+            if (randomSeed != null) {
+                inputReservoir.setSeed(randomSeed);
+            }
+
+            ExponentiallyBiasedAChao<Double> scoreReservoir = null;
+
+            if (forceUsePercentile) {
+                scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
+                if (randomSeed != null) {
+                    scoreReservoir.setSeed(randomSeed);
+                }
+            }
+
+            ExponentiallyDecayingEmergingItemsets streamingSummarizer =
+                    new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
+                            outlierItemSummarySize,
+                            minSupport,
+                            minOIRatio,
+                            decayRate,
+                            attributes.size());
+
+            AbstractPeriodicUpdater analysisUpdater;
+            if (useRealTimePeriod) {
+                analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
+                        summaryPeriod,
+                        inputReservoir,
+                        scoreReservoir,
+                        detector,
+                        streamingSummarizer);
+            } else {
+                analysisUpdater = new TupleAnalysisDecayer(summaryPeriod,
+                        inputReservoir,
+                        scoreReservoir,
+                        detector,
+                        streamingSummarizer);
+            }
+
+            AbstractPeriodicUpdater modelUpdater;
+            if (useRealTimePeriod) {
+                modelUpdater = new WallClockRetrainer(System.currentTimeMillis(),
+                        modelRefreshPeriod,
+                        inputReservoir,
+                        detector,
+                        streamingSummarizer);
+            } else {
+                modelUpdater = new TupleBasedRetrainer(modelRefreshPeriod,
+                        inputReservoir,
+                        detector,
+                        streamingSummarizer);
+            }
+
+            int tupleNo = 0;
+
+            for (int run = 0; run < numRuns; run++) {
+                for (Datum d : data) {
+                    inputReservoir.insert(d);
+
+                    if (tupleNo == warmupCount) {
+                        detector.train(inputReservoir.getReservoir());
+                        for (Datum id : inputReservoir.getReservoir()) {
+                            scoreReservoir.insert(detector.score(id));
+                        }
+                        detector.updateRecentScoreList(scoreReservoir.getReservoir());
+                    } else if (tupleNo >= warmupCount) {
+                        long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
+
+                        analysisUpdater.updateIfNecessary(now, tupleNo);
+                        modelUpdater.updateIfNecessary(now, tupleNo);
+                        double score = detector.score(d);
+
+                        if (scoreReservoir != null) {
+                            scoreReservoir.insert(score);
+                        }
+
+                        if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
+                                forceUsePercentile && detector.isPercentileOutlier(score,
+                                        targetPercentile)) {
+                            streamingSummarizer.markOutlier(d);
+                        } else {
+                            streamingSummarizer.markInlier(d);
+                        }
+                    }
+
+                    tupleNo += 1;
+                }
+            }
+
+            itemsetResults = streamingSummarizer.getItemsets(encoder);
+            endSemaphore.release();
+        }
+    }
+
+    public AnalysisResult analyzeOnePass() throws SQLException, IOException, ConfigurationException, InterruptedException {
         DatumEncoder encoder = new DatumEncoder();
-
-        Stopwatch sw = Stopwatch.createUnstarted();
-        Stopwatch tsw = Stopwatch.createUnstarted();
-        Stopwatch tsw2 = Stopwatch.createUnstarted();
-
-        // OUTLIER ANALYSIS
-
         DataLoader loader = constructLoader();
 
-        log.debug("Starting loading...");
-        sw.start();
-        List<Datum> data = loader.getData(encoder);
+        Stopwatch tsw = Stopwatch.createUnstarted();
 
+        List<Datum> data = loader.getData(encoder);
         if (randomSeed == null) {
             Collections.shuffle(data);
         } else {
             Collections.shuffle(data, new Random(randomSeed));
         }
 
-        sw.stop();
+        List<List<Datum>> partitionedData = new ArrayList<List<Datum>>();
+        for (int i = 0; i < numThreads; i++) {
+            partitionedData.add(new ArrayList<Datum>());
+        }
 
-        long loadTime = sw.elapsed(TimeUnit.MILLISECONDS);
-        sw.reset();
+        for (int i = 0; i < data.size(); i++) {
+            partitionedData.get(i % numThreads).add(data.get(i));
+        }
 
-        log.debug("...ended loading (time: {}ms)!", loadTime);
-
-        //System.console().readLine("waiting to start (press a key)");
+        // Want to measure time taken once data is loaded
         tsw.start();
-        tsw2.start();
 
-        OutlierDetector detector = constructDetector(randomSeed);
-
-        ExponentiallyBiasedAChao<Datum> inputReservoir =
-                new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
-
-        if (randomSeed != null) {
-            inputReservoir.setSeed(randomSeed);
+        List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
+        // Run per-core detection and summarization
+        for (int i = 0; i < numThreads; i++) {
+            RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(partitionedData.get(i), encoder);
+            rsas.add(rsa);
+            Thread t = new Thread(rsa);
+            t.start();
         }
 
-        ExponentiallyBiasedAChao<Double> scoreReservoir = null;
+        // Start semaphore to kick off all threads
+        startSemaphore.release(numThreads);
+        // Stall until all threads are done
+        endSemaphore.acquire(numThreads);
 
-        if (forceUsePercentile) {
-            scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
-            if (randomSeed != null) {
-                scoreReservoir.setSeed(randomSeed);
+        List<ItemsetResult> itemsetResults = new ArrayList<ItemsetResult>();
+        for (int i = 0; i < numThreads; i++) {
+            for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
+                itemsetResults.add(itemsetResult);
             }
         }
 
-        ExponentiallyDecayingEmergingItemsets streamingSummarizer =
-                new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
-                                                          outlierItemSummarySize,
-                                                          minSupport,
-                                                          minOIRatio,
-                                                          decayRate,
-                                                          attributes.size());
-
-        AbstractPeriodicUpdater analysisUpdater;
-        if (useRealTimePeriod) {
-            analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
-                                                           summaryPeriod,
-                                                           inputReservoir,
-                                                           scoreReservoir,
-                                                           detector,
-                                                           streamingSummarizer);
-        } else {
-            analysisUpdater = new TupleAnalysisDecayer(summaryPeriod,
-                                                       inputReservoir,
-                                                       scoreReservoir,
-                                                       detector,
-                                                       streamingSummarizer);
-        }
-
-        AbstractPeriodicUpdater modelUpdater;
-        if (useRealTimePeriod) {
-            modelUpdater = new WallClockRetrainer(System.currentTimeMillis(),
-                                                  modelRefreshPeriod,
-                                                  inputReservoir,
-                                                  detector,
-                                                  streamingSummarizer);
-        } else {
-            modelUpdater = new TupleBasedRetrainer(modelRefreshPeriod,
-                                                   inputReservoir,
-                                                   detector,
-                                                   streamingSummarizer);
-        }
-
-        int tupleNo = 0;
-        long totSummarizationTime = 0;
-
-        for (Datum d : data) {
-            inputReservoir.insert(d);
-
-            if (tupleNo == warmupCount) {
-                sw.start();
-                detector.train(inputReservoir.getReservoir());
-                for (Datum id : inputReservoir.getReservoir()) {
-                    scoreReservoir.insert(detector.score(id));
-                }
-                detector.updateRecentScoreList(scoreReservoir.getReservoir());
-                sw.stop();
-                sw.reset();
-                log.debug("...ended warmup training (time: {}ms)!", sw.elapsed(TimeUnit.MILLISECONDS));
-            } else if (tupleNo >= warmupCount) {
-                long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
-
-                analysisUpdater.updateIfNecessary(now, tupleNo);
-                modelUpdater.updateIfNecessary(now, tupleNo);
-                double score = detector.score(d);
-
-                if (scoreReservoir != null) {
-                    scoreReservoir.insert(score);
-                }
-
-                if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
-                    forceUsePercentile && detector.isPercentileOutlier(score,
-                                                                       targetPercentile)) {
-                    streamingSummarizer.markOutlier(d);
-                } else {
-                    streamingSummarizer.markInlier(d);
-                }
-            }
-
-            tupleNo += 1;
-        }
-        tsw2.stop();
-
-        sw.start();
-        List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
-        sw.stop();
-        totSummarizationTime += sw.elapsed(TimeUnit.MICROSECONDS);
-        sw.reset();
+        // Stop timer as soon as all itemsets have been mined and aggregated
         tsw.stop();
 
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
         tuplesPerSecond *= 1000000;
 
-        log.debug("...ended summarization (time: {}ms)!", (totSummarizationTime / 1000) + 1);
-        log.debug("...ended total (time: {}ms)!", (tsw.elapsed(TimeUnit.MICROSECONDS) / 1000) + 1);
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
-
-        tuplesPerSecond = ((double) data.size()) / ((double) tsw2.elapsed(TimeUnit.MICROSECONDS));
-        tuplesPerSecond *= 1000000;
-        log.debug("Tuples / second w/o itemset mining = {} tuples / second", tuplesPerSecond);
-
-        log.debug("Number of itemsets: {}", isr.size());
+        log.debug("Number of itemsets: {}", itemsetResults.size());
 
         // todo: refactor this so we don't just return zero
-        return new AnalysisResult(0, 0, loadTime, 0, totSummarizationTime, isr);
+        return new AnalysisResult(0, 0, 0, 0, 0, itemsetResults);
     }
 }
