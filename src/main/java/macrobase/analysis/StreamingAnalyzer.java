@@ -251,12 +251,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         List<List<Datum>> partitionedData = new ArrayList<List<Datum>>();
-        for (int i = 0; i < numThreads - 1; i++) {
-            partitionedData.add(new ArrayList<Datum>());
-        }
+        if (numThreads > 1) {
+            for (int i = 0; i < numThreads - 1; i++) {
+                partitionedData.add(new ArrayList<Datum>());
+            }
 
-        for (int i = 0; i < data.size(); i++) {
-            partitionedData.get(i % (numThreads - 1)).add(data.get(i));
+            for (int i = 0; i < data.size(); i++) {
+                partitionedData.get(i % (numThreads - 1)).add(data.get(i));
+            }
         }
 
         // Want to measure time taken once data is loaded
