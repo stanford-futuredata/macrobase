@@ -112,6 +112,9 @@ public class BaseAnalyzer {
             case BINNED_KDE:
                 log.info("Using BinnedKDE detector.");
                 return new BinnedKDE(conf);
+            case TREE_KDE:
+                log.info("Using TreeKDE detector.");
+                return new TreeKDE(conf);
             case MOVING_AVERAGE:
                 log.info("Using Moving Average detector.");
                 return new MovingAverage(conf);
