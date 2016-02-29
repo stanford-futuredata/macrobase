@@ -77,15 +77,29 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         List<Datum> data;
         DatumEncoder encoder;
 
+        private long trainingAndScoringTime;
+        private long miningTime;
+
         List<ItemsetResult> itemsetResults;
 
         RunnableStreamingAnalysis(List<Datum> data, DatumEncoder encoder) {
             this.data = data;
             this.encoder = encoder;
+
+            trainingAndScoringTime = 0;
+            miningTime = 0;
         }
 
         public List<ItemsetResult> getItemsetResults() {
             return itemsetResults;
+        }
+
+        public long getTrainingAndScoringTime() {
+            return trainingAndScoringTime;
+        }
+
+        public long getMiningTime() {
+            return miningTime;
         }
 
         @Override
@@ -154,6 +168,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
             int tupleNo = 0;
 
+            Stopwatch sw = Stopwatch.createUnstarted();
+            sw.start();
+
             for (int run = 0; run < numRuns; run++) {
                 for (Datum d : data) {
                     inputReservoir.insert(d);
@@ -188,7 +205,15 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 }
             }
 
+            sw.stop();
+            trainingAndScoringTime = sw.elapsed(TimeUnit.MICROSECONDS);
+
+            sw.reset();
+            sw.start();
             itemsetResults = streamingSummarizer.getItemsets(encoder);
+            sw.stop();
+            miningTime = sw.elapsed(TimeUnit.MICROSECONDS);
+
             endSemaphore.release();
         }
     }
@@ -232,6 +257,16 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         // Stall until all threads are done
         endSemaphore.acquire(numThreads);
 
+        long avgTrainingAndScoringTime = 0;
+        long avgMiningTime = 0;
+        for (int i = 0; i < numThreads; i++) {
+            avgTrainingAndScoringTime += rsas.get(i).getTrainingAndScoringTime();
+            avgMiningTime += rsas.get(i).getMiningTime();
+        }
+
+        avgTrainingAndScoringTime /= numThreads;
+        avgMiningTime /= numThreads;
+
         List<ItemsetResult> itemsetResults = new ArrayList<ItemsetResult>();
         for (int i = 0; i < numThreads; i++) {
             for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
@@ -243,10 +278,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         tsw.stop();
 
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
-        tuplesPerSecond *= 1000000;
+        tuplesPerSecond *= (1000000 * numRuns);
 
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
         log.debug("Number of itemsets: {}", itemsetResults.size());
+        log.debug("..ended training and scoring (time: {}ms)!", avgTrainingAndScoringTime);
+        log.debug("...ended mining (time: {}ms)!", avgMiningTime);
 
         // todo: refactor this so we don't just return zero
         return new AnalysisResult(0, 0, 0, 0, 0, itemsetResults);
