@@ -23,8 +23,7 @@ class RetrainingProcedure {
             name(RetrainingProcedure.class, "itemsetAdvanceTime"));
 
     public static void updatePeriod(ExponentiallyBiasedAChao<Datum> inputReservoir,
-                                    OutlierDetector detector,
-                                    ExponentiallyDecayingEmergingItemsets itemsets) {
+                                    OutlierDetector detector) {
         log.trace("Updating models.");
 
         Timer.Context rt = trainingTimer.time();

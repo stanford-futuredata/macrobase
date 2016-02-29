@@ -34,7 +34,6 @@ class AnalysisDecayProcedure {
 
         if (scoreReservoir != null) {
             scoreReservoir.advancePeriod();
-            detector.updateRecentScoreList(scoreReservoir.getReservoir());
         }
         rt.stop();
 

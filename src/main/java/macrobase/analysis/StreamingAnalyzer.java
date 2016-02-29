@@ -2,6 +2,7 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
+import com.google.common.collect.Lists;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -76,37 +77,30 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     class RunnableStreamingAnalysis implements Runnable {
         List<Datum> data;
         DatumEncoder encoder;
+        OutlierDetector detector;
 
         List<ItemsetResult> itemsetResults;
 
-        RunnableStreamingAnalysis(List<Datum> data, DatumEncoder encoder) {
+        ExponentiallyBiasedAChao<Datum> inputReservoir;
+        ExponentiallyBiasedAChao<Double> scoreReservoir;
+        ExponentiallyDecayingEmergingItemsets streamingSummarizer;
+        AbstractPeriodicUpdater analysisUpdater;
+
+        RunnableStreamingAnalysis(List<Datum> data, DatumEncoder encoder,
+                                  OutlierDetector detector) {
             this.data = data;
             this.encoder = encoder;
-        }
 
-        public List<ItemsetResult> getItemsetResults() {
-            return itemsetResults;
-        }
+            this.detector = detector;
 
-        @Override
-        public void run() {
-            try {
-                startSemaphore.acquire();
-            } catch (InterruptedException e) {
-                throw new RuntimeException("Start semaphore interrupted");
-            }
-
-            OutlierDetector detector = constructDetector(randomSeed);
-
-            ExponentiallyBiasedAChao<Datum> inputReservoir =
+            inputReservoir =
                     new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
 
             if (randomSeed != null) {
                 inputReservoir.setSeed(randomSeed);
             }
 
-            ExponentiallyBiasedAChao<Double> scoreReservoir = null;
-
+            scoreReservoir = null;
             if (forceUsePercentile) {
                 scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
                 if (randomSeed != null) {
@@ -114,15 +108,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 }
             }
 
-            ExponentiallyDecayingEmergingItemsets streamingSummarizer =
-                    new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
-                            outlierItemSummarySize,
-                            minSupport,
-                            minOIRatio,
-                            decayRate,
-                            attributes.size());
-
-            AbstractPeriodicUpdater analysisUpdater;
             if (useRealTimePeriod) {
                 analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
                         summaryPeriod,
@@ -138,37 +123,44 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                         streamingSummarizer);
             }
 
-            AbstractPeriodicUpdater modelUpdater;
-            if (useRealTimePeriod) {
-                modelUpdater = new WallClockRetrainer(System.currentTimeMillis(),
-                        modelRefreshPeriod,
-                        inputReservoir,
-                        detector,
-                        streamingSummarizer);
-            } else {
-                modelUpdater = new TupleBasedRetrainer(modelRefreshPeriod,
-                        inputReservoir,
-                        detector,
-                        streamingSummarizer);
+            streamingSummarizer =
+                    new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
+                            outlierItemSummarySize,
+                            minSupport,
+                            minOIRatio,
+                            decayRate,
+                            attributes.size());
+        }
+
+        public List<ItemsetResult> getItemsetResults() {
+            return itemsetResults;
+        }
+
+        @Override
+        public void run() {
+            try {
+                startSemaphore.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Start semaphore interrupted");
             }
 
             int tupleNo = 0;
-
+            List<Double> scoreReservoirCopy = new ArrayList<Double> ();
             for (int run = 0; run < numRuns; run++) {
                 for (Datum d : data) {
                     inputReservoir.insert(d);
-
                     if (tupleNo == warmupCount) {
-                        detector.train(inputReservoir.getReservoir());
                         for (Datum id : inputReservoir.getReservoir()) {
                             scoreReservoir.insert(detector.score(id));
                         }
-                        detector.updateRecentScoreList(scoreReservoir.getReservoir());
-                    } else if (tupleNo >= warmupCount) {
+                        scoreReservoirCopy = Lists.newArrayList(scoreReservoir.getReservoir());
+                        Collections.sort(scoreReservoirCopy);
+                    } else if (tupleNo > warmupCount) {
                         long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
-
-                        analysisUpdater.updateIfNecessary(now, tupleNo);
-                        modelUpdater.updateIfNecessary(now, tupleNo);
+                        if (analysisUpdater.updateIfNecessary(now, tupleNo)) {
+                            scoreReservoirCopy = Lists.newArrayList(scoreReservoir.getReservoir());
+                            Collections.sort(scoreReservoirCopy);
+                        }
                         double score = detector.score(d);
 
                         if (scoreReservoir != null) {
@@ -177,15 +169,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
                         if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
                                 forceUsePercentile && detector.isPercentileOutlier(score,
-                                        targetPercentile)) {
+                                        targetPercentile, scoreReservoirCopy)) {
                             streamingSummarizer.markOutlier(d);
                         } else {
                             streamingSummarizer.markInlier(d);
                         }
                     }
-
-                    tupleNo += 1;
                 }
+                tupleNo++;
             }
 
             itemsetResults = streamingSummarizer.getItemsets(encoder);
@@ -197,6 +188,59 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         DatumEncoder encoder = new DatumEncoder();
         DataLoader loader = constructLoader();
 
+        OutlierDetector detector = constructDetector(randomSeed);
+
+        ExponentiallyBiasedAChao<Datum> inputReservoir =
+                new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
+
+        // Score reservoir in main thread used ONLY if numThreads = 1
+        ExponentiallyBiasedAChao<Double> scoreReservoir = null;
+
+        if (forceUsePercentile) {
+            scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
+            if (randomSeed != null) {
+                scoreReservoir.setSeed(randomSeed);
+            }
+        }
+
+        // Streaming summarizer in main thread used ONLY if numThreads = 1
+        ExponentiallyDecayingEmergingItemsets streamingSummarizer =
+                new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
+                        outlierItemSummarySize,
+                        minSupport,
+                        minOIRatio,
+                        decayRate,
+                        attributes.size());
+
+        // Analysis updated in main thread used ONLY if numThreads = 1
+        AbstractPeriodicUpdater analysisUpdater;
+        if (useRealTimePeriod) {
+            analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
+                    summaryPeriod,
+                    inputReservoir,
+                    scoreReservoir,
+                    detector,
+                    streamingSummarizer);
+        } else {
+            analysisUpdater = new TupleAnalysisDecayer(summaryPeriod,
+                    inputReservoir,
+                    scoreReservoir,
+                    detector,
+                    streamingSummarizer);
+        }
+
+        AbstractPeriodicUpdater modelUpdater;
+        if (useRealTimePeriod) {
+            modelUpdater = new WallClockRetrainer(System.currentTimeMillis(),
+                    modelRefreshPeriod,
+                    inputReservoir,
+                    detector);
+        } else {
+            modelUpdater = new TupleBasedRetrainer(modelRefreshPeriod,
+                    inputReservoir,
+                    detector);
+        }
+
         Stopwatch tsw = Stopwatch.createUnstarted();
 
         List<Datum> data = loader.getData(encoder);
@@ -207,12 +251,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         List<List<Datum>> partitionedData = new ArrayList<List<Datum>>();
-        for (int i = 0; i < numThreads; i++) {
+        for (int i = 0; i < numThreads - 1; i++) {
             partitionedData.add(new ArrayList<Datum>());
         }
 
         for (int i = 0; i < data.size(); i++) {
-            partitionedData.get(i % numThreads).add(data.get(i));
+            partitionedData.get(i % (numThreads - 1)).add(data.get(i));
         }
 
         // Want to measure time taken once data is loaded
@@ -220,22 +264,82 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
         // Run per-core detection and summarization
-        for (int i = 0; i < numThreads; i++) {
-            RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(partitionedData.get(i), encoder);
+        for (int i = 0; i < numThreads - 1; i++) {
+            RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(partitionedData.get(i), encoder, detector);
             rsas.add(rsa);
             Thread t = new Thread(rsa);
             t.start();
         }
 
-        // Start semaphore to kick off all threads
-        startSemaphore.release(numThreads);
-        // Stall until all threads are done
-        endSemaphore.acquire(numThreads);
+        List<Double> scoreReservoirCopy = new ArrayList<Double>();
 
+        int tupleNo = 0;
+
+        // TODO: If numThreads = 1, only want to make numRuns passes; otherwise loop indefinitely until all helper
+        // threads are done with training
+        outerLoop:
+        for (int run = 0; ; run++) {
+            for (Datum d : data) {
+                inputReservoir.insert(d);
+
+                if (tupleNo == warmupCount) {
+                    detector.train(inputReservoir.getReservoir());
+                    // Start semaphore to kick off all threads
+                    startSemaphore.release(numThreads - 1);
+                    // Only score on this thread if there are no helper threads
+                    if (numThreads == 1) {
+                        for (Datum id : inputReservoir.getReservoir()) {
+                            scoreReservoir.insert(detector.score(id));
+                        }
+                        scoreReservoirCopy = Lists.newArrayList(scoreReservoir.getReservoir());
+                        Collections.sort(scoreReservoirCopy);
+                    }
+                } else if (tupleNo >= warmupCount) {
+                    long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
+
+                    modelUpdater.updateIfNecessary(now, tupleNo);
+
+                    // Only score on this thread if there are no helper threads
+                    if (numThreads == 1) {
+                        if (analysisUpdater.updateIfNecessary(now, tupleNo)) {
+                            scoreReservoirCopy = Lists.newArrayList(scoreReservoir.getReservoir());
+                            Collections.sort(scoreReservoirCopy);
+                        }
+                        double score = detector.score(d);
+
+                        if (scoreReservoir != null) {
+                            scoreReservoir.insert(score);
+                        }
+
+                        if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
+                                forceUsePercentile && detector.isPercentileOutlier(score,
+                                        targetPercentile, scoreReservoirCopy)) {
+                            streamingSummarizer.markOutlier(d);
+                        } else {
+                            streamingSummarizer.markInlier(d);
+                        }
+                    }
+                }
+
+                if ((numThreads > 1 && endSemaphore.tryAcquire(numThreads - 1)) ||
+                        (numThreads == 1 && run >= numRuns)) {
+                    // Hack to easily break out of nested loop
+                    break outerLoop;
+                }
+
+                tupleNo += 1;
+            }
+        }
+
+        // TODO: Update this as necessary
         List<ItemsetResult> itemsetResults = new ArrayList<ItemsetResult>();
-        for (int i = 0; i < numThreads; i++) {
-            for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
-                itemsetResults.add(itemsetResult);
+        if (numThreads == 1) {
+            itemsetResults = streamingSummarizer.getItemsets(encoder);
+        } else {
+            for (int i = 0; i < numThreads-1; i++) {
+                for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
+                    itemsetResults.add(itemsetResult);
+                }
             }
         }
 

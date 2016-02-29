@@ -15,17 +15,14 @@ public class TupleBasedRetrainer extends AbstractTupleBasedPeriodicUpdater {
 
     final ExponentiallyBiasedAChao<Datum> inputReservoir;
     final OutlierDetector detector;
-    final ExponentiallyDecayingEmergingItemsets itemsets;
 
 
     public TupleBasedRetrainer(long tuplesPerPeriod,
                                ExponentiallyBiasedAChao<Datum> inputReservoir,
-                               OutlierDetector detector,
-                               ExponentiallyDecayingEmergingItemsets itemsets) {
+                               OutlierDetector detector) {
         super(tuplesPerPeriod);
         this.inputReservoir = inputReservoir;
         this.detector = detector;
-        this.itemsets = itemsets;
     }
 
     @Override
@@ -33,7 +30,6 @@ public class TupleBasedRetrainer extends AbstractTupleBasedPeriodicUpdater {
         log.trace("Retraining models due to period: {} tuples processed", getCurrentTupleCount());
 
         RetrainingProcedure.updatePeriod(inputReservoir,
-                                         detector,
-                                         itemsets);
+                                         detector);
     }
 }

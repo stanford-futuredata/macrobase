@@ -8,10 +8,13 @@ public abstract class AbstractPeriodicUpdater {
 
     abstract void updatePeriod();
 
-    public void updateIfNecessary(long curTime, long curTupleNo) {
+    public boolean updateIfNecessary(long curTime, long curTupleNo) {
+        boolean updateMade = false;
         while (needsPeriodAdvance(curTime, curTupleNo)) {
             periodAdvanced();
             updatePeriod();
+            updateMade = true;
         }
+        return updateMade;
     }
 }

@@ -12,17 +12,14 @@ public class WallClockRetrainer extends AbstractWallClockPeriodicUpdater {
 
     final ExponentiallyBiasedAChao<Datum> inputReservoir;
     final OutlierDetector detector;
-    final ExponentiallyDecayingEmergingItemsets itemsets;
 
     public WallClockRetrainer(long startTime,
                               long periodMs,
                               ExponentiallyBiasedAChao<Datum> inputReservoir,
-                              OutlierDetector detector,
-                              ExponentiallyDecayingEmergingItemsets itemsets) {
+                              OutlierDetector detector) {
         super(startTime, periodMs);
         this.inputReservoir = inputReservoir;
         this.detector = detector;
-        this.itemsets = itemsets;
     }
 
     @Override
@@ -30,7 +27,6 @@ public class WallClockRetrainer extends AbstractWallClockPeriodicUpdater {
         log.trace("Retraining detectors due to period: {} tuples processed", getCurrentPeriodTime());
 
         RetrainingProcedure.updatePeriod(inputReservoir,
-                                         detector,
-                                         itemsets);
+                                         detector);
     }
 }
