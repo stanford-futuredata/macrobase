@@ -2,7 +2,11 @@ package macrobase.analysis;
 
 import com.google.common.base.Stopwatch;
 
+import macrobase.analysis.outlier.CovarianceMatrixAndMean;
 import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.outlier.OutlierDetector.ODDetectorType;
+import macrobase.analysis.outlier.MinCovDet;
+import macrobase.analysis.outlier.MAD;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
 import macrobase.analysis.periodic.AbstractPeriodicUpdater;
@@ -19,6 +23,10 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -50,6 +59,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     private final Semaphore startSemaphore;
     private final Semaphore endSemaphore;
 
+    // For shared-parameter implementation of MAD
+    private CopyOnWriteArrayList<Double> perThreadMedians;
+
+    // For shared-parameter implementation of MCD
+    private CopyOnWriteArrayList<Integer> perThreadNumSamples;
+    private CopyOnWriteArrayList<RealVector> perThreadMeans;
+    private CopyOnWriteArrayList<RealMatrix> perThreadCovariances;
+
     public StreamingAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         super(conf);
         conf.sanityCheckStreaming();
@@ -71,17 +88,26 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         startSemaphore = new Semaphore(0);
         endSemaphore = new Semaphore(0);
+
+        perThreadMedians = new CopyOnWriteArrayList<Double>();
+        perThreadNumSamples = new CopyOnWriteArrayList<Integer>();
+        perThreadMeans = new CopyOnWriteArrayList<RealVector>();
+        perThreadCovariances = new CopyOnWriteArrayList<RealMatrix>();
     }
 
     class RunnableStreamingAnalysis implements Runnable {
         List<Datum> data;
         DatumEncoder encoder;
 
+        int threadId;
+
         List<ItemsetResult> itemsetResults;
 
-        RunnableStreamingAnalysis(List<Datum> data, DatumEncoder encoder) {
+        RunnableStreamingAnalysis(List<Datum> data, DatumEncoder encoder, int threadId) {
             this.data = data;
             this.encoder = encoder;
+
+            this.threadId = threadId;
         }
 
         public List<ItemsetResult> getItemsetResults() {
@@ -160,6 +186,21 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
                     if (tupleNo == warmupCount) {
                         detector.train(inputReservoir.getReservoir());
+                        if (detector.getODDetectorType() == ODDetectorType.MCD) {
+                            MinCovDet minCovDetDetector = (MinCovDet) detector;
+
+                            perThreadCovariances.set(threadId,
+                                    new Array2DRowRealMatrix(minCovDetDetector.getLocalCovariance().getData()));
+                            perThreadMeans.set(threadId,
+                                    new ArrayRealVector((minCovDetDetector.getLocalMean())));
+                            perThreadNumSamples.set(threadId, minCovDetDetector.getNumSamples());
+
+                            minCovDetDetector.setCovariance(perThreadCovariances.get(threadId));
+                            minCovDetDetector.setMean(perThreadMeans.get(threadId));
+                        } else if (detector.getODDetectorType() == ODDetectorType.MAD) {
+                            MAD madDetector = (MAD) detector;
+                            perThreadMedians.set(threadId, madDetector.getMedian());
+                        }
                         for (Datum id : inputReservoir.getReservoir()) {
                             scoreReservoir.insert(detector.score(id));
                         }
@@ -168,7 +209,45 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                         long now = useRealTimePeriod ? System.currentTimeMillis() : 0;
 
                         analysisUpdater.updateIfNecessary(now, tupleNo);
-                        modelUpdater.updateIfNecessary(now, tupleNo);
+                        if (modelUpdater.updateIfNecessary(now, tupleNo)) {
+                            if (detector.getODDetectorType() == ODDetectorType.MCD) {
+                                MinCovDet minCovDetDetector = (MinCovDet) detector;
+
+                                perThreadCovariances.set(threadId,
+                                        new Array2DRowRealMatrix(minCovDetDetector.getLocalCovariance().getData()));
+                                perThreadMeans.set(threadId,
+                                        new ArrayRealVector((minCovDetDetector.getLocalMean())));
+                                perThreadNumSamples.set(threadId, minCovDetDetector.getNumSamples());
+
+                                minCovDetDetector.setCovariance(perThreadCovariances.get(threadId));
+                                minCovDetDetector.setMean(perThreadMeans.get(threadId));
+                            } else if (detector.getODDetectorType() == ODDetectorType.MAD) {
+                                MAD madDetector = (MAD) detector;
+                                perThreadMedians.set(threadId, madDetector.getMedian());
+                            }
+
+                            if (detector.getODDetectorType() == ODDetectorType.MCD) {
+                                MinCovDet minCovDetDetector = (MinCovDet) detector;
+
+                                List<RealMatrix> covarianceMatrices = new ArrayList<RealMatrix>();
+                                List<RealVector> means = new ArrayList<RealVector>();
+                                List<Double> allNumSamples = new ArrayList<Double>();
+
+                                for (int j = 0; j < numThreads; j++) {
+                                    covarianceMatrices.add(perThreadCovariances.get(j));
+                                    means.add(perThreadMeans.get(j));
+                                    allNumSamples.add((double) perThreadNumSamples.get(j));
+                                }
+
+                                CovarianceMatrixAndMean res = MinCovDet.combineCovarianceMatrices(covarianceMatrices,
+                                        means, allNumSamples);
+
+                                ((MinCovDet) detector).setCovariance(res.getCovarianceMatrix());
+                                ((MinCovDet) detector).setMean(res.getMean());
+                            } else if (detector.getODDetectorType() == ODDetectorType.MAD) {
+                                // Do something here
+                            }
+                        }
                         double score = detector.score(d);
 
                         if (scoreReservoir != null) {
@@ -215,13 +294,22 @@ public class StreamingAnalyzer extends BaseAnalyzer {
             partitionedData.get(i % numThreads).add(data.get(i));
         }
 
+        // Initialize shared data structures
+        for (int i = 0; i < numThreads; i++) {
+            perThreadMedians.add(0.0);
+
+            perThreadCovariances.add(new Array2DRowRealMatrix());
+            perThreadMeans.add(new ArrayRealVector());
+            perThreadNumSamples.add(0);
+        }
+
         // Want to measure time taken once data is loaded
         tsw.start();
 
         List<RunnableStreamingAnalysis> rsas = new ArrayList<RunnableStreamingAnalysis>();
         // Run per-core detection and summarization
         for (int i = 0; i < numThreads; i++) {
-            RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(partitionedData.get(i), encoder);
+            RunnableStreamingAnalysis rsa = new RunnableStreamingAnalysis(partitionedData.get(i), encoder, i);
             rsas.add(rsa);
             Thread t = new Thread(rsa);
             t.start();
@@ -243,7 +331,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         tsw.stop();
 
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
-        tuplesPerSecond *= 1000000;
+        tuplesPerSecond *= (1000000 * numRuns);
 
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
         log.debug("Number of itemsets: {}", itemsetResults.size());

@@ -27,6 +27,15 @@ import macrobase.datamodel.Datum;
  * Abstract class for All outlier detection algorithms
  */
 public abstract class OutlierDetector {
+    public enum ODDetectorType {
+        BINNED_KDE,
+        KDE,
+        MAD,
+        MCD,
+        MOVING_AVERAGE,
+        ZSCORE
+    }
+
     private static final Logger log = LoggerFactory.getLogger(OutlierDetector.class);
 
     public class BatchResult {
@@ -55,6 +64,8 @@ public abstract class OutlierDetector {
     public abstract double score(Datum datum);
 
     public abstract double getZScoreEquivalent(double zscore);
+
+    public abstract ODDetectorType getODDetectorType();
 
     private Map<Double, Double> cachedZScoreEquivalents = new HashMap<>();
 
@@ -146,7 +157,7 @@ public abstract class OutlierDetector {
         return new BatchResult(inliers, outliers);
     }
 
-    protected RealMatrix getCovariance(List<? extends HasMetrics> data) {
+    public RealMatrix getCovariance(List<? extends HasMetrics> data) {
         int rank = data.get(0).getMetrics().getDimension();
         RealMatrix ret = new Array2DRowRealMatrix(data.size(), rank);
         int index = 0;
@@ -155,6 +166,6 @@ public abstract class OutlierDetector {
             index += 1;
         }
 
-        return (new Covariance(ret)).getCovarianceMatrix();
+        return (new Covariance(ret, false)).getCovarianceMatrix();
     }
 }

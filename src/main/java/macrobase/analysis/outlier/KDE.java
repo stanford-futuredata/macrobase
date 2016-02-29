@@ -169,5 +169,10 @@ public class KDE extends OutlierDetector {
         throw new RuntimeException("ZScore equivalence is not implemented yet.");
     }
 
+    @Override
+    public ODDetectorType getODDetectorType() {
+        return ODDetectorType.KDE;
+    }
+
 
 }

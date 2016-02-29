@@ -37,6 +37,8 @@ public class MAD extends OutlierDetector {
         super(conf);
     }
 
+    public double getMedian() { return median; }
+
     @Override
     public void train(List<Datum> data) {
         Timer.Context context = medianComputation.time();
@@ -99,5 +101,10 @@ public class MAD extends OutlierDetector {
         double ret = zscore / MAD_TO_ZSCORE_COEFFICIENT;
         log.trace("setting zscore of {} threshold to {}", zscore, ret);
         return ret;
+    }
+
+    @Override
+    public ODDetectorType getODDetectorType() {
+        return ODDetectorType.MAD;
     }
 }

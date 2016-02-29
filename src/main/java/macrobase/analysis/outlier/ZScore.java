@@ -53,4 +53,9 @@ public class ZScore extends OutlierDetector {
         // z-score is identity since we're literally calculating the z-score
         return zscore;
     }
+
+    @Override
+    public ODDetectorType getODDetectorType() {
+        return ODDetectorType.ZSCORE;
+    }
 }

@@ -92,6 +92,11 @@ public class BinnedKDE extends KDE {
         return 0;
     }
 
+    @Override
+    public ODDetectorType getODDetectorType() {
+        return ODDetectorType.BINNED_KDE;
+    }
+
     /**
      * Assigns data to bins (in all dimensions) using linear binning
      *

@@ -40,6 +40,11 @@ public class MovingAverage extends TimeSeriesOutlierDetector {
     }
 
     @Override
+    public ODDetectorType getODDetectorType() {
+        return ODDetectorType.MOVING_AVERAGE;
+    }
+
+    @Override
     public void addToWindow(Datum newDatum) {
         if (window.size() == 0) {
             // We don't know what weight to use for the first datum, so we wait

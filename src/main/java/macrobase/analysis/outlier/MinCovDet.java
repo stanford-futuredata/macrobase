@@ -20,12 +20,12 @@ import macrobase.datamodel.HasMetrics;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.apache.commons.math3.stat.correlation.Covariance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class MinCovDet extends OutlierDetector {
     private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
     private final Counter singularCovariances = MacroBase.metrics.counter(name(MinCovDet.class, "singularCovariances"));
 
-    static class MetricsWithScore implements HasMetrics {
+    public static class MetricsWithScore implements HasMetrics {
         private RealVector metrics;
         private Double score;
 
@@ -68,10 +68,17 @@ public class MinCovDet extends OutlierDetector {
     private Random random = new Random();
     private double stoppingDelta;
 
+    // Local parameters used for training
+    private RealMatrix localCov;
+    private RealMatrix localInverseCov;
+    private RealVector localMean;
+
+    // Global parameters used for scoring
     private RealMatrix cov;
     private RealMatrix inverseCov;
-
     private RealVector mean;
+
+    private int numSamples;
 
     public void seedRandom(long seed) {
         random = new Random(seed);
@@ -135,7 +142,7 @@ public class MinCovDet extends OutlierDetector {
         return Math.sqrt(diagSum + 2 * nonDiagSum);
     }
 
-    private RealVector getMean(List<? extends HasMetrics> data) {
+    public RealVector getMean(List<? extends HasMetrics> data) {
         RealVector vec = null;
 
         for (HasMetrics d : data) {
@@ -156,7 +163,7 @@ public class MinCovDet extends OutlierDetector {
         for (int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
             scores.add(new MetricsWithScore(d.getMetrics(),
-                                            getMahalanobis(mean, inverseCov, d.getMetrics())));
+                                            getMahalanobis(localMean, localInverseCov, d.getMetrics())));
         }
 
         if (scores.size() < k) {
@@ -171,6 +178,47 @@ public class MinCovDet extends OutlierDetector {
     // helper method
     public static double getDeterminant(RealMatrix cov) {
         return (new LUDecomposition(cov)).getDeterminant();
+    }
+
+    public static CovarianceMatrixAndMean
+        combineCovarianceMatrices(List<RealMatrix> covarianceMatrices,
+                              List<RealVector> means,
+                              List<Double> allNumSamples) {
+        RealMatrix covarianceMatrix = new Array2DRowRealMatrix(
+                covarianceMatrices.get(0).getData()).scalarMultiply(allNumSamples.get(0));
+        RealVector mean = new ArrayRealVector(means.get(0));
+        double numSamples1 = allNumSamples.get(0);
+        for (int j = 1; j < covarianceMatrices.size(); j++) {
+            // Update covariance matrices and means
+            // First update covariance matrices
+            covarianceMatrix = covarianceMatrix.add(
+                    covarianceMatrices.get(j).scalarMultiply(allNumSamples.get(j)));
+            double numSamples2 = allNumSamples.get(j);
+            RealVector mean2 = new ArrayRealVector(means.get(j));
+            RealVector meanDifference = mean.subtract(mean2);
+            covarianceMatrix = covarianceMatrix.add(
+                    meanDifference.outerProduct(meanDifference).scalarMultiply((numSamples1 * numSamples2) /
+                            (numSamples1 + numSamples2)));
+
+            // Now update means
+            mean.mapMultiplyToSelf(numSamples1);
+            mean2.mapMultiplyToSelf(numSamples2);
+            mean = mean.add(mean2);
+            mean.mapDivideToSelf(numSamples1 + numSamples2);
+            numSamples1 += numSamples2;
+        }
+        covarianceMatrix = covarianceMatrix.scalarMultiply(1.0 / numSamples1);
+
+        return new CovarianceMatrixAndMean(mean, covarianceMatrix);
+    }
+
+    private void updateLocalInverseCovariance() {
+        try {
+            localInverseCov = new LUDecomposition(localCov).getSolver().getInverse();
+        } catch (SingularMatrixException e) {
+            singularCovariances.inc();
+            localInverseCov = new SingularValueDecomposition(localCov).getSolver().getInverse();
+        }
     }
 
     private void updateInverseCovariance() {
@@ -189,6 +237,7 @@ public class MinCovDet extends OutlierDetector {
         assert (p > 1);
 
         int h = (int) Math.floor((data.size() + p + 1) * alpha);
+        numSamples = h;
 
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
@@ -196,16 +245,16 @@ public class MinCovDet extends OutlierDetector {
         context.stop();
 
         context = meanComputation.time();
-        mean = getMean(initialSubset);
+        localMean = getMean(initialSubset);
         context.stop();
 
         context = covarianceComputation.time();
-        cov = getCovariance(initialSubset);
-        updateInverseCovariance();
+        localCov = getCovariance(initialSubset);
+        updateLocalInverseCovariance();
         context.stop();
 
         context = determinantComputation.time();
-        double det = getDeterminant(cov);
+        double det = getDeterminant(localCov);
         context.stop();
 
         int stepNo = 1;
@@ -218,16 +267,16 @@ public class MinCovDet extends OutlierDetector {
             context.stop();
 
             context = meanComputation.time();
-            mean = getMean(newH);
+            localMean = getMean(newH);
             context.stop();
 
             context = covarianceComputation.time();
-            cov = getCovariance(newH);
-            updateInverseCovariance();
+            localCov = getCovariance(newH);
+            updateLocalInverseCovariance();
             context.stop();
 
             context = determinantComputation.time();
-            double newDet = getDeterminant(cov);
+            double newDet = getDeterminant(localCov);
             context.stop();
 
             double delta = det - newDet;
@@ -245,8 +294,8 @@ public class MinCovDet extends OutlierDetector {
 
         log.debug("Number of iterations in MCD step: {}", numIterations);
 
-        log.trace("mean: {}", mean);
-        log.trace("cov: {}", cov);
+        log.trace("localMean: {}", localMean);
+        log.trace("localCov: {}", localCov);
     }
 
     @Override
@@ -254,17 +303,23 @@ public class MinCovDet extends OutlierDetector {
         return getMahalanobis(mean, inverseCov, datum.getMetrics());
     }
 
-    public RealMatrix getCovariance() {
-        return cov;
+    public RealMatrix getLocalCovariance() {
+        return localCov;
+    }
+    public RealMatrix getLocalInverseCovariance() {
+        return localInverseCov;
+    }
+    public RealVector getLocalMean() {
+        return localMean;
     }
 
-    public RealMatrix getInverseCovariance() {
-        return inverseCov;
-    }
+    public int getNumSamples() { return numSamples; }
 
-    public RealVector getMean() {
-        return mean;
+    public void setCovariance(RealMatrix cov) {
+        this.cov = cov;
+        updateInverseCovariance();
     }
+    public void setMean(RealVector mean) { this.mean = mean; }
 
     @Override
     public double getZScoreEquivalent(double zscore) {
@@ -273,5 +328,10 @@ public class MinCovDet extends OutlierDetector {
         // for normal distribution, mahalanobis distance is chi-squared
         // https://en.wikipedia.org/wiki/Mahalanobis_distance#Normal_distributions
         return (new ChiSquaredDistribution(p)).inverseCumulativeProbability(cdf);
+    }
+
+    @Override
+    public ODDetectorType getODDetectorType() {
+        return ODDetectorType.MCD;
     }
 }
