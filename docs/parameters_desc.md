@@ -273,7 +273,7 @@ The following are contextual outlier detection-specific parameters.
 <table class="table">
 <tr><th>Name</th><th>Default</th><th>Meaning</th></tr>
 <tr>
-  <td><code>macrobase.analysis.contextual.switch</code></td>
+  <td><code>macrobase.analysis.contextual.enabled</code></td>
   <td><code>false</code></td>
   <td>
   Controls whether to run contextual outlier detection or not
