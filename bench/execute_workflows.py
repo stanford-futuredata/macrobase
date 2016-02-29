@@ -25,16 +25,19 @@ default_args = {
   "macrobase.analysis.streaming.inlierItemSummarySize": 10000,
   "macrobase.analysis.streaming.outlierItemSummarySize": 10000,
   "macrobase.analysis.streaming.summaryUpdatePeriod": 100000,
-  "macrobase.analysis.period.modelRefreshPeriod": 100000,
+  "macrobase.analysis.streaming.modelRefreshPeriod": 100000,
 
   "macrobase.analysis.streaming.useRealTimePeriod": "false",
-  "macrobase.analysis.period.useTupleCountPeriod": "true",
+  "macrobase.analysis.streaming.useTupleCountPeriod": "true",
 
   "macrobase.analysis.streaming.warmupCount": 50000,
   "macrobase.analysis.streaming.decayRate": 0.01,
 
   "macrobase.analysis.mcd.alpha": 0.5,
-  "macrobase.analysis.mcd.stoppingDelta": 0.001
+  "macrobase.analysis.mcd.stoppingDelta": 0.001,
+
+  "macrobase.analysis.numRuns": 1,
+  "macrobase.analysis.numThreads": 1
 }
 
 
