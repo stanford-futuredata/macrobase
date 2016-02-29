@@ -42,7 +42,7 @@ public class BaseAnalyzer {
     protected final String storeAnalysisResults;
     
     
-    protected final boolean contextualSwitch;
+    protected final boolean contextualEnabled;
     protected final List<String> contextualDiscreteAttributes;
     protected final List<String> contextualDoubleAttributes;
     protected final Double contextualDenseContextTau;
@@ -72,7 +72,7 @@ public class BaseAnalyzer {
         storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS, MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
     
     
-        contextualSwitch = conf.getBoolean(MacroBaseConf.CONTEXTUAL_SWITCH, MacroBaseDefaults.CONTEXTUAL_SWITCH);
+        contextualEnabled = conf.getBoolean(MacroBaseConf.CONTEXTUAL_ENABLED, MacroBaseDefaults.CONTEXTUAL_ENABLED);
         contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
         contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
         contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);

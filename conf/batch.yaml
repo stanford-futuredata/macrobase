@@ -1,12 +1,12 @@
 macrobase.query.name: testTasks
-macrobase.loader.attributes: []
-macrobase.loader.targetLowMetrics: []
-macrobase.loader.targetHighMetrics: [income]
+macrobase.loader.attributes: [userid]
+macrobase.loader.targetLowMetrics: [data_count_minutes]
+macrobase.loader.targetHighMetrics: []
 
-macrobase.analysis.outlierDetectorType: MAD
+macrobase.analysis.detectorType: MCD
 
 macrobase.loader.db.dbUrl: postgres
-macrobase.loader.db.baseQuery: SELECT * FROM marketing;
+macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
 
 macrobase.analysis.minSupport: 0.001
 macrobase.analysis.minOIRatio: 3.0
@@ -25,14 +25,14 @@ macrobase.analysis.mcd.stoppingDelta: 0.001
 macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
 macrobase.loader.db.cacheDirectory: sql_cache
 
-macrobase.analysis.contextual.switch: true
-macrobase.analysis.contextual.discreteAttributes: [sex,marital_status,age,education,occupation,time_live_in_sf_area,dual_income_if_married,persons_in_household,persons_in_household_under_18,householder_status,home_type,ethnic,language]
-macrobase.analysis.contextual.doubleAttributes: []
-macrobase.analysis.contextual.denseContextTau: 0.3
-macrobase.analysis.contextual.numIntervals: 10
-
 logging:
   level: INFO
 
   loggers:
     "macrobase": TRACE
+
+macrobase.analysis.contextual.enabled: false
+macrobase.analysis.contextual.discreteAttributes: []
+macrobase.analysis.contextual.doubleAttributes: []
+macrobase.analysis.contextual.denseContextTau: 0.3
+macrobase.analysis.contextual.numIntervals: 10

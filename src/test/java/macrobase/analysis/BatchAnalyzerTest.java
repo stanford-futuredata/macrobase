@@ -117,7 +117,7 @@ public class BatchAnalyzerTest {
                  .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                  .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER)
                  .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simpleContextual.csv")
-                .set(MacroBaseConf.CONTEXTUAL_SWITCH,true)
+                .set(MacroBaseConf.CONTEXTUAL_ENABLED,true)
                 .set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
                 .set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1","C2"))
                 .set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)

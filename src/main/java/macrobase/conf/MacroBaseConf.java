@@ -70,7 +70,7 @@ public class MacroBaseConf extends Configuration {
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
 
     
-    public static final String CONTEXTUAL_SWITCH = "macrobase.analysis.contextual.switch";
+    public static final String CONTEXTUAL_ENABLED = "macrobase.analysis.contextual.enabled";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";

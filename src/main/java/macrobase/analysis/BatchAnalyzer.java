@@ -53,9 +53,9 @@ public class BatchAnalyzer extends BaseAnalyzer {
     	contextualDetector.searchContextualOutliers(data, zScore);
     	Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
         for(Context context: context2Outliers.keySet()){
-        	System.out.println("Context: " + context.print(encoder));
-        	System.out.println("Number of Inliers: " + context2Outliers.get(context).getInliers().size());
-        	System.out.println("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+        	log.info("Context: " + context.print(encoder));
+        	log.info("Number of Inliers: " + context2Outliers.get(context).getInliers().size());
+        	log.info("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
       
         }
     	//explain the contextual outliers
@@ -63,9 +63,8 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
     public AnalysisResult analyze() throws SQLException, IOException, ConfigurationException {
         
-    	if(contextualSwitch){
-    		contextualAnalyze();
-    		return new AnalysisResult(0,0,0,0,0,new ArrayList<ItemsetResult>());
+    	if(contextualEnabled){
+    		contextualAnalyze();	
     	}
     	
     	
