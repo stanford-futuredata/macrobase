@@ -323,13 +323,13 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                     }
                 }
 
-                if ((numThreads > 1 && endSemaphore.tryAcquire(numThreads - 1)) ||
-                        (numThreads == 1 && run >= numRuns)) {
-                    // Hack to easily break out of nested loop
-                    break outerLoop;
-                }
-
                 tupleNo += 1;
+            }
+
+            if ((numThreads > 1 && endSemaphore.tryAcquire(numThreads - 1)) ||
+                    (numThreads == 1 && run >= numRuns)) {
+                // Hack to easily break out of nested loop
+                break outerLoop;
             }
         }
 
