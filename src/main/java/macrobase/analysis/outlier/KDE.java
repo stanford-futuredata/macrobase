@@ -24,7 +24,7 @@ public class KDE extends OutlierDetector {
     private List<Datum> densityPopulation;
     protected RealMatrix bandwidth; // symmetric and positive definite
     protected RealMatrix bandwidthToNegativeHalf;
-    private double scoreScalingFactor;
+    protected double scoreScalingFactor;
     private double[] allScores;
     private BandwidthAlgorithm bandwidthAlgorithm;
     private double proportionOfDataToUse;
@@ -64,6 +64,15 @@ public class KDE extends OutlierDetector {
 
     public void setProportionOfDataToUse(double ratio) {
         this.proportionOfDataToUse = ratio;
+    }
+
+    /**
+     * Scaled version of the kernel (K_H in the literature)
+     * @param vector
+     * @return
+     */
+    protected double scaledKernelDensity(RealVector vector) {
+        return this.kernel.density(this.bandwidthToNegativeHalf.operate(vector));
     }
 
     /**
@@ -116,7 +125,6 @@ public class KDE extends OutlierDetector {
                 RealMatrix covariance = this.getCovariance(data);
                 log.info("Covarience of the data is: {}", covariance);
                 bandwidth = covariance.scalarMultiply(covarianceScale);
-                log.info("Covarience of the data is: {}", covariance);
             case MANUAL:
                 break;
         }
@@ -158,7 +166,7 @@ public class KDE extends OutlierDetector {
         double _score = 0.0;
         for (int i = 0; i < densityPopulation.size(); i++) {
             RealVector difference = datum.getMetrics().subtract(densityPopulation.get(i).getMetrics());
-            double _diff = kernel.density(this.bandwidthToNegativeHalf.operate(difference));
+            double _diff = scaledKernelDensity(difference);
             _score += _diff;
         }
         return -_score * this.scoreScalingFactor;

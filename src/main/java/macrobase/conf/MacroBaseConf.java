@@ -49,6 +49,7 @@ public class MacroBaseConf extends Configuration {
     public static final String KDE_BANDWIDTH_MULTIPLIER = "macrobase.analysis.kde.bandwidthMultiplier";
     public static final String KDE_KERNEL_TYPE = "macrobase.analysis.kde.kernelType";
     public static final String BINNED_KDE_BINS = "macrobase.analysis.binnedKde.numBins";
+    public static final String KDTREE_LEAF_CAPACITY = "macrobase.analysis.treeKde.leafCapacity";
 
     public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
@@ -77,6 +78,7 @@ public class MacroBaseConf extends Configuration {
         ZSCORE,
         KDE,
         BINNED_KDE,
+        TREE_KDE,
         MOVING_AVERAGE
     }
 

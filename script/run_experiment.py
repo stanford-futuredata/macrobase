@@ -10,6 +10,7 @@ from py_analysis.plot_distribution import parse_args as plot_dist_parse_args
 from py_analysis.plot_distribution import plot_distribution
 from py_analysis.plot_estimator import parse_args as plot_est_parse_args
 from py_analysis.plot_estimator import plot_estimator
+from helpers import retry_3_times
 
 SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.analysis.results.store"
 HIGH_METRICS = "macrobase.loader.targetHighMetrics"
@@ -31,7 +32,9 @@ def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
 
 
 def parse_args():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser("""Example usage:
+    python script/run_experiment.py bench/conf/treekde-test.yaml
+  """)
   parser.add_argument('experiment_yaml', type=argparse.FileType('r'))
   parser.add_argument('--remove-cached-data', action='store_true')
   parser.add_argument('--rename', help='Give a new name to the experiment')
@@ -79,7 +82,7 @@ if __name__ == '__main__':
   else:
     experiment_name = os.path.basename(
         args.experiment_yaml.name).rsplit('.')[0]
-    if args.macrobase_args is not None and DETECTOR in args.macrobase_args:
+    if 'macrobase_args' in vars(args) and DETECTOR in args.macrobase_args:
       experiment_name = '%s-%s' % (experiment_name,
                                    args.macrobase_args[DETECTOR])
     experiment['macrobase']['taskName'] = experiment_name
@@ -87,33 +90,38 @@ if __name__ == '__main__':
   taskname = experiment['macrobase']['taskName']
   if 'synthetic_data' in experiment:
     data_file = _file('target', 'data', taskname + '.csv')
-    if len(experiment['synthetic_data'].split()[1].split(',')) == 3:
-      dimensions = '1D'
-    else:
-      dimensions = '2D'
-    raw_args = (
-        [dimensions] +
-        experiment['synthetic_data'].split() +
-        ['--outfile', data_file])
-    print 'generating distribution with args:'
-    print('python script/generate_multimodal_distribution.py ' +
-          ' '.join(raw_args))
-    generate_args = generator_parse_args(raw_args)
-    generate_distribution(generate_args)
 
-    figure_file = _file('target', 'plots', '%s-distribution.png' % taskname)
-    raw_args = ['--csv', data_file,
-                '--savefig', figure_file]
+    @retry_3_times
+    def generate_and_plot_data():
+      if len(experiment['synthetic_data'].split()[1].split(',')) == 3:
+        dimensions = '1D'
+      else:
+        dimensions = '2D'
+      raw_args = (
+          [dimensions] +
+          experiment['synthetic_data'].split() +
+          ['--outfile', data_file])
+      print 'generating distribution with args:'
+      print('python script/generate_multimodal_distribution.py ' +
+            ' '.join(raw_args))
+      generate_args = generator_parse_args(raw_args)
+      generate_distribution(generate_args)
 
-    if dimensions == '2D':
-      raw_args.extend(['--hist2d', 'XX', 'YY',
-                       '--x-limits', '1', '25'])
-    elif dimensions == '1D':
-      raw_args.extend(['--histogram', 'XX'])
-    print ('python script/py_analysis/plot_distribution.py ' +
-           ' '.join(raw_args))
-    plot_args = plot_dist_parse_args(raw_args)
-    plot_distribution(plot_args)
+      figure_file = _file('target', 'plots', '%s-distribution.png' % taskname)
+      raw_args = ['--csv', data_file,
+                  '--savefig', figure_file]
+
+      if dimensions == '2D':
+        raw_args.extend(['--hist2d', 'XX', 'YY',
+                         '--x-limits', '1', '25'])
+      elif dimensions == '1D':
+        raw_args.extend(['--histogram', 'XX'])
+      print ('python script/py_analysis/plot_distribution.py ' +
+             ' '.join(raw_args))
+
+      plot_args = plot_dist_parse_args(raw_args)
+      plot_distribution(plot_args)
+    generate_and_plot_data()
   else:
     print 'it has to be a synthetic experiment for now'
 
@@ -128,7 +136,7 @@ if __name__ == '__main__':
   with open(config_file, 'w') as config_yaml:
     config_yaml.write(yaml.dump(config))
 
-  kwargs = args.macrobase_args
+  kwargs = getattr(args, 'macrobase_args', {})
   print kwargs
   run_macrobase(conf=config_file, **kwargs)
 

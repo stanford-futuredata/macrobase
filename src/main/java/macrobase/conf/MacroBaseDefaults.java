@@ -44,6 +44,9 @@ public class MacroBaseDefaults {
     // BinnedKDE defaults
     public static final Integer BINNED_KDE_BINS = 10000;
 
+    // TreeKDE defaults
+    public static final Integer KDTREE_LEAF_CAPACITY = 2;
+
     // Analysis results
     public static final String STORE_ANALYSIS_RESULTS = null;
 
