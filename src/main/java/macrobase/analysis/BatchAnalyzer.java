@@ -4,6 +4,9 @@ import com.google.common.base.Stopwatch;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import macrobase.analysis.contextualoutlier.Context;
+import macrobase.analysis.contextualoutlier.ContextualOutlierDetector;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
@@ -11,8 +14,11 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.DataLoader;
 import macrobase.ingest.DatumEncoder;
-
+import macrobase.ingest.SQLLoader;
+import macrobase.ingest.result.Schema;
+import macrobase.ingest.result.Schema.SchemaColumn;
 import macrobase.ingest.transform.DataTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +35,40 @@ public class BatchAnalyzer extends BaseAnalyzer {
         super(conf);
         conf.sanityCheckBatch();
     }
+    
+    public void contextualAnalyze() throws SQLException, IOException, ConfigurationException{
+    	OutlierDetector detector = constructDetector(randomSeed);
+    	
+    	
+    	DataLoader loader = constructLoader();
+    	DatumEncoder encoder = new DatumEncoder();
+    	List<Datum> data = loader.getData(encoder,
+    			contextualDiscreteAttributes,contextualDoubleAttributes);
+    	
+    	
+    	
+    	ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(detector,
+    			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
+    	
+    	contextualDetector.searchContextualOutliers(data, zScore);
+    	Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        for(Context context: context2Outliers.keySet()){
+        	log.info("Context: " + context.print(encoder));
+        	log.info("Number of Inliers: " + context2Outliers.get(context).getInliers().size());
+        	log.info("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+      
+        }
+    	//explain the contextual outliers
+    }
 
     public AnalysisResult analyze() throws SQLException, IOException, ConfigurationException {
-        DatumEncoder encoder = new DatumEncoder();
+        
+    	if(contextualEnabled){
+    		contextualAnalyze();	
+    	}
+    	
+    	
+    	DatumEncoder encoder = new DatumEncoder();
 
         Stopwatch sw = Stopwatch.createUnstarted();
 

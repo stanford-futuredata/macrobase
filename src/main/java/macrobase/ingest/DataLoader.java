@@ -50,6 +50,11 @@ public abstract class DataLoader {
 
     public abstract List<Datum> getData(DatumEncoder encoder)
             throws SQLException, IOException;
+    
+    public abstract List<Datum> getData(DatumEncoder encoder, 
+    		List<String> contextualDiscreteAttributes,
+    		List<String> contextualDoubleAttributes)
+            throws SQLException, IOException;
 
     public abstract RowSet getRows(String baseQuery,
                                    List<RowSetResource.RowSetRequest.RowRequestPair> preds,

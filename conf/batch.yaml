@@ -30,3 +30,9 @@ logging:
 
   loggers:
     "macrobase": TRACE
+
+macrobase.analysis.contextual.enabled: false
+macrobase.analysis.contextual.discreteAttributes: []
+macrobase.analysis.contextual.doubleAttributes: []
+macrobase.analysis.contextual.denseContextTau: 0.3
+macrobase.analysis.contextual.numIntervals: 10

@@ -1,5 +1,8 @@
 package macrobase.conf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import macrobase.analysis.outlier.KDE;
 import macrobase.conf.MacroBaseConf.DataLoaderType;
 import macrobase.conf.MacroBaseConf.DetectorType;
@@ -60,4 +63,10 @@ public class MacroBaseDefaults {
     public static final String DB_PASSWORD = "";
     public static final String DB_NAME = "postgres";
     public static final String DB_URL = "localhost";
+    
+    public static final Boolean CONTEXTUAL_ENABLED = false;
+    public static final Double CONTEXTUAL_DENSECONTEXTTAU = 0.5;
+    public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
+    public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
+    public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
 }

@@ -91,6 +91,22 @@ public abstract class SQLLoader extends DataLoader {
         return sql.replaceAll(";", "");
     }
 
+    public Schema getSchema()
+            throws SQLException {
+        Statement stmt = connection.createStatement();
+        String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
+        ResultSet rs = stmt.executeQuery(sql);
+
+        List<Schema.SchemaColumn> columns = Lists.newArrayList();
+
+        for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
+            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
+                                                rs.getMetaData().getColumnTypeName(i)));
+        }
+
+        return new Schema(columns);
+    }
+    
     public Schema getSchema(String baseQuery)
             throws SQLException {
         Statement stmt = connection.createStatement();
@@ -255,4 +271,88 @@ public abstract class SQLLoader extends DataLoader {
         }
     }
 
+    @Override
+    public List<Datum> getData(DatumEncoder encoder,
+    		List<String> contextualDiscreteAttributes,
+    		List<String> contextualDoubleAttributes)throws SQLException, IOException{
+    	String targetColumns = StreamSupport.stream(
+                Iterables.concat(attributes, lowMetrics, highMetrics, auxiliaryAttributes,contextualDiscreteAttributes,contextualDoubleAttributes).spliterator(), false)
+                .collect(Collectors.joining(", "));
+        String sql = String.format("SELECT %s FROM (%s) baseQuery",
+                                   targetColumns,
+                                   removeSqlJunk(baseQuery));
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+
+
+        for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
+            encoder.recordAttributeName(i, rs.getMetaData().getColumnName(i));
+        }
+
+        List<Datum> ret = Lists.newArrayList();
+
+
+        while (rs.next()) {
+            List<Integer> attrList = new ArrayList<>(attributes.size());
+
+            int i = 1;
+            for (; i <= attributes.size(); ++i) {
+                attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
+            }
+
+            RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
+            int vecPos = 0;
+
+            for (; i <= attributes.size() + lowMetrics.size(); ++i) {
+                double val = Math.pow(Math.max(rs.getDouble(i), 0.1), -1);
+                metricVec.setEntry(vecPos, val);
+
+                vecPos += 1;
+            }
+
+            for (; i <= attributes.size() + lowMetrics.size() + highMetrics.size(); ++i) {
+                double val = rs.getDouble(i);
+                metricVec.setEntry(vecPos, val);
+
+                vecPos += 1;
+            }
+
+            List<Integer> contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
+            for (; i <= attributes.size() + lowMetrics.size() + highMetrics.size() + contextualDiscreteAttributes.size(); ++i) {
+            	contextualDiscreteAttributesValues.add(encoder.getIntegerEncoding(i, rs.getString(i)));
+            }
+            
+            RealVector contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
+            vecPos = 0;
+            for (; i <= attributes.size() + lowMetrics.size() + highMetrics.size()+ contextualDiscreteAttributes.size() + contextualDoubleAttributes.size(); ++i) {
+                double val = rs.getDouble(i);
+                contextualDoubleAttributesValues.setEntry(vecPos, val);
+
+                vecPos += 1;
+            }
+            
+            
+            
+            Datum datum = new Datum(attrList, metricVec,contextualDiscreteAttributesValues,contextualDoubleAttributesValues);
+
+            // Set auxilaries on the datum if user specified
+            if (auxiliaryAttributes.size() > 0) {
+                RealVector auxilaries = new ArrayRealVector(auxiliaryAttributes.size());
+                for (int j = 0; j < auxiliaryAttributes.size(); ++j, ++i) {
+                    auxilaries.setEntry(j, rs.getDouble(i));
+                }
+                datum.setAuxiliaries(auxilaries);
+            }
+
+            ret.add(datum);
+        }
+
+        // normalize data
+        dataTransformation.transform(ret);
+
+        return ret;
+    }
+
+      
+   
 }

@@ -40,6 +40,13 @@ public class BaseAnalyzer {
     protected final String queryName;
 
     protected final String storeAnalysisResults;
+    
+    
+    protected final boolean contextualEnabled;
+    protected final List<String> contextualDiscreteAttributes;
+    protected final List<String> contextualDoubleAttributes;
+    protected final Double contextualDenseContextTau;
+    protected final Integer contextualNumIntervals;
 
     public BaseAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
@@ -63,6 +70,13 @@ public class BaseAnalyzer {
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
 
         storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS, MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
+    
+    
+        contextualEnabled = conf.getBoolean(MacroBaseConf.CONTEXTUAL_ENABLED, MacroBaseDefaults.CONTEXTUAL_ENABLED);
+        contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
+        contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
+        contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
+        contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
     }
 
     public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {
