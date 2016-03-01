@@ -349,7 +349,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         tsw.stop();
 
         double tuplesPerSecond = ((double) data.size()) / ((double) tsw.elapsed(TimeUnit.MICROSECONDS));
-        tuplesPerSecond *= 1000000;
+        tuplesPerSecond *= (1000000 * numRuns);
 
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
         log.debug("Number of itemsets: {}", itemsetResults.size());
