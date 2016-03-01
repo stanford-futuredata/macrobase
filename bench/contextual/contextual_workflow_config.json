@@ -1,0 +1,23 @@
+[
+  
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM marketing;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [],
+    "macrobase.query.name": "marketing",
+    "macrobase.loader.targetHighMetrics": ["income"]
+  }
+  
+  
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [],
+    "macrobase.query.name": "cmt100000",
+    "macrobase.loader.targetHighMetrics": ["income"]
+  }
+  
+  
+]

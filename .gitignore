@@ -32,6 +32,9 @@ sql_cache/*
 bench/workflows/*
 bench/conf/custom/
 
+bench/contextual/workflows/*
+bench/contextual/conf/custom/
+
 # Plots
 *.pdf
 

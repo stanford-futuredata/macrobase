@@ -1,0 +1,8 @@
+{
+  
+  "macrobase.analysis.zscore.threshold": [
+    3,
+    5,
+    7
+  ]
+}
