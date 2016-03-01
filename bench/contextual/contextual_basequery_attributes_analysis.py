@@ -83,21 +83,21 @@ def getPotentialDiscreteColumns(baseQuery):
         numRows = counts[0]
         numDistinctValues = counts[1]
         numNonNulls = counts[2]
-        if(numNonNulls / numRows > 0.5 and numDistinctValues / numRows < 0.1):
+        if(numDistinctValues / numRows < 0.1):
             result.append(colName)
     return result
 
 if __name__ == '__main__':
     
-    baseQuery = "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;"
-    #baseQuery = "SELECT * FROM marketing"
+    #baseQuery = "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;"
+    baseQuery = "SELECT * FROM marketing"
     
     print "Analyzing baseQuery: " + baseQuery
     
     numericColumns = getNumericColumns(baseQuery)
-    print "Potential Metric Columns are : " + ', '.join(numericColumns)
-    print "Potential Double Contextual Columns are : " + ', '.join(numericColumns)
+    print "Potential Metric Columns are : " + ', '.join(['\"' + x + '\"' for x in numericColumns])
+    print "Potential Double Contextual Columns are : " + ', '.join(['\"' + x + '\"' for x in numericColumns])
     
     discreteColumns = getPotentialDiscreteColumns(baseQuery)
-    print "Potential Discrete Contextual Columns are: " + ', '.join(discreteColumns)
+    print "Potential Discrete Contextual Columns are: " + ', '.join(['\"' + x + '\"' for x in discreteColumns])
 
