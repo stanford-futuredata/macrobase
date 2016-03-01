@@ -264,7 +264,7 @@ if __name__ == '__main__':
         if default_override is not None and key in defaults:
             defaults[key] = default_override
 
-    run_all_workloads(args.workflows, defaults, args.number_of_runs)
+    # run_all_workloads(args.workflows, defaults, args.number_of_runs)
     for parameter_name, values in args.sweeping_parameters.iteritems():
         for parameter_value in values:
             run_all_workloads(args.workflows, defaults,
