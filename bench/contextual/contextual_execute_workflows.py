@@ -104,6 +104,18 @@ def parse_results(results_file):
     return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
             tuples_per_second_no_itemset_mining)
 
+def seperate_contextual_results(results_file):
+    contextual_results_file = results_file + "_contextual"
+    
+    g = open(contextual_results_file,'w')
+    
+    with open(results_file, 'r') as f:
+        lines = f.read().split('\n')
+        for i in xrange(len(lines)):
+            line = lines[i]
+            if 'macrobase.analysis.BatchAnalyzer' in line or 'macrobase.analysis.contextualoutlier' in line:
+                 g.write(line + '\n')
+    g.close()
 
 def get_stats(value_list):
     value_list = [float(value) for value in value_list]
@@ -151,6 +163,11 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print 'running the following command:'
         print macrobase_cmd
         os.system("cd ..; cd ..; %s" % macrobase_cmd)
+        
+        seperate_contextual_results(results_file)
+        #for inspecting contextual outlier performance
+        
+        
         (times, num_itemsets, num_iterations, itemsets,
             tuples_per_second, tuples_per_second_no_itemset_mining) = parse_results(results_file)
 

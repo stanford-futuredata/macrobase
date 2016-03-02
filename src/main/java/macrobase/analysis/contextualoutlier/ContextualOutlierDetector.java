@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
 
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.summary.result.DatumWithScore;
@@ -54,34 +57,63 @@ public class ContextualOutlierDetector{
     
     public void searchContextualOutliers(List<Datum> data, double zScore){
     	
+    	Stopwatch sw = Stopwatch.createUnstarted();
+    	
+    	
     	log.debug("Find global context outliers on data size: " + data.size());
+    	sw.start();
+    	
     	OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(data, zScore);
     	List<Datum> remainingData = new ArrayList<Datum>();
     	for(DatumWithScore ds: or.getInliers()){
     		remainingData.add(ds.getDatum());
     	}
-    	log.debug("Done global context outlier remaining data size: " + remainingData.size());
+    	
+    	sw.stop();
+    	long globalOutlierDetecionTime = sw.elapsed(TimeUnit.MILLISECONDS);
+    	sw.reset();
+    	log.debug("Done global context outlier remaining data size {} : (time: {}ms)", remainingData.size(),globalOutlierDetecionTime);
     	
     	
     	List<LatticeNode> preLatticeNodes = null;
     	List<LatticeNode> curLatticeNodes = null;
     	for(int level = 1; level <= totalContextualDimensions; level++){
 			
+    		
+    		log.debug("Build {}-dimensional contexts on all attributes",level);
+    		sw.start();
     		if(level == 1){
-        		log.debug("Build one-dimensional contexts on all attributes");
         		curLatticeNodes = buildOneDimensionalLatticeNodes(remainingData);
         	}else{
-        		log.debug("Build {}-dimensional contexts on all attributes",level);
-        		curLatticeNodes = levelUpLattice(preLatticeNodes, remainingData);
-    			
+        		curLatticeNodes = levelUpLattice(preLatticeNodes, remainingData);	
         	}
+    		sw.stop();
+    		long latticeNodesBuildTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
+    		sw.reset();
+        	log.debug("Done building {}-dimensional contexts on all attributes (time: {}ms)", level,latticeNodesBuildTimeCurLevel);
+
+    		
+    		if(curLatticeNodes.size() == 0){
+    			log.debug("No more dense contexts, thus no need to level up anymore");
+    			break;
+    		}
+    			
+    		
         	log.debug("Find {}-dimensional contextual outliers",level);
+        	sw.start();
+        	int numDenseContextsCurLevel = 0;
         	//run contextual outlier detection
         	for(LatticeNode node: curLatticeNodes){
         		for(Context context: node.getDenseContexts()){
         			contextualOutlierDetection(remainingData,context,zScore);
+        			numDenseContextsCurLevel++;
         		}
         	}
+        	sw.stop();
+        	long contextualOutlierDetectionTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
+        	log.debug("Done Find {}-dimensional contextual outliers (time: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
+        	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average time per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
+
         	
 			preLatticeNodes = curLatticeNodes;
 		}
