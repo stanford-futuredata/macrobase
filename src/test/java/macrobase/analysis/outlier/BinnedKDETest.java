@@ -28,8 +28,8 @@ public class BinnedKDETest {
         }
 
         kde.train(data);
-        assertEquals(kde.score(data.get(0)), -0.005083, 1e-5);
-        assertEquals(kde.score(data.get(50)), -0.010001, 1e-5);
-        assertEquals(kde.score(data.get(data.size() - 1)), -0.005083, 1e-5);
+        assertEquals( -0.005129, kde.score(data.get(0)), 1e-5);
+        assertEquals(-0.010001, kde.score(data.get(50)),  1e-5);
+        assertEquals(-0.005133, kde.score(data.get(data.size() - 1)), 1e-5);
     }
 }

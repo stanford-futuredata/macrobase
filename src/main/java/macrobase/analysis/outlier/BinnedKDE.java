@@ -32,6 +32,7 @@ public class BinnedKDE extends KDE {
 
     public BinnedKDE(MacroBaseConf conf) {
         super(conf);
+        proportionOfDataToUse = 1.0;
         this.numBins = conf.getInt(MacroBaseConf.BINNED_KDE_BINS, MacroBaseDefaults.BINNED_KDE_BINS);
         this.numIntervals = this.numBins - 1;
     }

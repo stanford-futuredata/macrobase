@@ -27,7 +27,7 @@ public class KDE extends OutlierDetector {
     protected double scoreScalingFactor;
     private double[] allScores;
     private BandwidthAlgorithm bandwidthAlgorithm;
-    private double proportionOfDataToUse;
+    protected double proportionOfDataToUse;
     protected double algorithmicBandwidthMultiplier = 1.0;
 
     protected int metricsDimensions;
@@ -55,6 +55,7 @@ public class KDE extends OutlierDetector {
         super(conf);
         this.kernelType = conf.getKDEKernelType();
         this.bandwidthAlgorithm = conf.getKDEBandwidth();
+        log.debug("using {} bandwidth selection algorithm", this.bandwidthAlgorithm);
         this.algorithmicBandwidthMultiplier = conf.getDouble(MacroBaseConf.KDE_BANDWIDTH_MULTIPLIER, MacroBaseDefaults.KDE_BANDWIDTH_MULTIPLIER);
         
         this.kernel = this.kernelType.constructKernel(this.metricsDimensions);
@@ -151,6 +152,8 @@ public class KDE extends OutlierDetector {
     @Override
     public void train(List<Datum> data) {
         this.setBandwidth(data);
+
+        log.debug("training on {}% of the data", 100 * this.proportionOfDataToUse);
 
         // Very rudimentary sampling, write something better in the future.
         densityPopulation = new ArrayList<Datum>(data);

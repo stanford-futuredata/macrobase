@@ -7,6 +7,7 @@ import macrobase.analysis.outlier.KDE;
 import macrobase.conf.MacroBaseConf.DataLoaderType;
 import macrobase.conf.MacroBaseConf.DetectorType;
 import macrobase.conf.MacroBaseConf.DataTransformType;
+import macrobase.ingest.CsvLoader;
 
 public class MacroBaseDefaults {
     public static final String QUERY_NAME = "MacroBaseQuery";
@@ -49,6 +50,7 @@ public class MacroBaseDefaults {
 
     // TreeKDE defaults
     public static final Integer KDTREE_LEAF_CAPACITY = 2;
+    public static final Double TREE_KDE_ACCURACY = 1e-5;
 
     // Analysis results
     public static final String STORE_ANALYSIS_RESULTS = null;
@@ -58,6 +60,7 @@ public class MacroBaseDefaults {
     public static final String TIME_COLUMN = null;
     public static final DetectorType DETECTOR_TYPE = DetectorType.MAD_OR_MCD;
     public static final DataTransformType DATA_TRANSFORM = DataTransformType.ZERO_TO_ONE_SCALE;
+    public static final CsvLoader.Compression CSV_COMPRESSION = CsvLoader.Compression.UNCOMPRESSED;
 
     public static final String DB_USER = System.getProperty("user.name");
     public static final String DB_PASSWORD = "";

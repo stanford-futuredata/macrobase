@@ -3,6 +3,7 @@ package macrobase.conf;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.outlier.KDE;
+import macrobase.ingest.CsvLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +51,7 @@ public class MacroBaseConf extends Configuration {
     public static final String KDE_KERNEL_TYPE = "macrobase.analysis.kde.kernelType";
     public static final String BINNED_KDE_BINS = "macrobase.analysis.binnedKde.numBins";
     public static final String KDTREE_LEAF_CAPACITY = "macrobase.analysis.treeKde.leafCapacity";
+    public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
 
     public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
@@ -69,14 +71,14 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
-
+    public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
     
     public static final String CONTEXTUAL_ENABLED = "macrobase.analysis.contextual.enabled";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
-    
+
     public enum DetectorType {
         MAD_OR_MCD,
         MAD,
@@ -230,6 +232,15 @@ public class MacroBaseConf extends Configuration {
         }
         return KDE.KernelType.valueOf(_conf.get(KDE_KERNEL_TYPE));
     }
+
+    public CsvLoader.Compression getCsvCompression() {
+        if (!_conf.containsKey(CSV_COMPRESSION)) {
+            return MacroBaseDefaults.CSV_COMPRESSION;
+        }
+        return CsvLoader.Compression.valueOf(_conf.get(CSV_COMPRESSION));
+    }
+
+
 
     @Override
     public String toString() {

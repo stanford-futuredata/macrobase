@@ -172,6 +172,10 @@ public class KDTree {
         return true;
     }
 
+    public List<Datum> getItems() {
+        return this.items;
+    }
+
     public RealVector getMean() {
         return this.mean;
     }

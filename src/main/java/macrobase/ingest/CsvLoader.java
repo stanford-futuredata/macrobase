@@ -1,6 +1,7 @@
 package macrobase.ingest;
 
 import com.google.common.collect.Lists;
+import macrobase.MacroBase;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -9,13 +10,14 @@ import macrobase.ingest.result.Schema;
 import macrobase.ingest.transform.DataTransformation;
 import macrobase.runtime.resources.RowSetResource;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -24,11 +26,25 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 public class CsvLoader extends DataLoader {
+    public enum Compression {
+        UNCOMPRESSED,
+        GZIP
+    }
     public CsvLoader(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
 
-        File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
-        csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        String filename = conf.getString(MacroBaseConf.CSV_INPUT_FILE);
+        Compression compression = conf.getCsvCompression();
+
+        if (compression == Compression.GZIP) {
+            InputStream fileStream = new FileInputStream(filename);
+            InputStream gzipStream = new GZIPInputStream(fileStream);
+            Reader decoder = new InputStreamReader(gzipStream);
+            csvParser = new CSVParser(decoder, CSVFormat.DEFAULT.withHeader());
+        } else {
+            File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
+            csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        }
         schema = csvParser.getHeaderMap();
     }
 
