@@ -111,6 +111,7 @@ public class ContextualOutlierDetector{
         	}
         	sw.stop();
         	long contextualOutlierDetectionTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
+        	sw.reset();
         	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
 
@@ -129,25 +130,49 @@ public class ContextualOutlierDetector{
 	private List<LatticeNode> levelUpLattice(List<LatticeNode> latticeNodes, List<Datum> data){
 		
 		//sort the subspaces by their dimensions
+		Stopwatch sw = Stopwatch.createUnstarted();
+		
+		log.debug("\tSorting lattice nodes in level {} by their dimensions " , latticeNodes.get(0).dimensions.size());
+		sw.start();
+		
+		
 		List<LatticeNode> latticeNodeByDimensions = new ArrayList<LatticeNode>(latticeNodes);
 	    Collections.sort(latticeNodeByDimensions, new LatticeNode.DimensionComparator());
 
+	    sw.stop();
+	    long sortingTime = sw.elapsed(TimeUnit.MILLISECONDS);
+	    sw.reset();
+		log.debug("\tDone Sorting lattice nodes in level {} by their dimensions (duration: {}ms)" , latticeNodes.get(0).dimensions.size(), sortingTime);
+
+	    
 	    //find out dense candidate subspaces 
 	    List<LatticeNode> result = new ArrayList<LatticeNode>();
 		
+	    
+		log.debug("\tJoining lattice nodes in level {} by their dimensions " , latticeNodes.get(0).dimensions.size());
+		sw.start();
+		
+		int numLatticeNodeJoins = 0;
 	    for(int i = 0; i < latticeNodeByDimensions.size(); i++ ){
 	    	for(int j = i +1; j < latticeNodeByDimensions.size(); j++){
 	    		LatticeNode s1 = latticeNodeByDimensions.get(i);
 	    		LatticeNode s2 = latticeNodeByDimensions.get(j);
 	    		LatticeNode joined = s1.join(s2, data.size(), denseContextTau);
-	    		
+	    		numLatticeNodeJoins++;
 	    		if(joined != null){
 	    			result.add(joined);
 	    		}
 	    	}
 	    }
 	    
-	    
+	    sw.stop();
+	    long joiningTime = sw.elapsed(TimeUnit.MILLISECONDS);
+	    sw.reset();
+		log.debug("\tDone Joining lattice nodes in level {} by their dimensions (duration: {}ms)" , latticeNodes.get(0).dimensions.size(), joiningTime);
+		log.debug("\tDone Joining lattice nodes in level {} by their dimensions, there are {} joins (average duration per lattice node pair join: {}ms)" , latticeNodes.get(0).dimensions.size(), numLatticeNodeJoins, joiningTime/numLatticeNodeJoins);
+
+		
+		
 		return result;
 	}
 	
