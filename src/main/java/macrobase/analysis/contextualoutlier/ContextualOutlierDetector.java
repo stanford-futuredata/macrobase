@@ -72,7 +72,7 @@ public class ContextualOutlierDetector{
     	sw.stop();
     	long globalOutlierDetecionTime = sw.elapsed(TimeUnit.MILLISECONDS);
     	sw.reset();
-    	log.debug("Done global context outlier remaining data size {} : (time: {}ms)", remainingData.size(),globalOutlierDetecionTime);
+    	log.debug("Done global context outlier remaining data size {} : (duration: {}ms)", remainingData.size(),globalOutlierDetecionTime);
     	
     	
     	List<LatticeNode> preLatticeNodes = null;
@@ -90,7 +90,7 @@ public class ContextualOutlierDetector{
     		sw.stop();
     		long latticeNodesBuildTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
     		sw.reset();
-        	log.debug("Done building {}-dimensional contexts on all attributes (time: {}ms)", level,latticeNodesBuildTimeCurLevel);
+        	log.debug("Done building {}-dimensional contexts on all attributes (duration: {}ms)", level,latticeNodesBuildTimeCurLevel);
 
     		
     		if(curLatticeNodes.size() == 0){
@@ -111,8 +111,8 @@ public class ContextualOutlierDetector{
         	}
         	sw.stop();
         	long contextualOutlierDetectionTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
-        	log.debug("Done Find {}-dimensional contextual outliers (time: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
-        	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average time per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
+        	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
+        	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
 
         	
 			preLatticeNodes = curLatticeNodes;
