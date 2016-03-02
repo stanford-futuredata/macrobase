@@ -2,6 +2,7 @@ package macrobase.analysis.contextualoutlier;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -144,6 +145,7 @@ public class Context {
 		}
 	
 		Context newUnit = new Context(newDimension2Interval);
+		
 		
 		//merge two sorted tids
 		int index1 = 0;

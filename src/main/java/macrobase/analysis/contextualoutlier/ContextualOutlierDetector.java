@@ -69,6 +69,9 @@ public class ContextualOutlierDetector{
     		remainingData.add(ds.getDatum());
     	}
     	
+    	ContextPruning.detector = detector;
+    	ContextPruning.data = remainingData;
+    	
     	sw.stop();
     	long globalOutlierDetecionTime = sw.elapsed(TimeUnit.MILLISECONDS);
     	sw.reset();
@@ -153,14 +156,19 @@ public class ContextualOutlierDetector{
 		sw.start();
 		
 		int numLatticeNodeJoins = 0;
-	    for(int i = 0; i < latticeNodeByDimensions.size(); i++ ){
+		
+		  for(int i = 0; i < latticeNodeByDimensions.size(); i++ ){
 	    	for(int j = i +1; j < latticeNodeByDimensions.size(); j++){
+	    		
 	    		LatticeNode s1 = latticeNodeByDimensions.get(i);
 	    		LatticeNode s2 = latticeNodeByDimensions.get(j);
 	    		LatticeNode joined = s1.join(s2, data.size(), denseContextTau);
-	    		numLatticeNodeJoins++;
+	    		
 	    		if(joined != null){
-	    			result.add(joined);
+	    			numLatticeNodeJoins++;
+	    			//only interested in nodes that have dense contexts
+	    			if(joined.getDenseContexts().size() != 0)
+	    				result.add(joined);
 	    		}
 	    	}
 	    }
@@ -168,8 +176,9 @@ public class ContextualOutlierDetector{
 	    sw.stop();
 	    long joiningTime = sw.elapsed(TimeUnit.MILLISECONDS);
 	    sw.reset();
+	    
 		log.debug("\tDone Joining lattice nodes in level {} by their dimensions (duration: {}ms)" , latticeNodes.get(0).dimensions.size(), joiningTime);
-		log.debug("\tDone Joining lattice nodes in level {} by their dimensions, there are {} joins (average duration per lattice node pair join: {}ms)" , latticeNodes.get(0).dimensions.size(), numLatticeNodeJoins, joiningTime/numLatticeNodeJoins);
+		log.debug("\tDone Joining lattice nodes in level {} by their dimensions, there are {} joins (average duration per lattice node pair join: {}ms)" , latticeNodes.get(0).dimensions.size(), numLatticeNodeJoins, (numLatticeNodeJoins==0)?0:joiningTime/numLatticeNodeJoins);
 
 		
 		

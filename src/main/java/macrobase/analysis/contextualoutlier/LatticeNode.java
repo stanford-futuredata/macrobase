@@ -56,9 +56,6 @@ public class LatticeNode {
 			}
 		}
 		
-		//only interested in SubSpace that contains dense units
-		if(result.denseContexts == null || result.denseContexts.size() == 0)
-			return null;
 		return result;
 	}
 	/**
