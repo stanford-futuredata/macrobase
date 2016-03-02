@@ -20,7 +20,9 @@ public abstract class TimeSeriesOutlierDetector extends OutlierDetector {
 
     public abstract void removeLastFromWindow();
 
-    // Score current window.
+    /**
+     * Use the current window to build a model and then score the latest datum.
+     */
     public abstract double scoreWindow();
 
     @Override
