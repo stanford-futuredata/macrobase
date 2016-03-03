@@ -1,8 +1,10 @@
 package macrobase.analysis.contextualoutlier;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -23,11 +25,14 @@ public class Context {
 	 */
 	private SortedMap<Integer,Interval> dimension2Interval;
 	
-	
 	/**
-	 * A list of tuple ids that this unit contains
+	 * Number of tuples supporting this context
 	 */
-	private List<Integer> tids;
+	private int support = -1; 
+	/**
+	 * Data excluded from support, namely, outliers from large context
+	 */
+	Set<Datum> excludingData  = new HashSet<Datum>();
 	
 	/**
 	 * Initialize a one dimensional context
@@ -38,13 +43,13 @@ public class Context {
 		dimension2Interval = new TreeMap<Integer, Interval>();
 		dimension2Interval.put(dimension, interval);
 		
-		tids = new ArrayList<Integer>();
+		
 	}
 	
 	public Context(SortedMap<Integer, Interval> newDimension2Interval) {
 		this.dimension2Interval = newDimension2Interval;
 		
-		tids = new ArrayList<Integer>();
+		
 	}
 
 	public List<Integer> getDimensions(){
@@ -55,15 +60,6 @@ public class Context {
 		return result;
 	}
 	
-	public List<Integer> getTIDs(){
-		return tids;
-	}
-	public void addTID(int tid){
-		tids.add(tid);
-	}
-	public boolean removeTID(int tid){
-		return tids.remove(new Integer(tid));
-	}
 	
 	/**
 	 * 
@@ -71,8 +67,8 @@ public class Context {
 	 * @param tau
 	 * @return
 	 */
-	public boolean isDense(int total, double tau){
-		double density = (double) tids.size() / total;
+	public boolean isDense(List<Datum> data, double tau){
+		double density = (double) support / data.size();
 		if(density > tau)
 			return true;
 		else
@@ -115,7 +111,7 @@ public class Context {
 	 * @param other
 	 * @return
 	 */
-	public Context join(Context other, int minSize){
+	public Context join(Context other, List<Datum> data, double tau){
 		
 		SortedMap<Integer,Interval> newDimension2Interval = new TreeMap<Integer,Interval>();
 		
@@ -144,11 +140,18 @@ public class Context {
 			
 		}
 	
+		int minSize = (int)(data.size() * tau);
 		if(ContextPruning.densityPruning(this, other, minSize))
 			return null;
 		
+		
 		Context newUnit = new Context(newDimension2Interval);
+		newUnit.excludingData.addAll(this.excludingData);
+		newUnit.excludingData.addAll(other.excludingData);
+		newUnit.setSupport(data);
+		
 		//merge two sorted tids
+		/*
 		int index1 = 0;
 		int index2 = 0;
 		while(index1 < tids.size() && index2 < other.tids.size()){
@@ -164,11 +167,12 @@ public class Context {
 				index2++;
 			}
 		}
-		
-		if(newUnit.getTIDs().size() >= minSize)
+		*/
+		if(newUnit.support >= minSize)
 			return newUnit;
 		else
 			return null;
+			
 	}
 	
 	public String print(DatumEncoder encoder){
@@ -187,5 +191,25 @@ public class Context {
 		}
 		return sb.toString();
 	}
+
+	public int getSupport() {
+		return support;
+	}
+
+	public void setSupport(List<Datum> data) {
+		int count = 0;
+		for(Datum d :data){
+			if(containDatum(d) && ! excludingData.contains(d)){
+				count++;
+			}
+		}
+		this.support = count;
+	}
 	
+	public void addExcludingData(Datum d){
+		excludingData.add(d);
+	}
+	public boolean isExcluded(Datum d){
+		return excludingData.contains(d);
+	}
 }

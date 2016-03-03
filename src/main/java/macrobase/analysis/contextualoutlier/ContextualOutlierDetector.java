@@ -1,5 +1,6 @@
 package macrobase.analysis.contextualoutlier;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,8 +79,8 @@ public class ContextualOutlierDetector{
     	log.debug("Done global context outlier remaining data size {} : (duration: {}ms)", remainingData.size(),globalOutlierDetecionTime);
     	
     	
-    	List<LatticeNode> preLatticeNodes = null;
-    	List<LatticeNode> curLatticeNodes = null;
+    	List<LatticeNode> preLatticeNodes = new ArrayList<LatticeNode>();
+    	List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
     	for(int level = 1; level <= totalContextualDimensions; level++){
 			
     		
@@ -94,7 +95,11 @@ public class ContextualOutlierDetector{
     		long latticeNodesBuildTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
     		sw.reset();
         	log.debug("Done building {}-dimensional contexts on all attributes (duration: {}ms)", level,latticeNodesBuildTimeCurLevel);
-
+        	
+        	//free up memory of preLatticeNodes
+        	preLatticeNodes.clear();
+        	
+        	log.debug("Memory Usage: {}", checkMemoryUsage());
     		
     		if(curLatticeNodes.size() == 0){
     			log.debug("No more dense contexts, thus no need to level up anymore");
@@ -126,6 +131,24 @@ public class ContextualOutlierDetector{
     			ContextPruning.numDensityPruning,ContextPruning.numpdfPruning, ContextPruning.numDetectorSpecificPruning);
     	
     }
+    
+    private String checkMemoryUsage(){
+    	Runtime runtime = Runtime.getRuntime();
+
+    	NumberFormat format = NumberFormat.getInstance();
+
+    	StringBuilder sb = new StringBuilder();
+    	long maxMemory = runtime.maxMemory();
+    	long allocatedMemory = runtime.totalMemory();
+    	long freeMemory = runtime.freeMemory();
+
+    	sb.append("free memory: " + format.format(freeMemory / 1024) + "<br/>");
+    	sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "<br/>");
+    	sb.append("max memory: " + format.format(maxMemory / 1024) + "<br/>");
+    	sb.append("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024) + "<br/>");
+    	return sb.toString();
+    }
+    
     
   /**
    * Walking up the lattice, construct the lattice node, when include those lattice nodes that contain at least one dense context
@@ -165,7 +188,7 @@ public class ContextualOutlierDetector{
 	    		
 	    		LatticeNode s1 = latticeNodeByDimensions.get(i);
 	    		LatticeNode s2 = latticeNodeByDimensions.get(j);
-	    		LatticeNode joined = s1.join(s2, data.size(), denseContextTau);
+	    		LatticeNode joined = s1.join(s2, data, denseContextTau);
 	    		
 	    		if(joined != null){
 	    			numLatticeNodeJoins++;
@@ -202,8 +225,10 @@ public class ContextualOutlierDetector{
     	
     	List<Datum> contextualData = new ArrayList<Datum>();
     	
-    	for(int tid: context.getTIDs()){
-    		contextualData.add(data.get(tid));
+    	for(Datum d: data){
+    		//contain the d, and not excluded
+    		if(context.containDatum(d) && !context.isExcluded(d))
+    			contextualData.add(d);
     	}
     	
         OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(contextualData, zScore);
@@ -214,10 +239,8 @@ public class ContextualOutlierDetector{
         
         //excluding outlier tids from the context
         for(DatumWithScore datumWithScore: or.getOutliers()){
-        	Datum outlierDatum = datumWithScore.getDatum();
-        	int outlierTID = data.indexOf(outlierDatum);
-        	
-        	context.removeTID(outlierTID);
+        	Datum outlierDatum = datumWithScore.getDatum();        	
+        	context.addExcludingData(outlierDatum);
         }
         return or;
     }
@@ -234,7 +257,7 @@ public class ContextualOutlierDetector{
 		//find out the dense one dimensional contexts
 		Map<Integer,List<Context>> dimension2OneDimensionalDenseUnits = new HashMap<Integer, List<Context>>();
 		for(Context context: oneDimensionalUnits){
-			if(context.isDense(data.size(), denseContextTau)){
+			if(context.isDense(data, denseContextTau)){
 				
 				int dimension = context.getDimensions().get(0);
 				if(!dimension2OneDimensionalDenseUnits.containsKey(dimension))
@@ -324,15 +347,9 @@ public class ContextualOutlierDetector{
 		
 		
 		//add the support tids of contexts
-		for(int t = 0; t < data.size(); t++){
-			Datum datum = data.get(t);
-			for(Context context: result){
-				if(context.containDatum(datum)){
-					context.addTID(t);
-				}
-			}
+		for(Context context: result){
+			context.setSupport(data);
 		}
-				
 				
 		return result;
 	}

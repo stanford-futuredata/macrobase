@@ -46,28 +46,7 @@ public class ContextPruning {
 	 */
 	public static boolean densityPruning(Context c1, Context c2, int minSize){
 		
-		if(c1.getTIDs().size() < 1000)
-			return false;
-		
-		//randomly select 100 samples from C1, estimate percentage that is covered by c2
-		List<Integer> tids1 = c1.getTIDs();
-		Set<Integer> sample1 = randomSample(tids1,100);
-		
-		List<Integer> tids2 = c2.getTIDs();
-		
-		sample1.retainAll(tids2);
-		
-			
-		
-		double estimate =  (((double)sample1.size() )/ 100) * tids1.size();
-		
-		if(estimate < minSize){
-			numDensityPruning++;
-			return true;
-		}
-		else{
-			return false;
-		}
+		return false;
 	}
 	
 	
