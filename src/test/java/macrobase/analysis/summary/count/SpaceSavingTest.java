@@ -48,7 +48,7 @@ public class SpaceSavingTest {
 
     @Test
     public void decayTest() {
-        final int N = 1000;
+        final int N = 10000;
         final int ITEMS = 20;
         final double DECAY = .5;
         final int CAPACITY = 12;
@@ -62,9 +62,10 @@ public class SpaceSavingTest {
 
         for (int i = 0; i < N; ++i) {
             int item = r.nextInt(ITEMS);
-            ss.observe(item);
+            double cnt = r.nextDouble();
+            ss.observe(item, cnt);
 
-            trueCnt.compute(item, (k, v) -> v == null ? 1 : v + 1);
+            trueCnt.compute(item, (k, v) -> v == null ? cnt : v + cnt);
 
             if (i % 20 == 0) {
                 ss.multiplyAllCounts(DECAY);
@@ -75,6 +76,7 @@ public class SpaceSavingTest {
 
         for (Map.Entry<Integer, Double> cnts : ss.getCounts().entrySet()) {
             assertEquals(trueCnt.get(cnts.getKey()), cnts.getValue(), N*EPSILON);
+            assertEquals(trueCnt.get(cnts.getKey()), ss.getCount(cnts.getKey()), N*EPSILON);
         }
 
         ss.debugPrint();
