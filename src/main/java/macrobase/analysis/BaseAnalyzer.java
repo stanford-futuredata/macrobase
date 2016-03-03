@@ -132,6 +132,9 @@ public class BaseAnalyzer {
             case MOVING_AVERAGE:
                 log.info("Using Moving Average detector.");
                 return new MovingAverage(conf);
+            case ARIMA:
+                log.info("Using ARIMA detector");
+                return new ARIMA(conf);
             default:
                 throw new RuntimeException("Unhandled detector class!" + detectorType);
         }

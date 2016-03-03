@@ -53,6 +53,7 @@ public class MacroBaseConf extends Configuration {
     public static final String KDTREE_LEAF_CAPACITY = "macrobase.analysis.treeKde.leafCapacity";
     public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
 
+    public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
     public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
     public static final String DATA_TRANSFORM_TYPE = "macrobase.loader.transformType";
@@ -87,7 +88,8 @@ public class MacroBaseConf extends Configuration {
         KDE,
         BINNED_KDE,
         TREE_KDE,
-        MOVING_AVERAGE
+        MOVING_AVERAGE,
+        ARIMA
     }
 
     public enum DataLoaderType {
