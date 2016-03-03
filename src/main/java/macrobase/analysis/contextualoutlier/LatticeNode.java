@@ -47,12 +47,9 @@ public class LatticeNode {
 		LatticeNode result = new LatticeNode(newDimensions);
 		for(Context u1: getDenseContexts()){
 			for(Context u2: other.getDenseContexts()){
-				Context newUnit = u1.join(u2);
-				if(newUnit == null)
-					continue;
-				if(newUnit.isDense(total, tau)){
+				Context newUnit = u1.join(u2, (int)(total * tau));
+				if(newUnit != null)
 					result.addDenseContext(newUnit);
-				}
 			}
 		}
 		

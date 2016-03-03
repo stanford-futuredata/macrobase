@@ -122,6 +122,9 @@ public class ContextualOutlierDetector{
 			preLatticeNodes = curLatticeNodes;
 		}
     	
+    	log.debug("Context Pruning: densityPruning:{}, pdfPruning:{}, detectorSpecificPruning:{}", 
+    			ContextPruning.numDensityPruning,ContextPruning.numpdfPruning, ContextPruning.numDetectorSpecificPruning);
+    	
     }
     
   /**

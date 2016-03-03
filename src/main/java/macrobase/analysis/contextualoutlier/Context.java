@@ -109,13 +109,13 @@ public class Context {
 	 * Join this Context with other Context, can only be joined if the first (k-1) dimensions
 	 * have the same interval, and the last dimension has different interval
 	 * 
-	 * If not, return null
+	 * can be joined only if the size of the context is at least minSize
 	 * 
 	 * 
 	 * @param other
 	 * @return
 	 */
-	public Context join(Context other){
+	public Context join(Context other, int minSize){
 		
 		SortedMap<Integer,Interval> newDimension2Interval = new TreeMap<Integer,Interval>();
 		
@@ -144,9 +144,10 @@ public class Context {
 			
 		}
 	
+		if(ContextPruning.densityPruning(this, other, minSize))
+			return null;
+		
 		Context newUnit = new Context(newDimension2Interval);
-		
-		
 		//merge two sorted tids
 		int index1 = 0;
 		int index2 = 0;
@@ -164,7 +165,10 @@ public class Context {
 			}
 		}
 		
-		return newUnit;
+		if(newUnit.getTIDs().size() >= minSize)
+			return newUnit;
+		else
+			return null;
 	}
 	
 	public String print(DatumEncoder encoder){
