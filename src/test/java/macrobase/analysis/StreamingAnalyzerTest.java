@@ -179,6 +179,8 @@ public class StreamingAnalyzerTest {
 
         AnalysisResult ar = (new StreamingAnalyzer(conf)).analyzeOnePass();
 
+        log.debug(ar.prettyPrint());
+
         assertEquals(3, ar.getItemSets().size());
 
         HashSet<String> toFindColumn = Sets.newHashSet("model", "firmware_version");
