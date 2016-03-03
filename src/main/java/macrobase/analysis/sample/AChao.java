@@ -27,20 +27,6 @@ class AChao<T> {
         return reservoir;
     }
 
-    public void insertBatch(Collection<T> elements, double weight) {
-        for (T ele : elements) {
-            insert(ele, weight);
-        }
-    }
-
-    protected void setRunningCount(double newCount) {
-        runningCount = newCount;
-    }
-
-    protected double getRunningCount() {
-        return runningCount;
-    }
-
     public void insert(T ele, double weight) {
         runningCount += weight;
 

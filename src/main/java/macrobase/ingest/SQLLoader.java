@@ -90,22 +90,6 @@ public abstract class SQLLoader extends DataLoader {
     private String removeSqlJunk(String sql) {
         return sql.replaceAll(";", "");
     }
-
-    public Schema getSchema()
-            throws SQLException {
-        Statement stmt = connection.createStatement();
-        String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
-        ResultSet rs = stmt.executeQuery(sql);
-
-        List<Schema.SchemaColumn> columns = Lists.newArrayList();
-
-        for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
-            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
-                                                rs.getMetaData().getColumnTypeName(i)));
-        }
-
-        return new Schema(columns);
-    }
     
     public Schema getSchema(String baseQuery)
             throws SQLException {

@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -29,14 +30,18 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
 
     private final String fileDir;
 
-    public DiskCachingSQLLoader(MacroBaseConf conf) throws ConfigurationException, SQLException {
-        super(conf);
+    public DiskCachingSQLLoader(MacroBaseConf conf, Connection conn) throws ConfigurationException, SQLException {
+        super(conf, conn);
 
         fileDir = conf.getString(MacroBaseConf.DB_CACHE_DIR);
         File cacheDir = new File(fileDir);
         if (!cacheDir.exists()) {
             cacheDir.mkdirs();
         }
+    }
+
+    public DiskCachingSQLLoader(MacroBaseConf conf) throws ConfigurationException, SQLException {
+        this(conf, null);
     }
 
     private static class CachedData {

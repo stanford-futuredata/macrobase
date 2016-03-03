@@ -1,11 +1,11 @@
 package macrobase.runtime;
 
+import com.codahale.metrics.health.HealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import macrobase.conf.MacroBaseConf;
-import macrobase.runtime.healthcheck.TemplateHealthCheck;
 import macrobase.runtime.resources.AnalyzeResource;
 import macrobase.runtime.resources.RowSetResource;
 import macrobase.runtime.resources.SchemaResource;
@@ -41,9 +41,12 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
         environment.jersey().register(new RowSetResource(configuration));
         environment.jersey().register(new AnalyzeResource(configuration));
 
-        final TemplateHealthCheck healthCheck =
-                new TemplateHealthCheck("macrobase");
-        environment.healthChecks().register("template", healthCheck);
+        environment.healthChecks().register("basic", new HealthCheck() {
+            @Override
+            protected Result check() throws Exception {
+                return null;
+            }
+        });
 
         environment.jersey().setUrlPattern("/api/*");
     }
