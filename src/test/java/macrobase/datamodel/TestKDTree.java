@@ -9,6 +9,9 @@ import macrobase.ingest.DatumEncoder;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.*;
 
 import java.io.IOException;
@@ -17,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestKDTree {
+    private static final Logger log = LoggerFactory.getLogger(TestKDTree.class);
 
     private DataLoader loader;
     private List<Datum> data;
@@ -89,6 +93,8 @@ public class TestKDTree {
         for (int i=0; i<dimensions; i++) {
             assertArrayEquals(actualBoundaries[i], boundaries[i], 1e-7);
         }
+
+        log.debug("{}", node.toString());
     }
 
     @Test

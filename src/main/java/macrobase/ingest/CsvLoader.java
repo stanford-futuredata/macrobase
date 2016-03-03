@@ -80,10 +80,9 @@ public class CsvLoader extends DataLoader {
 
             List<Integer> attrList = new ArrayList<>(attributes.size());
 
-            int i = 1;
             for (String attr : attributes) {
-                attrList.add(encoder.getIntegerEncoding(i, record.get(schema.get(attr))));
-                i += 1;
+                int pos = schema.get(attr);
+                attrList.add(encoder.getIntegerEncoding(pos+1, record.get(pos)));
             }
             ret.add(new Datum(attrList, metricVec));
         }

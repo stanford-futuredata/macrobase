@@ -64,6 +64,81 @@ public class BatchAnalyzerTest {
     }
 
     @Test
+    public void testSensor10KPower() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
+                .set(MacroBaseConf.USE_PERCENTILE, true)
+                .set(MacroBaseConf.MIN_OI_RATIO, .01)
+                .set(MacroBaseConf.MIN_SUPPORT, .01)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("device_id")) // loader
+                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
+                .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("power_drain"))
+                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER)
+                .set(MacroBaseConf.CSV_COMPRESSION, CsvLoader.Compression.GZIP)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
+
+        conf.loadSystemProperties();
+        conf.sanityCheckBatch();
+
+        AnalysisResult ar = (new BatchAnalyzer(conf)).analyze();
+
+        assertEquals(1, ar.getItemSets().size());
+
+        HashSet<String> toFindColumn = Sets.newHashSet("device_id");
+        HashSet<String> toFindValue = Sets.newHashSet("2040");
+
+        for (ColumnValue cv : ar.getItemSets().get(0).getItems()) {
+            assertTrue(toFindColumn.contains(cv.getColumn()));
+            toFindColumn.remove(cv.getColumn());
+            assertTrue(toFindValue.contains(cv.getValue()));
+            toFindValue.remove(cv.getValue());
+        }
+
+        assertEquals(0, toFindColumn.size());
+        assertEquals(0, toFindValue.size());
+    }
+
+    @Test
+    public void testSensor10KTemp() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
+                .set(MacroBaseConf.USE_PERCENTILE, true)
+                .set(MacroBaseConf.MIN_OI_RATIO, 3)
+                .set(MacroBaseConf.MIN_SUPPORT, .5)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("device_id", "model", "firmware_version")) // loader
+                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("temperature"))
+                .set(MacroBaseConf.HIGH_METRICS, new ArrayList<>())
+                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataLoaderType.CSV_LOADER)
+                .set(MacroBaseConf.CSV_COMPRESSION, CsvLoader.Compression.GZIP)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
+
+        conf.loadSystemProperties();
+        conf.sanityCheckBatch();
+
+        AnalysisResult ar = (new BatchAnalyzer(conf)).analyze();
+
+        assertEquals(3, ar.getItemSets().size());
+
+        HashSet<String> toFindColumn = Sets.newHashSet("model", "firmware_version");
+        HashSet<String> toFindValue = Sets.newHashSet("M101", "0.4");
+
+        for (ColumnValue cv : ar.getItemSets().get(2).getItems()) {
+            assertTrue(toFindColumn.contains(cv.getColumn()));
+            toFindColumn.remove(cv.getColumn());
+            assertTrue(toFindValue.contains(cv.getValue()));
+            toFindValue.remove(cv.getValue());
+        }
+
+        assertEquals(0, toFindColumn.size());
+        assertEquals(0, toFindValue.size());
+    }
+
+
+    @Test
     public void testMCDAnalyzer() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
