@@ -75,6 +75,7 @@ public class TestTreeKDE {
         assertEquals(100000, data.size());
 
         TreeKDE treekde = new TreeKDE(conf);
+        treekde.setApproximateLeaves(false);
         treekde.train(data);
 
         KDE kde = new KDE(conf);
@@ -107,6 +108,7 @@ public class TestTreeKDE {
         List<Datum> data = loader.getData(new DatumEncoder());
 
         TreeKDE kde = new TreeKDE(conf);
+        kde.setApproximateLeaves(false);
 
         assertEquals(100000, data.size());
         kde.train(data);
@@ -163,6 +165,7 @@ public class TestTreeKDE {
         assertEquals(20, data.size());
 
         TreeKDE treekde = new TreeKDE(conf);
+        treekde.setApproximateLeaves(false);
         treekde.train(data);
 
         KDE kde = new KDE(conf);

@@ -6,7 +6,9 @@ synthetic_data: |
 macrobase:
   macrobase.analysis.detectorType: TREE_KDE
   macrobase.analysis.kde.bandwidthAlgorithm: OVERSMOOTHED
-  macrobase.analysis.treeKde.leafCapacity: 10
+  macrobase.analysis.kde.bandwidthMultiplier: 4
+  macrobase.analysis.treeKde.accuracy: 0.1
+  macrobase.analysis.treeKde.leafCapacity: 2
   macrobase.loader.attributes: [XX, YY]
   macrobase.loader.csv.file: target/data/tree-kde.csv
   macrobase.loader.loaderType: CSV_LOADER

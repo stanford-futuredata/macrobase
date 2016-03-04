@@ -46,3 +46,6 @@ bench/contextual/conf/custom/
 
 # custom configuration
 conf/custom/
+
+# Profiler
+.profiler/

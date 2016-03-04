@@ -20,7 +20,6 @@ public class KDTree {
     // Statistics
     protected int nBelow;
     protected RealVector mean;
-    protected RealMatrix covariance;
     private int splitDimension;
     private double splitValue;
     // Array of (k,2) dimensions, of (min, max) pairs in all k dimensions
@@ -63,6 +62,7 @@ public class KDTree {
 
             this.splitDimension = widestDimension;
 
+            // XXX: This is the slow part!!!
             Collections.sort(data, new DatumComparator(splitDimension));
 
             int splitIndex = data.size() / 2;
@@ -74,10 +74,6 @@ public class KDTree {
             this.hiChild = new KDTree(data.subList(splitIndex, data.size()), leafCapacity);
             this.nBelow = data.size();
 
-            // Estimated covariance using Pooled Covariance
-            this.covariance = (loChild.covariance.scalarMultiply(loChild.nBelow)
-                               .add(hiChild.covariance.scalarMultiply(hiChild.nBelow))
-                               .scalarMultiply(1./(loChild.nBelow + hiChild.nBelow)));
             this.mean = (loChild.mean.mapMultiply(loChild.nBelow)
                          .add(hiChild.mean.mapMultiply(hiChild.nBelow))
                          .mapDivide(loChild.nBelow + hiChild.nBelow));
@@ -94,17 +90,13 @@ public class KDTree {
                 sum = sum.add(d.getMetrics());
                 index += 1;
             }
-            if (this.nBelow > 1) {
-                this.covariance = (new Covariance(ret)).getCovarianceMatrix();
-            } else {
-                this.covariance = new Array2DRowRealMatrix(this.k, this.k);
-            }
 
             this.mean = sum.mapDivide(this.nBelow);
         }
     }
 
 
+    // TODO: Make this method faster.
     public List<RealVector> getMinMaxDistanceVectors(Datum queryDatum) {
         double[] minDifferences = new double[k];
         double[] maxDifferences = new double[k];
@@ -129,7 +121,7 @@ public class KDTree {
                 minDifferences[i] = 0;
             }
         }
-        List<RealVector> rtn = new ArrayList<RealVector>();
+        List<RealVector> rtn = new ArrayList<RealVector>(2);
         rtn.add(new ArrayRealVector(minDifferences));
         rtn.add(new ArrayRealVector(maxDifferences));
         return rtn;
