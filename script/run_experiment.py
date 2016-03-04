@@ -17,9 +17,12 @@ HIGH_METRICS = "macrobase.loader.targetHighMetrics"
 DETECTOR = "macrobase.analysis.detectorType"
 
 
-def run_macrobase(cmd='batch', conf='conf/batch.conf', **kwargs):
+def run_macrobase(cmd='batch', conf='conf/batch.conf', profiler=None,
+                  **kwargs):
   extra_args = ' '.join(['-D{key}={value}'.format(key=key, value=value)
                          for key, value in kwargs.items()])
+  if profiler == 'yourkit':
+    extra_args += ' -agentpath:/Applications/YourKit-Java-Profiler-2016.02.app/Contents/Resources/bin/mac/libyjpagent.jnilib'  # noqa
   macrobase_cmd = '''java {extra_args} -Xms128m -Xmx16G \\
       -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
       macrobase.MacroBase {cmd} {conf_file}'''.format(
@@ -41,6 +44,8 @@ def parse_args():
   parser.add_argument('--title-add', help='A title modifier')
   parser.add_argument('--compile', action='store_true',
                       help='Run mvn compile before running java code.')
+  parser.add_argument('--profile', action='store_true',
+                      help='Run with yourkit profiler attached.')
   add_macrobase_args(parser)
   return parser.parse_args()
 
@@ -138,6 +143,8 @@ if __name__ == '__main__':
 
   kwargs = getattr(args, 'macrobase_args', {})
   print kwargs
+  if args.profile:
+    kwargs['profiler'] = 'yourkit'
   run_macrobase(conf=config_file, **kwargs)
 
   for script_dict in experiment.get('post_run', []):

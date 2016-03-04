@@ -18,12 +18,19 @@ public class TreeKDE extends KDE {
     private double scoreInvertingFactor;
     private double onePointTolerance;
     private final double accuracy;
+    private boolean approximateLeaves = true;
+    // Create a list, so we don't create it all the time.
+    private List<RealVector> minMaxD;
 
     public TreeKDE(MacroBaseConf conf) {
         super(conf);
         kdtreeLeafCapacity = conf.getInt(MacroBaseConf.KDTREE_LEAF_CAPACITY, MacroBaseDefaults.KDTREE_LEAF_CAPACITY);
         accuracy = conf.getDouble(MacroBaseConf.TREE_KDE_ACCURACY, MacroBaseDefaults.TREE_KDE_ACCURACY);
         proportionOfDataToUse = 1.0;
+    }
+
+    public void setApproximateLeaves(boolean approximateLeaves) {
+        this.approximateLeaves = approximateLeaves;
     }
 
     @Override
@@ -41,21 +48,25 @@ public class TreeKDE extends KDE {
     }
 
     private double scoreKDTree(KDTree tree, Datum datum) {
-        List<RealVector> minMaxD = tree.getMinMaxDistanceVectors(datum);
+        minMaxD = tree.getMinMaxDistanceVectors(datum);
         double wMin = this.scaledKernelDensity(minMaxD.get(0));
         double wMax = this.scaledKernelDensity(minMaxD.get(1));
-        if (wMin - wMax < this.onePointTolerance) {
+        if (wMin - wMax < accuracy) {
             // Return the average of the scores
             return 0.5 * (wMin + wMax) * tree.getnBelow();
         } else {
             if (tree.isLeaf()) {
-                double _score = 0.0;
-                for (Datum child : tree.getItems()) {
-                    RealVector difference = datum.getMetrics().subtract(child.getMetrics());
-                    double _diff = this.scaledKernelDensity(difference);
-                    _score += _diff;
+                if (approximateLeaves) {
+                    return tree.getnBelow() * this.scaledKernelDensity(tree.getMean());
+                } else {
+                    double _score = 0.0;
+                    for (Datum child : tree.getItems()) {
+                        RealVector difference = datum.getMetrics().subtract(child.getMetrics());
+                        double _diff = this.scaledKernelDensity(difference);
+                        _score += _diff;
+                    }
+                    return _score;
                 }
-                return _score;
 
             } else {
                 return scoreKDTree(tree.getHiChild(), datum) + scoreKDTree(tree.getLoChild(), datum);
