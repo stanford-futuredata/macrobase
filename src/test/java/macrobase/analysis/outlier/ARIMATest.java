@@ -2,10 +2,16 @@ package macrobase.analysis.outlier;
 
 import macrobase.conf.MacroBaseConf;
 
+import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
-public class ARIMATest {
+/**
+ * These tests are ignored by default so that people running the test suite
+ * locally aren't required to have R and rJava installed.
+ */
+@Ignore public class ARIMATest {
     @Test
     public void constantTest() {
         int windowSize = 10;
