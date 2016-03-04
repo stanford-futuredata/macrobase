@@ -19,8 +19,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TestKDTree {
-    private static final Logger log = LoggerFactory.getLogger(TestKDTree.class);
+public class KDTreeTest {
+    private static final Logger log = LoggerFactory.getLogger(KDTreeTest.class);
 
     private DataLoader loader;
     private List<Datum> data;

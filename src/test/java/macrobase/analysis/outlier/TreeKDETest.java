@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class TestTreeKDE {
+public class TreeKDETest {
 
     @Test
     public void bimodalPipeline1DTest() throws ConfigurationException, IOException, SQLException {
@@ -53,8 +53,8 @@ public class TestTreeKDE {
     }
 
     @Test
-    public void CompareWithKDETest() throws ConfigurationException, IOException, SQLException {
-        double accuracy = 0.2;
+    public void compareWithKDETest() throws ConfigurationException, IOException, SQLException {
+        double accuracy = 0.001;
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.DETECTOR_TYPE, "TREE_KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -75,6 +75,7 @@ public class TestTreeKDE {
         assertEquals(100000, data.size());
 
         TreeKDE treekde = new TreeKDE(conf);
+        treekde.setApproximateLeaves(false);
         treekde.train(data);
 
         KDE kde = new KDE(conf);
@@ -88,7 +89,7 @@ public class TestTreeKDE {
     }
 
     @Test
-    public void StandardNormal2DTest() throws ConfigurationException, IOException, SQLException {
+    public void standardNormal2DTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.DETECTOR_TYPE, "TREE_KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -107,6 +108,7 @@ public class TestTreeKDE {
         List<Datum> data = loader.getData(new DatumEncoder());
 
         TreeKDE kde = new TreeKDE(conf);
+        kde.setApproximateLeaves(false);
 
         assertEquals(100000, data.size());
         kde.train(data);
@@ -142,7 +144,7 @@ public class TestTreeKDE {
     }
 
     @Test
-    public void SimpleCompareWithKDETest() throws ConfigurationException, IOException, SQLException {
+    public void simpleCompareWithKDETest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.DETECTOR_TYPE, "TREE_KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -163,6 +165,7 @@ public class TestTreeKDE {
         assertEquals(20, data.size());
 
         TreeKDE treekde = new TreeKDE(conf);
+        treekde.setApproximateLeaves(false);
         treekde.train(data);
 
         KDE kde = new KDE(conf);
