@@ -97,7 +97,15 @@ public class ContextualOutlierDetector{
         	log.debug("Done building {}-dimensional contexts on all attributes (duration: {}ms)", level,latticeNodesBuildTimeCurLevel);
         	
         	//free up memory of preLatticeNodes
-        	preLatticeNodes.clear();
+        	for(LatticeNode node: preLatticeNodes){
+        		for(Context context: node.getDenseContexts()){
+        			if(!context2Outliers.containsKey(context))
+        				context.clear();
+        		}
+        		node.clear();
+        	}
+        	preLatticeNodes.clear();	
+        	
         	
         	log.debug("Memory Usage: {}", checkMemoryUsage());
     		

@@ -131,4 +131,9 @@ public class LatticeNode {
 
 		}
 	}
+	
+	public void clear(){
+		dimensions.clear();
+		denseContexts.clear();
+	}
 }

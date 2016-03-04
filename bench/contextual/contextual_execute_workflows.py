@@ -156,7 +156,6 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     for i in xrange(number_of_runs):
         results_file = os.path.join(sub_dir, "results%d.txt" % i)
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
-            -XX:+UnlockCommercialFeatures -XX:+FlightRecorder -XX:StartFlightRecording=duration=60s,filename=myrecording.jfr \\
             -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
             macrobase.MacroBase {cmd} {conf_file} \\
             > {results_file} 2>&1'''.format(
