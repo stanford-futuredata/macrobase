@@ -30,10 +30,7 @@ public class Context {
 	 * Number of tuples supporting this context
 	 */
 	private int support = -1; 
-	/**
-	 * Data excluded from support, namely, outliers from large context
-	 */
-	Set<Datum> excludingData  = new HashSet<Datum>();
+	
 	
 	/**
 	 * Initialize a one dimensional context
@@ -144,21 +141,12 @@ public class Context {
 			
 		}
 	
-		int minSize = (int)(data.size() * tau);
-		if(ContextPruning.densityPruning(this, other, minSize))
-			return null;
-		
-		
 		Context newUnit = new Context(newDimensions, newIntervals);
-		newUnit.excludingData.addAll(this.excludingData);
-		newUnit.excludingData.addAll(other.excludingData);
-		newUnit.setSupport(data);
 		
-		if(newUnit.support >= minSize)
-			return newUnit;
-		else
+		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
-			
+		}
+		return newUnit;
 	}
 	
 	public String print(DatumEncoder encoder){
@@ -185,23 +173,18 @@ public class Context {
 	public void setSupport(List<Datum> data) {
 		int count = 0;
 		for(Datum d :data){
-			if(containDatum(d) && ! excludingData.contains(d)){
+			if(containDatum(d) ){
 				count++;
 			}
 		}
 		this.support = count;
 	}
 	
-	public void addExcludingData(Datum d){
-		excludingData.add(d);
-	}
-	public boolean isExcluded(Datum d){
-		return excludingData.contains(d);
-	}
+	
 	
 	public void clear(){
 		dimensions.clear();
 		intervals.clear();
-		excludingData.clear();
+		
 	}
 }

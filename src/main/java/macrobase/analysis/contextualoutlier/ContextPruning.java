@@ -9,6 +9,9 @@ public class ContextPruning {
 
 	public static List<Datum> data;
 
+	public static List<Datum> sampleData;
+	public static double errorBound;
+	
 	public static OutlierDetector detector;
 	
 	public static int numDensityPruning = 0;
@@ -39,29 +42,32 @@ public class ContextPruning {
 	
 	/**
 	 * Estimating the size of the intersection of two contexts
-	 * @param c1
-	 * @param c2
-	 * @param minSize
+	 * @param c
+	 * @param minDensity
 	 * @return true if the estimation > minSize
 	 */
-	public static boolean densityPruning(Context c1, Context c2, int minSize){
+	public static boolean densityPruning(Context c, double minDensity){
 		
-		return false;
+		int sampleContextCount = 0;
+		for(Datum d : sampleData){
+			if(c.containDatum(d)){
+				sampleContextCount++;
+			}
+		}
+		
+		double estimatedDensity = (double) sampleContextCount / sampleData.size();
+		
+		//estimation + variance
+		double maxBound = estimatedDensity + errorBound;
+		
+		if(maxBound < minDensity){
+			numDensityPruning++;
+			return true;
+		}else{
+			return false;
+		}
+		
 	}
 	
 	
-	private static Set<Integer> randomSample(List<Integer> items, int m){
-		Random rnd = new Random();
-	    HashSet<Integer> res = new HashSet<Integer>(m);
-	    int n = items.size();
-	    for(int i=n-m;i<n;i++){
-	        int pos = rnd.nextInt(i+1);
-	        Integer item = items.get(pos);
-	        if (res.contains(item))
-	            res.add(items.get(i));
-	        else
-	            res.add(item);
-	    }
-	    return res;
-	}
 }
