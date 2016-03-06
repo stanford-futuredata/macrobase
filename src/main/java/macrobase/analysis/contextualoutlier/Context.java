@@ -27,7 +27,7 @@ public class Context {
 	List<Interval> intervals = new ArrayList<Interval>();;
 	
 	private int size = -1;
-	
+	List<Context> parents = new ArrayList<Context>();
 	
 	/**
 	 * Initialize a one dimensional context
@@ -126,7 +126,8 @@ public class Context {
 		}
 	
 		Context newUnit = new Context(newDimensions, newIntervals);
-		
+		newUnit.parents.add(this);
+		newUnit.parents.add(other);
 		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
 		}
@@ -163,5 +164,9 @@ public class Context {
 
 	public void setSize(int size) {
 		this.size = size;
+	}
+	
+	public List<Context> getParents(){
+		return parents;
 	}
 }

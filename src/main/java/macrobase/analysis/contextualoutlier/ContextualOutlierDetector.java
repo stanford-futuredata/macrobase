@@ -260,7 +260,7 @@ public class ContextualOutlierDetector{
      * @param zScore
      * @return
      */
-    private void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
+    public void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
     	
     	List<Datum> contextualData = new ArrayList<Datum>();
     	
@@ -272,8 +272,14 @@ public class ContextualOutlierDetector{
     	
     	context.setSize(contextualData.size());
     	
+    	//Just did density estimation before
     	double realDensity = (double)contextualData.size() / data.size();
     	if(realDensity < denseContextTau){
+    		return;
+    	}
+    	
+    	//pdf pruning
+    	if(ContextPruning.pdfPruning(context)){
     		return;
     	}
     	

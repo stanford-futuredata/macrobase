@@ -19,24 +19,27 @@ public class ContextPruning {
 	public static int numDetectorSpecificPruning = 0;
 	
 	/**
-	 * Determine if the conjunction of two contexts have outliers or not
-	 * without actually running detector
-	 * @param c1
-	 * @param c2
+	 * Determine if the context can be pruned with running f
+	 * @param c
 	 * @return
 	 */
-	public static boolean pdfPruning(Context c1, Context c2){
+	public static boolean pdfPruning(Context c){
+		for(Context parent: c.getParents()){
+			if(c.getSize() == parent.getSize()){
+				numpdfPruning++;
+				return true;
+			}
+		}
 		return false;
 	}
 	
 	/**
-	 * Determine if the conjunction of two contexts have outliers or not
-	 * without actually running detector
-	 * @param c1
-	 * @param c2
+	 * Determine if the context can be pruned without running f, 
+	 * but can use the internals of f
+	 * @param c
 	 * @return
 	 */
-	public static boolean detectorSpecificPruning(Context c1, Context c2){
+	public static boolean detectorSpecificPruning(Context c){
 		return false;
 	}
 	
