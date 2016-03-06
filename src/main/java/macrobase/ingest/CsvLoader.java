@@ -58,41 +58,55 @@ public class CsvLoader extends DataLoader {
 
     @Override
     public List<Datum> getData(DatumEncoder encoder) {
-        for (Map.Entry<String, Integer> se : schema.entrySet()) {
-            encoder.recordAttributeName(se.getValue() + 1, se.getKey());
-        }
+    	  for (Map.Entry<String, Integer> se : schema.entrySet()) {
+              encoder.recordAttributeName(se.getValue() + 1, se.getKey());
+          }
 
-        List<Datum> ret = Lists.newArrayList();
-        for (CSVRecord record : csvParser) {
-            RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-            int vecPos = 0;
+          List<Datum> ret = Lists.newArrayList();
+          for (CSVRecord record : csvParser) {
+              RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
+              int vecPos = 0;
 
-            for (String metric : lowMetrics) {
-                double val = Math.pow(Math.max(Double.parseDouble(record.get(metric)), 0.1), -1);
-                metricVec.setEntry(vecPos, val);
-                vecPos += 1;
-            }
+              for (String metric : lowMetrics) {
+                  double val = Math.pow(Math.max(Double.parseDouble(record.get(metric)), 0.1), -1);
+                  metricVec.setEntry(vecPos, val);
+                  vecPos += 1;
+              }
 
-            for (String metric : highMetrics) {
-                metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
-                vecPos += 1;
-            }
+              for (String metric : highMetrics) {
+                  metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
+                  vecPos += 1;
+              }
 
-            List<Integer> attrList = new ArrayList<>(attributes.size());
+              List<Integer> attrList = new ArrayList<>(attributes.size());
 
-            for (String attr : attributes) {
-                int pos = schema.get(attr);
-                attrList.add(encoder.getIntegerEncoding(pos+1, record.get(pos)));
-            }
-            ret.add(new Datum(attrList, metricVec));
-        }
+              for (String attr : attributes) {
+                  int pos = schema.get(attr);
+                  attrList.add(encoder.getIntegerEncoding(pos+1, record.get(pos)));
+              }
+              
+              List<Integer> contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
+              for (String attr: contextualDiscreteAttributes) {
+            	  int pos = schema.get(attr);
+	              contextualDiscreteAttributesValues.add(encoder.getIntegerEncoding(pos+1, record.get(pos)));
+	          }
+              
+              RealVector contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
+	          vecPos = 0;
+	          for(String attr: contextualDoubleAttributes){
+	        	  contextualDoubleAttributesValues.setEntry(vecPos, Double.parseDouble(record.get(attr)));
+	              vecPos += 1;
+	          }
+	            
+              ret.add(new Datum(attrList, metricVec, contextualDiscreteAttributesValues, contextualDoubleAttributesValues));
+          }
 
-        // normalize data
-        if (dataTransformation != null) {
-            dataTransformation.transform(ret);
-        }
+          // normalize data
+          if (dataTransformation != null) {
+              dataTransformation.transform(ret);
+          }
 
-        return ret;
+          return ret;
     }
 
     @Override
@@ -100,58 +114,5 @@ public class CsvLoader extends DataLoader {
         return null;
     }
 
-	@Override
-	public List<Datum> getData(DatumEncoder encoder, List<String> contextualDiscreteAttributes,
-			List<String> contextualDoubleAttributes) throws SQLException, IOException {
-		 for (Map.Entry<String, Integer> se : schema.entrySet()) {
-	            encoder.recordAttributeName(se.getValue() + 1, se.getKey());
-	        }
 
-	        List<Datum> ret = Lists.newArrayList();
-	        for (CSVRecord record : csvParser) {
-	            RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-	            int vecPos = 0;
-
-	            for (String metric : lowMetrics) {
-	                double val = Math.pow(Math.max(Double.parseDouble(record.get(metric)), 0.1), -1);
-	                metricVec.setEntry(vecPos, val);
-	                vecPos += 1;
-	            }
-
-	            for (String metric : highMetrics) {
-	                metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
-	                vecPos += 1;
-	            }
-
-	            List<Integer> attrList = new ArrayList<>(attributes.size());
-
-	            int i = 1;
-	            for (String attr : attributes) {
-	                attrList.add(encoder.getIntegerEncoding(i, record.get(schema.get(attr))));
-	                i += 1;
-	            }
-	            
-	            
-	            List<Integer> contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
-	            for (String attr: contextualDiscreteAttributes) {
-	            	contextualDiscreteAttributesValues.add(encoder.getIntegerEncoding(i, record.get(schema.get(attr))));
-	            	i+= 1;
-	            }
-	            RealVector contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
-	            vecPos = 0;
-	            for(String attr: contextualDoubleAttributes){
-	            	contextualDoubleAttributesValues.setEntry(vecPos, Double.parseDouble(record.get(attr)));
-	            	vecPos += 1;
-	            }
-	            
-	            ret.add(new Datum(attrList, metricVec,contextualDiscreteAttributesValues,contextualDoubleAttributesValues));
-	        }
-
-	        // normalize data
-	        if (dataTransformation != null) {
-	            dataTransformation.transform(ret);
-	        }
-
-	        return ret;
-	}
 }

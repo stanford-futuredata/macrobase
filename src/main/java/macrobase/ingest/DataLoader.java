@@ -24,6 +24,8 @@ public abstract class DataLoader {
     protected final List<String> lowMetrics;
     protected final List<String> highMetrics;
     protected final List<String> auxiliaryAttributes;
+    protected final List<String> contextualDiscreteAttributes;
+    protected final List<String> contextualDoubleAttributes;
     protected final DataTransformation dataTransformation;
 
     public DataLoader(MacroBaseConf conf) throws ConfigurationException {
@@ -34,6 +36,8 @@ public abstract class DataLoader {
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
         auxiliaryAttributes = conf.getStringList(MacroBaseConf.AUXILIARY_ATTRIBUTES, new ArrayList<>());
+        contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
+        contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
         MacroBaseConf.DataTransformType dataTransformType = conf.getDataTransform();
 
         if (dataTransformType == MacroBaseConf.DataTransformType.ZERO_TO_ONE_SCALE) {
@@ -51,10 +55,6 @@ public abstract class DataLoader {
     public abstract List<Datum> getData(DatumEncoder encoder)
             throws SQLException, IOException;
     
-    public abstract List<Datum> getData(DatumEncoder encoder, 
-    		List<String> contextualDiscreteAttributes,
-    		List<String> contextualDoubleAttributes)
-            throws SQLException, IOException;
 
     public abstract RowSet getRows(String baseQuery,
                                    List<RowSetResource.RowSetRequest.RowRequestPair> preds,

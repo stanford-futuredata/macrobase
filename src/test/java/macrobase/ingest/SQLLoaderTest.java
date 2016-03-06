@@ -238,7 +238,7 @@ public class SQLLoaderTest {
         final int NUM_CONTEXTUAL_DISCRETE = 1;
         final int NUM_CONTEXTUAL_DOUBLE = 1;
 
-        final int DIMENSION = NUM_ATTRS + NUM_HIGH + NUM_LOW + NUM_AUXILIARY + NUM_CONTEXTUAL_DISCRETE + NUM_CONTEXTUAL_DOUBLE;
+        final int DIMENSION = NUM_ATTRS + NUM_HIGH + NUM_LOW  + NUM_CONTEXTUAL_DISCRETE + NUM_CONTEXTUAL_DOUBLE + NUM_AUXILIARY;
 
         Integer val = 1;
         Set<String> firstVals = new HashSet<>();
@@ -313,13 +313,14 @@ public class SQLLoaderTest {
         conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
         conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
         conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, auxiliaryAttributes);
-
+        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
+        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
         conf.set(MacroBaseConf.DATA_TRANSFORM_TYPE, MacroBaseConf.DataTransformType.IDENTITY);
 
         SQLLoader loader = new TestSQLLoader(conf, connection);
         DatumEncoder encoder = new DatumEncoder();
-        List<Datum> data = loader.getData(encoder,contextualDiscreteAttributes,contextualDoubleAttributes);
+        List<Datum> data = loader.getData(encoder);
 
         for (Datum d : data) {
             String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
@@ -355,7 +356,11 @@ public class SQLLoaderTest {
                   curValInt++;
             }
             
-            assertEquals(curValInt, d.getAuxiliaries().getEntry(0), 0);
+            for(int i = 0; i < NUM_AUXILIARY; ++i) {
+            	assertEquals(curValInt, d.getAuxiliaries().getEntry(i), 0);
+            	curValInt++;
+            }
+            
         }
 
         assertTrue(firstVals.isEmpty());

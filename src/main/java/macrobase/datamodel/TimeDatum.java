@@ -12,6 +12,14 @@ public class TimeDatum extends Datum {
         super(attributes, metrics);
         this.time = time;
     }
+    
+    
+    public TimeDatum(Integer time, List<Integer> attributes,
+            RealVector metrics,
+            List<Integer> contextualDiscreteAttributes,RealVector contextualDoubleAttributes) {
+        super(attributes, metrics, contextualDiscreteAttributes, contextualDoubleAttributes);
+        this.time = time;
+    }
 
     @Override
     public Integer getTime() {
