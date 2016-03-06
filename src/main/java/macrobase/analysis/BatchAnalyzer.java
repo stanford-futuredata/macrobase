@@ -51,11 +51,11 @@ public class BatchAnalyzer extends BaseAnalyzer {
     			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
     	
     	contextualDetector.searchContextualOutliers(data, zScore);
-    	Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+    	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         for(Context context: context2Outliers.keySet()){
         	log.info("Context: " + context.print(encoder));
-        	log.info("Number of Inliers: " + context2Outliers.get(context).getInliers().size());
-        	log.info("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+        	log.info("Number of Inliers: " + (context.getSize() - context2Outliers.get(context).size()));
+        	log.info("Number of Outliers: " + context2Outliers.get(context).size());
       
         }
     	//explain the contextual outliers

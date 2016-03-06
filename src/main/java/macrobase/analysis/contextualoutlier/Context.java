@@ -26,10 +26,7 @@ public class Context {
 	List<Integer> dimensions = new ArrayList<Integer>();
 	List<Interval> intervals = new ArrayList<Interval>();;
 	
-	/**
-	 * Number of tuples supporting this context
-	 */
-	private int support = -1; 
+	private int size = -1;
 	
 	
 	/**
@@ -54,19 +51,6 @@ public class Context {
 	}
 	
 	
-	/**
-	 * 
-	 * @param total is the total number of tuples, tau is the minimum threshold
-	 * @param tau
-	 * @return
-	 */
-	public boolean isDense(List<Datum> data, double tau){
-		double density = (double) support / data.size();
-		if(density > tau)
-			return true;
-		else
-			return false;
-	}
 	
 	/**
 	 * Determine if the unit contains the tuple
@@ -166,25 +150,18 @@ public class Context {
 		return sb.toString();
 	}
 
-	public int getSupport() {
-		return support;
-	}
-
-	public void setSupport(List<Datum> data) {
-		int count = 0;
-		for(Datum d :data){
-			if(containDatum(d) ){
-				count++;
-			}
-		}
-		this.support = count;
-	}
-	
-	
 	
 	public void clear(){
 		dimensions.clear();
 		intervals.clear();
 		
+	}
+
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
 	}
 }

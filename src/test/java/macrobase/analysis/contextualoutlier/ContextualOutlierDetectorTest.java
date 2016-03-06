@@ -59,12 +59,12 @@ public class ContextualOutlierDetectorTest {
 
         
         contextualDetector.searchContextualOutliers(data, 3);
-        Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
         for(Context context: context2Outliers.keySet()){
         	System.out.println("Context: " + context.toString());
-        	System.out.println("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+        	System.out.println("Number of Outliers: " + context2Outliers.get(context).size());
         }
         
     }
@@ -106,12 +106,12 @@ public class ContextualOutlierDetectorTest {
 
         
         contextualDetector.searchContextualOutliers(data, 3);
-        Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
         for(Context context: context2Outliers.keySet()){
         	System.out.println("Context: " + context.toString());
-        	System.out.println("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+        	System.out.println("Number of Outliers: " + context2Outliers.get(context).size());
         }
     
     }
@@ -165,12 +165,12 @@ public class ContextualOutlierDetectorTest {
 
         
         contextualDetector.searchContextualOutliers(data, 3);
-        Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
         for(Context context: context2Outliers.keySet()){
         	System.out.println("Context: " + context.toString());
-        	System.out.println("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+        	System.out.println("Number of Outliers: " + context2Outliers.get(context).size());
         }
     
     }
