@@ -75,6 +75,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     class RunnableStreamingAnalysis implements Runnable {
         List<Datum> data;
+        List<Datum> outliers;
         DatumEncoder encoder;
 
         private long trainingAndScoringTime;
@@ -88,11 +89,15 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
             trainingAndScoringTime = 0;
             miningTime = 0;
+
+            outliers = new ArrayList<Datum>();
         }
 
         public List<ItemsetResult> getItemsetResults() {
             return itemsetResults;
         }
+
+        public List<Datum> getOutliers() { return outliers; }
 
         public long getTrainingAndScoringTime() {
             return trainingAndScoringTime;
@@ -196,6 +201,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                 forceUsePercentile && detector.isPercentileOutlier(score,
                                         targetPercentile)) {
                             streamingSummarizer.markOutlier(d);
+                            outliers.add(d);
                         } else {
                             streamingSummarizer.markInlier(d);
                         }
@@ -268,10 +274,18 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         avgMiningTime /= numThreads;
 
         List<ItemsetResult> itemsetResults = new ArrayList<ItemsetResult>();
+        List<Datum> allOutliers = new ArrayList<Datum>();
         for (int i = 0; i < numThreads; i++) {
             for (ItemsetResult itemsetResult : rsas.get(i).getItemsetResults()) {
                 itemsetResults.add(itemsetResult);
             }
+            for (Datum outlier : rsas.get(i).getOutliers()) {
+                allOutliers.add(outlier);
+            }
+        }
+
+        for (Datum outlier : allOutliers) {
+            log.debug("Outlier: {}", outlier.getMetrics().toArray());
         }
 
         // Stop timer as soon as all itemsets have been mined and aggregated
