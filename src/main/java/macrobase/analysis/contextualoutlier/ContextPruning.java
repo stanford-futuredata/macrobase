@@ -82,9 +82,20 @@ public class ContextPruning {
 		Context p1 = c.getParents().get(0);
 		Context p2 = c.getParents().get(1);
 		
-		boolean p1_p2 = (p1.getSample().size() == c.getSample().size())?true:false;
+		boolean p1_p2 = true;
+		for(Datum d: p1.getSample()){
+			if(!p2.containDatum(d)){
+				p1_p2 = false;
+			}
+		}
 		
-		boolean p2_p1 = (p2.getSample().size() == c.getSample().size())?true:false;
+		boolean p2_p1 = true;
+		for(Datum d: p2.getSample()){
+			if(!p1.containDatum(d)){
+				p2_p1 = false;
+			}
+		}
+		
 		
 		if(p1_p2 || p2_p1){
 			numDependencyPruning++;

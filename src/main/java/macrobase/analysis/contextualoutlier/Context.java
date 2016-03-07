@@ -142,6 +142,11 @@ public class Context {
 		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
 		}
+		
+		if(ContextPruning.dependencyPruning(newUnit)){
+			return null;
+		}
+		
 		return newUnit;
 	}
 	
