@@ -131,13 +131,12 @@ public class ContextualOutlierDetector{
         	sw.reset();
         	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
-
+        	log.debug("Done Find {}-dimensional contextual outliers, Context Pruning: {}", level,ContextPruning.print());
+        	
         	
 			preLatticeNodes = curLatticeNodes;
 		}
     	
-    	log.debug("Context Pruning: densityPruning:{}, pdfPruning:{}, detectorSpecificPruning:{}", 
-    			ContextPruning.numDensityPruning,ContextPruning.numpdfPruning, ContextPruning.numDetectorSpecificPruning);
     	
     }
     
@@ -145,9 +144,8 @@ public class ContextualOutlierDetector{
     private void initContextPruning(List<Datum> data){
     	
     	ContextPruning.detector = detector;
-    	ContextPruning.data = data;
     	
-    	
+    	//Init a sample of the entire dataset
     	List<Datum> sampleData = new ArrayList<Datum>();
     	ContextPruning.errorBound = 0.01;
     	//numSamples is determined by confidence and error margin
@@ -271,6 +269,10 @@ public class ContextualOutlierDetector{
     	}
     	
     	context.setSize(contextualData.size());
+    	if(context.getDimensions().size() == 1){
+    		context.setSample(contextualData);
+    	}
+    	
     	
     	//Just did density estimation before
     	double realDensity = (double)contextualData.size() / data.size();
@@ -323,6 +325,7 @@ public class ContextualOutlierDetector{
 			LatticeNode ss = new LatticeNode(dimension);
 			for(Context denseUnit: dimension2OneDimensionalDenseUnits.get(dimension)){
 				ss.addDenseContext(denseUnit);
+				log.debug(denseUnit.toString());
 			}
 			latticeNodes.add(ss);
 		}

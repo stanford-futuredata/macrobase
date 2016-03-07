@@ -69,7 +69,7 @@ def parse_results(results_file):
         for i in xrange(len(lines)):
             line = lines[i]
             if line.startswith("DEBUG"):
-                if "time" in line:
+                if "time" in line and "...ended" in line:
                     line = line.split("...ended")[1].strip()
                     line_tokens = line.split("(")
                     time_type = line_tokens[0].strip()

@@ -29,6 +29,9 @@ public class Context {
 	private int size = -1;
 	List<Context> parents = new ArrayList<Context>();
 	
+	HashSet<Datum> sample = new HashSet<Datum>();
+	
+	
 	/**
 	 * Initialize a one dimensional context
 	 * @param dimension
@@ -128,6 +131,14 @@ public class Context {
 		Context newUnit = new Context(newDimensions, newIntervals);
 		newUnit.parents.add(this);
 		newUnit.parents.add(other);
+		
+		//set the sample of the newUnit  O(sampleSize)
+		for(Datum d: sample){
+			if(other.sample.contains(d)){
+				newUnit.sample.add(d);
+			}
+		}
+		
 		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
 		}
@@ -164,6 +175,35 @@ public class Context {
 
 	public void setSize(int size) {
 		this.size = size;
+	}
+	
+	/**
+	 * Given the actual context, init a sample from it
+	 * @param contextualData
+	 */
+	public void setSample(List<Datum> contextualData){
+		int numSample = 1000;
+		
+		List<Datum> listSample = new ArrayList<Datum>();
+		
+		Random rnd = new Random();
+		for(int i = 0; i < contextualData.size(); i++){
+			Datum d = contextualData.get(i);
+			if(listSample.size() < numSample){
+				listSample.add(d);
+			}else{
+				int j = rnd.nextInt(i); //j in [0,i)
+				if(j < listSample.size()){
+					listSample.set(j, d);
+				}
+			}
+			
+		}
+		
+		sample.addAll(listSample);
+	}
+	public HashSet<Datum> getSample(){
+		return sample;
 	}
 	
 	public List<Context> getParents(){
