@@ -42,10 +42,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
     	
     	DataLoader loader = constructLoader();
     	DatumEncoder encoder = new DatumEncoder();
-    	List<Datum> data = loader.getData(encoder,
-    			contextualDiscreteAttributes,contextualDoubleAttributes);
-    	
-    	
+    	List<Datum> data = loader.getData(encoder);
     	
     	ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(detector,
     			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
