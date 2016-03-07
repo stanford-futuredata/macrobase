@@ -282,7 +282,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         log.debug("Tuples / second = {} tuples / second", tuplesPerSecond);
         log.debug("Number of itemsets: {}", itemsetResults.size());
-        log.debug("..ended training and scoring (time: {}ms)!", avgTrainingAndScoringTime);
+        log.debug("...ended training and scoring (time: {}ms)!", avgTrainingAndScoringTime);
         log.debug("...ended mining (time: {}ms)!", avgMiningTime);
 
         // todo: refactor this so we don't just return zero

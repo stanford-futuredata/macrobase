@@ -1,0 +1,68 @@
+[
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "build_version",
+      "app_version",
+      "deviceid",
+      "hardware_carrier",
+      "state",
+      "hardware_model"
+    ],
+    "macrobase.query.name": "cmtDatasetComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "data_count_minutes",
+      "data_count_accel_samples",
+      "data_count_netloc_samples",
+      "data_count_gps_samples",
+      "distance_mapmatched_km",
+      "distance_gps_km"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "cand_nm",
+      "contbr_nm",
+      "contbr_zip",
+      "contbr_employer",
+      "contbr_employer"
+    ],
+    "macrobase.query.name": "campaignExpendituresComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "contb_receipt_amt"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "road_surface_conditions",
+      "urban_or_rural_area",
+      "speed_limit"
+    ],
+    "macrobase.query.name": "accidentsSimpleStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "number_of_casualties"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "build_version",
+      "app_version",
+      "deviceid"
+    ],
+    "macrobase.query.name": "cmtDatasetSimpleStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "data_count_minutes"
+    ]
+  }
+]
