@@ -16,6 +16,17 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [],
+    "macrobase.query.name": "uk_road_accidents",
+    "macrobase.loader.targetHighMetrics": ["accident_severity"],
+    
+    "macrobase.analysis.contextual.discreteAttributes": ["police_force","day_of_week","local_authority_district,local_authority_highway","n_1st_road_class","road_type","junction_detail","junction_control","n_2nd_road_class","pedestrian_crossinghuman_control","pedestrian_crossingphysical_facilities","light_conditions","weather_conditions","road_surface_conditions","special_conditions_at_site","carriageway_hazards","urban_or_rural_area","did_police_officer_attend_scene_of_accident"],
+    "macrobase.analysis.contextual.doubleAttributes": []
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
     "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [],
@@ -27,14 +38,24 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [],
-    "macrobase.query.name": "uk_road_accidents",
-    "macrobase.loader.targetHighMetrics": ["accident_severity"],
+    "macrobase.query.name": "cmt100000",
+    "macrobase.loader.targetHighMetrics": ["data_count_minutes"],
     
-    "macrobase.analysis.contextual.discreteAttributes": ["police_force","day_of_week","local_authority_district,local_authority_highway","n_1st_road_class","road_type","junction_detail","junction_control","n_2nd_road_class","pedestrian_crossinghuman_control","pedestrian_crossingphysical_facilities","light_conditions","weather_conditions","road_surface_conditions","special_conditions_at_site","carriageway_hazards","urban_or_rural_area","did_police_officer_attend_scene_of_accident"],
+    "macrobase.analysis.contextual.discreteAttributes": ["dataset_id", "runtime", "trip_start", "data_count_minutes", "data_count_accel_samples", "data_count_netloc_samples", "data_count_gps_samples", "observed_sample_rate", "distance_mapmatched_km", "distance_gps_km", "ground_truth_present", "timing_mapmatch", "distance_pct_path_error", "build_version", "timing_queue_wait", "data_trip_length", "battery_maximum_level", "battery_minimum_level", "battery_drain_rate_per_hour", "battery_plugged_duration_hours", "battery_delay_from_drive_end_seconds", "data_count_output_gps_speeding_points", "speeding_slow_gps_points", "speeding_10kmh_gps_points", "speeding_20kmh_gps_points", "speeding_40kmh_gps_points", "speeding_80kmh_gps_points", "output_accel_valid_minutes", "output_gps_moving_minutes", "output_gps_moving_and_accel_valid_minutes", "data_time_till_first_gps_minutes", "score_di_accel", "score_di_brake", "score_di_turn", "score_di_car_motion", "score_di_phone_motion", "score_di_speeding", "score_di_night", "star_rating", "trip_end", "score_di_car_motion_with_accel", "score_di_car_motion_with_speeding", "score_di_distance_km_with_accel", "score_di_distance_km_with_speeding", "score_accel_per_sec_ntile", "score_brake_per_sec_ntile", "score_turn_per_sec_ntile", "score_speeding_per_sec_ntile", "score_phone_motion_per_sec_ntile", "score_accel_per_km_ntile", "score_brake_per_km_ntile", "score_turn_per_km_ntile", "score_speeding_per_km_ntile", "score_phone_motion_per_km_ntile", "score", "distance_prepended_km", "recording_start", "score_di_distance_km", "recording_end", "display_distance_km", "display_trip_start", "data_count_gyro_samples", "star_rating_accel", "star_rating_brake", "star_rating_turn", "star_rating_speeding", "star_rating_phone_motion", "is_night", "battery_total_drain", "battery_total_drain_duration_hours", "score_smoothness", "score_awareness", "star_rating_night", "star_rating_smoothness", "star_rating_awareness", "hide", "data_count_tag_accel_samples", "passenger_star_rating", "suspension_damping_ratio", "suspension_natural_frequency", "suspension_fit_error", "driving", "trip_mode", "classification_confidence", "gk_trip_mode", "gk_confidence", "offroad_trip_mode", "offroad_confidence", "driver_confidence", "timing_processing_preprocessing", "timing_processing_gatekeeper", "timing_processing_accelpipeline", "timing_processing_offroad", "timing_processing_suspension", "timing_processing_scoring", "timing_processing_hitchhiker", "data_count_obd_samples", "data_count_pressure_samples", "raw_sampling_mode", "data_count_magnetometer_samples", "location_disabled_date", "display_count_accel", "display_count_brake", "display_count_turn", "display_count_phone_motion", "time_pct_speeding", "by_limit_low_km", "by_limit_low_secs", "by_limit_low_speeding_secs", "by_limit_mid_km", "by_limit_mid_secs", "by_limit_mid_speeding_secs", "by_limit_hi_km", "by_limit_hi_secs", "by_limit_hi_speeding_secs", "id", "uploadtime", "deviceid", "driveid", "state", "dest_server", "companyid", "hardware_manufacturer", "hardware_model", "hardware_bootloader", "hardware_carrier", "android_fw_version", "android_api_version", "android_codename", "android_baseband", "app_version", "file_format", "start_reason", "stop_reason", "previous_driveid", "userid", "tag_mac_address", "tag_trip_number", "tag_last_connection_number", "hidden_by_support"],
+    "macrobase.analysis.contextual.doubleAttributes": []
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 1000000;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [],
+    "macrobase.query.name": "cmt1000000",
+    "macrobase.loader.targetHighMetrics": ["data_count_minutes"],
+    
+    "macrobase.analysis.contextual.discreteAttributes": ["dataset_id", "runtime", "trip_start", "data_count_minutes", "data_count_accel_samples", "data_count_netloc_samples", "data_count_gps_samples", "observed_sample_rate", "distance_mapmatched_km", "distance_gps_km", "ground_truth_present", "timing_mapmatch", "distance_pct_path_error", "build_version", "timing_queue_wait", "data_trip_length", "battery_maximum_level", "battery_minimum_level", "battery_drain_rate_per_hour", "battery_plugged_duration_hours", "battery_delay_from_drive_end_seconds", "data_count_output_gps_speeding_points", "speeding_slow_gps_points", "speeding_10kmh_gps_points", "speeding_20kmh_gps_points", "speeding_40kmh_gps_points", "speeding_80kmh_gps_points", "output_accel_valid_minutes", "output_gps_moving_minutes", "output_gps_moving_and_accel_valid_minutes", "data_time_till_first_gps_minutes", "score_di_accel", "score_di_brake", "score_di_turn", "score_di_car_motion", "score_di_phone_motion", "score_di_speeding", "score_di_night", "star_rating", "trip_end", "score_di_car_motion_with_accel", "score_di_car_motion_with_speeding", "score_di_distance_km_with_accel", "score_di_distance_km_with_speeding", "score_accel_per_sec_ntile", "score_brake_per_sec_ntile", "score_turn_per_sec_ntile", "score_speeding_per_sec_ntile", "score_phone_motion_per_sec_ntile", "score_accel_per_km_ntile", "score_brake_per_km_ntile", "score_turn_per_km_ntile", "score_speeding_per_km_ntile", "score_phone_motion_per_km_ntile", "score", "distance_prepended_km", "recording_start", "score_di_distance_km", "recording_end", "display_distance_km", "display_trip_start", "data_count_gyro_samples", "star_rating_accel", "star_rating_brake", "star_rating_turn", "star_rating_speeding", "star_rating_phone_motion", "is_night", "battery_total_drain", "battery_total_drain_duration_hours", "score_smoothness", "score_awareness", "star_rating_night", "star_rating_smoothness", "star_rating_awareness", "hide", "data_count_tag_accel_samples", "passenger_star_rating", "suspension_damping_ratio", "suspension_natural_frequency", "suspension_fit_error", "driving", "trip_mode", "classification_confidence", "gk_trip_mode", "gk_confidence", "offroad_trip_mode", "offroad_confidence", "driver_confidence", "timing_processing_preprocessing", "timing_processing_gatekeeper", "timing_processing_accelpipeline", "timing_processing_offroad", "timing_processing_suspension", "timing_processing_scoring", "timing_processing_hitchhiker", "data_count_obd_samples", "data_count_pressure_samples", "raw_sampling_mode", "data_count_magnetometer_samples", "location_disabled_date", "display_count_accel", "display_count_brake", "display_count_turn", "display_count_phone_motion", "time_pct_speeding", "by_limit_low_km", "by_limit_low_secs", "by_limit_low_speeding_secs", "by_limit_mid_km", "by_limit_mid_secs", "by_limit_mid_speeding_secs", "by_limit_hi_km", "by_limit_hi_secs", "by_limit_hi_speeding_secs", "id", "uploadtime", "deviceid", "driveid", "state", "dest_server", "companyid", "hardware_manufacturer", "hardware_model", "hardware_bootloader", "hardware_carrier", "android_fw_version", "android_api_version", "android_codename", "android_baseband", "app_version", "file_format", "start_reason", "stop_reason", "previous_driveid", "userid", "tag_mac_address", "tag_trip_number", "tag_last_connection_number", "hidden_by_support"],
     "macrobase.analysis.contextual.doubleAttributes": []
   }
-  
 ]

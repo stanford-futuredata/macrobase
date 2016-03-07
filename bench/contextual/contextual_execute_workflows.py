@@ -18,7 +18,7 @@ default_args = {
   "macrobase.analysis.useZScore": "false",
   "macrobase.loader.db.user": os.getenv('USER', None),
   "macrobase.loader.db.password": None,
-  "macrobase.analysis.zscore.threshold": 3.0,
+  "macrobase.analysis.zscore.threshold": 5.0,
 
   "macrobase.analysis.streaming.inputReservoirSize": 10000,
   "macrobase.analysis.streaming.scoreReservoirSize": 10000,
