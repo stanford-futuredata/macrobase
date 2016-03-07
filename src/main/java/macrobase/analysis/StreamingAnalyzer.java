@@ -108,6 +108,14 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 }
             }
 
+            streamingSummarizer =
+                    new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
+                            outlierItemSummarySize,
+                            minSupport,
+                            minOIRatio,
+                            decayRate,
+                            attributes.size());
+
             if (useRealTimePeriod) {
                 analysisUpdater = new WallClockAnalysisDecayer(System.currentTimeMillis(),
                         summaryPeriod,
@@ -123,13 +131,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                         streamingSummarizer);
             }
 
-            streamingSummarizer =
-                    new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
-                            outlierItemSummarySize,
-                            minSupport,
-                            minOIRatio,
-                            decayRate,
-                            attributes.size());
         }
 
         public List<ItemsetResult> getItemsetResults() {
@@ -175,8 +176,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                             streamingSummarizer.markInlier(d);
                         }
                     }
+                    tupleNo++;
                 }
-                tupleNo++;
             }
 
             itemsetResults = streamingSummarizer.getItemsets(encoder);

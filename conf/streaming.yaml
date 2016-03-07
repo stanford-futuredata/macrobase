@@ -31,14 +31,14 @@ macrobase.analysis.streaming.modelUpdatePeriod: 10000
 macrobase.analysis.streaming.useRealTimePeriod: false
 macrobase.analysis.streaming.useTupleCountPeriod: true
 
-macrobase.analysis.streaming.warmupCount: 1000000
+macrobase.analysis.streaming.warmupCount: 50000
 macrobase.analysis.streaming.decayRate: .01
 
 macrobase.analysis.mcd.alpha: 0.5
 macrobase.analysis.mcd.stoppingDelta: 0.001
 
-macrobase.analysis.numThreads: 2
-macrobase.analysis.numRuns: 20
+macrobase.analysis.numThreads: 4
+macrobase.analysis.numRuns: 1
 
 macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
 macrobase.loader.db.cacheDirectory: sql_cache
