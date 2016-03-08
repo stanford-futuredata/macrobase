@@ -146,10 +146,10 @@ public class ContextualOutlierDetector{
     private void initContextPruning(List<Datum> data){
     	
     	ContextPruning.detector = detector;
-    	
+    	ContextPruning.data = data;
     	//Init a sample of the entire dataset
     	List<Datum> sampleData = new ArrayList<Datum>();
-    	ContextPruning.errorBound = 0.01;
+    	ContextPruning.alpha = 0.05;
     	//numSamples is determined by confidence and error margin
     	//95% confidence, +-B error bound
     	//B = 1% => 10000

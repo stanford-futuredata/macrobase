@@ -36,7 +36,7 @@ default_args = {
   "macrobase.analysis.mcd.alpha": 0.5,
   "macrobase.analysis.mcd.stoppingDelta": 0.001,
   
-  "macrobase.analysis.contextual.denseContextTau": 0.3,
+  "macrobase.analysis.contextual.denseContextTau": 0.1,
   "macrobase.analysis.contextual.numIntervals": 10
 }
 
