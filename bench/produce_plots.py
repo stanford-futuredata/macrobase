@@ -46,6 +46,12 @@ def parse_output_file(filename):
                 tps_no_mining_mean = float(tps_no_mining_line[0].split(": ")[1])
                 tps_no_mining_stddev = float(tps_no_mining_line[1].split(": ")[1])
 
+                inliers_line = lines[i + 6]
+                inliers = eval(inliers_line.split(": ")[1])
+
+                outliers_line = lines[i + 7]
+                outliers = eval(outliers_line.split(": ")[1])
+
                 try:
                     [parameter_type, parameter_value] = \
                         parameters_description.split(" = ")
@@ -61,7 +67,8 @@ def parse_output_file(filename):
                         (iterations_mean, iterations_stddev),
                         itemsets_list,
                         (tps_mean, tps_stddev),
-                        (tps_no_mining_mean, tps_no_mining_stddev))
+                        (tps_no_mining_mean, tps_no_mining_stddev),
+                        inliers, outliers)
                 except:
                     parameter_type = parameters_description
                     if parameter_type not in parsed_results:
@@ -72,7 +79,8 @@ def parse_output_file(filename):
                         (iterations_mean, iterations_stddev),
                         itemsets_list,
                         (tps_mean, tps_stddev),
-                        (tps_no_mining_mean, tps_no_mining_stddev))
+                        (tps_no_mining_mean, tps_no_mining_stddev),
+                        inliers, outliers)
     return parsed_results
 
 
@@ -92,27 +100,29 @@ def get_time(parsed_results,
         parameter_value][0][timing_type.lower()]
 
 
-def compute_precision_and_recall(itemsets, ground_truth_itemsets):
+def compute_precision_and_recall(predicted_labels, ground_truth_labels):
     num_correct = 0
-    for itemset in itemsets:
-        if itemset in ground_truth_itemsets:
+    ground_truth_labels_set = set(ground_truth_labels)
+    for predicted_label in predicted_labels:
+        if predicted_label in ground_truth_labels_set:
             num_correct += 1
-    if (len(itemsets) == 0):
-        if (len(ground_truth_itemsets) == 0):
+    if (len(predicted_labels) == 0):
+        if (len(ground_truth_labels) == 0):
             precision = 1.0
         else:
             precision = 0.0
     else:
-        precision = float(num_correct) / float(len(itemsets))
+        precision = float(num_correct) / float(len(predicted_labels))
 
+    predicted_labels_set = set(predicted_labels)
     num_correct = 0
-    for itemset in ground_truth_itemsets:
-        if itemset in itemsets:
+    for ground_truth_label in ground_truth_labels:
+        if ground_truth_label in predicted_labels_set:
             num_correct += 1
-    if (len(ground_truth_itemsets) == 0):
+    if (len(ground_truth_labels) == 0):
         recall = 1.0
     else:
-        recall = float(num_correct) / float(len(ground_truth_itemsets))
+        recall = float(num_correct) / float(len(ground_truth_labels))
 
     return precision, recall
 
@@ -211,6 +221,38 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads, is_
     print "...done!"
 
 
+def plot_recall_precision_od(parsed_results, idx, ylabel, plots_dir, workloads, is_xscale_log):
+    print "Plotting %s graphs..." % ylabel
+    key_value_pairs = dict()
+    for parameter_type in parsed_results:
+        if parameter_type == "defaultParameters":
+            continue
+        key_value_pairs[parameter_type] = dict()
+        for workload_name in parsed_results[parameter_type]:
+            if workload_name not in workloads:
+                continue
+            key_value_pairs[parameter_type][workload_name] = dict()
+            print "%s-->" % workload_name
+            for parameter_value in sorted(parsed_results[parameter_type][workload_name].keys()):
+                try:
+                    outliers = parsed_results[parameter_type][
+                        workload_name][parameter_value][7]
+                    ground_truth_outliers = parsed_results[
+                        "defaultParameters"][workload_name][7]
+                    value = compute_precision_and_recall(
+                        outliers, ground_truth_outliers)[idx]
+                    print ylabel + " : " + str(int(parameter_value)) + " = " + str(value)
+                    key_value_pairs[parameter_type][workload_name][parameter_value] = \
+                        value
+                except:
+                    continue
+            print
+            print
+
+    plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
+    print "...done!"
+
+
 def plot(key_value_pairs, ylabel, plots_dir, file_suffix, plot_errorbars, is_xscale_log):
     for parameter_type in key_value_pairs:
         if parameter_type == "defaultParameters":
@@ -291,6 +333,10 @@ if __name__ == '__main__':
     plot_recall_precision(parsed_results, 1, "Recall", args.plot_directory,
         workloads,
         False)
+    plot_recall_precision_od(parsed_results, 0, "PrecisionOD", args.plot_directory,
+        workloads, False)
+    plot_recall_precision_od(parsed_results, 1, "RecallOD", args.plot_directory,
+        workloads, False)
     plot_aux_graphs(
         parsed_results, 4, "Throughput in tuples/sec", "Tps", args.plot_directory,
         workloads, False)
