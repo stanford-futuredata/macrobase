@@ -37,7 +37,9 @@ default_args = {
   "macrobase.analysis.mcd.stoppingDelta": 0.001,
 
   "macrobase.analysis.numRuns": 1,
-  "macrobase.analysis.numThreads": 1
+  "macrobase.analysis.numThreads": 1,
+
+  "macrobase.analysis.randomSeed": 100
 }
 
 
