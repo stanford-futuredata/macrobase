@@ -61,6 +61,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     // For shared-parameter implementation of MAD
     private CopyOnWriteArrayList<Double> perThreadMedians;
+    private CopyOnWriteArrayList<Double> perThreadMADs;
 
     // For shared-parameter implementation of MCD
     private CopyOnWriteArrayList<Integer> perThreadNumSamples;
@@ -93,6 +94,59 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         perThreadNumSamples = new CopyOnWriteArrayList<Integer>();
         perThreadMeans = new CopyOnWriteArrayList<RealVector>();
         perThreadCovariances = new CopyOnWriteArrayList<RealMatrix>();
+    }
+
+    private void mergeMCDParameters(MinCovDet minCovDetDetector, int threadId) {
+        perThreadCovariances.set(threadId,
+                new Array2DRowRealMatrix(minCovDetDetector.getLocalCovariance().getData()));
+        perThreadMeans.set(threadId,
+                new ArrayRealVector((minCovDetDetector.getLocalMean())));
+        perThreadNumSamples.set(threadId, minCovDetDetector.getNumSamples());
+
+        minCovDetDetector.setCovariance(perThreadCovariances.get(threadId));
+        minCovDetDetector.setMean(perThreadMeans.get(threadId));
+
+        // Collect partial parameters from different threads
+        List<RealMatrix> covarianceMatrices = new ArrayList<RealMatrix>();
+        List<RealVector> means = new ArrayList<RealVector>();
+        List<Double> allNumSamples = new ArrayList<Double>();
+        for (int j = 0; j < numThreads; j++) {
+            covarianceMatrices.add(perThreadCovariances.get(j));
+            means.add(perThreadMeans.get(j));
+            allNumSamples.add((double) perThreadNumSamples.get(j));
+        }
+
+        // Combine partial parameters
+        CovarianceMatrixAndMean res = MinCovDet.combineCovarianceMatrices(covarianceMatrices,
+                means, allNumSamples);
+
+        // Set combined parameters
+        minCovDetDetector.setCovariance(res.getCovarianceMatrix());
+        minCovDetDetector.setMean(res.getMean());
+    }
+
+    private void mergeMADParameters(MAD madDetector, int threadId) {
+        perThreadMedians.set(threadId, madDetector.getLocalMedian());
+
+        // Collect partial parameters from different threads
+        List<Double> medians = new ArrayList<Double>();
+        for (int j = 0; j < numThreads; j++) {
+            medians.add(perThreadMedians.get(j));
+        }
+
+        // Combine partial parameters
+        double approximateMedian = MAD.computeMedian(medians);
+        double approximateMAD = madDetector.getApproximateMAD(approximateMedian);
+        perThreadMADs.set(threadId, approximateMAD);
+
+        List<Double> mads = new ArrayList<Double>();
+        for (int j = 0; j < numThreads; j++) {
+            mads.add(perThreadMADs.get(j));
+        }
+
+        // Set combined parameters
+        madDetector.setMedian(approximateMedian);
+        madDetector.setMAD(MAD.computeMedian(mads));
     }
 
     class RunnableStreamingAnalysis implements Runnable {
@@ -201,12 +255,22 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                                     new ArrayRealVector((minCovDetDetector.getLocalMean())));
                             perThreadNumSamples.set(threadId, minCovDetDetector.getNumSamples());
 
+                            // Set parameters for subsequent scoring
                             minCovDetDetector.setCovariance(perThreadCovariances.get(threadId));
                             minCovDetDetector.setMean(perThreadMeans.get(threadId));
                         } else if (detector.getODDetectorType() == ODDetectorType.MAD) {
                             MAD madDetector = (MAD) detector;
-                            perThreadMedians.set(threadId, madDetector.getMedian());
+
+                            double approximateMedian = madDetector.getLocalMedian();
+                            perThreadMedians.set(threadId, approximateMedian);
+                            double approximateMAD = madDetector.getApproximateMAD(approximateMedian);
+                            perThreadMADs.set(threadId, approximateMAD);
+
+                            // Set parameters for subsequent scoring
+                            madDetector.setMedian(approximateMedian);
+                            madDetector.setMAD(approximateMAD);
                         }
+
                         for (Datum id : inputReservoir.getReservoir()) {
                             scoreReservoir.insert(detector.score(id));
                         }
@@ -217,41 +281,9 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                         analysisUpdater.updateIfNecessary(now, tupleNo);
                         if (modelUpdater.updateIfNecessary(now, tupleNo)) {
                             if (detector.getODDetectorType() == ODDetectorType.MCD) {
-                                MinCovDet minCovDetDetector = (MinCovDet) detector;
-
-                                perThreadCovariances.set(threadId,
-                                        new Array2DRowRealMatrix(minCovDetDetector.getLocalCovariance().getData()));
-                                perThreadMeans.set(threadId,
-                                        new ArrayRealVector((minCovDetDetector.getLocalMean())));
-                                perThreadNumSamples.set(threadId, minCovDetDetector.getNumSamples());
-
-                                minCovDetDetector.setCovariance(perThreadCovariances.get(threadId));
-                                minCovDetDetector.setMean(perThreadMeans.get(threadId));
+                                mergeMCDParameters((MinCovDet) detector, threadId);
                             } else if (detector.getODDetectorType() == ODDetectorType.MAD) {
-                                MAD madDetector = (MAD) detector;
-                                perThreadMedians.set(threadId, madDetector.getMedian());
-                            }
-
-                            if (detector.getODDetectorType() == ODDetectorType.MCD) {
-                                MinCovDet minCovDetDetector = (MinCovDet) detector;
-
-                                List<RealMatrix> covarianceMatrices = new ArrayList<RealMatrix>();
-                                List<RealVector> means = new ArrayList<RealVector>();
-                                List<Double> allNumSamples = new ArrayList<Double>();
-
-                                for (int j = 0; j < numThreads; j++) {
-                                    covarianceMatrices.add(perThreadCovariances.get(j));
-                                    means.add(perThreadMeans.get(j));
-                                    allNumSamples.add((double) perThreadNumSamples.get(j));
-                                }
-
-                                CovarianceMatrixAndMean res = MinCovDet.combineCovarianceMatrices(covarianceMatrices,
-                                        means, allNumSamples);
-
-                                ((MinCovDet) detector).setCovariance(res.getCovarianceMatrix());
-                                ((MinCovDet) detector).setMean(res.getMean());
-                            } else if (detector.getODDetectorType() == ODDetectorType.MAD) {
-                                // Do something here
+                                mergeMADParameters((MAD) detector, threadId);
                             }
                         }
                         double score = detector.score(d);
@@ -304,6 +336,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         // Initialize shared data structures
         for (int i = 0; i < numThreads; i++) {
             perThreadMedians.add(0.0);
+            perThreadMADs.add(0.0);
 
             perThreadCovariances.add(new Array2DRowRealMatrix());
             perThreadMeans.add(new ArrayRealVector());
