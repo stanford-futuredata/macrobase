@@ -66,8 +66,10 @@ public class ContextualOutlierDetector{
     	log.debug("Find global context outliers on data size: " + data.size());
     	sw.start();
     	
-    	List<Datum> remainingData = null;
+        Context globalContext = new Context();
+        contextualOutlierDetection(data,globalContext,zScore);
     	
+    	List<Datum> remainingData = null;
     	//should not exclude outlier data points from bigger contexts
     	remainingData = data;
     	

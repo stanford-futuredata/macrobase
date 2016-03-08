@@ -13,36 +13,15 @@ public class ContextPruning {
 	
 	public static OutlierDetector detector;
 	
+	//These pruning can entirely prune a context and all sub-contexts
 	public static int numDensityPruning = 0;
 	public static int numDependencyPruning = 0;
 	
+	
+	//These pruning can only prune the current context
 	public static int numPdfPruning = 0;
 	public static int numDetectorSpecificPruning = 0;
 	
-	/**
-	 * Determine if the context can be pruned with running f
-	 * @param c
-	 * @return
-	 */
-	public static boolean pdfPruning(Context c){
-		for(Context parent: c.getParents()){
-			if(c.getSize() == parent.getSize()){
-				numPdfPruning++;
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Determine if the context can be pruned without running f, 
-	 * but can use the internals of f
-	 * @param c
-	 * @return
-	 */
-	public static boolean detectorSpecificPruning(Context c){
-		return false;
-	}
 	
 	/**
 	 * Estimating the size of a context
@@ -104,6 +83,29 @@ public class ContextPruning {
 			return false;
 		}
 	}
+	
+	
+	/**
+	 * Determine if the context can be pruned with running f
+	 * If the pdf of p1 is the same(similar) to the pdf of p2
+	 * @param c
+	 * @return
+	 */
+	public static boolean pdfPruning(Context c){
+		return false;
+	}
+	
+	/**
+	 * Determine if the context can be pruned without running f, 
+	 * but can use the internals of f
+	 * @param c
+	 * @return
+	 */
+	public static boolean detectorSpecificPruning(Context c){
+		return false;
+	}
+	
+
 	
 	public static String print(){
 		StringBuilder sb = new StringBuilder();

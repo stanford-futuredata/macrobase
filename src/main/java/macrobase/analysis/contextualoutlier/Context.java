@@ -31,6 +31,12 @@ public class Context {
 	
 	HashSet<Datum> sample = new HashSet<Datum>();
 	
+	/**
+	 * Global context
+	 */
+	public Context(){
+		
+	}
 	
 	/**
 	 * Initialize a one dimensional context
@@ -151,6 +157,9 @@ public class Context {
 	}
 	
 	public String print(DatumEncoder encoder){
+		if(dimensions.size() == 0){
+			return "Global Context: ";
+		}
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < dimensions.size(); i++){
 			sb.append( intervals.get(i).print(encoder) + " ");
@@ -160,6 +169,9 @@ public class Context {
 	
 	@Override
 	public String toString(){
+		if(dimensions.size() == 0){
+			return "Global Context: ";
+		}
 		StringBuilder sb = new StringBuilder();
 		for(int i = 0; i < dimensions.size(); i++){
 			sb.append(dimensions.get(i) + ":" + intervals.get(i).toString() + " ");
