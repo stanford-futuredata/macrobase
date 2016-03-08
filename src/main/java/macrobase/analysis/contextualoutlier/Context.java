@@ -59,7 +59,45 @@ public class Context {
 		return dimensions;
 	}
 	
-	
+	/**
+	 * Get all the contextual data, given the whole dataset
+	 * set a random sample long the way
+	 * @param data
+	 * @return
+	 */
+	public List<Datum> getContextualData(List<Datum> data){
+		List<Datum> contextualData = new ArrayList<Datum>();
+    	
+		
+		//set sample 
+		
+		Random rnd = new Random();
+		int numSample = 1000;
+    	List<Datum> sampleContextualData = new ArrayList<Datum>();
+    	int i = 0;
+    	
+    	
+    	for(Datum d: data){    		
+    		if(containDatum(d) ){
+    			contextualData.add(d);
+    			if(sampleContextualData.size() < numSample){
+    				sampleContextualData.add(d);
+    			}else{
+    				int j = rnd.nextInt(i); //j in [0,i)
+    				
+    				if(j < sampleContextualData.size()){
+    					sampleContextualData.set(j, d);
+    				}
+    			}
+    			i++;
+    		}
+    			
+    	}
+    	
+    	sample.addAll(sampleContextualData);
+    	setSize(contextualData.size());
+    	return contextualData;
+	}
 	
 	/**
 	 * Determine if the unit contains the tuple
@@ -138,12 +176,6 @@ public class Context {
 		newUnit.parents.add(this);
 		newUnit.parents.add(other);
 		
-		//set the sample of the newUnit  O(sampleSize)
-		for(Datum d: sample){
-			if(other.sample.contains(d)){
-				newUnit.sample.add(d);
-			}
-		}
 		
 		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
@@ -194,31 +226,7 @@ public class Context {
 		this.size = size;
 	}
 	
-	/**
-	 * Given the actual context, init a sample from it
-	 * @param contextualData
-	 */
-	public void setSample(List<Datum> contextualData){
-		int numSample = 1000;
-		
-		List<Datum> listSample = new ArrayList<Datum>();
-		
-		Random rnd = new Random();
-		for(int i = 0; i < contextualData.size(); i++){
-			Datum d = contextualData.get(i);
-			if(listSample.size() < numSample){
-				listSample.add(d);
-			}else{
-				int j = rnd.nextInt(i); //j in [0,i)
-				if(j < listSample.size()){
-					listSample.set(j, d);
-				}
-			}
-			
-		}
-		
-		sample.addAll(listSample);
-	}
+	
 	public HashSet<Datum> getSample(){
 		return sample;
 	}

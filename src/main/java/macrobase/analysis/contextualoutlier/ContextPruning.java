@@ -3,6 +3,7 @@ package macrobase.analysis.contextualoutlier;
 import java.util.*;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.stat.inference.TestUtils;
 
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.datamodel.Datum;
@@ -42,10 +43,6 @@ public class ContextPruning {
 			}
 		}
 		
-		if(sampleHit < 10 || (sampleSize - sampleHit) < 10){
-			//too small to use the statistical test
-			return false;
-		}
 		
 		double estimatedDensity = (double) sampleHit / sampleSize;
 		
@@ -81,6 +78,7 @@ public class ContextPruning {
 		for(Datum d: p1.getSample()){
 			if(!p2.containDatum(d)){
 				sample_p1_p2 = false;
+				break;
 			}
 		}
 		
@@ -88,21 +86,37 @@ public class ContextPruning {
 		for(Datum d: p2.getSample()){
 			if(!p1.containDatum(d)){
 				sample_p2_p1 = false;
+				break;
 			}
 		}
 		
 		
-		if(sample_p1_p2 && dependencyTest(p1,p2)){
-			numDependencyPruning++;
+		if(sample_p1_p2 ){
 			return true;
-		}else if(sample_p2_p1 && dependencyTest(p2,p1)){
-			numDependencyPruning++;
+//			if(dependencyTest(p1,p2)){
+//				numDependencyPruning++;
+//				return true;
+//			}else{
+//				falseDependencyUsingSample++;
+//				return false;
+//			}
+			
+		}else if(sample_p2_p1){
 			return true;
+//			if(dependencyTest(p2,p1)){
+//				numDependencyPruning++;
+//				return true;
+//			}else{
+//				falseDependencyUsingSample++;
+//				return false;
+//			}
+			
 		}else{
 			return false;
 		}
 	}
 	
+	public static int falseDependencyUsingSample = 0;
 	/**
 	 * All tuples in p1 are in p2 as well
 	 * @param p1
@@ -120,17 +134,45 @@ public class ContextPruning {
 	}
 	
 	
+	public static int numSameDistributions = 0;
 	/**
 	 * Determine if the context can be pruned with running f
 	 * If the pdf of p1 is the same(similar) to the pdf of p2
 	 * @param c
 	 * @return
 	 */
-	public static boolean pdfPruning(Context c){
+	public static boolean sameDistribution(Context p1, Context p2){
 		
+		HashSet<Datum> sample1 = p1.getSample();
+		HashSet<Datum> sample2 = p2.getSample();
+		
+		double[] values1 = new double[sample1.size()];
+		int i = 0;
+		for(Datum d: sample1){
+			values1[i] = d.getMetrics().getEntry(0);
+			i++;
+		}
 			
+		double[] values2 = new double[sample2.size()];
+		int j = 0; 
+		for(Datum d: sample2){
+			values2[j] = d.getMetrics().getEntry(0);
+			j++;
+		}
 		
-		return false;
+		double pValue = TestUtils.kolmogorovSmirnovTest(values1, values2);
+		
+		boolean rejectNull = (pValue <= alpha)? true: false;	
+		
+		if(rejectNull){
+			//reject null, leads to different distribution
+			return false;
+		}else{
+			//accept null, which is same distribution
+			numSameDistributions++;
+			return true;
+		}
+		
 	}
 	
 	/**
@@ -148,7 +190,8 @@ public class ContextPruning {
 	public static String print(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("numDensityPruning: " + numDensityPruning + "  ");
-		sb.append("numDependencyPruning: " + numDependencyPruning + "  ");
+		sb.append("numDependencyPruning: " + numDependencyPruning + "  " + " falseDependencyUsingSample:  " + falseDependencyUsingSample );
+		sb.append("numSameDistributions: " + numSameDistributions + "  ");
 		sb.append("numPdfPruning: " + numPdfPruning + "  ");
 		sb.append("numDetectorSpecificPruning: " + numDetectorSpecificPruning + "   ");
 		return sb.toString();

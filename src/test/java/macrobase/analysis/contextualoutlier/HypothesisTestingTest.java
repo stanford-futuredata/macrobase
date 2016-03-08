@@ -100,16 +100,12 @@ public class HypothesisTestingTest {
 	@Test
 	public void propotionTest(){
 		
-		int sampleSize = 1000;
-		int sampleHit = 10;
-		double minDensity = 0.1;
+		int sampleSize = 20;
+		int sampleHit = 19;
+		double minDensity = 0.9;
 		
 		boolean pruned = false;
 		
-		if(sampleHit < 10 || (sampleSize - sampleHit) < 10){
-			//too small to use the statistical test
-			pruned = false;
-		}
 		
 		double estimatedDensity = (double) sampleHit / sampleSize;
 		
@@ -129,7 +125,7 @@ public class HypothesisTestingTest {
 		}
 		
 		
-		assertEquals(pruned,true);
+		assertEquals(pruned,false);
 	}
 	
 }

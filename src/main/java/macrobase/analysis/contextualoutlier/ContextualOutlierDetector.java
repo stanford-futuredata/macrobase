@@ -134,7 +134,9 @@ public class ContextualOutlierDetector{
         	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, Context Pruning: {}", level,ContextPruning.print());
-        	
+        	log.debug("Done Find {}-dimensional contextual outliers, so far, Total Contextual OutlierDetection Runs: {}", level,totalContextualOutlierDetectionRuns);
+            log.debug("----------------------------------------------------------");
+
         	
 			preLatticeNodes = curLatticeNodes;
 		}
@@ -221,9 +223,9 @@ public class ContextualOutlierDetector{
 		sw.start();
 		
 		int numLatticeNodeJoins = 0;
-		
-		  for(int i = 0; i < latticeNodeByDimensions.size(); i++ ){
-	    	for(int j = i +1; j < latticeNodeByDimensions.size(); j++){
+		int numDenseContexts = 0;
+		for(int i = 0; i < latticeNodeByDimensions.size(); i++ ){
+			for(int j = i +1; j < latticeNodeByDimensions.size(); j++){
 	    		
 	    		LatticeNode s1 = latticeNodeByDimensions.get(i);
 	    		LatticeNode s2 = latticeNodeByDimensions.get(j);
@@ -232,8 +234,11 @@ public class ContextualOutlierDetector{
 	    		if(joined != null){
 	    			numLatticeNodeJoins++;
 	    			//only interested in nodes that have dense contexts
-	    			if(joined.getDenseContexts().size() != 0)
+	    			if(joined.getDenseContexts().size() != 0){
 	    				result.add(joined);
+	    				numDenseContexts += joined.getDenseContexts().size();
+	    			}
+	    				
 	    		}
 	    	}
 	    }
@@ -243,7 +248,9 @@ public class ContextualOutlierDetector{
 	    sw.reset();
 	    
 		log.debug("\tDone Joining lattice nodes in level {} by their dimensions (duration: {}ms)" , latticeNodes.get(0).dimensions.size(), joiningTime);
-		log.debug("\tDone Joining lattice nodes in level {} by their dimensions, there are {} joins (average duration per lattice node pair join: {}ms)" , latticeNodes.get(0).dimensions.size(), numLatticeNodeJoins, (numLatticeNodeJoins==0)?0:joiningTime/numLatticeNodeJoins);
+		log.debug("\tDone Joining lattice nodes in level {} by their dimensions,"
+				+ " there are {} joins and {} dense contexts (average duration per lattice node pair join: {}ms)" , 
+				latticeNodes.get(0).dimensions.size(), numLatticeNodeJoins,numDenseContexts,  (numLatticeNodeJoins==0)?0:joiningTime/numLatticeNodeJoins);
 
 		
 		
@@ -252,6 +259,7 @@ public class ContextualOutlierDetector{
 	
 	
     
+	private int totalContextualOutlierDetectionRuns = 0;
     /**
      * Run outlier detection algorithm on contextual data
      * The algorithm has to use zScore in contextual outlier detection
@@ -262,18 +270,7 @@ public class ContextualOutlierDetector{
      */
     public void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
     	
-    	List<Datum> contextualData = new ArrayList<Datum>();
-    	
-    	for(Datum d: data){
-    		//contain the d, and not excluded
-    		if(context.containDatum(d) )
-    			contextualData.add(d);
-    	}
-    	
-    	context.setSize(contextualData.size());
-    	if(context.getDimensions().size() == 1){
-    		context.setSample(contextualData);
-    	}
+    	List<Datum> contextualData = context.getContextualData(data);
     	
     	
     	//Just did density estimation before
@@ -283,12 +280,17 @@ public class ContextualOutlierDetector{
     	}
     	
     	//pdf pruning
-    	if(ContextPruning.pdfPruning(context)){
-    		return;
+    	if(context.getParents().size() == 2){
+    		if(ContextPruning.sameDistribution(context, context.getParents().get(0))){
+    			//use training of parent context
+    		}else if(ContextPruning.sameDistribution(context, context.getParents().get(1))){
+    			//use training of parent context
+    		}
     	}
     	
         OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(contextualData, zScore);
        
+        totalContextualOutlierDetectionRuns++;
         List<Datum> outliers = new ArrayList<Datum>();
         if(or.getOutliers().size() != 0){
         	for(DatumWithScore o: or.getOutliers()){
