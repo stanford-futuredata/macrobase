@@ -19,6 +19,7 @@ import com.codahale.metrics.Timer;
 public class MAD extends OutlierDetector {
     private static final Logger log = LoggerFactory.getLogger(MAD.class);
 
+    private double localMedian;
     private double median;
     private double MAD;
 
@@ -29,6 +30,7 @@ public class MAD extends OutlierDetector {
     private final Counter zeroMADs = MacroBase.metrics.counter(name(MAD.class, "zeroMADs"));
 
     private final double trimmedMeanFallback = 0.05;
+    private List<Datum> bufferedData;
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
@@ -37,10 +39,23 @@ public class MAD extends OutlierDetector {
         super(conf);
     }
 
-    public double getMedian() { return median; }
+    public double getLocalMedian() { return localMedian; }
+
+    public static double computeMedian(List<Double> array) {
+        array.sort((a, b) -> Double.compare(a, b));
+        double median;
+        if (array.size() % 2 == 0) {
+            median = (array.get(array.size() / 2 - 1) +
+                      array.get(array.size() / 2)) / 2;
+        } else {
+            median = array.get((int) Math.ceil(array.size() / 2));
+        }
+        return median;
+    }
 
     @Override
     public void train(List<Datum> data) {
+        bufferedData = data;
         Timer.Context context = medianComputation.time();
 
         assert (data.get(0).getMetrics().getDimension() == 1);
@@ -48,31 +63,28 @@ public class MAD extends OutlierDetector {
                                            y.getMetrics().getEntry(0)));
 
         if (data.size() % 2 == 0) {
-            median = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
+            localMedian = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
                       data.get(data.size() / 2).getMetrics().getEntry(0)) / 2;
         } else {
-            median = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
+            localMedian = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
         }
         context.stop();
 
-        context = residualComputation.time();
-        List<Double> residuals = new ArrayList<>(data.size());
-        for (Datum d : data) {
-            residuals.add(Math.abs(d.getMetrics().getEntry(0) - median));
+        log.trace("trained! localMedian is {}, MAD is {}", localMedian, MAD);
+    }
+
+    public double getApproximateMAD(double approximateMedian) {
+        Timer.Context context = residualComputation.time();
+        List<Double> residuals = new ArrayList<>(bufferedData.size());
+        for (Datum d : bufferedData) {
+            residuals.add(Math.abs(d.getMetrics().getEntry(0) - approximateMedian));
         }
         context.stop();
 
         context = residualMedianComputation.time();
-        residuals.sort((a, b) -> Double.compare(a, b));
+        double approximateMAD = computeMedian(residuals);
 
-        if (data.size() % 2 == 0) {
-            MAD = (residuals.get(data.size() / 2 - 1) +
-                   residuals.get(data.size() / 2)) / 2;
-        } else {
-            MAD = residuals.get((int) Math.ceil(data.size() / 2));
-        }
-
-        if (MAD == 0) {
+        if (approximateMAD == 0) {
             zeroMADs.inc();
             int lowerTrimmedMeanIndex = (int) (residuals.size() * trimmedMeanFallback);
             int upperTrimmedMeanIndex = (int) (residuals.size() * (1 - trimmedMeanFallback));
@@ -81,13 +93,21 @@ public class MAD extends OutlierDetector {
             for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
                 sum += residuals.get(i);
             }
-            MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
-            assert (MAD != 0);
+            approximateMAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
+            assert (approximateMAD != 0);
         }
 
         context.stop();
 
-        log.trace("trained! median is {}, MAD is {}", median, MAD);
+        return approximateMAD;
+    }
+
+    public void setMedian(double median) {
+        this.median = median;
+    }
+
+    public void setMAD(double MAD) {
+        this.MAD = MAD;
     }
 
     @Override
