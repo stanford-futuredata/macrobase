@@ -94,12 +94,12 @@ def parse_results(results_file):
                         line.split("tuples / second")[0].strip())
                 elif "Outlier:" in line:
                     line = line.split("Outlier: ")[1]
-                    line = line.split()
+                    line = line.strip()
                     outlier = frozenset(eval(line))
                     outliers.append(outlier)
                 elif "Inlier:" in line:
                     line = line.split("Inlier: ")[1]
-                    line = line.split()
+                    line = line.strip()
                     inlier = frozenset(eval(line))
                     inliers.append(inlier)
             if "Columns" in line:
