@@ -42,16 +42,20 @@ public class Context {
 	 * Initialize a one dimensional context
 	 * @param dimension
 	 * @param interval
+	 * @param parent
 	 */
-	public Context(int dimension, Interval interval){
+	public Context(int dimension, Interval interval, Context parent){
 		dimensions.add(dimension);
 		intervals.add(interval);
+		parents.add(parent);
 		
 	}
 	
-	public Context(List<Integer> dimensions, List<Interval> intervals) {
+	public Context(List<Integer> dimensions, List<Interval> intervals, Context parent1, Context parent2) {
 		this.dimensions = dimensions;
 		this.intervals = intervals;
+		parents.add(parent1);
+		parents.add(parent2);
 		
 	}
 
@@ -172,9 +176,8 @@ public class Context {
 			
 		}
 	
-		Context newUnit = new Context(newDimensions, newIntervals);
-		newUnit.parents.add(this);
-		newUnit.parents.add(other);
+		Context newUnit = new Context(newDimensions, newIntervals, this, other);
+		
 		
 		
 		if(ContextPruning.densityPruning(newUnit, tau)){

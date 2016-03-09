@@ -44,6 +44,18 @@ public class ContextPruning {
 		}
 		
 		
+		return densityPruning(sampleSize, sampleHit, minDensity);
+		
+	}
+	
+	/**
+	 * Estimating the size of a context
+	 * The Null Hypothesis is that (sampleHit/sampleSize) >= minDensity
+	 * @param c
+	 * @param minDensity
+	 * @return true if the estimation > minSize
+	 */
+	public static boolean densityPruning(int sampleSize, int sampleHit, double minDensity){
 		double estimatedDensity = (double) sampleHit / sampleSize;
 		
 		double sampleSD = Math.sqrt(minDensity * (1-minDensity) / sampleSize);
@@ -61,7 +73,6 @@ public class ContextPruning {
 			//fail to reject
 			return false;
 		}
-		
 	}
 	
 	/**
@@ -193,7 +204,7 @@ public class ContextPruning {
 	public static String print(){
 		StringBuilder sb = new StringBuilder();
 		sb.append("numDensityPruning: " + numDensityPruning + "  ");
-		sb.append("numDependencyPruning: " + numDependencyPruning + "  " + " falseDependencyUsingSample:  " + falseDependencyUsingSample );
+		sb.append("numDependencyPruning: " + numDependencyPruning + "  " + " falseDependencyUsingSample:  " + falseDependencyUsingSample + "  ");
 		sb.append("numSameDistributions: " + numSameDistributions + "  ");
 		sb.append("numPdfPruning: " + numPdfPruning + "  ");
 		sb.append("numDetectorSpecificPruning: " + numDetectorSpecificPruning + "   ");

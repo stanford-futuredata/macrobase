@@ -31,6 +31,9 @@ public class ContextualOutlierDetector{
     private int totalContextualDimensions;
     
     
+    Context globalContext = new Context();
+    
+    
     private double denseContextTau;
     private int numIntervals;
     
@@ -66,7 +69,7 @@ public class ContextualOutlierDetector{
     	log.debug("Find global context outliers on data size: " + data.size());
     	sw.start();
     	
-        Context globalContext = new Context();
+        
         contextualOutlierDetection(data,globalContext,zScore);
     	
     	List<Datum> remainingData = null;
@@ -90,9 +93,7 @@ public class ContextualOutlierDetector{
     		log.debug("Build {}-dimensional contexts on all attributes",level);
     		sw.start();
     		if(level == 1){
-    			//build one-dimensional lattice using sample data, to avoid scanning the database fully for every attribute
-    			curLatticeNodes = buildOneDimensionalLatticeNodes(ContextPruning.sampleData);
-        		//curLatticeNodes = buildOneDimensionalLatticeNodes(remainingData);
+    			curLatticeNodes = buildOneDimensionalLatticeNodes(remainingData);
         	}else{
         		curLatticeNodes = levelUpLattice(preLatticeNodes, remainingData);	
         	}
@@ -282,10 +283,11 @@ public class ContextualOutlierDetector{
     	}
     	
     	//pdf pruning
-    	if(context.getParents().size() == 2){
+    	if(context.getParents().size() > 0){
     		if(ContextPruning.sameDistribution(context, context.getParents().get(0))){
     			//use training of parent context
-    		}else if(ContextPruning.sameDistribution(context, context.getParents().get(1))){
+    		}else if(context.getParents().size() > 1 && 
+    				ContextPruning.sameDistribution(context, context.getParents().get(1))){
     			//use training of parent context
     		}
     	}
@@ -310,66 +312,56 @@ public class ContextualOutlierDetector{
 	 */
 	private List<LatticeNode> buildOneDimensionalLatticeNodes(List<Datum> data){
 		
-		List<Context> oneDimensionalUnits = initOneDimensionalContexts(data);
-		
-		//find out the dense one dimensional contexts
-		Map<Integer,List<Context>> dimension2OneDimensionalDenseUnits = new HashMap<Integer, List<Context>>();
-		for(Context context: oneDimensionalUnits){
-			if(!ContextPruning.densityPruning(context, denseContextTau)){
-				
-				int dimension = context.getDimensions().get(0);
-				if(!dimension2OneDimensionalDenseUnits.containsKey(dimension))
-					dimension2OneDimensionalDenseUnits.put(dimension, new ArrayList<Context>());
-				
-				dimension2OneDimensionalDenseUnits.get(dimension).add(context);
-			}
-		}
 		
 		//create subspaces
 		List<LatticeNode> latticeNodes = new ArrayList<LatticeNode>();
-		for(int dimension: dimension2OneDimensionalDenseUnits.keySet()){
+				
+		for(int dimension = 0; dimension < totalContextualDimensions; dimension++){
 			LatticeNode ss = new LatticeNode(dimension);
-			for(Context denseUnit: dimension2OneDimensionalDenseUnits.get(dimension)){
-				ss.addDenseContext(denseUnit);
-				log.debug(denseUnit.toString());
+			List<Context> denseContexts = initOneDimensionalDenseContexts(data, dimension);
+			for(Context denseContext: denseContexts){
+				ss.addDenseContext(denseContext);
+				log.debug(denseContext.toString());
 			}
 			latticeNodes.add(ss);
 		}
-		
 		
 		return latticeNodes;
 	}
 	
 	
-    /**
-	 * Initialize one dimensional contexts
+	/**
+	 * Initialize one dimensional dense contexts
+	 * The number of passes of data is O(totalContextualDimensions)
 	 * @param data
+	 * @param dimension
 	 * @return
 	 */
-	private List<Context> initOneDimensionalContexts(List<Datum> data){
-		List<Context> result = new ArrayList<Context>();
-		for(int dimension = 0; dimension < totalContextualDimensions; dimension++){
-			result.addAll( initOneDimensionalContexts(data,dimension) );
-		}
-		return result;
-	}
-	
-	
-	private List<Context> initOneDimensionalContexts(List<Datum> data, int dimension){
+	private List<Context> initOneDimensionalDenseContexts(List<Datum> data, int dimension){
 		int discreteDimensions = contextualDiscreteAttributes.size();
 		
 		
 		List<Context> result = new ArrayList<Context>();
 		
 		if(dimension < discreteDimensions){
-			HashSet<Integer> distinctValues = new HashSet<Integer>();
+			Map<Integer,Integer> distinctValue2Count = new HashMap<Integer,Integer>();
 			for(Datum datum: data){
-				distinctValues.add(datum.getContextualDiscreteAttributes().get(dimension));
+				Integer value = datum.getContextualDiscreteAttributes().get(dimension);
+				if(distinctValue2Count.containsKey(value)){
+					distinctValue2Count.put(value, distinctValue2Count.get(value) + 1);
+				}else{
+					distinctValue2Count.put(value, 1);
+				}
+				
 			}
-			for(Integer value: distinctValues){
-				Interval interval = new IntervalDiscrete(dimension,contextualDiscreteAttributes.get(dimension),value);
-				Context context = new Context(dimension, interval);
-				result.add(context);
+			for(Integer value: distinctValue2Count.keySet()){
+				//boolean denseContext = !ContextPruning.densityPruning(data.size(), distinctValue2Count.get(value), denseContextTau);
+				boolean denseContext = ( (double) distinctValue2Count.get(value) / data.size() >= denseContextTau)?true:false;
+				if(denseContext){
+					Interval interval = new IntervalDiscrete(dimension,contextualDiscreteAttributes.get(dimension),value);
+					Context context = new Context(dimension, interval, globalContext);
+					result.add(context);
+				}
 			}
 		}else{
 			double min = Double.MAX_VALUE;
@@ -384,7 +376,7 @@ public class ContextualOutlierDetector{
 					min = value;
 				}
 			}
-			
+			HashSet<Interval> allIntervals = new HashSet<Interval>();
 			// divide the interval into numIntervals
 			double step = (max - min) / numIntervals;
 			double start = min;
@@ -392,15 +384,35 @@ public class ContextualOutlierDetector{
 				if(i != numIntervals - 1){
 					Interval interval = new IntervalDouble(dimension,contextualDoubleAttributes.get(dimension - discreteDimensions), start, start + step);
 					start += step;
-					Context context = new Context(dimension, interval);
-					result.add(context);
+					allIntervals.add(interval);
 				}else{
 					//make the max a little bit larger
 					Interval interval = new IntervalDouble(dimension, contextualDoubleAttributes.get(dimension - discreteDimensions),start, max + 0.000001);
-					Context context = new Context(dimension, interval);
+					allIntervals.add(interval);
+				}
+			}
+			//count the interval
+			HashMap<Interval,Integer> interval2Count = new HashMap<Interval,Integer>();
+			for(Datum datum: data){
+				double value = datum.getContextualDoubleAttributes().getEntry(dimension - discreteDimensions );
+				for(Interval interval: allIntervals){
+					if(interval.contains(value)){
+						if(interval2Count.containsKey(interval)){
+							interval2Count.put(interval, interval2Count.get(interval)+1);
+						}else{
+							interval2Count.put(interval,1);
+						}
+						break;
+					}
+				}
+			}
+			for(Interval interval: interval2Count.keySet()){
+				//boolean denseContext =!ContextPruning.densityPruning(data.size(), interval2Count.get(interval), denseContextTau);
+				boolean denseContext = ( (double) interval2Count.get(interval) / data.size() >= denseContextTau)?true:false;
+				if(denseContext){
+					Context context = new Context(dimension, interval,globalContext);
 					result.add(context);
 				}
-				
 			}
 		}
 		
