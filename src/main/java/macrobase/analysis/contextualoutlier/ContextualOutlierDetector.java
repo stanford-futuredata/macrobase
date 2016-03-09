@@ -273,6 +273,11 @@ public class ContextualOutlierDetector{
      */
     public void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
     	
+    	if(context.getParents().size() == 2 &&
+    			ContextPruning.sameDistribution(context.getParents().get(0), context.getParents().get(1))){
+    		return;
+    	}
+    	
     	List<Datum> contextualData = context.getContextualData(data);
     	
     	
@@ -285,10 +290,10 @@ public class ContextualOutlierDetector{
     	//pdf pruning
     	if(context.getParents().size() > 0){
     		if(ContextPruning.sameDistribution(context, context.getParents().get(0))){
-    			//use training of parent context
+    			return;
     		}else if(context.getParents().size() > 1 && 
     				ContextPruning.sameDistribution(context, context.getParents().get(1))){
-    			//use training of parent context
+    			return;
     		}
     	}
     	
