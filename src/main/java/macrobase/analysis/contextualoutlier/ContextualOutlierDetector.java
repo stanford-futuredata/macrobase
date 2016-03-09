@@ -55,6 +55,7 @@ public class ContextualOutlierDetector{
     	this.numIntervals = numIntervals;
     	
     	totalContextualDimensions = contextualDiscreteAttributes.size() + contextualDoubleAttributes.size();
+    	log.debug("There are {} contextualDiscreteAttributes, and {} contextualDoubleAttributes" , contextualDiscreteAttributes,contextualDoubleAttributes);
     }
     
     public Map<Context,List<Datum>> getContextualOutliers(){
@@ -275,7 +276,7 @@ public class ContextualOutlierDetector{
     	
     	if(context.getParents().size() == 2 &&
     			ContextPruning.sameDistribution(context.getParents().get(0), context.getParents().get(1))){
-    		return;
+    		//return;
     	}
     	
     	List<Datum> contextualData = context.getContextualData(data);
@@ -290,10 +291,10 @@ public class ContextualOutlierDetector{
     	//pdf pruning
     	if(context.getParents().size() > 0){
     		if(ContextPruning.sameDistribution(context, context.getParents().get(0))){
-    			return;
+    			//return;
     		}else if(context.getParents().size() > 1 && 
     				ContextPruning.sameDistribution(context, context.getParents().get(1))){
-    			return;
+    			//return;
     		}
     	}
     	
