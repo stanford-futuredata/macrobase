@@ -90,7 +90,9 @@ public class ContextualOutlierDetector{
     		log.debug("Build {}-dimensional contexts on all attributes",level);
     		sw.start();
     		if(level == 1){
-        		curLatticeNodes = buildOneDimensionalLatticeNodes(remainingData);
+    			//build one-dimensional lattice using sample data, to avoid scanning the database fully for every attribute
+    			curLatticeNodes = buildOneDimensionalLatticeNodes(ContextPruning.sampleData);
+        		//curLatticeNodes = buildOneDimensionalLatticeNodes(remainingData);
         	}else{
         		curLatticeNodes = levelUpLattice(preLatticeNodes, remainingData);	
         	}

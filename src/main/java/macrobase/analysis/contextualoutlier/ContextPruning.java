@@ -55,6 +55,7 @@ public class ContextPruning {
 		
 		if(pValue <= alpha){
 			//reject the hypothesis, thus can be pruned
+			numDensityPruning++;
 			return true;
 		}else{
 			//fail to reject
@@ -92,6 +93,7 @@ public class ContextPruning {
 		
 		
 		if(sample_p1_p2 ){
+			numDependencyPruning++;
 			return true;
 //			if(dependencyTest(p1,p2)){
 //				numDependencyPruning++;
@@ -102,6 +104,7 @@ public class ContextPruning {
 //			}
 			
 		}else if(sample_p2_p1){
+			numDependencyPruning++;
 			return true;
 //			if(dependencyTest(p2,p1)){
 //				numDependencyPruning++;
