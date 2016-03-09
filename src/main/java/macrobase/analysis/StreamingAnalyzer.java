@@ -91,6 +91,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         endSemaphore = new Semaphore(0);
 
         perThreadMedians = new CopyOnWriteArrayList<Double>();
+        perThreadMADs = new CopyOnWriteArrayList<Double>();
         perThreadNumSamples = new CopyOnWriteArrayList<Integer>();
         perThreadMeans = new CopyOnWriteArrayList<RealVector>();
         perThreadCovariances = new CopyOnWriteArrayList<RealMatrix>();
