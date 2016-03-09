@@ -55,7 +55,7 @@ public class ContextualOutlierDetector{
     	this.numIntervals = numIntervals;
     	
     	totalContextualDimensions = contextualDiscreteAttributes.size() + contextualDoubleAttributes.size();
-    	log.debug("There are {} contextualDiscreteAttributes, and {} contextualDoubleAttributes" , contextualDiscreteAttributes,contextualDoubleAttributes);
+    	log.debug("There are {} contextualDiscreteAttributes, and {} contextualDoubleAttributes" , contextualDiscreteAttributes.size(),contextualDoubleAttributes.size());
     }
     
     public Map<Context,List<Datum>> getContextualOutliers(){
