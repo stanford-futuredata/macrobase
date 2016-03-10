@@ -10,5 +10,4 @@ macrobase:
     - "com_nam"
   macrobase.loader.auxiliaryAttributes: []
   kernelBandwidth: NORMAL_SCALE
-  macrobase.loader.transformType: IDENTITY
   macrobase.loader.loaderType: SQL_LOADER

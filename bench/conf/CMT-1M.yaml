@@ -13,10 +13,9 @@ macrobase:
   macrobase.loader.auxiliaryAttributes: []
   macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE
   macrobase.analysis.kde.bandwidthMultiplier: 4
-  macrobase.analysis.detectorType: TREE_KDE
+  macrobase.analysis.transformType: TREE_KDE
   macrobase.analysis.treeKde.accuracy: 0.1
   macrobase.analysis.treeKde.leafCapacity: 2
   macrobase.loader.loaderType: POSTGRES_LOADER
-  macrobase.loader.transformType: IDENTITY
 post_run:
   - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --ymin 0.1 --x-limits 50 150"

@@ -3,7 +3,7 @@ macrobase.loader.attributes: [userid]
 macrobase.loader.targetLowMetrics: [data_count_minutes]
 macrobase.loader.targetHighMetrics: []
 
-macrobase.analysis.detectorType: MCD
+macrobase.analysis.transformType: MCD
 
 macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;

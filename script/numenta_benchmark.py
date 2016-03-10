@@ -24,7 +24,6 @@ macrobase.loader.timeColumn: timestamp
 
 macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM nab;
-macrobase.loader.transformType: IDENTITY
 
 macrobase.analysis.detectorType: MOVING_AVERAGE
 

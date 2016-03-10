@@ -1,9 +1,8 @@
 macrobase:
   macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id AND userid IS NOT NULL LIMIT 100000;
   macrobase.loader.targetHighMetrics: [data_count_minutes]
-  macrobase.loader.transformType: IDENTITY
   macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes: [userid]
   macrobase.loader.auxiliaryAttributes: [battery_delay_from_drive_end_seconds]
-  macrobase.analysis.detectorType: MCD
+  macrobase.analysis.transformType: MCD
   macrobase.loader.loaderType: SQL_LOADER

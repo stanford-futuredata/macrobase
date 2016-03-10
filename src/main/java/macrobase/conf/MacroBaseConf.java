@@ -2,16 +2,14 @@ package macrobase.conf;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
-import macrobase.analysis.outlier.KDE;
-import macrobase.ingest.CsvLoader;
+import macrobase.analysis.stats.*;
+import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MacroBaseConf extends Configuration {
@@ -26,14 +24,13 @@ public class MacroBaseConf extends Configuration {
     public static final String RANDOM_SEED = "macrobase.analysis.randomSeed";
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
-    public static final String DETECTOR_TYPE = "macrobase.analysis.detectorType";
+    public static final String TRANSFORM_TYPE = "macrobase.analysis.transformType";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
     public static final String INPUT_RESERVOIR_SIZE = "macrobase.analysis.streaming.inputReservoirSize";
     public static final String SCORE_RESERVOIR_SIZE = "macrobase.analysis.streaming.scoreReservoirSize";
     public static final String SUMMARY_UPDATE_PERIOD = "macrobase.analysis.streaming.summaryUpdatePeriod";
-    public static final String USE_REAL_TIME_PERIOD = "macrobase.analysis.streaming.useRealTimePeriod";
-    public static final String USE_TUPLE_COUNT_PERIOD = "macrobase.analysis.streaming.useTupleCountPeriod";
+    public static final String DECAY_TYPE = "macrobase.analysis.streaming.decayType";
     public static final String DECAY_RATE = "macrobase.analysis.streaming.decayRate";
     public static final String MODEL_UPDATE_PERIOD = "macrobase.analysis.streaming.modelUpdatePeriod";
     public static final String OUTLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.outlierSummarySize";
@@ -56,7 +53,6 @@ public class MacroBaseConf extends Configuration {
     public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
     public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
-    public static final String DATA_TRANSFORM_TYPE = "macrobase.loader.transformType";
     public static final String DATA_LOADER_TYPE = "macrobase.loader.loaderType";
     public static final String TIME_COLUMN = "macrobase.loader.timeColumn";
     public static final String ATTRIBUTES = "macrobase.loader.attributes";
@@ -79,8 +75,38 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
+    public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
-    public enum DetectorType {
+    private final DatumEncoder datumEncoder;
+
+    public MacroBaseConf() {
+        datumEncoder = new DatumEncoder();
+        _conf = new HashMap<>();
+    }
+
+    public DataIngester constructIngester() throws ConfigurationException, SQLException, IOException {
+        DataIngesterType ingesterType = getDataLoaderType();
+        if (ingesterType == DataIngesterType.CSV_LOADER) {
+            return new CSVIngester(this);
+        } else if (ingesterType == DataIngesterType.POSTGRES_LOADER) {
+            return new PostgresIngester(this);
+        } else if (ingesterType == DataIngesterType.CACHING_POSTGRES_LOADER) {
+            return new DiskCachingIngester(this, new PostgresIngester(this));
+        }
+
+        throw new ConfigurationException(String.format("Unknown data loader type: %s", ingesterType));
+    }
+
+    public DatumEncoder getEncoder() {
+        return datumEncoder;
+    }
+
+    public enum PeriodType {
+        TUPLE_BASED,
+        TIME_BASED
+    }
+
+    public enum TransformType {
         MAD_OR_MCD,
         MAD,
         MCD,
@@ -92,18 +118,63 @@ public class MacroBaseConf extends Configuration {
         ARIMA
     }
 
-    public enum DataLoaderType {
+    public Random getRandom() {
+        Long seed = getLong(RANDOM_SEED, null);
+        if(seed != null) {
+            return new Random(seed);
+        } else {
+            return new Random();
+        }
+    }
+
+    public BatchTrainScore constructTransform (TransformType transformType)
+            throws ConfigurationException{
+        switch (transformType) {
+            case MAD_OR_MCD:
+                int metricsDimensions = this.getStringList(LOW_METRICS).size() + this.getStringList(HIGH_METRICS).size();
+                if (metricsDimensions == 1) {
+                    log.info("By default: using MAD transform for dimension 1 metric.");
+                    return new MAD(this);
+                } else {
+                    log.info("By default: using MCD transform for dimension {} metrics.", metricsDimensions);
+                    MinCovDet ret = new MinCovDet(this);
+                    return ret;
+                }
+            case MAD:
+                log.info("Using MAD transform.");
+                return new MAD(this);
+            case MCD:
+                log.info("Using MCD transform.");
+                MinCovDet ret = new MinCovDet(this);
+                return ret;
+            case ZSCORE:
+                log.info("Using ZScore transform.");
+                return new ZScore(this);
+            case KDE:
+                log.info("Using KDE transform.");
+                return new KDE(this);
+            case BINNED_KDE:
+                log.info("Using BinnedKDE transform.");
+                return new BinnedKDE(this);
+            case TREE_KDE:
+                log.info("Using TreeKDE transform.");
+                return new TreeKDE(this);
+            case MOVING_AVERAGE:
+                log.info("Using Moving Average transform.");
+                return new MovingAverage(this);
+            default:
+                throw new RuntimeException("Unhandled transform class!" + transformType);
+        }
+    }
+
+    public enum DataIngesterType {
         CSV_LOADER,
         POSTGRES_LOADER,
         CACHING_POSTGRES_LOADER
     }
 
-    public enum DataTransformType {
-        ZERO_TO_ONE_SCALE,
-        IDENTITY
-    }
 
-    private Map<String, String> _conf = new HashMap<>();
+    private Map<String, String> _conf;
 
     @JsonAnySetter
     public MacroBaseConf set(String key, Object value) {
@@ -200,25 +271,18 @@ public class MacroBaseConf extends Configuration {
         return defaultValue;
     }
 
-    public DataLoaderType getDataLoaderType() throws ConfigurationException {
+    public DataIngesterType getDataLoaderType() throws ConfigurationException {
         if (!_conf.containsKey(DATA_LOADER_TYPE)) {
             return MacroBaseDefaults.DATA_LOADER_TYPE;
         }
-        return DataLoaderType.valueOf(_conf.get(DATA_LOADER_TYPE));
+        return DataIngesterType.valueOf(_conf.get(DATA_LOADER_TYPE));
     }
 
-    public DetectorType getDetectorType() throws ConfigurationException {
-        if (!_conf.containsKey(DETECTOR_TYPE)) {
-            return MacroBaseDefaults.DETECTOR_TYPE;
+    public TransformType getTransformType() throws ConfigurationException {
+        if (!_conf.containsKey(TRANSFORM_TYPE)) {
+            return MacroBaseDefaults.TRANSFORM_TYPE;
         }
-        return DetectorType.valueOf(_conf.get(DETECTOR_TYPE));
-    }
-
-    public DataTransformType getDataTransform() throws ConfigurationException {
-        if (!_conf.containsKey(DATA_TRANSFORM_TYPE)) {
-            return MacroBaseDefaults.DATA_TRANSFORM;
-        }
-        return DataTransformType.valueOf(_conf.get(DATA_TRANSFORM_TYPE));
+        return TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
     }
 
     public KDE.BandwidthAlgorithm getKDEBandwidth() {
@@ -235,14 +299,19 @@ public class MacroBaseConf extends Configuration {
         return KDE.KernelType.valueOf(_conf.get(KDE_KERNEL_TYPE));
     }
 
-    public CsvLoader.Compression getCsvCompression() {
+    public CSVIngester.Compression getCsvCompression() {
         if (!_conf.containsKey(CSV_COMPRESSION)) {
             return MacroBaseDefaults.CSV_COMPRESSION;
         }
-        return CsvLoader.Compression.valueOf(_conf.get(CSV_COMPRESSION));
+        return CSVIngester.Compression.valueOf(_conf.get(CSV_COMPRESSION));
     }
 
-
+    public PeriodType getDecayType() {
+        if (!_conf.containsKey(DECAY_TYPE)) {
+            return MacroBaseDefaults.DECAY_TYPE;
+        }
+        return PeriodType.valueOf(_conf.get(DECAY_TYPE));
+    }
 
     @Override
     public String toString() {
@@ -271,16 +340,6 @@ public class MacroBaseConf extends Configuration {
 
     public void sanityCheckStreaming() throws ConfigurationException {
         sanityCheckBase();
-        if(getBoolean(USE_REAL_TIME_PERIOD, false) && getBoolean(USE_TUPLE_COUNT_PERIOD, false)) {
-            throw new ConfigurationException(String.format("Can only select one of %s or %s",
-                                                           USE_REAL_TIME_PERIOD,
-                                                           USE_TUPLE_COUNT_PERIOD));
-        }
-        else if(!(getBoolean(USE_REAL_TIME_PERIOD, false) || getBoolean(USE_TUPLE_COUNT_PERIOD, false))) {
-            throw new ConfigurationException(String.format("Must select one of %s or %s",
-                                                           USE_REAL_TIME_PERIOD,
-                                                           USE_TUPLE_COUNT_PERIOD));
-        }
     }
 
     public void loadSystemProperties() {

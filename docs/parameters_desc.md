@@ -96,7 +96,7 @@ workloads.
 <table class="table">
 <tr><th>Name</th><th>Default</th><th>Meaning</th></tr>
 <tr>
-  <td><code>macrobase.analysis.detectorType</code></td>
+  <td><code>macrobase.analysis.transformType</code></td>
   <td><code>MCD_OR_MAD</code></td>
   <td>
   Type of outlier detection algorithm to use.

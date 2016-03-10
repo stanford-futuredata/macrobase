@@ -3,26 +3,25 @@ package macrobase.datamodel;
 import com.google.common.collect.Lists;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.CsvLoader;
-import macrobase.ingest.DataLoader;
-import macrobase.ingest.DatumEncoder;
+import macrobase.ingest.CSVIngester;
+import macrobase.ingest.DataIngester;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.*;
+
 public class KDTreeTest {
     private static final Logger log = LoggerFactory.getLogger(KDTreeTest.class);
 
-    private DataLoader loader;
+    private DataIngester loader;
     private List<Datum> data;
 
     private void setUpSimpleCsv() throws IOException, ConfigurationException, SQLException {
@@ -31,9 +30,8 @@ public class KDTreeTest {
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A2", "A5"));
         conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A1", "A3", "A4"));
-        conf.set(MacroBaseConf.DATA_TRANSFORM_TYPE, "IDENTITY");
-        loader = new CsvLoader(conf);
-        data = loader.getData(new DatumEncoder());
+        loader = new CSVIngester(conf);
+        data = Lists.newArrayList(loader);
     }
 
     private void setUpVerySimpleCsv() throws IOException, ConfigurationException, SQLException {
@@ -42,9 +40,8 @@ public class KDTreeTest {
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("x", "y", "z"));
         conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("x", "y", "z"));
-        conf.set(MacroBaseConf.DATA_TRANSFORM_TYPE, "IDENTITY");
-        loader = new CsvLoader(conf);
-        data = loader.getData(new DatumEncoder());
+        loader = new CSVIngester(conf);
+        data = Lists.newArrayList(loader);
     }
 
     @Test

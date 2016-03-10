@@ -1,17 +1,14 @@
 package macrobase.runtime.resources;
 
 import macrobase.MacroBase;
-import macrobase.analysis.BatchAnalyzer;
+import macrobase.analysis.pipeline.BasicBatchedPipeline;
 import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.SQLLoader;
 import macrobase.analysis.result.AnalysisResult;
-import macrobase.ingest.transform.ZeroToOneLinearTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
 
 @Path("/analyze")
@@ -41,8 +38,8 @@ public class AnalyzeResource extends BaseResource {
         conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
         conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
-        BatchAnalyzer analyzer = new BatchAnalyzer(conf);
-        AnalysisResult result = analyzer.analyze();
+        BasicBatchedPipeline analyzer = new BasicBatchedPipeline(conf);
+        AnalysisResult result = analyzer.next();
 
         if (result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());

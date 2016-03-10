@@ -3,14 +3,12 @@ package macrobase.analysis.summary.itemset;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Sets;
-
 import macrobase.MacroBase;
-import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,8 +25,8 @@ public class FPGrowthEmerging {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
 
-    private List<ItemsetResult> getSingletonItemsets(List<DatumWithScore> inliers,
-                                                     List<DatumWithScore> outliers,
+    private List<ItemsetResult> getSingletonItemsets(List<Datum> inliers,
+                                                     List<Datum> outliers,
                                                      double minSupport,
                                                      double minRatio,
                                                      DatumEncoder encoder) {
@@ -66,13 +64,13 @@ public class FPGrowthEmerging {
         return ret;
     }
 
-    public List<ItemsetResult> getEmergingItemsetsWithMinSupport(List<DatumWithScore> inliers,
-                                                                 List<DatumWithScore> outliers,
+    public List<ItemsetResult> getEmergingItemsetsWithMinSupport(List<Datum> inliers,
+                                                                 List<Datum> outliers,
                                                                  double minSupport,
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
-        if (inliers.get(0).getDatum().getAttributes().size() == 1) {
+        if (inliers.get(0).getAttributes().size() == 1) {
             return getSingletonItemsets(inliers, outliers, minSupport, minRatio, encoder);
         }
 
@@ -87,10 +85,10 @@ public class FPGrowthEmerging {
 
         int supportCountRequired = (int) (outliers.size() * minSupport);
 
-        for (DatumWithScore d : outliers) {
+        for (Datum d : outliers) {
             Set<Integer> txn = null;
 
-            for (int i : d.getDatum().getAttributes()) {
+            for (int i : d.getAttributes()) {
                 double outlierCount = outlierCounts.get(i);
                 if (outlierCount >= supportCountRequired) {
                     Number inlierCount = inlierCounts.get(i);

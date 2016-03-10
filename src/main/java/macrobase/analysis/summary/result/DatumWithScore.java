@@ -2,6 +2,8 @@ package macrobase.analysis.summary.result;
 
 import macrobase.datamodel.Datum;
 
+// TODO: REMOVE after we refactor contextual outlier detection not to depend on
+//       DatumWithScore
 public class DatumWithScore {
     private Datum datum;
     private Double score;

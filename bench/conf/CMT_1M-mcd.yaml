@@ -4,6 +4,5 @@ macrobase:
   macrobase.loader.targetHighMetrics: [data_count_minutes]
   macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes: [userid]
-  macrobase.analysis.detectorType: MCD
-  macrobase.loader.transformType: IDENTITY
+  macrobase.analysis.transformType: MCD
   macrobase.loader.loaderType: SQL_LOADER

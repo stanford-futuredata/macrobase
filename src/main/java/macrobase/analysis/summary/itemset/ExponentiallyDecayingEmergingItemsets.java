@@ -32,10 +32,8 @@ public class ExponentiallyDecayingEmergingItemsets {
             name(ExponentiallyDecayingEmergingItemsets.class, "outlierDecayTime"));
 
 
-    @SuppressWarnings("unused")
-    private final int sizeOutlierSS;
-    @SuppressWarnings("unused")
-    private final int sizeInlierSS;
+    private double numInliers;
+    private double numOutliers;
 
     private final double minSupportOutlier;
     private final double minRatio;
@@ -53,8 +51,6 @@ public class ExponentiallyDecayingEmergingItemsets {
                                                  double minRatio,
                                                  double exponentialDecayRate,
                                                  int attributeDimension) {
-        this.sizeOutlierSS = outlierSummarySize;
-        this.sizeInlierSS = inlierSummarySize;
         this.minSupportOutlier = minSupportOutlier;
         this.minRatio = minRatio;
         this.exponentialDecayRate = exponentialDecayRate;
@@ -68,11 +64,11 @@ public class ExponentiallyDecayingEmergingItemsets {
     Map<Integer, Double> interestingItems;
 
     public Double getInlierCount() {
-        return inlierCountSummary.getTotalCount();
+        return numInliers;
     }
 
     public Double getOutlierCount() {
-        return outlierCountSummary.getTotalCount();
+        return numOutliers;
     }
 
     public void updateModelsNoDecay() {
@@ -130,6 +126,7 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     public void markOutlier(Datum outlier) {
+        numOutliers++;
         outlierCountSummary.observe(outlier.getAttributes());
 
         if (attributeDimension > 1) {
@@ -139,6 +136,7 @@ public class ExponentiallyDecayingEmergingItemsets {
 
     // TODO: don't track *all* inliers
     public void markInlier(Datum inlier) {
+        numInliers++;
         inlierCountSummary.observe(inlier.getAttributes());
         if (attributeDimension > 1) {
             inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
@@ -146,7 +144,7 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     private List<ItemsetResult> getSingleItemItemsets(DatumEncoder encoder) {
-        int supportCountRequired = (int) (this.outlierCountSummary.getTotalCount() * minSupportOutlier);
+        double supportCountRequired = outlierCountSummary.getTotalCount() * minSupportOutlier;
 
         log.debug("REQUIRED SUPPORT: {} {}", supportCountRequired, minSupportOutlier);
 

@@ -1,7 +1,6 @@
 package macrobase.runtime.resources;
 
 import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.RowSet;
 
 import org.slf4j.Logger;

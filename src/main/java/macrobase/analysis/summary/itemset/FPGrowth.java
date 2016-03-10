@@ -3,20 +3,13 @@ package macrobase.analysis.summary.itemset;
 import com.codahale.metrics.Timer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import macrobase.MacroBase;
-import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
-
+import macrobase.datamodel.Datum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -204,9 +197,9 @@ public class FPGrowth {
             }
         }
 
-        public void insertDatum(List<DatumWithScore> datums) {
-            for (DatumWithScore d : datums) {
-                List<Integer> filtered = d.getDatum().getAttributes().stream().filter(
+        public void insertDatum(List<Datum> datums) {
+            for (Datum d : datums) {
+                List<Integer> filtered = d.getAttributes().stream().filter(
                         i -> frequentItemCounts.containsKey(i)).collect(Collectors.toList());
 
                 if (!filtered.isEmpty()) {
@@ -482,7 +475,7 @@ public class FPGrowth {
 
     // ugh, this is a really ugly function sig, but it's efficient
     public List<ItemsetWithCount> getCounts(
-            List<DatumWithScore> transactions,
+            List<Datum> transactions,
             Map<Integer, Double> initialCounts,
             Set<Integer> targetItems,
             List<ItemsetWithCount> toCount) {
