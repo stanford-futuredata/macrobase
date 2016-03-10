@@ -8,7 +8,6 @@ macrobase:
   macrobase.loader.auxiliaryAttributes: []
   macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE
   macrobase.analysis.binnedKde.numBins: 1000000
-  macrobase.loader.transformType: IDENTITY
   macrobase.loader.loaderType: POSTGRES_LOADER
 post_run:
   - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --x-limits -1000 1000 --ymin 0.1"

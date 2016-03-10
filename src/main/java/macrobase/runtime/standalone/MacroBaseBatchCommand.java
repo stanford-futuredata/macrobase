@@ -3,7 +3,7 @@ package macrobase.runtime.standalone;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
 import macrobase.MacroBase;
-import macrobase.analysis.BatchAnalyzer;
+import macrobase.analysis.pipeline.BasicBatchedPipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -22,9 +22,9 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<MacroBaseConf> {
                        Namespace namespace,
                        MacroBaseConf configuration) throws Exception {
         configuration.loadSystemProperties();
-        BatchAnalyzer analyzer = new BatchAnalyzer(configuration);
+        BasicBatchedPipeline analyzer = new BasicBatchedPipeline(configuration);
 
-        AnalysisResult result = analyzer.analyze();
+        AnalysisResult result = analyzer.next();
         if (result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));
@@ -32,6 +32,6 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<MacroBaseConf> {
 
         MacroBase.reporter.report();
 
-        log.info("Result: {}", result.prettyPrint());
+        log.info("Result: {}", result);
     }
 }

@@ -4,6 +4,5 @@ macrobase:
   macrobase.loader.targetHighMetrics: [data_count_minutes]
   macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes: [userid]
-  macrobase.analysis.detectorType: KDE
-  macrobase.loader.transformType: IDENTITY
+  macrobase.analysis.transformType: KDE
   macrobase.loader.loaderType: SQL_LOADER

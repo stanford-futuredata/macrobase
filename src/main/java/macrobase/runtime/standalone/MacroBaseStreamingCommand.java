@@ -3,7 +3,7 @@ package macrobase.runtime.standalone;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
 import macrobase.MacroBase;
-import macrobase.analysis.StreamingAnalyzer;
+import macrobase.analysis.pipeline.BasicOneShotEWStreamingPipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -22,16 +22,11 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<MacroBaseConf> 
                        Namespace namespace,
                        MacroBaseConf configuration) throws Exception {
         configuration.loadSystemProperties();
-        StreamingAnalyzer analyzer = new StreamingAnalyzer(configuration);
+        BasicOneShotEWStreamingPipeline analyzer = new BasicOneShotEWStreamingPipeline(configuration);
 
-        AnalysisResult result = analyzer.analyzeOnePass();
-        if (result.getItemSets().size() > 1000) {
-            log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
-            result.setItemSets(result.getItemSets().subList(0, 1000));
-        }
-
+        AnalysisResult result = analyzer.next();
         MacroBase.reporter.report();
 
-        log.info("Result: {}", result.prettyPrint());
+        log.info("Result: {}", result);
     }
 }

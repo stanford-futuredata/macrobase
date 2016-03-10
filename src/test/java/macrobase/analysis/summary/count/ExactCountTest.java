@@ -1,8 +1,6 @@
 package macrobase.analysis.summary.count;
 
 import com.google.common.collect.Lists;
-import macrobase.analysis.summary.count.ExactCount;
-import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
@@ -20,10 +18,10 @@ public class ExactCountTest {
         ExactCount ec = new ExactCount();
         HashMap<Integer, Integer> truth = new HashMap<>();
 
-        List<DatumWithScore> dws = new ArrayList<>();
+        List<Datum> dws = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
             for (int j = 0; j < i; ++j) {
-                dws.add(new DatumWithScore(new Datum(Lists.newArrayList(i), new ArrayRealVector()), 0));
+                dws.add(new Datum(Lists.newArrayList(i), new ArrayRealVector()));
                 truth.compute(i, (k, v) -> v == null ? 1 : v + 1);
             }
         }

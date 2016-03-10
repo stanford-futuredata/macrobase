@@ -1,7 +1,9 @@
 package macrobase.datamodel;
 
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Datum implements HasMetrics {
@@ -15,6 +17,18 @@ public class Datum implements HasMetrics {
     
     
     public Datum() {
+    }
+
+    public Datum(Datum oldDatum, double... doubleMetrics) {
+        this(oldDatum, new ArrayRealVector(doubleMetrics));
+    }
+
+    public Datum(Datum oldDatum, RealVector metrics) {
+        this.metrics = metrics;
+        this.attributes = oldDatum.getAttributes();
+        this.contextualDiscreteAttributes = oldDatum.getContextualDiscreteAttributes();
+        this.contextualDoubleAttributes = oldDatum.getContextualDoubleAttributes();
+        this.auxiliaries = oldDatum.getAuxiliaries();
     }
 
     public Datum(List<Integer> attributes, RealVector metrics) {
@@ -56,11 +70,19 @@ public class Datum implements HasMetrics {
                 String.valueOf(getAuxiliaries()));
     }
     
-    public List<Integer> getContextualDiscreteAttributes(){
-    	return contextualDiscreteAttributes;
+    public List<Integer> getContextualDiscreteAttributes() {
+        if(contextualDiscreteAttributes != null) {
+            return contextualDiscreteAttributes;
+        } else {
+            return new ArrayList<>();
+        }
     }
     public RealVector getContextualDoubleAttributes(){
-    	return contextualDoubleAttributes;
+        if(contextualDoubleAttributes != null) {
+            return contextualDoubleAttributes;
+        } else {
+            return new ArrayRealVector(0);
+        }
     }
     
 }

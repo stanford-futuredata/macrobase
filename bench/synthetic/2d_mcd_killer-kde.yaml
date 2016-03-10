@@ -8,5 +8,5 @@ macrobase:
   macrobase.loader.targetHighMetrics: [XX, YY]
   macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes: [XX, YY]
-  macrobase.analysis.detectorType: KDE
+  macrobase.analysis.transformType: KDE
   macrobase.loader.loaderType: CSV_LOADER

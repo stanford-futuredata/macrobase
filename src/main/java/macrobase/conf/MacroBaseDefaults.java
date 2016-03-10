@@ -1,13 +1,11 @@
 package macrobase.conf;
 
+import macrobase.analysis.stats.KDE;
+import macrobase.conf.MacroBaseConf.DataIngesterType;
+import macrobase.ingest.CSVIngester;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import macrobase.analysis.outlier.KDE;
-import macrobase.conf.MacroBaseConf.DataLoaderType;
-import macrobase.conf.MacroBaseConf.DetectorType;
-import macrobase.conf.MacroBaseConf.DataTransformType;
-import macrobase.ingest.CsvLoader;
 
 public class MacroBaseDefaults {
     public static final String QUERY_NAME = "MacroBaseQuery";
@@ -25,11 +23,10 @@ public class MacroBaseDefaults {
     public static final Integer WARMUP_COUNT = 10000;
     public static final Integer INPUT_RESERVOIR_SIZE = 10000;
     public static final Integer SCORE_RESERVOIR_SIZE = 10000;
-    public static final Integer SUMMARY_UPDATE_PERIOD = 100000;
-    public static final Boolean USE_REAL_TIME_PERIOD = false;
-    public static final Boolean USE_TUPLE_COUNT_PERIOD = true;
+    public static final Double SUMMARY_UPDATE_PERIOD = 100000.;
+    public static final MacroBaseConf.PeriodType DECAY_TYPE = MacroBaseConf.PeriodType.TUPLE_BASED;
     public static final Double DECAY_RATE = .01;
-    public static final Integer MODEL_UPDATE_PERIOD = 100000;
+    public static final Double MODEL_UPDATE_PERIOD = 100000.;
     public static final Integer OUTLIER_ITEM_SUMMARY_SIZE = 100000;
     public static final Integer INLIER_ITEM_SUMMARY_SIZE = 100000;
     
@@ -57,11 +54,10 @@ public class MacroBaseDefaults {
     public static final String STORE_ANALYSIS_RESULTS = null;
 
     // loader defaults
-    public static final DataLoaderType DATA_LOADER_TYPE = DataLoaderType.POSTGRES_LOADER;
+    public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.POSTGRES_LOADER;
     public static final String TIME_COLUMN = null;
-    public static final DetectorType DETECTOR_TYPE = DetectorType.MAD_OR_MCD;
-    public static final DataTransformType DATA_TRANSFORM = DataTransformType.ZERO_TO_ONE_SCALE;
-    public static final CsvLoader.Compression CSV_COMPRESSION = CsvLoader.Compression.UNCOMPRESSED;
+    public static final MacroBaseConf.TransformType TRANSFORM_TYPE = MacroBaseConf.TransformType.MAD_OR_MCD;
+    public static final CSVIngester.Compression CSV_COMPRESSION = CSVIngester.Compression.UNCOMPRESSED;
 
     public static final String DB_USER = System.getProperty("user.name");
     public static final String DB_PASSWORD = "";
@@ -73,4 +69,5 @@ public class MacroBaseDefaults {
     public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
     public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
     public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
+    public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
 }

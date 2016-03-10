@@ -6,37 +6,38 @@ import java.util.List;
 import java.util.StringJoiner;
 
 public class AnalysisResult {
-    private int numOutliers;
-    private int numInliers;
+    private double numOutliers;
+    private double numInliers;
+    private long executionTime;
     private long loadTime;
-    private long labelTime;
     private long summarizationTime;
     private List<ItemsetResult> itemSets;
 
-    public AnalysisResult(int numOutliers,
-                          int numInliers,
+    public AnalysisResult(double numOutliers,
+                          double numInliers,
                           long loadTime,
-                          long labelTime,
+                          long executionTime,
                           long summarizationTime,
                           List<ItemsetResult> itemSets) {
         this.numOutliers = numOutliers;
         this.numInliers = numInliers;
+        this.executionTime = executionTime;
         this.loadTime = loadTime;
-        this.labelTime = labelTime;
         this.summarizationTime = summarizationTime;
         this.itemSets = itemSets;
     }
 
-    public String prettyPrint() {
-        String ret = String.format("outliers: %d\n" +
-                                   "inliers: %d\n" +
-                                   "load time %d\n" +
-                                   "labeling time: %d\n" +
-                                   "summarization time: %d\n\n",
+    @Override
+    public String toString() {
+        String ret = String.format("outliers: %f\n" +
+                                   "inliers: %f\n" +
+                                   "load time %dms\n" +
+                                   "execution time: %dms\n" +
+                                   "summarization time: %dms\n\n",
                                    numOutliers,
                                    numInliers,
                                    loadTime,
-                                   labelTime,
+                                   executionTime,
                                    summarizationTime);
 
         final String sep = "-----\n\n";
@@ -48,24 +49,24 @@ public class AnalysisResult {
         return ret + sep + joiner.toString() + sep;
     }
 
-    public int getNumOutliers() {
+    public double getNumOutliers() {
         return numOutliers;
     }
 
-    public int getNumInliers() {
+    public double getNumInliers() {
         return numInliers;
     }
 
-    public long getLoadTime() {
-        return loadTime;
-    }
-
-    public long getLabelTime() {
-        return labelTime;
+    public long getExecutionTime() {
+        return executionTime;
     }
 
     public long getSummarizationTime() {
         return summarizationTime;
+    }
+
+    public long getLoadTime() {
+        return loadTime;
     }
 
     public void setItemSets(List<ItemsetResult> itemsets) {

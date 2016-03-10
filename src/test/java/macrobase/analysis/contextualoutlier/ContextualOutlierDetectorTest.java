@@ -8,11 +8,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import macrobase.analysis.stats.BatchTrainScore;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
 
-import macrobase.analysis.outlier.MAD;
-import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.stats.MAD;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
@@ -59,7 +59,7 @@ public class ContextualOutlierDetectorTest {
 
         
         contextualDetector.searchContextualOutliers(data, 3);
-        Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        Map<Context,BatchTrainScore.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
         for(Context context: context2Outliers.keySet()){
@@ -106,7 +106,7 @@ public class ContextualOutlierDetectorTest {
 
         
         contextualDetector.searchContextualOutliers(data, 3);
-        Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        Map<Context,BatchTrainScore.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
         for(Context context: context2Outliers.keySet()){
@@ -165,7 +165,7 @@ public class ContextualOutlierDetectorTest {
 
         
         contextualDetector.searchContextualOutliers(data, 3);
-        Map<Context,OutlierDetector.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        Map<Context,BatchTrainScore.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
         for(Context context: context2Outliers.keySet()){

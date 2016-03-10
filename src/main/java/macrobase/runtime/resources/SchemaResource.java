@@ -1,12 +1,7 @@
 package macrobase.runtime.resources;
 
 import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.DataLoader;
-import macrobase.ingest.SQLLoader;
 import macrobase.ingest.result.Schema;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

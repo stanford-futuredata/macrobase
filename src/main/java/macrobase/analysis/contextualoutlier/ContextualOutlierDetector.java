@@ -10,7 +10,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.datamodel.Datum;
 
@@ -18,7 +18,7 @@ public class ContextualOutlierDetector{
     private static final Logger log = LoggerFactory.getLogger(ContextualOutlierDetector.class);
 
     
-    private OutlierDetector detector; //the detector used for every context
+    private BatchTrainScore detector; //the detector used for every context
     
     
     private List<String> contextualDiscreteAttributes;
@@ -30,9 +30,9 @@ public class ContextualOutlierDetector{
     private int numIntervals;
     
     //This is the outliers detected for every dense context
-    private Map<Context,OutlierDetector.BatchResult> context2Outliers = new HashMap<Context,OutlierDetector.BatchResult>();
+    private Map<Context,BatchTrainScore.BatchResult> context2Outliers = new HashMap<Context,BatchTrainScore.BatchResult>();
     
-    public ContextualOutlierDetector(OutlierDetector outlierDetector,
+    public ContextualOutlierDetector(BatchTrainScore outlierDetector,
     		List<String> contextualDiscreteAttributes,
     		List<String> contextualDoubleAttributes,
     		double denseContextTau,
@@ -48,14 +48,14 @@ public class ContextualOutlierDetector{
     	totalContextualDimensions = contextualDiscreteAttributes.size() + contextualDoubleAttributes.size();
     }
     
-    public Map<Context,OutlierDetector.BatchResult> getContextualOutliers(){
+    public Map<Context,BatchTrainScore.BatchResult> getContextualOutliers(){
     	return context2Outliers;
     }
     
     public void searchContextualOutliers(List<Datum> data, double zScore){
     	
     	log.debug("Find global context outliers on data size: " + data.size());
-    	OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(data, zScore);
+    	BatchTrainScore.BatchResult or = detector.classifyBatchByZScoreEquivalent(data, zScore);
     	List<Datum> remainingData = new ArrayList<Datum>();
     	for(DatumWithScore ds: or.getInliers()){
     		remainingData.add(ds.getDatum());
@@ -129,7 +129,7 @@ public class ContextualOutlierDetector{
      * @param zScore
      * @return
      */
-    private OutlierDetector.BatchResult contextualOutlierDetection(List<Datum> data, Context context, double zScore){
+    private BatchTrainScore.BatchResult contextualOutlierDetection(List<Datum> data, Context context, double zScore){
     	
     	List<Datum> contextualData = new ArrayList<Datum>();
     	
@@ -137,7 +137,7 @@ public class ContextualOutlierDetector{
     		contextualData.add(data.get(tid));
     	}
     	
-        OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(contextualData, zScore);
+        BatchTrainScore.BatchResult or = detector.classifyBatchByZScoreEquivalent(contextualData, zScore);
        
         if(or.getOutliers().size() != 0){
         	context2Outliers.put(context, or);

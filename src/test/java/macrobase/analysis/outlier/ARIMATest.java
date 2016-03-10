@@ -1,5 +1,6 @@
 package macrobase.analysis.outlier;
 
+import macrobase.analysis.stats.ARIMA;
 import macrobase.conf.MacroBaseConf;
 
 import org.junit.Ignore;

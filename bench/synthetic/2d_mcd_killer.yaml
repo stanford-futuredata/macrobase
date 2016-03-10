@@ -8,5 +8,5 @@ macrobase:
   macrobase.loader.targetHighMetrics: [XX, YY]
   macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes: [XX, YY]
-  macrobase.analysis.detectorType: MCD
+  macrobase.analysis.transformType: MCD
   macrobase.loader.loaderType: CSV_LOADER

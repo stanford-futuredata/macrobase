@@ -19,8 +19,6 @@ def add_macrobase_args(parser):
                       action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-detectorType',
                       action=MacrobaseArgAction)
-  parser.add_argument('--macrobase-loader-transformType',
-                      action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-treeKde-accuracy', type=float,
                       action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-treeKde-leafCapacity', type=int,

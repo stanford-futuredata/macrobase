@@ -7,9 +7,8 @@ macrobase.loader.timeColumn: timestamp
 macrobase.loader.db.cacheDirectory: cache
 macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
-macrobase.loader.transformType: IDENTITY
 
-macrobase.analysis.detectorType: MOVING_AVERAGE
+macrobase.analysis.transformType: MOVING_AVERAGE
 
 macrobase.analysis.minSupport: 0.001
 macrobase.analysis.minOIRatio: 1

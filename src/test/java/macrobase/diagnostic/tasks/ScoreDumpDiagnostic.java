@@ -1,12 +1,13 @@
 package macrobase.diagnostic.tasks;
 
-import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
-import macrobase.analysis.BaseAnalyzer;
-import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.pipeline.AbstractPipeline;
+import macrobase.analysis.result.AnalysisResult;
+import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class ScoreDumpDiagnostic extends ConfiguredCommand<MacroBaseConf> {
     private static final Logger log = LoggerFactory.getLogger(ScoreDumpDiagnostic.class);
@@ -37,9 +37,19 @@ public class ScoreDumpDiagnostic extends ConfiguredCommand<MacroBaseConf> {
         task.run();
     }
 
-    private class DiagnosticTask extends BaseAnalyzer {
+    private class DiagnosticTask extends AbstractPipeline {
         public DiagnosticTask(MacroBaseConf conf) throws ConfigurationException {
             super(conf);
+        }
+
+        @Override
+        public AnalysisResult next() {
+            return null;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return false;
         }
 
         public void run() throws ConfigurationException, IOException, SQLException {
@@ -48,10 +58,10 @@ public class ScoreDumpDiagnostic extends ConfiguredCommand<MacroBaseConf> {
             DatumEncoder encoder = new DatumEncoder();
 
             // OUTLIER ANALYSIS
-            List<Datum> data = constructLoader().getData(encoder);
-            OutlierDetector detector = constructDetector(randomSeed);
+            List<Datum> data = Lists.newArrayList(conf.constructIngester());
+            BatchTrainScore detector = conf.constructTransform(conf.getTransformType());
 
-            OutlierDetector.BatchResult or;
+            BatchTrainScore.BatchResult or;
             if (forceUsePercentile || (!forceUseZScore && targetPercentile > 0)) {
                 or = detector.classifyBatchByPercentile(data, targetPercentile);
             } else {
