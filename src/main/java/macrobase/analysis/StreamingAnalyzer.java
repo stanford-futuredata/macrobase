@@ -136,7 +136,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         }
 
         // Combine partial parameters
-        double approximateMedian = MAD.computeMedian(medians);
+        double approximateMedian = MAD.computeMean(medians);
         double approximateMAD = madDetector.getApproximateMAD(approximateMedian);
         perThreadMADs.set(threadId, approximateMAD);
 
@@ -147,7 +147,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         // Set combined parameters
         madDetector.setMedian(approximateMedian);
-        madDetector.setMAD(MAD.computeMedian(mads));
+        madDetector.setMAD(MAD.computeMean(mads));
     }
 
     class RunnableStreamingAnalysis implements Runnable {

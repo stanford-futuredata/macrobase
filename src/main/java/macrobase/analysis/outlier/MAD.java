@@ -53,6 +53,14 @@ public class MAD extends OutlierDetector {
         return median;
     }
 
+    public static double computeMean(List<Double> array) {
+        double mean = 0.0;
+        for (Double arrayElem : array) {
+            mean += arrayElem;
+        }
+        return mean / array.size();
+    }
+
     @Override
     public void train(List<Datum> data) {
         bufferedData = data;
