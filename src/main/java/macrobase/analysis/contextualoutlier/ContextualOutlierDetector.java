@@ -31,7 +31,7 @@ public class ContextualOutlierDetector{
     private int totalContextualDimensions;
     
     
-    Context globalContext = new Context();
+    Context globalContext;
     
     
     private double denseContextTau;
@@ -70,21 +70,22 @@ public class ContextualOutlierDetector{
     	log.debug("Find global context outliers on data size: " + data.size());
     	sw.start();
     	
-        
+    	HashSet<Datum> sample = randomSampling(data);
+        globalContext = new Context(sample);
+        ContextPruning.detector = detector;
+    	ContextPruning.data = data;
+    	ContextPruning.sample = sample;
+    	ContextPruning.alpha = 0.05;
+    	
+    	
         contextualOutlierDetection(data,globalContext,zScore);
-    	
-    	List<Datum> remainingData = null;
-    	//should not exclude outlier data points from bigger contexts
-    	remainingData = data;
-    	
     	
     	sw.stop();
     	long globalOutlierDetecionTime = sw.elapsed(TimeUnit.MILLISECONDS);
     	sw.reset();
-    	log.debug("Done global context outlier remaining data size {} : (duration: {}ms)", remainingData.size(),globalOutlierDetecionTime);
+    	log.debug("Done global context outlier remaining data size {} : (duration: {}ms)", data.size(),globalOutlierDetecionTime);
     	
     	
-    	initContextPruning(data);
     	
     	List<LatticeNode> preLatticeNodes = new ArrayList<LatticeNode>();
     	List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
@@ -94,9 +95,9 @@ public class ContextualOutlierDetector{
     		log.debug("Build {}-dimensional contexts on all attributes",level);
     		sw.start();
     		if(level == 1){
-    			curLatticeNodes = buildOneDimensionalLatticeNodes(remainingData);
+    			curLatticeNodes = buildOneDimensionalLatticeNodes(data);
         	}else{
-        		curLatticeNodes = levelUpLattice(preLatticeNodes, remainingData);	
+        		curLatticeNodes = levelUpLattice(preLatticeNodes, data);	
         	}
     		sw.stop();
     		long latticeNodesBuildTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -128,7 +129,7 @@ public class ContextualOutlierDetector{
         	//run contextual outlier detection
         	for(LatticeNode node: curLatticeNodes){
         		for(Context context: node.getDenseContexts()){
-        			contextualOutlierDetection(remainingData,context,zScore);
+        			contextualOutlierDetection(data,context,zScore);
         			numDenseContextsCurLevel++;
         		}
         	}
@@ -148,18 +149,12 @@ public class ContextualOutlierDetector{
     	
     }
     
-    
-    private void initContextPruning(List<Datum> data){
+    private HashSet<Datum> randomSampling(List<Datum> data){
     	
-    	ContextPruning.detector = detector;
-    	ContextPruning.data = data;
-    	//Init a sample of the entire dataset
     	List<Datum> sampleData = new ArrayList<Datum>();
-    	ContextPruning.alpha = 0.05;
-    	//numSamples is determined by confidence and error margin
-    	//95% confidence, +-B error bound
-    	//B = 1% => 10000
-    	int numSample = 10000;
+    	
+    	int minSampleSize = 100;
+    	int numSample = (int) (minSampleSize / denseContextTau);
     	
     	Random rnd = new Random();
 		for(int i = 0; i < data.size(); i++){
@@ -175,8 +170,9 @@ public class ContextualOutlierDetector{
 			
 		}
 		
-		ContextPruning.sampleData = sampleData;
+		return new HashSet<Datum>(sampleData);
     }
+    
     private String checkMemoryUsage(){
     	Runtime runtime = Runtime.getRuntime();
 
@@ -274,19 +270,12 @@ public class ContextualOutlierDetector{
      */
     public void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
     	
+    	/*
+    	 * If P1, P2 are same distribution, doesn't mean P1^P2 and P1 are same distribution
     	if(context.getParents().size() == 2 &&
     			ContextPruning.sameDistribution(context.getParents().get(0), context.getParents().get(1))){
     		//return;
-    	}
-    	
-    	List<Datum> contextualData = context.getContextualData(data);
-    	
-    	
-    	//Just did density estimation before
-    	double realDensity = (double)contextualData.size() / data.size();
-    	if(realDensity < denseContextTau){
-    		return;
-    	}
+    	}*/
     	
     	//pdf pruning
     	if(context.getParents().size() > 0){
@@ -297,6 +286,18 @@ public class ContextualOutlierDetector{
     			//return;
     		}
     	}
+    	
+    	
+    	
+    	List<Datum> contextualData = context.getContextualData(data);
+    	
+    	//Just did density estimation before
+    	double realDensity = (double)contextualData.size() / data.size();
+    	if(realDensity < denseContextTau){
+    		return;
+    	}
+    	
+    	
     	
         OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(contextualData, zScore);
        

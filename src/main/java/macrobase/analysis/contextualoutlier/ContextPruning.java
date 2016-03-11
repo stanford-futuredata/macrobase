@@ -11,7 +11,7 @@ import macrobase.datamodel.Datum;
 public class ContextPruning {
 
 	public static List<Datum> data;	//the entire data
-	public static List<Datum> sampleData; // a random sample from the entire data
+	public static HashSet<Datum> sample; // a random sample for the globalContext
 	public static double alpha = 0.05;
 	
 	public static OutlierDetector detector;
@@ -35,13 +35,8 @@ public class ContextPruning {
 	 */
 	public static boolean densityPruning(Context c, double minDensity){
 		
-		int sampleSize = sampleData.size();
-		int sampleHit = 0;
-		for(Datum d : sampleData){
-			if(c.containDatum(d)){
-				sampleHit++;
-			}
-		}
+		int sampleSize = sample.size();
+		int sampleHit = c.getSample().size();
 		
 		
 		return densityPruning(sampleSize, sampleHit, minDensity);
@@ -150,9 +145,9 @@ public class ContextPruning {
 	
 	public static int numSameDistributions = 0;
 	/**
-	 * Determine if the context can be pruned with running f
-	 * If the pdf of p1 is the same(similar) to the pdf of p2
-	 * @param c
+	 * Determine if two contexts have same distributions
+	 * @param p1
+	 * @param p2
 	 * @return
 	 */
 	public static boolean sameDistribution(Context p1, Context p2){

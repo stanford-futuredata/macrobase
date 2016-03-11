@@ -23,19 +23,20 @@ public class Context {
 	 * A list of ordered contextual dimensions this node represents
 	 * and intervals for each dimension
 	 */
-	List<Integer> dimensions = new ArrayList<Integer>();
-	List<Interval> intervals = new ArrayList<Interval>();;
+	private List<Integer> dimensions = new ArrayList<Integer>();
+	private List<Interval> intervals = new ArrayList<Interval>();;
 	
 	private int size = -1;
-	List<Context> parents = new ArrayList<Context>();
+	private List<Context> parents = new ArrayList<Context>();
 	
-	HashSet<Datum> sample = new HashSet<Datum>();
+	//the sample is maintained in the lattice
+	private HashSet<Datum> sample = new HashSet<Datum>();
 	
 	/**
 	 * Global context
 	 */
-	public Context(){
-		
+	public Context(HashSet<Datum> sample){
+		this.sample = sample;
 	}
 	
 	/**
@@ -49,15 +50,25 @@ public class Context {
 		intervals.add(interval);
 		parents.add(parent);
 		
+		for(Datum d: parent.sample){
+			if(containDatum(d)){
+				sample.add(d);
+			}
+		}
 	}
 	
 	public Context(List<Integer> dimensions, List<Interval> intervals, Context parent1, Context parent2) {
 		this.dimensions = dimensions;
 		this.intervals = intervals;
+		
 		parents.add(parent1);
 		parents.add(parent2);
+	
+		sample.addAll(parent1.sample);
+		sample.retainAll(parent2.sample);
 		
 	}
+	
 
 	public List<Integer> getDimensions(){
 		return dimensions;
@@ -65,7 +76,6 @@ public class Context {
 	
 	/**
 	 * Get all the contextual data, given the whole dataset
-	 * set a random sample long the way
 	 * @param data
 	 * @return
 	 */
@@ -74,16 +84,17 @@ public class Context {
     	
 		
 		//set sample 
-		
+		/*
 		Random rnd = new Random();
 		int numSample = 1000;
     	List<Datum> sampleContextualData = new ArrayList<Datum>();
     	int i = 0;
-    	
+    	*/
     	
     	for(Datum d: data){    		
     		if(containDatum(d) ){
     			contextualData.add(d);
+    			/*
     			if(sampleContextualData.size() < numSample){
     				sampleContextualData.add(d);
     			}else{
@@ -94,11 +105,12 @@ public class Context {
     				}
     			}
     			i++;
+    			*/
     		}
     			
     	}
     	
-    	sample.addAll(sampleContextualData);
+    	//sample.addAll(sampleContextualData);
     	setSize(contextualData.size());
     	return contextualData;
 	}
@@ -177,7 +189,6 @@ public class Context {
 		}
 	
 		Context newUnit = new Context(newDimensions, newIntervals, this, other);
-		
 		
 		
 		if(ContextPruning.densityPruning(newUnit, tau)){
