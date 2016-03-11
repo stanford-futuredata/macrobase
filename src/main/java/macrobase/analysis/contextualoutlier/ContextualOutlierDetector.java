@@ -67,7 +67,7 @@ public class ContextualOutlierDetector{
     	Stopwatch sw = Stopwatch.createUnstarted();
     	
     	
-    	log.debug("Find global context outliers on data size: " + data.size());
+    	log.debug("Find global context outliers on data num tuples: {} , MBs {} ",data.size());
     	sw.start();
     	
     	HashSet<Datum> sample = randomSampling(data);
@@ -289,7 +289,7 @@ public class ContextualOutlierDetector{
     	
     	
     	
-    	List<Datum> contextualData = context.getContextualData(data);
+    	HashSet<Datum> contextualData = context.getContextualData(data,context2Data);
     	
     	//Just did density estimation before
     	double realDensity = (double)contextualData.size() / data.size();
@@ -299,7 +299,7 @@ public class ContextualOutlierDetector{
     	
     	
     	
-        OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(contextualData, zScore);
+        OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(new ArrayList<Datum>(contextualData), zScore);
        
         totalContextualOutlierDetectionRuns++;
         List<Datum> outliers = new ArrayList<Datum>();
@@ -325,7 +325,7 @@ public class ContextualOutlierDetector{
 				
 		for(int dimension = 0; dimension < totalContextualDimensions; dimension++){
 			LatticeNode ss = new LatticeNode(dimension);
-			List<Context> denseContexts = initOneDimensionalDenseContexts(data, dimension);
+			List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2Data(data, dimension);
 			for(Context denseContext: denseContexts){
 				ss.addDenseContext(denseContext);
 				log.debug(denseContext.toString());
@@ -425,5 +425,101 @@ public class ContextualOutlierDetector{
 		
 		return result;
 	}
+	
+	private List<Context> initOneDimensionalDenseContextsAndContext2Data(List<Datum> data, int dimension){
+		int discreteDimensions = contextualDiscreteAttributes.size();
+		
+		
+		List<Context> result = new ArrayList<Context>();
+		
+		if(dimension < discreteDimensions){
+			Map<Integer,HashSet<Datum>> distinctValue2Data = new HashMap<Integer,HashSet<Datum>>();
+			for(Datum datum: data){
+				Integer value = datum.getContextualDiscreteAttributes().get(dimension);
+				if(distinctValue2Data.containsKey(value)){
+					distinctValue2Data.get(value).add(datum);
+				}else{
+					HashSet<Datum> temp = new HashSet<Datum>();
+					temp.add(datum);
+					distinctValue2Data.put(value, temp);
+				}
+				
+			}
+			for(Integer value: distinctValue2Data.keySet()){
+				//boolean denseContext = !ContextPruning.densityPruning(data.size(), distinctValue2Count.get(value), denseContextTau);
+				boolean denseContext = ( (double) distinctValue2Data.get(value).size() / data.size() >= denseContextTau)?true:false;
+				if(denseContext){
+					Interval interval = new IntervalDiscrete(dimension,contextualDiscreteAttributes.get(dimension),value);
+					Context context = new Context(dimension, interval, globalContext);
+					result.add(context);
+					
+					context2Data.put(context, distinctValue2Data.get(value));
+				}
+			}
+		}else{
+			double min = Double.MAX_VALUE;
+			double max = Double.MIN_VALUE;
+			//find out the min, max
+			for(Datum datum: data){
+				double value = datum.getContextualDoubleAttributes().getEntry(dimension - discreteDimensions );
+				if(value > max){
+					max = value;
+				}
+				if(value < min){
+					min = value;
+				}
+			}
+			HashSet<Interval> allIntervals = new HashSet<Interval>();
+			// divide the interval into numIntervals
+			double step = (max - min) / numIntervals;
+			double start = min;
+			for(int i = 0; i < numIntervals; i++){
+				if(i != numIntervals - 1){
+					Interval interval = new IntervalDouble(dimension,contextualDoubleAttributes.get(dimension - discreteDimensions), start, start + step);
+					start += step;
+					allIntervals.add(interval);
+				}else{
+					//make the max a little bit larger
+					Interval interval = new IntervalDouble(dimension, contextualDoubleAttributes.get(dimension - discreteDimensions),start, max + 0.000001);
+					allIntervals.add(interval);
+				}
+			}
+			//count the interval
+			HashMap<Interval,HashSet<Datum>> interval2Data = new HashMap<Interval,HashSet<Datum>>();
+			for(Datum datum: data){
+				double value = datum.getContextualDoubleAttributes().getEntry(dimension - discreteDimensions );
+				for(Interval interval: allIntervals){
+					if(interval.contains(value)){
+						if(interval2Data.containsKey(interval)){
+							interval2Data.get(interval).add(datum);
+						}else{
+							HashSet<Datum> temp = new HashSet<Datum>();
+							temp.add(datum);
+							interval2Data.put(interval,temp);
+						}
+						break;
+					}
+				}
+			}
+			for(Interval interval: interval2Data.keySet()){
+				//boolean denseContext =!ContextPruning.densityPruning(data.size(), interval2Count.get(interval), denseContextTau);
+				boolean denseContext = ( (double) interval2Data.get(interval).size() / data.size() >= denseContextTau)?true:false;
+				if(denseContext){
+					Context context = new Context(dimension, interval,globalContext);
+					result.add(context);
+					
+					context2Data.put(context, interval2Data.get(interval));
+				}
+				
+				
+			}
+		}
+		
+		return result;
+	}
+	//trade memory for efficiency
+	private Map<Context,HashSet<Datum>> context2Data = new HashMap<Context,HashSet<Datum>>();
+	
+	
     
 }

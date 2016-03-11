@@ -3,6 +3,7 @@ package macrobase.analysis.contextualoutlier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
@@ -28,6 +29,8 @@ public class Context {
 	
 	private int size = -1;
 	private List<Context> parents = new ArrayList<Context>();
+ 
+	private HashSet<Context> oneDimensionalAncestors = new HashSet<Context>();
 	
 	//the sample is maintained in the lattice
 	private HashSet<Datum> sample = new HashSet<Datum>();
@@ -55,6 +58,10 @@ public class Context {
 				sample.add(d);
 			}
 		}
+		
+		oneDimensionalAncestors.add(this);
+		
+		
 	}
 	
 	public Context(List<Integer> dimensions, List<Interval> intervals, Context parent1, Context parent2) {
@@ -67,21 +74,65 @@ public class Context {
 		sample.addAll(parent1.sample);
 		sample.retainAll(parent2.sample);
 		
+		oneDimensionalAncestors.addAll(parent1.oneDimensionalAncestors);
+		oneDimensionalAncestors.addAll(parent2.oneDimensionalAncestors);
+
+		
 	}
 	
 
-	public List<Integer> getDimensions(){
-		return dimensions;
-	}
 	
 	/**
 	 * Get all the contextual data, given the whole dataset
 	 * @param data
 	 * @return
 	 */
-	public List<Datum> getContextualData(List<Datum> data){
-		List<Datum> contextualData = new ArrayList<Datum>();
+	public HashSet<Datum> getContextualData(List<Datum> data, Map<Context,HashSet<Datum>> context2Data){
+		
+		if(parents.size() == 0){
+			//global context
+			return new HashSet<Datum>(data);
+		}
+		
+		HashSet<Datum> contextualData = new HashSet<Datum>();
     	
+		
+		boolean useIntersection = true;
+		Context smallestOneDimensionalAncestor = null;
+		int smallest = Integer.MAX_VALUE;
+		for(Context c: oneDimensionalAncestors){
+			if(!context2Data.containsKey(c)){
+				useIntersection = false;
+				break;
+			}else{
+				if(context2Data.get(c).size() < smallest){
+					smallest = context2Data.get(c).size();
+					smallestOneDimensionalAncestor = c;
+				}
+			}
+		}
+		
+		if(useIntersection){
+			for(Datum d: context2Data.get(smallestOneDimensionalAncestor)){
+				boolean pass = true;
+				for(Context c: oneDimensionalAncestors){
+					if(c != smallestOneDimensionalAncestor){
+						if(!context2Data.get(c).contains(d)){
+							pass = false;
+							break;
+						}
+					}
+				}
+				if(pass){
+					contextualData.add(d);
+				}
+			}
+			return contextualData;
+		}
+		
+		
+		
+		
 		
 		//set sample 
 		/*
@@ -158,8 +209,8 @@ public class Context {
 		List<Interval> newIntervals = new ArrayList<Interval>();
 		
 		
-		List<Integer> dimensions1 = getDimensions();
-		List<Integer> dimensions2 = other.getDimensions();
+		List<Integer> dimensions1 = dimensions;
+		List<Integer> dimensions2 = other.dimensions;
 		if(dimensions1.size() != dimensions2.size())
 			return null;
 		
@@ -190,6 +241,10 @@ public class Context {
 	
 		Context newUnit = new Context(newDimensions, newIntervals, this, other);
 		
+		if(newUnit.sample.size() > this.sample.size() || newUnit.sample.size() > other.sample.size()){
+			int a = 1;
+			a++;
+		}
 		
 		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
@@ -202,6 +257,7 @@ public class Context {
 		return newUnit;
 	}
 	
+
 	public String print(DatumEncoder encoder){
 		if(dimensions.size() == 0){
 			return "Global Context: ";
