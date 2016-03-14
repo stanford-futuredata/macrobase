@@ -81,7 +81,7 @@ public class BaseAnalyzer {
         throw new ConfigurationException(String.format("Unknown data loader type: %s", dataLoaderType));
     }
 
-    protected OutlierDetector constructDetector(Long randomSeed) {
+    protected OutlierDetector constructDetector() {
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
 
         switch (detectorType) {
@@ -92,9 +92,6 @@ public class BaseAnalyzer {
                 } else {
                     log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
                     MinCovDet ret = new MinCovDet(conf);
-                    if (randomSeed != null) {
-                        ret.seedRandom(randomSeed);
-                    }
                     return ret;
                 }
             case MAD:
@@ -103,9 +100,6 @@ public class BaseAnalyzer {
             case MCD:
                 log.info("Using MCD detector.");
                 MinCovDet ret = new MinCovDet(conf);
-                if (randomSeed != null) {
-                    ret.seedRandom(randomSeed);
-                }
                 return ret;
             case ZSCORE:
                 log.info("Using ZScore detector.");

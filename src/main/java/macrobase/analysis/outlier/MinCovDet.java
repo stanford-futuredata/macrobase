@@ -65,7 +65,7 @@ public class MinCovDet extends OutlierDetector {
     private final int p;
     // H = alpha*(n+p+1)
     private double alpha;
-    private Random random = new Random();
+    private Random random;
     private double stoppingDelta;
 
     // Local parameters used for training
@@ -79,10 +79,6 @@ public class MinCovDet extends OutlierDetector {
     private RealVector mean;
 
     private int numSamples;
-
-    public void seedRandom(long seed) {
-        random = new Random(seed);
-    }
 
     // efficient only when k << allData.size()
     private List<Datum> chooseKRandom(List<Datum> allData, final int k) {
@@ -114,6 +110,7 @@ public class MinCovDet extends OutlierDetector {
         }
         this.alpha = conf.getDouble(MacroBaseConf.MCD_ALPHA, MacroBaseDefaults.MCD_ALPHA);
         this.stoppingDelta = conf.getDouble(MacroBaseConf.MCD_STOPPING_DELTA, MacroBaseDefaults.MCD_STOPPING_DELTA);
+        this.random = conf.getRandom();
     }
 
     public static double getMahalanobis(RealVector mean,

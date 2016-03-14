@@ -53,7 +53,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
 
         sw.start();
 
-        OutlierDetector detector = constructDetector(randomSeed);
+        OutlierDetector detector = constructDetector();
 
         OutlierDetector.BatchResult or;
         if (forceUsePercentile || (!forceUseZScore && targetPercentile > 0)) {

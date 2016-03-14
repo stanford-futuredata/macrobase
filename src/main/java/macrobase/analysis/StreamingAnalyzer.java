@@ -183,22 +183,15 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 throw new RuntimeException("Start semaphore interrupted");
             }
 
-            OutlierDetector detector = constructDetector(randomSeed);
+            OutlierDetector detector = constructDetector();
 
             ExponentiallyBiasedAChao<Datum> inputReservoir =
-                    new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate);
-
-            if (randomSeed != null) {
-                inputReservoir.setSeed(randomSeed);
-            }
+                    new ExponentiallyBiasedAChao<>(inputReservoirSize, decayRate, conf.getRandom());
 
             ExponentiallyBiasedAChao<Double> scoreReservoir = null;
 
             if (forceUsePercentile) {
-                scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate);
-                if (randomSeed != null) {
-                    scoreReservoir.setSeed(randomSeed);
-                }
+                scoreReservoir = new ExponentiallyBiasedAChao<>(scoreReservoirSize, decayRate, conf.getRandom());
             }
 
             ExponentiallyDecayingEmergingItemsets streamingSummarizer =
@@ -319,11 +312,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         Stopwatch tsw = Stopwatch.createUnstarted();
 
         List<Datum> data = loader.getData(encoder);
-        if (randomSeed == null) {
-            Collections.shuffle(data);
-        } else {
-            Collections.shuffle(data, new Random(randomSeed));
-        }
+        Collections.shuffle(data, conf.getRandom());
 
         List<List<Datum>> partitionedData = new ArrayList<List<Datum>>();
         for (int i = 0; i < numThreads; i++) {

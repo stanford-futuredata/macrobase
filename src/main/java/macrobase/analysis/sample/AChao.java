@@ -21,6 +21,13 @@ class AChao<T> {
     public AChao(int capacity) {
         reservoir = new ArrayList<>();
         reservoirCapacity = capacity;
+        random = new Random();
+    }
+
+    public AChao(int capacity, Random random) {
+        reservoir = new ArrayList<>();
+        reservoirCapacity = capacity;
+        this.random = random;
     }
 
     public final List<T> getReservoir() {
