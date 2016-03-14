@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class MacroBaseConf extends Configuration {
@@ -188,6 +189,15 @@ public class MacroBaseConf extends Configuration {
             return Boolean.parseBoolean(_conf.get(key));
         }
         return defaultValue;
+    }
+
+    public Random getRandom() {
+        Long seed = getLong(RANDOM_SEED, null);
+        if (seed != null) {
+            return new Random(seed);
+        } else {
+            return new Random();
+        }
     }
 
     public DataLoaderType getDataLoaderType() throws ConfigurationException {
