@@ -312,7 +312,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         Stopwatch tsw = Stopwatch.createUnstarted();
 
         List<Datum> data = loader.getData(encoder);
-        Collections.shuffle(data, conf.getRandom());
+        // Collections.shuffle(data, conf.getRandom());
 
         List<List<Datum>> partitionedData = new ArrayList<List<Datum>>();
         for (int i = 0; i < numThreads; i++) {
