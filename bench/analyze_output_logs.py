@@ -152,12 +152,13 @@ def plot_time_graphs(parsed_results, plots_dir, timing_types, workloads, is_xsca
                     except:
                         continue
 
-        plot(key_value_pairs,
-             timing_type + " time (in milliseconds",
-             plots_dir,
-             timing_type,
-             True,
-             is_xscale_log)
+        if plots_dir is not None:
+            plot(key_value_pairs,
+                 timing_type + " time (in milliseconds",
+                 plots_dir,
+                 timing_type,
+                 True,
+                 is_xscale_log)
     print "...done!"
 
 
@@ -185,7 +186,8 @@ def plot_aux_graphs(parsed_results, idx, ylabel, file_suffix, plots_dir, workloa
             print
             print
 
-    plot(key_value_pairs, ylabel, plots_dir, file_suffix, True, is_xscale_log)
+    if plots_dir is not None:
+        plot(key_value_pairs, ylabel, plots_dir, file_suffix, True, is_xscale_log)
     print "...done!"
 
 
@@ -217,7 +219,8 @@ def plot_recall_precision(parsed_results, idx, ylabel, plots_dir, workloads, is_
             print
             print
 
-    plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
+    if plots_dir is not None:
+        plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
     print "...done!"
 
 
@@ -249,7 +252,8 @@ def plot_recall_precision_od(parsed_results, idx, ylabel, plots_dir, workloads, 
             print
             print
 
-    plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
+    if plots_dir is not None:
+        plot(key_value_pairs, ylabel, plots_dir, ylabel, False, is_xscale_log)
     print "...done!"
 
 
@@ -297,7 +301,7 @@ def parse_args():
                         required=True,
                         help='Output file from which plots need to be generated.')
     parser.add_argument('--plot-directory',
-                        required=True,
+                        default=None,
                         help='Directory to dump plots in.')
     parser.add_argument('--plotting-config',
                         type=argparse.FileType('r'),
@@ -314,9 +318,11 @@ if __name__ == '__main__':
 
     timing_types = args.plotting_parameters["timingTypes"]
     workloads = args.plotting_parameters["workloads"]
+    produce_plots = False
 
     parsed_results = parse_output_file(args.output_file)
-    os.system("mkdir -p %s" % args.plot_directory)
+    if args.plot_directory is not None:
+        os.system("mkdir -p %s" % args.plot_directory)
     plot_time_graphs(parsed_results, args.plot_directory, timing_types, workloads, False)
     plot_aux_graphs(
         parsed_results, 1, "Number of itemsets", "Itemsets", args.plot_directory,
