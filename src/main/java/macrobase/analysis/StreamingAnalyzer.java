@@ -236,6 +236,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
             for (int run = 0; run < numRuns; run++) {
                 for (Datum d : data) {
+                    for (Datum d1 : inputReservoir.getReservoir()) {
+                        System.out.println(d1.toString());
+                    }
+                    System.out.println("");
+                    System.out.println("");
                     inputReservoir.insert(d);
 
                     if (tupleNo == warmupCount) {
