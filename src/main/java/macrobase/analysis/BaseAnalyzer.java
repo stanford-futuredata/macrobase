@@ -1,5 +1,6 @@
 package macrobase.analysis;
 
+import macrobase.analysis.contextualoutlier.ContextualOutlierDetector;
 import macrobase.analysis.outlier.*;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -91,6 +92,12 @@ public class BaseAnalyzer {
         throw new ConfigurationException(String.format("Unknown data loader type: %s", dataLoaderType));
     }
 
+    protected ContextualOutlierDetector constructContextualDetector(){
+    	ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf,
+    			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
+    	return contextualDetector;
+    }
+    
     protected OutlierDetector constructDetector(Long randomSeed) {
         int metricsDimensions = lowMetrics.size() + highMetrics.size();
 

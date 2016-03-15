@@ -37,8 +37,6 @@ public class BatchAnalyzer extends BaseAnalyzer {
     }
     
     public void contextualAnalyze() throws SQLException, IOException, ConfigurationException{
-    	OutlierDetector detector = constructDetector(randomSeed);
-    	
     	
     	DataLoader loader = constructLoader();
     	DatumEncoder encoder = new DatumEncoder();
@@ -47,9 +45,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
     	
     	
     	
-    	ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(detector,
-    			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
-    	
+    	ContextualOutlierDetector contextualDetector =	constructContextualDetector();
     	contextualDetector.searchContextualOutliers(data, zScore);
     	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         for(Context context: context2Outliers.keySet()){

@@ -26,12 +26,16 @@ public class ContextualOutlierDetectorTest {
 	@Test
     public void testContextualDiscreteAttribute() {
 	   //construct a contextual outlier detector
-	   MAD mad = new MAD(new MacroBaseConf());
+	   MacroBaseConf conf = new MacroBaseConf();
+	   conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
+       conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+       conf.set(MacroBaseConf.DETECTOR_TYPE, "MAD");
+       
 	   List<String> contextualDiscreteAttributes = new ArrayList<String>();
 	   contextualDiscreteAttributes.add("C1_Discrete");
 	   List<String> contextualDoubleAttributes = new ArrayList<String>();
        ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(
-    		   mad,
+    		    conf,
     		   contextualDiscreteAttributes,
     		   contextualDoubleAttributes,
     		   0.4, 10);
@@ -73,12 +77,17 @@ public class ContextualOutlierDetectorTest {
 	@Test
     public void testContextualDoubleAttribute() {
 	   //construct a contextual outlier detector
-	   MAD mad = new MAD(new MacroBaseConf());
+	   MacroBaseConf conf = new MacroBaseConf();
+	   conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
+	   conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+	   conf.set(MacroBaseConf.DETECTOR_TYPE, "MAD");
+	       
+	       
 	   List<String> contextualDiscreteAttributes = new ArrayList<String>();
 	   List<String> contextualDoubleAttributes = new ArrayList<String>();
 	   contextualDoubleAttributes.add("C1_Double");
        ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(
-    		   mad,
+    		   conf,
     		   contextualDiscreteAttributes,
     		   contextualDoubleAttributes,
     		   0.4, 10);
@@ -119,7 +128,11 @@ public class ContextualOutlierDetectorTest {
 	@Test
     public void testTwoAttributesContext() {
 	   //construct a contextual outlier detector
-	   MAD mad = new MAD(new MacroBaseConf());
+	   MacroBaseConf conf = new MacroBaseConf();
+	   conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
+       conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+       conf.set(MacroBaseConf.DETECTOR_TYPE, "MAD");
+       
 	   List<String> contextualDiscreteAttributes = new ArrayList<String>();
 	   contextualDiscreteAttributes.add("C1_Discrete");
 	   
@@ -127,7 +140,7 @@ public class ContextualOutlierDetectorTest {
 	   contextualDoubleAttributes.add("C2_Double");
       
 	   ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(
-    		   mad,
+			   conf,
     		   contextualDiscreteAttributes,
     		   contextualDoubleAttributes,
     		   0.3, 10);

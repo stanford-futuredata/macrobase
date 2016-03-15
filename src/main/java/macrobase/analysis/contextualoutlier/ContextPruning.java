@@ -14,7 +14,6 @@ public class ContextPruning {
 	public static HashSet<Datum> sample; // a random sample for the globalContext
 	public static double alpha = 0.05;
 	
-	public static OutlierDetector detector;
 	
 	//These pruning can entirely prune a context and all sub-contexts
 	public static int numDensityPruning = 0;
@@ -22,7 +21,6 @@ public class ContextPruning {
 	
 	
 	//These pruning can only prune the current context
-	public static int numPdfPruning = 0;
 	public static int numDetectorSpecificPruning = 0;
 	
 	
@@ -184,16 +182,6 @@ public class ContextPruning {
 		
 	}
 	
-	/**
-	 * Determine if the context can be pruned without running f, 
-	 * but can use the internals of f
-	 * @param c
-	 * @return
-	 */
-	public static boolean detectorSpecificPruning(Context c){
-		return false;
-	}
-	
 
 	
 	public static String print(){
@@ -201,7 +189,6 @@ public class ContextPruning {
 		sb.append("numDensityPruning: " + numDensityPruning + "  ");
 		sb.append("numDependencyPruning: " + numDependencyPruning + "  " + " falseDependencyUsingSample:  " + falseDependencyUsingSample + "  ");
 		sb.append("numSameDistributions: " + numSameDistributions + "  ");
-		sb.append("numPdfPruning: " + numPdfPruning + "  ");
 		sb.append("numDetectorSpecificPruning: " + numDetectorSpecificPruning + "   ");
 		return sb.toString();
 	}

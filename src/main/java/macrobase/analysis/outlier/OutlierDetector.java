@@ -109,7 +109,42 @@ public abstract class OutlierDetector {
                                scoredData.subList(splitPoint, scoredData.size()));
 
     }
+    public BatchResult classifyBatchByZScoreEquivalentWithoutTraining(List<Datum> data,
+            double zscore) {
 
+		List<DatumWithScore> inliers = new ArrayList<>();
+		List<DatumWithScore> outliers = new ArrayList<>();
+		
+		Stopwatch sw = Stopwatch.createUnstarted();
+		/*
+		log.debug("Starting training...");
+		sw.start();
+		train(data);
+		sw.stop();
+		long trainTime = sw.elapsed(TimeUnit.MILLISECONDS);
+		log.debug("...ended training (time: {}ms)!", trainTime);
+		*/
+		log.debug("Starting scoring...");
+		sw.reset();
+		sw.start();
+		
+		double thresh = cachedZScoreEquivalents.computeIfAbsent(zscore, k -> getZScoreEquivalent(zscore));
+		
+		// take an efficiency hit for modularity :(
+		for (Datum d : data) {
+		double dScore = score(d);
+		DatumWithScore dws = new DatumWithScore(d, dScore);
+		if (dScore >= thresh) {
+		outliers.add(dws);
+		} else {
+		inliers.add(dws);
+		}
+		}
+		sw.stop();
+		long scoringTime = sw.elapsed(TimeUnit.MILLISECONDS);
+		log.debug("...ended scoring (time: {}ms)!", scoringTime);
+		return new BatchResult(inliers, outliers);
+    }
     public BatchResult classifyBatchByZScoreEquivalent(List<Datum> data,
                                                        double zscore) {
 

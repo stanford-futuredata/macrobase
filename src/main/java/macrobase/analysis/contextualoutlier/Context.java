@@ -12,6 +12,7 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 
@@ -34,6 +35,11 @@ public class Context {
 	
 	//the sample is maintained in the lattice
 	private HashSet<Datum> sample = new HashSet<Datum>();
+	
+	
+	//the outlier detector used for detection in this context
+	private OutlierDetector detector;
+	
 	
 	/**
 	 * Global context
@@ -127,6 +133,7 @@ public class Context {
 					contextualData.add(d);
 				}
 			}
+			setSize(contextualData.size());
 			return contextualData;
 		}
 		
@@ -241,10 +248,6 @@ public class Context {
 	
 		Context newUnit = new Context(newDimensions, newIntervals, this, other);
 		
-		if(newUnit.sample.size() > this.sample.size() || newUnit.sample.size() > other.sample.size()){
-			int a = 1;
-			a++;
-		}
 		
 		if(ContextPruning.densityPruning(newUnit, tau)){
 			return null;
@@ -281,12 +284,6 @@ public class Context {
 		return sb.toString();
 	}
 
-	
-	public void clear(){
-		dimensions.clear();
-		intervals.clear();
-		
-	}
 
 	public int getSize() {
 		return size;
@@ -303,5 +300,13 @@ public class Context {
 	
 	public List<Context> getParents(){
 		return parents;
+	}
+
+	public OutlierDetector getDetector() {
+		return detector;
+	}
+
+	public void setDetector(OutlierDetector detector) {
+		this.detector = detector;
 	}
 }

@@ -15,17 +15,26 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Stopwatch;
 
+import macrobase.analysis.outlier.BinnedKDE;
+import macrobase.analysis.outlier.KDE;
+import macrobase.analysis.outlier.MAD;
+import macrobase.analysis.outlier.MinCovDet;
+import macrobase.analysis.outlier.MovingAverage;
 import macrobase.analysis.outlier.OutlierDetector;
+import macrobase.analysis.outlier.TreeKDE;
+import macrobase.analysis.outlier.ZScore;
 import macrobase.analysis.summary.result.DatumWithScore;
+import macrobase.conf.ConfigurationException;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
 public class ContextualOutlierDetector{
     private static final Logger log = LoggerFactory.getLogger(ContextualOutlierDetector.class);
 
     
-    private OutlierDetector detector; //the detector used for every context
     
-    
+    private MacroBaseConf conf;
     private List<String> contextualDiscreteAttributes;
     private List<String> contextualDoubleAttributes;
     private int totalContextualDimensions;
@@ -41,14 +50,13 @@ public class ContextualOutlierDetector{
     //could've stored Context,OutlierDetector.BatchResult, but waste a lot of memory
     private Map<Context,List<Datum>> context2Outliers = new HashMap<Context,List<Datum>>();
     
-    public ContextualOutlierDetector(OutlierDetector outlierDetector,
+    public ContextualOutlierDetector(MacroBaseConf conf,
     		List<String> contextualDiscreteAttributes,
     		List<String> contextualDoubleAttributes,
     		double denseContextTau,
     		int numIntervals){
     	
-    	this.detector = outlierDetector;
-    	
+    	this.conf = conf;
     	this.contextualDiscreteAttributes = contextualDiscreteAttributes;
     	this.contextualDoubleAttributes = contextualDoubleAttributes;
     	this.denseContextTau = denseContextTau;
@@ -72,7 +80,6 @@ public class ContextualOutlierDetector{
     	
     	HashSet<Datum> sample = randomSampling(data);
         globalContext = new Context(sample);
-        ContextPruning.detector = detector;
     	ContextPruning.data = data;
     	ContextPruning.sample = sample;
     	ContextPruning.alpha = 0.05;
@@ -105,6 +112,7 @@ public class ContextualOutlierDetector{
         	log.debug("Done building {}-dimensional contexts on all attributes (duration: {}ms)", level,latticeNodesBuildTimeCurLevel);
         	
         	//free up memory of preLatticeNodes
+        	/*
         	for(LatticeNode node: preLatticeNodes){
         		for(Context context: node.getDenseContexts()){
         			if(!context2Outliers.containsKey(context))
@@ -113,6 +121,7 @@ public class ContextualOutlierDetector{
         		node.clear();
         	}
         	preLatticeNodes.clear();	
+        	*/
         	
         	
         	log.debug("Memory Usage: {}", checkMemoryUsage());
@@ -139,7 +148,7 @@ public class ContextualOutlierDetector{
         	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, Context Pruning: {}", level,ContextPruning.print());
-        	log.debug("Done Find {}-dimensional contextual outliers, so far, Total Contextual OutlierDetection Runs: {}", level,totalContextualOutlierDetectionRuns);
+            log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, numOutlierDetectionRunsWithoutTraining: {},  numOutlierDetectionRunsWithTraining: {}", level,densityPruning2,numOutlierDetectionRunsWithoutTraining,numOutlierDetectionRunsWithTraining);
             log.debug("----------------------------------------------------------");
 
         	
@@ -258,8 +267,9 @@ public class ContextualOutlierDetector{
 	}
 	
 	
-    
-	private int totalContextualOutlierDetectionRuns = 0;
+    private int densityPruning2 = 0;
+    private int numOutlierDetectionRunsWithoutTraining = 0;
+    private int numOutlierDetectionRunsWithTraining = 0;
     /**
      * Run outlier detection algorithm on contextual data
      * The algorithm has to use zScore in contextual outlier detection
@@ -270,25 +280,9 @@ public class ContextualOutlierDetector{
      */
     public void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
     	
-    	/*
-    	 * If P1, P2 are same distribution, doesn't mean P1^P2 and P1 are same distribution
-    	if(context.getParents().size() == 2 &&
-    			ContextPruning.sameDistribution(context.getParents().get(0), context.getParents().get(1))){
-    		//return;
-    	}*/
+    
     	
-    	//pdf pruning
-    	if(context.getParents().size() > 0){
-    		if(ContextPruning.sameDistribution(context, context.getParents().get(0))){
-    			//return;
-    		}else if(context.getParents().size() > 1 && 
-    				ContextPruning.sameDistribution(context, context.getParents().get(1))){
-    			//return;
-    		}
-    	}
-    	
-    	
-    	
+    	OutlierDetector.BatchResult or = null;
     	HashSet<Datum> contextualData = context.getContextualData(data,context2Data);
     	
     	//Just did density estimation before
@@ -297,11 +291,28 @@ public class ContextualOutlierDetector{
     		return;
     	}
     	
+    
+    	Context p1 = (context.getParents().size() > 0)?context.getParents().get(0):null;
+    	Context p2 = (context.getParents().size() > 1)?context.getParents().get(1):null;
     	
+    	if(p1 != null && ContextPruning.sameDistribution(context, p1)){
+    		context.setDetector(p1.getDetector());
+    		or = context.getDetector().classifyBatchByZScoreEquivalentWithoutTraining(new ArrayList<Datum>(contextualData), zScore);
+    		numOutlierDetectionRunsWithoutTraining++;
+    	}else if(p2 != null && ContextPruning.sameDistribution(context, p2)){
+    		context.setDetector(p2.getDetector());
+    		or = context.getDetector().classifyBatchByZScoreEquivalentWithoutTraining(new ArrayList<Datum>(contextualData), zScore);
+    		numOutlierDetectionRunsWithoutTraining++;
+    	}else{
+    		try {
+				context.setDetector(constructDetector());
+			} catch (ConfigurationException e) {
+				e.printStackTrace();
+			}
+    		or = context.getDetector().classifyBatchByZScoreEquivalent(new ArrayList<Datum>(contextualData), zScore);
+    		numOutlierDetectionRunsWithTraining++;
+    	}
     	
-        OutlierDetector.BatchResult or = detector.classifyBatchByZScoreEquivalent(new ArrayList<Datum>(contextualData), zScore);
-       
-        totalContextualOutlierDetectionRuns++;
         List<Datum> outliers = new ArrayList<Datum>();
         if(or.getOutliers().size() != 0){
         	for(DatumWithScore o: or.getOutliers()){
@@ -311,7 +322,53 @@ public class ContextualOutlierDetector{
         }
         
     }
-    
+    private OutlierDetector constructDetector() throws ConfigurationException {
+        int metricsDimensions = conf.getStringList(MacroBaseConf.LOW_METRICS).size() + conf.getStringList(MacroBaseConf.HIGH_METRICS).size();
+
+        Long randomSeed = conf.getLong(MacroBaseConf.RANDOM_SEED, MacroBaseDefaults.RANDOM_SEED);
+
+        switch (conf.getDetectorType()) {
+            case MAD_OR_MCD:
+                if (metricsDimensions == 1) {
+                    log.info("By default: using MAD detector for dimension 1 metric.");
+                    return new MAD(conf);
+                } else {
+                    log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
+                    MinCovDet ret = new MinCovDet(conf);
+                    if (randomSeed != null) {
+                        ret.seedRandom(randomSeed);
+                    }
+                    return ret;
+                }
+            case MAD:
+                log.info("Using MAD detector.");
+                return new MAD(conf);
+            case MCD:
+                log.info("Using MCD detector.");
+                MinCovDet ret = new MinCovDet(conf);
+                if (randomSeed != null) {
+                    ret.seedRandom(randomSeed);
+                }
+                return ret;
+            case ZSCORE:
+                log.info("Using ZScore detector.");
+                return new ZScore(conf);
+            case KDE:
+                log.info("Using KDE detector.");
+                return new KDE(conf);
+            case BINNED_KDE:
+                log.info("Using BinnedKDE detector.");
+                return new BinnedKDE(conf);
+            case TREE_KDE:
+                log.info("Using TreeKDE detector.");
+                return new TreeKDE(conf);
+            case MOVING_AVERAGE:
+                log.info("Using Moving Average detector.");
+                return new MovingAverage(conf);
+            default:
+                throw new RuntimeException("Unhandled detector class!" + conf.getDetectorType());
+        }
+    }
     /**
 	 * Find one dimensional lattice nodes with dense contexts
 	 * @param data
@@ -344,6 +401,7 @@ public class ContextualOutlierDetector{
 	 * @param dimension
 	 * @return
 	 */
+	@Deprecated
 	private List<Context> initOneDimensionalDenseContexts(List<Datum> data, int dimension){
 		int discreteDimensions = contextualDiscreteAttributes.size();
 		
@@ -426,6 +484,14 @@ public class ContextualOutlierDetector{
 		return result;
 	}
 	
+	/**
+	 * Initialize one dimensional dense contexts
+	 * The number of passes of data is O(totalContextualDimensions)
+	 * Store the datums of every one dimensional context in memory
+	 * @param data
+	 * @param dimension
+	 * @return
+	 */
 	private List<Context> initOneDimensionalDenseContextsAndContext2Data(List<Datum> data, int dimension){
 		int discreteDimensions = contextualDiscreteAttributes.size();
 		
