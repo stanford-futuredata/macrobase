@@ -1,0 +1,16 @@
+{
+  "workloads": [
+    "cmtDatasetSimpleStreaming",
+    "cmtDatasetComplexStreaming",
+    "fedDisbursementsSimpleStreaming",
+    "fedDisbursementsComplexStreaming"
+  ],
+  "timingTypes": [
+    "Loading",
+    "Warmup Training",
+    "Summarization Training",
+    "Scoring",
+    "Training",
+    "Total"
+  ]
+}
