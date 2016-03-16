@@ -30,7 +30,7 @@ default_args = {
   "macrobase.analysis.streaming.useRealTimePeriod": "false",
   "macrobase.analysis.streaming.useTupleCountPeriod": "true",
 
-  "macrobase.analysis.streaming.warmupCount": 10000,
+  "macrobase.analysis.streaming.warmupCount": 50000,
   "macrobase.analysis.streaming.decayRate": 0.01,
 
   "macrobase.analysis.mcd.alpha": 0.5,
@@ -97,7 +97,7 @@ def parse_results(results_file):
             if "Outlier:" in line:
                 line = line.split("Outlier: ")[1]
                 line = line.strip()
-                outlier = frozenset(eval(line))
+                outlier = frozenset(line.split())
                 outliers.append(outlier)
             elif "Inlier:" in line:
                 line = line.split("Inlier: ")[1]
@@ -168,6 +168,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print 'running the following command:'
         print macrobase_cmd
         os.system("cd ..; %s" % macrobase_cmd)
+        with open("../outliers.txt", 'r') as f1, open(results_file, 'a') as f2:
+            outliers = f1.read()
+            f2.write("\n\n\n" + outliers)
         (times, num_itemsets, num_iterations, itemsets,
             tuples_per_second, tuples_per_second_no_itemset_mining,
             outliers, inliers) = parse_results(results_file)

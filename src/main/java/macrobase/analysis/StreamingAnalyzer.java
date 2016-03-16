@@ -290,10 +290,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                             scoreReservoir.insert(score);
                         }
 
-                        outliers.add(d);
                         if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
                                 forceUsePercentile && detector.isPercentileOutlier(score,
                                         targetPercentile)) {
+                            outliers.add(d);
                             streamingSummarizer.markOutlier(d);
                         } else {
                             streamingSummarizer.markInlier(d);
@@ -369,7 +369,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("outliers.txt")))) {
             for (Datum outlier : allOutliers) {
-                writer.write("Outlier: " + outlier.getMetrics().toArray() + "\n");
+                writer.write("Outlier: ");
+                for (Double ele : outlier.getMetrics().toArray()) {
+                    writer.write(ele + " ");
+                }
+                writer.write("\n");
             }
         }
 
