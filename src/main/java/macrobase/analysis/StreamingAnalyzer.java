@@ -30,7 +30,11 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -363,8 +367,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         log.debug("Number of outliers: {}", allOutliers.size());
 
-        for (Datum outlier : allOutliers) {
-            log.debug("Outlier: {}", outlier.getMetrics().toArray());
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("outliers.txt")))) {
+            for (Datum outlier : allOutliers) {
+                writer.write("Outlier: " + outlier.getMetrics().toArray() + "\n");
+            }
         }
 
         // Stop timer as soon as all itemsets have been mined and aggregated
