@@ -97,11 +97,35 @@ public class Context {
 		
 		if(parents.size() == 0){
 			//global context
+			setSize(data.size());
 			return new HashSet<Datum>(data);
 		}
 		
 		HashSet<Datum> contextualData = new HashSet<Datum>();
     	
+		
+		
+		if(parents.size() == 2){
+			Context p1 = parents.get(0);
+			Context p2 = parents.get(1);
+			if(context2Data.containsKey(p1)&&context2Data.containsKey(p2)){
+				HashSet<Datum> data1 = context2Data.get(p1);
+				HashSet<Datum> data2 = context2Data.get(p2);
+				if(data1.size() < data2.size()){
+					for(Datum d: data1)
+						if(data2.contains(d))
+							contextualData.add(d);
+				}else{
+					for(Datum d: data2)
+						if(data1.contains(d))
+							contextualData.add(d);
+				}
+				setSize(contextualData.size());
+				return contextualData;
+			}
+		}
+		
+		
 		
 		boolean useIntersection = true;
 		Context smallestOneDimensionalAncestor = null;

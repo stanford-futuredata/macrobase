@@ -111,17 +111,7 @@ public class ContextualOutlierDetector{
     		sw.reset();
         	log.debug("Done building {}-dimensional contexts on all attributes (duration: {}ms)", level,latticeNodesBuildTimeCurLevel);
         	
-        	//free up memory of preLatticeNodes
-        	/*
-        	for(LatticeNode node: preLatticeNodes){
-        		for(Context context: node.getDenseContexts()){
-        			if(!context2Outliers.containsKey(context))
-        				context.clear();
-        		}
-        		node.clear();
-        	}
-        	preLatticeNodes.clear();	
-        	*/
+        	
         	
         	
         	log.debug("Memory Usage: {}", checkMemoryUsage());
@@ -152,7 +142,19 @@ public class ContextualOutlierDetector{
             log.debug("----------------------------------------------------------");
 
         	
+            //free up memory 
+        	if(level >= 2){
+        		for(LatticeNode node: preLatticeNodes){
+        			for(Context context: node.getDenseContexts()){
+        				context2Data.remove(context);
+        			}
+        		}
+        	}
+        	
+        	
 			preLatticeNodes = curLatticeNodes;
+			
+			
 		}
     	
     	
@@ -284,10 +286,13 @@ public class ContextualOutlierDetector{
     	
     	OutlierDetector.BatchResult or = null;
     	HashSet<Datum> contextualData = context.getContextualData(data,context2Data);
+    	//use space to trade for efficiency
+    	context2Data.put(context, contextualData);
     	
     	//Just did density estimation before
     	double realDensity = (double)contextualData.size() / data.size();
     	if(realDensity < denseContextTau){
+    		densityPruning2++;
     		return;
     	}
     	
@@ -322,6 +327,11 @@ public class ContextualOutlierDetector{
         }
         
     }
+    /**
+     * Every context stores its own detector
+     * @return
+     * @throws ConfigurationException
+     */
     private OutlierDetector constructDetector() throws ConfigurationException {
         int metricsDimensions = conf.getStringList(MacroBaseConf.LOW_METRICS).size() + conf.getStringList(MacroBaseConf.HIGH_METRICS).size();
 
@@ -330,10 +340,8 @@ public class ContextualOutlierDetector{
         switch (conf.getDetectorType()) {
             case MAD_OR_MCD:
                 if (metricsDimensions == 1) {
-                    log.info("By default: using MAD detector for dimension 1 metric.");
                     return new MAD(conf);
                 } else {
-                    log.info("By default: using MCD detector for dimension {} metrics.", metricsDimensions);
                     MinCovDet ret = new MinCovDet(conf);
                     if (randomSeed != null) {
                         ret.seedRandom(randomSeed);
@@ -341,29 +349,22 @@ public class ContextualOutlierDetector{
                     return ret;
                 }
             case MAD:
-                log.info("Using MAD detector.");
                 return new MAD(conf);
             case MCD:
-                log.info("Using MCD detector.");
                 MinCovDet ret = new MinCovDet(conf);
                 if (randomSeed != null) {
                     ret.seedRandom(randomSeed);
                 }
                 return ret;
             case ZSCORE:
-                log.info("Using ZScore detector.");
                 return new ZScore(conf);
             case KDE:
-                log.info("Using KDE detector.");
                 return new KDE(conf);
             case BINNED_KDE:
-                log.info("Using BinnedKDE detector.");
                 return new BinnedKDE(conf);
             case TREE_KDE:
-                log.info("Using TreeKDE detector.");
                 return new TreeKDE(conf);
             case MOVING_AVERAGE:
-                log.info("Using Moving Average detector.");
                 return new MovingAverage(conf);
             default:
                 throw new RuntimeException("Unhandled detector class!" + conf.getDetectorType());
