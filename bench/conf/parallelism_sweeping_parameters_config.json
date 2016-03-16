@@ -1,10 +1,5 @@
 {
   "macrobase.analysis.numThreads": [
-    32,
-    16,
-    8,
-    4,
-    2,
     1
   ]
 }

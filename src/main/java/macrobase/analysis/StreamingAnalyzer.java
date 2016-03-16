@@ -236,11 +236,6 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
             for (int run = 0; run < numRuns; run++) {
                 for (Datum d : data) {
-                    for (Datum d1 : inputReservoir.getReservoir()) {
-                        System.out.println(d1.toString());
-                    }
-                    System.out.println("");
-                    System.out.println("");
                     inputReservoir.insert(d);
 
                     if (tupleNo == warmupCount) {
@@ -291,11 +286,11 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                             scoreReservoir.insert(score);
                         }
 
+                        outliers.add(d);
                         if ((forceUseZScore && detector.isZScoreOutlier(score, zScore)) ||
                                 forceUsePercentile && detector.isPercentileOutlier(score,
                                         targetPercentile)) {
                             streamingSummarizer.markOutlier(d);
-                            outliers.add(d);
                         } else {
                             streamingSummarizer.markInlier(d);
                         }
@@ -365,6 +360,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                 allOutliers.add(outlier);
             }
         }
+
+        log.debug("Number of outliers: {}", allOutliers.size());
 
         for (Datum outlier : allOutliers) {
             log.debug("Outlier: {}", outlier.getMetrics().toArray());

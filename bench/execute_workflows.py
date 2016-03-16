@@ -20,8 +20,8 @@ default_args = {
   "macrobase.loader.db.password": None,
   "macrobase.analysis.zscore.threshold": 3.0,
 
-  "macrobase.analysis.streaming.inputReservoirSize": 10000,
-  "macrobase.analysis.streaming.scoreReservoirSize": 10000,
+  "macrobase.analysis.streaming.inputReservoirSize": 100,
+  "macrobase.analysis.streaming.scoreReservoirSize": 100,
   "macrobase.analysis.streaming.inlierItemSummarySize": 10000,
   "macrobase.analysis.streaming.outlierItemSummarySize": 10000,
   "macrobase.analysis.streaming.summaryUpdatePeriod": 100000,
@@ -30,7 +30,7 @@ default_args = {
   "macrobase.analysis.streaming.useRealTimePeriod": "false",
   "macrobase.analysis.streaming.useTupleCountPeriod": "true",
 
-  "macrobase.analysis.streaming.warmupCount": 50000,
+  "macrobase.analysis.streaming.warmupCount": 10000,
   "macrobase.analysis.streaming.decayRate": 0.01,
 
   "macrobase.analysis.mcd.alpha": 0.5,
@@ -94,16 +94,16 @@ def parse_results(results_file):
                     line = line.split("Tuples / second = ")[1]
                     tuples_per_second = float(
                         line.split("tuples / second")[0].strip())
-                elif "Outlier:" in line:
-                    line = line.split("Outlier: ")[1]
-                    line = line.strip()
-                    outlier = frozenset(eval(line))
-                    outliers.append(outlier)
-                elif "Inlier:" in line:
-                    line = line.split("Inlier: ")[1]
-                    line = line.strip()
-                    inlier = frozenset(eval(line))
-                    inliers.append(inlier)
+            if "Outlier:" in line:
+                line = line.split("Outlier: ")[1]
+                line = line.strip()
+                outlier = frozenset(eval(line))
+                outliers.append(outlier)
+            elif "Inlier:" in line:
+                line = line.split("Inlier: ")[1]
+                line = line.strip()
+                inlier = frozenset(eval(line))
+                inliers.append(inlier)
             if "Columns" in line:
                 j = i + 1
                 itemset = dict()

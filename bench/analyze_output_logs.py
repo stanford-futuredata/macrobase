@@ -1,6 +1,5 @@
 import argparse
 import json
-import matplotlib.pyplot as plt
 import os
 
 
@@ -103,26 +102,33 @@ def get_time(parsed_results,
 def compute_precision_and_recall(predicted_labels, ground_truth_labels):
     num_correct = 0
     ground_truth_labels_set = set(ground_truth_labels)
-    for predicted_label in predicted_labels:
+    predicted_labels_set = set(predicted_labels)
+
+    for predicted_label in predicted_labels_set:
         if predicted_label in ground_truth_labels_set:
             num_correct += 1
-    if (len(predicted_labels) == 0):
+        else:
+            pass
+            # print "Missed", predicted_label, "while computing precision"
+    if (len(predicted_labels_set) == 0):
         if (len(ground_truth_labels) == 0):
             precision = 1.0
         else:
             precision = 0.0
     else:
-        precision = float(num_correct) / float(len(predicted_labels))
+        precision = float(num_correct) / float(len(predicted_labels_set))
 
-    predicted_labels_set = set(predicted_labels)
     num_correct = 0
-    for ground_truth_label in ground_truth_labels:
+    for ground_truth_label in ground_truth_labels_set:
         if ground_truth_label in predicted_labels_set:
             num_correct += 1
-    if (len(ground_truth_labels) == 0):
+        else:
+            pass
+            # print "Missed", ground_truth_label, "while computing recall"
+    if (len(ground_truth_labels_set) == 0):
         recall = 1.0
     else:
-        recall = float(num_correct) / float(len(ground_truth_labels))
+        recall = float(num_correct) / float(len(ground_truth_labels_set))
 
     return precision, recall
 
@@ -322,6 +328,7 @@ if __name__ == '__main__':
 
     parsed_results = parse_output_file(args.output_file)
     if args.plot_directory is not None:
+        import matplotlib.pyplot as plt
         os.system("mkdir -p %s" % args.plot_directory)
     plot_time_graphs(parsed_results, args.plot_directory, timing_types, workloads, False)
     plot_aux_graphs(
