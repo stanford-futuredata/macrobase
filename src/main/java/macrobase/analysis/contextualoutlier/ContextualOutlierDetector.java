@@ -289,6 +289,7 @@ public class ContextualOutlierDetector{
     	//HashSet<Datum> contextualData = context.getContextualData(data,context2Data);
     	//context2Data.put(context, contextualData);
     	BitSet bs = context.getContextualBitSet(data,context2BitSet);
+    	context2BitSet.put(context, bs);
     	List<Integer> indexes = bitSet2Indexes(bs);
     	List<Datum> contextualData = new ArrayList<Datum>();
     	for(Integer index: indexes){
