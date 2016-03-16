@@ -1,6 +1,7 @@
 package macrobase.analysis.contextualoutlier;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -86,13 +87,71 @@ public class Context {
 		
 	}
 	
-
+	public BitSet getContextualBitSet(List<Datum> data, Map<Context,BitSet> context2BitSet){
+		
+		if(parents.size() == 0){
+			BitSet bs = new BitSet(data.size());
+			bs.set(0, data.size());
+			return bs;
+		}
+		BitSet bs = null;
+		if(parents.size() == 1 && context2BitSet.containsKey(this)){
+			bs = context2BitSet.get(this);
+		}
+		if(parents.size() == 2){
+			Context p1 = parents.get(0);
+			Context p2 = parents.get(1);
+			if(context2BitSet.containsKey(p1) && context2BitSet.containsKey(p2)){
+				BitSet b1 = context2BitSet.get(p1);
+				BitSet b2 = context2BitSet.get(p2);
+				bs = (BitSet) b1.clone();
+				bs.and(b2);
+			}
+		}
+		
+		boolean useIntersection = true;
+		for(Context c: oneDimensionalAncestors){
+			if(!context2BitSet.containsKey(c)){
+				useIntersection = false;
+				break;
+			}
+		}
+		if(useIntersection){
+			for(Context c: oneDimensionalAncestors){
+				if(bs == null){
+					bs = (BitSet) context2BitSet.get(c).clone();
+				}else{
+					bs.and(context2BitSet.get(c));
+				}
+			}
+		}
+		
+	
+		
+		if(bs != null){
+			return bs;
+		}else{
+			bs = new BitSet(data.size());
+			for(int i = 0; i < data.size(); i++){
+				Datum datum = data.get(i);
+				if(containDatum(datum)){
+					bs.set(i);
+				}
+			}
+			return bs;
+		}
+			
+		
+			
+	}
+	
 	
 	/**
 	 * Get all the contextual data, given the whole dataset
 	 * @param data
 	 * @return
 	 */
+	@Deprecated
 	public HashSet<Datum> getContextualData(List<Datum> data, Map<Context,HashSet<Datum>> context2Data){
 		
 		if(parents.size() == 0){

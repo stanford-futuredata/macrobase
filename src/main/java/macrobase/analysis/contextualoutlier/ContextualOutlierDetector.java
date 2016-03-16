@@ -2,6 +2,7 @@ package macrobase.analysis.contextualoutlier;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -146,7 +147,7 @@ public class ContextualOutlierDetector{
         	if(level >= 2){
         		for(LatticeNode node: preLatticeNodes){
         			for(Context context: node.getDenseContexts()){
-        				context2Data.remove(context);
+        				context2BitSet.remove(context);
         			}
         		}
         	}
@@ -285,10 +286,16 @@ public class ContextualOutlierDetector{
     
     	
     	OutlierDetector.BatchResult or = null;
-    	HashSet<Datum> contextualData = context.getContextualData(data,context2Data);
-    	//use space to trade for efficiency
-    	context2Data.put(context, contextualData);
-    	
+    	//HashSet<Datum> contextualData = context.getContextualData(data,context2Data);
+    	//context2Data.put(context, contextualData);
+    	BitSet bs = context.getContextualBitSet(data,context2BitSet);
+    	List<Integer> indexes = bitSet2Indexes(bs);
+    	List<Datum> contextualData = new ArrayList<Datum>();
+    	for(Integer index: indexes){
+    		contextualData.add(data.get(index));
+    	}
+    	context.setSize(contextualData.size());
+    			
     	//Just did density estimation before
     	double realDensity = (double)contextualData.size() / data.size();
     	if(realDensity < denseContextTau){
@@ -500,14 +507,15 @@ public class ContextualOutlierDetector{
 		List<Context> result = new ArrayList<Context>();
 		
 		if(dimension < discreteDimensions){
-			Map<Integer,HashSet<Datum>> distinctValue2Data = new HashMap<Integer,HashSet<Datum>>();
-			for(Datum datum: data){
+			Map<Integer,List<Integer>> distinctValue2Data = new HashMap<Integer,List<Integer>>();
+			for(int i = 0; i < data.size(); i++){
+				Datum datum = data.get(i);
 				Integer value = datum.getContextualDiscreteAttributes().get(dimension);
 				if(distinctValue2Data.containsKey(value)){
-					distinctValue2Data.get(value).add(datum);
+					distinctValue2Data.get(value).add(i);
 				}else{
-					HashSet<Datum> temp = new HashSet<Datum>();
-					temp.add(datum);
+					List<Integer> temp = new ArrayList<Integer>();
+					temp.add(i);
 					distinctValue2Data.put(value, temp);
 				}
 				
@@ -520,7 +528,8 @@ public class ContextualOutlierDetector{
 					Context context = new Context(dimension, interval, globalContext);
 					result.add(context);
 					
-					context2Data.put(context, distinctValue2Data.get(value));
+					BitSet bs = indexes2BitSet(distinctValue2Data.get(value),data.size());
+					context2BitSet.put(context, bs);
 				}
 			}
 		}else{
@@ -552,16 +561,17 @@ public class ContextualOutlierDetector{
 				}
 			}
 			//count the interval
-			HashMap<Interval,HashSet<Datum>> interval2Data = new HashMap<Interval,HashSet<Datum>>();
-			for(Datum datum: data){
+			HashMap<Interval,List<Integer>> interval2Data = new HashMap<Interval,List<Integer>>();
+			for(int i = 0; i < data.size(); i++){
+				Datum datum = data.get(i);
 				double value = datum.getContextualDoubleAttributes().getEntry(dimension - discreteDimensions );
 				for(Interval interval: allIntervals){
 					if(interval.contains(value)){
 						if(interval2Data.containsKey(interval)){
-							interval2Data.get(interval).add(datum);
+							interval2Data.get(interval).add(i);
 						}else{
-							HashSet<Datum> temp = new HashSet<Datum>();
-							temp.add(datum);
+							List<Integer> temp = new ArrayList<Integer>();
+							temp.add(i);
 							interval2Data.put(interval,temp);
 						}
 						break;
@@ -575,7 +585,9 @@ public class ContextualOutlierDetector{
 					Context context = new Context(dimension, interval,globalContext);
 					result.add(context);
 					
-					context2Data.put(context, interval2Data.get(interval));
+					BitSet bs = indexes2BitSet(interval2Data.get(interval),data.size());
+					context2BitSet.put(context, bs);
+					
 				}
 				
 				
@@ -585,8 +597,27 @@ public class ContextualOutlierDetector{
 		return result;
 	}
 	//trade memory for efficiency
-	private Map<Context,HashSet<Datum>> context2Data = new HashMap<Context,HashSet<Datum>>();
+	//private Map<Context,HashSet<Datum>> context2Data = new HashMap<Context,HashSet<Datum>>();
+	private Map<Context,BitSet> context2BitSet = new HashMap<Context,BitSet>();
 	
-	
+	private BitSet indexes2BitSet(List<Integer> indexes, int total){
+		BitSet bs = new BitSet(total);
+		for(int i = 0; i < indexes.size(); i++){
+			int index = indexes.get(i);
+			bs.set(index);
+		}
+		return bs;
+	}
+	private List<Integer> bitSet2Indexes(BitSet bs){
+		List<Integer> indexes = new ArrayList<Integer>();
+		for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i+1)) {
+		     // operate on index i here
+			indexes.add(i);
+		     if (i == Integer.MAX_VALUE) {
+		         break; // or (i+1) would overflow
+		     }
+		}
+		return indexes;
+	}
     
 }
