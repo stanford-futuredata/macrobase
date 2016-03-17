@@ -1,19 +1,19 @@
-macrobase.query.name: uk_road_accidents
-macrobase.loader.attributes: []
+macrobase.query.name: marketing
+macrobase.loader.attributes: [sex, marital_status, age, education, occupation, time_live_in_sf_area, dual_income_if_married, persons_in_household, persons_in_household_under_18, householder_status, home_type, ethnic, language]
 macrobase.loader.targetLowMetrics: []
-macrobase.loader.targetHighMetrics: [accident_severity]
+macrobase.loader.targetHighMetrics: [income]
 
 macrobase.analysis.detectorType: MAD
 
 macrobase.loader.db.user: xuchu
 macrobase.loader.db.password: None
-macrobase.loader.db.baseQuery: SELECT * FROM uk_road_accidents;
+macrobase.loader.db.baseQuery: SELECT * FROM marketing;
 
-macrobase.analysis.minSupport: 0.0010
+macrobase.analysis.minSupport: 0.5000
 macrobase.analysis.minOIRatio: 3.0000
 
 macrobase.analysis.useZScore: false
-macrobase.analysis.zscore.threshold: 3.0000
+macrobase.analysis.zscore.threshold: 5.0000
 
 macrobase.analysis.usePercentile: true
 macrobase.analysis.targetPercentile: 0.9900
@@ -21,7 +21,7 @@ macrobase.analysis.targetPercentile: 0.9900
 macrobase.analysis.mcd.alpha: 0.5000
 macrobase.analysis.mcd.stoppingDelta: 0.0010
 
-macrobase.loader.loaderType: POSTGRES_LOADER
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
 macrobase.loader.db.cacheDirectory: sql_cache
 
 logging:
@@ -29,10 +29,11 @@ logging:
 
   loggers:
     "macrobase": TRACE
-
-
+    
+    
 macrobase.analysis.contextual.enabled: true
-macrobase.analysis.contextual.discreteAttributes: [police_force, day_of_week, local_authority_district,local_authority_highway, n_1st_road_class, road_type, junction_detail, junction_control, n_2nd_road_class, pedestrian_crossinghuman_control, pedestrian_crossingphysical_facilities, light_conditions, weather_conditions, road_surface_conditions, special_conditions_at_site, carriageway_hazards, urban_or_rural_area, did_police_officer_attend_scene_of_accident]
-macrobase.analysis.contextual.doubleAttributes: []
-macrobase.analysis.contextual.denseContextTau: 0.3000
+macrobase.analysis.contextual.discreteAttributes: [income, sex, marital_status, age, education, occupation, time_live_in_sf_area, dual_income_if_married, persons_in_household, persons_in_household_under_18, householder_status, home_type, ethnic, language]
+macrobase.analysis.contextual.doubleAttributes: [income]
+macrobase.analysis.contextual.denseContextTau: 0.1000
 macrobase.analysis.contextual.numIntervals: 10
+

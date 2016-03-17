@@ -62,7 +62,7 @@ public class ContextualOutlierDetectorTest {
         }
 
         
-        contextualDetector.searchContextualOutliers(data, 3);
+        contextualDetector.searchContextualOutliers(data, 3, null);
         Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
@@ -114,7 +114,7 @@ public class ContextualOutlierDetectorTest {
         }
 
         
-        contextualDetector.searchContextualOutliers(data, 3);
+        contextualDetector.searchContextualOutliers(data, 3, null);
         Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         
@@ -177,7 +177,7 @@ public class ContextualOutlierDetectorTest {
         }
 
         
-        contextualDetector.searchContextualOutliers(data, 3);
+        contextualDetector.searchContextualOutliers(data, 3, null);
         Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         assertEquals(context2Outliers.size(), 1);
         

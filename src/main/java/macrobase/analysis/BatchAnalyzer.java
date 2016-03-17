@@ -46,7 +46,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
     	
     	
     	ContextualOutlierDetector contextualDetector =	constructContextualDetector();
-    	contextualDetector.searchContextualOutliers(data, zScore);
+    	contextualDetector.searchContextualOutliers(data, zScore,encoder);
     	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
         for(Context context: context2Outliers.keySet()){
         	log.info("Context: " + context.print(encoder));

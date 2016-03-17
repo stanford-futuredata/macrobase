@@ -11,7 +11,7 @@ streaming_template_conf_file = "contextual_streaming_template.conf"
 
 default_args = {
   "macrobase.analysis.minOIRatio": 3.0,
-  "macrobase.analysis.minSupport": 0.001,
+  "macrobase.analysis.minSupport": 0.5,
 
   "macrobase.analysis.usePercentile": "true",
   "macrobase.analysis.targetPercentile": 0.99,

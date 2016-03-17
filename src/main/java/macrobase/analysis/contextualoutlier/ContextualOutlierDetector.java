@@ -4,11 +4,13 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -24,11 +26,14 @@ import macrobase.analysis.outlier.MovingAverage;
 import macrobase.analysis.outlier.OutlierDetector;
 import macrobase.analysis.outlier.TreeKDE;
 import macrobase.analysis.outlier.ZScore;
+import macrobase.analysis.summary.itemset.FPGrowthEmerging;
+import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.DatumEncoder;
 
 public class ContextualOutlierDetector{
     private static final Logger log = LoggerFactory.getLogger(ContextualOutlierDetector.class);
@@ -71,7 +76,7 @@ public class ContextualOutlierDetector{
     	return context2Outliers;
     }
     
-    public void searchContextualOutliers(List<Datum> data, double zScore){
+    public void searchContextualOutliers(List<Datum> data, double zScore, DatumEncoder encoder){
     	
     	Stopwatch sw = Stopwatch.createUnstarted();
     	
@@ -86,7 +91,7 @@ public class ContextualOutlierDetector{
     	ContextPruning.alpha = 0.05;
     	
     	
-        contextualOutlierDetection(data,globalContext,zScore);
+        contextualOutlierDetection(data,globalContext,zScore, encoder);
     	
     	sw.stop();
     	long globalOutlierDetecionTime = sw.elapsed(TimeUnit.MILLISECONDS);
@@ -129,7 +134,7 @@ public class ContextualOutlierDetector{
         	//run contextual outlier detection
         	for(LatticeNode node: curLatticeNodes){
         		for(Context context: node.getDenseContexts()){
-        			contextualOutlierDetection(data,context,zScore);
+        			contextualOutlierDetection(data,context,zScore,encoder);
         			numDenseContextsCurLevel++;
         		}
         	}
@@ -281,7 +286,7 @@ public class ContextualOutlierDetector{
      * @param zScore
      * @return
      */
-    public void contextualOutlierDetection(List<Datum> data, Context context, double zScore){
+    public void contextualOutlierDetection(List<Datum> data, Context context, double zScore, DatumEncoder encoder){
     	
     
     	
@@ -326,8 +331,14 @@ public class ContextualOutlierDetector{
     		numOutlierDetectionRunsWithTraining++;
     	}
     	
+    	
+    	
         List<Datum> outliers = new ArrayList<Datum>();
         if(or.getOutliers().size() != 0){
+        	//outlier explanation
+        	explainContextualOutliers(context,or,encoder);
+        	
+        	
         	for(DatumWithScore o: or.getOutliers()){
         		outliers.add(o.getDatum());
         	}
@@ -335,6 +346,65 @@ public class ContextualOutlierDetector{
         }
         
     }
+    
+    public void explainContextualOutliers(Context context, OutlierDetector.BatchResult or, DatumEncoder encoder){
+    	 if(encoder == null)
+    		 return;
+    	 FPGrowthEmerging fpg = new FPGrowthEmerging();
+    	 double minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
+         double minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
+         List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(or.getInliers(),
+                                                                         or.getOutliers(),
+                                                                         minSupport,
+                                                                         minOIRatio,
+                                                                         encoder);
+         
+         log.info("Context: " + context.print(encoder));
+     	 log.info("Number of Inliers: " +  or.getInliers().size());
+     	 log.info("Number of Outliers: " + or.getOutliers().size());
+     	 
+     	 log.info("Possible Explanations with minSupport " + minSupport + " and minOIRatio " +  minOIRatio + " : ");
+     	 for(ItemsetResult is: isr){
+     		StringBuilder sb = new StringBuilder();
+     		StringJoiner joiner = new StringJoiner("\n");
+     		is.getItems().stream()
+                .forEach(i -> joiner.add(String.format("\t%s: %s",
+                                                       i.getColumn(),
+                                                       i.getValue())));
+     		sb.append("\t" + " support: " + is.getSupport() + " oiRation: " + is.getRatioToInliers() + " explanation: " + joiner);
+     		log.info(sb.toString());
+     	 }
+     	 
+     	 
+     	 /*
+     	 //order the isr by their support
+         isr.sort(new Comparator<ItemsetResult>(){
+			@Override
+			public int compare(ItemsetResult o1, ItemsetResult o2) {
+				if(o1.getSupport() > o2.getSupport())
+					return 1;
+				else if(o1.getSupport() < o2.getSupport())
+					return -1;
+				else 
+					return 0;
+			}});
+         
+         
+         //order the isr by their OIRatio
+         isr.sort(new Comparator<ItemsetResult>(){
+ 			@Override
+ 			public int compare(ItemsetResult o1, ItemsetResult o2) {
+ 				if(o1.getRatioToInliers() > o2.getRatioToInliers())
+ 					return 1;
+ 				else if(o1.getRatioToInliers() < o2.getRatioToInliers())
+ 					return -1;
+ 				else
+ 					return 0;
+ 			}});
+          */
+         
+    }
+    
     /**
      * Every context stores its own detector
      * @return
