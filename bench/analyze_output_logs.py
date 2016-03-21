@@ -49,7 +49,10 @@ def parse_output_file(filename):
                 inliers = eval(inliers_line.split(": ")[1])
 
                 outliers_line = lines[i + 7]
-                outliers = eval(outliers_line.split(": ")[1])
+                try:
+                    outliers = eval(outliers_line.split(": ")[1])
+                except:
+                    continue
 
                 try:
                     [parameter_type, parameter_value] = \

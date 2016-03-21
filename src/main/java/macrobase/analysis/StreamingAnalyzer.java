@@ -135,9 +135,12 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         // Collect partial parameters from different threads
         List<Double> medians = new ArrayList<Double>();
+        System.out.print("Medians: ");
         for (int j = 0; j < numThreads; j++) {
+            System.out.print(perThreadMedians.get(j) + " ");
             medians.add(perThreadMedians.get(j));
         }
+        System.out.println("");
 
         // Combine partial parameters
         double approximateMedian = MAD.computeMean(medians);
@@ -145,13 +148,16 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         perThreadMADs.set(threadId, approximateMAD);
 
         List<Double> mads = new ArrayList<Double>();
+        System.out.print("MADS: ");
         for (int j = 0; j < numThreads; j++) {
+            System.out.print(perThreadMADs.get(j) + " ");
             mads.add(perThreadMADs.get(j));
         }
+        System.out.println("");
 
         // Set combined parameters
         madDetector.setMedian(approximateMedian);
-        madDetector.setMAD(MAD.computeMean(mads));
+        madDetector.setMAD(mads.get(threadId));
     }
 
     class RunnableStreamingAnalysis implements Runnable {
