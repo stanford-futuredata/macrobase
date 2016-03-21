@@ -31,6 +31,7 @@ public class MAD extends OutlierDetector {
 
     private final double trimmedMeanFallback = 0.05;
     private List<Datum> bufferedData;
+    private List<Double> residuals;
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
@@ -81,18 +82,11 @@ public class MAD extends OutlierDetector {
         log.trace("trained! localMedian is {}, MAD is {}", localMedian, MAD);
     }
 
-    public double getApproximateMAD(double approximateMedian) {
-        Timer.Context context = residualComputation.time();
-        List<Double> residuals = new ArrayList<>(bufferedData.size());
-        for (Datum d : bufferedData) {
-            residuals.add(Math.abs(d.getMetrics().getEntry(0) - approximateMedian));
-        }
-        context.stop();
+    public double getMAD(List<Double> residuals) {
+        Timer.Context context = residualMedianComputation.time();
+        double MAD = computeMedian(residuals);
 
-        context = residualMedianComputation.time();
-        double approximateMAD = computeMedian(residuals);
-
-        if (approximateMAD == 0) {
+        if (MAD == 0) {
             zeroMADs.inc();
             int lowerTrimmedMeanIndex = (int) (residuals.size() * trimmedMeanFallback);
             int upperTrimmedMeanIndex = (int) (residuals.size() * (1 - trimmedMeanFallback));
@@ -101,13 +95,23 @@ public class MAD extends OutlierDetector {
             for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
                 sum += residuals.get(i);
             }
-            approximateMAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
-            assert (approximateMAD != 0);
+            MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
+            assert (MAD != 0);
         }
 
         context.stop();
+        return MAD;
+    }
 
-        return approximateMAD;
+    public double getApproximateMAD(double approximateMedian) {
+        Timer.Context context = residualComputation.time();
+        residuals = new ArrayList<>(bufferedData.size());
+        for (Datum d : bufferedData) {
+            residuals.add(Math.abs(d.getMetrics().getEntry(0) - approximateMedian));
+        }
+        context.stop();
+
+        return getMAD(residuals);
     }
 
     public void setMedian(double median) {
@@ -116,6 +120,10 @@ public class MAD extends OutlierDetector {
 
     public void setMAD(double MAD) {
         this.MAD = MAD;
+    }
+
+    public List<Double> getResiduals() {
+        return residuals;
     }
 
     @Override

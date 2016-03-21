@@ -65,7 +65,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
     // For shared-parameter implementation of MAD
     private CopyOnWriteArrayList<Double> perThreadMedians;
-    private CopyOnWriteArrayList<Double> perThreadMADs;
+    private CopyOnWriteArrayList<List<Double>> perThreadResiduals;
 
     // For shared-parameter implementation of MCD
     private CopyOnWriteArrayList<Integer> perThreadNumSamples;
@@ -95,7 +95,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         endSemaphore = new Semaphore(0);
 
         perThreadMedians = new CopyOnWriteArrayList<Double>();
-        perThreadMADs = new CopyOnWriteArrayList<Double>();
+        perThreadResiduals = new CopyOnWriteArrayList<List<Double>>();
         perThreadNumSamples = new CopyOnWriteArrayList<Integer>();
         perThreadMeans = new CopyOnWriteArrayList<RealVector>();
         perThreadCovariances = new CopyOnWriteArrayList<RealMatrix>();
@@ -135,29 +135,22 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
         // Collect partial parameters from different threads
         List<Double> medians = new ArrayList<Double>();
-        System.out.print("Medians: ");
-        for (int j = 0; j < numThreads; j++) {
-            System.out.print(perThreadMedians.get(j) + " ");
-            medians.add(perThreadMedians.get(j));
-        }
-        System.out.println("");
 
         // Combine partial parameters
         double approximateMedian = MAD.computeMean(medians);
-        double approximateMAD = madDetector.getApproximateMAD(approximateMedian);
-        perThreadMADs.set(threadId, approximateMAD);
+        madDetector.getApproximateMAD(approximateMedian);
+        perThreadResiduals.set(threadId, madDetector.getResiduals());
 
-        List<Double> mads = new ArrayList<Double>();
-        System.out.print("MADS: ");
+        List<Double> residuals = new ArrayList<Double>();
         for (int j = 0; j < numThreads; j++) {
-            System.out.print(perThreadMADs.get(j) + " ");
-            mads.add(perThreadMADs.get(j));
+            for (int i = 0; i < perThreadResiduals.get(j).size(); i++) {
+                residuals.add(perThreadResiduals.get(j).get(i));
+            }
         }
-        System.out.println("");
 
         // Set combined parameters
         madDetector.setMedian(approximateMedian);
-        madDetector.setMAD(mads.get(threadId));
+        madDetector.setMAD(madDetector.getMAD(residuals));
     }
 
     class RunnableStreamingAnalysis implements Runnable {
@@ -268,7 +261,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
                             double approximateMedian = madDetector.getLocalMedian();
                             perThreadMedians.set(threadId, approximateMedian);
                             double approximateMAD = madDetector.getApproximateMAD(approximateMedian);
-                            perThreadMADs.set(threadId, approximateMAD);
+                            perThreadResiduals.set(threadId, madDetector.getResiduals());
 
                             // Set parameters for subsequent scoring
                             madDetector.setMedian(approximateMedian);
@@ -336,7 +329,7 @@ public class StreamingAnalyzer extends BaseAnalyzer {
         // Initialize shared data structures
         for (int i = 0; i < numThreads; i++) {
             perThreadMedians.add(0.0);
-            perThreadMADs.add(0.0);
+            perThreadResiduals.add(new ArrayList<Double>());
 
             perThreadCovariances.add(new Array2DRowRealMatrix());
             perThreadMeans.add(new ArrayRealVector());
