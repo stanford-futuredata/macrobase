@@ -115,7 +115,8 @@ public class MacroBaseConf extends Configuration {
         BINNED_KDE,
         TREE_KDE,
         MOVING_AVERAGE,
-        ARIMA
+        ARIMA,
+        BAYESIAN_NORMAL,
     }
 
     public Random getRandom() {
@@ -162,6 +163,9 @@ public class MacroBaseConf extends Configuration {
             case MOVING_AVERAGE:
                 log.info("Using Moving Average transform.");
                 return new MovingAverage(this);
+            case BAYESIAN_NORMAL:
+                log.info("Using Bayesian Normal transform.");
+                return new BayesianNormalDensity(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }
