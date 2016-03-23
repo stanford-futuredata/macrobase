@@ -40,9 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class StreamingAnalyzer extends BaseAnalyzer {
     private static final Logger log = LoggerFactory.getLogger(StreamingAnalyzer.class);
@@ -71,6 +69,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     private CopyOnWriteArrayList<Integer> perThreadNumSamples;
     private CopyOnWriteArrayList<RealVector> perThreadMeans;
     private CopyOnWriteArrayList<RealMatrix> perThreadCovariances;
+
+    private CyclicBarrier barrier;
 
     public StreamingAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         super(conf);
@@ -133,24 +133,36 @@ public class StreamingAnalyzer extends BaseAnalyzer {
     private void mergeMADParameters(MAD madDetector, int threadId) {
         perThreadMedians.set(threadId, madDetector.getLocalMedian());
 
-        // Collect partial parameters from different threads
-        List<Double> medians = new ArrayList<Double>();
+        try {
+            barrier.await();
 
-        // Combine partial parameters
-        double approximateMedian = MAD.computeMean(medians);
-        madDetector.getApproximateMAD(approximateMedian);
-        perThreadResiduals.set(threadId, madDetector.getResiduals());
-
-        List<Double> residuals = new ArrayList<Double>();
-        for (int j = 0; j < numThreads; j++) {
-            for (int i = 0; i < perThreadResiduals.get(j).size(); i++) {
-                residuals.add(perThreadResiduals.get(j).get(i));
+            // Collect partial parameters from different threads
+            List<Double> medians = new ArrayList<Double>();
+            for (int j = 0; j < numThreads; j++) {
+                medians.add(perThreadMedians.get(j));
             }
-        }
 
-        // Set combined parameters
-        madDetector.setMedian(approximateMedian);
-        madDetector.setMAD(madDetector.getMAD(residuals));
+            // Combine partial parameters
+            double approximateMedian = MAD.computeMean(medians);
+            perThreadResiduals.set(threadId, madDetector.computeResiduals(approximateMedian));
+
+            barrier.await();
+
+            List<Double> residuals = new ArrayList<Double>();
+            for (int j = 0; j < numThreads; j++) {
+                for (int i = 0; i < perThreadResiduals.get(j).size(); i++) {
+                    residuals.add(perThreadResiduals.get(j).get(i));
+                }
+            }
+
+            // Set combined parameters
+            madDetector.setMedian(approximateMedian);
+            madDetector.setMAD(madDetector.getMAD(residuals));
+        } catch (InterruptedException e) {
+            // Do something
+        } catch (BrokenBarrierException e) {
+            // Do something
+        }
     }
 
     class RunnableStreamingAnalysis implements Runnable {
@@ -260,12 +272,10 @@ public class StreamingAnalyzer extends BaseAnalyzer {
 
                             double approximateMedian = madDetector.getLocalMedian();
                             perThreadMedians.set(threadId, approximateMedian);
-                            double approximateMAD = madDetector.getApproximateMAD(approximateMedian);
-                            perThreadResiduals.set(threadId, madDetector.getResiduals());
+                            perThreadResiduals.set(threadId, madDetector.computeResiduals(approximateMedian));
 
                             // Set parameters for subsequent scoring
                             madDetector.setMedian(approximateMedian);
-                            madDetector.setMAD(approximateMAD);
                         }
 
                         for (Datum id : inputReservoir.getReservoir()) {
@@ -335,6 +345,8 @@ public class StreamingAnalyzer extends BaseAnalyzer {
             perThreadMeans.add(new ArrayRealVector());
             perThreadNumSamples.add(0);
         }
+
+        barrier = new CyclicBarrier(numThreads);
 
         // Want to measure time taken once data is loaded
         tsw.start();

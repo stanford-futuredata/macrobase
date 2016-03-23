@@ -31,7 +31,6 @@ public class MAD extends OutlierDetector {
 
     private final double trimmedMeanFallback = 0.05;
     private List<Datum> bufferedData;
-    private List<Double> residuals;
 
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
@@ -103,15 +102,15 @@ public class MAD extends OutlierDetector {
         return MAD;
     }
 
-    public double getApproximateMAD(double approximateMedian) {
+    public List<Double> computeResiduals(double approximateMedian) {
         Timer.Context context = residualComputation.time();
-        residuals = new ArrayList<>(bufferedData.size());
+        List<Double> residuals = new ArrayList<>(bufferedData.size());
         for (Datum d : bufferedData) {
             residuals.add(Math.abs(d.getMetrics().getEntry(0) - approximateMedian));
         }
         context.stop();
 
-        return getMAD(residuals);
+        return residuals;
     }
 
     public void setMedian(double median) {
@@ -120,10 +119,6 @@ public class MAD extends OutlierDetector {
 
     public void setMAD(double MAD) {
         this.MAD = MAD;
-    }
-
-    public List<Double> getResiduals() {
-        return residuals;
     }
 
     @Override
