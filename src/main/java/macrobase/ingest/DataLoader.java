@@ -4,6 +4,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
 import macrobase.ingest.transform.DataTransformation;
@@ -55,6 +56,7 @@ public abstract class DataLoader {
     		List<String> contextualDiscreteAttributes,
     		List<String> contextualDoubleAttributes)
             throws SQLException, IOException;
+
 
     public abstract RowSet getRows(String baseQuery,
                                    List<RowSetResource.RowSetRequest.RowRequestPair> preds,

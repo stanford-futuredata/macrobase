@@ -73,6 +73,7 @@ public class MacroBaseConf extends Configuration {
     
     public static final String CONTEXTUAL_ENABLED = "macrobase.analysis.contextual.enabled";
     public static final String CONTEXTUAL_API = "macrobase.analysis.contextual.api";
+    public static final String CONTEXTUAL_API_OUTLIER_PREDICATES = "macrobase.analysis.contextual.api.outlierPredicates";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";

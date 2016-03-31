@@ -250,8 +250,8 @@ public class ContextualOutlierDetector{
         	for(LatticeNode node: curLatticeNodes){
         		for(Context context: node.getDenseContexts()){
         			List<Datum> outliers = contextualOutlierDetection(data,context,zScore,encoder);
-        			if(outliers != null && outliers.contains(inputOutliers)){
-        	    		result.add(globalContext);
+        			if(outliers != null && outliers.containsAll(inputOutliers)){
+        	    		result.add(context);
         	    	}
         			numDenseContextsCurLevel++;
         		}

@@ -33,6 +33,7 @@ logging:
     
 macrobase.analysis.contextual.enabled: true
 macrobase.analysis.contextual.api: findContextsGivenOutlierPredicate
+macrobase.analysis.contextual.api.outlierPredicates: sex = Female
 macrobase.analysis.contextual.discreteAttributes: [income, sex, marital_status, age, education, occupation, time_live_in_sf_area, dual_income_if_married, persons_in_household, persons_in_household_under_18, householder_status, home_type, ethnic, language]
 macrobase.analysis.contextual.doubleAttributes: [income]
 macrobase.analysis.contextual.denseContextTau: 0.1000

@@ -46,9 +46,6 @@ public class BatchAnalyzer extends BaseAnalyzer {
     
     
     	
-    	
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    	
         
         if(contextualAPI.equals("findAllContextualOutliers")){
         		
@@ -64,21 +61,32 @@ public class BatchAnalyzer extends BaseAnalyzer {
         	
         }else if(contextualAPI.equals("findContextsGivenOutlierPredicate")){
         	System.out.println("[Contextual Outlier Detection]: Please specify outlier tuples using a predicate (e.g., userid = 1230 ");
-            String predicate = reader.readLine();
-            String[] splits = predicate.split(" = ");
+           
+            String[] splits = contextualAPIOutlierPredicates.split(" = ");
             String columnName = splits[0];
             String columnValue = splits[1];
-            int dimension = encoder.getAttributeDimension(columnName);
-            int integerEncoding = encoder.getIntegerEncoding(dimension, columnValue);
-        	
-        	
+            
+            int attributeIndex = attributes.indexOf(columnName);
+            int contextualDiscreteAttributeIndex = contextualDiscreteAttributes.indexOf(columnName);
+            
+           
         		
         	List<Datum> inputOutliers = new ArrayList<Datum>();	
         	for(Datum datum: data){
-        		int curValue = datum.getColumnValue(dimension);
-        		if( curValue == integerEncoding){
-        			inputOutliers.add(datum);
+        		
+        		
+        		if(attributeIndex != -1){
+        			int encodedValue = datum.getAttributes().get(attributeIndex);
+        			if ( encoder.getAttribute(encodedValue).getValue() .equals(columnValue)){
+        				inputOutliers.add(datum);
+        			}
+        		}else if(contextualDiscreteAttributeIndex != -1){
+        			int encodedValue = datum.getContextualDiscreteAttributes().get(contextualDiscreteAttributeIndex);
+        			if ( encoder.getAttribute(encodedValue).getValue() .equals(columnValue)){
+        				inputOutliers.add(datum);
+        			}
         		}
+        		
         	}
         	
         	
