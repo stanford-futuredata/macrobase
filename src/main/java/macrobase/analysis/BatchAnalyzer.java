@@ -37,24 +37,59 @@ public class BatchAnalyzer extends BaseAnalyzer {
     }
     
     public void contextualAnalyze() throws SQLException, IOException, ConfigurationException{
-    	
+    		
     	DataLoader loader = constructLoader();
     	DatumEncoder encoder = new DatumEncoder();
     	List<Datum> data = loader.getData(encoder,
     			contextualDiscreteAttributes,contextualDoubleAttributes);
-    	
-    	
-    	
     	ContextualOutlierDetector contextualDetector =	constructContextualDetector();
-    	contextualDetector.searchContextualOutliers(data, zScore,encoder);
-    	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
-        for(Context context: context2Outliers.keySet()){
-        	log.info("Context: " + context.print(encoder));
-        	log.info("Number of Inliers: " + (context.getSize() - context2Outliers.get(context).size()));
-        	log.info("Number of Outliers: " + context2Outliers.get(context).size());
-      
+    
+    
+    	
+    	
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    	
+        
+        if(contextualAPI.equals("findAllContextualOutliers")){
+        		
+        	
+        	contextualDetector.searchContextualOutliers(data, zScore,encoder);
+        	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
+            for(Context context: context2Outliers.keySet()){
+            	log.info("Context: " + context.print(encoder));
+            	log.info("Number of Inliers: " + (context.getSize() - context2Outliers.get(context).size()));
+            	log.info("Number of Outliers: " + context2Outliers.get(context).size());
+          
+            }
+        	
+        }else if(contextualAPI.equals("findContextsGivenOutlierPredicate")){
+        	System.out.println("[Contextual Outlier Detection]: Please specify outlier tuples using a predicate (e.g., userid = 1230 ");
+            String predicate = reader.readLine();
+            String[] splits = predicate.split(" = ");
+            String columnName = splits[0];
+            String columnValue = splits[1];
+            int dimension = encoder.getAttributeDimension(columnName);
+            int integerEncoding = encoder.getIntegerEncoding(dimension, columnValue);
+        	
+        	
+        		
+        	List<Datum> inputOutliers = new ArrayList<Datum>();	
+        	for(Datum datum: data){
+        		int curValue = datum.getColumnValue(dimension);
+        		if( curValue == integerEncoding){
+        			inputOutliers.add(datum);
+        		}
+        	}
+        	
+        	
+        	List<Context> contextsContainingInputOutliers = contextualDetector.searchContextGivenOutliers(data, zScore, encoder, inputOutliers);
+        	for(Context context: contextsContainingInputOutliers){
+        		log.info("Context: " + context.print(encoder));
+        		
+        	}
         }
-    	//explain the contextual outliers
+    	
+    	
     }
 
     public AnalysisResult analyze() throws SQLException, IOException, ConfigurationException {

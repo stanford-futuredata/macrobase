@@ -76,6 +76,14 @@ public class ContextualOutlierDetector{
     	return context2Outliers;
     }
     
+    
+    
+    /**
+     * Interface 1: search all contextual outliers
+     * @param data
+     * @param zScore
+     * @param encoder
+     */
     public void searchContextualOutliers(List<Datum> data, double zScore, DatumEncoder encoder){
     	
     	Stopwatch sw = Stopwatch.createUnstarted();
@@ -104,6 +112,8 @@ public class ContextualOutlierDetector{
     	List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
     	for(int level = 1; level <= totalContextualDimensions; level++){
 			
+    		if(level > 2)
+    			break;
     		
     		log.debug("Build {}-dimensional contexts on all attributes",level);
     		sw.start();
@@ -165,6 +175,115 @@ public class ContextualOutlierDetector{
     	
     	
     }
+    
+    /**
+     * Interface 2: Given some outliers, search contexts for which they are outliers
+     * @param data
+     * @param zScore
+     * @param encoder
+     * @param inputOutliers
+     */
+    public List<Context> searchContextGivenOutliers(List<Datum> data, double zScore, DatumEncoder encoder, List<Datum> inputOutliers){
+    	
+    	//result contexts that have the input outliers
+    	List<Context> result = new ArrayList<Context>();
+    	
+    	Stopwatch sw = Stopwatch.createUnstarted();
+    	
+    	log.debug("Find global context outliers on data num tuples: {} , MBs {} ",data.size());
+    	sw.start();
+    	
+    	HashSet<Datum> sample = randomSampling(data);
+        globalContext = new Context(sample);
+    	ContextPruning.data = data;
+    	ContextPruning.sample = sample;
+    	ContextPruning.alpha = 0.05;
+    	
+    	
+        List<Datum> globalOutliers = contextualOutlierDetection(data,globalContext,zScore, encoder);
+    	if(globalOutliers != null && globalOutliers.contains(inputOutliers)){
+    		result.add(globalContext);
+    	}
+        
+        
+    	sw.stop();
+    	long globalOutlierDetecionTime = sw.elapsed(TimeUnit.MILLISECONDS);
+    	sw.reset();
+    	log.debug("Done global context outlier remaining data size {} : (duration: {}ms)", data.size(),globalOutlierDetecionTime);
+    	
+    	
+    	
+    	List<LatticeNode> preLatticeNodes = new ArrayList<LatticeNode>();
+    	List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
+    	for(int level = 1; level <= totalContextualDimensions; level++){
+			
+    		if(level > 2)
+    			break;
+    		
+    		log.debug("Build {}-dimensional contexts on all attributes",level);
+    		sw.start();
+    		if(level == 1){
+    			curLatticeNodes = buildOneDimensionalLatticeNodesGivenOutliers(data, inputOutliers);
+        	}else{
+        		curLatticeNodes = levelUpLattice(preLatticeNodes, data);	
+        	}
+    		sw.stop();
+    		long latticeNodesBuildTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
+    		sw.reset();
+        	log.debug("Done building {}-dimensional contexts on all attributes (duration: {}ms)", level,latticeNodesBuildTimeCurLevel);
+        	
+        	
+        	
+        	
+        	log.debug("Memory Usage: {}", checkMemoryUsage());
+    		
+    		if(curLatticeNodes.size() == 0){
+    			log.debug("No more dense contexts, thus no need to level up anymore");
+    			break;
+    		}
+    			
+    		
+        	log.debug("Find {}-dimensional contextual outliers",level);
+        	sw.start();
+        	int numDenseContextsCurLevel = 0;
+        	//run contextual outlier detection
+        	for(LatticeNode node: curLatticeNodes){
+        		for(Context context: node.getDenseContexts()){
+        			List<Datum> outliers = contextualOutlierDetection(data,context,zScore,encoder);
+        			if(outliers != null && outliers.contains(inputOutliers)){
+        	    		result.add(globalContext);
+        	    	}
+        			numDenseContextsCurLevel++;
+        		}
+        	}
+        	sw.stop();
+        	long contextualOutlierDetectionTimeCurLevel = sw.elapsed(TimeUnit.MILLISECONDS);
+        	sw.reset();
+        	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
+        	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
+        	log.debug("Done Find {}-dimensional contextual outliers, Context Pruning: {}", level,ContextPruning.print());
+            log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, numOutlierDetectionRunsWithoutTraining: {},  numOutlierDetectionRunsWithTraining: {}", level,densityPruning2,numOutlierDetectionRunsWithoutTraining,numOutlierDetectionRunsWithTraining);
+            log.debug("----------------------------------------------------------");
+
+        	
+            //free up memory 
+        	if(level >= 2){
+        		for(LatticeNode node: preLatticeNodes){
+        			for(Context context: node.getDenseContexts()){
+        				context2BitSet.remove(context);
+        			}
+        		}
+        	}
+        	
+        	
+			preLatticeNodes = curLatticeNodes;
+			
+			
+		}
+    	return result;
+    }
+    
+    
     
     private HashSet<Datum> randomSampling(List<Datum> data){
     	
@@ -286,7 +405,7 @@ public class ContextualOutlierDetector{
      * @param zScore
      * @return
      */
-    public void contextualOutlierDetection(List<Datum> data, Context context, double zScore, DatumEncoder encoder){
+    public List<Datum> contextualOutlierDetection(List<Datum> data, Context context, double zScore, DatumEncoder encoder){
     	
     
     	
@@ -306,7 +425,7 @@ public class ContextualOutlierDetector{
     	double realDensity = (double)contextualData.size() / data.size();
     	if(realDensity < denseContextTau){
     		densityPruning2++;
-    		return;
+    		return null;
     	}
     	
     
@@ -344,6 +463,8 @@ public class ContextualOutlierDetector{
         	}
         	 context2Outliers.put(context, outliers);
         }
+        
+        return outliers;
         
     }
     
@@ -461,7 +582,7 @@ public class ContextualOutlierDetector{
 				
 		for(int dimension = 0; dimension < totalContextualDimensions; dimension++){
 			LatticeNode ss = new LatticeNode(dimension);
-			List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2Data(data, dimension);
+			List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2Data(data, dimension, denseContextTau);
 			for(Context denseContext: denseContexts){
 				ss.addDenseContext(denseContext);
 				log.debug(denseContext.toString());
@@ -472,6 +593,23 @@ public class ContextualOutlierDetector{
 		return latticeNodes;
 	}
 	
+
+	private List<LatticeNode> buildOneDimensionalLatticeNodesGivenOutliers(List<Datum> data, List<Datum> inputOutliers){
+		//create subspaces
+		List<LatticeNode> latticeNodes = new ArrayList<LatticeNode>();
+				
+		for(int dimension = 0; dimension < totalContextualDimensions; dimension++){
+			LatticeNode ss = new LatticeNode(dimension);
+			List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2DataGivenOutliers(data, dimension, inputOutliers);
+			for(Context denseContext: denseContexts){
+				ss.addDenseContext(denseContext);
+				log.debug(denseContext.toString());
+			}
+			latticeNodes.add(ss);
+		}
+		
+		return latticeNodes;
+	}
 	
 	/**
 	 * Initialize one dimensional dense contexts
@@ -571,7 +709,7 @@ public class ContextualOutlierDetector{
 	 * @param dimension
 	 * @return
 	 */
-	private List<Context> initOneDimensionalDenseContextsAndContext2Data(List<Datum> data, int dimension){
+	private List<Context> initOneDimensionalDenseContextsAndContext2Data(List<Datum> data, int dimension, double curDensityThreshold){
 		int discreteDimensions = contextualDiscreteAttributes.size();
 		
 		
@@ -593,7 +731,7 @@ public class ContextualOutlierDetector{
 			}
 			for(Integer value: distinctValue2Data.keySet()){
 				//boolean denseContext = !ContextPruning.densityPruning(data.size(), distinctValue2Count.get(value), denseContextTau);
-				boolean denseContext = ( (double) distinctValue2Data.get(value).size() / data.size() >= denseContextTau)?true:false;
+				boolean denseContext = ( (double) distinctValue2Data.get(value).size() / data.size() >= curDensityThreshold)?true:false;
 				if(denseContext){
 					Interval interval = new IntervalDiscrete(dimension,contextualDiscreteAttributes.get(dimension),value);
 					Context context = new Context(dimension, interval, globalContext);
@@ -651,7 +789,7 @@ public class ContextualOutlierDetector{
 			}
 			for(Interval interval: interval2Data.keySet()){
 				//boolean denseContext =!ContextPruning.densityPruning(data.size(), interval2Count.get(interval), denseContextTau);
-				boolean denseContext = ( (double) interval2Data.get(interval).size() / data.size() >= denseContextTau)?true:false;
+				boolean denseContext = ( (double) interval2Data.get(interval).size() / data.size() >= curDensityThreshold)?true:false;
 				if(denseContext){
 					Context context = new Context(dimension, interval,globalContext);
 					result.add(context);
@@ -667,6 +805,34 @@ public class ContextualOutlierDetector{
 		
 		return result;
 	}
+
+	
+	private List<Context> initOneDimensionalDenseContextsAndContext2DataGivenOutliers(List<Datum> data, int dimension, List<Datum> inputOutliers){
+		List<Context> contextsContainingOutliers = initOneDimensionalDenseContextsAndContext2Data(inputOutliers,dimension, 1.0);
+		
+		List<Context> result = new ArrayList<Context>();
+		
+		//re-initialize context2Bitset
+		for(Context context: contextsContainingOutliers){
+			List<Integer> temp = new ArrayList<Integer>();
+			for(int i = 0; i < data.size(); i++){
+				Datum datum = data.get(i);
+				if(context.containDatum(datum)){
+					temp.add(i);
+				}
+			}
+			boolean denseContext = ( (double) temp.size() / data.size() >= denseContextTau)?true:false;
+			if(denseContext){
+				BitSet bs = indexes2BitSet(temp,data.size());
+				context2BitSet.put(context, bs);
+				result.add(context);
+			}
+			
+		}
+		return result;
+	}
+	
+	
 	//trade memory for efficiency
 	//private Map<Context,HashSet<Datum>> context2Data = new HashMap<Context,HashSet<Datum>>();
 	private Map<Context,BitSet> context2BitSet = new HashMap<Context,BitSet>();
@@ -691,4 +857,6 @@ public class ContextualOutlierDetector{
 		return indexes;
 	}
     
+	
+	
 }

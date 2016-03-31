@@ -63,4 +63,16 @@ public class Datum implements HasMetrics {
     	return contextualDoubleAttributes;
     }
     
+    public Integer getColumnValue(int dimension){
+    	if(dimension <= attributes.size()){
+    		return attributes.get(dimension - 1); 
+    	}else if(dimension > attributes.size() + metrics.getDimension() && 
+    			dimension <= attributes.size() + metrics.getDimension() + contextualDiscreteAttributes.size()){
+    		int index = dimension - attributes.size() - metrics.getDimension() - 1;
+    		return contextualDiscreteAttributes.get(index);
+    	}else{
+    		return -1;
+    	}
+    }
+    
 }

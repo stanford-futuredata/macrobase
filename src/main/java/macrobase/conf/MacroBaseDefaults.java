@@ -65,6 +65,7 @@ public class MacroBaseDefaults {
     public static final String DB_URL = "localhost";
     
     public static final Boolean CONTEXTUAL_ENABLED = false;
+    public static final String CONTEXTUAL_API = "findAllContextualOutliers";
     public static final Double CONTEXTUAL_DENSECONTEXTTAU = 0.5;
     public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
     public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();

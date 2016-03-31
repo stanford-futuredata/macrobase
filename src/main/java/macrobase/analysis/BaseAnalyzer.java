@@ -44,6 +44,7 @@ public class BaseAnalyzer {
     
     
     protected final boolean contextualEnabled;
+    protected final String contextualAPI;
     protected final List<String> contextualDiscreteAttributes;
     protected final List<String> contextualDoubleAttributes;
     protected final Double contextualDenseContextTau;
@@ -74,6 +75,7 @@ public class BaseAnalyzer {
     
     
         contextualEnabled = conf.getBoolean(MacroBaseConf.CONTEXTUAL_ENABLED, MacroBaseDefaults.CONTEXTUAL_ENABLED);
+        contextualAPI = conf.getString(MacroBaseConf.CONTEXTUAL_API,MacroBaseDefaults.CONTEXTUAL_API);
         contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
         contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
         contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);

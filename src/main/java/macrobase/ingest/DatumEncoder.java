@@ -44,6 +44,15 @@ public class DatumEncoder {
     public void recordAttributeName(int dimension, String attribute) {
         attributeDimensionNameMap.put(dimension, attribute);
     }
+    
+    public Integer getAttributeDimension(String attributeName){
+    	for(Integer i: attributeDimensionNameMap.keySet()){
+    		if(attributeDimensionNameMap.get(i).equals(attributeName)){
+    			return i;
+    		}
+    	}
+    	return -1;
+    }
 
     public ColumnValue getAttribute(int encodedAttr) {
         int matchingColumn = integerToColumn.get(encodedAttr);
