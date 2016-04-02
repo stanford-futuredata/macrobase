@@ -202,7 +202,7 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
     	console.log("PGSTRURL:"+ configService.getPostgresUrl())
     }
 
-	$http.put("http://localhost:8080/api/schema",
+	$http.put("api/schema",
 	    {
     	        pgUrl: configService.getPostgresUrl(),
     	        baseQuery: configService.getBaseQuery() })
@@ -290,7 +290,7 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
         configService.clearAnalysis();
         $scope.analyzeStr = "Analyzing..."
 
-	$http.post("http://localhost:8080/api/analyze",
+	$http.post("api/analyze",
 	    {
     	        pgUrl: configService.getPostgresUrl(),
     	        baseQuery: configService.getBaseQuery(),
@@ -416,7 +416,7 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 	}
 	 
 
-	$http.post("http://localhost:8080/api/rows",
+	$http.post("api/rows",
 	    {
     	        pgUrl: configService.getPostgresUrl(),
                 baseQuery: configService.getBaseQuery(),
