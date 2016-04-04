@@ -311,14 +311,14 @@ The following are contextual outlier detection-specific parameters.
   <td><code>macrobase.analysis.contextual.api</code></td>
   <td><code>findAllContextualOutliers</code></td>
   <td>
-  How to invoke contextual outlier detection. Default value is to find all contextual outliers. The value could also be findContextsGivenOutlierPredicate, in which case, we only find contexts that contain the specified tuples
+  How to invoke contextual outlier detection. Default value is to find all contextual outliers. The value could also be <code>findContextsGivenOutlierPredicate</code>, in which case, we only find contexts that contain the specified tuples
   </td>
 </tr>
 <tr>
   <td><code>macrobase.analysis.contextual.api.outlierPredicates</code></td>
-  <td><code></code></td>
+  <td><code>(none)</code></td>
   <td>
-  Specifiy the outlier tuples, for which we are looking for contexts where they are outliers
+  Specifiy the outlier tuples, for which we are looking for contexts where they are outliers (e.g., userid = 100 )
   </td>
 </tr>
 <tr>
