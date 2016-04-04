@@ -307,4 +307,25 @@ The following are contextual outlier detection-specific parameters.
   The number of intervals for a double contextual attribute to be discretized into. Right now, it is equal width, i.e., every interval covers (max - min) / numInterval
   </td>
 </tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.api</code></td>
+  <td><code>findAllContextualOutliers</code></td>
+  <td>
+  How to invoke contextual outlier detection. Default value is to find all contextual outliers. The value could also be findContextsGivenOutlierPredicate, in which case, we only find contexts that contain the specified tuples
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.api.outlierPredicates</code></td>
+  <td><code></code></td>
+  <td>
+  Specifiy the outlier tuples, for which we are looking for contexts where they are outliers
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.maxPredicates</code></td>
+  <td><code>Integer.MAX_VALUE</code></td>
+  <td>
+  The maximum number of predicates we allow in a context. Default value is has no limit. This parameter has effect on the running time
+  </td>
+</tr>
 </table>
