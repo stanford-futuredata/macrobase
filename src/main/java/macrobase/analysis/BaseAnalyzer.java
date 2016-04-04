@@ -50,6 +50,7 @@ public class BaseAnalyzer {
     protected final List<String> contextualDoubleAttributes;
     protected final Double contextualDenseContextTau;
     protected final Integer contextualNumIntervals;
+    protected final Integer contextualMaxPredicates;
 
     public BaseAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
@@ -82,6 +83,7 @@ public class BaseAnalyzer {
         contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
         contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
         contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
+        contextualMaxPredicates = conf.getInt(MacroBaseConf.CONTEXTUAL_MAX_PREDICATES,MacroBaseDefaults.CONTEXTUAL_MAX_PREDICATES);
     }
 
     public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {

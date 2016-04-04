@@ -51,7 +51,7 @@ public class ContextualOutlierDetector{
     
     private double denseContextTau;
     private int numIntervals;
-    
+    private int maxPredicates;
     //This is the outliers detected for every dense context
     //could've stored Context,OutlierDetector.BatchResult, but waste a lot of memory
     private Map<Context,List<Datum>> context2Outliers = new HashMap<Context,List<Datum>>();
@@ -68,7 +68,9 @@ public class ContextualOutlierDetector{
     	this.denseContextTau = denseContextTau;
     	this.numIntervals = numIntervals;
     	
-    	totalContextualDimensions = contextualDiscreteAttributes.size() + contextualDoubleAttributes.size();
+    	this.maxPredicates = conf.getInt(MacroBaseConf.CONTEXTUAL_MAX_PREDICATES,MacroBaseDefaults.CONTEXTUAL_MAX_PREDICATES);
+    	
+    	this.totalContextualDimensions = contextualDiscreteAttributes.size() + contextualDoubleAttributes.size();
     	log.debug("There are {} contextualDiscreteAttributes, and {} contextualDoubleAttributes" , contextualDiscreteAttributes.size(),contextualDoubleAttributes.size());
     }
     
@@ -112,7 +114,7 @@ public class ContextualOutlierDetector{
     	List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
     	for(int level = 1; level <= totalContextualDimensions; level++){
 			
-    		if(level > 2)
+    		if(level > maxPredicates)
     			break;
     		
     		log.debug("Build {}-dimensional contexts on all attributes",level);
@@ -217,7 +219,7 @@ public class ContextualOutlierDetector{
     	List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
     	for(int level = 1; level <= totalContextualDimensions; level++){
 			
-    		if(level > 2)
+    		if(level > maxPredicates)
     			break;
     		
     		log.debug("Build {}-dimensional contexts on all attributes",level);

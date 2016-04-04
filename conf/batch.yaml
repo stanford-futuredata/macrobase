@@ -38,4 +38,5 @@ macrobase.analysis.contextual.discreteAttributes: [income, sex, marital_status, 
 macrobase.analysis.contextual.doubleAttributes: [income]
 macrobase.analysis.contextual.denseContextTau: 0.1000
 macrobase.analysis.contextual.numIntervals: 10
+macrobase.analysis.contextual.maxPredicates: 2
 

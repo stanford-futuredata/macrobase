@@ -49,7 +49,6 @@ public class BatchAnalyzer extends BaseAnalyzer {
         
         if(contextualAPI.equals("findAllContextualOutliers")){
         		
-        	
         	contextualDetector.searchContextualOutliers(data, zScore,encoder);
         	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
             for(Context context: context2Outliers.keySet()){
@@ -60,8 +59,7 @@ public class BatchAnalyzer extends BaseAnalyzer {
             }
         	
         }else if(contextualAPI.equals("findContextsGivenOutlierPredicate")){
-        	System.out.println("[Contextual Outlier Detection]: Please specify outlier tuples using a predicate (e.g., userid = 1230 ");
-           
+        	 
             String[] splits = contextualAPIOutlierPredicates.split(" = ");
             String columnName = splits[0];
             String columnValue = splits[1];

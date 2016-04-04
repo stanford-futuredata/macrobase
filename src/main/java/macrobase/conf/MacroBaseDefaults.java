@@ -71,4 +71,5 @@ public class MacroBaseDefaults {
     public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
     public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
     public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
+    public static final Integer CONTEXTUAL_MAX_PREDICATES = Integer.MAX_VALUE;
 }
