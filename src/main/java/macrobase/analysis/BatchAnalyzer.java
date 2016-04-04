@@ -89,8 +89,9 @@ public class BatchAnalyzer extends BaseAnalyzer {
         	
         	
         	List<Context> contextsContainingInputOutliers = contextualDetector.searchContextGivenOutliers(data, zScore, encoder, inputOutliers);
+        	log.info("There are {} contexts that contain the input outliers", contextsContainingInputOutliers.size());
         	for(Context context: contextsContainingInputOutliers){
-        		log.info("Context: " + context.print(encoder));
+        		log.info("\tContext: " + context.print(encoder));
         		
         	}
         }
