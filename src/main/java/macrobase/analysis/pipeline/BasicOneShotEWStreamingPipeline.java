@@ -46,8 +46,8 @@ public class BasicOneShotEWStreamingPipeline extends OneShotPipeline {
                  totalMs,
                  (result.getNumInliers()+result.getNumOutliers())/(double)totalMs*1000);
 
-        return new AnalysisResult(result.getNumInliers(),
-                                  result.getNumOutliers(),
+        return new AnalysisResult(result.getNumOutliers(),
+                                  result.getNumInliers(),
                                   loadMs,
                                   executeMs,
                                   summarizeMs,
