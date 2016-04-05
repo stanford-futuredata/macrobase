@@ -37,7 +37,8 @@ default_args = {
   "macrobase.analysis.mcd.stoppingDelta": 0.001,
   
   "macrobase.analysis.contextual.denseContextTau": 0.1,
-  "macrobase.analysis.contextual.numIntervals": 10
+  "macrobase.analysis.contextual.numIntervals": 10,
+  
 }
 
 
@@ -143,6 +144,10 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
     conf_file = os.path.join(sub_dir, conf_file)
+    
+    #create 
+    config_parameters["macrobase.analysis.contextual.outputFile"] = os.path.join(sub_dir, "output.txt")
+    
     create_config_file(config_parameters, conf_file)
     cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
 
