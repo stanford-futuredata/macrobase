@@ -51,6 +51,7 @@ public class BaseAnalyzer {
     protected final Double contextualDenseContextTau;
     protected final Integer contextualNumIntervals;
     protected final Integer contextualMaxPredicates;
+    protected final String contextualOutputFile;
 
     public BaseAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
@@ -84,6 +85,7 @@ public class BaseAnalyzer {
         contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
         contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
         contextualMaxPredicates = conf.getInt(MacroBaseConf.CONTEXTUAL_MAX_PREDICATES,MacroBaseDefaults.CONTEXTUAL_MAX_PREDICATES);
+        contextualOutputFile = conf.getString(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,MacroBaseDefaults.CONTEXTUAL_OUTPUT_FILE);
     }
 
     public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {

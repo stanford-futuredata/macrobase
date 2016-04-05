@@ -152,7 +152,8 @@ public class BatchAnalyzerTest {
                 .set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
                 .set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1","C2"))
                 .set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
-                .set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10);
+                .set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10)
+                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,"temp.txt");
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 

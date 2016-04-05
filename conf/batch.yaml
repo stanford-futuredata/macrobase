@@ -39,4 +39,4 @@ macrobase.analysis.contextual.doubleAttributes: [income]
 macrobase.analysis.contextual.denseContextTau: 0.1000
 macrobase.analysis.contextual.numIntervals: 10
 macrobase.analysis.contextual.maxPredicates: 2
-
+macrobase.analysis.contextual.outputFile: temp.txt

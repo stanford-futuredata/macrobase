@@ -328,4 +328,11 @@ The following are contextual outlier detection-specific parameters.
   The maximum number of predicates we allow in a context. Default value is has no limit. This parameter has effect on the running time
   </td>
 </tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.outputFile</code></td>
+  <td><code>(none)</code></td>
+  <td>
+  The output file of the result of contextual outlier detection. Default is output to the console if no output file is specified
+  </td>
+</tr>
 </table>

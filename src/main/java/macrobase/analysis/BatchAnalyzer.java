@@ -51,12 +51,23 @@ public class BatchAnalyzer extends BaseAnalyzer {
         		
         	contextualDetector.searchContextualOutliers(data, zScore,encoder);
         	Map<Context,List<Datum>> context2Outliers = contextualDetector.getContextualOutliers();
-            for(Context context: context2Outliers.keySet()){
-            	log.info("Context: " + context.print(encoder));
-            	log.info("Number of Inliers: " + (context.getSize() - context2Outliers.get(context).size()));
-            	log.info("Number of Outliers: " + context2Outliers.get(context).size());
+        	
+        	if(contextualOutputFile == null){
+	    		  for(Context context: context2Outliers.keySet()){
+	              	log.info("Context: " + context.print(encoder));
+	              	log.info("Number of Inliers: " + (context.getSize() - context2Outliers.get(context).size()));
+	              	log.info("Number of Outliers: " + context2Outliers.get(context).size());
+	              }
+        	}else{
+        		PrintWriter out = new PrintWriter(new FileWriter(contextualOutputFile));
+        		 for(Context context: context2Outliers.keySet()){
+ 	              	out.println("Context: " + context.print(encoder));
+ 	              	out.println("\tNumber of Inliers: " + (context.getSize() - context2Outliers.get(context).size()));
+ 	              	out.println("\tNumber of Outliers: " + context2Outliers.get(context).size());
+ 	              }
+        		 out.close();
+        	}
           
-            }
         	
         }else if(contextualAPI.equals("findContextsGivenOutlierPredicate")){
         	 
@@ -89,11 +100,23 @@ public class BatchAnalyzer extends BaseAnalyzer {
         	
         	
         	List<Context> contextsContainingInputOutliers = contextualDetector.searchContextGivenOutliers(data, zScore, encoder, inputOutliers);
-        	log.info("There are {} contexts that contain the input outliers", contextsContainingInputOutliers.size());
-        	for(Context context: contextsContainingInputOutliers){
-        		log.info("\tContext: " + context.print(encoder));
-        		
+        	
+        	if(contextualOutputFile == null){
+        		log.info("There are {} contexts that contain the input outliers", contextsContainingInputOutliers.size());
+            	for(Context context: contextsContainingInputOutliers){
+            		log.info("\tContext: " + context.print(encoder));
+            		
+            	}
+        	}else{
+        		PrintWriter out = new PrintWriter(new FileWriter(contextualOutputFile));
+        		out.println("There are " + contextsContainingInputOutliers.size() + " contexts that contain the input outliers");
+        		for(Context context: contextsContainingInputOutliers){
+            		out.println("\tContext: " + context.print(encoder));
+            		
+            	}
+       		 	out.close();
         	}
+        	
         }
     	
     	

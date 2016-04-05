@@ -79,6 +79,7 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
     public static final String CONTEXTUAL_MAX_PREDICATES = "macrobase.analysis.contextual.maxPredicates";
+    public static final String CONTEXTUAL_OUTPUT_FILE = "macrobase.analysis.contextual.outputFile";
     public enum DetectorType {
         MAD_OR_MCD,
         MAD,
