@@ -156,7 +156,14 @@ public class ContextualOutlierDetector{
         	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, Context Pruning: {}", level,ContextPruning.print());
-            log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, numOutlierDetectionRunsWithoutTraining: {},  numOutlierDetectionRunsWithTraining: {}", level,densityPruning2,numOutlierDetectionRunsWithoutTraining,numOutlierDetectionRunsWithTraining);
+            log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, "
+            		+ "numOutlierDetectionRunsWithoutTrainingWithoutScoring: {},  "
+            		+ "numOutlierDetectionRunsWithoutTrainingWithScoring: {},  "
+            		+ "numOutlierDetectionRunsWithTrainingWithScoring: {}", 
+            		level,densityPruning2,
+            		numOutlierDetectionRunsWithoutTrainingWithoutScoring,
+            		numOutlierDetectionRunsWithoutTrainingWithScoring,
+            		numOutlierDetectionRunsWithTrainingWithScoring);
             log.debug("----------------------------------------------------------");
 
         	
@@ -264,9 +271,16 @@ public class ContextualOutlierDetector{
         	log.debug("Done Find {}-dimensional contextual outliers (duration: {}ms)", level, contextualOutlierDetectionTimeCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, there are {} dense contexts(average duration per context: {}ms)", level, numDenseContextsCurLevel,(numDenseContextsCurLevel == 0)?0:contextualOutlierDetectionTimeCurLevel/numDenseContextsCurLevel);
         	log.debug("Done Find {}-dimensional contextual outliers, Context Pruning: {}", level,ContextPruning.print());
-            log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, numOutlierDetectionRunsWithoutTraining: {},  numOutlierDetectionRunsWithTraining: {}", level,densityPruning2,numOutlierDetectionRunsWithoutTraining,numOutlierDetectionRunsWithTraining);
-            log.debug("----------------------------------------------------------");
-
+        	log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, "
+            		+ "numOutlierDetectionRunsWithoutTrainingWithoutScoring: {},  "
+            		+ "numOutlierDetectionRunsWithoutTrainingWithScoring: {},  "
+            		+ "numOutlierDetectionRunsWithTrainingWithScoring: {}", 
+            		level,densityPruning2,
+            		numOutlierDetectionRunsWithoutTrainingWithoutScoring,
+            		numOutlierDetectionRunsWithoutTrainingWithScoring,
+            		numOutlierDetectionRunsWithTrainingWithScoring);
+            log.debug("----------------------------------------------------------");       
+            
         	
             //free up memory 
         	if(level >= 2){
@@ -397,8 +411,9 @@ public class ContextualOutlierDetector{
 	
 	
     private int densityPruning2 = 0;
-    private int numOutlierDetectionRunsWithoutTraining = 0;
-    private int numOutlierDetectionRunsWithTraining = 0;
+    private int numOutlierDetectionRunsWithoutTrainingWithoutScoring = 0;
+    private int numOutlierDetectionRunsWithoutTrainingWithScoring = 0;
+    private int numOutlierDetectionRunsWithTrainingWithScoring = 0;
     /**
      * Run outlier detection algorithm on contextual data
      * The algorithm has to use zScore in contextual outlier detection
@@ -416,48 +431,91 @@ public class ContextualOutlierDetector{
     	//context2Data.put(context, contextualData);
     	BitSet bs = context.getContextualBitSet(data,context2BitSet);
     	context2BitSet.put(context, bs);
-    	List<Integer> indexes = bitSet2Indexes(bs);
-    	List<Datum> contextualData = new ArrayList<Datum>();
-    	for(Integer index: indexes){
-    		contextualData.add(data.get(index));
-    	}
-    	context.setSize(contextualData.size());
-    			
-    	//Just did density estimation before
-    	double realDensity = (double)contextualData.size() / data.size();
-    	if(realDensity < denseContextTau){
-    		densityPruning2++;
-    		return null;
-    	}
     	
-    
     	Context p1 = (context.getParents().size() > 0)?context.getParents().get(0):null;
     	Context p2 = (context.getParents().size() > 1)?context.getParents().get(1):null;
     	
     	if(p1 != null && ContextPruning.sameDistribution(context, p1)){
+    		//training
     		context.setDetector(p1.getDetector());
-    		or = context.getDetector().classifyBatchByZScoreEquivalentWithoutTraining(new ArrayList<Datum>(contextualData), zScore);
-    		numOutlierDetectionRunsWithoutTraining++;
+
+    		//scoring
+    		if(!context2Outliers.containsKey(p1)){
+    			//parent does not contain outliers
+    			numOutlierDetectionRunsWithoutTrainingWithoutScoring++;
+    		}else{
+    			List<Integer> indexes = bitSet2Indexes(bs);
+            	List<Datum> contextualData = new ArrayList<Datum>();
+            	for(Integer index: indexes){
+            		contextualData.add(data.get(index));
+            	}
+            	context.setSize(contextualData.size());
+            			
+            	//Just did density estimation before
+            	double realDensity = (double)contextualData.size() / data.size();
+            	if(realDensity < denseContextTau){
+            		densityPruning2++;
+            		return null;
+            	}
+            	or = context.getDetector().classifyBatchByZScoreEquivalentWithoutTraining(new ArrayList<Datum>(contextualData), zScore);
+        		numOutlierDetectionRunsWithoutTrainingWithScoring++;
+    		}
+        	
     	}else if(p2 != null && ContextPruning.sameDistribution(context, p2)){
+    		
+    		//training
     		context.setDetector(p2.getDetector());
-    		or = context.getDetector().classifyBatchByZScoreEquivalentWithoutTraining(new ArrayList<Datum>(contextualData), zScore);
-    		numOutlierDetectionRunsWithoutTraining++;
+    		
+    		//scoring
+    		if(!context2Outliers.containsKey(p2)){
+    			//parent does not contain outliers
+    			numOutlierDetectionRunsWithoutTrainingWithoutScoring++;
+    		}else{
+    			List<Integer> indexes = bitSet2Indexes(bs);
+            	List<Datum> contextualData = new ArrayList<Datum>();
+            	for(Integer index: indexes){
+            		contextualData.add(data.get(index));
+            	}
+            	context.setSize(contextualData.size());
+            			
+            	//Just did density estimation before
+            	double realDensity = (double)contextualData.size() / data.size();
+            	if(realDensity < denseContextTau){
+            		densityPruning2++;
+            		return null;
+            	}
+        		or = context.getDetector().classifyBatchByZScoreEquivalentWithoutTraining(new ArrayList<Datum>(contextualData), zScore);
+        		numOutlierDetectionRunsWithoutTrainingWithScoring++;
+    		}
+        	
     	}else{
+    		
+    		//training
     		try {
 				context.setDetector(constructDetector());
 			} catch (ConfigurationException e) {
 				e.printStackTrace();
 			}
+    		
+    		//scoring
+    		List<Integer> indexes = bitSet2Indexes(bs);
+        	List<Datum> contextualData = new ArrayList<Datum>();
+        	for(Integer index: indexes){
+        		contextualData.add(data.get(index));
+        	}
+        	context.setSize(contextualData.size());
+        	
+        	
     		or = context.getDetector().classifyBatchByZScoreEquivalent(new ArrayList<Datum>(contextualData), zScore);
-    		numOutlierDetectionRunsWithTraining++;
+    		numOutlierDetectionRunsWithTrainingWithScoring++;
     	}
     	
     	
     	
         List<Datum> outliers = new ArrayList<Datum>();
-        if(or.getOutliers().size() != 0){
+        if(or != null && or.getOutliers().size() != 0){
         	//outlier explanation
-        	explainContextualOutliers(context,or,encoder);
+        	//explainContextualOutliers(context,or,encoder);
         	
         	
         	for(DatumWithScore o: or.getOutliers()){
