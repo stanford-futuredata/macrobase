@@ -309,7 +309,7 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
             $scope.numOutliers = response.data.numOutliers
             $scope.numInliers = response.data.numInliers
             $scope.loadTime = response.data.loadTime
-            $scope.executionTime = response.data.executionTime
+            $scope.executionTime = response.data.labelTime
             $scope.summarizationTime = response.data.summarizationTime
             $scope.itemsets = response.data.itemSets
 
