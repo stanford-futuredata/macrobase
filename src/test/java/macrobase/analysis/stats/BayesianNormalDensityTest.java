@@ -19,7 +19,7 @@ import java.util.Random;
 import static junit.framework.TestCase.assertEquals;
 
 public class BayesianNormalDensityTest {
-    private static final Logger log = LoggerFactory.getLogger(BayesianNormalDensity.class);
+    private static final Logger log = LoggerFactory.getLogger(BayesianNormalDensityTest.class);
 
     @Test
     public void univariateCompareWithKDETest() throws ConfigurationException, IOException, SQLException {

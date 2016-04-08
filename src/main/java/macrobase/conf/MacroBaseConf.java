@@ -41,6 +41,9 @@ public class MacroBaseConf extends Configuration {
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
 
+    public static final String NUM_MIXTURES = "macrobase.analysis.mixtures.numMixtures";
+    public static final String EM_CUTOFF_PROGRESS = "macrobase.analysis.em.improvement_cutoff_ration";
+
     // Algorithm to use when choosing the bandwidth for the given data.
     public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
     // Multiplies the bandwidth that was gotten algorithmically by this given constant (double).
@@ -77,6 +80,7 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
+    public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
     private final DatumEncoder datumEncoder;
 
     public MacroBaseConf() {
@@ -117,6 +121,7 @@ public class MacroBaseConf extends Configuration {
         MOVING_AVERAGE,
         ARIMA,
         BAYESIAN_NORMAL,
+        GAUSSIAN_MIXTURE_EM,
     }
 
     public Random getRandom() {
@@ -166,6 +171,9 @@ public class MacroBaseConf extends Configuration {
             case BAYESIAN_NORMAL:
                 log.info("Using Bayesian Normal transform.");
                 return new BayesianNormalDensity(this);
+            case GAUSSIAN_MIXTURE_EM:
+                log.info("Using Bayesian Normal transform.");
+                return new GaussianMixtureModel(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }
