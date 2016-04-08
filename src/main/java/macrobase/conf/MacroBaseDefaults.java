@@ -70,4 +70,6 @@ public class MacroBaseDefaults {
     public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
     public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
+    public static final Integer NUM_MIXTURES = 2;
+    public static final Double EM_CUTOFF_PROGRESS = 0.00001;
 }
