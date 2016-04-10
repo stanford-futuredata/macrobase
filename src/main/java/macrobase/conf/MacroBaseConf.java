@@ -41,7 +41,7 @@ public class MacroBaseConf extends Configuration {
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
 
-    public static final String NUM_MIXTURES = "macrobase.analysis.mixtures.numMixtures";
+    public static final String NUM_MIXTURES = "macrobase.analysis.stat.mixtures.numMixtures";
     public static final String EM_CUTOFF_PROGRESS = "macrobase.analysis.em.improvement_cutoff_ration";
 
     // Algorithm to use when choosing the bandwidth for the given data.
