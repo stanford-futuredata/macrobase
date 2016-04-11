@@ -10,6 +10,8 @@ import macrobase.datamodel.Datum;
 
 public class ContextPruning {
 
+	public static ContextPruningOptions contextPruningOptions;
+	
 	public static List<Datum> data;	//the entire data
 	public static HashSet<Datum> sample; // a random sample for the globalContext
 	public static double alpha = 0.05;
@@ -24,6 +26,7 @@ public class ContextPruning {
 	public static int numDetectorSpecificPruning = 0;
 	
 	
+	
 	/**
 	 * Estimating the size of a context
 	 * The Null Hypothesis is that density(c) >= minDensity
@@ -32,6 +35,9 @@ public class ContextPruning {
 	 * @return true if the estimation > minSize
 	 */
 	public static boolean densityPruning(Context c, double minDensity){
+		
+		if(contextPruningOptions.isDensityPruning() == false)
+			return false;
 		
 		int sampleSize = sample.size();
 		int sampleHit = c.getSample().size();
@@ -76,6 +82,10 @@ public class ContextPruning {
 	 * @return
 	 */
 	public static boolean dependencyPruning(Context c){
+		
+		if(contextPruningOptions.isDependencyPruning() == false)
+			return false;
+			
 		Context p1 = c.getParents().get(0);
 		Context p2 = c.getParents().get(1);
 		
@@ -149,6 +159,11 @@ public class ContextPruning {
 	 * @return
 	 */
 	public static boolean sameDistribution(Context p1, Context p2){
+		
+		if(contextPruningOptions.isDistributionPruningForTraining() == false 
+				&& contextPruningOptions.isDistributionPruningForScoring() == false){
+			return false;
+		}
 		
 		HashSet<Datum> sample1 = p1.getSample();
 		HashSet<Datum> sample2 = p2.getSample();

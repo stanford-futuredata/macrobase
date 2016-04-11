@@ -52,6 +52,7 @@ public class BaseAnalyzer {
     protected final Integer contextualNumIntervals;
     protected final Integer contextualMaxPredicates;
     protected final String contextualOutputFile;
+    protected final String contextualPruning;
 
     public BaseAnalyzer(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
@@ -86,6 +87,7 @@ public class BaseAnalyzer {
         contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
         contextualMaxPredicates = conf.getInt(MacroBaseConf.CONTEXTUAL_MAX_PREDICATES,MacroBaseDefaults.CONTEXTUAL_MAX_PREDICATES);
         contextualOutputFile = conf.getString(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,MacroBaseDefaults.CONTEXTUAL_OUTPUT_FILE);
+        contextualPruning = conf.getString(MacroBaseConf.CONTEXTUAL_PRUNING,MacroBaseDefaults.CONTEXTUAL_PRUNING);
     }
 
     public DataLoader constructLoader() throws ConfigurationException, SQLException, IOException {
