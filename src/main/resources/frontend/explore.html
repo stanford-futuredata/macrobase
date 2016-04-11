@@ -2,6 +2,7 @@
 <html lang="en-US">
 <script src="js/angular.min.js"></script>
 <script src="js/ngStorage.min.js"></script>
+<script src="js/plotly.min.js"></script>
 
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
@@ -26,7 +27,7 @@
 
                 <div class="panel panel-default" ng-show="hasItemsets()">
 
-                    <div class="panel-heading">Itemset Under Consideration</div>
+                    <div class="panel-heading">Subgroup Under Consideration</div>
                     <div class="panel-body">
 
                         <div class="table-responsive">
@@ -45,6 +46,19 @@
                     </div>
                 </div>
 
+				<div class="panel panel-default">
+
+						<div class="panel  panel-default">
+								<div class="panel-heading">Plot</div>
+						</div>
+						<div class="panel-body">
+								<div id="plotArea" style="width:600px;height:250px;"></div>
+								<span ng-repeat="h in visibleRows[0].columnValues">
+										<button ng-model="button" ng-click="preparePlotData(h.column)" ng-disabled="plotDataLoading">{{h.column}}</button>
+										<!-- <span ng-click="preparePlotData(h.column)">{{h.column}}{{$last ? '' : ', '}}</span> -->
+								</span>
+						</div>
+				</div>
 
                 <div class="panel panel-default">
 

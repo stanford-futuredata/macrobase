@@ -3,6 +3,7 @@
 
 <script src="js/angular.min.js"></script>
 <script src="js/ngStorage.min.js"></script>
+<script src="js/plotly.min.js"></script>
 
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
@@ -160,12 +161,26 @@
                         </div>
                     </div>
 
+										<div id="overview_plot_panel" class="panel-body">
+														Overview Plot:<span ng-repeat="h in getPlotColumns()">
+																<button ng-model="button" ng-click="preparePlotData(h)" ng-disabled="plotDataLoading">{{h}}</button>
+														</span>
+														<div id="plotArea" ng-hide = "hidePlot"></div>
+										</div>
+										</div>
                     <div>
                         Sort order:
                         <button ng-click="sortAnalysis('support')">support</button>
                         <button ng-click="sortAnalysis('ratioToInliers')">ratio</button>
                         <button ng-click="sortAnalysis('itemSize')">number of attributes</button>
                     </div>
+                    <div>
+                        Plot all:
+										<span ng-repeat="pc in getPlotColumns()">
+												<button ng-model="button" ng-click="prepareAllItemsetPlotData(pc)" ng-disabled="plotDataLoading">{{pc}}</button>
+										</span>
+                    </div>
+                    <br>
 
                     <div class="panel panel-default" ng-repeat="i in itemsets">
                         <div class="panel-body">
@@ -193,7 +208,13 @@
                                     <td>{{item.value}}</td>
                                 </tr>
                             </table>
-                            <a href="#" ng-click="exploreItems(i.items)">Explore</a>
+                            <button ng-model="button" ng-click="exploreItems(i.items)">Explore</button>
+                            <br>
+                            Plot:<span ng-repeat="h in getPlotColumns()">
+                              <button ng-model="button" ng-click="prepareItemsetPlotData(h, $parent.$index)" ng-disabled="plotDataLoading">{{h}}</button>
+                            </span>
+                            <div id="plotArea_{{$index}}" ng-hide="shouldHideItemsetPlot($index)" width=500></div>
+                          </div>
                         </div>
                     </div>
                 </div>

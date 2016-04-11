@@ -315,12 +315,17 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
             $scope.summarizationTime = result.summarizationTime
             $scope.itemsets = result.itemSets
 
+			$scope.resetPlotDiv();
+			$scope.resetItemsetPlots();
+
             $scope.sortAnalysis("support");
 	    });
     }
     }
 
     $scope.sortAnalysis = function(field) {
+			$scope.resetPlotDiv();
+			$scope.resetItemsetPlots();
         $scope.itemsets.sort(function(a, b) {
             if(field === "itemSize") {
                return a.items.length - b.items.length;
@@ -342,6 +347,354 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
         explorerService.setItems(items)
         $window.open("explore.html", "_blank")
     }
+
+    //get names of all columns that should be available to plot
+    $scope.getPlotColumns = function() {
+        var plotCols = [];
+        plotCols = plotCols.concat(configService.getHighMetrics(DEFAULT_CONFIG));
+        plotCols = plotCols.concat(configService.getLowMetrics(DEFAULT_CONFIG));
+        return plotCols;
+    }
+
+    //variable relevant to top-level plot
+
+    $scope.plotDataLoading = false; /* used to disable plotting related buttons
+                                       during data load */
+
+
+    $scope.plotPoints = [];
+    $scope.plotField = null;
+    $scope.hidePlot = true;
+    $scope.plotCount = 10000; // upper bound on items to pull
+    $scope.maxItemsetCount = 5; /* number of categories (including base) to
+                                   make available in main plot */
+    $scope.maxShownSeries = 3; /* number of outlier classes to show in main
+                                  plot */
+
+    //variable relevant to itemset-level plot
+    $scope.itemsetPlotPoints = [];
+    $scope.itemsetPlotField = [];
+    $scope.itemsetHidePlot = [];
+
+    $scope.plotDiv = document.getElementById('plotArea');
+
+    //determines whether we should hide the itemset plot at index
+    $scope.shouldHideItemsetPlot  = function (itemsetIdx){
+        if(itemsetIdx > $scope.itemsetHidePlot.length){
+            return true;
+        }
+        else{
+            return $scope.itemsetHidePlot[itemsetIdx];
+        }
+    }
+
+    // clear and hide itemset plots. called after analyze
+    $scope.resetItemsetPlots  = function (){
+        var data = [];
+        $scope.itemsetHidePlot = [];
+        for(var i = 0 ; i < $scope.itemsets.length; i++){
+            $scope.itemsetHidePlot.push(true);
+            Plotly.newPlot($scope.plotDiv, data, function(err,msg){
+                console.log(msg);
+            });
+        }
+    }
+
+    // clear and hide top-level plot
+    $scope.resetPlotDiv  = function (){
+        var data = [];
+        Plotly.newPlot($scope.plotDiv, data, function(err,msg){
+            console.log(msg);
+        });
+        $scope.hidePlot = true
+    }
+
+    // update top-level plot with data from $scope.plotPoints
+    $scope.updatePlotDiv = function (){
+        var data = [];
+        showSeries = true;
+
+        for(var i = 0 ; i < $scope.plotPoints.length; i++){
+            if(i > $scope.maxShownSeries){ 
+                showSeries = "legendonly";
+            }
+            data.push({x:$scope.plotPoints[i][0],
+                opacity:0.5, type:'histogram',
+                histnorm:'probability density',
+                name:$scope.plotPoints[i][1],
+                visible:showSeries
+            });
+        }
+
+        var layout = {
+            xaxis: {title: $scope.plotField},
+            yaxis: {title: 'Probability Density'},
+            barmode:'overlay',
+            bargap: 0.1,
+            bargroupgap: 0.2,
+            width:500,
+            legend:{
+              x:0,
+              y:-0.6
+            },
+        };
+        Plotly.newPlot($scope.plotDiv, data, layout, function (err, msg) {
+            console.log(msg);
+        });
+
+        $scope.hidePlot = false;
+    }
+
+    // update plots for itemset subsection for given idx
+    $scope.updateItemsetPlotDivs = function (itemsetIdx){
+        var data = [];
+        showSeries = true;
+
+        if(itemsetIdx >= $scope.itemsetPlotPoints.length)
+            return;
+
+        var plotPoints = $scope.itemsetPlotPoints[itemsetIdx];
+
+        itemsetPlotDiv = document.getElementById('plotArea_'+itemsetIdx);
+        //plotPoints[0] is base and [1] is for class
+        for(var i = 0 ; i <= 1; i++){
+            data.push({x:plotPoints[i][0],
+                opacity:0.5, type:'histogram',
+                histnorm:'probability density',
+                name:plotPoints[i][1],
+                visible:showSeries
+            });
+        }
+        var layout = {
+            xaxis: {title: $scope.itemsetPlotField[itemsetIdx]},
+            yaxis: {title: 'Probability Density'},
+            barmode:'overlay',
+            bargap: 0.1,
+            bargroupgap: 0.2,
+            width:500,
+            legend:{
+              x:0,
+              y:-0.6
+            },
+        };
+        Plotly.newPlot(itemsetPlotDiv, data, layout, function (err, msg) {
+            console.log(msg);
+        });
+
+        $scope.itemsetHidePlot[itemsetIdx] = false;
+    }
+
+    //called when one of the plot all buttons is clicked
+    $scope.prepareAllItemsetPlotData = function(fname) {
+        for(var i = 0; i < $scope.itemsets.length; i++){
+            $scope.prepareItemsetPlotData(fname, i);
+        }
+    }
+
+    //first call used to populate one of the itemset plots
+    $scope.prepareItemsetPlotData = function(fname, itemsetIdx) {
+        $scope.itemsetPlotPoints[itemsetIdx] = [];
+        $scope.itemsetPlotField[itemsetIdx] = fname;
+        var fieldIdx = null;
+        $scope.plotDataLoading = true;
+
+        $scope.getItemsetPlotRows($scope.itemsets[itemsetIdx].items,
+                itemsetIdx, fname, fieldIdx, true);
+    }
+
+    //hit api to get rows for itemset
+    $scope.getItemsetPlotRows = function(items, itemsetIdx, fname, fieldIdx) {
+
+        var colVals = [[]];
+
+        if(items == null) {
+            items = [];
+        }
+
+        colVals.push(items);
+
+        $http.post("api/rows/multiple",
+                {
+                    pgUrl: configService.getPostgresUrl(),
+            baseQuery: configService.getBaseQuery(),
+            columnValues: colVals,
+            limit: $scope.plotCount,
+            offset: 0
+                }
+                ).then(function(response) {
+                    $scope.prepareItemsetPlotDataPostBaseQuery(response.data, fname, itemsetIdx)
+                } , function(error){
+                    $scope.plotDataLoading = false
+                    console.log(error)
+                });
+    }
+
+    $scope.prepareItemsetPlotDataPostBaseQuery = function( dataRows, fname, itemsetIdx) {
+
+        var baseRows = dataRows[0].rows;
+        var itemsetRows = dataRows[1].rows;
+
+        if(baseRows.length == 0){
+            $scope.plotDataLoading = false;
+            console.error("Base data was empty for "+itemsetIdx);
+            return;
+        }
+
+        //use first elem as template to ensure col is in fields
+        var firstEle = baseRows[0];
+
+        //ensure column is in list
+        for(var i=0; i < firstEle.columnValues.length; i++) {
+            var ele = firstEle.columnValues[i];
+
+            if(ele.column == fname) {
+                //set relevant vars
+                $scope.plotField = fname;
+                fieldIdx = i;
+                break
+            }
+        }
+
+        //invalid fname
+        //TODO: raise error
+        if ($scope.itemsetPlotField[itemsetIdx] == null){
+            $scope.plotDataLoading = false;
+            return;
+        }
+
+        plotPoints = $scope.itemsetPlotPoints[itemsetIdx];
+
+        plotPoints.push([]);
+        //load in rows if not yet loaded
+        plotPoints[0][0] = [];
+        plotPoints[0][1] = 'base';
+        for(var row of baseRows) {
+            plotPoints[0][0].push(row.columnValues[fieldIdx].value);
+        }
+
+        var name = $scope.createNameFromItemset($scope.itemsets[itemsetIdx].items);
+        plotPoints = $scope.itemsetPlotPoints[itemsetIdx];
+        plotPoints.push([]);
+        plotPoints[1][0] = [];
+        plotPoints[1][1] = name;
+
+        for(var row of itemsetRows) {
+            plotPoints[1][0].push(row.columnValues[fieldIdx].value);
+        }
+
+        $scope.updateItemsetPlotDivs(itemsetIdx);
+        $scope.plotDataLoading = false;
+    }
+
+    //first call for populating top-level chart
+    $scope.preparePlotData = function(fname) {
+        $scope.plotPoints = [];
+        $scope.plotField = null;
+        $scope.plotDataLoading = true;
+
+        $scope.getPlotRows(Math.min($scope.itemsets.length,$scope.maxItemsetCount),
+                fname);
+    }
+
+    $scope.preparePlotDataPostBaseQuery = function( dataRows, fname) {
+
+        var baseRows = dataRows[0].rows;
+        var fieldIdx = null;
+
+        if(baseRows.length == 0){
+            $scope.plotDataLoading = false;
+            return;//TODO: show message about missing data
+        }
+
+        //use first elem as template to ensure col is in fields
+        var firstEle = baseRows[0];
+
+        //ensure column is in list
+        for(var i=0; i < firstEle.columnValues.length; i++) {
+            var ele = firstEle.columnValues[i];
+
+            if(ele.column == fname) {
+                //set relevant vars
+                $scope.plotField = fname;
+                fieldIdx = i;
+                break;
+            }
+        }
+
+        //invalid fname
+        //TODO: raise error
+        if ($scope.plotField == null){
+            $scope.plotDataLoading = false
+                return;
+        }
+
+
+        $scope.plotPoints.push([])
+            //load in rows if not yet loaded
+            $scope.plotPoints[0][0] = []
+            $scope.plotPoints[0][1] = 'base'
+            for(var row of baseRows) {
+                $scope.plotPoints[0][0].push(row.columnValues[fieldIdx].value)
+            }
+
+        for(var i = 1; i < dataRows.length; i++){
+            var itemsetRows = dataRows[i].rows;
+            var name = $scope.createNameFromItemset($scope.itemsets[i-1].items);
+            $scope.plotPoints.push([]);
+            $scope.plotPoints[i][0] = [];
+            $scope.plotPoints[i][1] = name;
+            for(var row of itemsetRows) {
+                $scope.plotPoints[i][0].push(row.columnValues[fieldIdx].value);
+            }
+        }
+        $scope.updatePlotDiv();
+        $scope.plotDataLoading = false;
+    }
+
+        //create name for series given items
+    $scope.createNameFromItemset = function(items){
+        var names = []
+            for(var item of items){
+                names.push(item.column+":"+item.value)
+
+            }
+        return names.join()
+    }
+
+    //get rows for top-level plot from API
+    $scope.getPlotRows = function(maxCount, fname) {
+
+        configService.unmarkForBasicQuery();
+
+        //empty array for base
+        colVals = [[]];
+
+        for(var i=0; i < Math.min(maxCount, $scope.itemsets.length); i++){
+
+            var itemset = $scope.itemsets[i];
+
+            if(itemset.items == null) {
+                colVals.push([]);
+            } else{
+                colVals.push(itemset.items);
+            }
+        }
+
+
+        $http.post("api/rows/multiple",
+                { pgUrl: configService.getPostgresUrl(),
+                    baseQuery: configService.getBaseQuery(),
+            columnValues: colVals,
+            limit: $scope.plotCount,
+            offset: 0
+                }).then(function(response) {
+                    $scope.preparePlotDataPostBaseQuery(response.data, fname);
+                } , function(error){
+                    $scope.plotDataLoading = false;
+                    console.log(error);
+                });
+    }
+
 }]);
 
 
@@ -351,35 +704,71 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
     $scope.exploreRows = []
 
     $scope.itemset = angular.fromJson(explorerService.getItems())
+	
+    //plotting related vars
+	$scope.plotPoints = [];
+	$scope.plotField = null;
+	$scope.plotCount = 100000;
+	$scope.plotDataLoading = false;
+	
+	$scope.plotDiv = document.getElementById('plotArea');
 
-    function updateVisibleData() {
+    //update plots given data in plotPoints
+    $scope.updatePlotDiv = function (){
+        data=[];
+        data.push({x:$scope.plotPoints[0],
+            opacity:0.75,
+            type:'histogram',
+            histnorm:'probability density',
+            name:'base'});
 
-	$scope.hasItemsets = function() {
-	    console.log(explorerService.getItems())
-	    return (explorerService.getItems() != "null")
-	}
+        if($scope.plotPoints.length > 0){
+            data.push({x:$scope.plotPoints[1],
+                opacity:0.75,
+                type:'histogram',
+                histnorm:'probability density',
+                name:'selected subgroup'});
+        }
+        var layout = {
+            xaxis: {title: $scope.plotField},
+            yaxis: {title: 'Probability Density'},
+            barmode:'overlay'};
+        Plotly.newPlot($scope.plotDiv, data=data, layout, function (err, msg) {
+            console.log(msg);
+        });
+    }
+	
+		
 
-        $scope.visibleRows = angular.copy($scope.exploreRows)
-         for(var row of $scope.visibleRows) {
-                for(var hc of explorerService.getHiddenColumns()) {
-                            for(var i=0; i < row.columnValues.length; i++) {
+    function updateVisibleData () {
 
-                    var ele = row.columnValues[i]
+        $scope.hasItemsets = function() {
+            console.log(explorerService.getItems())
+                return (explorerService.getItems() != "null")
+        }
+
+        $scope.visibleRows = angular.copy($scope.exploreRows);
+        for(var row of $scope.visibleRows) {
+            for(var hc of explorerService.getHiddenColumns()) {
+                for(var i=0; i < row.columnValues.length; i++) {
+
+                    var ele = row.columnValues[i];
 
                     if(ele.column == hc) {
 
                         if(row.columnValues.length > 1)
-                            row.columnValues.splice(i, 1)
+                            row.columnValues.splice(i, 1);
                         else {
-                            row.columnValues = []
-                            }
+                            row.columnValues = [];
+                        }
                     }
                 }
             }
         }
     }
 
-    $scope.getHiddenColumns = function() { return explorerService.getHiddenColumns() }
+    $scope.getHiddenColumns = function() { 
+        return explorerService.getHiddenColumns() }
 
     $scope.showColumn = function(c) {
         explorerService.removeHiddenColumn(c)
@@ -437,15 +826,95 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 	    });
     }
 
+    //should we show the plot?
+    shouldShowPlot = function(){
+                    return $scope.plotField == null;
+    };
+
+    //called by plot buttons
+    $scope.preparePlotData = function(fname) {
+        $scope.plotPoints = []
+            $scope.plotField = null
+            $scope.plotDataLoading = true
+
+            $scope.getPlotRows(fname)
+    }
+
+    //use data to populate plots
+    $scope.generatePlotData = function(fname, plotRows){
+        var fieldIdx = null;
+
+        var baseRows = plotRows[0];
+
+        if(baseRows.length == 0){
+            console.error("Base Query has no data");
+            return;
+        }
+
+        //use first elem as template to ensure col is in fields
+        var firstEle = baseRows[0];
+
+        //ensure column is in list
+        for(var i=0; i < firstEle.columnValues.length; i++) {
+            var ele = firstEle.columnValues[i];
+
+            if(ele.column == fname) {
+                //set relevant vars
+                $scope.plotField = fname;
+                fieldIdx = i;
+                break
+            }
+        }
+
+        //invalid fname
+        //TODO: raise error
+        if ($scope.plotField == null)
+            return;
+
+        for(var i = 0; i < plotRows.length; i++) {
+            for(var row of plotRows[i]) {
+                $scope.plotPoints.push([]);
+                $scope.plotPoints[i].push(row.columnValues[fieldIdx].value);
+            }
+        }
+
+        $scope.updatePlotDiv();
+        $scope.plotDataLoading = false;
+
+    }
+
+    //get rows for plot from API
+    $scope.getPlotRows = function(fname) {
+
+        configService.unmarkForBasicQuery();
+
+        var colVals = [[]];
+
+        var _items = angular.fromJson(explorerService.getItems());
+        if(_items != null) {
+            colVals.push(_items);
+        }
+
+
+
+        $http.post("api/rows/multiple",
+                {  
+                    pgUrl: configService.getPostgresUrl(),
+                    baseQuery: configService.getBaseQuery(),
+                    columnValues: colVals,
+                    limit: $scope.plotCount,
+                    offset: 0
+                })
+            .then(function(response) {
+                plotRows = []
+                for(var i = 0; i < response.data.length; i++){
+                    plotRows.push(response.data[i].rows);
+                }
+            $scope.generatePlotData(fname, plotRows);
+            }, function(error){
+                $scope.plotDataLoading = false;
+                console.log(error);
+            });
+    }
 }]);
-
-
-
-
-
-
-
-
-
-
 
