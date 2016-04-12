@@ -138,4 +138,70 @@ public abstract class DiskCachingSQLLoader extends SQLLoader {
 
         return data;
     }
+    
+    
+    //the following are the same methods augmented with contextual attributes
+    @Override
+    public List<Datum> getData(DatumEncoder encoder,
+    		List<String> contextualDiscreteAttributes,
+    		List<String> contextualDoubleAttributes)throws SQLException, IOException{
+    	  List<Datum> data = readInData(encoder, timeColumn, attributes, lowMetrics, highMetrics,contextualDiscreteAttributes ,contextualDoubleAttributes,baseQuery);
+          if (data != null) {
+              return data;
+          }
+
+          data = super.getData(encoder,contextualDiscreteAttributes,contextualDoubleAttributes);
+          log.info("Writing out loaded data...");
+          writeOutData(encoder, timeColumn, attributes, lowMetrics, highMetrics, contextualDiscreteAttributes,contextualDoubleAttributes,baseQuery, data);
+          log.info("...done writing!");
+
+          return data;
+    }
+
+	private List<Datum> readInData(DatumEncoder encoder, String timeColumn, List<String> attributes,
+			List<String> lowMetrics, List<String> highMetrics, List<String> contextualDiscreteAttributes,
+			List<String> contextualDoubleAttributes, String baseQuery) throws IOException {
+		File f = new File(fileDir + "/" + convertFileName(timeColumn, attributes, lowMetrics, highMetrics,contextualDiscreteAttributes,contextualDoubleAttributes, baseQuery));
+		if (!f.exists()) {
+			log.info("Data did not exist; going to read from SQL.");
+			return null;
+		}
+
+		log.info("On-disk cache exists; loading...");
+		InputStream inputStream = new SnappyInputStream(new BufferedInputStream(new FileInputStream(f), 16384));
+
+		Kryo kryo = new Kryo();
+		Input input = new Input(inputStream);
+		CachedData cachedData = kryo.readObject(input, CachedData.class);
+		log.info("...loaded!");
+
+		encoder.copy(cachedData.getEncoder());
+		return cachedData.getData();
+	}
+
+	private void writeOutData(DatumEncoder encoder, String timeColumn, List<String> attributes, List<String> lowMetrics,
+			List<String> highMetrics, List<String> contextualDiscreteAttributes,
+			List<String> contextualDoubleAttributes, String baseQuery, List<Datum> data) throws IOException {
+		CachedData d = new CachedData(encoder, data);
+
+		OutputStream outputStream = new SnappyOutputStream(
+				new BufferedOutputStream(new FileOutputStream(
+						fileDir + "/" + convertFileName(timeColumn, attributes, lowMetrics, highMetrics, contextualDiscreteAttributes,contextualDoubleAttributes,baseQuery))),
+				16384);
+
+		Kryo kryo = new Kryo();
+		Output output = new Output(outputStream);
+		kryo.writeObject(output, d);
+		output.close();
+	}
+
+	private String convertFileName(String timeColumn, List<String> attributes, List<String> lowMetrics,
+			List<String> highMetrics, List<String> contextualDiscreteAttributes,
+			List<String> contextualDoubleAttributes, String baseQuery) {
+		int hashCode = String.format("T-%s::A-%s::L%s::H%s::CDIS%s::CDOU%s::BQ%s", timeColumn, attributes.toString(),
+				lowMetrics.toString(), highMetrics.toString(), 
+				contextualDiscreteAttributes.toString(),contextualDoubleAttributes.toString(),
+				baseQuery).replace(" ", "_").hashCode();
+		return Integer.toString(hashCode);
+	}
 }
