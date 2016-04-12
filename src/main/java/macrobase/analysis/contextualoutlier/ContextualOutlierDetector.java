@@ -719,7 +719,7 @@ public class ContextualOutlierDetector{
 		if(interval instanceof IntervalDiscrete){
 			IntervalDiscrete id = (IntervalDiscrete) interval;
 			String columnValue = encoder.getAttribute(id.getValue()).getValue();
-			if(columnValue.equals("null")){
+			if(columnValue == null || columnValue.equals("null")){
 				return false;
 			}
 		}
