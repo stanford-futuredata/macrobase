@@ -121,7 +121,7 @@ public class ContextualOutlierDetector{
     		log.debug("Build {}-dimensional contexts on all attributes",level);
     		sw.start();
     		if(level == 1){
-    			curLatticeNodes = buildOneDimensionalLatticeNodes(data);
+    			curLatticeNodes = buildOneDimensionalLatticeNodes(data,encoder);
         	}else{
         		curLatticeNodes = levelUpLattice(preLatticeNodes, data);	
         	}
@@ -234,7 +234,7 @@ public class ContextualOutlierDetector{
     		log.debug("Build {}-dimensional contexts on all attributes",level);
     		sw.start();
     		if(level == 1){
-    			curLatticeNodes = buildOneDimensionalLatticeNodesGivenOutliers(data, inputOutliers);
+    			curLatticeNodes = buildOneDimensionalLatticeNodesGivenOutliers(data, encoder,inputOutliers);
         	}else{
         		curLatticeNodes = levelUpLattice(preLatticeNodes, data);	
         	}
@@ -661,7 +661,7 @@ public class ContextualOutlierDetector{
 	 * @param data
 	 * @return
 	 */
-	private List<LatticeNode> buildOneDimensionalLatticeNodes(List<Datum> data){
+	private List<LatticeNode> buildOneDimensionalLatticeNodes(List<Datum> data, DatumEncoder encoder){
 		
 		
 		//create subspaces
@@ -672,7 +672,10 @@ public class ContextualOutlierDetector{
 			List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2Data(data, dimension, denseContextTau);
 			for(Context denseContext: denseContexts){
 				ss.addDenseContext(denseContext);
-				log.debug(denseContext.toString());
+				if(encoder!=null)
+					log.debug(denseContext.toString() + " ---- " + denseContext.print(encoder));
+				else
+					log.debug(denseContext.toString());
 			}
 			latticeNodes.add(ss);
 		}
@@ -681,7 +684,7 @@ public class ContextualOutlierDetector{
 	}
 	
 
-	private List<LatticeNode> buildOneDimensionalLatticeNodesGivenOutliers(List<Datum> data, List<Datum> inputOutliers){
+	private List<LatticeNode> buildOneDimensionalLatticeNodesGivenOutliers(List<Datum> data, DatumEncoder encoder, List<Datum> inputOutliers){
 		//create subspaces
 		List<LatticeNode> latticeNodes = new ArrayList<LatticeNode>();
 				
@@ -690,7 +693,11 @@ public class ContextualOutlierDetector{
 			List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2DataGivenOutliers(data, dimension, inputOutliers);
 			for(Context denseContext: denseContexts){
 				ss.addDenseContext(denseContext);
-				log.debug(denseContext.toString());
+				if(encoder!=null)
+					log.debug(denseContext.toString() + " ---- " + denseContext.print(encoder));
+				else
+					log.debug(denseContext.toString());
+				
 			}
 			latticeNodes.add(ss);
 		}
