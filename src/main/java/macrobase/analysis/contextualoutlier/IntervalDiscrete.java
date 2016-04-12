@@ -21,7 +21,9 @@ public class IntervalDiscrete extends Interval{
 			return false;
 	}
 	
-	
+	public int getValue(){
+		return value;
+	}
 	
 	@Override
 	public String print(DatumEncoder encoder) {
