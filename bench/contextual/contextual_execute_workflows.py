@@ -38,7 +38,7 @@ default_args = {
   
   "macrobase.analysis.contextual.denseContextTau": 0.1,
   "macrobase.analysis.contextual.numIntervals": 10,
-  
+  "macrobase.analysis.contextual.maxPredicates": 100,
 }
 
 
