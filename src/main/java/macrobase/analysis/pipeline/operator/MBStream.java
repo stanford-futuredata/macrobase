@@ -38,4 +38,8 @@ public class MBStream<T> {
     public Integer remaining() {
         return output.size();
     }
+    
+    public List<T> inspect() {
+        return output;
+    }
 }

@@ -2,7 +2,6 @@ package macrobase.analysis.classify;
 
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import org.junit.Test;
 
@@ -24,10 +23,11 @@ public class StaticThresholdClassifierTest {
         }
 
         StaticThresholdClassifier sc = new StaticThresholdClassifier(conf);
+        sc.initialize();
         sc.consume(data);
-
         List<OutlierClassificationResult> results = sc.getStream().drain();
-
+        sc.shutdown();
+        
         int outlierCount = 0;
         for(OutlierClassificationResult oc : results) {
             if(oc.isOutlier()) {

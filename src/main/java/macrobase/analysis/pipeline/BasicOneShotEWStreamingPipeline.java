@@ -15,6 +15,7 @@ import macrobase.analysis.transform.EWFeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class BasicOneShotEWStreamingPipeline extends BasePipeline {
@@ -28,7 +29,7 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
     }
 
     @Override
-    public AnalysisResult run() throws Exception {
+    public List<AnalysisResult> run() throws Exception {
         long startMs = System.currentTimeMillis();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
@@ -54,11 +55,11 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
                  totalMs,
                  (result.getNumInliers()+result.getNumOutliers())/(double)totalMs*1000);
 
-        return new AnalysisResult(result.getNumOutliers(),
+        return Arrays.asList(new AnalysisResult(result.getNumOutliers(),
                                   result.getNumInliers(),
                                   loadMs,
                                   executeMs,
                                   summarizeMs,
-                                  result.getItemsets());
+                                  result.getItemsets()));
     }
 }

@@ -92,4 +92,8 @@ public class DatumEncoder {
 
         return ret;
     }
+    
+    public int getNextKey(){
+    	return nextKey;
+    }
 }

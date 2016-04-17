@@ -8,6 +8,9 @@ import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 import net.sourceforge.argparse4j.inf.Namespace;
+
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +34,17 @@ public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
             return;
         }
 
-        AnalysisResult result = ((Pipeline) ao).initialize(configuration).run();
+        List<AnalysisResult> results = ((Pipeline) ao).initialize(configuration).run();
 
-        if (result.getItemSets().size() > 1000) {
-            log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
-            result.setItemSets(result.getItemSets().subList(0, 1000));
+        for(AnalysisResult result: results) {
+            if (result.getItemSets().size() > 1000) {
+                log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
+                result.setItemSets(result.getItemSets().subList(0, 1000));
+            }
         }
 
         MacroBase.reporter.report();
 
-        log.info("Result: {}", result);
+        log.info("Result: {}", results);
     }
 }

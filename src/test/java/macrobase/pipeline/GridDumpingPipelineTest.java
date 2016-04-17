@@ -43,7 +43,7 @@ public class GridDumpingPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new GridDumpingPipeline().initialize(conf)).run();
+        AnalysisResult ar = (new GridDumpingPipeline().initialize(conf)).run().get(0);
         assertEquals(1, ar.getItemSets().size());
 
         HashSet<String> toFindColumn = Sets.newHashSet("XX");

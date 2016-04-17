@@ -33,7 +33,6 @@ logging:
   loggers:
     "macrobase": TRACE
 
-macrobase.analysis.contextual.enabled: false
 macrobase.analysis.contextual.discreteAttributes: []
 macrobase.analysis.contextual.doubleAttributes: []
 macrobase.analysis.contextual.denseContextTau: 0.3

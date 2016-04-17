@@ -1,5 +1,7 @@
 package macrobase.analysis.pipeline;
 
+import java.util.List;
+
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 
@@ -9,5 +11,5 @@ import macrobase.conf.MacroBaseConf;
  */
 public interface Pipeline {
     Pipeline initialize(MacroBaseConf conf) throws Exception;
-    AnalysisResult run() throws Exception;
+    List<AnalysisResult> run() throws Exception;
 }

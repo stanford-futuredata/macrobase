@@ -45,7 +45,7 @@ public class BasicBatchedPipelineTest {
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
-        AnalysisResult ar = ba.run();
+        AnalysisResult ar = ba.run().get(0);
 
         assertEquals(1, ar.getItemSets().size());
 
@@ -88,7 +88,7 @@ public class BasicBatchedPipelineTest {
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
-        AnalysisResult ar = ba.run();
+        AnalysisResult ar = ba.run().get(0);
 
         assertEquals(1, ar.getItemSets().size());
 
@@ -127,7 +127,7 @@ public class BasicBatchedPipelineTest {
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
-        AnalysisResult ar = ba.run();
+        AnalysisResult ar = ba.run().get(0);
 
         assertEquals(3, ar.getItemSets().size());
 
@@ -168,7 +168,7 @@ public class BasicBatchedPipelineTest {
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
-        AnalysisResult ar = ba.run();
+        AnalysisResult ar = ba.run().get(0);
 
         assertEquals(1, ar.getItemSets().size());
 
@@ -200,7 +200,6 @@ public class BasicBatchedPipelineTest {
                  .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                  .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                  .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simpleContextual.csv")
-                .set(MacroBaseConf.CONTEXTUAL_ENABLED, true)
                 .set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
                 .set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1","C2"))
                 .set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
@@ -210,7 +209,7 @@ public class BasicBatchedPipelineTest {
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
-        AnalysisResult ar = ba.run();
+        AnalysisResult ar = ba.run().get(0);
 
         assertEquals(0, ar.getItemSets().size());
     }

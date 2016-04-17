@@ -11,11 +11,12 @@ public class Datum implements HasMetrics {
     private RealVector metrics;
     private RealVector auxiliaries;
 
-    
+
     private List<Integer> contextualDiscreteAttributes;
     private RealVector contextualDoubleAttributes;
-    
-    
+
+    private Datum parentDatum; //the parent datum this datum is created from 
+
     public Datum() {
     }
 
@@ -24,6 +25,7 @@ public class Datum implements HasMetrics {
     }
 
     public Datum(Datum oldDatum, RealVector metrics) {
+        this.parentDatum = oldDatum;
         this.metrics = metrics;
         this.attributes = oldDatum.getAttributes();
         this.contextualDiscreteAttributes = oldDatum.getContextualDiscreteAttributes();
@@ -39,8 +41,8 @@ public class Datum implements HasMetrics {
         this.attributes = attributes;
         this.metrics = metrics;
     }
-    
-    public Datum(List<Integer> attributes, RealVector metrics,List<Integer> contextualDiscreteAttributes,RealVector contextualDoubleAttributes) {
+
+    public Datum(List<Integer> attributes, RealVector metrics, List<Integer> contextualDiscreteAttributes, RealVector contextualDoubleAttributes) {
         this.attributes = attributes;
         this.metrics = metrics;
         this.contextualDiscreteAttributes = contextualDiscreteAttributes;
@@ -50,6 +52,7 @@ public class Datum implements HasMetrics {
     public Integer getTime() {
         return null;
     }
+
     public List<Integer> getAttributes() {
         return attributes;
     }
@@ -67,26 +70,31 @@ public class Datum implements HasMetrics {
         this.auxiliaries = auxiliaries;
     }
 
+    public Datum getParentDatum() {
+        return parentDatum;
+    }
+
     public String toString() {
         return String.format(
                 "metrics: %s, encoded attributes: %s, auxiliaries: %s",
                 getMetrics().toString(), getAttributes().toString(),
                 String.valueOf(getAuxiliaries()));
     }
-    
+
     public List<Integer> getContextualDiscreteAttributes() {
-        if(contextualDiscreteAttributes != null) {
+        if (contextualDiscreteAttributes != null) {
             return contextualDiscreteAttributes;
         } else {
             return new ArrayList<>();
         }
     }
-    public RealVector getContextualDoubleAttributes(){
-        if(contextualDoubleAttributes != null) {
+
+    public RealVector getContextualDoubleAttributes() {
+        if (contextualDoubleAttributes != null) {
             return contextualDoubleAttributes;
         } else {
             return new ArrayRealVector(0);
         }
     }
-    
+
 }

@@ -273,13 +273,6 @@ The following are contextual outlier detection-specific parameters.
 <table class="table">
 <tr><th>Name</th><th>Default</th><th>Meaning</th></tr>
 <tr>
-  <td><code>macrobase.analysis.contextual.enabled</code></td>
-  <td><code>false</code></td>
-  <td>
-  Controls whether to run contextual outlier detection or not
-  </td>
-</tr>
-<tr>
   <td><code>macrobase.analysis.contextual.discreteAttributes</code></td>
   <td><code>none</code></td>
   <td>
@@ -305,6 +298,62 @@ The following are contextual outlier detection-specific parameters.
   <td><code>10</code></td>
   <td>
   The number of intervals for a double contextual attribute to be discretized into. Right now, it is equal width, i.e., every interval covers (max - min) / numInterval
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.api</code></td>
+  <td><code>findAllContextualOutliers</code></td>
+  <td>
+  How to invoke contextual outlier detection. Default value is to find all contextual outliers. The value could also be <code>findContextsGivenOutlierPredicate</code>, in which case, we only find contexts that contain the specified tuples
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.api.outlierPredicates</code></td>
+  <td><code>(none)</code></td>
+  <td>
+  Specifiy the outlier tuples, for which we are looking for contexts where they are outliers (e.g., userid = 100 ), the attribute in the predicate has to appear in the <code>macrobase.analysis.contextual.discreteAttributes</code>
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.maxPredicates</code></td>
+  <td><code>Integer.MAX_VALUE</code></td>
+  <td>
+  The maximum number of predicates we allow in a context. Default value is has no limit. This parameter has effect on the running time
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.outputFile</code></td>
+  <td><code>(none)</code></td>
+  <td>
+  The output file of the result of contextual outlier detection. Default is output to the console if no output file is specified
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.pruning.density</code></td>
+  <td><code>true</code></td>
+  <td>
+  Whether enable density pruning or not. Prune a context if the estimated density of a context is less than <code>macrobase.analysis.contextual.denseContextTau</code>
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.pruning.dependency</code></td>
+  <td><code>true</code></td>
+  <td>
+  Whether enable dependency pruning or not. Prune a context if it has two sub-contexts C1 and C2 such that C1 determines C2, namely, all tuples in C1 are in C2
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.pruning.distributionForTraining</code></td>
+  <td><code>true</code></td>
+  <td>
+  Whether enable distribution pruning used for skip training. Skip the training of Context C1, if it has similar distribution to C2. 
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.contextual.pruning.distributionForScoring</code></td>
+  <td><code>true</code></td>
+  <td>
+  Whether enable distribution pruning used for skip scoring. Skip the scoring of Context C1, if it has similar distribution to C2. 
   </td>
 </tr>
 </table>

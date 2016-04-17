@@ -65,12 +65,21 @@ public class MacroBaseDefaults {
     public static final String DB_NAME = "postgres";
     public static final String DB_URL = "localhost";
     
-    public static final Boolean CONTEXTUAL_ENABLED = false;
+    //contextual outlier detection defaults
+    public static final MacroBaseConf.ContextualAPI CONTEXTUAL_API = MacroBaseConf.ContextualAPI.findAllContextualOutliers;
+    public static final String CONTEXTUAL_API_OUTLIER_PREDICATES  = "";
     public static final Double CONTEXTUAL_DENSECONTEXTTAU = 0.5;
     public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
     public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
     public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
+    public static final Integer CONTEXTUAL_MAX_PREDICATES = Integer.MAX_VALUE;
+    public static final String CONTEXTUAL_OUTPUT_FILE = null;
+    public static final Boolean CONTEXTUAL_PRUNING_DENSITY = true;
+    public static final Boolean CONTEXTUAL_PRUNING_DEPENDENCY = true;
+    public static final Boolean CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = true;
+    public static final Boolean CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = true;
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
+    
     public static final Integer NUM_MIXTURES = 2;
     public static final Double EM_CUTOFF_PROGRESS = 0.00001;
     public static final Integer DPM_TRUNCATING_PARAMETER = 50;

@@ -55,7 +55,7 @@ public class BasicOneShotEWStreamingPipelineTest {
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
-        AnalysisResult ar = sa.run();
+        AnalysisResult ar = sa.run().get(0);
 
         log.debug(ar.toString());
         ar.getItemSets().get(0).prettyPrint();
@@ -97,7 +97,7 @@ public class BasicOneShotEWStreamingPipelineTest {
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
-        AnalysisResult ar = sa.run();
+        AnalysisResult ar = sa.run().get(0);
 
         log.debug(ar.toString());
 
@@ -140,7 +140,7 @@ public class BasicOneShotEWStreamingPipelineTest {
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
-        AnalysisResult ar = sa.run();
+        AnalysisResult ar = sa.run().get(0);
 
         assertTrue(ar.getLoadTime() >= 0);
         assertTrue(ar.getExecutionTime() >= 0);
@@ -192,7 +192,7 @@ public class BasicOneShotEWStreamingPipelineTest {
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
-        AnalysisResult ar = sa.run();
+        AnalysisResult ar = sa.run().get(0);
 
         log.debug(ar.toString());
 

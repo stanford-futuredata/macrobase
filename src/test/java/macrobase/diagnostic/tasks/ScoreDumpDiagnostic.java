@@ -1,5 +1,6 @@
 package macrobase.diagnostic.tasks;
 
+import macrobase.util.Drainer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.dropwizard.cli.ConfiguredCommand;
@@ -7,11 +8,9 @@ import io.dropwizard.setup.Bootstrap;
 import macrobase.analysis.pipeline.BasePipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.stats.BatchTrainScore;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
-import macrobase.util.Drainer;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,7 @@ public class ScoreDumpDiagnostic extends ConfiguredCommand<MacroBaseConf> {
 
     private class DiagnosticTask extends BasePipeline {
 
-        public AnalysisResult run() throws Exception {
+        public List<AnalysisResult> run() throws Exception {
             assert (conf.isSet(SCORE_DUMP_FILE_CONFIG_PARAM));
 
             DatumEncoder encoder = new DatumEncoder();

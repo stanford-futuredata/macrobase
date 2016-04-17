@@ -13,6 +13,8 @@ public class BatchScoreFeatureTransform implements FeatureTransform {
     protected MacroBaseConf conf;
 
     private final MBStream<Datum> output = new MBStream<>();
+    
+    private boolean requiresTraining = true;
 
     public BatchScoreFeatureTransform(MacroBaseConf conf, MacroBaseConf.TransformType transformType)
             throws ConfigurationException {
@@ -20,6 +22,11 @@ public class BatchScoreFeatureTransform implements FeatureTransform {
         this.conf = conf;
     }
 
+    public BatchScoreFeatureTransform(BatchTrainScore batchTrainScore, boolean requiresTraining) {
+        this.batchTrainScore = batchTrainScore;
+        this.requiresTraining = requiresTraining;
+    }
+    
     @Override
     public void initialize() {
 
@@ -27,8 +34,9 @@ public class BatchScoreFeatureTransform implements FeatureTransform {
 
     @Override
     public void consume(List<Datum> records) {
-        batchTrainScore.train(records);
-        for (Datum d : records) {
+        if(requiresTraining)
+            batchTrainScore.train(records);
+        for(Datum d : records) {
             output.add(new Datum(d, batchTrainScore.score(d)));
         }
     }

@@ -30,7 +30,7 @@ public class AnalyzeResource extends BaseResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public AnalysisResult getAnalysis(AnalysisRequest request) throws Exception {
+    public List<AnalysisResult> getAnalysis(AnalysisRequest request) throws Exception {
         conf.set(MacroBaseConf.DB_URL, request.pgUrl);
         conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
         conf.set(MacroBaseConf.ATTRIBUTES, request.attributes);
@@ -38,14 +38,16 @@ public class AnalyzeResource extends BaseResource {
         conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
         conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
-        AnalysisResult result = new BasicBatchedPipeline().initialize(conf).run();
+        List<AnalysisResult> results = new BasicBatchedPipeline().initialize(conf).run();
 
-        if (result.getItemSets().size() > 1000) {
-            log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
-            result.setItemSets(result.getItemSets().subList(0, 1000));
+        for(AnalysisResult result: results) {
+            if (result.getItemSets().size() > 1000) {
+                log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
+                result.setItemSets(result.getItemSets().subList(0, 1000));
+            }
         }
-
+        
         MacroBase.reporter.report();
-        return result;
+        return results;
     }
 }

@@ -11,14 +11,14 @@ streaming_template_conf_file = "contextual_streaming_template.conf"
 
 default_args = {
   "macrobase.analysis.minOIRatio": 3.0,
-  "macrobase.analysis.minSupport": 0.001,
+  "macrobase.analysis.minSupport": 0.5,
 
   "macrobase.analysis.usePercentile": "true",
   "macrobase.analysis.targetPercentile": 0.99,
   "macrobase.analysis.useZScore": "false",
   "macrobase.loader.db.user": os.getenv('USER', None),
   "macrobase.loader.db.password": None,
-  "macrobase.analysis.zscore.threshold": 3.0,
+  "macrobase.analysis.zscore.threshold": 5.0,
 
   "macrobase.analysis.streaming.inputReservoirSize": 10000,
   "macrobase.analysis.streaming.scoreReservoirSize": 10000,
@@ -36,8 +36,9 @@ default_args = {
   "macrobase.analysis.mcd.alpha": 0.5,
   "macrobase.analysis.mcd.stoppingDelta": 0.001,
   
-  "macrobase.analysis.contextual.denseContextTau": 0.3,
-  "macrobase.analysis.contextual.numIntervals": 10
+  "macrobase.analysis.contextual.denseContextTau": 0.1,
+  "macrobase.analysis.contextual.numIntervals": 10,
+  
 }
 
 
@@ -69,7 +70,7 @@ def parse_results(results_file):
         for i in xrange(len(lines)):
             line = lines[i]
             if line.startswith("DEBUG"):
-                if "time" in line:
+                if "time" in line and "...ended" in line:
                     line = line.split("...ended")[1].strip()
                     line_tokens = line.split("(")
                     time_type = line_tokens[0].strip()
@@ -104,6 +105,18 @@ def parse_results(results_file):
     return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
             tuples_per_second_no_itemset_mining)
 
+def seperate_contextual_results(results_file):
+    contextual_results_file = results_file + "_contextual"
+    
+    g = open(contextual_results_file,'w')
+    
+    with open(results_file, 'r') as f:
+        lines = f.read().split('\n')
+        for i in xrange(len(lines)):
+            line = lines[i]
+            if 'macrobase.analysis.BatchAnalyzer' in line or 'macrobase.analysis.contextualoutlier' in line:
+                 g.write(line + '\n')
+    g.close()
 
 def get_stats(value_list):
     value_list = [float(value) for value in value_list]
@@ -131,8 +144,12 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
     conf_file = os.path.join(sub_dir, conf_file)
+    
+    #create 
+    config_parameters["macrobase.analysis.contextual.outputFile"] = os.path.join(sub_dir, "output.txt")
+    
     create_config_file(config_parameters, conf_file)
-    cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
+    cmd = "pipeline" if config_parameters["isBatchJob"] else "streaming"
 
     all_times = dict()
     all_num_itemsets = list()
@@ -151,6 +168,11 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print 'running the following command:'
         print macrobase_cmd
         os.system("cd ..; cd ..; %s" % macrobase_cmd)
+        
+        seperate_contextual_results(results_file)
+        #for inspecting contextual outlier performance
+        
+        
         (times, num_itemsets, num_iterations, itemsets,
             tuples_per_second, tuples_per_second_no_itemset_mining) = parse_results(results_file)
 

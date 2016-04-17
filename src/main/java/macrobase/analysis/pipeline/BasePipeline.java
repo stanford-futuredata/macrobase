@@ -1,7 +1,7 @@
 package macrobase.analysis.pipeline;
 
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseConf.ContextualAPI;
 import macrobase.conf.MacroBaseConf.DataIngesterType;
 import macrobase.conf.MacroBaseConf.TransformType;
 import macrobase.conf.MacroBaseDefaults;
@@ -30,8 +30,9 @@ public abstract class BasePipeline implements Pipeline {
     protected List<String> lowMetrics;
     protected String queryName;
     protected String storeAnalysisResults;
-    protected boolean contextualEnabled;
 
+    protected ContextualAPI contextualAPI;
+    
     protected MacroBaseConf conf;
 
     @Override
@@ -58,16 +59,7 @@ public abstract class BasePipeline implements Pipeline {
         storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS,
                                               MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
 
-        contextualEnabled = conf.getBoolean(MacroBaseConf.CONTEXTUAL_ENABLED, MacroBaseDefaults.CONTEXTUAL_ENABLED);
-        contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES,
-                                                          MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
-        contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES,
-                                                        MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
-        contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU,
-                                                   MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
-        contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS,
-                                             MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
-
+        contextualAPI = conf.getContextualAPI();
         return this;
     }
 }
