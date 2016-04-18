@@ -22,12 +22,18 @@ import java.util.zip.GZIPInputStream;
 
 public class CSVIngester extends DataIngester {
     private static final Logger log = LoggerFactory.getLogger(CSVIngester.class);
-    protected final List<String> attributes;
-    protected final List<String> highMetrics;
     private CSVParser csvParser;
-    private Iterator<CSVRecord> csvIterator;
     private Map<String, Integer> schema;
     private String filename;
+
+    private ArrayList<Datum> cachedData;
+    private Iterator<Datum> cachedIterator;
+    private int badRows = 0;
+
+    public enum Compression {
+        UNCOMPRESSED,
+        GZIP
+    }
 
     public CSVIngester(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
@@ -50,10 +56,22 @@ public class CSVIngester extends DataIngester {
             conf.getEncoder().recordAttributeName(se.getValue() + 1, se.getKey());
         }
 
-        csvIterator = csvParser.iterator();
+        // Load all records into memory to filter out rows with missing data
+        Iterator<CSVRecord> rawIterator = csvParser.iterator();
+        cachedData = new ArrayList<>(1000);
 
-        highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
-        attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
+        while (rawIterator.hasNext()) {
+            try {
+                CSVRecord record = rawIterator.next();
+                Datum curRow = parseRecord(record);
+                cachedData.add(curRow);
+            } catch (NumberFormatException e) {
+                badRows++;
+            }
+        }
+        log.info("{}/{} bad rows", badRows, cachedData.size());
+
+        cachedIterator = cachedData.iterator();
     }
 
     @Override
@@ -61,18 +79,15 @@ public class CSVIngester extends DataIngester {
         return filename;
     }
 
-    public enum Compression {
-        UNCOMPRESSED,
-        GZIP
-    }
-
-    @Override
-    public boolean hasNext() {
-        return csvIterator.hasNext();
-    }
-
     public Datum next() {
-        CSVRecord record = csvIterator.next();
+        return cachedIterator.next();
+    }
+
+    public boolean hasNext() {
+        return cachedIterator.hasNext();
+    }
+
+    private Datum parseRecord(CSVRecord record) throws NumberFormatException {
         int vecPos = 0;
 
         RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
@@ -114,9 +129,13 @@ public class CSVIngester extends DataIngester {
             }
         }
 
-        return new Datum(attrList, metricVec, contextualDiscreteAttributesValues, contextualDoubleAttributesValues);
+        return new Datum(
+                attrList,
+                metricVec,
+                contextualDiscreteAttributesValues,
+                contextualDoubleAttributesValues
+        );
     }
-
 
     public Schema getSchema(String baseQuery) {
         return null;

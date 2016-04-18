@@ -1,0 +1,29 @@
+macrobase.query.name: testTasks
+
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.csv.file: test_data/us_energy_0p1.csv.gz
+macrobase.loader.csv.compression: GZIP
+macrobase.loader.attributes: [area_id, building_name]
+macrobase.loader.targetLowMetrics: []
+macrobase.loader.targetHighMetrics: [interiorequipment_electricity_kw]
+
+macrobase.analysis.transformType: MCD
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.90
+
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE
+
