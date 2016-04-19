@@ -1,10 +1,10 @@
 package macrobase.datamodel;
 
+import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.stat.correlation.Covariance;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,13 +36,7 @@ public class KDTree {
         this.k = data.get(0).getMetrics().getDimension();
         this.boundaries = new double[k][2];
 
-        // Calculate boundaries of the data in the tree
-        for (int i = 0; i < k; i++) {
-            Datum maxI = Collections.max(data, new DatumComparator(i));
-            Datum minI = Collections.min(data, new DatumComparator(i));
-            this.boundaries[i][0] = minI.getMetrics().getEntry(i);
-            this.boundaries[i][1] = maxI.getMetrics().getEntry(i);
-        }
+        boundaries = AlgebraUtils.getBoundingBox(data);
 
         if (data.size() > this.leafCapacity) {
 

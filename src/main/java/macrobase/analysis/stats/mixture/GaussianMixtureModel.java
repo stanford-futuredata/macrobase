@@ -1,5 +1,6 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateNormal;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -25,7 +26,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.EMCutoffProgress = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
-        log.debug("created Gausiann MM with {} mixtures", this.K);
+        log.debug("created Gaussian MM with {} mixtures", this.K);
     }
 
     @Override
@@ -103,17 +104,19 @@ public class GaussianMixtureModel extends BatchMixtureModel {
                 logLikelihood += Math.log(score(data.get(n)));
             }
 
-            log.info("log likelihood after iteration {} is {}", iteration, logLikelihood);
+            log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+
+            log.debug("cluster likelihoods are: {}", phi);
             log.debug("cluster centers are at {}", mu);
+            log.debug("cluster covariances are at {}", sigma);
 
             double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
             if (improvement >= 0 && improvement < this.EMCutoffProgress) {
-                log.debug("Breaking because imporovemnt was {} percent", improvement * 100);
+                log.debug("Breaking because improvement was {} percent", improvement * 100);
                 break;
             } else {
                 log.debug("improvement is : {}%", improvement * 100);
             }
-
         }
     }
 

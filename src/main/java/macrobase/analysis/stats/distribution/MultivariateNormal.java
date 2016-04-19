@@ -12,7 +12,7 @@ public class MultivariateNormal {
 
     public MultivariateNormal(RealVector mean, RealMatrix sigma) {
         double[][] arrayOfMatrix = new double[sigma.getColumnDimension()][sigma.getRowDimension()];
-        for (int i=0; i< sigma.getColumnDimension(); i ++ ) {
+        for (int i = 0; i < sigma.getColumnDimension(); i++) {
             arrayOfMatrix[i] = sigma.getRow(i);
         }
         distribution = new MultivariateNormalDistribution(mean.toArray(), arrayOfMatrix);
