@@ -72,4 +72,7 @@ public class MacroBaseDefaults {
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
     public static final Integer NUM_MIXTURES = 2;
     public static final Double EM_CUTOFF_PROGRESS = 0.00001;
+    public static final Integer DPM_TRUNCATING_PARAMETER = 50;
+    public static final Double DPM_CONCENTRATION_PARAMETER = 1.;
+    public static final Integer MIXTURE_MAX_ITERATIONS_TO_CONVERGE = 100;
 }

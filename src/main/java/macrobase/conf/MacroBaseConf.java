@@ -3,6 +3,9 @@ package macrobase.conf;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.stats.*;
+import macrobase.analysis.stats.mixture.GaussianMixtureModel;
+import macrobase.analysis.stats.mixture.VariationalDPMG;
+import macrobase.analysis.stats.mixture.VariationalGMM;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,11 +44,16 @@ public class MacroBaseConf extends Configuration {
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
 
+    public static final String MIXTURE_MAX_ITERATIONS_TO_CONVERGE = "macrobase.analysis.stat.mixtures.maxIterations";
     public static final String NUM_MIXTURES = "macrobase.analysis.stat.mixtures.numMixtures";
-    public static final String EM_CUTOFF_PROGRESS = "macrobase.analysis.em.improvement_cutoff_ration";
+    public static final String EM_CUTOFF_PROGRESS = "macrobase.analysis.em.improvementCutoffRatio";
+    public static final String DPM_TRUNCATING_PARAMETER = "macrobase.analysis.dpm.truncatingParameter";
+    public static final String DPM_CONCENTRATION_PARAMETER = "macrobase.analysis.dpm.concentrationParameter";
 
     // Algorithm to use when choosing the bandwidth for the given data.
     public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
+    public static final String KDE_PROPORTION_OF_DATA_TO_USE = "macrobase.analysis.kde.proportionOfDataToUse";
+
     // Multiplies the bandwidth that was gotten algorithmically by this given constant (double).
     public static final String KDE_BANDWIDTH_MULTIPLIER = "macrobase.analysis.kde.bandwidthMultiplier";
     public static final String KDE_KERNEL_TYPE = "macrobase.analysis.kde.kernelType";
@@ -122,6 +130,8 @@ public class MacroBaseConf extends Configuration {
         ARIMA,
         BAYESIAN_NORMAL,
         GAUSSIAN_MIXTURE_EM,
+        VARIATIONAL_GMM,
+        VARIATIONAL_DPGM,
     }
 
     public Random getRandom() {
@@ -172,8 +182,14 @@ public class MacroBaseConf extends Configuration {
                 log.info("Using Bayesian Normal transform.");
                 return new BayesianNormalDensity(this);
             case GAUSSIAN_MIXTURE_EM:
-                log.info("Using Bayesian Normal transform.");
+                log.info("Using Finite mixture of Gaussians (EM algorithm) transform.");
                 return new GaussianMixtureModel(this);
+            case VARIATIONAL_GMM:
+                log.info("Using Finite mixture of Gaussians (Bayesian algorithm) transform.");
+                return new VariationalGMM(this);
+            case VARIATIONAL_DPGM:
+                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new VariationalDPMG(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }

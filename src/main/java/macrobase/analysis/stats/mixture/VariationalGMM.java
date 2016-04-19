@@ -1,5 +1,6 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -45,7 +46,7 @@ public class VariationalGMM extends BatchMixtureModel {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
-        log.debug("created Gausiann MM with {} mixtures", this.K);
+        log.debug("created Gaussian MM with {} mixtures", this.K);
     }
 
     @Override
@@ -61,7 +62,7 @@ public class VariationalGMM extends BatchMixtureModel {
         // priorNu = 1. / dimensions;
         priorNu = 0.1;
         priorW = MatrixUtils.createRealIdentityMatrix(dimensions);
-        RealMatrix priorWInverse = AlgebraUtils.createInverseMatrix(priorW);
+        RealMatrix priorWInverse = AlgebraUtils.invertMatrix(priorW);
 
         alpha = new double[K];
         beta = new double[K];
@@ -144,20 +145,20 @@ public class VariationalGMM extends BatchMixtureModel {
                 RealMatrix wInverse = priorWInverse.add(
                         S.get(k).scalarMultiply(clusterWeight[k])).add(
                         adjustedMean.outerProduct(adjustedMean).scalarMultiply(priorBeta * clusterWeight[k] / (priorBeta + clusterWeight[k])));
-                W.set(k, AlgebraUtils.createInverseMatrix(wInverse));
+                W.set(k, AlgebraUtils.invertMatrix(wInverse));
             }
-
 
             predictiveDistributions = new ArrayList<>(K);
             for (int k = 0; k < this.K; k++) {
                 double scale = (nu[k] + 1 - dimensions) * beta[k] / (1 + beta[k]);
-                RealMatrix ll = AlgebraUtils.createInverseMatrix(W.get(k).scalarMultiply(scale));
+                RealMatrix ll = AlgebraUtils.invertMatrix(W.get(k).scalarMultiply(scale));
                 // TODO: MultivariateTDistribution should support real values for 3rd parameters
                 predictiveDistributions.add(new MultivariateTDistribution(m.get(k), ll, (int) (nu[k] - 1 - dimensions)));
             }
 
             log.debug("cluster means are at {}", clusterMean);
             log.debug("cluster weights are at {}", clusterWeight);
+            log.debug("cluster covariances are at {}", getCovariances());
 
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
@@ -165,7 +166,7 @@ public class VariationalGMM extends BatchMixtureModel {
                 logLikelihood += Math.log(score(data.get(n)));
             }
 
-            log.trace("log likelihood after iteration {} is {}", iteration, logLikelihood);
+            log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
 
             double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
             if (improvement >= 0 && improvement < this.progressCutoff) {
@@ -204,7 +205,7 @@ public class VariationalGMM extends BatchMixtureModel {
     public List<RealMatrix> getCovariances() {
         List<RealMatrix> covariances = new ArrayList<>(K);
         for (int k = 0; k < this.K; k++) {
-            covariances.add(AlgebraUtils.createInverseMatrix(W.get(k).scalarMultiply(nu[k])));
+            covariances.add(AlgebraUtils.invertMatrix(W.get(k).scalarMultiply(nu[k])));
         }
         return covariances;
     }

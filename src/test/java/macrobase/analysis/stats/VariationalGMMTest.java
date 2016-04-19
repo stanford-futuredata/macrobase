@@ -1,10 +1,15 @@
 package macrobase.analysis.stats;
 
 import com.google.common.collect.Lists;
+import macrobase.analysis.stats.mixture.GaussianMixtureModel;
+import macrobase.analysis.stats.mixture.VariationalGMM;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import macrobase.diagnostics.JsonUtils;
+import macrobase.diagnostics.ScoreDumper;
 import macrobase.ingest.CSVIngester;
+import macrobase.util.DiagnosticsUtils;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -184,6 +189,24 @@ public class VariationalGMMTest {
             }
             assertEquals("a cluster was not identified", true, identified);
         }
+
+        double[][] boundaries = {
+                {0, 6.01},
+                {-2, 4.01},
+        };
+        List<Datum> scoredData = DiagnosticsUtils.create2DGrid(boundaries, 0.05);
+
+        JsonUtils.dumpAsJson(variationalGMM.getCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
+        JsonUtils.dumpAsJson(variationalGMM.getMeans(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
+        JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-weights.json");
+
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
+        ScoreDumper dumper = new ScoreDumper(conf);
+        dumper.dumpScores(variationalGMM, scoredData);
+
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
+        dumper = new ScoreDumper(conf);
+        dumper.dumpScores(variationalGMM, data);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package macrobase.analysis.stats;
 
 import com.google.common.collect.Lists;
+import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
