@@ -6,9 +6,10 @@ import re
 class MacrobaseArgAction(argparse.Action):
   def __call__(self, parser, namespace, values, option_string=None):
     arg = re.sub('_', '.', self.dest)
-    macrobase_args = getattr(namespace, 'macrobase_args', {})
+    _attr_to_set = 'macrobase_args' if self.const is None else self.const
+    macrobase_args = getattr(namespace, _attr_to_set, {})
     macrobase_args[arg] = values
-    setattr(namespace, 'macrobase_args', macrobase_args)
+    setattr(namespace, _attr_to_set, macrobase_args)
 
 
 def add_macrobase_args(parser):
@@ -17,7 +18,7 @@ def add_macrobase_args(parser):
   parser.add_argument('--macrobase-analysis-kde-bandwidthMultiplier',
                       type=float,
                       action=MacrobaseArgAction)
-  parser.add_argument('--macrobase-analysis-detectorType',
+  parser.add_argument('--macrobase-analysis-transformType',
                       action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-treeKde-accuracy', type=float,
                       action=MacrobaseArgAction)

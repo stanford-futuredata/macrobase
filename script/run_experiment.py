@@ -2,7 +2,6 @@ import argparse
 import errno
 import os
 import yaml
-import sys
 from generate_multimodal_distribution import generate_distribution
 from generate_multimodal_distribution import parse_args as generator_parse_args
 from py_analysis.common import add_macrobase_args
@@ -10,28 +9,12 @@ from py_analysis.plot_distribution import parse_args as plot_dist_parse_args
 from py_analysis.plot_distribution import plot_distribution
 from py_analysis.plot_estimator import parse_args as plot_est_parse_args
 from py_analysis.plot_estimator import plot_estimator
+from macrobase_cmd import run_macrobase
 from helpers import retry_3_times
 
 SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.analysis.results.store"
 HIGH_METRICS = "macrobase.loader.targetHighMetrics"
 DETECTOR = "macrobase.analysis.detectorType"
-
-
-def run_macrobase(cmd='batch', conf='conf/batch.conf', profiler=None,
-                  **kwargs):
-  extra_args = ' '.join(['-D{key}={value}'.format(key=key, value=value)
-                         for key, value in kwargs.items()])
-  if profiler == 'yourkit':
-    extra_args += ' -agentpath:/Applications/YourKit-Java-Profiler-2016.02.app/Contents/Resources/bin/mac/libyjpagent.jnilib'  # noqa
-  macrobase_cmd = '''java {extra_args} -Xms128m -Xmx16G \\
-      -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
-      macrobase.MacroBase {cmd} {conf_file}'''.format(
-      cmd=cmd, conf_file=conf, extra_args=extra_args)
-  print 'running the following command:'
-  print macrobase_cmd
-  exit_status = os.system(macrobase_cmd)
-  if exit_status != 0:
-    sys.exit(exit_status)
 
 
 def parse_args():
