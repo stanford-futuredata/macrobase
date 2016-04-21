@@ -10,14 +10,16 @@ import java.util.List;
 import java.util.Random;
 
 public abstract class BatchMixtureModel extends BatchTrainScore {
+    protected MacroBaseConf conf;
     public BatchMixtureModel(MacroBaseConf conf) {
         super(conf);
+        this.conf = conf;
     }
 
     protected List<RealVector> gonzalezInitializeMixtureCenters(List<Datum> data, int K) {
         List<RealVector> vectors = new ArrayList<>(K);
         int N = data.size();
-        Random rand = new Random();
+        Random rand = conf.getRandom();
         HashSet<Integer> pointsChosen = new HashSet<Integer>();
         int index = rand.nextInt(data.size());
         for (int k = 0; k < K; k++) {

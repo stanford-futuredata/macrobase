@@ -33,6 +33,7 @@ public class VariationalGMMTest {
      */
     public void univariateToyBimodalTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 2)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -54,6 +55,7 @@ public class VariationalGMMTest {
      */
     public void bivariateWellSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -142,6 +144,7 @@ public class VariationalGMMTest {
      */
     public void bivariateOkSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -215,6 +218,7 @@ public class VariationalGMMTest {
      */
     public void unusedOrOverlappingClusterTest() throws ConfigurationException, IOException, SQLException {
         MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 4)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
