@@ -23,4 +23,14 @@ public class JsonUtils {
         PrintStream out = new PrintStream(new File(dir, filename), "UTF-8");
         out.println(gson.toJson(object));
     }
+
+    public static void tryToDumpAsJson(Object object, String filename) {
+        try {
+            dumpAsJson(object, filename);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 }

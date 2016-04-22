@@ -94,7 +94,9 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
-    public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
+    public static final String SCORED_DATA_FILE = "macrobase.diagnostic.dumpScoreFile";
+    public static final String DUMP_DENSITY_GRID_TO = "macrobase.diagnostic.dumpDensityGridFile";
+    public static final String NUM_DENSITY_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.densityGridPointsPerDimension";
 
     private final DatumEncoder datumEncoder;
 

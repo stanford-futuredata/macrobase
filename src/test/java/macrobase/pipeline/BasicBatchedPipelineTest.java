@@ -80,6 +80,8 @@ public class BasicBatchedPipelineTest {
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("XX"))
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DUMP_DENSITY_GRID_TO, "junk.json")
+                .set(MacroBaseConf.SCORED_DATA_FILE, "points.json")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/20points.csv");

@@ -29,7 +29,7 @@ public class MacroBaseDefaults {
     public static final Double MODEL_UPDATE_PERIOD = 100000.;
     public static final Integer OUTLIER_ITEM_SUMMARY_SIZE = 100000;
     public static final Integer INLIER_ITEM_SUMMARY_SIZE = 100000;
-    
+
     // timeseries defaults
     public static final Integer TUPLE_WINDOW = 100;
 
@@ -61,7 +61,7 @@ public class MacroBaseDefaults {
     public static final String DB_PASSWORD = "";
     public static final String DB_NAME = "postgres";
     public static final String DB_URL = "localhost";
-    
+
     public static final Boolean CONTEXTUAL_ENABLED = false;
     public static final Double CONTEXTUAL_DENSECONTEXTTAU = 0.5;
     public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
@@ -75,4 +75,7 @@ public class MacroBaseDefaults {
     public static final Integer MIXTURE_MAX_ITERATIONS_TO_CONVERGE = 100;
     public static final MacroBaseConf.ClassifierType CLASSIFIER_TYPE = MacroBaseConf.ClassifierType.NORM_PERCENTILE;
     public static final MacroBaseConf.DensityEstimaterType DENSITY_ESTIMATER_TYPE = MacroBaseConf.DensityEstimaterType.DPGMM;
+    public static final String SCORED_DATA_FILE = null;
+    public static final String DUMP_DENSITY_GRID_TO = null;
+    public static final Integer NUM_DENSITY_GRID_POINTS_PER_DIMENSION = 1000;
 }

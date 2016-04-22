@@ -26,10 +26,6 @@ public class BatchScoreFeatureTransform extends BatchTransform {
         this.conf = conf;
     }
 
-    public BatchScoreFeatureTransform(MacroBaseConf conf, Iterator<Datum> input) throws ConfigurationException {
-        this(conf, input, conf.getTransformType());
-    }
-
     @Override
     protected List<Datum> transform(List<Datum> data) {
         if (identityTransform) {

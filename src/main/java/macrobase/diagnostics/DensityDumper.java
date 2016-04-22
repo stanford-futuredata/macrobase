@@ -1,6 +1,7 @@
 package macrobase.diagnostics;
 
 import macrobase.analysis.stats.BatchTrainScore;
+import macrobase.analysis.stats.DensityEstimater;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.util.DiagnosticsUtils;
@@ -9,14 +10,15 @@ import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class ScoreDumper {
+public class DensityDumper {
     private final MacroBaseConf conf;
     private final String scoreFile;
 
-    public ScoreDumper(MacroBaseConf conf) {
+    public DensityDumper(MacroBaseConf conf) {
         this.conf = conf;
-        this.scoreFile = conf.getString(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "");
+        this.scoreFile = conf.getString(MacroBaseConf.SCORED_DATA_FILE, "");
     }
 
     public void dumpScores(BatchTrainScore batchTrainScore, List<Datum> data) {
@@ -35,7 +37,16 @@ public class ScoreDumper {
     }
 
     public void dumpScores(BatchTrainScore batchTrainScore, double[][] boundaries, double delta) {
-        List<Datum> gridData = DiagnosticsUtils.create2DGrid(boundaries, delta);
+        List<Datum> gridData = DiagnosticsUtils.createGridFixedIncrement(boundaries, delta);
         dumpScores(batchTrainScore, gridData);
+    }
+
+    public static void tryToDumpScoredGrid(DensityEstimater densityEstimater, double[][] boundingBox, int pointsPerDimension, String filename) {
+        List<Datum> gridData = DiagnosticsUtils.createGridFixedSize(boundingBox, pointsPerDimension);
+
+        List<MetricsAndDensity> scoredGrid = gridData.stream()
+                .map(d -> new MetricsAndDensity(d.getMetrics(), densityEstimater.density(d)))
+                .collect(Collectors.toList());
+        JsonUtils.tryToDumpAsJson(scoredGrid, filename);
     }
 }
