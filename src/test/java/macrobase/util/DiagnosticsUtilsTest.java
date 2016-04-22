@@ -15,17 +15,17 @@ public class DiagnosticsUtilsTest {
     /**
      * test 2D grid construction for a simple case.
      */
-    public void testGrid() {
+    public void test2DGrid() {
         double[][] boundaries = {
-                {1, 2.001},
-                {1, 2.001},
+                {1, 2.000001},
+                {1, 2.000001},
         };
         List<Datum> grid;
 
-        grid = DiagnosticsUtils.create2DGrid(boundaries, 0.1);
+        grid = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.1);
         assertEquals(121, grid.size());
 
-        grid = DiagnosticsUtils.create2DGrid(boundaries, 0.5);
+        grid = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.5);
         assertEquals(9, grid.size());
 
         double[][] expectedGrid = {
@@ -52,5 +52,31 @@ public class DiagnosticsUtilsTest {
         for (int i = 0 ; i < 9 ; i++) {
             assertEquals(true, pointsSeen[i]);
         }
+
+        List<Datum> grid2 = DiagnosticsUtils.createGridFixedSize(boundaries, 3);
+        assertEquals(grid2.size(), 9);
+        for (int i = 0; i < 9; i++) {
+            for (int d=0; d < 2; d++) {
+                assertEquals(grid.get(i).getMetrics().getEntry(d), grid2.get(i).getMetrics().getEntry(d), 1e-5);
+            }
+        }
+    }
+
+    @Test
+    /**
+     * test 1D grid construction for a simple case.
+     */
+    public void test1DGrid() {
+        double[][] boundaries = {
+                {1, 2.000001},
+        };
+        List<Datum> grid;
+        grid = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.5);
+        assertEquals(3, grid.size());
+        grid = DiagnosticsUtils.createGridFixedSize(boundaries, 6);
+        assertEquals(6, grid.size());
+        assertEquals(1.8, grid.get(4).getMetrics().getEntry(0), 1e-5);
+        assertEquals(1.2, grid.get(1).getMetrics().getEntry(0), 1e-5);
+
     }
 }

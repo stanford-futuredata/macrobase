@@ -9,18 +9,13 @@ import java.util.List;
 
 public class DiagnosticsUtils {
 
-    public static List<Datum> create2DGrid(double[][] boundaries, double delta) {
+    public static List<Datum> createGridFixedIncrement(double[][] boundaries, double delta) {
         int dimension = boundaries.length;
         int[] dimensionPoints = new int[dimension];
         int size = 1;
         for (int d = 0; d < dimension; d++) {
             dimensionPoints[d] = (int) ((boundaries[d][1] - boundaries[d][0]) / delta + 1);
             size *= dimensionPoints[d];
-        }
-        List<Datum> scoredData = new ArrayList<>((int) size);
-        double[] point = new double[dimension];
-        for (int d = 0; d < dimension; d++) {
-            point[d] = boundaries[d][0];
         }
 
         List<RealVector> gridPointVectors = new ArrayList<>(dimension);
@@ -33,15 +28,52 @@ public class DiagnosticsUtils {
             gridPointVectors.add(new ArrayRealVector(array));
         }
 
+        return convertToGrid(gridPointVectors);
+    }
+
+    private static List<Datum> convertToGrid(List<RealVector> anchors) {
+        // TODO: Currently only supports 1D and 2D grids.
+        int size = 1;
+        for (RealVector v : anchors) {
+            size *= v.getDimension();
+        }
+        int dimension = anchors.size();
         List<Datum> grid = new ArrayList<>(size);
-        double[] array = new double[2];
-        for (int i = 0; i < dimensionPoints[0]; i++) {
-            array[0] = gridPointVectors.get(0).getEntry(i);
-            for (int j = 0; j < dimensionPoints[1]; j++) {
-                array[1] = gridPointVectors.get(1).getEntry(j);
+        double[] array = new double[dimension];
+        if (dimension == 1) {
+            for (double x : anchors.get(0).toArray()) {
+                array[0] = x;
                 grid.add(new Datum(new ArrayList<Integer>(), new ArrayRealVector(array)));
+            }
+        } else if (dimension == 2) {
+            for (double x : anchors.get(0).toArray()) {
+                array[0] = x;
+                for (double y : anchors.get(1).toArray()) {
+                    array[1] = y;
+                    grid.add(new Datum(new ArrayList<Integer>(), new ArrayRealVector(array)));
+                }
             }
         }
         return grid;
+    }
+
+    public static List<Datum> createGridFixedSize(double[][] boundaries, int pointsPerDimension) {
+        int dimension = boundaries.length;
+        double delta[] = new double[dimension];
+        for (int d = 0; d < dimension; d++) {
+            delta[d] = (boundaries[d][1] - boundaries[d][0]) / (pointsPerDimension - 1.);
+        }
+
+        List<RealVector> gridPointVectors = new ArrayList<>(dimension);
+
+        for (int d = 0; d < dimension; d++) {
+            double[] array = new double[pointsPerDimension];
+            for (int i = 0; i < pointsPerDimension; i++) {
+                array[i] = boundaries[d][0] + i * delta[d];
+            }
+            gridPointVectors.add(new ArrayRealVector(array));
+        }
+
+        return convertToGrid(gridPointVectors);
     }
 }

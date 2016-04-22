@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.BatchMixtureModel;
+import macrobase.analysis.stats.DensityEstimater;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -17,7 +18,7 @@ import java.util.List;
 /**
  * Variational Dirichlet Process Mixture of Gaussians.
  */
-public class VariationalDPMG extends BatchMixtureModel {
+public class VariationalDPMG extends BatchMixtureModel implements DensityEstimater {
     private static final Logger log = LoggerFactory.getLogger(VariationalDPMG.class);
     private final int maxIterationsToConverge;
 
@@ -88,6 +89,16 @@ public class VariationalDPMG extends BatchMixtureModel {
         baseLocation = new ArrayRealVector(midpoints);
         inverseBaseOmega = MatrixUtils.createRealIdentityMatrix(dimension);
 
+    }
+
+    @Override
+    public double density(Datum datum) {
+        double density = 0;
+        double[] stickLengths = getClusterWeights();
+        for (int i=0; i < predictiveDistributions.size(); i++){
+            density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
+        }
+        return density;
     }
 
     @Override
@@ -249,12 +260,7 @@ public class VariationalDPMG extends BatchMixtureModel {
 
     @Override
     public double score(Datum datum) {
-        double density = 0;
-        double[] stickLengths = getClusterWeights();
-        for (int i=0; i < predictiveDistributions.size(); i++){
-            density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
-        }
-        return density;
+        return density(datum);
     }
 
     @Override

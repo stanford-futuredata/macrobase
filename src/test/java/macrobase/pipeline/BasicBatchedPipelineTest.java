@@ -65,6 +65,52 @@ public class BasicBatchedPipelineTest {
     }
 
     @Test
+    public void testGMMDensityClassifier() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.IDENTITY)
+                .set(MacroBaseConf.DENSITY_ESTIMATER_TYPE, MacroBaseConf.DensityEstimaterType.GMM)
+                .set(MacroBaseConf.NUM_MIXTURES, 1)
+                .set(MacroBaseConf.CLASSIFIER_TYPE, MacroBaseConf.ClassifierType.DENSITY_PERCENTILE)
+                .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
+                .set(MacroBaseConf.USE_PERCENTILE, true)
+                .set(MacroBaseConf.MIN_OI_RATIO, .01)
+                .set(MacroBaseConf.MIN_SUPPORT, .01)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
+                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
+                .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("XX"))
+                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.DUMP_DENSITY_GRID_TO, "junk.json")
+                .set(MacroBaseConf.SCORED_DATA_FILE, "points.json")
+                .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
+                .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/20points.csv");
+
+        conf.loadSystemProperties();
+        conf.sanityCheckBatch();
+
+        AnalysisResult ar = (new BasicBatchedPipeline(conf)).next();
+
+        assertEquals(1, ar.getItemSets().size());
+
+        HashSet<String> toFindColumn = Sets.newHashSet("XX");
+        HashSet<String> toFindValue = Sets.newHashSet("-5.8");
+
+        for (ColumnValue cv : ar.getItemSets().get(0).getItems()) {
+            assertTrue(toFindColumn.contains(cv.getColumn()));
+            toFindColumn.remove(cv.getColumn());
+            assertTrue(toFindValue.contains(cv.getValue()));
+            toFindValue.remove(cv.getValue());
+        }
+
+        assertEquals(0, toFindColumn.size());
+        assertEquals(0, toFindValue.size());
+
+        assertEquals(ar.getNumInliers(), 19, 1e-9);
+        assertEquals(ar.getNumOutliers(), 1, 1e-9);
+    }
+
+    @Test
     public void testSensor10KPower() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
@@ -178,9 +224,7 @@ public class BasicBatchedPipelineTest {
         assertEquals(0, toFindColumn.size());
         assertEquals(0, toFindValue.size());
     }
-    
-    
-    
+
     @Test
     public void testContextualMADAnalyzer() throws Exception {
     	 MacroBaseConf conf = new MacroBaseConf()
@@ -206,7 +250,5 @@ public class BasicBatchedPipelineTest {
         AnalysisResult ar = (new BasicBatchedPipeline(conf)).next();
 
         assertEquals(0, ar.getItemSets().size());
-
-     
     }
 }

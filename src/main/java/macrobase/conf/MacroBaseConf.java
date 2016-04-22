@@ -2,10 +2,14 @@ package macrobase.conf;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
+import macrobase.analysis.classify.BatchingPercentileClassifier;
+import macrobase.analysis.classify.DensityBatchPercentileClassifier;
+import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.stats.*;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.analysis.stats.mixture.VariationalDPMG;
 import macrobase.analysis.stats.mixture.VariationalGMM;
+import macrobase.analysis.transform.FeatureTransform;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +42,7 @@ public class MacroBaseConf extends Configuration {
     public static final String MODEL_UPDATE_PERIOD = "macrobase.analysis.streaming.modelUpdatePeriod";
     public static final String OUTLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.outlierSummarySize";
     public static final String INLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.inlierItemSummarySize";
-    
+
     public static final String TUPLE_WINDOW = "macrobase.analysis.timeseries.tupleWindow";
 
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
@@ -62,7 +66,9 @@ public class MacroBaseConf extends Configuration {
     public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
 
     public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
-    public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
+
+    public static final String CLASSIFIER_TYPE = "macrobase.classify.classifierType";
+    public static final String DENSITY_ESTIMATER_TYPE = "macrobase.classify.densityEstimaterType";
 
     public static final String DATA_LOADER_TYPE = "macrobase.loader.loaderType";
     public static final String TIME_COLUMN = "macrobase.loader.timeColumn";
@@ -80,7 +86,7 @@ public class MacroBaseConf extends Configuration {
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
-    
+
     public static final String CONTEXTUAL_ENABLED = "macrobase.analysis.contextual.enabled";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
@@ -88,7 +94,10 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
-    public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
+    public static final String SCORED_DATA_FILE = "macrobase.diagnostic.dumpScoreFile";
+    public static final String DUMP_DENSITY_GRID_TO = "macrobase.diagnostic.dumpDensityGridFile";
+    public static final String NUM_DENSITY_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.densityGridPointsPerDimension";
+
     private final DatumEncoder datumEncoder;
 
     public MacroBaseConf() {
@@ -113,9 +122,45 @@ public class MacroBaseConf extends Configuration {
         return datumEncoder;
     }
 
+    public OutlierClassifier constructOutlierClassifier(FeatureTransform featureTransform) throws ConfigurationException {
+        ClassifierType classifierType = getClassifierType();
+        switch (classifierType) {
+            case NORM_PERCENTILE:
+                return new BatchingPercentileClassifier(this, featureTransform);
+            case DENSITY_PERCENTILE:
+                return new DensityBatchPercentileClassifier(this, featureTransform);
+            default:
+                throw new ConfigurationException(String.format("Unknown classifier type: %s", classifierType));
+        }
+    }
+
+    public DensityEstimater constructDensityEstimator() throws ConfigurationException {
+        DensityEstimaterType densityEstimaterType = getDensityEstimatorType();
+        switch (densityEstimaterType) {
+            case GMM:
+                log.info("Using finite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new VariationalGMM(this);
+            case DPGMM:
+                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new VariationalDPMG(this);
+            default:
+                throw new ConfigurationException(String.format("Unknown DensityEstimater type: %s", getDensityEstimatorType()));
+        }
+    }
+
+    public enum ClassifierType {
+        NORM_PERCENTILE,
+        DENSITY_PERCENTILE
+    }
+
     public enum PeriodType {
         TUPLE_BASED,
         TIME_BASED
+    }
+
+    public enum DensityEstimaterType {
+        DPGMM,
+        GMM
     }
 
     public enum TransformType {
@@ -132,19 +177,20 @@ public class MacroBaseConf extends Configuration {
         GAUSSIAN_MIXTURE_EM,
         VARIATIONAL_GMM,
         VARIATIONAL_DPGM,
+        IDENTITY,
     }
 
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
-        if(seed != null) {
+        if (seed != null) {
             return new Random(seed);
         } else {
             return new Random();
         }
     }
 
-    public BatchTrainScore constructTransform (TransformType transformType)
-            throws ConfigurationException{
+    public BatchTrainScore constructTransform(TransformType transformType)
+            throws ConfigurationException {
         switch (transformType) {
             case MAD_OR_MCD:
                 int metricsDimensions = this.getStringList(LOW_METRICS).size() + this.getStringList(HIGH_METRICS).size();
@@ -198,7 +244,7 @@ public class MacroBaseConf extends Configuration {
     public enum DataIngesterType {
         CSV_LOADER,
         POSTGRES_LOADER,
-        CACHING_POSTGRES_LOADER
+        CLASSIFIER_TYPE, CACHING_POSTGRES_LOADER
     }
 
 
@@ -299,6 +345,20 @@ public class MacroBaseConf extends Configuration {
         return defaultValue;
     }
 
+    public ClassifierType getClassifierType() throws ConfigurationException {
+        if (!_conf.containsKey(CLASSIFIER_TYPE)) {
+            return MacroBaseDefaults.CLASSIFIER_TYPE;
+        }
+        return ClassifierType.valueOf(_conf.get(CLASSIFIER_TYPE));
+    }
+
+    public DensityEstimaterType getDensityEstimatorType() {
+        if (!_conf.containsKey(DENSITY_ESTIMATER_TYPE)) {
+            return MacroBaseDefaults.DENSITY_ESTIMATER_TYPE;
+        }
+        return DensityEstimaterType.valueOf(_conf.get(DENSITY_ESTIMATER_TYPE));
+    }
+
     public DataIngesterType getDataLoaderType() throws ConfigurationException {
         if (!_conf.containsKey(DATA_LOADER_TYPE)) {
             return MacroBaseDefaults.DATA_LOADER_TYPE;
@@ -350,15 +410,14 @@ public class MacroBaseConf extends Configuration {
     }
 
     private void sanityCheckBase() throws ConfigurationException {
-        if(getBoolean(USE_PERCENTILE, false) && getBoolean(USE_ZSCORE, false)) {
+        if (getBoolean(USE_PERCENTILE, false) && getBoolean(USE_ZSCORE, false)) {
             throw new ConfigurationException(String.format("Can only select one of %s or %s",
-                                                           USE_PERCENTILE,
-                                                           USE_ZSCORE));
-        }
-        else if(!(getBoolean(USE_PERCENTILE, false) || getBoolean(USE_ZSCORE, false))) {
+                    USE_PERCENTILE,
+                    USE_ZSCORE));
+        } else if (!(getBoolean(USE_PERCENTILE, false) || getBoolean(USE_ZSCORE, false))) {
             throw new ConfigurationException(String.format("Must select one of %s or %s",
-                                                           USE_PERCENTILE,
-                                                           USE_ZSCORE));
+                    USE_PERCENTILE,
+                    USE_ZSCORE));
         }
     }
 
@@ -376,4 +435,5 @@ public class MacroBaseConf extends Configuration {
                 .filter(e -> e.startsWith("macrobase"))
                 .forEach(e -> set(e, System.getProperty(e)));
     }
+
 }

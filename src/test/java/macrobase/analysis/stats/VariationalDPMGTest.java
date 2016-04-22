@@ -6,7 +6,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
-import macrobase.diagnostics.ScoreDumper;
+import macrobase.diagnostics.DensityDumper;
 import macrobase.ingest.CSVIngester;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
@@ -84,12 +84,12 @@ public class VariationalDPMGTest {
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCenters(), "VariationalDPMGTest-bivariateWellSeparatedNormalTest-means.json");
         JsonUtils.dumpAsJson(variationalDPGM.getClusterWeights(), "VariationalDPMGTest-bivariateWellSeparatedNormalTest-weights.json");
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-grid.json");
-        ScoreDumper dumper = new ScoreDumper(conf);
+        conf.set(MacroBaseConf.SCORED_DATA_FILE, "3gaussians-700-grid.json");
+        DensityDumper dumper = new DensityDumper(conf);
         dumper.dumpScores(variationalDPGM, boundaries, 0.05);
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-data.json");
-        dumper = new ScoreDumper(conf);
+        conf.set(MacroBaseConf.SCORED_DATA_FILE, "3gaussians-700-data.json");
+        dumper = new DensityDumper(conf);
         dumper.dumpScores(variationalDPGM, data);
 
 
@@ -178,12 +178,12 @@ public class VariationalDPMGTest {
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCenters(), "VariationalDPMGTest-bivariateOkSeparatedNormalTest-means.json");
         JsonUtils.dumpAsJson(variationalDPGM.getClusterWeights(), "VariationalDPMGTest-bivariateOkSeparatedNormalTest-weights.json");
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
-        ScoreDumper dumper = new ScoreDumper(conf);
+        conf.set(MacroBaseConf.SCORED_DATA_FILE, "3gaussians-7k-grid.json");
+        DensityDumper dumper = new DensityDumper(conf);
         dumper.dumpScores(variationalDPGM, boundaries, 0.05);
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
-        dumper = new ScoreDumper(conf);
+        conf.set(MacroBaseConf.SCORED_DATA_FILE, "3gaussians-7k-data.json");
+        dumper = new DensityDumper(conf);
         dumper.dumpScores(variationalDPGM, data);
     }
 }
