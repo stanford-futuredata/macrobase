@@ -1,7 +1,6 @@
 package macrobase.analysis.pipeline;
 
 import com.google.common.collect.Lists;
-import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.contextualoutlier.Context;
 import macrobase.analysis.contextualoutlier.ContextualOutlierDetector;
@@ -9,17 +8,17 @@ import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
+import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
 import macrobase.ingest.TimedBatchIngest;
-import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +58,7 @@ public class BasicBatchedPipeline extends OneShotPipeline {
         DataIngester ingester = conf.constructIngester();
         TimedBatchIngest batchIngest = new TimedBatchIngest(ingester);
         FeatureTransform featureTransform = new BatchScoreFeatureTransform(conf, batchIngest, conf.getTransformType());
-        OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf, featureTransform);
+        OutlierClassifier outlierClassifier = conf.constructOutlierClassifier(featureTransform);
         BatchSummarizer summarizer = new BatchSummarizer(conf, outlierClassifier);
 
         // TODO: this should be a new pipeline

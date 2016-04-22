@@ -1,15 +1,11 @@
 package macrobase.analysis.pipeline;
 
-import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.AnalysisResult;
-import macrobase.analysis.summary.Summarizer;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseConf.DataIngesterType;
 import macrobase.conf.MacroBaseConf.TransformType;
 import macrobase.conf.MacroBaseDefaults;
-import macrobase.ingest.DataIngester;
-import macrobase.analysis.transform.FeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +32,6 @@ public abstract class AbstractPipeline implements Iterator<AnalysisResult> {
     protected final List<String> lowMetrics;
     protected final MacroBaseConf conf;
     protected final String queryName;
-    protected final String storeAnalysisResults;
     protected final boolean contextualEnabled;
 
     public AbstractPipeline(MacroBaseConf conf) throws ConfigurationException {
@@ -58,8 +53,6 @@ public abstract class AbstractPipeline implements Iterator<AnalysisResult> {
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
-
-        storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS, MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
 
         contextualEnabled = conf.getBoolean(MacroBaseConf.CONTEXTUAL_ENABLED, MacroBaseDefaults.CONTEXTUAL_ENABLED);
         contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES,MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);

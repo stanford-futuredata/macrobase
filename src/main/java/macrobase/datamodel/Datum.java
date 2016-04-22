@@ -10,8 +10,8 @@ public class Datum implements HasMetrics {
     private List<Integer> attributes;
     private RealVector metrics;
     private RealVector auxiliaries;
+    private double density;
 
-    
     private List<Integer> contextualDiscreteAttributes;
     private RealVector contextualDoubleAttributes;
     
@@ -83,6 +83,14 @@ public class Datum implements HasMetrics {
         } else {
             return new ArrayRealVector(0);
         }
+    }
+
+    public void setDensity(double density) {
+        this.density = density;
+    }
+
+    public double getDensity() {
+        return density;
     }
     
 }

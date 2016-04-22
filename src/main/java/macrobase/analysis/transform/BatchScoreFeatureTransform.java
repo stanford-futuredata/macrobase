@@ -12,11 +12,17 @@ import java.util.List;
 public class BatchScoreFeatureTransform extends BatchTransform {
     protected BatchTrainScore batchTrainScore;
     protected MacroBaseConf conf;
+    protected boolean identityTransform;
 
     public BatchScoreFeatureTransform(MacroBaseConf conf, Iterator<Datum> input, MacroBaseConf.TransformType transformType)
             throws ConfigurationException {
         super(input);
-        this.batchTrainScore = conf.constructTransform(transformType);
+        if (transformType == MacroBaseConf.TransformType.IDENTITY) {
+            identityTransform = true;
+        } else {
+            this.batchTrainScore = conf.constructTransform(transformType);
+            identityTransform = false;
+        }
         this.conf = conf;
     }
 
@@ -26,6 +32,9 @@ public class BatchScoreFeatureTransform extends BatchTransform {
 
     @Override
     protected List<Datum> transform(List<Datum> data) {
+        if (identityTransform) {
+            return data;
+        }
         batchTrainScore.train(data);
         List<Datum> results = new ArrayList<>(data.size());
         for(Datum d : data) {

@@ -50,8 +50,6 @@ public class MacroBaseDefaults {
     public static final Double TREE_KDE_ACCURACY = 1e-5;
 
     public static final String R_LOG_FILE = null;
-    // Analysis results
-    public static final String STORE_ANALYSIS_RESULTS = null;
 
     // loader defaults
     public static final DataIngesterType DATA_LOADER_TYPE = DataIngesterType.POSTGRES_LOADER;
@@ -75,4 +73,6 @@ public class MacroBaseDefaults {
     public static final Integer DPM_TRUNCATING_PARAMETER = 50;
     public static final Double DPM_CONCENTRATION_PARAMETER = 1.;
     public static final Integer MIXTURE_MAX_ITERATIONS_TO_CONVERGE = 100;
+    public static final MacroBaseConf.ClassifierType CLASSIFIER_TYPE = MacroBaseConf.ClassifierType.NORM_PERCENTILE;
+    public static final MacroBaseConf.DensityEstimaterType DENSITY_ESTIMATER_TYPE = MacroBaseConf.DensityEstimaterType.DPGMM;
 }

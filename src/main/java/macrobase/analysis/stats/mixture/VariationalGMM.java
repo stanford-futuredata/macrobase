@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.BatchMixtureModel;
+import macrobase.analysis.stats.DensityEstimater;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -17,7 +18,7 @@ import java.util.List;
 /**
  * Fit Gaussian Mixture models using Variational Bayes
  */
-public class VariationalGMM extends BatchMixtureModel {
+public class VariationalGMM extends BatchMixtureModel implements DensityEstimater {
     private static final Logger log = LoggerFactory.getLogger(VariationalGMM.class);
 
     private int K;  // Number of mixture components
@@ -180,17 +181,7 @@ public class VariationalGMM extends BatchMixtureModel {
 
     @Override
     public double score(Datum datum) {
-        double density = 0;
-        double sum_alpha = 0;
-        for (int k = 0; k < this.K; k++) {
-            // If the mixture is very improbable, skip.
-            if (Math.abs(alpha[k] - priorAlpha) < 1e-4) {
-                continue;
-            }
-            sum_alpha += alpha[k];
-            density += alpha[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
-        }
-        return density / sum_alpha;
+        return density(datum);
     }
 
     @Override
@@ -212,5 +203,20 @@ public class VariationalGMM extends BatchMixtureModel {
 
     public double[] getPriorAdjustedWeights() {
         return clusterWeight;
+    }
+
+    @Override
+    public double density(Datum datum) {
+        double density = 0;
+        double sum_alpha = 0;
+        for (int k = 0; k < this.K; k++) {
+            // If the mixture is very improbable, skip.
+            if (Math.abs(alpha[k] - priorAlpha) < 1e-4) {
+                continue;
+            }
+            sum_alpha += alpha[k];
+            density += alpha[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
+        }
+        return density / sum_alpha;
     }
 }
