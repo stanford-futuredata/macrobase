@@ -1,5 +1,6 @@
 package macrobase.analysis.classify;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -19,37 +21,51 @@ import static org.junit.Assert.assertTrue;
 public class DumpClassifierTest {
 
     @Test
-    public void testDumpSmall() throws IOException {
+    public void testDumpSmall() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         ArrayList<Integer> attrs = new ArrayList<>();
         attrs.add(1);
         attrs.add(2);
         OutlierClassifier dummy = new OutlierClassifier() {
-            int num = 2;
+
+            MBStream<OutlierClassificationResult> result = new MBStream<>();
 
             @Override
-            public boolean hasNext() {
-                return num>0;
+            public MBStream<OutlierClassificationResult> getStream() throws Exception {
+
+                return result;
             }
 
             @Override
-            public OutlierClassificationResult next() {
-                num--;
-                return new OutlierClassificationResult(
-                        new Datum(attrs, new ArrayRealVector()),
-                        true
-                );
+            public void initialize() throws Exception {
+
+            }
+
+            @Override
+            public void consume(List<Datum> records) throws Exception {
+                for(Datum r : records) {
+                    result.add(new OutlierClassificationResult(r, true));
+                }
+            }
+
+            @Override
+            public void shutdown() throws Exception {
+
             }
         };
 
         DumpClassifier dumper = new DumpClassifier(conf, dummy, "testDumpSmall");
-        assertTrue(dumper.hasNext());
-        OutlierClassificationResult first = dumper.next();
+        List<Datum> data = new ArrayList<>();
+        data.add(new Datum(attrs, new ArrayRealVector()));
+        data.add(new Datum(attrs, new ArrayRealVector()));
+        dumper.consume(data);
+
+        List<OutlierClassificationResult> results = dumper.getStream().drain();
+
+        assertEquals(results.size(), data.size());
+        OutlierClassificationResult first = results.get(0);
         assertEquals(true, first.isOutlier());
         assertEquals(1, first.getDatum().getAttributes().get(0).intValue());
-        while (dumper.hasNext()) {
-            dumper.next();
-        }
 
         Path filePath = Paths.get(dumper.getFilePath());
         assertTrue(Files.exists(filePath));

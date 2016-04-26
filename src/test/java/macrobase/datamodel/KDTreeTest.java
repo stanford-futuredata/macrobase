@@ -1,7 +1,6 @@
 package macrobase.datamodel;
 
 import com.google.common.collect.Lists;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
 import macrobase.ingest.DataIngester;
@@ -11,8 +10,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,28 +23,29 @@ public class KDTreeTest {
     private DataIngester loader;
     private List<Datum> data;
 
-    private void setUpSimpleCsv() throws IOException, ConfigurationException, SQLException {
+    private void setUpSimpleCsv() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A2", "A5"));
         conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A1", "A3", "A4"));
         loader = new CSVIngester(conf);
-        data = Lists.newArrayList(loader);
+        data = loader.getStream().drain();
     }
 
-    private void setUpVerySimpleCsv() throws IOException, ConfigurationException {
+
+    private void setUpVerySimpleCsv() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/verySimple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("x", "y", "z"));
         conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("x", "y", "z"));
         loader = new CSVIngester(conf);
-        data = Lists.newArrayList(loader);
+        data = loader.getStream().drain();
     }
 
     @Test
-    public void testConstruction() throws IOException, SQLException, ConfigurationException {
+    public void testConstruction() throws Exception {
         this.setUpVerySimpleCsv();
         KDTree node;
 
@@ -97,7 +95,7 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testEstimateDistanceVectors() throws IOException, SQLException, ConfigurationException {
+    public void testEstimateDistanceVectors() throws Exception {
         this.setUpVerySimpleCsv();
         KDTree node;
         node = new KDTree(data, 2);
@@ -117,7 +115,7 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testEstimateDistanceSquared() throws IOException, SQLException, ConfigurationException {
+    public void testEstimateDistanceSquared() throws Exception {
         this.setUpVerySimpleCsv();
         KDTree node;
         node = new KDTree(data, 2);
@@ -134,7 +132,7 @@ public class KDTreeTest {
 
 
     @Test
-    public void testIsInsideBoundaries() throws IOException, SQLException, ConfigurationException {
+    public void testIsInsideBoundaries() throws Exception {
         this.setUpVerySimpleCsv();
         KDTree node;
 
@@ -145,7 +143,7 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testIsOutsideBoundaries() throws IOException, SQLException, ConfigurationException {
+    public void testIsOutsideBoundaries() throws Exception {
         this.setUpVerySimpleCsv();
         KDTree node = new KDTree(data, 2);
 
@@ -155,7 +153,7 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testToString() throws IOException, ConfigurationException {
+    public void testToString() throws Exception {
         setUpVerySimpleCsv();
         KDTree node = new KDTree(data, 2);
         String str = node.toString();
@@ -163,7 +161,7 @@ public class KDTreeTest {
     }
 
     @Test
-    public void testPooledCovariance() throws IOException, SQLException, ConfigurationException {
+    public void testPooledCovariance() throws Exception {
         this.setUpSimpleCsv();
         KDTree node;
 

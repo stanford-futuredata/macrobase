@@ -1,5 +1,6 @@
 package macrobase.analysis.transform;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.ConfigurationException;
@@ -9,23 +10,22 @@ import macrobase.datamodel.Datum;
 import macrobase.util.Periodic;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public class EWFeatureTransform extends FeatureTransform {
+public class EWFeatureTransform implements FeatureTransform {
     private final ExponentiallyBiasedAChao<Datum> reservoir;
     private final BatchTrainScore scorer;
-    private final Iterator<Datum> input;
+    private final List<Datum> warmupInput = new ArrayList<>();
+    private final int warmupCount;
+    private int tupleCount = 0;
+
+    private final MBStream<Datum> output = new MBStream<>();
 
     private final Periodic retrainer;
     private final Periodic decayer;
 
-    List<Datum> warmupOutput = new ArrayList<>();
-
-    public EWFeatureTransform(MacroBaseConf conf,
-                              Iterator<Datum> input) throws ConfigurationException {
+    public EWFeatureTransform(MacroBaseConf conf) throws ConfigurationException {
         this(conf,
-             input,
              conf.getTransformType(),
              conf.getInt(MacroBaseConf.WARMUP_COUNT, MacroBaseDefaults.WARMUP_COUNT),
              conf.getInt(MacroBaseConf.INPUT_RESERVOIR_SIZE, MacroBaseDefaults.INPUT_RESERVOIR_SIZE),
@@ -37,7 +37,6 @@ public class EWFeatureTransform extends FeatureTransform {
     }
 
     public EWFeatureTransform(MacroBaseConf conf,
-                              Iterator<Datum> input,
                               MacroBaseConf.TransformType transformType,
                               int warmupCount,
                               int sampleSize,
@@ -46,8 +45,6 @@ public class EWFeatureTransform extends FeatureTransform {
                               double decayRate,
                               MacroBaseConf.PeriodType trainingPeriodType,
                               double trainingPeriod) throws ConfigurationException {
-        this.input = input;
-
         scorer = conf.constructTransform(transformType);
 
         reservoir = new ExponentiallyBiasedAChao<>(sampleSize, decayRate, conf.getRandom());
@@ -60,38 +57,49 @@ public class EWFeatureTransform extends FeatureTransform {
                                  trainingPeriod,
                                  () -> scorer.train(reservoir.getReservoir()));
 
-        List<Datum> warmupInput = new ArrayList<>(warmupCount);
-        for(int i = 0; i < warmupCount; ++i) {
-            Datum d = input.next();
-            warmupInput.add(d);
-            reservoir.insert(d);
-            retrainer.runIfNecessary();
-            decayer.runIfNecessary();
-        }
+        this.warmupCount = warmupCount;
+    }
 
-        scorer.train(reservoir.getReservoir());
-        for(Datum d : warmupInput) {
-            warmupOutput.add(new Datum(d, scorer.score(d)));
+    @Override
+    public void initialize() {
+
+    }
+
+    @Override
+    public void consume(List<Datum> records) {
+        for(Datum d : records) {
+            tupleCount ++;
+
+            if(tupleCount < warmupCount) {
+                warmupInput.add(d);
+                reservoir.insert(d);
+                retrainer.runIfNecessary();
+                decayer.runIfNecessary();
+            } else {
+                if(tupleCount == warmupCount) {
+                    scorer.train(reservoir.getReservoir());
+                    for(Datum di: warmupInput) {
+                        output.add(new Datum(di, scorer.score(di)));
+                    }
+
+                    warmupInput.clear();
+                }
+
+                retrainer.runIfNecessary();
+                decayer.runIfNecessary();
+                reservoir.insert(d);
+                output.add(new Datum(d, scorer.score(d)));
+            }
         }
     }
 
     @Override
-    public boolean hasNext() {
-        return input.hasNext();
+    public void shutdown() {
+
     }
 
     @Override
-    public Datum next() {
-        if(!warmupOutput.isEmpty()) {
-            return warmupOutput.remove(0);
-        }
-
-        retrainer.runIfNecessary();
-        decayer.runIfNecessary();
-
-        Datum d = input.next();
-        reservoir.insert(d);
-
-        return new Datum(d, scorer.score(d));
+    public MBStream<Datum> getStream() {
+        return output;
     }
 }

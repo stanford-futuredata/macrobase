@@ -1,6 +1,5 @@
 package macrobase.ingest;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mockrunner.jdbc.StatementResultSetHandler;
 import com.mockrunner.mock.jdbc.JDBCMockObjectFactory;
@@ -133,7 +132,7 @@ public class CachingSQLIngesterTest {
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
         DatumEncoder encoder = conf.getEncoder();
-        List<Datum> data = Lists.newArrayList((new DiskCachingIngester(conf, new TestSQLIngester(conf, connection))));
+        List<Datum> data = new DiskCachingIngester(conf, new TestSQLIngester(conf, connection)).getStream().drain();
 
         for (Datum d : data) {
             String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
@@ -165,7 +164,9 @@ public class CachingSQLIngesterTest {
         assertTrue(firstVals.isEmpty());
 
         DatumEncoder encoder2 = conf.getEncoder();
-        List<Datum> data2 = Lists.newArrayList((new DiskCachingIngester(conf, new TestSQLIngester(conf, connection))));
+        SQLIngester t = new TestSQLIngester(conf, connection);
+        t.connect();
+        List<Datum> data2 = new DiskCachingIngester(conf, t).getStream().drain();
 
         for (Datum d : data2) {
             String firstValString = encoder2.getAttribute(d.getAttributes().get(0)).getValue();

@@ -24,7 +24,7 @@ public class MacroBaseStreamingCommand extends ConfiguredCommand<MacroBaseConf> 
         configuration.loadSystemProperties();
         BasicOneShotEWStreamingPipeline analyzer = new BasicOneShotEWStreamingPipeline(configuration);
 
-        AnalysisResult result = analyzer.next();
+        AnalysisResult result = analyzer.run();
         MacroBase.reporter.report();
 
         log.info("Result: {}", result);

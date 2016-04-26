@@ -1,25 +1,17 @@
 package macrobase.analysis.transform;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public class LinearMetricNormalizer extends BatchTransform {
-    private static final Logger log = LoggerFactory.getLogger(LinearMetricNormalizer.class);
+public class LinearMetricNormalizer implements FeatureTransform {
+    private MBStream<Datum> output = new MBStream<>();
 
-    public LinearMetricNormalizer(Iterator<Datum> inputIterator) {
-        super(inputIterator);
-    }
-
-    protected List<Datum> transform(List<Datum> data) {
-
-        List<Datum> ret = new ArrayList<>(data.size());
+    @Override
+    public void consume(List<Datum> data) {
         int dimensions = data.get(0).getMetrics().getDimension();
 
         RealVector metricWiseMinVec = new ArrayRealVector(dimensions);
@@ -53,9 +45,23 @@ public class LinearMetricNormalizer extends BatchTransform {
                 double cur = metrics.getEntry(dim);
                 metrics.setEntry(dim, (cur - dimMin) / (dimMax - dimMin));
             }
-            ret.add(new Datum(d, metrics));
+            output.add(new Datum(d, metrics));
         }
+    }
 
-        return ret;
+    @Override
+    public void initialize() throws Exception {
+
+    }
+
+
+    @Override
+    public void shutdown() throws Exception {
+
+    }
+
+    @Override
+    public MBStream<Datum> getStream() throws Exception {
+        return output;
     }
 }

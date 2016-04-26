@@ -1,14 +1,7 @@
 package macrobase.analysis.transform;
 
+import macrobase.analysis.pipeline.operator.MBConsumer;
+import macrobase.analysis.pipeline.operator.MBProducer;
 import macrobase.datamodel.Datum;
 
-import java.util.Iterator;
-
-public abstract class FeatureTransform implements Iterator<Datum> {
-
-    @Override
-    public abstract boolean hasNext();
-
-    @Override
-    public abstract Datum next();
-}
+public interface FeatureTransform extends MBConsumer<Datum>, MBProducer<Datum> { }

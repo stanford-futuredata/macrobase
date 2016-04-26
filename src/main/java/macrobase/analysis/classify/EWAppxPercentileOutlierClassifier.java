@@ -1,5 +1,6 @@
 package macrobase.analysis.classify;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.result.DatumWithNorm;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -9,14 +10,14 @@ import macrobase.datamodel.Datum;
 import macrobase.util.Periodic;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /*
  Exponentially weighted approximate percentile-based streaming classifier
  */
+
 public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
-    protected Iterator<Datum> input;
+    private final double percentile;
     private ExponentiallyBiasedAChao<DatumWithNorm> reservoir;
 
     private double currentThreshold = 0;
@@ -24,11 +25,15 @@ public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
     private final Periodic reservoirDecayer;
     private final Periodic percentileUpdater;
 
-    List<OutlierClassificationResult> warmupOutput = new ArrayList<>();
 
-    public EWAppxPercentileOutlierClassifier(MacroBaseConf conf, Iterator<Datum> input) {
+    private final int warmupCount;
+    private int tupleCount = 0;
+    private final List<Datum> warmupInput = new ArrayList<>();
+
+    private MBStream<OutlierClassificationResult> output = new MBStream<>();
+
+    public EWAppxPercentileOutlierClassifier(MacroBaseConf conf) {
         this(conf,
-             input,
              conf.getInt(MacroBaseConf.SCORE_RESERVOIR_SIZE, MacroBaseDefaults.SCORE_RESERVOIR_SIZE),
              conf.getInt(MacroBaseConf.WARMUP_COUNT, MacroBaseDefaults.WARMUP_COUNT),
              conf.getDecayType(),
@@ -46,7 +51,6 @@ public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
     }
 
     public EWAppxPercentileOutlierClassifier(MacroBaseConf conf,
-                                             Iterator<Datum> input,
                                              int sampleSize,
                                              int warmupCount,
                                              MacroBaseConf.PeriodType updatePeriodType,
@@ -55,7 +59,6 @@ public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
                                              double decayPeriod,
                                              double decayRate,
                                              double percentile) {
-        this.input = input;
         reservoir = new ExponentiallyBiasedAChao<>(sampleSize, decayRate, conf.getRandom());
 
         this.percentileUpdater = new Periodic(updatePeriodType,
@@ -66,40 +69,50 @@ public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
                                              decayPeriod,
                                              reservoir::advancePeriod);
 
-        List<DatumWithNorm> warmupInput = new ArrayList<>(warmupCount);
-        for(int i = 0; i < warmupCount; ++i) {
-            Datum d = input.next();
-            DatumWithNorm dwn = new DatumWithNorm(d, d.getMetrics().getNorm());
-            warmupInput.add(dwn);
-            reservoir.insert(dwn);
-            reservoirDecayer.runIfNecessary();
-            percentileUpdater.runIfNecessary();
-        }
-        updateThreshold(percentile);
+        this.warmupCount = warmupCount;
+        this.percentile = percentile;
+    }
 
-        for(DatumWithNorm dwn : warmupInput) {
-            warmupOutput.add(new OutlierClassificationResult(dwn.getDatum(), dwn.getNorm() > currentThreshold));
+    @Override
+    public MBStream<OutlierClassificationResult> getStream() {
+        return output;
+    }
+
+    @Override
+    public void initialize() {
+
+    }
+
+    @Override
+    public void consume(List<Datum> records) {
+        for(Datum d : records) {
+            tupleCount ++;
+
+            if(tupleCount < warmupCount) {
+                warmupInput.add(d);
+                DatumWithNorm dwn = new DatumWithNorm(d, d.getMetrics().getNorm());
+                reservoir.insert(dwn);
+                reservoirDecayer.runIfNecessary();
+                percentileUpdater.runIfNecessary();
+            } else {
+                if(tupleCount == warmupCount) {
+                    updateThreshold(percentile);
+
+                    for(Datum di: warmupInput) {
+                        output.add(new OutlierClassificationResult(di, d.getMetrics().getNorm() > currentThreshold));
+                    }
+                    warmupInput.clear();
+                }
+
+                double norm = d.getMetrics().getNorm();
+                reservoir.insert(new DatumWithNorm(d, norm));
+                output.add(new OutlierClassificationResult(d, norm > currentThreshold));
+            }
         }
     }
 
     @Override
-    public boolean hasNext() {
-        return input.hasNext();
-    }
+    public void shutdown() {
 
-    @Override
-    public OutlierClassificationResult next() {
-        if(!warmupOutput.isEmpty()) {
-            return warmupOutput.remove(0);
-        }
-
-        reservoirDecayer.runIfNecessary();
-        percentileUpdater.runIfNecessary();
-
-        Datum d = input.next();
-        double norm = d.getMetrics().getNorm();
-        reservoir.insert(new DatumWithNorm(d, norm));
-
-        return new OutlierClassificationResult(d, norm > currentThreshold);
     }
 }

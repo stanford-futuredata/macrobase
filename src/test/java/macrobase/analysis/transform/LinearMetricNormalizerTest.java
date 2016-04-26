@@ -1,6 +1,5 @@
 package macrobase.analysis.transform;
 
-import com.google.common.collect.Lists;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
@@ -13,7 +12,7 @@ import static org.junit.Assert.assertTrue;
 
 public class LinearMetricNormalizerTest {
     @Test
-    public void testLinearTransform() {
+    public void testLinearTransform() throws Exception {
         Random r = new Random(0);
         List<Datum> data = new ArrayList<>();
         for(int i = 0; i < 10; ++i) {
@@ -24,7 +23,9 @@ public class LinearMetricNormalizerTest {
             data.add(d);
         }
 
-        List<Datum> transformed = Lists.newArrayList(new LinearMetricNormalizer(data.iterator()));
+        LinearMetricNormalizer lmn = new LinearMetricNormalizer();
+        lmn.consume(data);
+        List<Datum> transformed = lmn.getStream().drain();
         for(Datum d : transformed) {
             for(int dim = 0; dim < 3; ++dim) {
                 Double val = d.getMetrics().getEntry(dim);

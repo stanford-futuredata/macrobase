@@ -10,6 +10,7 @@ import macrobase.diagnostics.JsonUtils;
 import macrobase.diagnostics.ScoreDumper;
 import macrobase.ingest.CSVIngester;
 import macrobase.util.DiagnosticsUtils;
+import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -31,7 +32,7 @@ public class VariationalGMMTest {
     /**
      * Tests Bayesian Gaussian Mixture Model on a three well separated clusters.
      */
-    public void univariateToyBimodalTest() throws ConfigurationException, IOException, SQLException {
+    public void univariateToyBimodalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
@@ -42,7 +43,7 @@ public class VariationalGMMTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(18, data.size());
 
         VariationalGMM variationalGMM = new VariationalGMM(conf);
@@ -53,7 +54,7 @@ public class VariationalGMMTest {
     /**
      * Tests Bayesian Gaussian Mixture Model on a three well separated clusters.
      */
-    public void bivariateWellSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
@@ -64,7 +65,7 @@ public class VariationalGMMTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
         VariationalGMM variationalGMM = new VariationalGMM(conf);
@@ -142,7 +143,7 @@ public class VariationalGMMTest {
     /**
      * Tests Gaussian Mixture Model on a three not so well separated clusters.
      */
-    public void bivariateOkSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
@@ -153,7 +154,7 @@ public class VariationalGMMTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(7000, data.size());
 
         double[][] clusterMeans = {
@@ -216,7 +217,7 @@ public class VariationalGMMTest {
     /**
      * Tests Gaussian Mixture Model on a three not so well separated clusters.
      */
-    public void unusedOrOverlappingClusterTest() throws ConfigurationException, IOException, SQLException {
+    public void unusedOrOverlappingClusterTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
@@ -227,7 +228,7 @@ public class VariationalGMMTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
         VariationalGMM variationalGMM = new VariationalGMM(conf);

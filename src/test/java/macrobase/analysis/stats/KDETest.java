@@ -5,6 +5,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
+import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
@@ -40,7 +41,7 @@ public class KDETest {
     }
 
     @Test
-    public void StandardNormal2DTest() throws ConfigurationException, IOException, SQLException {
+    public void StandardNormal2DTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -52,7 +53,7 @@ public class KDETest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
 
         KDE kde = new KDE(conf);
         kde.setProportionOfDataToUse(1.0);

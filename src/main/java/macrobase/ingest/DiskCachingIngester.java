@@ -3,7 +3,7 @@ package macrobase.ingest;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.google.common.collect.Lists;
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -13,7 +13,6 @@ import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.*;
-import java.util.Iterator;
 import java.util.List;
 
 
@@ -22,7 +21,7 @@ public class DiskCachingIngester extends DataIngester {
 
     private final String fileDir;
     private DataIngester innerIngester;
-    private Iterator<Datum> outputIterator;
+    private MBStream<Datum> output;
 
     public DiskCachingIngester(MacroBaseConf conf, DataIngester innerIngester) throws ConfigurationException, IOException {
         super(conf);
@@ -41,24 +40,14 @@ public class DiskCachingIngester extends DataIngester {
     }
 
     @Override
-    public boolean hasNext() {
-        try {
-            initalize();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    public MBStream<Datum> getStream() throws Exception {
+        if(output == null) {
+            initialize();
         }
-        return outputIterator.hasNext();
+
+        return output;
     }
 
-    @Override
-    public Datum next() {
-        try {
-            initalize();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return outputIterator.next();
-    }
 
     private static class CachedData {
         private DatumEncoder encoder;
@@ -81,17 +70,18 @@ public class DiskCachingIngester extends DataIngester {
         }
     }
 
-    private void initalize() throws IOException {
-        if(outputIterator == null) {
+    private void initialize() throws Exception {
+        if(output == null) {
             List<Datum> data;
             data = readInData();
-            if (data == null) {
-                data = Lists.newArrayList(innerIngester);
+            if (data == null || data.size() == 0) {
+                output = innerIngester.getStream();
                 log.info("Writing out loaded data...");
                 writeOutData(data);
                 log.info("...done writing!");
+            } else {
+                output.add(data);
             }
-            outputIterator = data.iterator();
         }
     }
 

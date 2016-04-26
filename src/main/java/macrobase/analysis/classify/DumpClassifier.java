@@ -1,7 +1,9 @@
 package macrobase.analysis.classify;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
+import macrobase.datamodel.Datum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 /**
  * Transparently dumps classifier output by wrapping another classifier and copying its
@@ -16,10 +19,12 @@ import java.io.PrintWriter;
  */
 public class DumpClassifier implements OutlierClassifier {
     private static final Logger log = LoggerFactory.getLogger(DumpClassifier.class);
-    protected OutlierClassifier input = null;
+    protected final OutlierClassifier input;
     protected MacroBaseConf conf;
     private PrintWriter out;
     private int count;
+
+    private MBStream<OutlierClassificationResult> outputStream = new MBStream<>();
 
     private String filepath;
 
@@ -38,23 +43,36 @@ public class DumpClassifier implements OutlierClassifier {
         return filepath;
     }
 
-    public boolean hasNext() {
-        boolean hasNext = input.hasNext();
-        if (!hasNext) {
-            out.close();
-        }
-        return hasNext;
+    @Override
+    public void initialize() throws Exception {
+
     }
 
-    public OutlierClassificationResult next() {
-        OutlierClassificationResult res = input.next();
-        int flag = 0;
-        if (res.isOutlier()) {
-            flag = 1;
-        }
-        out.format("%d,%d\n", count, flag);
+    @Override
+    public void consume(List<Datum> records) throws Exception {
 
-        count++;
-        return res;
+        input.consume(records);
+        List<OutlierClassificationResult> results = input.getStream().drain();
+
+        for(OutlierClassificationResult res : results) {
+            int flag = 0;
+            if (res.isOutlier()) {
+                flag = 1;
+            }
+            out.format("%d,%d\n", count, flag);
+            count++;
+        }
+
+        outputStream.add(results);
+    }
+
+    @Override
+    public void shutdown() throws Exception {
+
+    }
+
+    @Override
+    public MBStream<OutlierClassificationResult> getStream() throws Exception {
+        return outputStream;
     }
 }

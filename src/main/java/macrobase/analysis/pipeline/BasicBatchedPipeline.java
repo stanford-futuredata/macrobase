@@ -1,6 +1,5 @@
 package macrobase.analysis.pipeline;
 
-import com.google.common.collect.Lists;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.DumpClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
@@ -16,7 +15,6 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
-import macrobase.ingest.TimedBatchIngest;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +33,12 @@ public class BasicBatchedPipeline extends OneShotPipeline {
         conf.sanityCheckBatch();
     }
 
-    public AnalysisResult contextualAnalyze(DataIngester ingester) throws SQLException, IOException, ConfigurationException{
+    public AnalysisResult contextualAnalyze() throws Exception {
         BatchTrainScore detector = conf.constructTransform(conf.getTransformType());
 
-    	List<Datum> data = Lists.newArrayList(ingester);
+        DataIngester ingester = conf.constructIngester();
+
+        List<Datum> data = ingester.getStream().drain();
     	ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(detector,
     			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
     	
@@ -56,31 +56,43 @@ public class BasicBatchedPipeline extends OneShotPipeline {
     }
 
     @Override
-    AnalysisResult run() throws SQLException, IOException, ConfigurationException {
+    public AnalysisResult run() throws Exception {
+        // TODO: this should be a new pipeline
+        if(contextualEnabled){
+            return contextualAnalyze();
+        }
+
         long startMs = System.currentTimeMillis();
         DataIngester ingester = conf.constructIngester();
         // TODO: this should be a new pipeline
         // Needs to happen early before ingester is possibly consumed. Downstream stages are allowed to drain
         // upstream stages in construction.
         if(contextualEnabled){
-            return contextualAnalyze(ingester);
+            return contextualAnalyze();
         }
 
-        TimedBatchIngest batchIngest = new TimedBatchIngest(ingester);
-        FeatureTransform featureTransform = new BatchScoreFeatureTransform(conf, batchIngest, conf.getTransformType());
-        OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf, featureTransform);
+        List<Datum> data = ingester.getStream().drain();
+        long loadEndMs = System.currentTimeMillis();
+
+        FeatureTransform featureTransform = new BatchScoreFeatureTransform(conf, conf.getTransformType());
+        featureTransform.consume(data);
+
+        OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf);
+        outlierClassifier.consume(featureTransform.getStream().drain());
+
         if (conf.getBoolean(MacroBaseConf.CLASSIFIER_DUMP)) {
             String queryName = conf.getString(MacroBaseConf.QUERY_NAME);
             outlierClassifier = new DumpClassifier(conf, outlierClassifier, queryName);
         }
-        BatchSummarizer summarizer = new BatchSummarizer(conf, outlierClassifier);
 
+        BatchSummarizer summarizer = new BatchSummarizer(conf);
+        summarizer.consume(outlierClassifier.getStream().drain());
 
-        Summary result = summarizer.next();
+        Summary result = summarizer.getStream().drain().get(0);
 
         final long endMs = System.currentTimeMillis();
-        final long loadMs = batchIngest.getFinishTimeMs() - startMs;
-        final long totalMs = endMs - batchIngest.getFinishTimeMs();
+        final long loadMs = loadEndMs - startMs;
+        final long totalMs = endMs - loadEndMs;
         final long summarizeMs = result.getCreationTimeMs();
         final long executeMs = totalMs - result.getCreationTimeMs();
 

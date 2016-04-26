@@ -43,7 +43,7 @@ public class BasicBatchedPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new BasicBatchedPipeline(conf)).next();
+        AnalysisResult ar = (new BasicBatchedPipeline(conf)).run();
 
         assertEquals(1, ar.getItemSets().size());
 
@@ -84,8 +84,7 @@ public class BasicBatchedPipelineTest {
         conf.sanityCheckBatch();
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline(conf);
-        assertTrue(ba.hasNext());
-        AnalysisResult ar = ba.next();
+        AnalysisResult ar = ba.run();
 
         assertEquals(1, ar.getItemSets().size());
 
@@ -122,7 +121,7 @@ public class BasicBatchedPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new BasicBatchedPipeline(conf)).next();
+        AnalysisResult ar = (new BasicBatchedPipeline(conf)).run();
 
         assertEquals(3, ar.getItemSets().size());
 
@@ -161,7 +160,7 @@ public class BasicBatchedPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new BasicBatchedPipeline(conf)).next();
+        AnalysisResult ar = (new BasicBatchedPipeline(conf)).run();
 
         assertEquals(1, ar.getItemSets().size());
 
@@ -203,7 +202,7 @@ public class BasicBatchedPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new BasicBatchedPipeline(conf)).next();
+        AnalysisResult ar = (new BasicBatchedPipeline(conf)).run();
 
         assertEquals(0, ar.getItemSets().size());
 

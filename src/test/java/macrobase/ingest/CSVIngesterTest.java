@@ -12,13 +12,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class CSVIngesterTest {
     private static final Logger log = LoggerFactory.getLogger(CSVIngesterTest.class);
 
     @Test
-    public void testSimple() throws IOException, ConfigurationException {
+    public void testSimple() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A2","A5"));
@@ -26,13 +27,11 @@ public class CSVIngesterTest {
         conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A1","A3","A4"));
         CSVIngester ingester = new CSVIngester(conf);
 
-        Datum datum = ingester.next();
+        List<Datum> data = ingester.getStream().drain();
+
+        Datum datum = data.get(0);
         assertEquals(43, datum.getMetrics().getEntry(0), 0.0);
         assertEquals(45, datum.getMetrics().getEntry(1), 0.0);
-
-        while(ingester.hasNext()) {
-            ingester.next();
-        }
     }
 
     @Test
@@ -40,7 +39,7 @@ public class CSVIngesterTest {
      * Test that when we encounter missing metrics we skip the entire row and read
      * all of the valid rows.
      */
-    public void testMissingData() throws IOException, ConfigurationException {
+    public void testMissingData() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/missingdata.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("a1"));
@@ -48,12 +47,12 @@ public class CSVIngesterTest {
         conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("m1","m2"));
 
         CSVIngester ingester = new CSVIngester(conf);
+        List<Datum> data = ingester.getStream().drain();
 
         int count = 0;
-        while (ingester.hasNext()) {
-            Datum datum = ingester.next();
+        for(Datum d : data) {
             if (count == 3) {
-                assertEquals(5, datum.getMetrics().getEntry(0), 0.0);
+                assertEquals(5, d.getMetrics().getEntry(0), 0.0);
             }
             count++;
         }

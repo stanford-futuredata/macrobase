@@ -6,6 +6,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
+import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -27,7 +28,7 @@ public class GaussianMixtureModelTest {
     /**
      * Tests Gaussian Mixture Model on a three well separated clusters.
      */
-    public void bivariateWellSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "GAUSSIAN_MIXTURE_EM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
@@ -37,7 +38,7 @@ public class GaussianMixtureModelTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
         GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
@@ -78,12 +79,12 @@ public class GaussianMixtureModelTest {
             assertEquals(true, identified);
         }
     }
-
+    
     @Test
     /**
      * Tests Gaussian Mixture Model on a three not so well separated clusters.
      */
-    public void bivariateOkSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "GAUSSIAN_MIXTURE_EM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
@@ -93,7 +94,7 @@ public class GaussianMixtureModelTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(7000, data.size());
 
         GaussianMixtureModel gmm = new GaussianMixtureModel(conf);

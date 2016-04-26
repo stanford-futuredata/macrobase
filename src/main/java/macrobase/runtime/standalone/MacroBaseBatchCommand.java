@@ -24,7 +24,7 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<MacroBaseConf> {
         configuration.loadSystemProperties();
         BasicBatchedPipeline analyzer = new BasicBatchedPipeline(configuration);
 
-        AnalysisResult result = analyzer.next();
+        AnalysisResult result = analyzer.run();
         if (result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));

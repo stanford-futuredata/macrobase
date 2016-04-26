@@ -5,6 +5,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
+import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
@@ -23,7 +24,7 @@ import static org.hamcrest.Matchers.*;
 public class TreeKDETest {
 
     @Test
-    public void bimodalPipeline1DTest() throws ConfigurationException, IOException, SQLException {
+    public void bimodalPipeline1DTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "TREE_KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -35,7 +36,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.ATTRIBUTES, "")
                 .set(MacroBaseConf.KDTREE_LEAF_CAPACITY, 2);
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         TreeKDE kde = new TreeKDE(conf);
 
         assertEquals(15, data.size());
@@ -47,7 +48,7 @@ public class TreeKDETest {
     }
 
     @Test
-    public void compareWithKDETest() throws ConfigurationException, IOException, SQLException {
+    public void compareWithKDETest() throws Exception {
         double accuracy = 0.001;
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "TREE_KDE")
@@ -61,7 +62,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(100000, data.size());
 
         TreeKDE treekde = new TreeKDE(conf);
@@ -86,7 +87,7 @@ public class TreeKDETest {
     }
 
     @Test
-    public void standardNormal2DTest() throws ConfigurationException, IOException, SQLException {
+    public void standardNormal2DTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "TREE_KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -98,7 +99,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
 
         TreeKDE kde = new TreeKDE(conf);
         kde.setApproximateLeaves(false);
@@ -140,7 +141,7 @@ public class TreeKDETest {
     }
 
     @Test
-    public void simpleCompareWithKDETest() throws ConfigurationException, IOException, SQLException {
+    public void simpleCompareWithKDETest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "TREE_KDE")
                 .set(MacroBaseConf.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
@@ -153,7 +154,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(20, data.size());
 
         TreeKDE treekde = new TreeKDE(conf);

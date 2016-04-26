@@ -1,42 +1,48 @@
 package macrobase.analysis.summary;
 
 import com.google.common.base.Stopwatch;
-import macrobase.analysis.classify.OutlierClassifier;
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
-import macrobase.util.IterUtils;
+import macrobase.ingest.DatumEncoder;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class BatchSummarizer extends Summarizer {
+public class BatchSummarizer implements Summarizer {
     private FPGrowthEmerging fpg;
     protected final Double minSupport;
     protected final Double minOIRatio;
+    private MBStream<Summary> output = new MBStream<>();
+    private final DatumEncoder encoder;
 
-    public BatchSummarizer(MacroBaseConf conf, OutlierClassifier input) {
-        super(conf, input);
+    public BatchSummarizer(MacroBaseConf conf) {
         fpg = new FPGrowthEmerging();
         minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
         minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
+        encoder = conf.getEncoder();
     }
 
     @Override
-    public boolean hasNext() {
-        return input.hasNext();
+    public MBStream<Summary> getStream() {
+        return output;
     }
 
     @Override
-    public Summary next() {
+    public void initialize() {
+
+    }
+
+    @Override
+    public void consume(List<OutlierClassificationResult> records) {
         List<Datum> outliers = new ArrayList<>();
         List<Datum> inliers = new ArrayList<>();
-        for (OutlierClassificationResult result : IterUtils.iterable(input)) {
+        for (OutlierClassificationResult result : records) {
             if (result.isOutlier()) {
                 outliers.add(result.getDatum());
             } else {
@@ -51,9 +57,14 @@ public class BatchSummarizer extends Summarizer {
                 minOIRatio,
                 encoder);
 
-        return new Summary(isr,
-                           inliers.size(),
-                           outliers.size(),
-                           sw.elapsed(TimeUnit.MILLISECONDS));
+        output.add(new Summary(isr,
+                               inliers.size(),
+                               outliers.size(),
+                               sw.elapsed(TimeUnit.MILLISECONDS)));
+    }
+
+    @Override
+    public void shutdown() {
+
     }
 }

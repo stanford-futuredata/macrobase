@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class AbstractPipeline implements Iterator<AnalysisResult> {
+public abstract class AbstractPipeline {
     private static final Logger log = LoggerFactory.getLogger(AbstractPipeline.class);
 
     protected final Boolean forceUsePercentile;
@@ -67,11 +67,5 @@ public abstract class AbstractPipeline implements Iterator<AnalysisResult> {
         contextualDenseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
         contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
     }
-
-    @Override
-    public abstract AnalysisResult next();
-
-    @Override
-    public abstract boolean hasNext();
 
 }

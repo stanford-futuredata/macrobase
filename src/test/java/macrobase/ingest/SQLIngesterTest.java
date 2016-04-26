@@ -14,8 +14,6 @@ import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
 import macrobase.runtime.resources.RowSetResource;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,8 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class SQLIngesterTest {
-    private static final Logger log = LoggerFactory.getLogger(SQLIngesterTest.class);
-
     public class TestSQLIngester extends SQLIngester {
         public TestSQLIngester(MacroBaseConf conf, Connection connection)
                 throws ConfigurationException, SQLException {
@@ -52,6 +48,7 @@ public class SQLIngesterTest {
         StatementResultSetHandler statementHandler =
                 connection.getStatementResultSetHandler();
         MockResultSet result = statementHandler.createResultSet();
+        result.setFetchSize(0);
 
         MockResultSetMetaData metaData = new MockResultSetMetaData();
 
@@ -175,7 +172,8 @@ public class SQLIngesterTest {
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
         DatumEncoder encoder = conf.getEncoder();
-        List<Datum> data = Lists.newArrayList(new TestSQLIngester(conf, connection));
+        SQLIngester ingester = new TestSQLIngester(conf, connection);
+        List<Datum> data = ingester.getStream().drain();
 
         for (Datum d : data) {
             String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
@@ -308,7 +306,8 @@ public class SQLIngesterTest {
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
         DatumEncoder encoder = conf.getEncoder();
-        List<Datum> data = Lists.newArrayList(new TestSQLIngester(conf, connection));
+        SQLIngester ingester = new TestSQLIngester(conf, connection);
+        List<Datum> data = ingester.getStream().drain();
 
         for (Datum d : data) {
             String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
@@ -423,6 +422,7 @@ public class SQLIngesterTest {
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test LIMIT 10000;");
 
         SQLIngester loader = new TestSQLIngester(conf, connection);
+        loader.connect();
         List<RowSetResource.RowSetRequest.RowRequestPair> pairs = new ArrayList<>();
         RowSetResource.RowSetRequest.RowRequestPair rrp = new RowSetResource.RowSetRequest.RowRequestPair();
         rrp.column = "c1";

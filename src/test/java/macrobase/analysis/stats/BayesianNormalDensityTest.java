@@ -5,6 +5,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
+import macrobase.util.Drainer;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.junit.Test;
@@ -22,7 +23,7 @@ public class BayesianNormalDensityTest {
     private static final Logger log = LoggerFactory.getLogger(BayesianNormalDensityTest.class);
 
     @Test
-    public void univariateCompareWithKDETest() throws ConfigurationException, IOException, SQLException {
+    public void univariateCompareWithKDETest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "BAYESIAN_NORMAL")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -32,7 +33,7 @@ public class BayesianNormalDensityTest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(100000, data.size());
 
         BayesianNormalDensity bayesianNormal = new BayesianNormalDensity(conf);
@@ -53,7 +54,7 @@ public class BayesianNormalDensityTest {
     }
 
     @Test
-    public void univariateNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void univariateNormalTest() throws Exception {
         // Make sure we are close to standard normal
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "BAYESIAN_NORMAL")
@@ -66,7 +67,7 @@ public class BayesianNormalDensityTest {
 
         NormalDistribution standardNormal = new NormalDistribution(0, 1);
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(100000, data.size());
 
         BayesianNormalDensity bayesianNormal = new BayesianNormalDensity(conf);
@@ -85,7 +86,7 @@ public class BayesianNormalDensityTest {
     }
 
     @Test
-    public void bivariateNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateNormalTest() throws Exception {
         // Make sure we are close to bivariate normal
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "BAYESIAN_NORMAL")
@@ -100,7 +101,7 @@ public class BayesianNormalDensityTest {
         double[][] variance = {{1, 0}, {0, 1}};
         MultivariateNormalDistribution bivariateNormal = new MultivariateNormalDistribution(means, variance);
 
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(100000, data.size());
 
         BayesianNormalDensity bayesianNormal = new BayesianNormalDensity(conf);

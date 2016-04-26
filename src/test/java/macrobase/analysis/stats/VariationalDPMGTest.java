@@ -1,6 +1,5 @@
 package macrobase.analysis.stats;
 
-import com.google.common.collect.Lists;
 import macrobase.analysis.stats.mixture.VariationalDPMG;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -8,6 +7,7 @@ import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
 import macrobase.diagnostics.ScoreDumper;
 import macrobase.ingest.CSVIngester;
+import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
@@ -28,7 +28,7 @@ public class VariationalDPMGTest {
     /**
      * Tests Bayesian Dirichlet Process Gaussian Mixture on a three well separated clusters.
      */
-    public void univariateToyBimodalTest() throws ConfigurationException, IOException, SQLException {
+    public void univariateToyBimodalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_DPMM")
@@ -41,7 +41,7 @@ public class VariationalDPMGTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(18, data.size());
 
         VariationalDPMG variationalDPGM = new VariationalDPMG(conf);
@@ -53,7 +53,7 @@ public class VariationalDPMGTest {
     /**
      * Tests Bayesian Gaussian Mixture Model on a three well separated clusters.
      */
-    public void bivariateWellSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_DPMM")
@@ -66,7 +66,7 @@ public class VariationalDPMGTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
         VariationalDPMG variationalDPGM = new VariationalDPMG(conf);
@@ -134,7 +134,7 @@ public class VariationalDPMGTest {
     /**
      * Tests Gaussian Mixture Model on a three not so well separated clusters.
      */
-    public void bivariateOkSeparatedNormalTest() throws ConfigurationException, IOException, SQLException {
+    public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_DPMM")
@@ -148,7 +148,7 @@ public class VariationalDPMGTest {
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Lists.newArrayList(conf.constructIngester());
+        List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(7000, data.size());
 
         double[][] clusterMeans = {

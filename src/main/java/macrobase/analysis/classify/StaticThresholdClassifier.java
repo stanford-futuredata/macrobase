@@ -1,32 +1,42 @@
 package macrobase.analysis.classify;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
-import java.util.Iterator;
+import java.util.List;
 
 public class StaticThresholdClassifier implements OutlierClassifier {
+    MBStream<OutlierClassificationResult> results = new MBStream<>();
 
-    protected Iterator<Datum> input;
-    private Double threshold;
-    private Double thresholdSquared;
+    private final Double thresholdSquared;
 
-    public StaticThresholdClassifier(MacroBaseConf conf, Iterator<Datum> input) {
-        this.input = input;
-        threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
-        thresholdSquared = threshold * threshold;
+    public StaticThresholdClassifier(MacroBaseConf conf) {
+        Double threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
+        thresholdSquared = threshold*threshold;
     }
 
     @Override
-    public boolean hasNext() {
-        return input.hasNext();
+    public MBStream<OutlierClassificationResult> getStream() {
+        return results;
     }
 
     @Override
-    public OutlierClassificationResult next() {
-        Datum nextInput = input.next();
-        return new OutlierClassificationResult(nextInput, thresholdSquared > nextInput.getMetrics().getNorm());
+    public void initialize() {
+
+    }
+
+    @Override
+    public void consume(List<Datum> records) {
+        for(Datum r : records) {
+            results.add(new OutlierClassificationResult(r, thresholdSquared > r.getMetrics().getNorm()));
+        }
+    }
+
+    @Override
+    public void shutdown() {
+
     }
 }

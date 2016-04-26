@@ -1,15 +1,15 @@
 package macrobase.ingest;
 
+import macrobase.analysis.pipeline.operator.MBProducer;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public abstract class DataIngester implements Iterator<Datum> {
+public abstract class DataIngester implements MBProducer<Datum> {
     protected final List<String> attributes;
     protected final List<String> auxiliaryAttributes;
     protected final List<String> contextualDiscreteAttributes;
@@ -30,7 +30,6 @@ public abstract class DataIngester implements Iterator<Datum> {
         contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
         contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
     }
-
 
     public abstract String getBaseQuery();
 }

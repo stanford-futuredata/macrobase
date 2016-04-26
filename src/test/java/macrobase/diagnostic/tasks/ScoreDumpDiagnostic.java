@@ -12,6 +12,7 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
+import macrobase.util.Drainer;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,23 +43,13 @@ public class ScoreDumpDiagnostic extends ConfiguredCommand<MacroBaseConf> {
             super(conf);
         }
 
-        @Override
-        public AnalysisResult next() {
-            return null;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return false;
-        }
-
-        public void run() throws ConfigurationException, IOException, SQLException {
+        public void run() throws Exception {
             assert (conf.isSet(SCORE_DUMP_FILE_CONFIG_PARAM));
 
             DatumEncoder encoder = new DatumEncoder();
 
             // OUTLIER ANALYSIS
-            List<Datum> data = Lists.newArrayList(conf.constructIngester());
+            List<Datum> data = Drainer.drainIngest(conf);
             BatchTrainScore detector = conf.constructTransform(conf.getTransformType());
 
             BatchTrainScore.BatchResult or;

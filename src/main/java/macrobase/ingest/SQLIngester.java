@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.ManagedDataSource;
 import macrobase.MacroBase;
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -26,7 +27,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -49,6 +49,9 @@ public abstract class SQLIngester extends DataIngester {
 
     protected final String baseQuery;
     protected ResultSet resultSet;
+
+    private final MBStream<Datum> output = new MBStream<>();
+    private boolean connected = false;
     
     private static final String LIMIT_REGEX = "(LIMIT\\s\\d+)";
 
@@ -67,6 +70,14 @@ public abstract class SQLIngester extends DataIngester {
 
         if(connection != null) {
             this.connection = connection;
+        }
+    }
+
+    public void connect() throws ConfigurationException, SQLException {
+        initializeResultSet();
+
+        while(!resultSet.isLast()) {
+            output.add(getNext());
         }
     }
 
@@ -184,25 +195,13 @@ public abstract class SQLIngester extends DataIngester {
     }
 
     @Override
-    public boolean hasNext() {
-        try {
-            initializeResultSet();
-            return !resultSet.isLast();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+    public MBStream<Datum> getStream() throws Exception {
+        if(!connected) {
+            connect();
+            connected = true;
         }
-    }
 
-    @Override
-    public Datum next() {
-        try {
-            initializeResultSet();
-            return getNext();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new NoSuchElementException();
-        }
+        return output;
     }
 
     private Datum getNext() throws SQLException {

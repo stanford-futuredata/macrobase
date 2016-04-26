@@ -1,9 +1,9 @@
 package macrobase.ingest;
 
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
-import macrobase.ingest.result.Schema;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -26,8 +26,9 @@ public class CSVIngester extends DataIngester {
     private Map<String, Integer> schema;
     private String filename;
 
-    private ArrayList<Datum> cachedData;
-    private Iterator<Datum> cachedIterator;
+    private MBStream<Datum> dataStream = new MBStream<>();
+    private boolean loaded = false;
+
     private int badRows = 0;
 
     public enum Compression {
@@ -37,54 +38,11 @@ public class CSVIngester extends DataIngester {
 
     public CSVIngester(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
-
-        filename = conf.getString(MacroBaseConf.CSV_INPUT_FILE);
-        Compression compression = conf.getCsvCompression();
-
-        if (compression == Compression.GZIP) {
-            InputStream fileStream = new FileInputStream(filename);
-            InputStream gzipStream = new GZIPInputStream(fileStream);
-            Reader decoder = new InputStreamReader(gzipStream);
-            csvParser = new CSVParser(decoder, CSVFormat.DEFAULT.withHeader());
-        } else {
-            File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
-            csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
-        }
-        schema = csvParser.getHeaderMap();
-
-        for (Map.Entry<String, Integer> se : schema.entrySet()) {
-            conf.getEncoder().recordAttributeName(se.getValue() + 1, se.getKey());
-        }
-
-        // Load all records into memory to filter out rows with missing data
-        Iterator<CSVRecord> rawIterator = csvParser.iterator();
-        cachedData = new ArrayList<>(1000);
-
-        while (rawIterator.hasNext()) {
-            try {
-                CSVRecord record = rawIterator.next();
-                Datum curRow = parseRecord(record);
-                cachedData.add(curRow);
-            } catch (NumberFormatException e) {
-                badRows++;
-            }
-        }
-        log.info("{}/{} bad rows", badRows, cachedData.size());
-
-        cachedIterator = cachedData.iterator();
     }
 
     @Override
     public String getBaseQuery() {
         return filename;
-    }
-
-    public Datum next() {
-        return cachedIterator.next();
-    }
-
-    public boolean hasNext() {
-        return cachedIterator.hasNext();
     }
 
     private Datum parseRecord(CSVRecord record) throws NumberFormatException {
@@ -137,8 +95,47 @@ public class CSVIngester extends DataIngester {
         );
     }
 
-    public Schema getSchema(String baseQuery) {
-        return null;
+    @Override
+    public MBStream<Datum> getStream() throws Exception {
+        if(!loaded) {
+            long st = System.currentTimeMillis();
+
+            filename = conf.getString(MacroBaseConf.CSV_INPUT_FILE);
+            Compression compression = conf.getCsvCompression();
+
+            if (compression == Compression.GZIP) {
+                InputStream fileStream = new FileInputStream(filename);
+                InputStream gzipStream = new GZIPInputStream(fileStream);
+                Reader decoder = new InputStreamReader(gzipStream);
+                csvParser = new CSVParser(decoder, CSVFormat.DEFAULT.withHeader());
+            } else {
+                File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
+                csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+            }
+            schema = csvParser.getHeaderMap();
+
+            for (Map.Entry<String, Integer> se : schema.entrySet()) {
+                conf.getEncoder().recordAttributeName(se.getValue() + 1, se.getKey());
+            }
+
+            // Load all records into memory to filter out rows with missing data
+            Iterator<CSVRecord> rawIterator = csvParser.iterator();
+
+            int numRows = 0;
+            while (rawIterator.hasNext()) {
+                try {
+                    CSVRecord record = rawIterator.next();
+                    Datum curRow = parseRecord(record);
+                    dataStream.add(curRow);
+                    numRows++;
+                } catch (NumberFormatException e) {
+                    badRows++;
+                }
+            }
+            log.info("{}/{} bad rows", badRows, numRows);
+        }
+
+        return dataStream;
     }
 }
 

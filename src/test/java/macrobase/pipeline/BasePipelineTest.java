@@ -49,21 +49,12 @@ public class BasePipelineTest {
         conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
-        
-        conf.set(MacroBaseConf.DATA_LOADER_TYPE,
-                 MacroBaseConf.DataIngesterType.POSTGRES_LOADER);
-        assertTrue(conf.constructIngester() instanceof PostgresIngester);
 
         conf.set(MacroBaseConf.DATA_LOADER_TYPE,
                  MacroBaseConf.DataIngesterType.CSV_LOADER);
         conf.set(MacroBaseConf.CSV_INPUT_FILE, folder.newFile("dummy").getAbsolutePath());
 
         assertTrue(conf.constructIngester() instanceof CSVIngester);
-
-        conf.set(MacroBaseConf.DATA_LOADER_TYPE,
-                 MacroBaseConf.DataIngesterType.CACHING_POSTGRES_LOADER);
-        conf.set(MacroBaseConf.DB_CACHE_DIR, folder.newFolder().getAbsolutePath());
-        assertTrue(conf.constructIngester() instanceof DiskCachingIngester);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.MAD);

@@ -1,37 +1,36 @@
 package macrobase.analysis.summary;
 
 import com.google.common.base.Stopwatch;
-import macrobase.analysis.classify.OutlierClassifier;
+import macrobase.analysis.pipeline.operator.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
+import macrobase.ingest.DatumEncoder;
 import macrobase.util.Periodic;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class EWStreamingSummarizer extends Summarizer {
+public class EWStreamingSummarizer implements Summarizer {
     private final ExponentiallyDecayingEmergingItemsets streamingSummarizer;
     private final Periodic summaryUpdater;
     private final Periodic summarizationTimer;
     private int count;
+    private final DatumEncoder encoder;
+
+    private final MBStream<Summary> output = new MBStream<>();
 
     private boolean needsSummarization = false;
 
-    public EWStreamingSummarizer(MacroBaseConf conf,
-                                 OutlierClassifier input) throws ConfigurationException {
-        this(conf, input, -1);
+    public EWStreamingSummarizer(MacroBaseConf conf) throws ConfigurationException {
+        this(conf, -1);
     }
 
     public EWStreamingSummarizer(MacroBaseConf conf,
-                                 OutlierClassifier classificationResults,
                                  int maximumSummaryDelay) throws ConfigurationException {
-        super(conf, classificationResults);
-
         Double summaryPeriod = conf.getDouble(MacroBaseConf.SUMMARY_UPDATE_PERIOD,
                                               MacroBaseDefaults.SUMMARY_UPDATE_PERIOD);
         Double decayRate = conf.getDouble(MacroBaseConf.DECAY_RATE, MacroBaseDefaults.DECAY_RATE);
@@ -44,6 +43,8 @@ public class EWStreamingSummarizer extends Summarizer {
         Double minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
 
         List<String> attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
+
+        encoder = conf.getEncoder();
 
         streamingSummarizer = new ExponentiallyDecayingEmergingItemsets(inlierItemSummarySize,
                                                                         outlierItemSummarySize,
@@ -62,18 +63,21 @@ public class EWStreamingSummarizer extends Summarizer {
     }
 
     @Override
-    public boolean hasNext() {
-        return input.hasNext();
+    public MBStream<Summary> getStream() {
+        return output;
     }
 
     @Override
-    public Summary next() {
-        while(input.hasNext() && !needsSummarization) {
+    public void initialize() {
+
+    }
+
+    @Override
+    public void consume(List<OutlierClassificationResult> records) {
+        for(OutlierClassificationResult result : records) {
             count++;
             summaryUpdater.runIfNecessary();
             summarizationTimer.runIfNecessary();
-
-            OutlierClassificationResult result = input.next();
 
             if(result.isOutlier()) {
                 streamingSummarizer.markOutlier(result.getDatum());
@@ -84,9 +88,14 @@ public class EWStreamingSummarizer extends Summarizer {
 
         Stopwatch sw = Stopwatch.createStarted();
         List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
-        return new Summary(isr,
-                           streamingSummarizer.getInlierCount(),
-                           streamingSummarizer.getOutlierCount(),
-                           sw.elapsed(TimeUnit.MILLISECONDS));
+        output.add(new Summary(isr,
+                               streamingSummarizer.getInlierCount(),
+                               streamingSummarizer.getOutlierCount(),
+                               sw.elapsed(TimeUnit.MILLISECONDS)));
+    }
+
+    @Override
+    public void shutdown() {
+
     }
 }

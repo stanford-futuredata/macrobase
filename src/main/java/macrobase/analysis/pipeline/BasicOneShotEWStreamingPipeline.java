@@ -9,14 +9,15 @@ import macrobase.analysis.summary.Summary;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
+import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
-import macrobase.ingest.TimedBatchIngest;
 import macrobase.analysis.transform.EWFeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 public class BasicOneShotEWStreamingPipeline extends OneShotPipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicOneShotEWStreamingPipeline.class);
@@ -27,20 +28,28 @@ public class BasicOneShotEWStreamingPipeline extends OneShotPipeline {
     }
 
     @Override
-    AnalysisResult run() throws SQLException, IOException, ConfigurationException {
+    public AnalysisResult run() throws Exception {
         long startMs = System.currentTimeMillis();
         DataIngester ingester = conf.constructIngester();
-        TimedBatchIngest batchIngest = new TimedBatchIngest(ingester);
-        FeatureTransform featureTransform = new EWFeatureTransform(conf, batchIngest);
-        OutlierClassifier outlierClassifier = new EWAppxPercentileOutlierClassifier(conf, featureTransform);
-        Summarizer summarizer = new EWStreamingSummarizer(conf, outlierClassifier);
-        Summary result = summarizer.next();
+        List<Datum> data = ingester.getStream().drain();
+        long loadEndMs = System.currentTimeMillis();
+
+        FeatureTransform featureTransform = new EWFeatureTransform(conf);
+        featureTransform.consume(ingester.getStream().drain());
+
+        OutlierClassifier outlierClassifier = new EWAppxPercentileOutlierClassifier(conf);
+        outlierClassifier.consume(featureTransform.getStream().drain());
+
+        Summarizer summarizer = new EWStreamingSummarizer(conf);
+        summarizer.consume(outlierClassifier.getStream().drain());
+
+        Summary result = summarizer.getStream().drain().get(0);
 
         final long endMs = System.currentTimeMillis();
-        final long loadMs = batchIngest.getFinishTimeMs() - startMs;
-        final long totalMs = endMs - batchIngest.getFinishTimeMs();
+        final long loadMs = loadEndMs - startMs;
+        final long totalMs = endMs - loadEndMs;
         final long summarizeMs = result.getCreationTimeMs();
-        final long executeMs = totalMs - summarizeMs;
+        final long executeMs = totalMs - result.getCreationTimeMs();
 
         log.info("took {}ms ({} tuples/sec)",
                  totalMs,
