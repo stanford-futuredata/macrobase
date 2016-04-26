@@ -1,6 +1,7 @@
 package macrobase.analysis.summary;
 
 import com.google.common.base.Stopwatch;
+import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -19,7 +20,7 @@ public class BatchSummarizer extends Summarizer {
     protected final Double minSupport;
     protected final Double minOIRatio;
 
-    public BatchSummarizer(MacroBaseConf conf, Iterator<OutlierClassificationResult> input) {
+    public BatchSummarizer(MacroBaseConf conf, OutlierClassifier input) {
         super(conf, input);
         fpg = new FPGrowthEmerging();
         minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);

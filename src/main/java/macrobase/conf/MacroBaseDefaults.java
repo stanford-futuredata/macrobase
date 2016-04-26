@@ -1,11 +1,13 @@
 package macrobase.conf;
 
+import com.google.common.collect.ImmutableMap;
 import macrobase.analysis.stats.KDE;
 import macrobase.conf.MacroBaseConf.DataIngesterType;
 import macrobase.ingest.CSVIngester;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MacroBaseDefaults {
     public static final String QUERY_NAME = "MacroBaseQuery";
@@ -75,4 +77,11 @@ public class MacroBaseDefaults {
     public static final Integer DPM_TRUNCATING_PARAMETER = 50;
     public static final Double DPM_CONCENTRATION_PARAMETER = 1.;
     public static final Integer MIXTURE_MAX_ITERATIONS_TO_CONVERGE = 100;
+
+    // Defaults for random flags that don't deserve a custom method so they can be looked up in
+    // MacrobaseConf
+    public static final ImmutableMap<String, Boolean> DEFAULT_BOOLEANS = ImmutableMap
+            .<String, Boolean>builder()
+            .put(MacroBaseConf.CLASSIFIER_DUMP, false)
+            .build();
 }

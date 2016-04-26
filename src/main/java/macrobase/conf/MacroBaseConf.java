@@ -89,6 +89,8 @@ public class MacroBaseConf extends Configuration {
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
     public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
+    public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
+
     private final DatumEncoder datumEncoder;
 
     public MacroBaseConf() {
@@ -286,10 +288,14 @@ public class MacroBaseConf extends Configuration {
     }
 
     public Boolean getBoolean(String key) throws ConfigurationException {
-        if (!_conf.containsKey(key)) {
+        if (_conf.containsKey(key) || MacroBaseDefaults.DEFAULT_BOOLEANS.containsKey(key)) {
+            return getBoolean(
+                    key,
+                    MacroBaseDefaults.DEFAULT_BOOLEANS.get(key)
+            );
+        } else {
             throw new MissingParameterException(key);
         }
-        return getBoolean(key, null);
     }
 
     public Boolean getBoolean(String key, Boolean defaultValue) {

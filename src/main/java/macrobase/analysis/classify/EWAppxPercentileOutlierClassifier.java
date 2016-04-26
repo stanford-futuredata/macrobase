@@ -15,7 +15,8 @@ import java.util.List;
 /*
  Exponentially weighted approximate percentile-based streaming classifier
  */
-public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
+public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
+    protected Iterator<Datum> input;
     private ExponentiallyBiasedAChao<DatumWithNorm> reservoir;
 
     private double currentThreshold = 0;
@@ -54,7 +55,7 @@ public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
                                              double decayPeriod,
                                              double decayRate,
                                              double percentile) {
-        super(conf, input);
+        this.input = input;
         reservoir = new ExponentiallyBiasedAChao<>(sampleSize, decayRate, conf.getRandom());
 
         this.percentileUpdater = new Periodic(updatePeriodType,

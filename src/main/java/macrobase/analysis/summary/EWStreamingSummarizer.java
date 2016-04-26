@@ -1,6 +1,7 @@
 package macrobase.analysis.summary;
 
 import com.google.common.base.Stopwatch;
+import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -22,12 +23,12 @@ public class EWStreamingSummarizer extends Summarizer {
     private boolean needsSummarization = false;
 
     public EWStreamingSummarizer(MacroBaseConf conf,
-                                 Iterator<OutlierClassificationResult> input) throws ConfigurationException {
+                                 OutlierClassifier input) throws ConfigurationException {
         this(conf, input, -1);
     }
 
     public EWStreamingSummarizer(MacroBaseConf conf,
-                                 Iterator<OutlierClassificationResult> classificationResults,
+                                 OutlierClassifier classificationResults,
                                  int maximumSummaryDelay) throws ConfigurationException {
         super(conf, classificationResults);
 

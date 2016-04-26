@@ -7,13 +7,14 @@ import macrobase.datamodel.Datum;
 
 import java.util.Iterator;
 
-public class StaticThresholdClassifier extends OutlierClassifier {
+public class StaticThresholdClassifier implements OutlierClassifier {
 
+    protected Iterator<Datum> input;
     private Double threshold;
     private Double thresholdSquared;
 
     public StaticThresholdClassifier(MacroBaseConf conf, Iterator<Datum> input) {
-        super(conf, input);
+        this.input = input;
         threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
         thresholdSquared = threshold * threshold;
     }

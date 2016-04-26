@@ -13,10 +13,12 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class TreeKDETest {
 
@@ -40,7 +42,7 @@ public class TreeKDETest {
         kde.train(data);
 
         for (Datum datum : data) {
-            assertTrue(-1 * kde.score(datum) > 0);
+            assertThat(kde.score(datum), greaterThan(Double.valueOf(0)));
         }
     }
 
@@ -70,9 +72,16 @@ public class TreeKDETest {
         kde.setProportionOfDataToUse(1.0);
         kde.train(data);
 
+        Random r = new Random(0);
         for (int i=0; i<100; i++) {
-            int index = ThreadLocalRandom.current().nextInt(0, data.size() + 1);
-            assertEquals(kde.score(data.get(index)), treekde.score(data.get(index)), accuracy);
+            int index = r.nextInt(data.size() + 1);
+            Datum datum = data.get(index);
+            double kde_score = kde.score(datum);
+            double treekde_score = treekde.scoreDensity(datum);
+            assertEquals(
+                    kde_score,
+                    treekde_score,
+                    accuracy);
         }
     }
 
@@ -117,13 +126,16 @@ public class TreeKDETest {
 
         for (double[] array : candidates) {
             RealVector vector = new ArrayRealVector(array);
-            double expectedScore = gaussianNorm * Math.pow(Math.E, -0.5 * vector.getNorm());
+            double expectedScore = gaussianNorm * Math.exp(-0.5 * vector.getNorm());
             // Accept 10x error or 1e-4 since we don't care about absolute performance only order of magnitude.
             double error = Math.max(1e-4, expectedScore * 0.9);
-            double score = -kde.score(new Datum(dummyAttr, vector));
+            double score = -kde.scoreDensity(new Datum(dummyAttr, vector));
 
-            assertTrue(String.format("expected abs(%f - %f) < %f", expectedScore, score, error),
-                    Math.abs(expectedScore - score) < error);
+            assertEquals(
+                    expectedScore,
+                    score,
+                    error
+            );
         }
     }
 
@@ -153,7 +165,7 @@ public class TreeKDETest {
         kde.train(data);
 
        for (Datum datum : data) {
-           assertEquals(kde.score(datum), treekde.score(datum), 1e-8);
+           assertEquals(kde.score(datum), treekde.scoreDensity(datum), 1e-8);
        }
     }
 }

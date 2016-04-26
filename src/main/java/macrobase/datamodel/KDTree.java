@@ -60,9 +60,11 @@ public class KDTree {
             Collections.sort(data, new DatumComparator(splitDimension));
 
             int splitIndex = data.size() / 2;
-            Datum belowSplit = data.get(splitIndex);
-            Datum aboveSplit = data.get(1 + splitIndex);
-            this.splitValue = 0.5 * (aboveSplit.getMetrics().getEntry(splitDimension) + belowSplit.getMetrics().getEntry(splitDimension));
+            Datum belowSplit = data.get(splitIndex - 1);
+            Datum aboveSplit = data.get(splitIndex);
+            this.splitValue = 0.5 * (
+                    aboveSplit.getMetrics().getEntry(splitDimension) + belowSplit.getMetrics().getEntry(splitDimension)
+            );
 
             this.loChild = new KDTree(data.subList(0, splitIndex), leafCapacity);
             this.hiChild = new KDTree(data.subList(splitIndex, data.size()), leafCapacity);
@@ -90,8 +92,13 @@ public class KDTree {
     }
 
 
+    /**
+     * Estimates min and max difference absolute vectors from point to region
+     * @param queryDatum target point
+     * @return minVec, maxVec
+     */
     // TODO: Make this method faster.
-    public List<RealVector> getMinMaxDistanceVectors(Datum queryDatum) {
+    public RealVector[] getMinMaxDistanceVectors(Datum queryDatum) {
         double[] minDifferences = new double[k];
         double[] maxDifferences = new double[k];
 
@@ -115,34 +122,41 @@ public class KDTree {
                 minDifferences[i] = 0;
             }
         }
-        List<RealVector> rtn = new ArrayList<RealVector>(2);
-        rtn.add(new ArrayRealVector(minDifferences));
-        rtn.add(new ArrayRealVector(maxDifferences));
+
+        RealVector[] rtn = new RealVector[2];
+        rtn[0] = new ArrayRealVector(minDifferences);
+        rtn[1] = new ArrayRealVector(maxDifferences);
         return rtn;
     }
 
+    /**
+     * Estimates bounds on the distance to a region
+     * @param queryDatum target point
+     * @return array with min, max distances squared
+     */
     public double[] estimateL2DistanceSquared(Datum queryDatum) {
         RealVector vector = queryDatum.getMetrics();
         double[] estimates = new double[2];
         for (int i=0; i<k; i++) {
             double deltaLo = vector.getEntry(i) - this.boundaries[i][0];
             double deltaHi = this.boundaries[i][1] - vector.getEntry(i);
+            double sqDeltaLo = deltaLo * deltaLo;
+            double sqDeltaHi = deltaHi * deltaHi;
+
             // point is outside
             if (deltaLo < 0 || deltaHi < 0) {
-                deltaHi *= deltaHi;
-                deltaLo *= deltaLo;
                 // Add the bigger distance to the longer estimate;
-                if (deltaHi < deltaLo) {
-                    estimates[0] += deltaHi;
-                    estimates[1] += deltaLo;
+                if (sqDeltaHi < sqDeltaLo) {
+                    estimates[0] += sqDeltaHi;
+                    estimates[1] += sqDeltaLo;
                 } else {
-                    estimates[0] += deltaLo;
-                    estimates[1] += deltaHi;
+                    estimates[0] += sqDeltaLo;
+                    estimates[1] += sqDeltaHi;
                 }
             } else {
                 // Point is inside so only add to max distance.
                 // The point is inside the tree boundaries.
-                estimates[1] += Math.max(deltaHi * deltaHi, deltaLo * deltaLo);
+                estimates[1] += Math.max(sqDeltaHi, sqDeltaLo);
             }
         }
         return estimates;

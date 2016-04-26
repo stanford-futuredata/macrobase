@@ -8,6 +8,7 @@ import macrobase.datamodel.Datum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,44 +38,47 @@ public class MAD extends BatchTrainScore {
     @Override
     public void train(List<Datum> data) {
         Timer.Context context = medianComputation.time();
-
         assert (data.get(0).getMetrics().getDimension() == 1);
-        data.sort((x, y) -> Double.compare(x.getMetrics().getEntry(0),
-                                           y.getMetrics().getEntry(0)));
 
-        if (data.size() % 2 == 0) {
-            median = (data.get(data.size() / 2 - 1).getMetrics().getEntry(0) +
-                      data.get(data.size() / 2).getMetrics().getEntry(0)) / 2;
+        int len = data.size();
+        double[] metrics = new double[data.size()];
+        for (int i = 0; i < len; i++) {
+            metrics[i] = data.get(i).getMetrics().getEntry(0);
+        }
+        Arrays.sort(metrics);
+
+        if (len % 2 == 0) {
+            median = (metrics[len / 2 - 1] + metrics[len / 2]) / 2;
         } else {
-            median = data.get((int) Math.ceil(data.size() / 2)).getMetrics().getEntry(0);
+            median = metrics[(int) Math.ceil(len / 2)];
         }
         context.stop();
 
         context = residualComputation.time();
-        List<Double> residuals = new ArrayList<>(data.size());
-        for (Datum d : data) {
-            residuals.add(Math.abs(d.getMetrics().getEntry(0) - median));
+        double[] residuals = new double[len];
+        for (int i = 0; i < len; i++) {
+            residuals[i] = Math.abs(metrics[i] - median);
         }
         context.stop();
 
         context = residualMedianComputation.time();
-        residuals.sort((a, b) -> Double.compare(a, b));
+        Arrays.sort(residuals);
 
         if (data.size() % 2 == 0) {
-            MAD = (residuals.get(data.size() / 2 - 1) +
-                   residuals.get(data.size() / 2)) / 2;
+            MAD = (residuals[data.size() / 2 - 1] +
+                   residuals[data.size() / 2]) / 2;
         } else {
-            MAD = residuals.get((int) Math.ceil(data.size() / 2));
+            MAD = residuals[(int) Math.ceil(data.size() / 2)];
         }
 
         if (MAD == 0) {
             zeroMADs.inc();
-            int lowerTrimmedMeanIndex = (int) (residuals.size() * trimmedMeanFallback);
-            int upperTrimmedMeanIndex = (int) (residuals.size() * (1 - trimmedMeanFallback));
+            int lowerTrimmedMeanIndex = (int) (residuals.length * trimmedMeanFallback);
+            int upperTrimmedMeanIndex = (int) (residuals.length * (1 - trimmedMeanFallback));
             log.trace("MAD was zero; using trimmed means of residuals ({})", trimmedMeanFallback);
             double sum = 0;
             for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
-                sum += residuals.get(i);
+                sum += residuals[i];
             }
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
             assert (MAD != 0);

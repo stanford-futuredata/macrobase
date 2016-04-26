@@ -1,0 +1,28 @@
+macrobase.query.name: testTreeKDE
+
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.csv.file: test_data/us_energy_0p1.csv.gz
+macrobase.loader.csv.compression: GZIP
+macrobase.loader.attributes: [area_id, building_name]
+macrobase.loader.targetLowMetrics: []
+macrobase.loader.targetHighMetrics: [fans_electricity_kw, interiorequipment_electricity_kw]
+
+macrobase.analysis.transformType: TREE_KDE
+macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE
+macrobase.analysis.kde.kernelType: EPANECHNIKOV_MULTIPLICATIVE
+macrobase.analysis.treeKde.leafCapacity: 10
+
+macrobase.analysis.minSupport: 0.01
+macrobase.analysis.minOIRatio: 3.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.95
+
+macrobase.diagnostic.dumpClassifier: true
+
+logging:
+  level: DEBUG
+
+  loggers:
+    "macrobase": TRACE
+

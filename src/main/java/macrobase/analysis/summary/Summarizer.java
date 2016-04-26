@@ -1,6 +1,7 @@
 package macrobase.analysis.summary;
 
 import macrobase.analysis.result.OutlierClassificationResult;
+import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.DatumEncoder;
 
@@ -12,11 +13,11 @@ import java.util.Iterator;
  */
 public abstract class Summarizer implements Iterator<Summary> {
 
-    protected final Iterator<OutlierClassificationResult> input;
+    protected final OutlierClassifier input;
     protected final DatumEncoder encoder;
 
     public
-    Summarizer(MacroBaseConf conf, Iterator<OutlierClassificationResult> input) {
+    Summarizer(MacroBaseConf conf, OutlierClassifier input) {
         this.input = input;
         this.encoder = conf.getEncoder();
     }

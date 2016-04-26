@@ -14,8 +14,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.*;
 
 public class KDTreeTest {
@@ -34,7 +36,7 @@ public class KDTreeTest {
         data = Lists.newArrayList(loader);
     }
 
-    private void setUpVerySimpleCsv() throws IOException, ConfigurationException, SQLException {
+    private void setUpVerySimpleCsv() throws IOException, ConfigurationException {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/verySimple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("x", "y", "z"));
@@ -102,16 +104,16 @@ public class KDTreeTest {
         double[] zeroArray = {0, 0, 0};
         for (Datum datum : data) {
             // Check that minimum distance is zero if the point is inside.
-            assertArrayEquals(zeroArray, node.getMinMaxDistanceVectors(datum).get(0).toArray(), 1e-7);
+            assertArrayEquals(zeroArray, node.getMinMaxDistanceVectors(datum)[0].toArray(), 1e-7);
         }
 
         double[] farAwayPoint = {-10, 5, 21};
         Datum datum = new Datum(new ArrayList<>(), new ArrayRealVector(farAwayPoint));
         double[] minArray = {11, 0, 12};
         double[] maxArray = {21, 4, 20};
-        List<RealVector> minMaxVectors= node.getMinMaxDistanceVectors(datum);
-        assertArrayEquals(minArray, minMaxVectors.get(0).toArray(), 1e-7);
-        assertArrayEquals(maxArray, minMaxVectors.get(1).toArray(), 1e-7);
+        RealVector[] minMaxVectors= node.getMinMaxDistanceVectors(datum);
+        assertArrayEquals(minArray, minMaxVectors[0].toArray(), 1e-7);
+        assertArrayEquals(maxArray, minMaxVectors[1].toArray(), 1e-7);
     }
 
     @Test
@@ -143,13 +145,30 @@ public class KDTreeTest {
     }
 
     @Test
+    public void testIsOutsideBoundaries() throws IOException, SQLException, ConfigurationException {
+        this.setUpVerySimpleCsv();
+        KDTree node = new KDTree(data, 2);
+
+        double[] metrics = {-1, -1, -1};
+        Datum newdatum = new Datum(data.get(0), new ArrayRealVector(metrics));
+        assertFalse(node.isInsideBoundaries(newdatum));
+    }
+
+    @Test
+    public void testToString() throws IOException, ConfigurationException {
+        setUpVerySimpleCsv();
+        KDTree node = new KDTree(data, 2);
+        String str = node.toString();
+        assertThat(str.length(), greaterThan(Integer.valueOf(data.size())));
+    }
+
+    @Test
     public void testPooledCovariance() throws IOException, SQLException, ConfigurationException {
         this.setUpSimpleCsv();
         KDTree node;
 
         node = new KDTree(data, 200);
         assertTrue(node.isLeaf());
-
     }
 
 }

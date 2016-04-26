@@ -2,6 +2,7 @@ package macrobase.analysis.pipeline;
 
 import com.google.common.collect.Lists;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
+import macrobase.analysis.classify.DumpClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.contextualoutlier.Context;
 import macrobase.analysis.contextualoutlier.ContextualOutlierDetector;
@@ -12,6 +13,7 @@ import macrobase.analysis.summary.Summary;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
 import macrobase.ingest.TimedBatchIngest;
@@ -57,15 +59,22 @@ public class BasicBatchedPipeline extends OneShotPipeline {
     AnalysisResult run() throws SQLException, IOException, ConfigurationException {
         long startMs = System.currentTimeMillis();
         DataIngester ingester = conf.constructIngester();
+        // TODO: this should be a new pipeline
+        // Needs to happen early before ingester is possibly consumed. Downstream stages are allowed to drain
+        // upstream stages in construction.
+        if(contextualEnabled){
+            return contextualAnalyze(ingester);
+        }
+
         TimedBatchIngest batchIngest = new TimedBatchIngest(ingester);
         FeatureTransform featureTransform = new BatchScoreFeatureTransform(conf, batchIngest, conf.getTransformType());
         OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf, featureTransform);
+        if (conf.getBoolean(MacroBaseConf.CLASSIFIER_DUMP)) {
+            String queryName = conf.getString(MacroBaseConf.QUERY_NAME);
+            outlierClassifier = new DumpClassifier(conf, outlierClassifier, queryName);
+        }
         BatchSummarizer summarizer = new BatchSummarizer(conf, outlierClassifier);
 
-        // TODO: this should be a new pipeline
-    	if(contextualEnabled){
-    		return contextualAnalyze(ingester);
-    	}
 
         Summary result = summarizer.next();
 

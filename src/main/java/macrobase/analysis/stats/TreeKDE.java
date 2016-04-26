@@ -8,6 +8,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TreeKDE extends KDE {
@@ -15,12 +16,13 @@ public class TreeKDE extends KDE {
     private static final Logger log = LoggerFactory.getLogger(TreeKDE.class);
     private KDTree kdtree;
     private int kdtreeLeafCapacity;
-    private double scoreInvertingFactor;
+    private double scoreScaleLog;
     private double onePointTolerance;
     private final double accuracy;
-    private boolean approximateLeaves = true;
-    // Create a list, so we don't create it all the time.
-    private List<RealVector> minMaxD;
+    // Leave this off until we have a more refined appromixation, saw very bad results with true
+    private boolean approximateLeaves = false;
+
+    private int numScored = 0;
 
     public TreeKDE(MacroBaseConf conf) {
         super(conf);
@@ -36,10 +38,10 @@ public class TreeKDE extends KDE {
     @Override
     public void train(List<Datum> data) {
         this.setBandwidth(data);
-        log.debug("training kd-tree KDE");
-        this.kdtree = new KDTree(data, kdtreeLeafCapacity);
+        log.debug("training kd-tree KDE on {} points", data.size());
+        this.kdtree = new KDTree(new ArrayList<>(data), kdtreeLeafCapacity);
         this.scoreScalingFactor = 1.0 / (bandwidthDeterminantSqrt * data.size());
-        this.scoreInvertingFactor = 1.0 / scoreScalingFactor;
+        this.scoreScaleLog = Math.log(scoreScalingFactor);
 
         // Instead of scaling scores we scale acceptance
         this.onePointTolerance = bandwidthDeterminantSqrt * accuracy;
@@ -48,9 +50,9 @@ public class TreeKDE extends KDE {
     }
 
     private double scoreKDTree(KDTree tree, Datum datum) {
-        minMaxD = tree.getMinMaxDistanceVectors(datum);
-        double wMin = this.scaledKernelDensity(minMaxD.get(0));
-        double wMax = this.scaledKernelDensity(minMaxD.get(1));
+        RealVector[] minMaxD = tree.getMinMaxDistanceVectors(datum);
+        double wMin = this.scaledKernelDensity(minMaxD[0]);
+        double wMax = this.scaledKernelDensity(minMaxD[1]);
         if (wMin - wMax < accuracy) {
             // Return the average of the scores
             return 0.5 * (wMin + wMax) * tree.getnBelow();
@@ -79,9 +81,21 @@ public class TreeKDE extends KDE {
     }
 
     @Override
+    /**
+     * Return the negative log pdf density, this avoids underflow errors while still being
+     * an interpretable quantity. Use scoreDensity if you need the actual negative pdf.
+     */
     public double score(Datum datum) {
+        numScored++;
+        if (numScored % 10000 == 0) {
+            log.debug("Scored {}", numScored);
+        }
         double unscaledScore = scoreKDTree(kdtree, datum);
         // Note: return score with a minus sign, s.t. outliers are selected not inliers.
-        return -unscaledScore * scoreScalingFactor;
+        return -(Math.log(unscaledScore) + scoreScaleLog);
+    }
+
+    public double scoreDensity(Datum datum) {
+        return -Math.exp(-score(datum));
     }
 }
