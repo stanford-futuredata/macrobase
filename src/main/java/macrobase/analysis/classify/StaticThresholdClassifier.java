@@ -11,11 +11,10 @@ import java.util.List;
 public class StaticThresholdClassifier implements OutlierClassifier {
     MBStream<OutlierClassificationResult> results = new MBStream<>();
 
-    private final Double thresholdSquared;
+    private final double threshold;
 
     public StaticThresholdClassifier(MacroBaseConf conf) {
-        Double threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
-        thresholdSquared = threshold*threshold;
+        threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
     }
 
     @Override
@@ -31,7 +30,7 @@ public class StaticThresholdClassifier implements OutlierClassifier {
     @Override
     public void consume(List<Datum> records) {
         for(Datum r : records) {
-            results.add(new OutlierClassificationResult(r, thresholdSquared > r.getMetrics().getNorm()));
+            results.add(new OutlierClassificationResult(r, threshold < r.getMetrics().getNorm()));
         }
     }
 

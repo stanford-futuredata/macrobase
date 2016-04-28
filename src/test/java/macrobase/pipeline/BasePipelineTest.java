@@ -1,10 +1,10 @@
 package macrobase.pipeline;
 
 import macrobase.analysis.stats.*;
+import macrobase.analysis.stats.mixture.GaussianMixtureModel;
+import macrobase.analysis.stats.mixture.VariationalDPMG;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
-import macrobase.ingest.DiskCachingIngester;
-import macrobase.ingest.PostgresIngester;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -79,6 +79,18 @@ public class BasePipelineTest {
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.TREE_KDE);
         assertTrue(conf.constructTransform(conf.getTransformType()) instanceof TreeKDE);
+
+        conf.set(MacroBaseConf.TRANSFORM_TYPE,
+                 MacroBaseConf.TransformType.BAYESIAN_NORMAL);
+        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof BayesianNormalDensity);
+
+        conf.set(MacroBaseConf.TRANSFORM_TYPE,
+                 MacroBaseConf.TransformType.GAUSSIAN_MIXTURE_EM);
+        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof GaussianMixtureModel);
+
+        conf.set(MacroBaseConf.TRANSFORM_TYPE,
+                 MacroBaseConf.TransformType.VARIATIONAL_DPMG);
+        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof VariationalDPMG);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.MOVING_AVERAGE);

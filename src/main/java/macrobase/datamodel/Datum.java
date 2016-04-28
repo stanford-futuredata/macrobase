@@ -31,6 +31,10 @@ public class Datum implements HasMetrics {
         this.auxiliaries = oldDatum.getAuxiliaries();
     }
 
+    public Datum(List<Integer> attributes, double... doubleMetrics) {
+        this(attributes, new ArrayRealVector(doubleMetrics));
+    }
+
     public Datum(List<Integer> attributes, RealVector metrics) {
         this.attributes = attributes;
         this.metrics = metrics;
