@@ -6,10 +6,10 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import macrobase.conf.MacroBaseConf;
+import macrobase.runtime.command.MacroBasePipelineCommand;
 import macrobase.runtime.resources.AnalyzeResource;
 import macrobase.runtime.resources.RowSetResource;
 import macrobase.runtime.resources.SchemaResource;
-import macrobase.runtime.command.MacroBasePipelineCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

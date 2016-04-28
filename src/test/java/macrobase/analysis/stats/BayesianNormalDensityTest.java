@@ -49,7 +49,7 @@ public class BayesianNormalDensityTest {
         for (int i =0 ; i < 33; i++ ) {
             index = rand.nextInt(data.size());
             d = data.get(index);
-            assertEquals(kde.score(d), bayesianNormal.score(d), 0.03);
+            assertEquals(kde.score(d), -bayesianNormal.getDensity(d), 0.03);
         }
     }
 
@@ -81,7 +81,7 @@ public class BayesianNormalDensityTest {
         for (int i =0 ; i < 100; i++ ) {
             index = rand.nextInt(data.size());
             d = data.get(index);
-            assertEquals(standardNormal.density(d.getMetrics().getEntry(0)), -bayesianNormal.score(d), 0.01);
+            assertEquals(standardNormal.density(d.getMetrics().getEntry(0)), bayesianNormal.getDensity(d), 0.01);
         }
     }
 
@@ -116,7 +116,7 @@ public class BayesianNormalDensityTest {
         for (int i =0 ; i < 100; i++ ) {
             index = rand.nextInt(data.size());
             d = data.get(index);
-            assertEquals(bivariateNormal.density(d.getMetrics().toArray()), -bayesianNormal.score(d), 1e-3);
+            assertEquals(bivariateNormal.density(d.getMetrics().toArray()), bayesianNormal.getDensity(d), 1e-3);
         }
     }
 }

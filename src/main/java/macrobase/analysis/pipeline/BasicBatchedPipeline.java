@@ -10,10 +10,10 @@ import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
+import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
-import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,18 +37,18 @@ public class BasicBatchedPipeline extends BasePipeline {
         DataIngester ingester = conf.constructIngester();
 
         List<Datum> data = ingester.getStream().drain();
-    	ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(detector,
-    			contextualDiscreteAttributes,contextualDoubleAttributes,contextualDenseContextTau,contextualNumIntervals);
-    	
-    	contextualDetector.searchContextualOutliers(data, targetPercentile);
-    	Map<Context,BatchTrainScore.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
-        for(Context context: context2Outliers.keySet()){
-        	log.info("Context: " + context.print(conf.getEncoder()));
-        	log.info("Number of Inliers: " + context2Outliers.get(context).getInliers().size());
-        	log.info("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
-      
+        ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(detector,
+                contextualDiscreteAttributes, contextualDoubleAttributes, contextualDenseContextTau, contextualNumIntervals);
+
+        contextualDetector.searchContextualOutliers(data, targetPercentile);
+        Map<Context, BatchTrainScore.BatchResult> context2Outliers = contextualDetector.getContextualOutliers();
+        for (Context context : context2Outliers.keySet()) {
+            log.info("Context: " + context.print(conf.getEncoder()));
+            log.info("Number of Inliers: " + context2Outliers.get(context).getInliers().size());
+            log.info("Number of Outliers: " + context2Outliers.get(context).getOutliers().size());
+
         }
-    	//explain the contextual outliers
+        //explain the contextual outliers
 
         return new AnalysisResult(0, 0, 0, 0, 0, new ArrayList<>());
     }
@@ -56,7 +56,7 @@ public class BasicBatchedPipeline extends BasePipeline {
     @Override
     public AnalysisResult run() throws Exception {
         // TODO: this should be a new pipeline
-        if(contextualEnabled){
+        if (contextualEnabled) {
             return contextualAnalyze();
         }
 
@@ -65,7 +65,7 @@ public class BasicBatchedPipeline extends BasePipeline {
         // TODO: this should be a new pipeline
         // Needs to happen early before ingester is possibly consumed. Downstream stages are allowed to drain
         // upstream stages in construction.
-        if(contextualEnabled){
+        if (contextualEnabled) {
             return contextualAnalyze();
         }
 
@@ -80,9 +80,9 @@ public class BasicBatchedPipeline extends BasePipeline {
         }
 
         MBOperatorChain<?, Summary> chain = MBOperatorChain.begin(data)
-                                          .then(new BatchScoreFeatureTransform(conf, conf.getTransformType()))
-                                          .then(outlierClassifier)
-                                          .then(new BatchSummarizer(conf));
+                .then(new BatchScoreFeatureTransform(conf, conf.getTransformType()))
+                .then(outlierClassifier)
+                .then(new BatchSummarizer(conf));
 
         Summary result = chain.execute().drain().get(0);
 
@@ -93,14 +93,14 @@ public class BasicBatchedPipeline extends BasePipeline {
         final long executeMs = totalMs - result.getCreationTimeMs();
 
         log.info("took {}ms ({} tuples/sec)",
-                 totalMs,
-                 (result.getNumInliers()+result.getNumOutliers())/(double)totalMs*1000);
+                totalMs,
+                (result.getNumInliers() + result.getNumOutliers()) / (double) totalMs * 1000);
 
         return new AnalysisResult(result.getNumOutliers(),
-                                  result.getNumInliers(),
-                                  loadMs,
-                                  executeMs,
-                                  summarizeMs,
-                                  result.getItemsets());
+                result.getNumInliers(),
+                loadMs,
+                executeMs,
+                summarizeMs,
+                result.getItemsets());
     }
 }

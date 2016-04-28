@@ -2,20 +2,20 @@ package macrobase.diagnostics;
 
 import org.apache.commons.math3.linear.RealVector;
 
-public class MetricsAndDensity {
+public class MetricsAndScore {
     private RealVector metrics;
-    private double density;
+    private double score;
 
-    public MetricsAndDensity(RealVector metrics, double density) {
+    public MetricsAndScore(RealVector metrics, double score) {
         this.metrics = metrics;
-        this.density = density;
+        this.score = score;
     }
 
     public RealVector getMetrics() {
         return metrics;
     }
 
-    public double getDensity() {
-        return density;
+    public double getScore() {
+        return score;
     }
 }

@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ScoreDumper {
     private final MacroBaseConf conf;
@@ -16,17 +17,17 @@ public class ScoreDumper {
 
     public ScoreDumper(MacroBaseConf conf) {
         this.conf = conf;
-        this.scoreFile = conf.getString(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "");
+        this.scoreFile = conf.getString(MacroBaseConf.SCORED_DATA_FILE, "");
     }
 
     public void dumpScores(BatchTrainScore batchTrainScore, List<Datum> data) {
-        List<MetricsAndDensity> metricsAndDensities = new ArrayList<>(data.size());
+        List<MetricsAndScore> metricsAndScores = new ArrayList<>(data.size());
         for (Datum d : data) {
             double score = batchTrainScore.score(d);
-            metricsAndDensities.add(new MetricsAndDensity(d.getMetrics(), score));
+            metricsAndScores.add(new MetricsAndScore(d.getMetrics(), score));
         }
         try {
-            JsonUtils.dumpAsJson(metricsAndDensities, scoreFile);
+            JsonUtils.dumpAsJson(metricsAndScores, scoreFile);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
@@ -35,7 +36,16 @@ public class ScoreDumper {
     }
 
     public void dumpScores(BatchTrainScore batchTrainScore, double[][] boundaries, double delta) {
-        List<Datum> gridData = DiagnosticsUtils.create2DGrid(boundaries, delta);
+        List<Datum> gridData = DiagnosticsUtils.createGridFixedIncrement(boundaries, delta);
         dumpScores(batchTrainScore, gridData);
+    }
+
+    public static void tryToDumpScoredGrid(BatchTrainScore batchTrainScore, double[][] boundingBox, int pointsPerDimension, String filename) {
+        List<Datum> gridData = DiagnosticsUtils.createGridFixedSize(boundingBox, pointsPerDimension);
+
+        List<MetricsAndScore> scoredGrid = gridData.stream()
+                .map(d -> new MetricsAndScore(d.getMetrics(), batchTrainScore.score(d)))
+                .collect(Collectors.toList());
+        JsonUtils.tryToDumpAsJson(scoredGrid, filename);
     }
 }

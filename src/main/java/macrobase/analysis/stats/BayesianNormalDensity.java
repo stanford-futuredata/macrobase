@@ -80,7 +80,11 @@ public class BayesianNormalDensity extends BatchTrainScore {
 
     @Override
     public double score(Datum datum) {
-        return -distribution.density(datum.getMetrics());
+        return 1. / getDensity(datum);
+    }
+
+    public double getDensity(Datum datum) {
+        return distribution.density(datum.getMetrics());
     }
 
     @Override

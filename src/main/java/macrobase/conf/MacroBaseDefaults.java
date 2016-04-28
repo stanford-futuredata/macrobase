@@ -7,7 +7,6 @@ import macrobase.ingest.CSVIngester;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MacroBaseDefaults {
     public static final String QUERY_NAME = "MacroBaseQuery";
@@ -84,4 +83,7 @@ public class MacroBaseDefaults {
             .<String, Boolean>builder()
             .put(MacroBaseConf.CLASSIFIER_DUMP, false)
             .build();
+    public static final String DUMP_SCORE_GRID = null;
+    public static final String SCORED_DATA_FILE = null;
+    public static final Integer NUM_SCORE_GRID_POINTS_PER_DIMENSION = 1000;
 }

@@ -2,7 +2,7 @@ import os
 import sys
 
 
-def run_macrobase(cmd='batch', conf='conf/batch.conf', profiler=None,
+def run_macrobase(cmd='pipeline', conf='conf/batch.conf', profiler=None,
                   **kwargs):
   extra_args = ' '.join(['-D{key}={value}'.format(key=key, value=value)
                          for key, value in kwargs.items()])

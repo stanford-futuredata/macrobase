@@ -128,6 +128,7 @@ if __name__ == '__main__':
   print kwargs
   if args.profile:
     kwargs['profiler'] = 'yourkit'
+  kwargs['macrobase.pipeline.class'] = 'macrobase.analysis.pipeline.GridDumpingPipeline'
   run_macrobase(conf=config_file, **kwargs)
 
   for script_dict in experiment.get('post_run', []):

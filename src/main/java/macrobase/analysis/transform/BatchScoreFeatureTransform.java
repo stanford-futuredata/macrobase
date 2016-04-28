@@ -28,7 +28,7 @@ public class BatchScoreFeatureTransform implements FeatureTransform {
     @Override
     public void consume(List<Datum> records) {
         batchTrainScore.train(records);
-        for(Datum d : records) {
+        for (Datum d : records) {
             output.add(new Datum(d, batchTrainScore.score(d)));
         }
     }
@@ -36,6 +36,10 @@ public class BatchScoreFeatureTransform implements FeatureTransform {
     @Override
     public void shutdown() {
 
+    }
+
+    public BatchTrainScore getBatchTrainScore() {
+        return batchTrainScore;
     }
 
     @Override

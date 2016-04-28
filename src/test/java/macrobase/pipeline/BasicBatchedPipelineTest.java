@@ -66,6 +66,7 @@ public class BasicBatchedPipelineTest {
                      ar.getNumInliers()+ar.getNumOutliers(), 0);
     }
 
+
     @Test
     public void testSensor10KPower() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
@@ -184,9 +185,7 @@ public class BasicBatchedPipelineTest {
         assertEquals(0, toFindColumn.size());
         assertEquals(0, toFindValue.size());
     }
-    
-    
-    
+
     @Test
     public void testContextualMADAnalyzer() throws Exception {
     	 MacroBaseConf conf = new MacroBaseConf()
@@ -214,7 +213,5 @@ public class BasicBatchedPipelineTest {
         AnalysisResult ar = ba.run();
 
         assertEquals(0, ar.getItemSets().size());
-
-     
     }
 }

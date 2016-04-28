@@ -198,7 +198,7 @@ public class VariationalGMMTest {
                 {0, 6.01},
                 {-2, 4.01},
         };
-        List<Datum> scoredData = DiagnosticsUtils.create2DGrid(boundaries, 0.05);
+        List<Datum> scoredData = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.05);
 
         JsonUtils.dumpAsJson(variationalGMM.getCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
         JsonUtils.dumpAsJson(variationalGMM.getMeans(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");

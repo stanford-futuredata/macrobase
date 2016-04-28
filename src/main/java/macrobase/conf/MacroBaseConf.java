@@ -39,7 +39,7 @@ public class MacroBaseConf extends Configuration {
     public static final String MODEL_UPDATE_PERIOD = "macrobase.analysis.streaming.modelUpdatePeriod";
     public static final String OUTLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.outlierSummarySize";
     public static final String INLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.inlierItemSummarySize";
-    
+
     public static final String TUPLE_WINDOW = "macrobase.analysis.timeseries.tupleWindow";
 
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
@@ -81,7 +81,7 @@ public class MacroBaseConf extends Configuration {
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
-    
+
     public static final String CONTEXTUAL_ENABLED = "macrobase.analysis.contextual.enabled";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
@@ -91,6 +91,9 @@ public class MacroBaseConf extends Configuration {
 
     public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
     public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
+    public static final String DUMP_SCORE_GRID = "macrobase.diagnostic.dumpScoreGrid";
+    public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
+    public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
 
     private final DatumEncoder datumEncoder;
 
@@ -139,15 +142,15 @@ public class MacroBaseConf extends Configuration {
 
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
-        if(seed != null) {
+        if (seed != null) {
             return new Random(seed);
         } else {
             return new Random();
         }
     }
 
-    public BatchTrainScore constructTransform (TransformType transformType)
-            throws ConfigurationException{
+    public BatchTrainScore constructTransform(TransformType transformType)
+            throws ConfigurationException {
         switch (transformType) {
             case MAD_OR_MCD:
                 int metricsDimensions = this.getStringList(LOW_METRICS).size() + this.getStringList(HIGH_METRICS).size();
@@ -357,15 +360,14 @@ public class MacroBaseConf extends Configuration {
     }
 
     private void sanityCheckBase() throws ConfigurationException {
-        if(getBoolean(USE_PERCENTILE, false) && getBoolean(USE_ZSCORE, false)) {
+        if (getBoolean(USE_PERCENTILE, false) && getBoolean(USE_ZSCORE, false)) {
             throw new ConfigurationException(String.format("Can only select one of %s or %s",
-                                                           USE_PERCENTILE,
-                                                           USE_ZSCORE));
-        }
-        else if(!(getBoolean(USE_PERCENTILE, false) || getBoolean(USE_ZSCORE, false))) {
+                    USE_PERCENTILE,
+                    USE_ZSCORE));
+        } else if (!(getBoolean(USE_PERCENTILE, false) || getBoolean(USE_ZSCORE, false))) {
             throw new ConfigurationException(String.format("Must select one of %s or %s",
-                                                           USE_PERCENTILE,
-                                                           USE_ZSCORE));
+                    USE_PERCENTILE,
+                    USE_ZSCORE));
         }
     }
 
