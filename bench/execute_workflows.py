@@ -129,7 +129,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         else "streaming.conf"
     conf_file = os.path.join(sub_dir, conf_file)
     create_config_file(config_parameters, conf_file)
-    cmd = "batch" if config_parameters["isBatchJob"] else "streaming"
+    cmd = "pipeline"
 
     all_times = dict()
     all_num_itemsets = list()

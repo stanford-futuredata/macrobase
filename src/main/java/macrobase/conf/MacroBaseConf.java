@@ -19,6 +19,7 @@ public class MacroBaseConf extends Configuration {
     private static final Logger log = LoggerFactory.getLogger(MacroBaseConf.class);
 
     public static final String QUERY_NAME = "macrobase.query.name";
+    public static final String PIPELINE_NAME = "macrobase.pipeline.class";
 
     public static final String ZSCORE = "macrobase.analysis.zscore.threshold";
     public static final String TARGET_PERCENTILE = "macrobase.analysis.targetPercentile";

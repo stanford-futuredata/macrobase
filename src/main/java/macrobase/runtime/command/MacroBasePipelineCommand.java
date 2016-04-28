@@ -1,20 +1,21 @@
-package macrobase.runtime.standalone;
+package macrobase.runtime.command;
 
 import io.dropwizard.cli.ConfiguredCommand;
 import io.dropwizard.setup.Bootstrap;
 import macrobase.MacroBase;
 import macrobase.analysis.pipeline.BasicBatchedPipeline;
+import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MacroBaseBatchCommand extends ConfiguredCommand<MacroBaseConf> {
-    private static final Logger log = LoggerFactory.getLogger(MacroBaseBatchCommand.class);
+public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
+    private static final Logger log = LoggerFactory.getLogger(MacroBasePipelineCommand.class);
 
-    public MacroBaseBatchCommand() {
-        super("batch", "Run task without starting server.");
+    public MacroBasePipelineCommand() {
+        super("pipeline", "Run pipeline without starting server.");
     }
 
     @Override
@@ -22,7 +23,15 @@ public class MacroBaseBatchCommand extends ConfiguredCommand<MacroBaseConf> {
                        Namespace namespace,
                        MacroBaseConf configuration) throws Exception {
         configuration.loadSystemProperties();
-        BasicBatchedPipeline analyzer = new BasicBatchedPipeline(configuration);
+        Class c = Class.forName(configuration.getString(MacroBaseConf.PIPELINE_NAME));
+        Object ao = c.newInstance();
+
+        if(!(ao instanceof Pipeline)) {
+            log.error("{} is not an instance of Pipeline! Exiting...");
+            return;
+        }
+        Pipeline analyzer = (Pipeline) ao;
+        analyzer.initialize(configuration);
 
         AnalysisResult result = analyzer.run();
         if (result.getItemSets().size() > 1000) {

@@ -19,12 +19,13 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-public class BasicOneShotEWStreamingPipeline extends OneShotPipeline {
+public class BasicOneShotEWStreamingPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicOneShotEWStreamingPipeline.class);
 
-    public BasicOneShotEWStreamingPipeline(MacroBaseConf conf) throws ConfigurationException, SQLException, IOException {
-        super(conf);
-        conf.sanityCheckStreaming();
+    @Override
+    public void initialize(MacroBaseConf conf) throws Exception {
+        super.initialize(conf);
+        conf.sanityCheckBatch();
     }
 
     @Override

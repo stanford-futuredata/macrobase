@@ -1,4 +1,6 @@
 macrobase.query.name: testTasks
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicOneShotEWStreamingPipeline
+
 macrobase.loader.attributes: [userid, app_version]
 macrobase.loader.targetLowMetrics: [data_count_minutes]
 macrobase.loader.targetHighMetrics: []

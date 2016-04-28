@@ -38,7 +38,8 @@ public class AnalyzeResource extends BaseResource {
         conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
         conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
-        BasicBatchedPipeline analyzer = new BasicBatchedPipeline(conf);
+        BasicBatchedPipeline analyzer = new BasicBatchedPipeline();
+        analyzer.initialize(conf);
         AnalysisResult result = analyzer.run();
 
         if (result.getItemSets().size() > 1000) {

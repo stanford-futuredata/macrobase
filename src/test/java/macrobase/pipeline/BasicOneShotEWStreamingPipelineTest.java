@@ -53,7 +53,8 @@ public class BasicOneShotEWStreamingPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckStreaming();
 
-        BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline(conf);
+        BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
+        sa.initialize(conf);
         AnalysisResult ar = sa.run();
 
         log.debug(ar.toString());
@@ -94,7 +95,9 @@ public class BasicOneShotEWStreamingPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckStreaming();
 
-        AnalysisResult ar = (new BasicOneShotEWStreamingPipeline(conf)).run();
+        BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
+        sa.initialize(conf);
+        AnalysisResult ar = sa.run();
 
         log.debug(ar.toString());
 
@@ -135,7 +138,9 @@ public class BasicOneShotEWStreamingPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new BasicOneShotEWStreamingPipeline(conf)).run();
+        BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
+        sa.initialize(conf);
+        AnalysisResult ar = sa.run();
 
         assertTrue(ar.getLoadTime() >= 0);
         assertTrue(ar.getExecutionTime() >= 0);
@@ -185,7 +190,9 @@ public class BasicOneShotEWStreamingPipelineTest {
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
-        AnalysisResult ar = (new BasicOneShotEWStreamingPipeline(conf)).run();
+        BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
+        sa.initialize(conf);
+        AnalysisResult ar = sa.run();
 
         log.debug(ar.toString());
 

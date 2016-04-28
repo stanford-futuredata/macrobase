@@ -1,4 +1,6 @@
 macrobase.query.name: testTasks
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicBatchedPipeline
+
 macrobase.loader.attributes: [userid]
 macrobase.loader.targetLowMetrics: [data_count_minutes]
 macrobase.loader.targetHighMetrics: []

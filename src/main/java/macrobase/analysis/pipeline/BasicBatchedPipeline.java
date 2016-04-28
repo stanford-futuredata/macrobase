@@ -25,11 +25,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BasicBatchedPipeline extends OneShotPipeline {
+public class BasicBatchedPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicBatchedPipeline.class);
 
-    public BasicBatchedPipeline(MacroBaseConf conf) throws ConfigurationException, SQLException, IOException {
-        super(conf);
+    @Override
+    public void initialize(MacroBaseConf conf) throws Exception {
+        super.initialize(conf);
         conf.sanityCheckBatch();
     }
 
