@@ -80,6 +80,7 @@ public class DiskCachingIngester extends DataIngester {
                 writeOutData(data);
                 log.info("...done writing!");
             } else {
+                output = new MBStream<>();
                 output.add(data);
             }
         }
