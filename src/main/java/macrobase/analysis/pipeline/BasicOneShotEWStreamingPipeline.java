@@ -1,13 +1,13 @@
 package macrobase.analysis.pipeline;
 
 import macrobase.analysis.classify.EWAppxPercentileOutlierClassifier;
-import macrobase.analysis.classify.OutlierClassifier;
+import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.operator.MBOperatorChain;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.EWStreamingSummarizer;
 import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
-import macrobase.analysis.transform.FeatureTransform;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
@@ -15,17 +15,16 @@ import macrobase.analysis.transform.EWFeatureTransform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 public class BasicOneShotEWStreamingPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicOneShotEWStreamingPipeline.class);
 
     @Override
-    public void initialize(MacroBaseConf conf) throws Exception {
+    public Pipeline initialize(MacroBaseConf conf) throws Exception {
         super.initialize(conf);
         conf.sanityCheckBatch();
+        return this;
     }
 
     @Override
@@ -35,14 +34,13 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
         List<Datum> data = ingester.getStream().drain();
         long loadEndMs = System.currentTimeMillis();
 
-        FeatureTransform featureTransform = new EWFeatureTransform(conf);
-        featureTransform.consume(ingester.getStream().drain());
-
-        OutlierClassifier outlierClassifier = new EWAppxPercentileOutlierClassifier(conf);
-        outlierClassifier.consume(featureTransform.getStream().drain());
+        MBStream<OutlierClassificationResult> ocrs =
+                MBOperatorChain.begin(data)
+                             .then(new EWFeatureTransform(conf))
+                             .then(new EWAppxPercentileOutlierClassifier(conf)).executeMiniBatchUntilFixpoint(1000);
 
         Summarizer summarizer = new EWStreamingSummarizer(conf);
-        summarizer.consume(outlierClassifier.getStream().drain());
+        summarizer.consume(ocrs.drain());
 
         Summary result = summarizer.getStream().drain().get(0);
 

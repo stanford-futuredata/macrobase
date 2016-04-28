@@ -20,4 +20,22 @@ public class MBStream<T> {
         output = new ArrayList<>();
         return ret;
     }
+
+    public List<T> drain(int maxElements) {
+        List<T> ret;
+
+        if(maxElements < 0 || output.size() <= maxElements) {
+            ret = output;
+            output = new ArrayList<>();
+        } else {
+            ret = output.subList(0, maxElements);
+            output = output.subList(maxElements, output.size());
+        }
+
+        return ret;
+    }
+
+    public Integer remaining() {
+        return output.size();
+    }
 }

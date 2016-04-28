@@ -35,7 +35,7 @@ public abstract class BasePipeline implements Pipeline {
     protected MacroBaseConf conf;
 
     @Override
-    public void initialize(MacroBaseConf conf) throws Exception {
+    public Pipeline initialize(MacroBaseConf conf) throws Exception {
         this.conf = conf;
 
         queryName = conf.getString(MacroBaseConf.QUERY_NAME, MacroBaseDefaults.QUERY_NAME);
@@ -67,5 +67,7 @@ public abstract class BasePipeline implements Pipeline {
                                                    MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
         contextualNumIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS,
                                              MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
+
+        return this;
     }
 }

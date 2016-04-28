@@ -30,10 +30,9 @@ public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
             log.error("{} is not an instance of Pipeline! Exiting...");
             return;
         }
-        Pipeline analyzer = (Pipeline) ao;
-        analyzer.initialize(configuration);
 
-        AnalysisResult result = analyzer.run();
+        AnalysisResult result = ((Pipeline) ao).initialize(configuration).run();
+
         if (result.getItemSets().size() > 1000) {
             log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
             result.setItemSets(result.getItemSets().subList(0, 1000));
