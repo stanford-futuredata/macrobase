@@ -5,8 +5,11 @@ import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DumpClassifierTest {
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
     public void testDumpSmall() throws Exception {
@@ -54,7 +59,9 @@ public class DumpClassifierTest {
             }
         };
 
-        DumpClassifier dumper = new DumpClassifier(conf, dummy, "testDumpSmall");
+        File f = folder.newFile("testDumpSmall");
+
+        DumpClassifier dumper = new DumpClassifier(conf, dummy, f.getAbsolutePath());
         List<Datum> data = new ArrayList<>();
         data.add(new Datum(attrs, new ArrayRealVector()));
         data.add(new Datum(attrs, new ArrayRealVector()));

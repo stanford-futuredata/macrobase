@@ -2,7 +2,7 @@ macrobase.query.name: testTasks
 macrobase.pipeline.class: macrobase.analysis.pipeline.BasicBatchedPipeline
 
 macrobase.loader.loaderType: CSV_LOADER
-macrobase.loader.csv.file: test_data/us_energy_0p1.csv.gz
+macrobase.loader.csv.file: src/test/resources/data/us_energy_0p1.csv.gz
 macrobase.loader.csv.compression: GZIP
 macrobase.loader.attributes: [area_id, building_name]
 macrobase.loader.targetLowMetrics: []

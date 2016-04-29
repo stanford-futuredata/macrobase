@@ -35,7 +35,8 @@ public class DumpClassifier implements OutlierClassifier {
     public DumpClassifier(MacroBaseConf conf, OutlierClassifier input, String name) throws IOException {
         this.conf = conf;
         this.input = input;
-        filepath = String.format("test_out/dump_classifier_%s.txt", name);
+	// TODO: output directory should be configurable
+        filepath = String.format("%s-dumpClassifier.txt", name);
         out = new PrintWriter(new BufferedWriter(new FileWriter(filepath)));
     }
 
