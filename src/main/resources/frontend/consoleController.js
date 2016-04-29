@@ -41,8 +41,8 @@ myApp.service('explorerService', function($localStorage) {
 myApp.service('configService', function($localStorage) {
     var defaults = {
                            pgUrl: "localhost",
-                           baseQuery: "SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000",
-                           selectedTargets: { DEFAULT_CONFIG : {"attributes": ["userid"],"lowMetrics": ["data_count_minutes"] }}}
+                           baseQuery: "SELECT * FROM sensor_data;",
+                           selectedTargets: { DEFAULT_CONFIG : {"attributes": ["state"],"highMetrics": ["power_drain"] }}}
 
     var hasAnalysisForConfig = false
 
@@ -309,7 +309,7 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
             $scope.numOutliers = response.data.numOutliers
             $scope.numInliers = response.data.numInliers
             $scope.loadTime = response.data.loadTime
-            $scope.executionTime = response.data.labelTime
+            $scope.executionTime = response.data.executionTime
             $scope.summarizationTime = response.data.summarizationTime
             $scope.itemsets = response.data.itemSets
 
