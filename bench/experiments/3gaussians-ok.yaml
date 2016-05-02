@@ -1,0 +1,13 @@
+macrobase:
+  macrobase.pipeline.class: macrobase.analysis.pipeline.GridDumpingPipeline
+  macrobase.analysis.transformType: VARIATIONAL_GMM
+  macrobase.analysis.stat.mixtures.numMixtures: 6
+  macrobase.loader.attributes: [XX, YY]
+  macrobase.loader.csv.file: src/test/resources/data/3gaussians-7000points.csv.gz
+  macrobase.loader.csv.compression: GZIP
+  macrobase.loader.loaderType: CSV_LOADER
+  macrobase.loader.targetHighMetrics: [XX, YY]
+  macrobase.loader.targetLowMetrics: []
+  macrobase.query.name: ok_gaussians_finite_gmm
+post_run:
+  - plot_score_contours: "--plot density --savefig"

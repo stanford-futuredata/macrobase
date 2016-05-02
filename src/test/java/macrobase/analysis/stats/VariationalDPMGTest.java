@@ -1,7 +1,6 @@
 package macrobase.analysis.stats;
 
 import macrobase.analysis.stats.mixture.VariationalDPMG;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -14,8 +13,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,11 +52,12 @@ public class VariationalDPMGTest {
      */
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 4)
+                .set(MacroBaseConf.RANDOM_SEED, 40)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_DPMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
+                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.csv")
                 .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 15)
-                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 1)
+                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.2)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-700points.csv.gz")
@@ -111,6 +109,11 @@ public class VariationalDPMGTest {
         List<RealVector> calculatedCenters = variationalDPGM.getClusterCenters();
         double[] weights = variationalDPGM.getClusterWeights();
 
+        List<List<Integer>> lists = new ArrayList<>();
+        lists.add(new ArrayList<>());
+        lists.add(new ArrayList<>());
+        lists.add(new ArrayList<>());
+
         double[] inferedWeights = new double[3];
         for (int i = 0 ; i < calculatedCenters.size(); i++ ) {
             if (weights[i] < 0.001) {
@@ -120,6 +123,7 @@ public class VariationalDPMGTest {
                 if (calculatedCenters.get(i).getDistance(vectorClusterMeans.get(j)) < 2) {
                     log.debug("identified cluster {} to be close to {} (weight = {})", calculatedCenters.get(i), vectorClusterMeans.get(j), weights[i]);
                     inferedWeights[j] += weights[i];
+                    lists.get(j).add(i);
                     break;
                 }
             }
@@ -127,6 +131,22 @@ public class VariationalDPMGTest {
 
         for (int j=0 ; j < 3 ; j++) {
             assertEquals(clusterPoints[j], inferedWeights[j] * 700, 3);
+        }
+        // Make sure centers belong to only one cluster.
+        double[] maxProbas = {0, 0, 0};
+        for (int i = 0; i < 3; i++) {
+            double[] probas = variationalDPGM.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
+            log.debug("probas = {}", probas);
+            for (int j=0; j< 3; j++) {
+                double p = 0;
+                for (int ii : lists.get(j)) {
+                    p += probas[ii];
+                }
+                maxProbas[j] = Math.max(p, maxProbas[j]);
+            }
+        }
+        for (int j=0; j< 3; j++) {
+            assertEquals(1, maxProbas[j], 0.01);
         }
     }
 

@@ -1,19 +1,34 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
+import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.*;
 
 public abstract class BatchMixtureModel extends BatchTrainScore {
+    private static final Logger log = LoggerFactory.getLogger(BatchMixtureModel.class);
     protected MacroBaseConf conf;
     public BatchMixtureModel(MacroBaseConf conf) {
         super(conf);
         this.conf = conf;
+    }
+
+    protected List<RealVector> initalizeClustersFromFile(String filename, int K) throws FileNotFoundException {
+        Gson gson = new Gson();
+        JsonReader reader = new JsonReader(new FileReader(filename));
+        RealVector[] centers = gson.fromJson(reader, ArrayRealVector[].class);
+        List<RealVector> vectors = Arrays.asList(centers);
+        return vectors.subList(0, K);
     }
 
     protected List<RealVector> gonzalezInitializeMixtureCenters(List<Datum> data, int K) {
@@ -44,4 +59,21 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
         }
         return vectors;
     }
+
+    /**
+     * @return centers of mixtures
+     */
+    public abstract List<RealVector> getClusterCenters();
+
+    /**
+     * @return weights of each cluster
+     */
+    public abstract double[] getClusterWeights();
+
+    /**
+     * @return covariances of mixture components
+     */
+    public abstract List<RealMatrix> getClusterCovariances();
+
+    public abstract double[] getClusterProbabilities(Datum d);
 }

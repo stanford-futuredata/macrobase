@@ -95,12 +95,15 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = "macrobase.analysis.contextual.pruning.distributionForTraining";
     public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = "macrobase.analysis.contextual.pruning.distributionForScoring";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
+    public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
 
     public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
     public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
     public static final String DUMP_SCORE_GRID = "macrobase.diagnostic.dumpScoreGrid";
     public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
     public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
+    public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
+    public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initalClusters";
 
     private final DatumEncoder datumEncoder;
 
@@ -273,6 +276,13 @@ public class MacroBaseConf extends Configuration {
             return Double.parseDouble(_conf.get(key));
         }
         return defaultValue;
+    }
+
+    public List<Double> getDoubleList(String key) throws ConfigurationException {
+        if (!_conf.containsKey(key)) {
+            throw new MissingParameterException(key);
+        }
+        return _conf.get(key).length() > 0 ? Arrays.asList(_conf.get(key).split(",[ ]*")).stream().map(Double::parseDouble).collect(Collectors.toList()) : new ArrayList<>();
     }
 
     public Integer getInt(String key) throws ConfigurationException {
