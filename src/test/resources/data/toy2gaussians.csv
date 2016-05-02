@@ -1,19 +1,19 @@
-XX
--1
-0
-0
-1
-1
-1
-2
-2
-3
-104
-105
-105
-106
-106
-106
-107
-107
-108
+Cluster,XX
+first, -1
+first, 0
+first, 0
+first, 1
+first, 1
+first, 1
+first, 2
+first, 2
+first, 3
+second, 104
+second, 105
+second, 105
+second, 106
+second, 106
+second, 106
+second, 107
+second, 107
+second, 108

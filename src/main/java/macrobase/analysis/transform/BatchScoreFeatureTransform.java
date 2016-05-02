@@ -12,9 +12,8 @@ public class BatchScoreFeatureTransform implements FeatureTransform {
     protected BatchTrainScore batchTrainScore;
     protected MacroBaseConf conf;
 
-    private final MBStream<Datum> output = new MBStream<>();
-    
     private boolean requiresTraining = true;
+    protected final MBStream<Datum> output = new MBStream<>();
 
     public BatchScoreFeatureTransform(MacroBaseConf conf, MacroBaseConf.TransformType transformType)
             throws ConfigurationException {

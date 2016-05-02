@@ -1,6 +1,5 @@
 package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateNormal;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -134,12 +133,33 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         return 0;
     }
 
-    public List<RealVector> getMeans() {
+    @Override
+    public List<RealVector> getClusterCenters() {
         return mu;
     }
 
-    public List<RealMatrix> getCovariance() {
+    @Override
+    public double[] getClusterWeights() {
+        return phi;
+    }
+
+    @Override
+    public List<RealMatrix> getClusterCovariances() {
         return sigma;
+    }
+
+    @Override
+    public double[] getClusterProbabilities(Datum d) {
+        double[] probas = new double[K];
+        double normalizingConstant = 0;
+        for (int k = 0; k < K; k++) {
+            probas[k] = phi[k] * mixtureDistributions.get(k).density(d.getMetrics());
+            normalizingConstant += probas[k];
+        }
+        for (int k = 0; k < K; k++) {
+            probas[k] /= normalizingConstant;
+        }
+        return probas;
     }
 
 }

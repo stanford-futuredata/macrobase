@@ -1,6 +1,5 @@
 package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.BatchMixtureModel;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -11,6 +10,7 @@ import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +19,7 @@ import java.util.List;
  */
 public class VariationalGMM extends BatchMixtureModel {
     private static final Logger log = LoggerFactory.getLogger(VariationalGMM.class);
+    private final String initialClusterCentersFile;
 
     private int K;  // Number of mixture components
     private double progressCutoff;
@@ -47,6 +48,7 @@ public class VariationalGMM extends BatchMixtureModel {
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
         log.debug("created Gaussian MM with {} mixtures", this.K);
+        this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
     @Override
@@ -62,6 +64,7 @@ public class VariationalGMM extends BatchMixtureModel {
         // priorNu = 1. / dimensions;
         priorNu = 0.1;
         priorW = MatrixUtils.createRealIdentityMatrix(dimensions);
+        //priorW.setEntry(1, 1, 3);
         RealMatrix priorWInverse = AlgebraUtils.invertMatrix(priorW);
 
         alpha = new double[K];
@@ -70,14 +73,23 @@ public class VariationalGMM extends BatchMixtureModel {
         W = new ArrayList<>(K);
 
         // Initialize
-        m = gonzalezInitializeMixtureCenters(data, K);
+        if (initialClusterCentersFile != null) {
+            try {
+                m = initalizeClustersFromFile(initialClusterCentersFile, K);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                m = gonzalezInitializeMixtureCenters(data, K);
+            }
+        } else {
+            m = gonzalezInitializeMixtureCenters(data, K);
+        }
+        log.debug("initialized cluster centers as: {}", m);
         for (int k = 0; k < this.K; k++) {
             alpha[k] = 1. / K;
             beta[k] = priorBeta;
             nu[k] = priorNu;
             W.add(priorW);
         }
-        log.debug("initialized cluster centers as: {}", m);
 
         List<RealVector> clusterMean;
         List<RealMatrix> S;
@@ -158,7 +170,7 @@ public class VariationalGMM extends BatchMixtureModel {
 
             log.debug("cluster means are at {}", clusterMean);
             log.debug("cluster weights are at {}", clusterWeight);
-            log.debug("cluster covariances are at {}", getCovariances());
+            log.debug("cluster covariances are at {}", getClusterCovariances());
 
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
@@ -198,11 +210,18 @@ public class VariationalGMM extends BatchMixtureModel {
         return 0;
     }
 
-    public List<RealVector> getMeans() {
+    @Override
+    public double[] getClusterWeights() {
+        return alpha;
+    }
+
+    @Override
+    public List<RealVector> getClusterCenters() {
         return m;
     }
 
-    public List<RealMatrix> getCovariances() {
+    @Override
+    public List<RealMatrix> getClusterCovariances() {
         List<RealMatrix> covariances = new ArrayList<>(K);
         for (int k = 0; k < this.K; k++) {
             covariances.add(AlgebraUtils.invertMatrix(W.get(k).scalarMultiply(nu[k])));
@@ -212,5 +231,20 @@ public class VariationalGMM extends BatchMixtureModel {
 
     public double[] getPriorAdjustedWeights() {
         return clusterWeight;
+    }
+
+    @Override
+    public double[] getClusterProbabilities(Datum d) {
+        double[] probas = new double[K];
+        double[] weights = getClusterWeights();
+        double normalizingConstant = 0;
+        for (int i = 0; i < K; i++) {
+            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());
+            normalizingConstant += probas[i];
+        }
+        for (int i = 0; i < K; i++) {
+            probas[i] /= normalizingConstant;
+        }
+        return probas;
     }
 }
