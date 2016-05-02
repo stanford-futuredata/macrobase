@@ -1,8 +1,6 @@
 package macrobase.analysis.stats;
 
-import com.google.common.collect.Lists;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
@@ -14,8 +12,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,8 +55,8 @@ public class GaussianMixtureModelTest {
                 {{0.9,0.2},{0.2,0.3}},
         };
 
-        List<RealVector> calculatedMeans = gmm.getMeans();
-        List<RealMatrix> calculatedCovariances = gmm.getCovariance();
+        List<RealVector> calculatedMeans = gmm.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = gmm.getClusterCovariances();
 
         for (int i=0; i<3 ; i ++) {
             boolean identified = false;
@@ -77,6 +73,17 @@ public class GaussianMixtureModelTest {
                 }
             }
             assertEquals(true, identified);
+        }
+        // Make sure centers belong to only one cluster.
+        double[] maxProbas = {0, 0, 0};
+        for (int i = 0; i < 3; i++) {
+            double[] probas = gmm.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
+            for (int j=0; j< 3; j++) {
+                maxProbas[j] = Math.max(probas[j], maxProbas[j]);
+            }
+        }
+        for (int j=0; j< 3; j++) {
+            assertEquals(maxProbas[j], 1, 0.01);
         }
     }
     
@@ -115,8 +122,8 @@ public class GaussianMixtureModelTest {
                 {{0.9,0.2},{0.2,0.3}},
         };
 
-        List<RealVector> calculatedMeans = gmm.getMeans();
-        List<RealMatrix> calculatedCovariances = gmm.getCovariance();
+        List<RealVector> calculatedMeans = gmm.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = gmm.getClusterCovariances();
 
         for (int i=0; i<3 ; i ++) {
             boolean identified = false;

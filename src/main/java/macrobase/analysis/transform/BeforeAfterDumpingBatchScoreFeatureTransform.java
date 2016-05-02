@@ -13,7 +13,7 @@ import java.util.List;
 
 public class BeforeAfterDumpingBatchScoreFeatureTransform implements FeatureTransform {
 
-    private String dumpFilename;
+    private final String dumpFilename;
     private FeatureTransform underlyingTransform;
     private final MBStream<Datum> output = new MBStream<>();
 
