@@ -1,8 +1,9 @@
 package macrobase.analysis.pipeline;
 
+import com.google.common.base.Stopwatch;
 import macrobase.analysis.classify.EWAppxPercentileOutlierClassifier;
-import macrobase.analysis.pipeline.operator.MBStream;
-import macrobase.analysis.pipeline.operator.MBOperatorChain;
+import macrobase.analysis.pipeline.operator.MBOperator;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.EWStreamingSummarizer;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class BasicOneShotEWStreamingPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicOneShotEWStreamingPipeline.class);
@@ -30,24 +32,30 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
 
     @Override
     public List<AnalysisResult> run() throws Exception {
-        long startMs = System.currentTimeMillis();
+        Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
-        long loadEndMs = System.currentTimeMillis();
+        final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
-        MBStream<OutlierClassificationResult> ocrs =
-                MBOperatorChain.begin(data)
-                             .then(new EWFeatureTransform(conf))
-                             .then(new EWAppxPercentileOutlierClassifier(conf)).executeMiniBatchUntilFixpoint(1000);
+
+        MBStream<Datum> streamData = new MBStream<>(data);
+
+        MBOperator<Datum, OutlierClassificationResult> ocr =
+                new EWFeatureTransform(conf)
+                .then(new EWAppxPercentileOutlierClassifier(conf), 1000);
+
+        while(streamData.remaining() > 0) {
+            ocr.consume(streamData.drain(1000));
+        }
+
+        MBStream<OutlierClassificationResult> ocrs = ocr.getStream();
 
         Summarizer summarizer = new EWStreamingSummarizer(conf);
         summarizer.consume(ocrs.drain());
 
         Summary result = summarizer.getStream().drain().get(0);
 
-        final long endMs = System.currentTimeMillis();
-        final long loadMs = loadEndMs - startMs;
-        final long totalMs = endMs - loadEndMs;
+        final long totalMs = sw.elapsed(TimeUnit.MILLISECONDS) - loadMs;
         final long summarizeMs = result.getCreationTimeMs();
         final long executeMs = totalMs - result.getCreationTimeMs();
 

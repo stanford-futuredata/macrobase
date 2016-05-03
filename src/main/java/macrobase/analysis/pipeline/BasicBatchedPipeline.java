@@ -1,13 +1,15 @@
 package macrobase.analysis.pipeline;
 
+import com.google.common.base.Stopwatch;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.DumpClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
-import macrobase.analysis.pipeline.operator.MBOperatorChain;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.BatchSummarizer;
+import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
+import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class BasicBatchedPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicBatchedPipeline.class);
@@ -29,29 +32,29 @@ public class BasicBatchedPipeline extends BasePipeline {
 
     @Override
     public List<AnalysisResult> run() throws Exception {
-        long startMs = System.currentTimeMillis();
+        Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
-       
         List<Datum> data = ingester.getStream().drain();
-        long loadEndMs = System.currentTimeMillis();
+        final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
-        OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf);
+        FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());
+        ft.consume(data);
+
+        OutlierClassifier oc = new BatchingPercentileClassifier(conf);
 
         if (conf.getBoolean(MacroBaseConf.CLASSIFIER_DUMP)) {
             String queryName = conf.getString(MacroBaseConf.QUERY_NAME);
-            outlierClassifier = new DumpClassifier(conf, outlierClassifier, queryName);
+            oc = new DumpClassifier(conf, oc, queryName);
         }
 
-        MBOperatorChain<?, Summary> chain = MBOperatorChain.begin(data)
-                .then(new BatchScoreFeatureTransform(conf, conf.getTransformType()))
-                .then(outlierClassifier)
-                .then(new BatchSummarizer(conf));
+        oc.consume(ft.getStream().drain());
 
-        Summary result = chain.execute().drain().get(0);
+        Summarizer bs = new BatchSummarizer(conf);
+        bs.consume(oc.getStream().drain());
 
-        final long endMs = System.currentTimeMillis();
-        final long loadMs = loadEndMs - startMs;
-        final long totalMs = endMs - loadEndMs;
+        Summary result = bs.getStream().drain().get(0);
+
+        final long totalMs = sw.elapsed(TimeUnit.MILLISECONDS) - loadMs;
         final long summarizeMs = result.getCreationTimeMs();
         final long executeMs = totalMs - result.getCreationTimeMs();
 

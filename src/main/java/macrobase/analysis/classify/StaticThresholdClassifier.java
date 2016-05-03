@@ -1,6 +1,6 @@
 package macrobase.analysis.classify;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -8,7 +8,7 @@ import macrobase.datamodel.Datum;
 
 import java.util.List;
 
-public class StaticThresholdClassifier implements OutlierClassifier {
+public class StaticThresholdClassifier extends OutlierClassifier {
     MBStream<OutlierClassificationResult> results = new MBStream<>();
 
     private final double threshold;

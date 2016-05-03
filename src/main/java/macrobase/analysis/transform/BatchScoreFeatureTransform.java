@@ -1,6 +1,6 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -8,7 +8,7 @@ import macrobase.datamodel.Datum;
 
 import java.util.List;
 
-public class BatchScoreFeatureTransform implements FeatureTransform {
+public class BatchScoreFeatureTransform extends FeatureTransform {
     protected BatchTrainScore batchTrainScore;
     protected MacroBaseConf conf;
 

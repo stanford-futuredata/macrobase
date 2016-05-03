@@ -8,4 +8,4 @@ import macrobase.analysis.result.OutlierClassificationResult;
  # when there has been an update.
  */
 
-public interface Summarizer extends MBOperator<OutlierClassificationResult, Summary> { }
+public abstract class Summarizer extends MBOperator<OutlierClassificationResult, Summary> { }

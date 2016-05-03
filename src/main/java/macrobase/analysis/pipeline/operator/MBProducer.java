@@ -1,5 +1,7 @@
 package macrobase.analysis.pipeline.operator;
 
+import macrobase.analysis.pipeline.stream.MBStream;
+
 public interface MBProducer<T> {
-    public MBStream<T> getStream() throws Exception;
+    MBStream<T> getStream() throws Exception;
 }

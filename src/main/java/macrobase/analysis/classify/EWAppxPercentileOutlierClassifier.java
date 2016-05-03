@@ -1,6 +1,6 @@
 package macrobase.analysis.classify;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.DatumWithNorm;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
@@ -16,7 +16,7 @@ import java.util.List;
  Exponentially weighted approximate percentile-based streaming classifier
  */
 
-public class EWAppxPercentileOutlierClassifier implements OutlierClassifier {
+public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
     private final double percentile;
     private ExponentiallyBiasedAChao<DatumWithNorm> reservoir;
 

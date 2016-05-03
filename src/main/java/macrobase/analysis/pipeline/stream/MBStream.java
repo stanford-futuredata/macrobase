@@ -1,11 +1,11 @@
-package macrobase.analysis.pipeline.operator;
+package macrobase.analysis.pipeline.stream;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class MBStream<T> {
-    private List<T> output = new ArrayList<>();
+    private List<T> output;
 
     public void add(T record) { output.add(record); }
 
@@ -15,10 +15,16 @@ public class MBStream<T> {
 
     public void close() {}
 
-    public List<T> drain() {
-        List<T> ret = output;
+    public MBStream() {
         output = new ArrayList<>();
-        return ret;
+    }
+
+    public MBStream(List<T> data) {
+        output = data;
+    }
+
+    public List<T> drain() {
+        return drain(-1);
     }
 
     public List<T> drain(int maxElements) {

@@ -1,6 +1,6 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -11,7 +11,7 @@ import macrobase.diagnostics.MetricsAndMetrics;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeforeAfterDumpingBatchScoreFeatureTransform implements FeatureTransform {
+public class BeforeAfterDumpingBatchScoreFeatureTransform extends FeatureTransform {
 
     private final String dumpFilename;
     private FeatureTransform underlyingTransform;

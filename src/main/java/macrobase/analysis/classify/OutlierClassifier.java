@@ -5,4 +5,4 @@ import macrobase.analysis.result.OutlierClassificationResult;
 
 import macrobase.datamodel.Datum;
 
-public interface OutlierClassifier extends MBOperator<Datum, OutlierClassificationResult> { }
+public abstract class OutlierClassifier extends MBOperator<Datum, OutlierClassificationResult> { }

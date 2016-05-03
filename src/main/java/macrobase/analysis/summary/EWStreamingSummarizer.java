@@ -1,7 +1,7 @@
 package macrobase.analysis.summary;
 
 import com.google.common.base.Stopwatch;
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.itemset.ExponentiallyDecayingEmergingItemsets;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -14,7 +14,7 @@ import macrobase.util.Periodic;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class EWStreamingSummarizer implements Summarizer {
+public class EWStreamingSummarizer extends Summarizer {
     private final ExponentiallyDecayingEmergingItemsets streamingSummarizer;
     private final Periodic summaryUpdater;
     private final Periodic summarizationTimer;
