@@ -8,11 +8,13 @@ import macrobase.datamodel.Datum;
 
 public abstract class TimeSeriesOutlierDetector extends BatchTrainScore {
     protected final int tupleWindowSize;
+    protected final Integer timeColumn;
     private int currentTupleWindowSize;
 
     public TimeSeriesOutlierDetector(MacroBaseConf conf) {
         super(conf);
         this.tupleWindowSize = conf.getInt(MacroBaseConf.TUPLE_WINDOW, MacroBaseDefaults.TUPLE_WINDOW);
+        this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
         assert tupleWindowSize > 1;
     }
 
@@ -30,7 +32,7 @@ public abstract class TimeSeriesOutlierDetector extends BatchTrainScore {
         // Just sanity checks - we don't actually compute anything in train,
         // since we train as we go while scoring.
         assert data.size() >= tupleWindowSize;
-        assert data.get(0).getTime() != null;
+        assert timeColumn != null;
     }
 
     @Override

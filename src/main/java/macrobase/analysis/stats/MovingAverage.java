@@ -46,7 +46,7 @@ public class MovingAverage extends TimeSeriesOutlierDetector {
             // until we have the second one to actually process it.
             window.add(new DatumWithInfo(newDatum, 0));
         } else {
-            int weight = newDatum.getTime() - getLatestDatum().getTime();
+            int weight = newDatum.getTime(timeColumn) - getLatestDatum().getTime(timeColumn);
             if (window.size() == 1) {
                 windowSum = new ArrayRealVector(newDatum.getMetrics()
                         .getDimension());
@@ -88,7 +88,7 @@ public class MovingAverage extends TimeSeriesOutlierDetector {
         RealVector average = windowSum.mapDivide(weightTotal);
         double percentDiff = 0;
         for (int i = 0; i < average.getDimension(); i++) {
-            if (average.getEntry(i) == 0) {
+            if (average.getEntry(i) == 0 || timeColumn == i) {
                 // What should we do here?
                 continue;
             }
