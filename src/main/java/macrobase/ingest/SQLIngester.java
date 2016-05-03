@@ -10,7 +10,6 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
-import macrobase.datamodel.TimeDatum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
@@ -46,6 +45,7 @@ public abstract class SQLIngester extends DataIngester {
     private final String dbUser;
     private final String dbPassword;
     private final String dbName;
+    private final Integer timeColumn;
 
     protected final String baseQuery;
     protected ResultSet resultSet;
@@ -68,6 +68,7 @@ public abstract class SQLIngester extends DataIngester {
         dbName = conf.getString(MacroBaseConf.DB_NAME, MacroBaseDefaults.DB_NAME);
         baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
+        timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
 
         if (connection != null) {
             this.connection = connection;
@@ -213,12 +214,7 @@ public abstract class SQLIngester extends DataIngester {
         List<Integer> contextualDiscreteAttrValues = getContextualDiscreteAttrs(resultSet, conf.getEncoder(), attrList.size() + metricVec.getDimension() + 1);
         RealVector contextualDoubleAttrValues = getContextualDoubleAttrs(resultSet, attrList.size() + metricVec.getDimension() + contextualDiscreteAttrValues.size() + 1);
 
-        Datum datum;
-        if (timeColumn == null) {
-            datum = new Datum(attrList, metricVec, contextualDiscreteAttrValues, contextualDoubleAttrValues);
-        } else {
-            datum = new TimeDatum(resultSet.getInt(timeColumn), attrList, metricVec, contextualDiscreteAttrValues, contextualDoubleAttrValues);
-        }
+        Datum datum = new Datum(attrList, metricVec, contextualDiscreteAttrValues, contextualDoubleAttrValues);
 
         // Set auxilaries on the datum if user specified
         if (auxiliaryAttributes.size() > 0) {
@@ -285,7 +281,7 @@ public abstract class SQLIngester extends DataIngester {
 
 
     // Shield your eyes, mere mortals, from this glorious hideousness.
-    private String orderByTimeColumn(String sql, @Nullable String timeColumn) {
+    private String orderByTimeColumn(String sql, @Nullable Integer timeColumn) {
         if (timeColumn == null) {
             return sql;
         } else {
@@ -293,7 +289,8 @@ public abstract class SQLIngester extends DataIngester {
                 throw new RuntimeException("baseQuery currently shouldn't contain ORDER BY if timeColumn is specified.");
             }
 
-            String orderBy = " ORDER BY " + timeColumn;
+            String timeColumnName = conf.getEncoder().getAttributeName(timeColumn);
+            String orderBy = " ORDER BY " + timeColumnName;
             if (Pattern.compile(LIMIT_REGEX).matcher(sql).find()) {
                 return sql.replaceAll(LIMIT_REGEX, orderBy + " $1");
             } else {

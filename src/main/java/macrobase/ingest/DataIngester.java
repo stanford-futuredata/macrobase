@@ -17,12 +17,12 @@ public abstract class DataIngester implements MBProducer<Datum> {
     protected final List<String> highMetrics;
     protected final List<String> lowMetrics;
     protected final MacroBaseConf conf;
-    protected final String timeColumn;
+    protected final Integer timeColumn;
 
     public DataIngester(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;
 
-        timeColumn = conf.getString(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
+        timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);

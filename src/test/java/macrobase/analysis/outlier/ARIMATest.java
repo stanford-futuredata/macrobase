@@ -17,6 +17,7 @@ import static org.junit.Assert.*;
     public void constantTest() {
         int windowSize = 10;
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TUPLE_WINDOW, windowSize);
+        conf.set(MacroBaseConf.TIME_COLUMN, 0);
         ARIMA a = new ARIMA(conf);
         for (int i = 0; i < windowSize; i++) {
             a.score(TestOutlierUtils.createTimeDatum(i, 1));
@@ -34,6 +35,7 @@ import static org.junit.Assert.*;
     public void linearTest() {
         int windowSize = 10;
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TUPLE_WINDOW, windowSize);
+        conf.set(MacroBaseConf.TIME_COLUMN, 0);
         ARIMA a = new ARIMA(conf);
         for (int i = 0; i < windowSize; i++) {
             a.score(TestOutlierUtils.createTimeDatum(i, i));
@@ -53,6 +55,7 @@ import static org.junit.Assert.*;
     @Test
     public void simpleTest() {
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TUPLE_WINDOW, 6);
+        conf.set(MacroBaseConf.TIME_COLUMN, 0);
         ARIMA a = new ARIMA(conf);
         a.score(TestOutlierUtils.createTimeDatum(0, 1.5));
         a.score(TestOutlierUtils.createTimeDatum(1, 4.5));
@@ -73,6 +76,7 @@ import static org.junit.Assert.*;
     public void windowTest() {
         int windowSize = 5;
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TUPLE_WINDOW, windowSize);
+        conf.set(MacroBaseConf.TIME_COLUMN, 0);
         ARIMA a = new ARIMA(conf);
         for (int i = 0; i < windowSize; i++) {
             a.score(TestOutlierUtils.createTimeDatum(i, 1));
