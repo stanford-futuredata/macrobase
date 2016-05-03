@@ -24,7 +24,6 @@ public class Context {
     private int size = -1;
     private List<Context> parents = new ArrayList<Context>();
     private HashSet<Context> oneDimensionalAncestors = new HashSet<Context>();
-    //Sample datums in this context
     //the outlier detector used for detection in this context
     private BatchTrainScore detector;
     //the following is for context pruning
@@ -33,6 +32,8 @@ public class Context {
     private boolean densityPruning;
     private boolean dependencyPruning;
     private double alpha;
+    //The outliers found in this context
+    private BitSet outlierBitSet;
 
     /**
      * Global context
@@ -293,5 +294,13 @@ public class Context {
 
     public void setDetector(BatchTrainScore detector) {
         this.detector = detector;
+    }
+
+    public BitSet getOutlierBitSet() {
+        return outlierBitSet;
+    }
+
+    public void setOutlierBitSet(BitSet outlierBitSet) {
+        this.outlierBitSet = outlierBitSet;
     }
 }

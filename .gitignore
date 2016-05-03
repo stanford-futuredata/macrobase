@@ -49,3 +49,6 @@ conf/custom/
 
 # Profiler
 .profiler/
+
+# temp
+temp*

@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import argparse
 import json
 import os
@@ -36,9 +37,10 @@ default_args = {
   "macrobase.analysis.mcd.alpha": 0.5,
   "macrobase.analysis.mcd.stoppingDelta": 0.001,
   
-  "macrobase.analysis.contextual.denseContextTau": 0.1,
+  "macrobase.analysis.contextual.denseContextTau": 0.01,
   "macrobase.analysis.contextual.numIntervals": 10,
-  
+  "macrobase.analysis.contextual.maxPredicates": 4,
+  "macrobase.analysis.classify.outlierStaticThreshold": 5.0,
 }
 
 
@@ -114,7 +116,7 @@ def seperate_contextual_results(results_file):
         lines = f.read().split('\n')
         for i in xrange(len(lines)):
             line = lines[i]
-            if 'macrobase.analysis.BatchAnalyzer' in line or 'macrobase.analysis.contextualoutlier' in line:
+            if 'macrobase.analysis.BatchAnalyzer' in line or 'macrobase.analysis.contextualoutlier' in line or 'macrobase.analysis.pipeline.BasicContextualBatchedPipeline' in line:
                  g.write(line + '\n')
     g.close()
 
@@ -137,9 +139,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     dim = (len(config_parameters["macrobase.loader.targetHighMetrics"]) +
            len(config_parameters["macrobase.loader.targetLowMetrics"]))
     if dim > 1:
-        config_parameters["macrobase.analysis.detectorType"] = "MCD"
+        config_parameters["macrobase.analysis.transformType"] = "MCD"
     else:
-        config_parameters["macrobase.analysis.detectorType"] = "MAD"
+        config_parameters["macrobase.analysis.transformType"] = "MAD"
     process_config_parameters(config_parameters)
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
@@ -162,6 +164,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         results_file = os.path.join(sub_dir, "results%d.txt" % i)
         macrobase_cmd = '''java ${{JAVA_OPTS}} \\
             -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
+            -agentpath:/home/x4chu/yjp-2016.02/bin/linux-x86-64/libyjpagent.so=disablestacktelemetry,disableexceptiontelemetry,delay=10000 \\
             macrobase.MacroBase {cmd} {conf_file} \\
             > {results_file} 2>&1'''.format(
             cmd=cmd, conf_file=conf_file, results_file=results_file)
@@ -286,12 +289,14 @@ if __name__ == '__main__':
         if default_override is not None and key in defaults:
             defaults[key] = default_override
 
+    '''
     run_all_workloads(args.workflows, defaults, args.number_of_runs)
     '''
+            
     for parameter_name, values in args.sweeping_parameters.iteritems():
         for parameter_value in values:
             run_all_workloads(args.workflows, defaults,
                               args.number_of_runs,
                               sweeping_parameter_name=parameter_name,
                               sweeping_parameter_value=parameter_value)
-    '''
+    

@@ -139,13 +139,15 @@ public class ContextualOutlierDetector {
                     level, numDenseContextsCurLevel,
                     (numDenseContextsCurLevel == 0) ? 0 : contextualOutlierDetectionTimeCurLevel / numDenseContextsCurLevel);
             log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, "
-                      + "numOutlierDetectionRunsWithoutTrainingWithoutScoring: {},  "
-                      + "numOutlierDetectionRunsWithoutTrainingWithScoring: {},  "
-                      + "numOutlierDetectionRunsWithTrainingWithScoring: {}",
-                      level, densityPruning2,
-                      numOutlierDetectionRunsWithoutTrainingWithoutScoring,
-                      numOutlierDetectionRunsWithoutTrainingWithScoring,
-                      numOutlierDetectionRunsWithTrainingWithScoring);
+                    + "numOutlierDetectionRunsWithoutTrainingWithoutScoring: {},  "
+                    + "numOutlierDetectionRunsWithoutTrainingWithScoring: {},  "
+                    + "numOutlierDetectionRunsWithTrainingWithScoring: {}, "
+                    + "numContextualOutliersContainedInParent: {}",
+                    level, densityPruning2,
+                    numOutlierDetectionRunsWithoutTrainingWithoutScoring,
+                    numOutlierDetectionRunsWithoutTrainingWithScoring,
+                    numOutlierDetectionRunsWithTrainingWithScoring,
+                    numContextualOutliersContainedInParent);
             log.debug("----------------------------------------------------------");
             //free up memory
             if (level >= 2) {
@@ -265,13 +267,15 @@ public class ContextualOutlierDetector {
                     level, numDenseContextsCurLevel,
                     (numDenseContextsCurLevel == 0) ? 0 : contextualOutlierDetectionTimeCurLevel / numDenseContextsCurLevel);
             log.debug("Done Find {}-dimensional contextual outliers, densityPruning2: {}, "
-                      + "numOutlierDetectionRunsWithoutTrainingWithoutScoring: {},  "
-                      + "numOutlierDetectionRunsWithoutTrainingWithScoring: {},  "
-                      + "numOutlierDetectionRunsWithTrainingWithScoring: {}",
-                      level, densityPruning2,
-                      numOutlierDetectionRunsWithoutTrainingWithoutScoring,
-                      numOutlierDetectionRunsWithoutTrainingWithScoring,
-                      numOutlierDetectionRunsWithTrainingWithScoring);
+                    + "numOutlierDetectionRunsWithoutTrainingWithoutScoring: {},  "
+                    + "numOutlierDetectionRunsWithoutTrainingWithScoring: {},  "
+                    + "numOutlierDetectionRunsWithTrainingWithScoring: {}, "
+                    + "numContextualOutliersContainedInParent: {}",
+                    level, densityPruning2,
+                    numOutlierDetectionRunsWithoutTrainingWithoutScoring,
+                    numOutlierDetectionRunsWithoutTrainingWithScoring,
+                    numOutlierDetectionRunsWithTrainingWithScoring,
+                    numContextualOutliersContainedInParent);
             log.debug("----------------------------------------------------------");
             //free up memory
             if (level >= 2) {
@@ -364,7 +368,7 @@ public class ContextualOutlierDetector {
     private int numOutlierDetectionRunsWithoutTrainingWithoutScoring = 0;
     private int numOutlierDetectionRunsWithoutTrainingWithScoring = 0;
     private int numOutlierDetectionRunsWithTrainingWithScoring = 0;
-
+    private int numContextualOutliersContainedInParent = 0;
     /**
      * Run outlier detection algorithm on contextual data
      * The algorithm has to static threhold classifier
@@ -409,15 +413,15 @@ public class ContextualOutlierDetector {
             }
         } else {
             context.setDetector(constructDetector());
-            context.setDetector(constructDetector());
             contextualData = new ArrayList<Datum>();
             numOutlierDetectionRunsWithTrainingWithScoring++;
         }
+        List<Integer> indexes = null;
         if (contextualData == null) {
             // pruned by distribution
             return null;
         } else {
-            List<Integer> indexes = bitSet2Indexes(bs);
+            indexes = bitSet2Indexes(bs);
             for (Integer index : indexes) {
                 contextualData.add(data.get(index));
             }
@@ -429,36 +433,79 @@ public class ContextualOutlierDetector {
             }
         }
         FeatureTransform featureTransform = new BatchScoreFeatureTransform(context.getDetector(), requiresTraining);
-
-        Map<Long, Datum> idToContextualData = new HashMap<>();
-        for(Datum d : contextualData) {
-            idToContextualData.put(d.getID(), d);
-        }
-
         featureTransform.consume(contextualData);
         OutlierClassifier outlierClassifier = new StaticThresholdClassifier(conf);
         outlierClassifier.consume(featureTransform.getStream().drain());
-        List<Datum> outliers = new ArrayList<>();
         List<OutlierClassificationResult> outlierClassificationResults = outlierClassifier.getStream().drain();
-        for (OutlierClassificationResult outlierClassificationResult : outlierClassificationResults) {
+        List<Integer> outlierIndexes = new ArrayList<Integer>();
+        for (int i = 0; i < outlierClassificationResults.size(); i++) {
+            OutlierClassificationResult outlierClassificationResult = outlierClassificationResults.get(i);
             if (outlierClassificationResult.isOutlier()) {
-                Datum dAfterTransform = outlierClassificationResult.getDatum();
-                outliers.add(idToContextualData.get(dAfterTransform.getParentID()));
+                outlierIndexes.add(indexes.get(i));    
             }
         }
-        if (outliers.size() > 0) {
-            context2Outliers.put(context, outlierClassificationResults);
-            if (contextualOutputFile != null) {
-                PrintWriter contextualOut = new PrintWriter(new FileWriter(contextualOutputFile,true));
-                contextualOut.println("Context: " + context.print(conf.getEncoder()));
-                contextualOut.println("\t Number of inliners " + (contextualData.size() - outliers.size()));
-                contextualOut.println("\t Number of outliers " + outliers.size());
-                contextualOut.close();
+        if (outlierIndexes.size() > 0) {
+            BitSet outlierBitSet = indexes2BitSet(outlierIndexes, data.size());
+            context.setOutlierBitSet(outlierBitSet);
+            if (!contextualOutliersContainedInParentContextualOutliers(context, 1 - alpha)) {
+                //outliers not contained in parent context outliers
+                context2Outliers.put(context, outlierClassificationResults);
+                if (contextualOutputFile != null) {
+                    PrintWriter contextualOut = new PrintWriter(new FileWriter(contextualOutputFile,true));
+                    contextualOut.println("Context: " + context.print(conf.getEncoder()));
+                    contextualOut.println("\t Number of inliners " + (contextualData.size() - outlierBitSet.cardinality()));
+                    contextualOut.println("\t Number of outliers " + outlierBitSet.cardinality());
+                    contextualOut.close();
+                }
+                //construct outliers from outlierIndexes
+                List<Datum> outliers = new ArrayList<Datum>();
+                for (int i = 0; i < outlierIndexes.size(); i++) {
+                    outliers.add(data.get(i));
+                }
+                return outliers;
+            } else {
+                numContextualOutliersContainedInParent++;
+                // outliers are contained in parent context outliers
+                return new ArrayList<Datum>();
             }
+        } else {
+            return new ArrayList<Datum>();
         }
-        return outliers;
     }
 
+    private boolean contextualOutliersContainedInParentContextualOutliers(Context context, double threshold) {
+        BitSet outlierBitSet = context.getOutlierBitSet();
+        if (outlierBitSet == null)
+            return false;
+        Context p1 = (context.getParents().size() > 0) ? context.getParents().get(0) : null;
+        Context p2 = (context.getParents().size() > 1) ? context.getParents().get(1) : null;
+        if (p1 != null && p1.getOutlierBitSet() != null) {
+            BitSet p1OutlierBitSet = p1.getOutlierBitSet();
+            int numContained = 0;
+            for (int i = outlierBitSet.nextSetBit(0); i >= 0; i = outlierBitSet.nextSetBit(i + 1)) {
+                if(p1OutlierBitSet.get(i) == true)
+                    numContained++;
+            }
+            double percentage = (double) numContained / outlierBitSet.cardinality();
+            if (percentage >= threshold) {
+                return true;
+            }
+        }
+        if (p2 != null && p2.getOutlierBitSet() != null) {
+            BitSet p2OutlierBitSet = p2.getOutlierBitSet();
+            int numContained = 0;
+            for (int i = outlierBitSet.nextSetBit(0); i >= 0; i = outlierBitSet.nextSetBit(i + 1)) {
+                if(p2OutlierBitSet.get(i) == true)
+                    numContained++;
+            }
+            double percentage = (double) numContained / outlierBitSet.cardinality();
+            if (percentage >= threshold) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private boolean sameDistribution(Context p1, Context p2) {
         if (distributionPruningForTraining == false && distributionPruningForScoring == false) {
             return false;
@@ -711,11 +758,12 @@ public class ContextualOutlierDetector {
     private List<Integer> bitSet2Indexes(BitSet bs) {
         List<Integer> indexes = new ArrayList<Integer>();
         for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-            // operate on index i here
-            indexes.add(i);
             if (i == Integer.MAX_VALUE) {
                 break; // or (i+1) would overflow
             }
+            // operate on index i here
+            indexes.add(i);
+            
         }
         return indexes;
     }
