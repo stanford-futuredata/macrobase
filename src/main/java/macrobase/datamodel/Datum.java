@@ -49,8 +49,8 @@ public class Datum implements HasMetrics {
         this.contextualDoubleAttributes = contextualDoubleAttributes;
     }
 
-    public Integer getTime() {
-        return null;
+    public int getTime(Integer timeColumn) {
+        return (int) metrics.getEntry(timeColumn);
     }
 
     public List<Integer> getAttributes() {

@@ -87,15 +87,16 @@ public class DiskCachingIngester extends DataIngester {
         }
     }
 
-    private String convertFileName(String timeColumn,
+    private String convertFileName(Integer timeColumn,
                                    List<String> attributes,
                                    List<String> lowMetrics,
                                    List<String> highMetrics,
                                    List<String> contextualDiscreteAttributes,
                                    List<String> contextualDoubleAttributes,
                                    String baseQuery) {
+        String timeColumnName = conf.getEncoder().getAttributeName(timeColumn);
         int hashCode = String.format("T-%s::A-%s::L%s::H%s::CDis%s::CDou%s::BQ%s",
-                timeColumn,
+                timeColumnName,
                 attributes.toString(),
                 lowMetrics.toString(),
                 highMetrics.toString(),
