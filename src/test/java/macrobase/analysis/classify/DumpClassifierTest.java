@@ -1,6 +1,6 @@
 package macrobase.analysis.classify;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -10,12 +10,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;

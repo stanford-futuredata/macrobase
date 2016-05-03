@@ -1,6 +1,6 @@
 package macrobase.ingest;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;

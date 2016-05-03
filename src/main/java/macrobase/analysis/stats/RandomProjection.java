@@ -1,6 +1,6 @@
 package macrobase.analysis.stats;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -11,7 +11,7 @@ import org.apache.commons.math3.linear.*;
 import java.util.List;
 
 
-public class RandomProjection implements FeatureTransform {
+public class RandomProjection extends FeatureTransform {
     private boolean hasConsumed;
     private long randomSeed;
     private RealVector metricVector;

@@ -1,6 +1,6 @@
 package macrobase.analysis.classify;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.stats.mixture.BatchMixtureModel;
 import macrobase.conf.ConfigurationException;
@@ -17,7 +17,7 @@ import java.util.List;
  * Tags points of the group which has it's center closest to TARGET_GROUP location as outliers.
  * Assumes that the input data already has probabilities corresponding to each of the groups as their metrics.
  */
-public class MixtureGroupClassifier implements OutlierClassifier {
+public class MixtureGroupClassifier extends OutlierClassifier {
     private static final Logger log = LoggerFactory.getLogger(MixtureGroupClassifier.class);
     private final RealVector targetLocation;
     private final BatchMixtureModel mixtureModel;

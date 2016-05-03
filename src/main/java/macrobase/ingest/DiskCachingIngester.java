@@ -3,7 +3,7 @@ package macrobase.ingest;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;

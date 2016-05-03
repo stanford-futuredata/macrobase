@@ -1,7 +1,7 @@
 package macrobase.analysis.summary;
 
 import com.google.common.base.Stopwatch;
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class BatchSummarizer implements Summarizer {
+public class BatchSummarizer extends Summarizer {
     private FPGrowthEmerging fpg;
     protected final Double minSupport;
     protected final Double minOIRatio;

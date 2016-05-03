@@ -1,6 +1,6 @@
 package macrobase.analysis.classify;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -17,7 +17,7 @@ import java.util.List;
  * Transparently dumps classifier output by wrapping another classifier and copying its
  * results to a file.
  */
-public class DumpClassifier implements OutlierClassifier {
+public class DumpClassifier extends OutlierClassifier {
     private static final Logger log = LoggerFactory.getLogger(DumpClassifier.class);
     protected final OutlierClassifier input;
     protected MacroBaseConf conf;

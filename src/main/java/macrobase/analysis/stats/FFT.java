@@ -1,6 +1,6 @@
 package macrobase.analysis.stats;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -13,7 +13,7 @@ import org.apache.commons.math3.transform.TransformType;
 
 import java.util.List;
 
-public class FFT implements FeatureTransform {
+public class FFT extends FeatureTransform {
     private RealVector metricVector;
     private RealVector paddedInput;
     private RealVector transformedMetricVector;

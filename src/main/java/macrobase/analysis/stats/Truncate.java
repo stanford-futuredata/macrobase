@@ -1,6 +1,6 @@
 package macrobase.analysis.stats;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -13,7 +13,7 @@ import java.util.List;
  * The Truncate transform truncates each metric vector to be of length k.
  * It preserves just the top k components, and drops the last n - k.
  */
-public class Truncate implements FeatureTransform{
+public class Truncate extends FeatureTransform{
     private RealVector metricVector;
     private RealVector transformedVector;
     private int k;

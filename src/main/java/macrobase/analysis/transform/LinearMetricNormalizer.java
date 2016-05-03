@@ -1,13 +1,13 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 import java.util.List;
 
-public class LinearMetricNormalizer implements FeatureTransform {
+public class LinearMetricNormalizer extends FeatureTransform {
     private MBStream<Datum> output = new MBStream<>();
 
     @Override

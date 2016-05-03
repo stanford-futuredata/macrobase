@@ -1,6 +1,6 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.ConfigurationException;
@@ -12,7 +12,7 @@ import macrobase.util.Periodic;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EWFeatureTransform implements FeatureTransform {
+public class EWFeatureTransform extends FeatureTransform {
     private final ExponentiallyBiasedAChao<Datum> reservoir;
     private final BatchTrainScore scorer;
     private final List<Datum> warmupInput = new ArrayList<>();

@@ -1,6 +1,6 @@
 package macrobase.analysis.classify;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.DatumWithNorm;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.conf.MacroBaseConf;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BatchingPercentileClassifier implements OutlierClassifier {
+public class BatchingPercentileClassifier extends OutlierClassifier {
     private static final Logger log = LoggerFactory.getLogger(BatchingPercentileClassifier.class);
 
     MBStream<OutlierClassificationResult> results = new MBStream<>();

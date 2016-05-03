@@ -1,6 +1,6 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.pipeline.operator.MBStream;
+import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.analysis.stats.mixture.BatchMixtureModel;
 import macrobase.conf.MacroBaseConf;
@@ -12,7 +12,7 @@ import macrobase.util.AlgebraUtils;
 
 import java.util.List;
 
-public class GridDumpingBatchScoreTransform implements FeatureTransform {
+public class GridDumpingBatchScoreTransform extends FeatureTransform {
 
     private final String dumpFilename;
     private final Integer dimensionsPerGrid;
