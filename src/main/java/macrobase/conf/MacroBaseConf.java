@@ -6,6 +6,10 @@ import macrobase.analysis.stats.*;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.analysis.stats.mixture.VariationalDPMG;
 import macrobase.analysis.stats.mixture.VariationalGMM;
+import macrobase.analysis.transform.aggregate.BatchedWindowAggregate;
+import macrobase.analysis.transform.aggregate.BatchedWindowCount;
+import macrobase.analysis.transform.aggregate.BatchedWindowMax;
+import macrobase.analysis.transform.aggregate.BatchedWindowSum;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +33,7 @@ public class MacroBaseConf extends Configuration {
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
     public static final String TRANSFORM_TYPE = "macrobase.analysis.transformType";
+    public static final String AGGREGATE_TYPE = "macrobase.analysis.aggregateType";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
     public static final String INPUT_RESERVOIR_SIZE = "macrobase.analysis.streaming.inputReservoirSize";
@@ -159,6 +164,12 @@ public class MacroBaseConf extends Configuration {
         findContextsGivenOutlierPredicate,
     }
     
+    public enum AggregateType {
+        COUNT,
+        SUM,
+        MAX
+    }
+
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
         if (seed != null) {
@@ -217,6 +228,23 @@ public class MacroBaseConf extends Configuration {
                 return new VariationalDPMG(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
+        }
+    }
+
+    public BatchedWindowAggregate constructAggregate(AggregateType aggregateType)
+            throws ConfigurationException {
+        switch (aggregateType) {
+            case SUM:
+                log.info("Using SUM aggregation.");
+                return new BatchedWindowSum(this);
+            case COUNT:
+                log.info("Using COUNT aggregation.");
+                return new BatchedWindowCount(this);
+            case MAX:
+                log.info("Using MAX aggregation.");
+                return new BatchedWindowMax(this);
+            default:
+                throw new RuntimeException("Unhandled aggreation type!" + aggregateType);
         }
     }
 
@@ -354,6 +382,13 @@ public class MacroBaseConf extends Configuration {
             return MacroBaseDefaults.CONTEXTUAL_API;
         }
         return ContextualAPI.valueOf(_conf.get(CONTEXTUAL_API));
+    }
+
+    public AggregateType getAggregateType() throws ConfigurationException {
+        if (!_conf.containsKey(AGGREGATE_TYPE)) {
+            return MacroBaseDefaults.AGGREGATE_TYPE;
+        }
+        return AggregateType.valueOf(_conf.get(AGGREGATE_TYPE));
     }
 
     public KDE.BandwidthAlgorithm getKDEBandwidth() {
