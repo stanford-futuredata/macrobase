@@ -50,6 +50,12 @@ public class MacroBaseDefaults {
     public static final Integer KDTREE_LEAF_CAPACITY = 2;
     public static final Double TREE_KDE_ACCURACY = 1e-5;
 
+    // RandomProjection default
+    public static final Integer RANDOM_PROJECTION_K = 10;
+
+    // Truncate default
+    public static final Integer TRUNCATE_K = 10;
+
     public static final String R_LOG_FILE = null;
     // Analysis results
     public static final String STORE_ANALYSIS_RESULTS = null;

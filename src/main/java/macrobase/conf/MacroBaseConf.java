@@ -62,6 +62,10 @@ public class MacroBaseConf extends Configuration {
     public static final String KDTREE_LEAF_CAPACITY = "macrobase.analysis.treeKde.leafCapacity";
     public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
 
+    public static final String RANDOM_PROJECTION_K = "macrobase.analysis.randomProjection.k";
+
+    public static final String TRUNCATE_K = "macrobase.analysis.truncate.k";
+
     public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
     public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
