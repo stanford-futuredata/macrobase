@@ -304,14 +304,16 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
 	        configService.analysisReceived()
 	        $scope.analyzeStr = "Analyze"
 
-            $scope.analysisResult = response.data;
+	    var result = response.data[0];
 
-            $scope.numOutliers = response.data.numOutliers
-            $scope.numInliers = response.data.numInliers
-            $scope.loadTime = response.data.loadTime
-            $scope.executionTime = response.data.executionTime
-            $scope.summarizationTime = response.data.summarizationTime
-            $scope.itemsets = response.data.itemSets
+            $scope.analysisResult = result;
+
+            $scope.numOutliers = result.numOutliers
+            $scope.numInliers = result.numInliers
+            $scope.loadTime = result.loadTime
+            $scope.executionTime = result.executionTime
+            $scope.summarizationTime = result.summarizationTime
+            $scope.itemsets = result.itemSets
 
             $scope.sortAnalysis("support");
 	    });
