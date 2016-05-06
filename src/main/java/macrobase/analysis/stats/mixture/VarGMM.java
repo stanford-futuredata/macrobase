@@ -16,8 +16,6 @@ public abstract class VarGMM extends BatchMixtureModel {
         super(conf);
     }
 
-    //public abstract double calculateLogLikelihood(List<Datum> data, MixingComponents mixingComponents, NormalWishartClusters clusters);
-
     @Override
     public List<RealMatrix> getClusterCovariances() {
         return clusters.getMAPCovariances();

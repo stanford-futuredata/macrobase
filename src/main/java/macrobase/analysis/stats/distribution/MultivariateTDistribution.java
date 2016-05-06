@@ -39,21 +39,6 @@ public class MultivariateTDistribution {
         return Math.exp(Gamma.logGamma(0.5 * doubleNumerator) - Gamma.logGamma(0.5 * doubleDenominator));
     }
 
-    public static double halfGammaRatio(int doubleNumerator, int doubleDenominator) {
-        double gammaRation = 1;
-        for (int i = 2; i < doubleNumerator - doubleDenominator + 1; i += 2) {
-            gammaRation *= 0.5 * (doubleNumerator - i);
-        }
-        // using the that Gamma(n+1/2) / Gamma(n) ~= sqrt(n)
-        // http://mathworld.wolfram.com/images/equations/GammaFunction/NumberedEquation29.gif
-        if ((doubleNumerator - doubleDenominator) % 2 == 1) {
-            double j = 0.5 * doubleDenominator;
-            gammaRation *= Math.sqrt(j) *
-                    (1 - 1. / (8 * j) + 1. / (128 * j * j) + 5. / (1024 * j * j * j));
-        }
-        return gammaRation;
-    }
-
     public double density(RealVector vector) {
         if (degreesOfFreedom == 0) {
             return 0;

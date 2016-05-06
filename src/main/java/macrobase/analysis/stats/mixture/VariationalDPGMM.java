@@ -24,7 +24,6 @@ public class VariationalDPGMM extends VarGMM {
         mixingComponents = new DPComponents(concentrationParameter, T);
     }
 
-
     @Override
     public void train(List<Datum> data) {
         // 0. Initialize all approximating factors
@@ -32,7 +31,6 @@ public class VariationalDPGMM extends VarGMM {
         clusters = new NormalWishartClusters(T, data.get(0).getMetrics().getDimension());
         clusters.initializeBaseForDP(data);
         clusters.initializeAtomsForDP(data, conf.getRandom());
-        //clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
 
         log.debug("actual training");
         MeanFieldVariationalInference.train(this, data, mixingComponents, clusters);
@@ -45,7 +43,6 @@ public class VariationalDPGMM extends VarGMM {
         for (int i = 0; i < predictiveDistributions.size(); i++) {
             density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }
-        //log.debug("Score {}", Math.log(density));
         return Math.log(density);
     }
 
