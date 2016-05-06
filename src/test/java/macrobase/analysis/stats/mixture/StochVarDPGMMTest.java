@@ -22,7 +22,7 @@ public class StochVarDPGMMTest {
     @Test
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 48)
+                .set(MacroBaseConf.RANDOM_SEED, 8)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
                 .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.3)
@@ -114,9 +114,9 @@ public class StochVarDPGMMTest {
      */
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 4)
+                .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
-                .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 15)
+                .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
                 .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 30)
                 .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.2)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)

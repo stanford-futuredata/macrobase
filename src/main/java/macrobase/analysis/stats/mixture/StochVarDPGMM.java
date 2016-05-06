@@ -22,6 +22,6 @@ public class StochVarDPGMM extends DPGMM {
         clusters.initializeAtomsForDP(data, conf.getRandom());
 
         log.debug("actual training");
-        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, 3500, 0.01, 0.3);
+        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, 7000, 0.01, 0.0);
     }
 }
