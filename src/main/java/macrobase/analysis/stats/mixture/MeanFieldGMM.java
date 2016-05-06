@@ -142,21 +142,26 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         List<RealVector> weightedSum = calculateWeightedSums(data, r);
         List<RealVector> clusterMean = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
-            clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
+            if (clusterWeight[k] > 0) {
+                clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
+            } else {
+                clusterMean.add(weightedSum.get(k));
+                log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
+            }
         }
         List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
         log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < K; k++) {
             atomBeta[k] = baseBeta + clusterWeight[k];
-            atomLoc.set(k, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
+            atomLoc.set(k, baseLoc.mapMultiply(baseBeta).add(weightedSum.get(k)).mapDivide(atomBeta[k]));
             atomDOF[k] = baseNu + 1 + clusterWeight[k];
             RealVector adjustedMean = clusterMean.get(k).subtract(baseLoc);
-            log.debug("adjustedMean: {}", adjustedMean);
+            //log.debug("adjustedMean: {}", adjustedMean);
             RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
-            log.debug("wInverse: {}", wInverse);
+            //log.debug("wInverse: {}", wInverse);
             atomOmega.set(k, AlgebraUtils.invertMatrix(wInverse));
         }
     }

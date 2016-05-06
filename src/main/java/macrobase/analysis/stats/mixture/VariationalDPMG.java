@@ -106,7 +106,6 @@ public class VariationalDPMG extends MeanFieldGMM {
     private double[] calcExQlogMixing() {
         double[] lnMixingContribution = new double[T];
         double cumulativeAlreadyAssigned = 0;
-        // for (int t=0; t<atomLoc.size(); t++) {
         for (int t = 0; t < T; t++) {
             // Calculate Mixing coefficient contributions to r
             lnMixingContribution[t] = cumulativeAlreadyAssigned + (Gamma.digamma(shapeParams[t][0]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]));
@@ -130,19 +129,10 @@ public class VariationalDPMG extends MeanFieldGMM {
         r = new double[N][T];
         List<RealMatrix> S;  // initialized and used in step 2.
         double logLikelihood = -Double.MAX_VALUE;
-        double[] clusterWeight;
-        List<RealVector> clusterMean;
         List<Wishart> wisharts;
 
         for (int iteration = 1; ; iteration++) {
             // 0. Initialize volatile parameters
-            clusterMean = new ArrayList<>(T);
-            for (int t = 0; t < T; t++) {
-                clusterMean.add(new ArrayRealVector(new double[D]));
-            }
-            clusterWeight = new double[T];
-
-
             wisharts = constructWisharts(atomOmega, atomDOF);
             // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
             // 1. Reevaluate r[][]
@@ -161,44 +151,14 @@ public class VariationalDPMG extends MeanFieldGMM {
                     if (normalizingConstant > 0) {
                         r[n][t] /= normalizingConstant;
                     }
-                    // Calculate unnormalized cluster weight, cluster mean
-                    clusterWeight[t] += r[n][t];
-                    clusterMean.set(t, clusterMean.get(t).add(data.get(n).getMetrics().mapMultiply(r[n][t])));
                 }
             }
 
             // 2. Reevaluate clusters based on densities that we have for each point.
             // 2. Reevaluate atoms and stick lengths.
-            //S = new ArrayList<>(T);
-
-            for (int t = 0; t < T; t++) {
-                //S.add(new BlockRealMatrix(D, D));
-                if (clusterWeight[t] > 0) {
-                    clusterMean.set(t, clusterMean.get(t).mapDivide(clusterWeight[t]));
-                } else {
-                    continue;
-                }
-            }
-            //    for (int n = 0; n < N; n++) {
-            //        RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(t));
-            //        S.set(t, S.get(t).add(_diff.outerProduct(_diff).scalarMultiply(r[n][t])));
-            //    }
-            //    S.set(t, S.get(t).scalarMultiply(1 / clusterWeight[t]));
-            //}
 
             updateSticks(r);
-            //updateAtoms(r, data);
-
-            S = calculateQuadraticForms(data, clusterMean, r);
-            for (int t = 0; t < atomLoc.size(); t++) {
-                atomBeta[t] = baseBeta + clusterWeight[t];
-                atomLoc.set(t, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(t).mapMultiply(clusterWeight[t])).mapDivide(atomBeta[t]));
-                atomDOF[t] = baseNu + 1 + clusterWeight[t];
-                RealMatrix wInverse = baseOmegaInverse.add(
-                        S.get(t)).add(
-                        clusterMean.get(t).outerProduct(clusterMean.get(t)).scalarMultiply(baseBeta * clusterWeight[t] / (baseBeta + clusterWeight[t])));
-                atomOmega.set(t, AlgebraUtils.invertMatrix(wInverse));
-            }
+            updateAtoms(r, data);
 
 
             updatePredictiveDistributions();
