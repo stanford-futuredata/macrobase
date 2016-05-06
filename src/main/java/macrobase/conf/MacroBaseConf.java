@@ -3,9 +3,9 @@ package macrobase.conf;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.stats.*;
+import macrobase.analysis.stats.mixture.FiniteGMM;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.analysis.stats.mixture.VariationalDPMG;
-import macrobase.analysis.stats.mixture.VariationalGMM;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -207,7 +207,7 @@ public class MacroBaseConf extends Configuration {
                 return new GaussianMixtureModel(this);
             case VARIATIONAL_GMM:
                 log.info("Using Finite mixture of Gaussians (Bayesian algorithm) transform.");
-                return new VariationalGMM(this);
+                return new FiniteGMM(this);
             case VARIATIONAL_DPMG:
                 log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new VariationalDPMG(this);

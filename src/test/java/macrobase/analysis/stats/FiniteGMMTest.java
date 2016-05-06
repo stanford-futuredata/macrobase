@@ -1,7 +1,7 @@
 package macrobase.analysis.stats;
 
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.analysis.stats.mixture.VariationalGMM;
+import macrobase.analysis.stats.mixture.FiniteGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -21,8 +21,8 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class VariationalGMMTest {
-    private static final Logger log = LoggerFactory.getLogger(VariationalGMMTest.class);
+public class FiniteGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(FiniteGMMTest.class);
 
     @Test
     /**
@@ -42,8 +42,8 @@ public class VariationalGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(18, data.size());
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
-        variationalGMM.train(data);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        finiteGMM.train(data);
     }
 
     @Test
@@ -65,14 +65,14 @@ public class VariationalGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
         List<RealVector> calculatedMeans;
 
         int numClustersIdentified = 0;
         // Make sure we have 3 clusters. Sometimes initialization is not great.
-        variationalGMM.train(data);
+        finiteGMM.train(data);
 
-        double[] calculatedWeights = variationalGMM.getPriorAdjustedWeights();
+        double[] calculatedWeights = finiteGMM.getPriorAdjustedWeights();
 
         numClustersIdentified = 0;
         for (double weight : calculatedWeights) {
@@ -80,8 +80,8 @@ public class VariationalGMMTest {
                 numClustersIdentified += 1;
             }
         }
-        calculatedMeans = variationalGMM.getClusterCenters();
-        List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();
+        calculatedMeans = finiteGMM.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
 
         double[][] clusterMeans = {
                 {2, 11},
@@ -135,7 +135,7 @@ public class VariationalGMMTest {
         // Make sure centers belong to only one cluster.
         double[] maxProbas = {0, 0, 0};
         for (int i = 0; i < 3; i++) {
-            double[] probas = variationalGMM.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
+            double[] probas = finiteGMM.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
             for (int j=0; j< 3; j++) {
                 maxProbas[j] = Math.max(probas[j], maxProbas[j]);
             }
@@ -178,11 +178,11 @@ public class VariationalGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
-        variationalGMM.train(data);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        finiteGMM.train(data);
 
-        List<RealVector> calculatedMeans = variationalGMM.getClusterCenters();
-        List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();
+        List<RealVector> calculatedMeans = finiteGMM.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
 
         for (int i = 0; i < 3; i++) {
             boolean identified = false;
@@ -206,17 +206,17 @@ public class VariationalGMMTest {
         };
         List<Datum> scoredData = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.05);
 
-        JsonUtils.dumpAsJson(variationalGMM.getClusterCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
-        JsonUtils.dumpAsJson(variationalGMM.getClusterCenters(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-weights.json");
+        JsonUtils.dumpAsJson(finiteGMM.getClusterCovariances(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
+        JsonUtils.dumpAsJson(finiteGMM.getClusterCenters(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-means.json");
+        JsonUtils.dumpAsJson(finiteGMM.getPriorAdjustedWeights(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-weights.json");
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
-        dumper.dumpScores(variationalGMM, scoredData);
+        dumper.dumpScores(finiteGMM, scoredData);
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
         dumper = new ScoreDumper(conf);
-        dumper.dumpScores(variationalGMM, data);
+        dumper.dumpScores(finiteGMM, data);
     }
 
     @Test
@@ -237,17 +237,17 @@ public class VariationalGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
         List<RealVector> calculatedMeans = null;
         double[] calculatedWeights = null;
 
         int numClustersIdentified = 0;
         // Sometimes there is a weird convergence into one cluster when trying to fit more than 2 clusters.
         while (numClustersIdentified < 2) {
-            variationalGMM.train(data);
+            finiteGMM.train(data);
 
-            calculatedMeans = variationalGMM.getClusterCenters();
-            calculatedWeights = variationalGMM.getPriorAdjustedWeights();
+            calculatedMeans = finiteGMM.getClusterCenters();
+            calculatedWeights = finiteGMM.getPriorAdjustedWeights();
 
             numClustersIdentified = 0;
             for (double weight : calculatedWeights) {

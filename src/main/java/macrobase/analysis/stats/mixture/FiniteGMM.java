@@ -18,8 +18,8 @@ import java.util.List;
 /**
  * Fit Gaussian Mixture models using Variational Bayes
  */
-public class VariationalGMM extends BatchMixtureModel {
-    private static final Logger log = LoggerFactory.getLogger(VariationalGMM.class);
+public class FiniteGMM extends BatchMixtureModel {
+    private static final Logger log = LoggerFactory.getLogger(FiniteGMM.class);
     private final String initialClusterCentersFile;
 
     private int K;  // Number of mixture components
@@ -49,7 +49,7 @@ public class VariationalGMM extends BatchMixtureModel {
     protected double halfDimensionLn2Pi;
 
 
-    public VariationalGMM(MacroBaseConf conf) {
+    public FiniteGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
@@ -174,7 +174,6 @@ public class VariationalGMM extends BatchMixtureModel {
         }
         List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
         log.debug("clusterWeights: {}", clusterWeight);
-
 
         for (int k = 0; k < this.K; k++) {
             atomBeta[k] = priorBeta + clusterWeight[k];
