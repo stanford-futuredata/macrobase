@@ -26,13 +26,8 @@ public class VariationalDPMG extends MeanFieldGMM {
     // Concentration parameter for the Dirichlet distribution.
     private double concentrationParameter;
 
-
     // Parameters describing stick lengths, i.e. shape parameters of Beta distributions.
     private double shapeParams[][];
-
-    // Parameters for multinomial distributions for data points. i.e. density corresponding to each cluster (atom).
-    private double[][] r;
-
 
     private List<MultivariateTDistribution> predictiveDistributions;
 
@@ -55,7 +50,6 @@ public class VariationalDPMG extends MeanFieldGMM {
         concentrationParameter = conf.getDouble(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, MacroBaseDefaults.DPM_CONCENTRATION_PARAMETER);
     }
 
-    // Keep this here so we have exactly the same behavior.
     @Override
     protected void initializeBaseNormalWishart(List<Datum> data) {
         int dimension = data.get(0).getMetrics().getDimension();
@@ -148,11 +142,6 @@ public class VariationalDPMG extends MeanFieldGMM {
             density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }
         return Math.log(density);
-    }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        return 0;
     }
 
     @Override

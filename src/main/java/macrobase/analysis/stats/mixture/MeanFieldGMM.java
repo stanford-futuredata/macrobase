@@ -8,6 +8,7 @@ import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,10 +41,8 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     // Mean-Field iterative algorithm maximum iterations.
     protected final int maxIterationsToConverge;
 
-
     // TODO: right now FiniteGMM needs this
     protected double[] clusterWeight;
-
 
     public MeanFieldGMM(MacroBaseConf conf) {
         super(conf);
@@ -57,24 +56,8 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         dimensionLn2 = D * Math.log(2);
     }
 
-    protected void initializeBaseNormalWishart(List<Datum> data) {
-        baseNu = D;
-        double[][] boundingBox = AlgebraUtils.getBoundingBox(data);
-        double[] midpoints = new double[D];
-        double[] dimensionWidth = new double[D];
-        double R = 0;  // value of the widest dimension.
-        for (int i = 0; i < D; i++) {
-            dimensionWidth[i] = boundingBox[i][1] - boundingBox[i][0];
-            midpoints[i] = boundingBox[i][0] + dimensionWidth[i];
-            if (dimensionWidth[i] > R) {
-                R = dimensionWidth[i];
-            }
-        }
-        baseBeta = Math.pow(R, -1);
-        baseLoc = new ArrayRealVector(midpoints);
-        baseOmega = MatrixUtils.createRealIdentityMatrix(D).scalarMultiply(Math.pow(R, -2));
-        baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
-    }
+    // TODO: figure out a combine initalization strategy that works both for finite and DP GMMs.
+    protected abstract void initializeBaseNormalWishart(List<Datum> data);
 
     protected abstract void initializeBaseMixing();
 
@@ -89,9 +72,8 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     protected abstract void updatePredictiveDistributions();
 
     /**
-     *
      * @param data - data to train on
-     * @param K - run inference with K clusters
+     * @param K    - run inference with K clusters
      */
     public void train(List<Datum> data, int K) {
         int N = data.size();
@@ -139,7 +121,7 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
             updateSticks(r);
             updateAtoms(r, data);
 
-            // TODO: remove
+            // TODO: this should be somehow moved to FiniteGMM, or testing for this should be removed.
             clusterWeight = calculateClusterWeights(r);
 
             updatePredictiveDistributions();
@@ -167,7 +149,6 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
             log.debug(".........................................");
         }
     }
-
 
 
     protected static List<RealMatrix> calculateQuadraticForms(List<Datum> data, List<RealVector> clusterMean, double[][] r) {
@@ -278,6 +259,11 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
             covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(i).scalarMultiply(atomDOF[i])));
         }
         return covariances;
+    }
+
+    @Override
+    public double getZScoreEquivalent(double zscore) {
+        throw new NotImplementedException();
     }
 
 }

@@ -30,11 +30,6 @@ public class FiniteGMM extends MeanFieldGMM {
     private double[] mixingCoeffs;
     private List<MultivariateTDistribution> predictiveDistributions;
 
-    //private double[] clusterWeight;  // N_k (Bishop)
-
-    // Useful constants for each dataset.
-
-
     public FiniteGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
@@ -47,8 +42,6 @@ public class FiniteGMM extends MeanFieldGMM {
         super.train(data, K);
     }
 
-
-    // Custom initialization for FiniteGMM to keep the exact same behavior as before refactor.
     @Override
     protected void initializeBaseNormalWishart(List<Datum> data) {
         D = data.get(0).getMetrics().getDimension();
@@ -121,7 +114,6 @@ public class FiniteGMM extends MeanFieldGMM {
         }
     }
 
-
     @Override
     protected double[] calcExQlogMixing() {
         int num = mixingCoeffs.length;
@@ -136,7 +128,6 @@ public class FiniteGMM extends MeanFieldGMM {
         return exLogMixing;
     }
 
-
     @Override
     public double score(Datum datum) {
         double density = 0;
@@ -150,11 +141,6 @@ public class FiniteGMM extends MeanFieldGMM {
             density += mixingCoeffs[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
         }
         return Math.log(density / sum_alpha);
-    }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        return 0;
     }
 
     @Override
