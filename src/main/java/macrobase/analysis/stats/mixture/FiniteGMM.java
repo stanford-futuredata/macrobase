@@ -13,12 +13,12 @@ import java.util.List;
  */
 public class FiniteGMM extends VarGMM {
     private static final Logger log = LoggerFactory.getLogger(FiniteGMM.class);
-    private final String initialClusterCentersFile;
+    protected final String initialClusterCentersFile;
 
-    private int K;  // Number of mixture components
+    protected int K;  // Number of mixture components
 
     // Components.
-    private MultiComponents mixingComponents;
+    protected MultiComponents mixingComponents;
 
     public FiniteGMM(MacroBaseConf conf) {
         super(conf);

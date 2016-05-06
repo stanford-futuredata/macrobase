@@ -48,7 +48,6 @@ public class NormalWishartClusters {
     public void initializeBaseForDP(List<Datum> data) {
         int dimension = data.get(0).getMetrics().getDimension();
         baseNu = dimension;
-        log.debug("baseNu {}", baseNu);
         double[][] boundingBox = AlgebraUtils.getBoundingBox(data);
         double[] midpoints = new double[dimension];
         double[] dimensionWidth = new double[dimension];
@@ -61,7 +60,6 @@ public class NormalWishartClusters {
             }
         }
         baseBeta = Math.pow(R, -2);
-        log.debug("baseNu {}", baseNu);
         baseLoc = new ArrayRealVector(midpoints);
         baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
     }
@@ -103,7 +101,6 @@ public class NormalWishartClusters {
             dof[k] = baseNu;
             omega.add(baseOmega);
         }
-        log.debug("atomOmega: {}", omega);
     }
 
     public void initializeBaseForFinite(List<Datum> data) {
@@ -144,11 +141,9 @@ public class NormalWishartClusters {
                 clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
             } else {
                 clusterMean.add(weightedSum.get(k));
-                //log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
             }
         }
         List<RealMatrix> quadForm = MeanFieldGMM.calculateQuadraticForms(data, clusterMean, r);
-        log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < K; k++) {
             beta[k] = baseBeta + clusterWeight[k];
@@ -158,10 +153,9 @@ public class NormalWishartClusters {
             RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
-            //log.debug("wInverse: {}", wInverse);
             omega.set(k, AlgebraUtils.invertMatrix(wInverse));
         }
-        log.debug("dof: {}", dof);
+        log.debug("clusterWeights: {}", clusterWeight);
     }
 
     public void moveNatural(List<Datum> data, double[][] r, double pace, double repeat) {
@@ -173,7 +167,6 @@ public class NormalWishartClusters {
                 clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
             } else {
                 clusterMean.add(weightedSum.get(k));
-                //log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
             }
             // Multiply by repeat to get actual numbers
             clusterWeight[k] *= repeat;
