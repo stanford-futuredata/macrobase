@@ -42,9 +42,6 @@ public class VariationalDPGMM extends VarGMM {
     public double score(Datum datum) {
         double density = 0;
         double[] stickLengths = mixingComponents.getClusterProportions();
-        log.debug("sticks: {}", stickLengths);
-        log.debug("cov: {}", getClusterCovariances());
-        log.debug("loc: {}", getClusterCenters());
         for (int i = 0; i < predictiveDistributions.size(); i++) {
             density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }

@@ -48,7 +48,8 @@ public class MultivariateTDistributionTest {
                 {22, 12},
         };
         for (int[] nd : nonApproximatePairs) {
-            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio(nd[0], nd[1]), 1e-10);
+            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio(nd[0], nd[1]), 1e-8);
+            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio((double) nd[0], (double) nd[1]), 1e-8);
         }
 
         int[][] approximatePairs = {
@@ -61,7 +62,8 @@ public class MultivariateTDistributionTest {
                 {10, 3},
         };
         for (int[] nd : nonApproximatePairs) {
-            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio(nd[0], nd[1]), 1e-10);
+            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio(nd[0], nd[1]), 1e-8);
+            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio((double) nd[0], (double) nd[1]), 1e-8);
         }
     }
 

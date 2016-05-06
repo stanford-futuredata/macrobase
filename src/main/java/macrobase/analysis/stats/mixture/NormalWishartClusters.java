@@ -198,10 +198,8 @@ public class NormalWishartClusters {
         List<MultivariateTDistribution> predictiveDistributions = new ArrayList<>(K);
         for (int k = 0; k < this.K; k++) {
             double scale = (dof[k] + 1 - D) * beta[k] / (1 + beta[k]);
-            log.debug("scale: {}", scale);
             RealMatrix ll = AlgebraUtils.invertMatrix(omega.get(k).scalarMultiply(scale));
-            // TODO: MultivariateTDistribution should support real values for 3rd parameters
-            predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, (int) (dof[k] - 1 - D)));
+            predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, dof[k] - 1 - D));
         }
         return predictiveDistributions;
     }
