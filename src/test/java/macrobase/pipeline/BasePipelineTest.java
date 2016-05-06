@@ -2,7 +2,7 @@ package macrobase.pipeline;
 
 import macrobase.analysis.stats.*;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.analysis.stats.mixture.VariationalDPMG;
+import macrobase.analysis.stats.mixture.VariationalDPGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
 import org.junit.Rule;
@@ -90,7 +90,7 @@ public class BasePipelineTest {
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.VARIATIONAL_DPMG);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof VariationalDPMG);
+        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof VariationalDPGMM);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.MOVING_AVERAGE);

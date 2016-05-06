@@ -18,8 +18,8 @@ import java.util.List;
 /**
  * Variational Dirichlet Process Mixture of Gaussians.
  */
-public class VariationalDPMG extends MeanFieldGMM {
-    private static final Logger log = LoggerFactory.getLogger(VariationalDPMG.class);
+public class VariationalDPGMM extends MeanFieldGMM {
+    private static final Logger log = LoggerFactory.getLogger(VariationalDPGMM.class);
 
     // Number of truncated clusters.
     private int T;
@@ -44,7 +44,7 @@ public class VariationalDPMG extends MeanFieldGMM {
         }
     }
 
-    public VariationalDPMG(MacroBaseConf conf) {
+    public VariationalDPGMM(MacroBaseConf conf) {
         super(conf);
         T = conf.getInt(MacroBaseConf.DPM_TRUNCATING_PARAMETER, MacroBaseDefaults.DPM_TRUNCATING_PARAMETER);
         concentrationParameter = conf.getDouble(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, MacroBaseDefaults.DPM_CONCENTRATION_PARAMETER);
