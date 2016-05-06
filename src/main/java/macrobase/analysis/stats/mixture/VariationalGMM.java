@@ -36,11 +36,11 @@ public class VariationalGMM extends BatchMixtureModel {
 
     // Gaussian-Wishart distribution coefficients
     // Coefficients for K Gaussian distributions
-    private List<RealVector> m;
-    private double[] beta;
+    private List<RealVector> atomLoc;
+    private double[] atomBeta;
     // Wishart distribution coefficients for Precision matrix (lambda)
-    private List<RealMatrix> W;
-    private double[] nu;
+    private List<RealMatrix> atomOmega;
+    private double[] atomDOF;
 
 
     public VariationalGMM(MacroBaseConf conf) {
@@ -68,27 +68,27 @@ public class VariationalGMM extends BatchMixtureModel {
         RealMatrix priorWInverse = AlgebraUtils.invertMatrix(priorW);
 
         alpha = new double[K];
-        beta = new double[K];
-        nu = new double[K];
-        W = new ArrayList<>(K);
+        atomBeta = new double[K];
+        atomDOF = new double[K];
+        atomOmega = new ArrayList<>(K);
 
         // Initialize
         if (initialClusterCentersFile != null) {
             try {
-                m = initalizeClustersFromFile(initialClusterCentersFile, K);
+                atomLoc = initalizeClustersFromFile(initialClusterCentersFile, K);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                m = gonzalezInitializeMixtureCenters(data, K);
+                atomLoc = gonzalezInitializeMixtureCenters(data, K);
             }
         } else {
-            m = gonzalezInitializeMixtureCenters(data, K);
+            atomLoc = gonzalezInitializeMixtureCenters(data, K);
         }
-        log.debug("initialized cluster centers as: {}", m);
+        log.debug("initialized cluster centers as: {}", atomLoc);
         for (int k = 0; k < this.K; k++) {
             alpha[k] = 1. / K;
-            beta[k] = priorBeta;
-            nu[k] = priorNu;
-            W.add(priorW);
+            atomBeta[k] = priorBeta;
+            atomDOF[k] = priorNu;
+            atomOmega.add(priorW);
         }
 
         List<RealVector> clusterMean;
@@ -98,7 +98,6 @@ public class VariationalGMM extends BatchMixtureModel {
 
         double logLikelihood = -Double.MAX_VALUE;
         for (int iteration = 0; ; iteration++) {
-            clusterWeight = new double[K];
             double[] ex_ln_phi = new double[K];
             double[] ex_ln_det_lambda = new double[K];
             double sum_alpha = 0;
@@ -114,9 +113,9 @@ public class VariationalGMM extends BatchMixtureModel {
 
             for (int k = 0; k < this.K; k++) {
                 ex_ln_phi[k] = Gamma.digamma(alpha[k] - Gamma.digamma(sum_alpha));
-                ex_ln_det_lambda[k] = dimensions * Math.log(2) + Math.log((new EigenDecomposition(W.get(k))).getDeterminant());
+                ex_ln_det_lambda[k] = dimensions * Math.log(2) + Math.log((new EigenDecomposition(atomOmega.get(k))).getDeterminant());
                 for (int i = 0; i < dimensions; i++) {
-                    ex_ln_det_lambda[k] += Gamma.digamma((nu[k] - i) / 2);
+                    ex_ln_det_lambda[k] += Gamma.digamma((atomDOF[k] - i) / 2);
                 }
             }
 
@@ -126,8 +125,8 @@ public class VariationalGMM extends BatchMixtureModel {
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int k = 0; k < this.K; k++) {
-                    RealVector _diff = data.get(n).getMetrics().subtract(m.get(k));
-                    ex_ln_xmu = dimensions / beta[k] + nu[k] * _diff.dotProduct(W.get(k).operate(_diff));
+                    RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(k));
+                    ex_ln_xmu = dimensions / atomBeta[k] + atomDOF[k] * _diff.dotProduct(atomOmega.get(k).operate(_diff));
                     r[n][k] = Math.exp(ex_ln_phi[k] + 0.5 * ex_ln_det_lambda[k] - _const - 0.5 * ex_ln_xmu);
                     normalizingConstant += r[n][k];
                 }
@@ -137,15 +136,17 @@ public class VariationalGMM extends BatchMixtureModel {
                     }
                     r[n][k] /= normalizingConstant;
                     // Calculate unnormalized cluster weight, cluster mean
-                    clusterWeight[k] += r[n][k];
-                    clusterMean.set(k, clusterMean.get(k).add(data.get(n).getMetrics().mapMultiply(r[n][k])));
+                    // clusterMean.set(k, clusterMean.get(k).add(data.get(n).getMetrics().mapMultiply(r[n][k])));
                 }
             }
+
+            clusterWeight = calculateClusterWeights(r);
+            List<RealVector> weightedSum = calculateWeightedSums(data, r);
 
             // 2. Reevaluate clusters based on densities that we have for each point.
             log.debug("clusterWeights: {}", clusterWeight);
             for (int k = 0; k < this.K; k++) {
-                clusterMean.set(k, clusterMean.get(k).mapDivide(clusterWeight[k]));
+                clusterMean.set(k, weightedSum.get(k).mapDivide(clusterWeight[k]));
                 for (int n = 0; n < N; n++) {
                     RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(k));
                     S.set(k, S.get(k).add(_diff.outerProduct(_diff).scalarMultiply(r[n][k])));
@@ -155,9 +156,9 @@ public class VariationalGMM extends BatchMixtureModel {
 
             for (int k = 0; k < this.K; k++) {
                 alpha[k] = priorAlpha + clusterWeight[k];
-                beta[k] = priorBeta + clusterWeight[k];
-                m.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(beta[k]));
-                nu[k] = priorNu + 1 + clusterWeight[k];
+                atomBeta[k] = priorBeta + clusterWeight[k];
+                atomLoc.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
+                atomDOF[k] = priorNu + 1 + clusterWeight[k];
                 RealVector adjustedMean = clusterMean.get(k).subtract(priorM);
                 log.debug("adjustedMean: {}", adjustedMean);
                 log.debug("S: {}", S.get(k));
@@ -165,15 +166,15 @@ public class VariationalGMM extends BatchMixtureModel {
                         S.get(k).scalarMultiply(clusterWeight[k])).add(
                         adjustedMean.outerProduct(adjustedMean).scalarMultiply(priorBeta * clusterWeight[k] / (priorBeta + clusterWeight[k])));
                 log.debug("wInverse: {}", wInverse);
-                W.set(k, AlgebraUtils.invertMatrix(wInverse));
+                atomOmega.set(k, AlgebraUtils.invertMatrix(wInverse));
             }
 
             predictiveDistributions = new ArrayList<>(K);
             for (int k = 0; k < this.K; k++) {
-                double scale = (nu[k] + 1 - dimensions) * beta[k] / (1 + beta[k]);
-                RealMatrix ll = AlgebraUtils.invertMatrix(W.get(k).scalarMultiply(scale));
+                double scale = (atomDOF[k] + 1 - dimensions) * atomBeta[k] / (1 + atomBeta[k]);
+                RealMatrix ll = AlgebraUtils.invertMatrix(atomOmega.get(k).scalarMultiply(scale));
                 // TODO: MultivariateTDistribution should support real values for 3rd parameters
-                predictiveDistributions.add(new MultivariateTDistribution(m.get(k), ll, (int) (nu[k] - 1 - dimensions)));
+                predictiveDistributions.add(new MultivariateTDistribution(atomLoc.get(k), ll, (int) (atomDOF[k] - 1 - dimensions)));
             }
 
             log.debug("cluster means are at {}", clusterMean);
@@ -196,6 +197,31 @@ public class VariationalGMM extends BatchMixtureModel {
                 log.debug("improvement is : {}%", improvement * 100);
             }
         }
+    }
+
+    private List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
+        int N = data.size();
+        int D = data.get(0).getMetrics().getDimension();
+        List<RealVector> sums = new ArrayList<>(K);
+        for (int k=0; k<K; k++) {
+            RealVector sum = new ArrayRealVector(D);
+            for (int n=0; n<N; n++) {
+                sum = sum.add(data.get(n).getMetrics().mapMultiply(r[n][k]));
+            }
+            sums.add(sum);
+        }
+        return sums;
+    }
+
+    private double[] calculateClusterWeights(double[][] r) {
+        int N = r.length;
+        double[] clusterWeight = new double[K];
+        for (int k=0; k<K; k++) {
+            for (int n=0; n < N; n++) {
+                clusterWeight[k] += r[n][k];
+            }
+        }
+        return clusterWeight;
     }
 
     @Override
@@ -225,14 +251,14 @@ public class VariationalGMM extends BatchMixtureModel {
 
     @Override
     public List<RealVector> getClusterCenters() {
-        return m;
+        return atomLoc;
     }
 
     @Override
     public List<RealMatrix> getClusterCovariances() {
         List<RealMatrix> covariances = new ArrayList<>(K);
         for (int k = 0; k < this.K; k++) {
-            covariances.add(AlgebraUtils.invertMatrix(W.get(k).scalarMultiply(nu[k])));
+            covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(k).scalarMultiply(atomDOF[k])));
         }
         return covariances;
     }
