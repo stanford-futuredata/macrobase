@@ -1,6 +1,6 @@
 package macrobase.analysis.stats;
 
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
+import macrobase.analysis.stats.mixture.ExpectMaxGMM;
 import macrobase.analysis.stats.mixture.FiniteGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -99,7 +99,7 @@ public class FiniteGMMTest {
         };
 
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
         List<RealVector> emMeans = gmm.getClusterCenters();
         List<RealMatrix> emCovariances = gmm.getClusterCovariances();

@@ -1,7 +1,7 @@
 package macrobase.analysis.stats;
 
-import macrobase.analysis.stats.mixture.FiniteSVIGMM;
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
+import macrobase.analysis.stats.mixture.StochVarFiniteGMM;
+import macrobase.analysis.stats.mixture.ExpectMaxGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -21,8 +21,8 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class FiniteSVIGMMTest {
-    private static final Logger log = LoggerFactory.getLogger(FiniteSVIGMMTest.class);
+public class StochVarFiniteGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(StochVarFiniteGMMTest.class);
 
     @Test
     /**
@@ -43,7 +43,7 @@ public class FiniteSVIGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        FiniteSVIGMM finiteGMM = new FiniteSVIGMM(conf);
+        StochVarFiniteGMM finiteGMM = new StochVarFiniteGMM(conf);
         List<RealVector> calculatedMeans;
 
         // Make sure we have 3 clusters. Sometimes initialization is not great.
@@ -69,7 +69,7 @@ public class FiniteSVIGMMTest {
         };
 
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
         List<RealVector> emMeans = gmm.getClusterCenters();
         List<RealMatrix> emCovariances = gmm.getClusterCovariances();
@@ -148,7 +148,7 @@ public class FiniteSVIGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        FiniteSVIGMM finiteGMM = new FiniteSVIGMM(conf);
+        StochVarFiniteGMM finiteGMM = new StochVarFiniteGMM(conf);
         finiteGMM.train(data);
 
         List<RealVector> calculatedMeans = finiteGMM.getClusterCenters();

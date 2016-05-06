@@ -1,6 +1,6 @@
 package macrobase.analysis.stats;
 
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
+import macrobase.analysis.stats.mixture.ExpectMaxGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
@@ -17,8 +17,8 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class GaussianMixtureModelTest {
-    private static final Logger log = LoggerFactory.getLogger(GaussianMixtureModelTest.class);
+public class ExpectMaxGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(ExpectMaxGMMTest.class);
 
     @Test
     /**
@@ -37,7 +37,7 @@ public class GaussianMixtureModelTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
 
         double[][] clusterMeans = {
@@ -104,7 +104,7 @@ public class GaussianMixtureModelTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(7000, data.size());
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
 
         double[][] clusterMeans = {

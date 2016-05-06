@@ -7,10 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class FiniteSVIGMM extends FiniteGMM {
-    private static final Logger log = LoggerFactory.getLogger(FiniteSVIGMM.class);
+public class StochVarFiniteGMM extends FiniteGMM {
+    private static final Logger log = LoggerFactory.getLogger(StochVarFiniteGMM.class);
 
-    public FiniteSVIGMM(MacroBaseConf conf) {
+    public StochVarFiniteGMM(MacroBaseConf conf) {
         super(conf);
     }
 
@@ -25,6 +25,6 @@ public class FiniteSVIGMM extends FiniteGMM {
         //clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
 
         log.debug("actual training");
-        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, 7000, 0.001, 0);
+        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, 7000, 0.001, 0.5);
     }
 }

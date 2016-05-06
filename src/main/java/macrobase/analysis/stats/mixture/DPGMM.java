@@ -11,13 +11,13 @@ import java.util.List;
 /**
  * Mean-Field Variational Inference for Dirichlet Process Gaussian Mixture Model.
  */
-public class VariationalDPGMM extends VarGMM {
-    private static final Logger log = LoggerFactory.getLogger(VariationalDPGMM.class);
-    private DPComponents mixingComponents;
+public class DPGMM extends VarGMM {
+    private static final Logger log = LoggerFactory.getLogger(DPGMM.class);
+    protected DPComponents mixingComponents;
 
-    private final int T;
+    protected final int T;
 
-    public VariationalDPGMM(MacroBaseConf conf) {
+    public DPGMM(MacroBaseConf conf) {
         super(conf);
         T = conf.getInt(MacroBaseConf.DPM_TRUNCATING_PARAMETER, MacroBaseDefaults.DPM_TRUNCATING_PARAMETER);
         double concentrationParameter = conf.getDouble(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, MacroBaseDefaults.DPM_CONCENTRATION_PARAMETER);

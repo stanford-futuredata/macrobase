@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GaussianMixtureModel extends BatchMixtureModel {
-    private static final Logger log = LoggerFactory.getLogger(GaussianMixtureModel.class);
+public class ExpectMaxGMM extends BatchMixtureModel {
+    private static final Logger log = LoggerFactory.getLogger(ExpectMaxGMM.class);
 
     private int K;  // Number of mixture components
     private double[] phi;  // Mixing coefficients, K vector
@@ -21,7 +21,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
     private List<MultivariateNormal> mixtureDistributions;
     private double EMCutoffProgress;
 
-    public GaussianMixtureModel(MacroBaseConf conf) {
+    public ExpectMaxGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.EMCutoffProgress = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
