@@ -120,9 +120,12 @@ public class VariationalGMM extends BatchMixtureModel {
                 S.add(new BlockRealMatrix(D, D));
             }
 
+            // Calculate mixing coefficient log expectation
             for (int k = 0; k < this.K; k++) {
                 ex_ln_phi[k] = Gamma.digamma(alpha[k] - Gamma.digamma(sum_alpha));
             }
+
+            double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
 
             log.debug("clusterWeights: {}", clusterWeight);
             double _const = 0.5 * D * Math.log(2 * Math.PI);
@@ -202,10 +205,23 @@ public class VariationalGMM extends BatchMixtureModel {
         }
     }
 
+    private double[][] calcLogLikelihoodFixedAtoms(List<Datum> data, List<RealVector> atomLoc, double[] atomBeta, List<RealMatrix> atomOmega, double[] atomDOF) {
+        int N = data.size();
+        double[][] loglike = new double[N][K];
+        for (int k=0; k<K; k++) {
+            for (int n=0; n<N; n++) {
+                RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(k));
+                loglike[n][k] = -halfDimensionLn2Pi - 0.5 * (
+                        D / atomBeta[k] + atomDOF[k] * _diff.dotProduct(atomOmega.get(k).operate(_diff)));
+            }
+        }
+        return loglike;
+    }
+
     protected static List<Wishart> constructWisharts(List<RealMatrix> omega, double[] dof) {
         int num = omega.size();
         List<Wishart> wisharts = new ArrayList<>(num);
-        for (int i=0; i<num; i++) {
+        for (int i = 0; i < num; i++) {
             wisharts.add(new Wishart(omega.get(i), dof[i]));
         }
         return wisharts;
@@ -214,9 +230,9 @@ public class VariationalGMM extends BatchMixtureModel {
     private List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
         int N = data.size();
         List<RealVector> sums = new ArrayList<>(K);
-        for (int k=0; k<K; k++) {
+        for (int k = 0; k < K; k++) {
             RealVector sum = new ArrayRealVector(D);
-            for (int n=0; n<N; n++) {
+            for (int n = 0; n < N; n++) {
                 sum = sum.add(data.get(n).getMetrics().mapMultiply(r[n][k]));
             }
             sums.add(sum);
@@ -227,8 +243,8 @@ public class VariationalGMM extends BatchMixtureModel {
     private double[] calculateClusterWeights(double[][] r) {
         int N = r.length;
         double[] clusterWeight = new double[K];
-        for (int k=0; k<K; k++) {
-            for (int n=0; n < N; n++) {
+        for (int k = 0; k < K; k++) {
+            for (int n = 0; n < N; n++) {
                 clusterWeight[k] += r[n][k];
             }
         }
