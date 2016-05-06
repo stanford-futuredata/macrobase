@@ -1,5 +1,6 @@
 package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
@@ -95,6 +96,7 @@ public class NormalWishartClusters {
             RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
+            log.debug("wInverse: {}", wInverse);
             omega.set(k, AlgebraUtils.invertMatrix(wInverse));
         }
     }
@@ -127,5 +129,16 @@ public class NormalWishartClusters {
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
             omega.set(k, StochVarInfGMM.step(omega.get(k), AlgebraUtils.invertMatrix(wInverse), pace));
         }
+    }
+
+    public List<MultivariateTDistribution> constructPredictiveDistributions() {
+        List<MultivariateTDistribution> predictiveDistributions = new ArrayList<>(K);
+        for (int k = 0; k < this.K; k++) {
+            double scale = (dof[k] + 1 - D) * beta[k] / (1 + beta[k]);
+            RealMatrix ll = AlgebraUtils.invertMatrix(omega.get(k).scalarMultiply(scale));
+            // TODO: MultivariateTDistribution should support real values for 3rd parameters
+            predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, (int) (dof[k] - 1 - D)));
+        }
+        return predictiveDistributions;
     }
 }

@@ -30,6 +30,10 @@ public class FiniteGMM extends MeanFieldGMM {
     private double[] mixingCoeffs;
     private List<MultivariateTDistribution> predictiveDistributions;
 
+    // Components.
+    private MultiComponents mixingComponents;
+    private NormalWishartClusters clusters;
+
     public FiniteGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
@@ -37,10 +41,92 @@ public class FiniteGMM extends MeanFieldGMM {
         this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
+   // @Override
+   // public void train(List<Datum> data) {
+   //     super.train(data, K);
+   // }
     @Override
     public void train(List<Datum> data) {
-        super.train(data, K);
+        // 0. Initialize all approximating factors
+        log.debug("training locally");
+        initConstants(data);
+        initializeBaseNormalWishart(data);
+        initializeBaseMixing();
+        initializeSticks();
+        initializeAtoms(data);
+
+        log.debug("components");
+        mixingComponents = new MultiComponents(priorAlpha, K);
+        mixingComponents.initalize();
+        clusters = new NormalWishartClusters(atomLoc, atomBeta, atomOmega, atomDOF);
+        clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
+
+        log.debug("actual training");
+        train(data, mixingComponents, clusters, maxIterationsToConverge, progressCutoff);
     }
+
+    public void train(List<Datum> data, MultiComponents mixingComponents, NormalWishartClusters clusters, int maxIter, double improvementCutoff) {
+        log.debug("inside main train");
+        double[] exLnMixingContribution;
+        double[] lnPrecision;
+        double[][] dataLogLike;
+        double[][] r;
+
+        int N = data.size();
+        double logLikelihood = -Double.MAX_VALUE;
+        for (int iter = 1; ; iter++) {
+            log.debug("inte: {}", iter);
+            // Step 1. update local variables
+            log.debug("0.");
+            exLnMixingContribution = mixingComponents.calcExpectationLog();
+            log.debug("1. {}", exLnMixingContribution);
+            lnPrecision = clusters.calculateExLogPrecision();
+            log.debug("2. {}", lnPrecision);
+            dataLogLike = clusters.calcLogLikelyFixedPrec(data);
+            log.debug("3. {}", dataLogLike);
+            r = normalizeLogProbas(exLnMixingContribution, lnPrecision, dataLogLike);
+
+            // Step 2. update global variables
+            mixingComponents.update(r);
+            clusters.update(data, r);
+
+            double oldLogLikelihood = logLikelihood;
+            logLikelihood = calculateLogLikelihood(data, mixingComponents, clusters);
+            if (checkTermination(logLikelihood, oldLogLikelihood, iter, maxIter, improvementCutoff)) {
+                break;
+            }
+        }
+    }
+
+    private boolean checkTermination(double logLikelihood, double oldLogLikelihood, int iteration, int maxIter, double improvementCutoff) {
+        log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+
+        if (iteration >= maxIter) {
+            log.debug("Breaking because have already run {} iterations", iteration);
+            return true;
+        }
+
+        double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
+        if (improvement >= 0 && improvement < improvementCutoff) {
+            log.debug("Breaking because improvement was {} percent", improvement * 100);
+            return true;
+        } else {
+            log.debug("improvement is : {}%", improvement * 100);
+        }
+        log.debug(".........................................");
+        return false;
+    }
+
+    private double calculateLogLikelihood(List<Datum> data, MultiComponents mixingComonents, NormalWishartClusters clusters) {
+        updatePredictiveDistributions(mixingComonents, clusters);
+        double logLikelihood = 0;
+        for (Datum d : data) {
+            logLikelihood += score(d);
+        }
+        return logLikelihood;
+    }
+
+
 
     @Override
     protected void initializeBaseNormalWishart(List<Datum> data) {
@@ -89,6 +175,11 @@ public class FiniteGMM extends MeanFieldGMM {
             atomOmega.add(baseOmega);
         }
         log.debug("atomOmega: {}", atomOmega);
+    }
+
+    private void updatePredictiveDistributions(MultiComponents mixingComonents, NormalWishartClusters clusters) {
+        predictiveDistributions = clusters.constructPredictiveDistributions();
+        mixingCoeffs = mixingComonents.getCoeffs();
     }
 
     @Override
@@ -148,8 +239,17 @@ public class FiniteGMM extends MeanFieldGMM {
         return mixingCoeffs;
     }
 
-    public double[] getPriorAdjustedWeights() {
-        return clusterWeight;
+    public double[] getPriorAdjustedClusterProportions() {
+        double[] mixingCoeffs = mixingComponents.getCoeffs();
+        double sum = - priorAlpha; // to adjust for prior.
+        for (double coeff : mixingCoeffs) {
+            sum += coeff;
+        }
+        double[] proportions = new double[K];
+        for (int i=0; i<K; i++) {
+            proportions[i] = (mixingCoeffs[i] - priorAlpha / K) / sum;
+        }
+        return proportions;
     }
 
     @Override

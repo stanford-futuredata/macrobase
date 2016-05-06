@@ -72,7 +72,7 @@ public class FiniteGMMTest {
         // Make sure we have 3 clusters. Sometimes initialization is not great.
         finiteGMM.train(data);
 
-        double[] calculatedWeights = finiteGMM.getPriorAdjustedWeights();
+        double[] calculatedWeights = finiteGMM.getPriorAdjustedClusterProportions();
 
         numClustersIdentified = 0;
         for (double weight : calculatedWeights) {
@@ -208,7 +208,7 @@ public class FiniteGMMTest {
 
         JsonUtils.dumpAsJson(finiteGMM.getClusterCovariances(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
         JsonUtils.dumpAsJson(finiteGMM.getClusterCenters(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(finiteGMM.getPriorAdjustedWeights(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-weights.json");
+        JsonUtils.dumpAsJson(finiteGMM.getPriorAdjustedClusterProportions(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-weights.json");
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
@@ -247,7 +247,7 @@ public class FiniteGMMTest {
             finiteGMM.train(data);
 
             calculatedMeans = finiteGMM.getClusterCenters();
-            calculatedWeights = finiteGMM.getPriorAdjustedWeights();
+            calculatedWeights = finiteGMM.getPriorAdjustedClusterProportions();
 
             numClustersIdentified = 0;
             for (double weight : calculatedWeights) {
@@ -280,7 +280,7 @@ public class FiniteGMMTest {
                 }
             }
         }
-        assertEquals(identifiedWeights[0], clusterWeights[0], 1);
-        assertEquals(identifiedWeights[1], clusterWeights[1], 1);
+        assertEquals(identifiedWeights[0] * 500, clusterWeights[0], 1);
+        assertEquals(identifiedWeights[1] * 500, clusterWeights[1], 1);
     }
 }

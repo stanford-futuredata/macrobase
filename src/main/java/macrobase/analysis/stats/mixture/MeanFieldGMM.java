@@ -5,7 +5,10 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
-import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.BlockRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -71,10 +74,56 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
 
     protected abstract void updatePredictiveDistributions();
 
-    /**
-     * @param data - data to train on
-     * @param K    - run inference with K clusters
-     */
+    //public void train(List<Datum> data, MixingComponents mixingComonents, NormalWishartClusters clusters, int maxIter, double improvementCutoff) {
+    //    double[] exLnMixingContribution;
+    //    double[] lnPrecision;
+    //    double[][] dataLogLike;
+    //    double[][] r;
+
+    //    int N = data.size();
+    //    double logLikelihood = -Double.MAX_VALUE;
+    //    for (int iter = 1; ; iter++) {
+    //        // Step 1. update local variables
+    //        exLnMixingContribution = mixingComonents.calcExpectationLog();
+    //        lnPrecision = clusters.calculateExLogPrecision();
+    //        dataLogLike = clusters.calcLogLikelyFixedPrec(data);
+    //        r = normalizeLogProbas(exLnMixingContribution, lnPrecision, dataLogLike);
+
+    //        // Step 2. update global variables
+    //        mixingComonents.update(r);
+    //        clusters.update(data, r);
+
+    //        // TODO:!!!
+    //        updatePredictiveDistributions();
+
+    //        if (iter>= maxIterationsToConverge) {
+    //            log.debug("Breaking because have already run {} iterations", iter);
+    //            break;
+    //        }
+
+    //        double oldLogLikelihood = logLikelihood;
+    //        logLikelihood = 0;
+    //        for (int n = 0; n < N; n++) {
+    //            logLikelihood += score(data.get(n));
+    //        }
+
+    //        double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
+    //        if (improvement >= 0 && improvement < this.progressCutoff) {
+    //            log.debug("Breaking because improvement was {} percent", improvement * 100);
+    //            break;
+    //        } else {
+    //            log.debug("improvement is : {}%", improvement * 100);
+    //        }
+    //        log.debug(".........................................");
+
+    //    }
+    //}
+
+        /**
+         * @param data - data to train on
+         * @param K    - run inference with K clusters
+         */
+
     public void train(List<Datum> data, int K) {
         int N = data.size();
         // 0. Initialize all approximating factors
@@ -170,7 +219,7 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     protected static double[] calculateExLogPrecision(List<RealMatrix> omega, double[] dof) {
         int K = omega.size();
         double[] lnPrecision = new double[K];
-        for (int i=0; i<K; i++) {
+        for (int i = 0; i < K; i++) {
             lnPrecision[i] = 0.5 * (new Wishart(omega.get(i), dof[i])).getExpectationLogDeterminantLambda();
         }
         return lnPrecision;

@@ -14,6 +14,12 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
         coeffs = new double[clusters];
     }
 
+    public void initalize() {
+        for (int i = 0; i < K; i++) {
+            coeffs[i] = 1. / K;
+        }
+    }
+
     @Override
     public double[] calcExpectationLog() {
         double[] exLogMixing = new double[K];
@@ -30,7 +36,7 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
     @Override
     public void update(double[][] r) {
         double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
-        for (int k=0; k<K; k++) {
+        for (int k = 0; k < K; k++) {
             coeffs[k] = priorAlpha + clusterWeight[k];
         }
     }
@@ -38,8 +44,12 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
     @Override
     public void moveNatural(double[][] r, double pace, double portion) {
         double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
-        for (int k=0; k<K; k++) {
+        for (int k = 0; k < K; k++) {
             coeffs[k] = StochVarInfGMM.step(coeffs[k], priorAlpha + portion * clusterWeight[k], pace);
         }
+    }
+
+    public double[] getCoeffs() {
+        return coeffs;
     }
 }
