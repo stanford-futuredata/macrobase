@@ -5,19 +5,26 @@ import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Datum implements HasMetrics {
+    private static AtomicLong idGen = new AtomicLong();
+
+    private final Long id;
     private List<Integer> attributes;
     private RealVector metrics;
     private RealVector auxiliaries;
 
 
+
     private List<Integer> contextualDiscreteAttributes;
     private RealVector contextualDoubleAttributes;
 
-    private Datum parentDatum; //the parent datum this datum is created from 
+    private final Long parentDatumID; //the parent datum this datum is created from
 
     public Datum() {
+        id = idGen.incrementAndGet();
+        parentDatumID = null;
     }
 
     public Datum(Datum oldDatum, double... doubleMetrics) {
@@ -25,7 +32,8 @@ public class Datum implements HasMetrics {
     }
 
     public Datum(Datum oldDatum, RealVector metrics) {
-        this.parentDatum = oldDatum;
+        this.id = idGen.incrementAndGet();
+        this.parentDatumID = oldDatum.getID();
         this.metrics = metrics;
         this.attributes = oldDatum.getAttributes();
         this.contextualDiscreteAttributes = oldDatum.getContextualDiscreteAttributes();
@@ -38,11 +46,13 @@ public class Datum implements HasMetrics {
     }
 
     public Datum(List<Integer> attributes, RealVector metrics) {
+        this();
         this.attributes = attributes;
         this.metrics = metrics;
     }
 
     public Datum(List<Integer> attributes, RealVector metrics, List<Integer> contextualDiscreteAttributes, RealVector contextualDoubleAttributes) {
+        this();
         this.attributes = attributes;
         this.metrics = metrics;
         this.contextualDiscreteAttributes = contextualDiscreteAttributes;
@@ -70,8 +80,12 @@ public class Datum implements HasMetrics {
         this.auxiliaries = auxiliaries;
     }
 
-    public Datum getParentDatum() {
-        return parentDatum;
+    public Long getID() {
+        return id;
+    }
+
+    public Long getParentID() {
+        return parentDatumID;
     }
 
     public String toString() {

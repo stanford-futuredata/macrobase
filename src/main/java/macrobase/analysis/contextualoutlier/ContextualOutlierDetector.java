@@ -49,8 +49,7 @@ public class ContextualOutlierDetector {
     private boolean distributionPruningForScoring;
     private double alpha = 0.05;
     //This is the outliers detected for every dense context
-    //could've stored Context,OutlierDetector.BatchResult, but waste a lot of memory
-    private Map<Context, OutlierClassifier> context2OutlierClassifier = new HashMap<Context, OutlierClassifier>();
+    private Map<Context, List<OutlierClassificationResult>> context2Outliers = new HashMap<>();
 
     public ContextualOutlierDetector(MacroBaseConf conf) throws IOException {
         this.conf = conf;
@@ -86,7 +85,7 @@ public class ContextualOutlierDetector {
      * @param data
      * @throws Exception
      */
-    public Map<Context, OutlierClassifier> searchContextualOutliers(List<Datum> data) throws Exception {
+    public Map<Context, List<OutlierClassificationResult>> searchContextualOutliers(List<Datum> data) throws Exception {
         Stopwatch sw = Stopwatch.createUnstarted();
         log.debug("Find global context outliers on data num tuples: {} , MBs {} ", data.size());
         sw.start();
@@ -158,7 +157,7 @@ public class ContextualOutlierDetector {
             }
             preLatticeNodes = curLatticeNodes;
         }
-        return context2OutlierClassifier;
+        return context2Outliers;
     }
 
     private List<Datum> findInputOutliers(List<Datum> data) {
@@ -188,7 +187,7 @@ public class ContextualOutlierDetector {
      * @param data
      * @throws Exception
      */
-    public Map<Context, OutlierClassifier> searchContextGivenOutliers(List<Datum> data) throws Exception {
+    public Map<Context, List<OutlierClassificationResult>> searchContextGivenOutliers(List<Datum> data) throws Exception {
         List<Datum> inputOutliers = findInputOutliers(data);
         return searchContextGivenOutliers(data, inputOutliers);
     }
@@ -200,12 +199,12 @@ public class ContextualOutlierDetector {
      * @param inputOutliers
      * @throws Exception
      */
-    public Map<Context, OutlierClassifier> searchContextGivenOutliers(List<Datum> data, List<Datum> inputOutliers) throws Exception {
+    public Map<Context, List<OutlierClassificationResult>> searchContextGivenOutliers(List<Datum> data, List<Datum> inputOutliers) throws Exception {
         //result contexts that have the input outliers
         List<Context> result = new ArrayList<Context>();
         if (inputOutliers == null || inputOutliers.size() == 0) {
             log.info("There is no input outliers");
-            return context2OutlierClassifier;
+            return context2Outliers;
         }
         Stopwatch sw = Stopwatch.createUnstarted();
         log.debug("Find global context outliers on data num tuples: {} , MBs {} ", data.size());
@@ -284,9 +283,9 @@ public class ContextualOutlierDetector {
             }
             preLatticeNodes = curLatticeNodes;
         }
-        Map<Context, OutlierClassifier> context2OutlierClassifierGivenOutlier = new HashMap<Context, OutlierClassifier>();
+        Map<Context, List<OutlierClassificationResult>> context2OutlierClassifierGivenOutlier = new HashMap<>();
         for (Context context : result) {
-            context2OutlierClassifierGivenOutlier.put(context, context2OutlierClassifier.get(context));
+            context2OutlierClassifierGivenOutlier.put(context, context2Outliers.get(context));
         }
         return context2OutlierClassifierGivenOutlier;
     }
@@ -430,20 +429,25 @@ public class ContextualOutlierDetector {
             }
         }
         FeatureTransform featureTransform = new BatchScoreFeatureTransform(context.getDetector(), requiresTraining);
+
+        Map<Long, Datum> idToContextualData = new HashMap<>();
+        for(Datum d : contextualData) {
+            idToContextualData.put(d.getID(), d);
+        }
+
         featureTransform.consume(contextualData);
         OutlierClassifier outlierClassifier = new StaticThresholdClassifier(conf);
         outlierClassifier.consume(featureTransform.getStream().drain());
-        List<Datum> outliers = new ArrayList<Datum>();
-        List<OutlierClassificationResult> outlierClassificationResults = outlierClassifier.getStream().inspect();
+        List<Datum> outliers = new ArrayList<>();
+        List<OutlierClassificationResult> outlierClassificationResults = outlierClassifier.getStream().drain();
         for (OutlierClassificationResult outlierClassificationResult : outlierClassificationResults) {
             if (outlierClassificationResult.isOutlier()) {
                 Datum dAfterTransform = outlierClassificationResult.getDatum();
-                Datum dBeforeTransform = dAfterTransform.getParentDatum();
-                outliers.add(dBeforeTransform);
+                outliers.add(idToContextualData.get(dAfterTransform.getParentID()));
             }
         }
         if (outliers.size() > 0) {
-            context2OutlierClassifier.put(context, outlierClassifier);
+            context2Outliers.put(context, outlierClassificationResults);
             if (contextualOutputFile != null) {
                 PrintWriter contextualOut = new PrintWriter(new FileWriter(contextualOutputFile,true));
                 contextualOut.println("Context: " + context.print(conf.getEncoder()));
