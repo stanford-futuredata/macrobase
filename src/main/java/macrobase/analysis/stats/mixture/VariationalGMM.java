@@ -30,6 +30,7 @@ public class VariationalGMM extends BatchMixtureModel {
     private RealVector priorM;
     private double priorNu;
     private RealMatrix priorW;
+    private RealMatrix priorWInverse;
     private double[] mixingCoeffs;
     private List<MultivariateTDistribution> predictiveDistributions;
 
@@ -72,7 +73,7 @@ public class VariationalGMM extends BatchMixtureModel {
         priorNu = 0.1;
         priorW = MatrixUtils.createRealIdentityMatrix(D);
         //priorW.setEntry(1, 1, 3);
-        RealMatrix priorWInverse = AlgebraUtils.invertMatrix(priorW);
+        priorWInverse = AlgebraUtils.invertMatrix(priorW);
 
         mixingCoeffs = new double[K];
         atomBeta = new double[K];
@@ -130,30 +131,10 @@ public class VariationalGMM extends BatchMixtureModel {
             }
 
             // 2. Reevaluate clusters based on densities that we have for each point.
-            clusterWeight = calculateClusterWeights(r);
-            List<RealVector> weightedSum = calculateWeightedSums(data, r);
-            clusterMean = new ArrayList<>(K);
-            for (int k = 0; k < this.K; k++) {
-                clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
-            }
-            List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
-            log.debug("clusterWeights: {}", clusterWeight);
-
             updateSticks(r);
             updateAtoms(r, data);
 
-            for (int k = 0; k < this.K; k++) {
-                atomBeta[k] = priorBeta + clusterWeight[k];
-                atomLoc.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
-                atomDOF[k] = priorNu + 1 + clusterWeight[k];
-                RealVector adjustedMean = clusterMean.get(k).subtract(priorM);
-                log.debug("adjustedMean: {}", adjustedMean);
-                RealMatrix wInverse = priorWInverse
-                        .add(quadForm.get(k))
-                        .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(priorBeta * clusterWeight[k] / (priorBeta + clusterWeight[k])));
-                log.debug("wInverse: {}", wInverse);
-                atomOmega.set(k, AlgebraUtils.invertMatrix(wInverse));
-            }
+            clusterWeight = calculateClusterWeights(r);
 
             predictiveDistributions = new ArrayList<>(K);
             for (int k = 0; k < this.K; k++) {
@@ -163,7 +144,6 @@ public class VariationalGMM extends BatchMixtureModel {
                 predictiveDistributions.add(new MultivariateTDistribution(atomLoc.get(k), ll, (int) (atomDOF[k] - 1 - D)));
             }
 
-            log.debug("cluster means are at {}", clusterMean);
             log.debug("cluster weights are at {}", clusterWeight);
             log.debug("cluster covariances are at {}", getClusterCovariances());
 
@@ -186,6 +166,28 @@ public class VariationalGMM extends BatchMixtureModel {
     }
 
     private void updateAtoms(double[][] r, List<Datum> data) {
+        double[] clusterWeight = calculateClusterWeights(r);
+        List<RealVector> weightedSum = calculateWeightedSums(data, r);
+        List<RealVector> clusterMean = new ArrayList<>(K);
+        for (int k = 0; k < this.K; k++) {
+            clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
+        }
+        List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
+        log.debug("clusterWeights: {}", clusterWeight);
+
+
+        for (int k = 0; k < this.K; k++) {
+            atomBeta[k] = priorBeta + clusterWeight[k];
+            atomLoc.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
+            atomDOF[k] = priorNu + 1 + clusterWeight[k];
+            RealVector adjustedMean = clusterMean.get(k).subtract(priorM);
+            log.debug("adjustedMean: {}", adjustedMean);
+            RealMatrix wInverse = priorWInverse
+                    .add(quadForm.get(k))
+                    .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(priorBeta * clusterWeight[k] / (priorBeta + clusterWeight[k])));
+            log.debug("wInverse: {}", wInverse);
+            atomOmega.set(k, AlgebraUtils.invertMatrix(wInverse));
+        }
     }
 
     /**
