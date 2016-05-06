@@ -38,11 +38,12 @@ public class VariationalInference {
         List<Datum> miniBatch;
 
         final int N = data.size();
-        final int partitions = N / desiredMinibatchSize;
+        final int partitions = N / Math.min(data.size(), desiredMinibatchSize);
 
         double logLikelihood = -Double.MAX_VALUE;
         for (int iter = 1; ; iter++) {
             double pace = Math.pow(iter + delay, -forgettingRate);
+            log.debug("pace = {}", pace);
 
             for (int p = 0; p < partitions; p++) {
                 // Step 0. Create the minibatch.
@@ -53,10 +54,12 @@ public class VariationalInference {
 
                 minibatchSize = miniBatch.size();
 
+                log.debug("minibatch Size = {}", minibatchSize);
+
                 // Step 1. Update local variables
                 exLnMixingContribution = mixingComponents.calcExpectationLog();
                 lnPrecision = clusters.calculateExLogPrecision();
-                dataLogLike = clusters.calcLogLikelyFixedPrec(data);
+                dataLogLike = clusters.calcLogLikelyFixedPrec(miniBatch);
                 r = VariationalInference.normalizeLogProbas(exLnMixingContribution, lnPrecision, dataLogLike);
 
                 // Step 2. Update global variables
@@ -66,7 +69,7 @@ public class VariationalInference {
                 double oldLogLikelihood = logLikelihood;
                 logLikelihood = model.calculateLogLikelihood(data, mixingComponents, clusters);
                 if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
-                    break;
+                    return;
                 }
             }
         }

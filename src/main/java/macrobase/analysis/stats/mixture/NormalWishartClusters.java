@@ -160,6 +160,8 @@ public class NormalWishartClusters {
 
     public void moveNatural(List<Datum> data, double[][] r, double pace, double repeat) {
         double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
+        log.debug("unscaled weights: {}", clusterWeight);
+        log.debug("repeat: {}", repeat);
         List<RealVector> weightedSum = MeanFieldGMM.calculateWeightedSums(data, r);
         List<RealVector> clusterMean = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {

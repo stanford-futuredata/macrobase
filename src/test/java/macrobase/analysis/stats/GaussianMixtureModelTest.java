@@ -26,7 +26,7 @@ public class GaussianMixtureModelTest {
      */
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, "GAUSSIAN_MIXTURE_EM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -93,7 +93,7 @@ public class GaussianMixtureModelTest {
      */
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, "GAUSSIAN_MIXTURE_EM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)

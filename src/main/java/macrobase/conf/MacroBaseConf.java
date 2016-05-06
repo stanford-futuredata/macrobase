@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.stats.*;
 import macrobase.analysis.stats.mixture.FiniteGMM;
+import macrobase.analysis.stats.mixture.FiniteSVIGMM;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.analysis.stats.mixture.VariationalDPGMM;
 import macrobase.ingest.*;
@@ -145,9 +146,10 @@ public class MacroBaseConf extends Configuration {
         MOVING_AVERAGE,
         ARIMA,
         BAYESIAN_NORMAL,
-        GAUSSIAN_MIXTURE_EM,
-        VARIATIONAL_GMM,
-        VARIATIONAL_DPMG,
+        EM_GMM,
+        MEAN_FIELD_GMM,
+        MEAN_FIELD_DPGMM,
+        SVI_GMM,
     }
 
     public enum ContextualAPI {
@@ -202,15 +204,18 @@ public class MacroBaseConf extends Configuration {
             case BAYESIAN_NORMAL:
                 log.info("Using Bayesian Normal transform.");
                 return new BayesianNormalDensity(this);
-            case GAUSSIAN_MIXTURE_EM:
+            case EM_GMM:
                 log.info("Using Finite mixture of Gaussians (EM algorithm) transform.");
                 return new GaussianMixtureModel(this);
-            case VARIATIONAL_GMM:
+            case MEAN_FIELD_GMM:
                 log.info("Using Finite mixture of Gaussians (Bayesian algorithm) transform.");
                 return new FiniteGMM(this);
-            case VARIATIONAL_DPMG:
+            case MEAN_FIELD_DPGMM:
                 log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new VariationalDPGMM(this);
+            case SVI_GMM:
+                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new FiniteSVIGMM(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }

@@ -25,6 +25,6 @@ public class FiniteSVIGMM extends FiniteGMM {
         //clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
 
         log.debug("actual training");
-        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, 500, 1, 0.7);
+        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, 7000, 0.001, 0);
     }
 }

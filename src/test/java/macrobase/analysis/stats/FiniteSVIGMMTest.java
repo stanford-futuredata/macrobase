@@ -1,7 +1,7 @@
 package macrobase.analysis.stats;
 
+import macrobase.analysis.stats.mixture.FiniteSVIGMM;
 import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.analysis.stats.mixture.FiniteGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -21,30 +21,8 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class FiniteGMMTest {
-    private static final Logger log = LoggerFactory.getLogger(FiniteGMMTest.class);
-
-    @Test
-    /**
-     * Tests Bayesian Gaussian Mixture Model on a three well separated clusters.
-     */
-    public void univariateToyBimodalTest() throws Exception {
-        MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 4)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
-                .set(MacroBaseConf.NUM_MIXTURES, 2)
-                .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
-                .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
-                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/toy2gaussians.csv")
-                .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.LOW_METRICS, "")
-                .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Drainer.drainIngest(conf);
-        assertEquals(18, data.size());
-
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
-        finiteGMM.train(data);
-    }
+public class FiniteSVIGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(FiniteSVIGMMTest.class);
 
     @Test
     /**
@@ -53,7 +31,7 @@ public class FiniteGMMTest {
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 44)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.MIXTURE_CENTERS_FILE, "src/test/resources/data/3gaussians-700.points-centers.json")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -65,21 +43,13 @@ public class FiniteGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteSVIGMM finiteGMM = new FiniteSVIGMM(conf);
         List<RealVector> calculatedMeans;
 
-        int numClustersIdentified = 0;
         // Make sure we have 3 clusters. Sometimes initialization is not great.
         finiteGMM.train(data);
+        log.debug("finitesh training");
 
-        double[] calculatedWeights = finiteGMM.getPriorAdjustedClusterProportions();
-
-        numClustersIdentified = 0;
-        for (double weight : calculatedWeights) {
-            if (weight > 0.1) {
-                numClustersIdentified += 1;
-            }
-        }
         calculatedMeans = finiteGMM.getClusterCenters();
         List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
 
@@ -152,7 +122,7 @@ public class FiniteGMMTest {
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -178,7 +148,7 @@ public class FiniteGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteSVIGMM finiteGMM = new FiniteSVIGMM(conf);
         finiteGMM.train(data);
 
         List<RealVector> calculatedMeans = finiteGMM.getClusterCenters();
@@ -217,70 +187,5 @@ public class FiniteGMMTest {
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
         dumper = new ScoreDumper(conf);
         dumper.dumpScores(finiteGMM, data);
-    }
-
-    @Test
-    /**
-     * Tests Gaussian Mixture Model on a three not so well separated clusters.
-     */
-    public void unusedOrOverlappingClusterTest() throws Exception {
-        MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 4)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
-                .set(MacroBaseConf.NUM_MIXTURES, 4)
-                .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
-                .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
-                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2gaussians-500points.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
-                .set(MacroBaseConf.ATTRIBUTES, "");
-        List<Datum> data = Drainer.drainIngest(conf);
-        assertEquals(500, data.size());
-
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
-        List<RealVector> calculatedMeans = null;
-        double[] calculatedWeights = null;
-
-        int numClustersIdentified = 0;
-        // Sometimes there is a weird convergence into one cluster when trying to fit more than 2 clusters.
-        while (numClustersIdentified < 2) {
-            finiteGMM.train(data);
-
-            calculatedMeans = finiteGMM.getClusterCenters();
-            calculatedWeights = finiteGMM.getPriorAdjustedClusterProportions();
-
-            numClustersIdentified = 0;
-            for (double weight : calculatedWeights) {
-                if (weight > 0.1) {
-                    numClustersIdentified += 1;
-                }
-            }
-        }
-
-        double[][] clusterMeans = {
-                {1, 1},
-                {10, 3},
-        };
-        List<RealVector> vectorClusterMeans = new ArrayList<>(2);
-        for (int k = 0; k < 2; k++) {
-            vectorClusterMeans.add(new ArrayRealVector(clusterMeans[k]));
-        }
-
-        double[] clusterWeights = {
-                200,
-                300,
-        };
-        double[] identifiedWeights = {0, 0};
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 2; j++) {
-                if (calculatedMeans.get(i).getDistance(vectorClusterMeans.get(j)) < 1) {
-                    identifiedWeights[j] += calculatedWeights[i];
-                    log.debug("adding {} to cluster {}", calculatedWeights[i], vectorClusterMeans.get(j));
-                    break;
-                }
-            }
-        }
-        assertEquals(identifiedWeights[0] * 500, clusterWeights[0], 1);
-        assertEquals(identifiedWeights[1] * 500, clusterWeights[1], 1);
     }
 }

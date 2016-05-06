@@ -85,11 +85,11 @@ public class BasePipelineTest {
         assertTrue(conf.constructTransform(conf.getTransformType()) instanceof BayesianNormalDensity);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.GAUSSIAN_MIXTURE_EM);
+                 MacroBaseConf.TransformType.EM_GMM);
         assertTrue(conf.constructTransform(conf.getTransformType()) instanceof GaussianMixtureModel);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.VARIATIONAL_DPMG);
+                 MacroBaseConf.TransformType.MEAN_FIELD_DPGMM);
         assertTrue(conf.constructTransform(conf.getTransformType()) instanceof VariationalDPGMM);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
