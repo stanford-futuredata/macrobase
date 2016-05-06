@@ -169,29 +169,33 @@ public class VariationalDPMG extends MeanFieldGMM {
 
             // 2. Reevaluate clusters based on densities that we have for each point.
             // 2. Reevaluate atoms and stick lengths.
-            S = new ArrayList<>(T);
+            //S = new ArrayList<>(T);
 
             for (int t = 0; t < T; t++) {
-                S.add(new BlockRealMatrix(D, D));
+                //S.add(new BlockRealMatrix(D, D));
                 if (clusterWeight[t] > 0) {
                     clusterMean.set(t, clusterMean.get(t).mapDivide(clusterWeight[t]));
                 } else {
                     continue;
                 }
-                for (int n = 0; n < N; n++) {
-                    RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(t));
-                    S.set(t, S.get(t).add(_diff.outerProduct(_diff).scalarMultiply(r[n][t])));
-                }
-                S.set(t, S.get(t).scalarMultiply(1 / clusterWeight[t]));
             }
+            //    for (int n = 0; n < N; n++) {
+            //        RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(t));
+            //        S.set(t, S.get(t).add(_diff.outerProduct(_diff).scalarMultiply(r[n][t])));
+            //    }
+            //    S.set(t, S.get(t).scalarMultiply(1 / clusterWeight[t]));
+            //}
 
             updateSticks(r);
+            //updateAtoms(r, data);
+
+            S = calculateQuadraticForms(data, clusterMean, r);
             for (int t = 0; t < atomLoc.size(); t++) {
                 atomBeta[t] = baseBeta + clusterWeight[t];
                 atomLoc.set(t, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(t).mapMultiply(clusterWeight[t])).mapDivide(atomBeta[t]));
                 atomDOF[t] = baseNu + 1 + clusterWeight[t];
                 RealMatrix wInverse = baseOmegaInverse.add(
-                        S.get(t).scalarMultiply(clusterWeight[t])).add(
+                        S.get(t)).add(
                         clusterMean.get(t).outerProduct(clusterMean.get(t)).scalarMultiply(baseBeta * clusterWeight[t] / (baseBeta + clusterWeight[t])));
                 atomOmega.set(t, AlgebraUtils.invertMatrix(wInverse));
             }
