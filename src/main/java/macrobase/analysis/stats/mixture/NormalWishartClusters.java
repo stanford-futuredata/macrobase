@@ -61,7 +61,7 @@ public class NormalWishartClusters {
             }
         }
         baseBeta = Math.pow(R, -2);
-        log.debug("baseNu {}", baseBeta);
+        log.debug("baseNu {}", baseNu);
         baseLoc = new ArrayRealVector(midpoints);
         baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
     }
@@ -114,14 +114,6 @@ public class NormalWishartClusters {
         baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
     }
 
-    public void initializeBase(RealVector loc, double beta, RealMatrix omega, double dof) {
-        baseLoc = loc;
-        baseBeta = beta;
-        baseOmega = omega;
-        baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
-        baseNu = dof;
-    }
-
     public double[] calculateExLogPrecision() {
         double[] lnPrecision = new double[K];
         for (int i = 0; i < K; i++) {
@@ -152,7 +144,7 @@ public class NormalWishartClusters {
                 clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
             } else {
                 clusterMean.add(weightedSum.get(k));
-                log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
+                //log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
             }
         }
         List<RealMatrix> quadForm = MeanFieldGMM.calculateQuadraticForms(data, clusterMean, r);
@@ -166,9 +158,10 @@ public class NormalWishartClusters {
             RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
-            log.debug("wInverse: {}", wInverse);
+            //log.debug("wInverse: {}", wInverse);
             omega.set(k, AlgebraUtils.invertMatrix(wInverse));
         }
+        log.debug("dof: {}", dof);
     }
 
     public void moveNatural(List<Datum> data, double[][] r, double pace, double repeat) {
@@ -180,7 +173,7 @@ public class NormalWishartClusters {
                 clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
             } else {
                 clusterMean.add(weightedSum.get(k));
-                log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
+                //log.debug("weighted sum = {} (should be 0)", weightedSum.get(k));
             }
             // Multiply by repeat to get actual numbers
             clusterWeight[k] *= repeat;
@@ -205,6 +198,7 @@ public class NormalWishartClusters {
         List<MultivariateTDistribution> predictiveDistributions = new ArrayList<>(K);
         for (int k = 0; k < this.K; k++) {
             double scale = (dof[k] + 1 - D) * beta[k] / (1 + beta[k]);
+            log.debug("scale: {}", scale);
             RealMatrix ll = AlgebraUtils.invertMatrix(omega.get(k).scalarMultiply(scale));
             // TODO: MultivariateTDistribution should support real values for 3rd parameters
             predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, (int) (dof[k] - 1 - D)));
