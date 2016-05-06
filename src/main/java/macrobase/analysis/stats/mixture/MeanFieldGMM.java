@@ -265,5 +265,20 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         }
     }
 
+    // Mixture Model Methods
+    @Override
+    public List<RealVector> getClusterCenters() {
+        return atomLoc;
+    }
+
+    @Override
+    public List<RealMatrix> getClusterCovariances() {
+        List<RealMatrix> covariances = new ArrayList<>(atomOmega.size());
+        for (int i = 0; i < atomOmega.size(); i++) {
+            covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(i).scalarMultiply(atomDOF[i])));
+        }
+        return covariances;
+    }
+
 }
 

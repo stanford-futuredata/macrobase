@@ -1,7 +1,6 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
-import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -9,7 +8,6 @@ import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,73 +122,7 @@ public class VariationalDPMG extends MeanFieldGMM {
 
     @Override
     public void train(List<Datum> data) {
-        int N = data.size();
-        // 0. Initialize all approximating factors
-        initConstants(data);
-        initializeBaseNormalWishart(data);
-        initializeBaseMixing();
-        initializeSticks();
-        initializeAtoms(data);
-
-        // TODO: remove??!
-        r = new double[N][T];
-        List<RealMatrix> S;  // initialized and used in step 2.
-        double logLikelihood = -Double.MAX_VALUE;
-        List<Wishart> wisharts;
-
-        for (int iteration = 1; ; iteration++) {
-            // 0. Initialize volatile parameters
-            wisharts = constructWisharts(atomOmega, atomDOF);
-            // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
-            // 1. Reevaluate r[][]
-            double[] lnMixingContribution = calcExQlogMixing();
-
-            double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
-
-            for (int n = 0; n < N; n++) {
-                double normalizingConstant = 0;
-                for (int t = 0; t < T; t++) {
-                    r[n][t] = Math.exp(lnMixingContribution[t] + 0.5 * wisharts.get(t).getExpectationLogDeterminantLambda() + dataLogLike[n][t]);
-
-                    normalizingConstant += r[n][t];
-                }
-                for (int t = 0; t < atomLoc.size(); t++) {
-                    if (normalizingConstant > 0) {
-                        r[n][t] /= normalizingConstant;
-                    }
-                }
-            }
-
-            // 2. Reevaluate clusters based on densities that we have for each point.
-            // 2. Reevaluate atoms and stick lengths.
-
-            updateSticks(r);
-            updateAtoms(r, data);
-
-            updatePredictiveDistributions();
-
-            double oldLogLikelihood = logLikelihood;
-            logLikelihood = 0;
-            for (int n = 0; n < N; n++) {
-                logLikelihood += score(data.get(n));
-            }
-
-            log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
-
-            if (iteration >= maxIterationsToConverge) {
-                log.debug("Breaking because have already run {} iterations", iteration);
-                break;
-            }
-
-            double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
-            if (improvement >= 0 && improvement < this.progressCutoff) {
-                log.debug("Breaking because improvement was {} percent", improvement * 100);
-                break;
-            } else {
-                log.debug("improvement is : {}%", improvement * 100);
-            }
-            log.debug(".........................................");
-        }
+        super.train(data, T);
     }
 
     @Override
@@ -211,7 +143,7 @@ public class VariationalDPMG extends MeanFieldGMM {
     @Override
     public double score(Datum datum) {
         double density = 0;
-        double[] stickLengths = getClusterWeights();
+        double[] stickLengths = getClusterProportions();
         for (int i = 0; i < predictiveDistributions.size(); i++) {
             density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }
@@ -224,7 +156,7 @@ public class VariationalDPMG extends MeanFieldGMM {
     }
 
     @Override
-    public double[] getClusterWeights() {
+    public double[] getClusterProportions() {
         double[] proportions = new double[T];
         double stickRemaining = 1;
         double expectedBreak;
@@ -236,24 +168,11 @@ public class VariationalDPMG extends MeanFieldGMM {
         return proportions;
     }
 
-    @Override
-    public List<RealVector> getClusterCenters() {
-        return atomLoc;
-    }
-
-    @Override
-    public List<RealMatrix> getClusterCovariances() {
-        List<RealMatrix> covariances = new ArrayList<>(T);
-        for (int t = 0; t < T; t++) {
-            covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(t).scalarMultiply(atomDOF[t])));
-        }
-        return covariances;
-    }
 
     @Override
     public double[] getClusterProbabilities(Datum d) {
         double[] probas = new double[T];
-        double[] weights = getClusterWeights();
+        double[] weights = getClusterProportions();
         double normalizingConstant = 0;
         for (int i = 0; i < T; i++) {
             probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());

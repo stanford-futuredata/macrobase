@@ -8,7 +8,6 @@ import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -159,22 +158,8 @@ public class FiniteGMM extends MeanFieldGMM {
     }
 
     @Override
-    public double[] getClusterWeights() {
+    public double[] getClusterProportions() {
         return mixingCoeffs;
-    }
-
-    @Override
-    public List<RealVector> getClusterCenters() {
-        return atomLoc;
-    }
-
-    @Override
-    public List<RealMatrix> getClusterCovariances() {
-        List<RealMatrix> covariances = new ArrayList<>(K);
-        for (int k = 0; k < this.K; k++) {
-            covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(k).scalarMultiply(atomDOF[k])));
-        }
-        return covariances;
     }
 
     public double[] getPriorAdjustedWeights() {
@@ -184,7 +169,7 @@ public class FiniteGMM extends MeanFieldGMM {
     @Override
     public double[] getClusterProbabilities(Datum d) {
         double[] probas = new double[K];
-        double[] weights = getClusterWeights();
+        double[] weights = getClusterProportions();
         double normalizingConstant = 0;
         for (int i = 0; i < K; i++) {
             probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());

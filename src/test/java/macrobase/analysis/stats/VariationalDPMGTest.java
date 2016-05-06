@@ -43,7 +43,7 @@ public class VariationalDPMGTest {
 
         VariationalDPMG variationalDPGM = new VariationalDPMG(conf);
         variationalDPGM.train(data);
-        log.debug("{}",  variationalDPGM.getClusterCenters(), variationalDPGM.getClusterWeights());
+        log.debug("{}",  variationalDPGM.getClusterCenters(), variationalDPGM.getClusterProportions());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class VariationalDPMGTest {
         variationalDPGM.train(data);
 
         log.debug("clusters : {}", variationalDPGM.getClusterCenters());
-        log.debug("weights: {}", variationalDPGM.getClusterWeights());
+        log.debug("weights: {}", variationalDPGM.getClusterProportions());
 
         double[][] boundaries = {
                 {-1, 13.01},
@@ -80,7 +80,7 @@ public class VariationalDPMGTest {
 
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCovariances(), "VariationalDPMGTest-bivariateWellSeparatedNormalTest-covariances.json");
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCenters(), "VariationalDPMGTest-bivariateWellSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(variationalDPGM.getClusterWeights(), "VariationalDPMGTest-bivariateWellSeparatedNormalTest-weights.json");
+        JsonUtils.dumpAsJson(variationalDPGM.getClusterProportions(), "VariationalDPMGTest-bivariateWellSeparatedNormalTest-weights.json");
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
@@ -107,7 +107,7 @@ public class VariationalDPMGTest {
         }
 
         List<RealVector> calculatedCenters = variationalDPGM.getClusterCenters();
-        double[] weights = variationalDPGM.getClusterWeights();
+        double[] weights = variationalDPGM.getClusterProportions();
 
         List<List<Integer>> lists = new ArrayList<>();
         lists.add(new ArrayList<>());
@@ -196,7 +196,7 @@ public class VariationalDPMGTest {
 
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCovariances(), "VariationalDPMGTest-bivariateOkSeparatedNormalTest-covariances.json");
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCenters(), "VariationalDPMGTest-bivariateOkSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(variationalDPGM.getClusterWeights(), "VariationalDPMGTest-bivariateOkSeparatedNormalTest-weights.json");
+        JsonUtils.dumpAsJson(variationalDPGM.getClusterProportions(), "VariationalDPMGTest-bivariateOkSeparatedNormalTest-weights.json");
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);

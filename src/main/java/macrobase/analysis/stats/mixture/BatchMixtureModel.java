@@ -68,7 +68,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     /**
      * @return weights of each cluster
      */
-    public abstract double[] getClusterWeights();
+    public abstract double[] getClusterProportions();
 
     /**
      * @return covariances of mixture components
