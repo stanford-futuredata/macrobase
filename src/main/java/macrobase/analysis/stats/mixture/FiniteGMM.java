@@ -1,12 +1,14 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
-import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
-import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,7 @@ public class FiniteGMM extends MeanFieldGMM {
     private double[] mixingCoeffs;
     private List<MultivariateTDistribution> predictiveDistributions;
 
-    private double[] clusterWeight;  // N_k (Bishop)
+    //private double[] clusterWeight;  // N_k (Bishop)
 
     // Useful constants for each dataset.
 
@@ -39,6 +41,11 @@ public class FiniteGMM extends MeanFieldGMM {
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         log.debug("created Gaussian MM with {} mixtures", this.K);
         this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
+    }
+
+    @Override
+    public void train(List<Datum> data) {
+        super.train(data, K);
     }
 
 
@@ -53,18 +60,21 @@ public class FiniteGMM extends MeanFieldGMM {
         baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
     }
 
-    private void initalizeBaseMixing() {
+    @Override
+    protected void initializeBaseMixing() {
         priorAlpha = 0.1;
     }
 
-    private void initializeSticks() {
+    @Override
+    protected void initializeSticks() {
         mixingCoeffs = new double[K];
         for (int k = 0; k < this.K; k++) {
             mixingCoeffs[k] = 1. / K;
         }
     }
 
-    private void initalizeAtoms(List<Datum> data) {
+    @Override
+    protected void initializeAtoms(List<Datum> data) {
         atomBeta = new double[K];
         atomDOF = new double[K];
         atomOmega = new ArrayList<>(K);
@@ -90,77 +100,13 @@ public class FiniteGMM extends MeanFieldGMM {
     }
 
     @Override
-    public void train(List<Datum> data) {
-        initConstants(data);
-        initializeBaseNormalWishart(data);
-        initalizeBaseMixing();
-        initializeSticks();
-        initalizeAtoms(data);
-
-        int N = data.size();
-        List<Wishart> wisharts;
-        // density of each point with respect to each mixture component.
-        double[][] r = new double[N][K];
-
-        double logLikelihood = -Double.MAX_VALUE;
-        for (int iteration = 0; ; iteration++) {
-
-            // Useful to keep everything tidy.
-            wisharts = constructWisharts(atomOmega, atomDOF);
-
-            // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
-
-            // Calculate mixing coefficient log expectation
-            double[] ex_log_mixing = calcExQlogMixing();
-
-            double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
-
-            for (int n = 0; n < N; n++) {
-                double normalizingConstant = 0;
-                for (int k = 0; k < this.K; k++) {
-                    r[n][k] = Math.exp(ex_log_mixing[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() + dataLogLike[n][k]);
-                    normalizingConstant += r[n][k];
-                }
-                for (int k = 0; k < this.K; k++) {
-                    if (normalizingConstant == 0) {
-                        continue;
-                    }
-                    r[n][k] /= normalizingConstant;
-                }
-            }
-
-            // 2. Reevaluate clusters based on densities that we have for each point.
-            updateSticks(r);
-            updateAtoms(r, data);
-
-            clusterWeight = calculateClusterWeights(r);
-
-            predictiveDistributions = new ArrayList<>(K);
-            for (int k = 0; k < this.K; k++) {
-                double scale = (atomDOF[k] + 1 - D) * atomBeta[k] / (1 + atomBeta[k]);
-                RealMatrix ll = AlgebraUtils.invertMatrix(atomOmega.get(k).scalarMultiply(scale));
-                // TODO: MultivariateTDistribution should support real values for 3rd parameters
-                predictiveDistributions.add(new MultivariateTDistribution(atomLoc.get(k), ll, (int) (atomDOF[k] - 1 - D)));
-            }
-
-            log.debug("cluster weights are at {}", clusterWeight);
-            log.debug("cluster covariances are at {}", getClusterCovariances());
-
-            double oldLogLikelihood = logLikelihood;
-            logLikelihood = 0;
-            for (int n = 0; n < N; n++) {
-                logLikelihood += score(data.get(n));
-            }
-
-            log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
-
-            double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
-            if (improvement >= 0 && improvement < this.progressCutoff) {
-                log.debug("Breaking because improvement was {} percent", improvement * 100);
-                break;
-            } else {
-                log.debug("improvement is : {}%", improvement * 100);
-            }
+    protected void updatePredictiveDistributions() {
+        predictiveDistributions = new ArrayList<>(K);
+        for (int k = 0; k < this.K; k++) {
+            double scale = (atomDOF[k] + 1 - D) * atomBeta[k] / (1 + atomBeta[k]);
+            RealMatrix ll = AlgebraUtils.invertMatrix(atomOmega.get(k).scalarMultiply(scale));
+            // TODO: MultivariateTDistribution should support real values for 3rd parameters
+            predictiveDistributions.add(new MultivariateTDistribution(atomLoc.get(k), ll, (int) (atomDOF[k] - 1 - D)));
         }
     }
 
@@ -168,7 +114,8 @@ public class FiniteGMM extends MeanFieldGMM {
      * Make sure to update clusterWeight before!!!!
      * @param r
      */
-    private void updateSticks(double[][] r) {
+    @Override
+    protected void updateSticks(double[][] r) {
         double[] clusterWeight = calculateClusterWeights(r);
         for (int k=0; k<K; k++) {
             mixingCoeffs[k] = priorAlpha + clusterWeight[k];
@@ -176,7 +123,8 @@ public class FiniteGMM extends MeanFieldGMM {
     }
 
 
-    private double[] calcExQlogMixing() {
+    @Override
+    protected double[] calcExQlogMixing() {
         int num = mixingCoeffs.length;
         double[] exLogMixing = new double[num];
         double sum = 0;

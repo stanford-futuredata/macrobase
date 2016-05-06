@@ -6,7 +6,10 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
-import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +38,8 @@ public class VariationalDPMG extends MeanFieldGMM {
 
     private List<MultivariateTDistribution> predictiveDistributions;
 
-    private void updatePredictiveDistributions() {
+    @Override
+    protected void updatePredictiveDistributions() {
         int dimension = atomLoc.get(0).getDimension();
 
         predictiveDistributions = new ArrayList<>(T);
@@ -75,7 +79,8 @@ public class VariationalDPMG extends MeanFieldGMM {
     }
 
 
-    private void initalizeAtoms(List<Datum> data) {
+    @Override
+    protected void initializeAtoms(List<Datum> data) {
         atomOmega = new ArrayList<>(T);
         atomDOF = new double[T];
         atomBeta = new double[T];
@@ -90,11 +95,13 @@ public class VariationalDPMG extends MeanFieldGMM {
         }
     }
 
-    private void initalizeBaseMixing() {
+    @Override
+    protected void initializeBaseMixing() {
         // concentrationParameter has been set in the constructor.
     }
 
-    private void initializeSticks() {
+    @Override
+    protected void initializeSticks() {
         // stick lengths
         shapeParams = new double[T][2];
         for (int i = 0; i < T; i++) {
@@ -103,7 +110,8 @@ public class VariationalDPMG extends MeanFieldGMM {
         }
     }
 
-    private double[] calcExQlogMixing() {
+    @Override
+    protected double[] calcExQlogMixing() {
         double[] lnMixingContribution = new double[T];
         double cumulativeAlreadyAssigned = 0;
         for (int t = 0; t < T; t++) {
@@ -118,12 +126,11 @@ public class VariationalDPMG extends MeanFieldGMM {
     public void train(List<Datum> data) {
         int N = data.size();
         // 0. Initialize all approximating factors
-        instantiateVariationalParameters(N, T);
         initConstants(data);
         initializeBaseNormalWishart(data);
-        initalizeBaseMixing();
+        initializeBaseMixing();
         initializeSticks();
-        initalizeAtoms(data);
+        initializeAtoms(data);
 
         // TODO: remove??!
         r = new double[N][T];
@@ -160,13 +167,12 @@ public class VariationalDPMG extends MeanFieldGMM {
             updateSticks(r);
             updateAtoms(r, data);
 
-
             updatePredictiveDistributions();
 
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
             for (int n = 0; n < N; n++) {
-                logLikelihood += Math.log(score(data.get(n)));
+                logLikelihood += score(data.get(n));
             }
 
             log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
@@ -187,7 +193,8 @@ public class VariationalDPMG extends MeanFieldGMM {
         }
     }
 
-    private void updateSticks(double[][] r) {
+    @Override
+    protected void updateSticks(double[][] r) {
         int N = r.length;
         for (int t = 0; t < atomLoc.size(); t++) {
             shapeParams[t][0] = 1;
@@ -201,9 +208,6 @@ public class VariationalDPMG extends MeanFieldGMM {
         }
     }
 
-    private void instantiateVariationalParameters(int numPoints, int maxNumClusters) {
-    }
-
     @Override
     public double score(Datum datum) {
         double density = 0;
@@ -211,7 +215,7 @@ public class VariationalDPMG extends MeanFieldGMM {
         for (int i = 0; i < predictiveDistributions.size(); i++) {
             density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }
-        return density;
+        return Math.log(density);
     }
 
     @Override

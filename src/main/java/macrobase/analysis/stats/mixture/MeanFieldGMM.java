@@ -40,6 +40,11 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     // Mean-Field iterative algorithm maximum iterations.
     protected final int maxIterationsToConverge;
 
+
+    // TODO: right now FiniteGMM needs this
+    protected double[] clusterWeight;
+
+
     public MeanFieldGMM(MacroBaseConf conf) {
         super(conf);
         this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
@@ -70,6 +75,100 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         baseOmega = MatrixUtils.createRealIdentityMatrix(D).scalarMultiply(Math.pow(R, -2));
         baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
     }
+
+    protected abstract void initializeBaseMixing();
+
+    protected abstract void initializeSticks();
+
+    protected abstract void initializeAtoms(List<Datum> data);
+
+    protected abstract void updateSticks(double[][] r);
+
+    protected abstract double[] calcExQlogMixing();
+
+    protected abstract void updatePredictiveDistributions();
+
+    /**
+     *
+     * @param data - data to train on
+     * @param K - run inference with K clusters
+     */
+    public void train(List<Datum> data, int K) {
+        int N = data.size();
+        // 0. Initialize all approximating factors
+        initConstants(data);
+        initializeBaseNormalWishart(data);
+        initializeBaseMixing();
+        initializeSticks();
+        initializeAtoms(data);
+
+        List<Wishart> wisharts;
+        // density of each point with respect to each mixture component.
+        double[][] r = new double[N][K];
+
+        double logLikelihood = -Double.MAX_VALUE;
+        for (int iteration = 1; ; iteration++) {
+
+            // Useful to keep everything tidy.
+            wisharts = constructWisharts(atomOmega, atomDOF);
+
+            // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
+            // 1. Reevaluate r[][]
+
+            // Calculate mixing coefficient log expectation
+            double[] exLnMixingContribution = calcExQlogMixing();
+
+            double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
+
+            for (int n = 0; n < N; n++) {
+                double normalizingConstant = 0;
+                for (int k = 0; k < K; k++) {
+                    r[n][k] = Math.exp(exLnMixingContribution[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() + dataLogLike[n][k]);
+                    normalizingConstant += r[n][k];
+                }
+                for (int k = 0; k < atomLoc.size(); k++) {
+                    if (normalizingConstant > 0) {
+                        r[n][k] /= normalizingConstant;
+                    }
+                }
+            }
+
+            // 2. Reevaluate clusters based on densities that we have for each point.
+            // 2. Reevaluate atoms and stick lengths.
+
+            updateSticks(r);
+            updateAtoms(r, data);
+
+            // TODO: remove
+            clusterWeight = calculateClusterWeights(r);
+
+            updatePredictiveDistributions();
+
+            double oldLogLikelihood = logLikelihood;
+            logLikelihood = 0;
+            for (int n = 0; n < N; n++) {
+                logLikelihood += score(data.get(n));
+            }
+
+            log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+
+            if (iteration >= maxIterationsToConverge) {
+                log.debug("Breaking because have already run {} iterations", iteration);
+                break;
+            }
+
+            double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
+            if (improvement >= 0 && improvement < this.progressCutoff) {
+                log.debug("Breaking because improvement was {} percent", improvement * 100);
+                break;
+            } else {
+                log.debug("improvement is : {}%", improvement * 100);
+            }
+            log.debug(".........................................");
+        }
+    }
+
+
 
     protected static List<RealMatrix> calculateQuadraticForms(List<Datum> data, List<RealVector> clusterMean, double[][] r) {
         int D = data.get(0).getMetrics().getDimension();
