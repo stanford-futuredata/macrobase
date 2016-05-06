@@ -120,6 +120,7 @@ public class VariationalGMM extends BatchMixtureModel {
                 }
             }
 
+            log.debug("clusterWeights: {}", clusterWeight);
             double _const = 0.5 * dimensions * Math.log(2 * Math.PI);
             double ex_ln_xmu;
             for (int n = 0; n < N; n++) {
@@ -131,6 +132,9 @@ public class VariationalGMM extends BatchMixtureModel {
                     normalizingConstant += r[n][k];
                 }
                 for (int k = 0; k < this.K; k++) {
+                    if (normalizingConstant == 0) {
+                        continue;
+                    }
                     r[n][k] /= normalizingConstant;
                     // Calculate unnormalized cluster weight, cluster mean
                     clusterWeight[k] += r[n][k];
@@ -139,6 +143,7 @@ public class VariationalGMM extends BatchMixtureModel {
             }
 
             // 2. Reevaluate clusters based on densities that we have for each point.
+            log.debug("clusterWeights: {}", clusterWeight);
             for (int k = 0; k < this.K; k++) {
                 clusterMean.set(k, clusterMean.get(k).mapDivide(clusterWeight[k]));
                 for (int n = 0; n < N; n++) {
@@ -154,9 +159,12 @@ public class VariationalGMM extends BatchMixtureModel {
                 m.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(beta[k]));
                 nu[k] = priorNu + 1 + clusterWeight[k];
                 RealVector adjustedMean = clusterMean.get(k).subtract(priorM);
+                log.debug("adjustedMean: {}", adjustedMean);
+                log.debug("S: {}", S.get(k));
                 RealMatrix wInverse = priorWInverse.add(
                         S.get(k).scalarMultiply(clusterWeight[k])).add(
                         adjustedMean.outerProduct(adjustedMean).scalarMultiply(priorBeta * clusterWeight[k] / (priorBeta + clusterWeight[k])));
+                log.debug("wInverse: {}", wInverse);
                 W.set(k, AlgebraUtils.invertMatrix(wInverse));
             }
 
@@ -175,7 +183,7 @@ public class VariationalGMM extends BatchMixtureModel {
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
             for (int n = 0; n < N; n++) {
-                logLikelihood += Math.log(score(data.get(n)));
+                logLikelihood += score(data.get(n));
             }
 
             log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
@@ -202,7 +210,7 @@ public class VariationalGMM extends BatchMixtureModel {
             sum_alpha += alpha[k];
             density += alpha[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
         }
-        return density / sum_alpha;
+        return Math.log(density / sum_alpha);
     }
 
     @Override
