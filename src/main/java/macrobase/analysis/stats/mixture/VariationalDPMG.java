@@ -18,7 +18,6 @@ import java.util.List;
  */
 public class VariationalDPMG extends MeanFieldGMM {
     private static final Logger log = LoggerFactory.getLogger(VariationalDPMG.class);
-    private final int maxIterationsToConverge;
 
     // Number of truncated clusters.
     private int T;
@@ -51,8 +50,6 @@ public class VariationalDPMG extends MeanFieldGMM {
         super(conf);
         T = conf.getInt(MacroBaseConf.DPM_TRUNCATING_PARAMETER, MacroBaseDefaults.DPM_TRUNCATING_PARAMETER);
         concentrationParameter = conf.getDouble(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, MacroBaseDefaults.DPM_CONCENTRATION_PARAMETER);
-        progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
-        maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
     }
 
     // Keep this here so we have exactly the same behavior.
@@ -76,35 +73,48 @@ public class VariationalDPMG extends MeanFieldGMM {
         baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
     }
 
-    @Override
-    public void train(List<Datum> data) {
-        int N = data.size();
-        int dimension = data.get(0).getMetrics().getDimension();
 
-        instantiateVariationalParameters(N, T);
-        initializeBaseNormalWishart(data);
-
-        // 0. Initialize all approximating factors
-
-        // stick lengths
-        for (int i = 0; i < T; i++) {
-            shapeParams[i][0] = 1;
-            shapeParams[i][1] = concentrationParameter;
-        }
+    private void initalizeAtoms(List<Datum> data) {
+        atomOmega = new ArrayList<>(T);
+        atomDOF = new double[T];
+        atomBeta = new double[T];
 
         // atoms
         atomLoc = gonzalezInitializeMixtureCenters(data, T);
         for (int i = 0; i < T; i++) {
             // initialize betas as if all points are from the first cluster.
             atomBeta[i] = 1;
-
             atomDOF[i] = baseNu;
             atomOmega.add(0, AlgebraUtils.invertMatrix(baseOmegaInverse));
         }
+    }
 
-        final double dimensionLn2 = dimension * Math.log(2);
-        final double halfDimensionLn2Pi = 0.5 * dimension * Math.log(2 * Math.PI);
+    private void initalizeBaseMixing() {
+        // concentrationParameter has been set in the constructor.
+    }
 
+    private void initializeSticks() {
+        // stick lengths
+        shapeParams = new double[T][2];
+        for (int i = 0; i < T; i++) {
+            shapeParams[i][0] = 1;
+            shapeParams[i][1] = concentrationParameter;
+        }
+    }
+
+    @Override
+    public void train(List<Datum> data) {
+        int N = data.size();
+        // 0. Initialize all approximating factors
+        instantiateVariationalParameters(N, T);
+        initConstants(data);
+        initializeBaseNormalWishart(data);
+        initalizeBaseMixing();
+        initializeSticks();
+        initalizeAtoms(data);
+
+        // TODO: remove??!
+        r = new double[N][T];
         List<RealMatrix> S;  // initialized and used in step 2.
         double logLikelihood = -Double.MAX_VALUE;
         double[] clusterWeight;
@@ -114,7 +124,7 @@ public class VariationalDPMG extends MeanFieldGMM {
             // 0. Initialize volatile parameters
             clusterMean = new ArrayList<>(T);
             for (int t = 0; t < T; t++) {
-                clusterMean.add(new ArrayRealVector(new double[dimension]));
+                clusterMean.add(new ArrayRealVector(new double[D]));
             }
             clusterWeight = new double[T];
 
@@ -128,7 +138,7 @@ public class VariationalDPMG extends MeanFieldGMM {
             for (int t = 0; t < T; t++) {
                 // Calculate Per cluster 0.5 ln L_t - D/2 ln(2 pi) contributions.
                 lnLambdaContribution[t] = dimensionLn2 + Math.log((new EigenDecomposition(atomOmega.get(t))).getDeterminant());
-                for (int i = 0; i < dimension; i++) {
+                for (int i = 0; i < D ; i++) {
                     lnLambdaContribution[t] += Gamma.digamma((atomDOF[t] - i) / 2);
                 }
                 lnLambdaContribution[t] /= 2;
@@ -144,7 +154,7 @@ public class VariationalDPMG extends MeanFieldGMM {
                 for (int t = 0; t < T; t++) {
                     RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(t));
                     if (atomBeta[t] != 0) {
-                        lnXMuLambdaContribution = dimension / atomBeta[t] + atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
+                        lnXMuLambdaContribution = D / atomBeta[t] + atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
                     } else {
                         lnXMuLambdaContribution = atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
                     }
@@ -166,7 +176,7 @@ public class VariationalDPMG extends MeanFieldGMM {
             S = new ArrayList<>(T);
 
             for (int t = 0; t < T; t++) {
-                S.add(new BlockRealMatrix(dimension, dimension));
+                S.add(new BlockRealMatrix(D, D));
                 if (clusterWeight[t] > 0) {
                     clusterMean.set(t, clusterMean.get(t).mapDivide(clusterWeight[t]));
                 } else {
@@ -225,12 +235,6 @@ public class VariationalDPMG extends MeanFieldGMM {
     }
 
     private void instantiateVariationalParameters(int numPoints, int maxNumClusters) {
-        shapeParams = new double[maxNumClusters][2];
-        r = new double[numPoints][maxNumClusters];
-        atomLoc = new ArrayList<>(maxNumClusters);
-        atomOmega = new ArrayList<>(maxNumClusters);
-        atomDOF = new double[maxNumClusters];
-        atomBeta = new double[maxNumClusters];
     }
 
     @Override

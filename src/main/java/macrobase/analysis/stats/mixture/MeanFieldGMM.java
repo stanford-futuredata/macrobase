@@ -35,14 +35,24 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     // Useful constants
     protected int D;
     protected double halfDimensionLn2Pi;
+    protected double dimensionLn2;
+
+    // Mean-Field iterative algorithm maximum iterations.
+    protected final int maxIterationsToConverge;
 
     public MeanFieldGMM(MacroBaseConf conf) {
         super(conf);
         this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
+        maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
+    }
+
+    protected void initConstants(List<Datum> data) {
+        D = data.get(0).getMetrics().getDimension();
+        halfDimensionLn2Pi = 0.5 * D * Math.log(2 * Math.PI);
+        dimensionLn2 = D * Math.log(2);
     }
 
     protected void initializeBaseNormalWishart(List<Datum> data) {
-        D = data.get(0).getMetrics().getDimension();
         baseNu = D;
         double[][] boundingBox = AlgebraUtils.getBoundingBox(data);
         double[] midpoints = new double[D];

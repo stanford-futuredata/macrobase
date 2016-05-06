@@ -53,11 +53,11 @@ public class FiniteGMM extends MeanFieldGMM {
         baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
     }
 
-    private void initalizeBaseSticks() {
+    private void initalizeBaseMixing() {
         priorAlpha = 0.1;
     }
 
-    private void initializeMixingCoeffs() {
+    private void initializeSticks() {
         mixingCoeffs = new double[K];
         for (int k = 0; k < this.K; k++) {
             mixingCoeffs[k] = 1. / K;
@@ -91,9 +91,10 @@ public class FiniteGMM extends MeanFieldGMM {
 
     @Override
     public void train(List<Datum> data) {
+        initConstants(data);
         initializeBaseNormalWishart(data);
-        initalizeBaseSticks();
-        initializeMixingCoeffs();
+        initalizeBaseMixing();
+        initializeSticks();
         initalizeAtoms(data);
 
         int N = data.size();
