@@ -100,7 +100,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
             for (int n = 0; n < N; n++) {
-                logLikelihood += score(data.get(n));
+                logLikelihood += Math.log(score(data.get(n)));
             }
 
             log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
@@ -125,7 +125,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         for (int k = 0; k < K; k++) {
             probability += phi[k] * mixtureDistributions.get(k).density(datum.getMetrics());
         }
-        return Math.log(probability);
+        return probability;
     }
 
     @Override
