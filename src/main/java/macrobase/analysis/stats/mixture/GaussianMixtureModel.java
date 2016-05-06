@@ -49,7 +49,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         // Picking points uniformly does not work, because it sometimes leads
         // to a local maximum in EM optimization where two cluster are replaces with
         // twice the cluster that represents both.
-        mu = this.gonzalezInitializeMixtureCenters(data, this.K);
+        mu = this.gonzalezInitializeMixtureCenters(data, this.K, conf.getRandom());
         for (int k = 0; k < K; k++) {
             sigma.add(MatrixUtils.createRealIdentityMatrix(dimensions));
             mixtureDistributions.add(new MultivariateNormal(mu.get(k), sigma.get(k)));

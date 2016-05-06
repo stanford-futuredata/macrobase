@@ -14,7 +14,7 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
         coeffs = new double[clusters];
     }
 
-    public void initalize() {
+    public void initialize() {
         for (int i = 0; i < K; i++) {
             coeffs[i] = 1. / K;
         }
@@ -51,5 +51,9 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
 
     public double[] getCoeffs() {
         return coeffs;
+    }
+
+    public double getPrior() {
+        return priorAlpha;
     }
 }

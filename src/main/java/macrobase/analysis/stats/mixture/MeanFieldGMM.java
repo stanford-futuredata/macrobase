@@ -2,7 +2,6 @@ package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -18,8 +17,6 @@ import java.util.List;
 
 public abstract class MeanFieldGMM extends BatchMixtureModel {
     private static final Logger log = LoggerFactory.getLogger(MeanFieldGMM.class);
-    protected double progressCutoff;
-
     // Parameters for Base Distribution, which is Wishart-Gaussian
     protected double baseNu;
     protected RealMatrix baseOmega;
@@ -41,16 +38,8 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     protected double halfDimensionLn2Pi;
     protected double dimensionLn2;
 
-    // Mean-Field iterative algorithm maximum iterations.
-    protected final int maxIterationsToConverge;
-
-    // TODO: right now FiniteGMM needs this
-    protected double[] clusterWeight;
-
     public MeanFieldGMM(MacroBaseConf conf) {
         super(conf);
-        this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
-        maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
     }
 
     protected void initConstants(List<Datum> data) {
@@ -169,9 +158,6 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
 
             updateSticks(r);
             updateAtoms(r, data);
-
-            // TODO: this should be somehow moved to FiniteGMM, or testing for this should be removed.
-            clusterWeight = calculateClusterWeights(r);
 
             updatePredictiveDistributions();
 

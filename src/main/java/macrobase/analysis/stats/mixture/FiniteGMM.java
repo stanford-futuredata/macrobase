@@ -4,22 +4,18 @@ import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
-import macrobase.util.AlgebraUtils;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Fit Gaussian Mixture models using Variational Bayes
  */
-public class FiniteGMM extends MeanFieldGMM {
+public class FiniteGMM extends BatchMixtureModel{
     private static final Logger log = LoggerFactory.getLogger(FiniteGMM.class);
     private final String initialClusterCentersFile;
 
@@ -41,7 +37,8 @@ public class FiniteGMM extends MeanFieldGMM {
         this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
-   // @Override
+
+    // @Override
    // public void train(List<Datum> data) {
    //     super.train(data, K);
    // }
@@ -49,17 +46,12 @@ public class FiniteGMM extends MeanFieldGMM {
     public void train(List<Datum> data) {
         // 0. Initialize all approximating factors
         log.debug("training locally");
-        initConstants(data);
-        initializeBaseNormalWishart(data);
-        initializeBaseMixing();
-        initializeSticks();
-        initializeAtoms(data);
-
-        log.debug("components");
         mixingComponents = new MultiComponents(priorAlpha, K);
-        mixingComponents.initalize();
-        clusters = new NormalWishartClusters(atomLoc, atomBeta, atomOmega, atomDOF);
-        clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
+        mixingComponents.initialize();
+        clusters = new NormalWishartClusters(K, data.get(0).getMetrics().getDimension());
+        clusters.initializeBaseForFinite(data);
+        clusters.initalizeAtomsForFinite(data, initialClusterCentersFile, conf.getRandom());
+        //clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
 
         log.debug("actual training");
         train(data, mixingComponents, clusters, maxIterationsToConverge, progressCutoff);
@@ -75,16 +67,11 @@ public class FiniteGMM extends MeanFieldGMM {
         int N = data.size();
         double logLikelihood = -Double.MAX_VALUE;
         for (int iter = 1; ; iter++) {
-            log.debug("inte: {}", iter);
             // Step 1. update local variables
-            log.debug("0.");
             exLnMixingContribution = mixingComponents.calcExpectationLog();
-            log.debug("1. {}", exLnMixingContribution);
             lnPrecision = clusters.calculateExLogPrecision();
-            log.debug("2. {}", lnPrecision);
             dataLogLike = clusters.calcLogLikelyFixedPrec(data);
-            log.debug("3. {}", dataLogLike);
-            r = normalizeLogProbas(exLnMixingContribution, lnPrecision, dataLogLike);
+            r = MeanFieldVariationalInference.normalizeLogProbas(exLnMixingContribution, lnPrecision, dataLogLike);
 
             // Step 2. update global variables
             mixingComponents.update(r);
@@ -126,106 +113,20 @@ public class FiniteGMM extends MeanFieldGMM {
         return logLikelihood;
     }
 
-
-
-    @Override
-    protected void initializeBaseNormalWishart(List<Datum> data) {
-        D = data.get(0).getMetrics().getDimension();
-        baseNu = 0.1;
-        baseBeta = 0.1;
-        baseLoc = new ArrayRealVector(D);
-        baseOmega = MatrixUtils.createRealIdentityMatrix(D);
-        baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
-    }
-
-    @Override
-    protected void initializeBaseMixing() {
-        priorAlpha = 0.1;
-    }
-
-    @Override
-    protected void initializeSticks() {
-        mixingCoeffs = new double[K];
-        for (int k = 0; k < this.K; k++) {
-            mixingCoeffs[k] = 1. / K;
-        }
-    }
-
-    @Override
-    protected void initializeAtoms(List<Datum> data) {
-        atomBeta = new double[K];
-        atomDOF = new double[K];
-        atomOmega = new ArrayList<>(K);
-
-        // Initialize
-        if (initialClusterCentersFile != null) {
-            try {
-                atomLoc = initalizeClustersFromFile(initialClusterCentersFile, K);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                atomLoc = gonzalezInitializeMixtureCenters(data, K);
-            }
-        } else {
-            atomLoc = gonzalezInitializeMixtureCenters(data, K);
-        }
-        log.debug("initialized cluster centers as: {}", atomLoc);
-        for (int k = 0; k < this.K; k++) {
-            atomBeta[k] = baseBeta;
-            atomDOF[k] = baseNu;
-            atomOmega.add(baseOmega);
-        }
-        log.debug("atomOmega: {}", atomOmega);
-    }
-
     private void updatePredictiveDistributions(MultiComponents mixingComonents, NormalWishartClusters clusters) {
         predictiveDistributions = clusters.constructPredictiveDistributions();
         mixingCoeffs = mixingComonents.getCoeffs();
     }
 
     @Override
-    protected void updatePredictiveDistributions() {
-        predictiveDistributions = new ArrayList<>(K);
-        for (int k = 0; k < this.K; k++) {
-            double scale = (atomDOF[k] + 1 - D) * atomBeta[k] / (1 + atomBeta[k]);
-            RealMatrix ll = AlgebraUtils.invertMatrix(atomOmega.get(k).scalarMultiply(scale));
-            // TODO: MultivariateTDistribution should support real values for 3rd parameters
-            predictiveDistributions.add(new MultivariateTDistribution(atomLoc.get(k), ll, (int) (atomDOF[k] - 1 - D)));
-        }
-    }
-
-    /**
-     * Make sure to update clusterWeight before!!!!
-     * @param r
-     */
-    @Override
-    protected void updateSticks(double[][] r) {
-        double[] clusterWeight = calculateClusterWeights(r);
-        for (int k=0; k<K; k++) {
-            mixingCoeffs[k] = priorAlpha + clusterWeight[k];
-        }
-    }
-
-    @Override
-    protected double[] calcExQlogMixing() {
-        int num = mixingCoeffs.length;
-        double[] exLogMixing = new double[num];
-        double sum = 0;
-        for (double coeff : mixingCoeffs) {
-            sum += coeff;
-        }
-        for (int i = 0; i < num; i++) {
-            exLogMixing[i] = Gamma.digamma(mixingCoeffs[i]) - Gamma.digamma(sum);
-        }
-        return exLogMixing;
-    }
-
-    @Override
     public double score(Datum datum) {
         double density = 0;
         double sum_alpha = 0;
+        double[] mixingCoeffs = mixingComponents.getCoeffs();
+        double prior = mixingComponents.getPrior();
         for (int k = 0; k < this.K; k++) {
             // If the mixture is very improbable, skip.
-            if (Math.abs(mixingCoeffs[k] - priorAlpha) < 1e-4) {
+            if (Math.abs(mixingCoeffs[k] - prior) < 1e-4) {
                 continue;
             }
             sum_alpha += mixingCoeffs[k];
@@ -235,8 +136,23 @@ public class FiniteGMM extends MeanFieldGMM {
     }
 
     @Override
+    public double getZScoreEquivalent(double zscore) {
+        throw new NotImplementedException("");
+    }
+
+    @Override
     public double[] getClusterProportions() {
-        return mixingCoeffs;
+        return mixingComponents.getCoeffs();
+    }
+
+    @Override
+    public List<RealMatrix> getClusterCovariances() {
+        return clusters.getMAPCovariances();
+    }
+
+    @Override
+    public List<RealVector> getClusterCenters() {
+        return clusters.getMAPLocations();
     }
 
     public double[] getPriorAdjustedClusterProportions() {

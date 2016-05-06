@@ -4,13 +4,17 @@ import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class NormalWishartClusters {
     private static final Logger log = LoggerFactory.getLogger(NormalWishartClusters.class);
@@ -31,17 +35,48 @@ public class NormalWishartClusters {
     private RealVector baseLoc;
 
     private int K;
-    private final int D;
-    private final double halfDimensionLn2Pi;
+    private int D;
+    private double halfDimensionLn2Pi;
 
-    public NormalWishartClusters(List<RealVector> loc, double[] beta, List<RealMatrix> omega, double[] dof) {
-        this.loc = loc;
-        this.beta = beta;
-        this.omega = omega;
-        this.dof = dof;
-        K = loc.size();
-        D = loc.get(0).getDimension();
+    public NormalWishartClusters(int K, int dimension) {
+        this.K = K;
+
+        this.D = dimension;
         halfDimensionLn2Pi = 0.5 * D * Math.log(2 * Math.PI);
+    }
+
+    public void initalizeAtomsForFinite(List<Datum> data, String filename, Random random) {
+
+        beta = new double[K];
+        dof = new double[K];
+        omega = new ArrayList<>(K);
+
+        // Initialize
+        if (filename != null) {
+            try {
+                loc = BatchMixtureModel.initalizeClustersFromFile(filename, K);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+            }
+        } else {
+            loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+        }
+        log.debug("initialized cluster centers as: {}", loc);
+        for (int k = 0; k < this.K; k++) {
+            beta[k] = baseBeta;
+            dof[k] = baseNu;
+            omega.add(baseOmega);
+        }
+        log.debug("atomOmega: {}", omega);
+    }
+
+    public void initializeBaseForFinite(List<Datum> data) {
+        baseNu = 0.1;
+        baseBeta = 0.1;
+        baseLoc = new ArrayRealVector(D);
+        baseOmega = MatrixUtils.createRealIdentityMatrix(D);
+        baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
     }
 
     public void initializeBase(RealVector loc, double beta, RealMatrix omega, double dof) {
@@ -54,7 +89,7 @@ public class NormalWishartClusters {
 
     public double[] calculateExLogPrecision() {
         double[] lnPrecision = new double[K];
-        for (int i=0; i<K; i++) {
+        for (int i = 0; i < K; i++) {
             lnPrecision[i] = 0.5 * (new Wishart(omega.get(i), dof[i])).getExpectationLogDeterminantLambda();
         }
         return lnPrecision;
@@ -140,5 +175,17 @@ public class NormalWishartClusters {
             predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, (int) (dof[k] - 1 - D)));
         }
         return predictiveDistributions;
+    }
+
+    public List<RealMatrix> getMAPCovariances() {
+        List<RealMatrix> covariances = new ArrayList<>(omega.size());
+        for (int i = 0; i < omega.size(); i++) {
+            covariances.add(AlgebraUtils.invertMatrix(omega.get(i).scalarMultiply(dof[i])));
+        }
+        return covariances;
+    }
+
+    public List<RealVector> getMAPLocations() {
+        return loc;
     }
 }

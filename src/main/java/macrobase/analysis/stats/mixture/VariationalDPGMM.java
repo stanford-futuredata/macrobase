@@ -78,7 +78,7 @@ public class VariationalDPGMM extends MeanFieldGMM {
         atomBeta = new double[T];
 
         // atoms
-        atomLoc = gonzalezInitializeMixtureCenters(data, T);
+        atomLoc = gonzalezInitializeMixtureCenters(data, T, conf.getRandom());
         for (int i = 0; i < T; i++) {
             // initialize betas as if all points are from the first cluster.
             atomBeta[i] = 1;
