@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
+import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -60,6 +61,7 @@ public class VariationalGMM extends BatchMixtureModel {
         int N = data.size();
         D = data.get(0).getMetrics().getDimension();
         halfDimensionLn2Pi = 0.5 * D * Math.log(2 * Math.PI);
+        List<Wishart> wisharts;
 
         //priorAlpha = 1. / dimensions;
         priorAlpha = 0.1;
@@ -104,10 +106,12 @@ public class VariationalGMM extends BatchMixtureModel {
         double logLikelihood = -Double.MAX_VALUE;
         for (int iteration = 0; ; iteration++) {
             double[] ex_ln_phi = new double[K];
-            double[] ex_ln_det_lambda = new double[K];
             double sum_alpha = 0;
             clusterMean = new ArrayList<>(K);
             S = new ArrayList<>(K);
+
+            // Useful to keep everything tidy.
+            wisharts = constructWisharts(atomOmega, atomDOF);
 
             // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
             for (int k = 0; k < this.K; k++) {
@@ -118,10 +122,6 @@ public class VariationalGMM extends BatchMixtureModel {
 
             for (int k = 0; k < this.K; k++) {
                 ex_ln_phi[k] = Gamma.digamma(alpha[k] - Gamma.digamma(sum_alpha));
-                ex_ln_det_lambda[k] = D * Math.log(2) + Math.log((new EigenDecomposition(atomOmega.get(k))).getDeterminant());
-                for (int i = 0; i < D; i++) {
-                    ex_ln_det_lambda[k] += Gamma.digamma((atomDOF[k] - i) / 2);
-                }
             }
 
             log.debug("clusterWeights: {}", clusterWeight);
@@ -132,7 +132,7 @@ public class VariationalGMM extends BatchMixtureModel {
                 for (int k = 0; k < this.K; k++) {
                     RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(k));
                     ex_ln_xmu = D / atomBeta[k] + atomDOF[k] * _diff.dotProduct(atomOmega.get(k).operate(_diff));
-                    r[n][k] = Math.exp(ex_ln_phi[k] + 0.5 * ex_ln_det_lambda[k] - _const - 0.5 * ex_ln_xmu);
+                    r[n][k] = Math.exp(ex_ln_phi[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() - _const - 0.5 * ex_ln_xmu);
                     normalizingConstant += r[n][k];
                 }
                 for (int k = 0; k < this.K; k++) {
@@ -200,6 +200,15 @@ public class VariationalGMM extends BatchMixtureModel {
                 log.debug("improvement is : {}%", improvement * 100);
             }
         }
+    }
+
+    protected static List<Wishart> constructWisharts(List<RealMatrix> omega, double[] dof) {
+        int num = omega.size();
+        List<Wishart> wisharts = new ArrayList<>(num);
+        for (int i=0; i<num; i++) {
+            wisharts.add(new Wishart(omega.get(i), dof[i]));
+        }
+        return wisharts;
     }
 
     private List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
