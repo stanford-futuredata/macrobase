@@ -1,6 +1,5 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.mixture.DPGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;

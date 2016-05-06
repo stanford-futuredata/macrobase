@@ -1,7 +1,5 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.mixture.ExpectMaxGMM;
-import macrobase.analysis.stats.mixture.FiniteGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -68,18 +66,9 @@ public class FiniteGMMTest {
         FiniteGMM finiteGMM = new FiniteGMM(conf);
         List<RealVector> calculatedMeans;
 
-        int numClustersIdentified = 0;
         // Make sure we have 3 clusters. Sometimes initialization is not great.
         finiteGMM.train(data);
 
-        double[] calculatedWeights = finiteGMM.getPriorAdjustedClusterProportions();
-
-        numClustersIdentified = 0;
-        for (double weight : calculatedWeights) {
-            if (weight > 0.1) {
-                numClustersIdentified += 1;
-            }
-        }
         calculatedMeans = finiteGMM.getClusterCenters();
         List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
 
