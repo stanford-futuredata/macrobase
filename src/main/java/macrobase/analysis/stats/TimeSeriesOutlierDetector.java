@@ -29,8 +29,8 @@ public abstract class TimeSeriesOutlierDetector extends BatchTrainScore {
 
     @Override
     public void train(List<Datum> data) {
-        // Just sanity checks - we don't actually compute anything in trainMeanField,
-        // since we trainMeanField as we go while scoring.
+        // Just sanity checks - we don't actually compute anything in train,
+        // since we train as we go while scoring.
         assert data.size() >= tupleWindowSize;
         assert timeColumn != null;
     }
