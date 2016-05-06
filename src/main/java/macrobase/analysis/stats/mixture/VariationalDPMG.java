@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
+import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -119,6 +120,7 @@ public class VariationalDPMG extends MeanFieldGMM {
         double logLikelihood = -Double.MAX_VALUE;
         double[] clusterWeight;
         List<RealVector> clusterMean;
+        List<Wishart> wisharts;
 
         for (int iteration = 1; ; iteration++) {
             // 0. Initialize volatile parameters
@@ -129,19 +131,13 @@ public class VariationalDPMG extends MeanFieldGMM {
             clusterWeight = new double[T];
 
 
+            wisharts = constructWisharts(atomOmega, atomDOF);
             // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
             // 1. Reevaluate r[][]
-            double[] lnLambdaContribution = new double[T];
             double[] lnMixingContribution = new double[T];
             double cumulativeAlreadyAssigned = 0;
             // for (int t=0; t<atomLoc.size(); t++) {
             for (int t = 0; t < T; t++) {
-                // Calculate Per cluster 0.5 ln L_t - D/2 ln(2 pi) contributions.
-                lnLambdaContribution[t] = dimensionLn2 + Math.log((new EigenDecomposition(atomOmega.get(t))).getDeterminant());
-                for (int i = 0; i < D ; i++) {
-                    lnLambdaContribution[t] += Gamma.digamma((atomDOF[t] - i) / 2);
-                }
-                lnLambdaContribution[t] /= 2;
                 // Calculate Mixing coefficient contributions to r
                 lnMixingContribution[t] = cumulativeAlreadyAssigned + (Gamma.digamma(shapeParams[t][0]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]));
                 cumulativeAlreadyAssigned += Gamma.digamma(shapeParams[t][1]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]);
@@ -158,7 +154,7 @@ public class VariationalDPMG extends MeanFieldGMM {
                     } else {
                         lnXMuLambdaContribution = atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
                     }
-                    r[n][t] = Math.exp(lnMixingContribution[t] - halfDimensionLn2Pi + lnLambdaContribution[t] - lnXMuLambdaContribution);
+                    r[n][t] = Math.exp(lnMixingContribution[t] - halfDimensionLn2Pi + 0.5 * wisharts.get(t).getExpectationLogDeterminantLambda()- lnXMuLambdaContribution);
                     normalizingConstant += r[n][t];
                 }
                 for (int t = 0; t < atomLoc.size(); t++) {
