@@ -28,6 +28,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
         this.conf = conf;
         progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
         maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
+        log.debug("max iter = {}", maxIterationsToConverge);
     }
 
     public static List<RealVector> initalizeClustersFromFile(String filename, int K) throws FileNotFoundException {

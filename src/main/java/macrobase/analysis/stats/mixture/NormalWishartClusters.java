@@ -188,8 +188,6 @@ public class NormalWishartClusters {
 
     public void moveNatural(List<Datum> data, double[][] r, double pace, double repeat) {
         double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
-        log.debug("unscaled weights: {}", clusterWeight);
-        log.debug("repeat: {}", repeat);
         List<RealVector> weightedSum = calculateWeightedSums(data, r);
         List<RealVector> clusterMean = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
@@ -222,7 +220,7 @@ public class NormalWishartClusters {
         for (int k = 0; k < this.K; k++) {
             double scale = (dof[k] + 1 - D) * beta[k] / (1 + beta[k]);
             RealMatrix ll = AlgebraUtils.invertMatrix(omega.get(k).scalarMultiply(scale));
-            predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, dof[k] - 1 - D));
+            predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, dof[k] + 1 - D));
         }
         return predictiveDistributions;
     }

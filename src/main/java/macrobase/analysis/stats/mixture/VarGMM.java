@@ -5,10 +5,17 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+/**
+ * A class that combines methods for all variational inference
+ # subclasses that use a type of Gaussian Mixture Model
+ */
 public abstract class VarGMM extends BatchMixtureModel {
+    private static final Logger log = LoggerFactory.getLogger(VarGMM.class);
     protected NormalWishartClusters clusters;
     protected List<MultivariateTDistribution> predictiveDistributions;
 
@@ -43,6 +50,9 @@ public abstract class VarGMM extends BatchMixtureModel {
         double[] cc = getNormClusterContrib();
         for (int i = 0; i < predictiveDistributions.size(); i++) {
             density += cc[i] * predictiveDistributions.get(i).density(datum.getMetrics());
+        }
+        if (density == 0) {
+            log.debug("what the fuck should i do here??");
         }
         return Math.log(density);
     }

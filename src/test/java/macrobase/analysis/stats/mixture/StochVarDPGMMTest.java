@@ -25,7 +25,7 @@ public class StochVarDPGMMTest {
                 .set(MacroBaseConf.RANDOM_SEED, 48)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
-                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.1)
+                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.3)
                 .set(MacroBaseConf.NUM_MIXTURES, 3) // Used to compare with EM algorithm
                 .set(MacroBaseConf.MIXTURE_CENTERS_FILE, "src/test/resources/data/3gaussians-700.points-centers.json")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -105,6 +105,65 @@ public class StochVarDPGMMTest {
         }
         for (int j=0; j< 3; j++) {
             assertEquals(maxProbas[j], 1, 0.01);
+        }
+    }
+
+    @Test
+    /**
+     * Tests Gaussian Mixture Model on a three not so well separated clusters.
+     */
+    public void bivariateOkSeparatedNormalTest() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 4)
+                .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
+                .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 15)
+                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 30)
+                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.2)
+                .set(MacroBaseConf.NUM_MIXTURES, 3)
+                .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
+                .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
+                .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-7000points.csv.gz")
+                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
+                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.ATTRIBUTES, "");
+        List<Datum> data = Drainer.drainIngest(conf);
+        assertEquals(7000, data.size());
+
+        double[][] clusterMeans = {
+                {1.5, 2},
+                {2, 0},
+                {4.5, 1},
+        };
+        List<RealVector> vectorClusterMeans = new ArrayList<>(3);
+        for (int k = 0; k < 3; k++) {
+            vectorClusterMeans.add(new ArrayRealVector(clusterMeans[k]));
+        }
+        double[][][] clusterCovariances = {
+                {{0.5, 0.4}, {0.4, 0.5}},
+                {{0.3, 0}, {0, 0.6}},
+                {{0.9, 0.2}, {0.2, 0.3}},
+        };
+
+        StochVarDPGMM dpgmm= new StochVarDPGMM(conf);
+        dpgmm.train(data);
+
+        List<RealVector> calculatedMeans = dpgmm.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = dpgmm.getClusterCovariances();
+
+        for (int i = 0; i < 3; i++) {
+            boolean identified = false;
+            for (int j = 0; j < 3; j++) {
+                if (calculatedMeans.get(i).getDistance(vectorClusterMeans.get(j)) < 0.1) {
+                    for (int p = 0; p < 2; p++) {
+                        for (int q = 0; q < 2; q++) {
+                            assertEquals(clusterCovariances[j][p][q], calculatedCovariances.get(i).getEntry(p, q), 0.1);
+                        }
+                    }
+                    identified = true;
+                    break;
+                }
+            }
+            assertEquals("a cluster was not identified", true, identified);
         }
     }
 }
