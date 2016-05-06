@@ -128,14 +128,10 @@ public class VariationalGMM extends BatchMixtureModel {
             double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
 
             log.debug("clusterWeights: {}", clusterWeight);
-            double _const = 0.5 * D * Math.log(2 * Math.PI);
-            double ex_ln_xmu;
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int k = 0; k < this.K; k++) {
-                    RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(k));
-                    ex_ln_xmu = D / atomBeta[k] + atomDOF[k] * _diff.dotProduct(atomOmega.get(k).operate(_diff));
-                    r[n][k] = Math.exp(ex_ln_phi[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() - _const - 0.5 * ex_ln_xmu);
+                    r[n][k] = Math.exp(ex_ln_phi[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() + dataLogLike[n][k]);
                     normalizingConstant += r[n][k];
                 }
                 for (int k = 0; k < this.K; k++) {
