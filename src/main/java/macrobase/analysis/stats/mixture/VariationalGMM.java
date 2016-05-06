@@ -30,7 +30,7 @@ public class VariationalGMM extends BatchMixtureModel {
     private RealVector priorM;
     private double priorNu;
     private RealMatrix priorW;
-    private double[] alpha;
+    private double[] mixingCoeffs;
     private List<MultivariateTDistribution> predictiveDistributions;
 
     private double[] clusterWeight;  // N_k (Bishop)
@@ -74,7 +74,7 @@ public class VariationalGMM extends BatchMixtureModel {
         //priorW.setEntry(1, 1, 3);
         RealMatrix priorWInverse = AlgebraUtils.invertMatrix(priorW);
 
-        alpha = new double[K];
+        mixingCoeffs = new double[K];
         atomBeta = new double[K];
         atomDOF = new double[K];
         atomOmega = new ArrayList<>(K);
@@ -92,7 +92,7 @@ public class VariationalGMM extends BatchMixtureModel {
         }
         log.debug("initialized cluster centers as: {}", atomLoc);
         for (int k = 0; k < this.K; k++) {
-            alpha[k] = 1. / K;
+            mixingCoeffs[k] = 1. / K;
             atomBeta[k] = priorBeta;
             atomDOF[k] = priorNu;
             atomOmega.add(priorW);
@@ -105,7 +105,6 @@ public class VariationalGMM extends BatchMixtureModel {
 
         double logLikelihood = -Double.MAX_VALUE;
         for (int iteration = 0; ; iteration++) {
-            double[] ex_ln_phi = new double[K];
             double sum_alpha = 0;
             clusterMean = new ArrayList<>(K);
             S = new ArrayList<>(K);
@@ -115,15 +114,13 @@ public class VariationalGMM extends BatchMixtureModel {
 
             // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
             for (int k = 0; k < this.K; k++) {
-                sum_alpha += alpha[k];
+                sum_alpha += mixingCoeffs[k];
                 clusterMean.add(new ArrayRealVector(D));
                 S.add(new BlockRealMatrix(D, D));
             }
 
             // Calculate mixing coefficient log expectation
-            for (int k = 0; k < this.K; k++) {
-                ex_ln_phi[k] = Gamma.digamma(alpha[k] - Gamma.digamma(sum_alpha));
-            }
+            double[] ex_log_mixing = calcExQlogMixing(mixingCoeffs);
 
             double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
 
@@ -131,7 +128,7 @@ public class VariationalGMM extends BatchMixtureModel {
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int k = 0; k < this.K; k++) {
-                    r[n][k] = Math.exp(ex_ln_phi[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() + dataLogLike[n][k]);
+                    r[n][k] = Math.exp(ex_log_mixing[k] + 0.5 * wisharts.get(k).getExpectationLogDeterminantLambda() + dataLogLike[n][k]);
                     normalizingConstant += r[n][k];
                 }
                 for (int k = 0; k < this.K; k++) {
@@ -157,7 +154,7 @@ public class VariationalGMM extends BatchMixtureModel {
             }
 
             for (int k = 0; k < this.K; k++) {
-                alpha[k] = priorAlpha + clusterWeight[k];
+                mixingCoeffs[k] = priorAlpha + clusterWeight[k];
                 atomBeta[k] = priorBeta + clusterWeight[k];
                 atomLoc.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
                 atomDOF[k] = priorNu + 1 + clusterWeight[k];
@@ -199,6 +196,19 @@ public class VariationalGMM extends BatchMixtureModel {
                 log.debug("improvement is : {}%", improvement * 100);
             }
         }
+    }
+
+    private double[] calcExQlogMixing(double[] mixingCoeffs) {
+        int num = mixingCoeffs.length;
+        double[] exLogMixing = new double[num];
+        double sum = 0;
+        for (double coeff : mixingCoeffs) {
+            sum += coeff;
+        }
+        for (int i = 0; i < num; i++) {
+            exLogMixing[i] = Gamma.digamma(mixingCoeffs[i]) - Gamma.digamma(sum);
+        }
+        return exLogMixing;
     }
 
     private double[][] calcLogLikelihoodFixedAtoms(List<Datum> data, List<RealVector> atomLoc, double[] atomBeta, List<RealMatrix> atomOmega, double[] atomDOF) {
@@ -253,11 +263,11 @@ public class VariationalGMM extends BatchMixtureModel {
         double sum_alpha = 0;
         for (int k = 0; k < this.K; k++) {
             // If the mixture is very improbable, skip.
-            if (Math.abs(alpha[k] - priorAlpha) < 1e-4) {
+            if (Math.abs(mixingCoeffs[k] - priorAlpha) < 1e-4) {
                 continue;
             }
-            sum_alpha += alpha[k];
-            density += alpha[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
+            sum_alpha += mixingCoeffs[k];
+            density += mixingCoeffs[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
         }
         return Math.log(density / sum_alpha);
     }
@@ -269,7 +279,7 @@ public class VariationalGMM extends BatchMixtureModel {
 
     @Override
     public double[] getClusterWeights() {
-        return alpha;
+        return mixingCoeffs;
     }
 
     @Override
