@@ -139,8 +139,10 @@ public class VariationalGMM extends BatchMixtureModel {
             List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
             log.debug("clusterWeights: {}", clusterWeight);
 
+            updateSticks(r);
+            updateAtoms(r, data);
+
             for (int k = 0; k < this.K; k++) {
-                mixingCoeffs[k] = priorAlpha + clusterWeight[k];
                 atomBeta[k] = priorBeta + clusterWeight[k];
                 atomLoc.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
                 atomDOF[k] = priorNu + 1 + clusterWeight[k];
@@ -180,6 +182,20 @@ public class VariationalGMM extends BatchMixtureModel {
             } else {
                 log.debug("improvement is : {}%", improvement * 100);
             }
+        }
+    }
+
+    private void updateAtoms(double[][] r, List<Datum> data) {
+    }
+
+    /**
+     * Make sure to update clusterWeight before!!!!
+     * @param r
+     */
+    private void updateSticks(double[][] r) {
+        double[] clusterWeight = calculateClusterWeights(r);
+        for (int k=0; k<K; k++) {
+            mixingCoeffs[k] = priorAlpha + clusterWeight[k];
         }
     }
 
