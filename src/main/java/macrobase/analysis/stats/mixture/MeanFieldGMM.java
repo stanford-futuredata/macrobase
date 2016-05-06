@@ -150,6 +150,31 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         }
     }
 
+    protected double[][] normalizeLogProbas(double[] lnMixing, double[] lnPrecision, double[][] dataLogLike) {
+        double[][] r = new double[dataLogLike.length][lnMixing.length];
+        for (int n = 0; n < dataLogLike.length; n++) {
+            double normalizingConstant = 0;
+            for (int k = 0; k < lnMixing.length; k++) {
+                r[n][k] = Math.exp(lnMixing[k] + lnPrecision[k] + dataLogLike[n][k]);
+                normalizingConstant += r[n][k];
+            }
+            for (int k = 0; k < atomLoc.size(); k++) {
+                if (normalizingConstant > 0) {
+                    r[n][k] /= normalizingConstant;
+                }
+            }
+        }
+        return r;
+    }
+
+    protected static double[] calculateExLogPrecision(List<RealMatrix> omega, double[] dof) {
+        int K = omega.size();
+        double[] lnPrecision = new double[K];
+        for (int i=0; i<K; i++) {
+            lnPrecision[i] = 0.5 * (new Wishart(omega.get(i), dof[i])).getExpectationLogDeterminantLambda();
+        }
+        return lnPrecision;
+    }
 
     protected static List<RealMatrix> calculateQuadraticForms(List<Datum> data, List<RealVector> clusterMean, double[][] r) {
         int D = data.get(0).getMetrics().getDimension();
