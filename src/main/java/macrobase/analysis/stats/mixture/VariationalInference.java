@@ -115,4 +115,15 @@ public class VariationalInference {
         return start.scalarMultiply(1 - pace).add(end.scalarMultiply(pace));
     }
 
+    protected static double[] calculateClusterWeights(double[][] r) {
+        int N = r.length;
+        int K = r[0].length;
+        double[] clusterWeight = new double[K];
+        for (int k = 0; k < K; k++) {
+            for (int n = 0; n < N; n++) {
+                clusterWeight[k] += r[n][k];
+            }
+        }
+        return clusterWeight;
+    }
 }

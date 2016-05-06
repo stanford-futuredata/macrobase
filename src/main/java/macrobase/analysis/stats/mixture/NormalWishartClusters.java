@@ -4,10 +4,7 @@ import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.datamodel.Datum;
 import macrobase.util.AlgebraUtils;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +40,37 @@ public class NormalWishartClusters {
 
         this.D = dimension;
         halfDimensionLn2Pi = 0.5 * D * Math.log(2 * Math.PI);
+    }
+
+    protected static List<RealMatrix> calculateQuadraticForms(List<Datum> data, List<RealVector> clusterMean, double[][] r) {
+        int D = data.get(0).getMetrics().getDimension();
+        int K = clusterMean.size();
+        int N = data.size();
+        List<RealMatrix> quadForm = new ArrayList<>(K);
+        for (int k = 0; k < K; k++) {
+            RealMatrix form = new BlockRealMatrix(D, D);
+            for (int n = 0; n < N; n++) {
+                RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(k));
+                form = form.add(_diff.outerProduct(_diff).scalarMultiply(r[n][k]));
+            }
+            quadForm.add(form);
+        }
+        return quadForm;
+    }
+
+    protected static List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
+        int N = data.size();
+        int K = r[0].length;
+        int D = data.get(0).getMetrics().getDimension();
+        List<RealVector> sums = new ArrayList<>(K);
+        for (int k = 0; k < K; k++) {
+            RealVector sum = new ArrayRealVector(D);
+            for (int n = 0; n < N; n++) {
+                sum = sum.add(data.get(n).getMetrics().mapMultiply(r[n][k]));
+            }
+            sums.add(sum);
+        }
+        return sums;
     }
 
     public void initializeBaseForDP(List<Datum> data) {
@@ -133,8 +161,8 @@ public class NormalWishartClusters {
     }
 
     public void update(List<Datum> data, double[][] r) {
-        double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
-        List<RealVector> weightedSum = MeanFieldGMM.calculateWeightedSums(data, r);
+        double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
+        List<RealVector> weightedSum = calculateWeightedSums(data, r);
         List<RealVector> clusterMean = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
             if (clusterWeight[k] > 0) {
@@ -143,7 +171,7 @@ public class NormalWishartClusters {
                 clusterMean.add(weightedSum.get(k));
             }
         }
-        List<RealMatrix> quadForm = MeanFieldGMM.calculateQuadraticForms(data, clusterMean, r);
+        List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
 
         for (int k = 0; k < K; k++) {
             beta[k] = baseBeta + clusterWeight[k];
@@ -159,10 +187,10 @@ public class NormalWishartClusters {
     }
 
     public void moveNatural(List<Datum> data, double[][] r, double pace, double repeat) {
-        double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
+        double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
         log.debug("unscaled weights: {}", clusterWeight);
         log.debug("repeat: {}", repeat);
-        List<RealVector> weightedSum = MeanFieldGMM.calculateWeightedSums(data, r);
+        List<RealVector> weightedSum = calculateWeightedSums(data, r);
         List<RealVector> clusterMean = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
             if (clusterWeight[k] > 0) {
@@ -174,7 +202,7 @@ public class NormalWishartClusters {
             clusterWeight[k] *= repeat;
             weightedSum.set(k, weightedSum.get(k).mapMultiply(repeat));
         }
-        List<RealMatrix> quadForm = MeanFieldGMM.calculateQuadraticForms(data, clusterMean, r);
+        List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
         log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < K; k++) {

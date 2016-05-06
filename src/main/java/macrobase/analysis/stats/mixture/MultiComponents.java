@@ -33,7 +33,7 @@ public class MultiComponents implements MixingComponents {
 
     @Override
     public void update(double[][] r) {
-        double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
+        double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
         sumCoeffs = 0;
         for (int k = 0; k < K; k++) {
             coeffs[k] = priorAlpha + clusterWeight[k];
@@ -42,7 +42,7 @@ public class MultiComponents implements MixingComponents {
     }
 
     public void moveNatural(double[][] r, double pace, double portion) {
-        double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
+        double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
         for (int k = 0; k < K; k++) {
             coeffs[k] = VariationalInference.step(coeffs[k], priorAlpha + portion * clusterWeight[k], pace);
         }
