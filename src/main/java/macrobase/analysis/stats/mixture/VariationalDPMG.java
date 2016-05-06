@@ -55,6 +55,27 @@ public class VariationalDPMG extends MeanFieldGMM {
         maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
     }
 
+    // Keep this here so we have exactly the same behavior.
+    @Override
+    protected void initializeBaseNormalWishart(List<Datum> data) {
+        int dimension = data.get(0).getMetrics().getDimension();
+        baseNu = dimension;
+        double[][] boundingBox = AlgebraUtils.getBoundingBox(data);
+        double[] midpoints = new double[dimension];
+        double[] dimensionWidth = new double[dimension];
+        double R = 0;  // value of the widest dimension.
+        for (int i = 0; i < dimension; i++) {
+            dimensionWidth[i] = boundingBox[i][1] - boundingBox[i][0];
+            midpoints[i] = boundingBox[i][0] + dimensionWidth[i];
+            if (dimensionWidth[i] > R) {
+                R = dimensionWidth[i];
+            }
+        }
+        baseBeta = Math.pow(R, -2);
+        baseLoc = new ArrayRealVector(midpoints);
+        baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
+    }
+
     @Override
     public void train(List<Datum> data) {
         int N = data.size();
