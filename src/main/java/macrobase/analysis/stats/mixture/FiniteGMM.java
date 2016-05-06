@@ -111,7 +111,7 @@ public class FiniteGMM extends MeanFieldGMM {
             // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
 
             // Calculate mixing coefficient log expectation
-            double[] ex_log_mixing = calcExQlogMixing(mixingCoeffs);
+            double[] ex_log_mixing = calcExQlogMixing();
 
             double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
 
@@ -176,7 +176,7 @@ public class FiniteGMM extends MeanFieldGMM {
     }
 
 
-    private double[] calcExQlogMixing(double[] mixingCoeffs) {
+    private double[] calcExQlogMixing() {
         int num = mixingCoeffs.length;
         double[] exLogMixing = new double[num];
         double sum = 0;

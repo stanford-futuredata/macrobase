@@ -103,6 +103,18 @@ public class VariationalDPMG extends MeanFieldGMM {
         }
     }
 
+    private double[] calcExQlogMixing() {
+        double[] lnMixingContribution = new double[T];
+        double cumulativeAlreadyAssigned = 0;
+        // for (int t=0; t<atomLoc.size(); t++) {
+        for (int t = 0; t < T; t++) {
+            // Calculate Mixing coefficient contributions to r
+            lnMixingContribution[t] = cumulativeAlreadyAssigned + (Gamma.digamma(shapeParams[t][0]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]));
+            cumulativeAlreadyAssigned += Gamma.digamma(shapeParams[t][1]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]);
+        }
+        return lnMixingContribution;
+    }
+
     @Override
     public void train(List<Datum> data) {
         int N = data.size();
@@ -134,27 +146,15 @@ public class VariationalDPMG extends MeanFieldGMM {
             wisharts = constructWisharts(atomOmega, atomDOF);
             // 1. calculate expectation of densities of each point coming from individual clusters - r[n][k]
             // 1. Reevaluate r[][]
-            double[] lnMixingContribution = new double[T];
-            double cumulativeAlreadyAssigned = 0;
-            // for (int t=0; t<atomLoc.size(); t++) {
-            for (int t = 0; t < T; t++) {
-                // Calculate Mixing coefficient contributions to r
-                lnMixingContribution[t] = cumulativeAlreadyAssigned + (Gamma.digamma(shapeParams[t][0]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]));
-                cumulativeAlreadyAssigned += Gamma.digamma(shapeParams[t][1]) - Gamma.digamma(shapeParams[t][0] + shapeParams[t][1]);
-            }
+            double[] lnMixingContribution = calcExQlogMixing();
 
+            double[][] dataLogLike = calcLogLikelihoodFixedAtoms(data, atomLoc, atomBeta, atomOmega, atomDOF);
 
-            double lnXMuLambdaContribution;
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int t = 0; t < T; t++) {
-                    RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(t));
-                    if (atomBeta[t] != 0) {
-                        lnXMuLambdaContribution = D / atomBeta[t] + atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
-                    } else {
-                        lnXMuLambdaContribution = atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
-                    }
-                    r[n][t] = Math.exp(lnMixingContribution[t] - halfDimensionLn2Pi + 0.5 * wisharts.get(t).getExpectationLogDeterminantLambda()- lnXMuLambdaContribution);
+                    r[n][t] = Math.exp(lnMixingContribution[t] + 0.5 * wisharts.get(t).getExpectationLogDeterminantLambda() + dataLogLike[n][t]);
+
                     normalizingConstant += r[n][t];
                 }
                 for (int t = 0; t < atomLoc.size(); t++) {
@@ -185,15 +185,8 @@ public class VariationalDPMG extends MeanFieldGMM {
                 S.set(t, S.get(t).scalarMultiply(1 / clusterWeight[t]));
             }
 
+            updateSticks(r);
             for (int t = 0; t < atomLoc.size(); t++) {
-                shapeParams[t][0] = 1;
-                shapeParams[t][1] = concentrationParameter;
-                for (int n = 0; n < N; n++) {
-                    shapeParams[t][0] += r[n][t];
-                    for (int j = t + 1; j < T; j++) {
-                        shapeParams[t][1] += r[n][j];
-                    }
-                }
                 atomBeta[t] = baseBeta + clusterWeight[t];
                 atomLoc.set(t, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(t).mapMultiply(clusterWeight[t])).mapDivide(atomBeta[t]));
                 atomDOF[t] = baseNu + 1 + clusterWeight[t];
@@ -227,6 +220,20 @@ public class VariationalDPMG extends MeanFieldGMM {
                 log.debug("improvement is : {}%", improvement * 100);
             }
             log.debug(".........................................");
+        }
+    }
+
+    private void updateSticks(double[][] r) {
+        int N = r.length;
+        for (int t = 0; t < atomLoc.size(); t++) {
+            shapeParams[t][0] = 1;
+            shapeParams[t][1] = concentrationParameter;
+            for (int n = 0; n < N; n++) {
+                shapeParams[t][0] += r[n][t];
+                for (int j = t + 1; j < T; j++) {
+                    shapeParams[t][1] += r[n][j];
+                }
+            }
         }
     }
 
