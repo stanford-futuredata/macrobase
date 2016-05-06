@@ -1,12 +1,11 @@
 macrobase:
   macrobase.query.name: phillips-GA-Nrtu
-  macrobase.analysis.minOIRatio: 2
   macrobase.pipeline.class: macrobase.analysis.pipeline.MixtureModelPipeline
   macrobase.analysis.transformType: VARIATIONAL_GMM
-  macrobase.analysis.stat.mixtures.numMixtures: 5
+  macrobase.analysis.stat.mixtures.numMixtures: 10
   macrobase.analysis.stat.mixtures.initalClusters: target/scores/centers-phillips-GA-Nrtu-mixtures.json
-  macrobase.analysis.classify.targetGroup: "30, 11"
-  macrobase.loader.csv.file: target/phillips_data/power_usage_city_state_rtus-3000ppid.csv
+  macrobase.analysis.classify.targetGroup: "17, 9"
+  macrobase.loader.csv.file: power_usage_city_state_rtu-GA.csv
   macrobase.analysis.em.improvementCutoffRatio: 0.0001
   macrobase.loader.csv.compression: UNCOMPRESSED
   macrobase.loader.loaderType: CSV_LOADER
@@ -16,4 +15,4 @@ macrobase:
 post_run:
   - plot_score_contours: "--plot density --savefig --y-limits 0 24 --x-limits 0 45"
   - plot_score_contours: "--plot density --savefig contours.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-GA-Nrtu-mixtures.json --covariances target/scores/covariances-phillips-GA-Nrtu-mixtures.json --weights target/scores/weights-phillips-GA-Nrtu-mixtures.json"
-  - plot_score_contours: "--plot noop --savefig cluster.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-GA-Nrtu-mixtures.json --covariances target/scores/covariances-phillips-GA-Nrtu-mixtures.json --weights target/scores/weights-phillips-GA-Nrtu-mixtures.json --csv target/phillips_data/power_usage_city_state_rtus-3000ppid.csv  --hist2d power_usage time"
+  - plot_score_contours: "--plot noop --savefig cluster.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-GA-Nrtu-mixtures.json --covariances target/scores/covariances-phillips-GA-Nrtu-mixtures.json --weights target/scores/weights-phillips-GA-Nrtu-mixtures.json --csv power_usage_city_state_rtu-GA.csv  --hist2d power_usage time"
