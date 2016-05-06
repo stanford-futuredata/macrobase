@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import macrobase.analysis.result.OutlierClassificationResult;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.junit.Test;
 
@@ -50,7 +51,7 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector()));
         }
-        Map<Context, OutlierClassifier> context2Outliers = contextualDetector.searchContextualOutliers(data);
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
         assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
@@ -93,7 +94,7 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(),
                                new ArrayRealVector(c1)));
         }
-        Map<Context, OutlierClassifier> context2Outliers = contextualDetector.searchContextualOutliers(data);
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
         assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
@@ -146,7 +147,7 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector(c2)));
         }
-        Map<Context, OutlierClassifier> context2Outliers = contextualDetector.searchContextualOutliers(data);
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
         assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
@@ -203,7 +204,7 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector(c2)));
         }
-        Map<Context, OutlierClassifier> context2Outliers = contextualDetector.searchContextualOutliers(data);
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
         assertEquals(context2Outliers.size(), 0);
     }
 
@@ -248,7 +249,7 @@ public class ContextualOutlierDetectorTest {
                 inputOutliers.add(datum);
             }
         }
-        Map<Context, OutlierClassifier> context2Outliers = contextualDetector.searchContextGivenOutliers(data,
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextGivenOutliers(data,
                                                                                                          inputOutliers);
         assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {

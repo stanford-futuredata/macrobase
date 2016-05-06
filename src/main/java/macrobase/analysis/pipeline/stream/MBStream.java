@@ -1,5 +1,7 @@
 package macrobase.analysis.pipeline.stream;
 
+import macrobase.datamodel.Datum;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,9 +45,5 @@ public class MBStream<T> {
 
     public Integer remaining() {
         return output.size();
-    }
-    
-    public List<T> inspect() {
-        return output;
     }
 }
