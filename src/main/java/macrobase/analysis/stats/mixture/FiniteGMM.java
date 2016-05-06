@@ -32,8 +32,6 @@ public class FiniteGMM extends MeanFieldGMM {
     private double[] clusterWeight;  // N_k (Bishop)
 
     // Useful constants for each dataset.
-    protected int D;
-    protected double halfDimensionLn2Pi;
 
 
     public FiniteGMM(MacroBaseConf conf) {
@@ -43,25 +41,30 @@ public class FiniteGMM extends MeanFieldGMM {
         this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
-    @Override
-    public void train(List<Datum> data) {
-        int N = data.size();
-        D = data.get(0).getMetrics().getDimension();
-        halfDimensionLn2Pi = 0.5 * D * Math.log(2 * Math.PI);
-        List<Wishart> wisharts;
 
-        //priorAlpha = 1. / dimensions;
-        priorAlpha = 0.1;
-        //baseBeta = 1. / dimensions;
+    // Custom initialization for FiniteGMM to keep the exact same behavior as before refactor.
+    @Override
+    protected void initializeBaseNormalWishart(List<Datum> data) {
+        D = data.get(0).getMetrics().getDimension();
+        baseNu = 0.1;
         baseBeta = 0.1;
         baseLoc = new ArrayRealVector(D);
-        // baseNu = 1. / dimensions;
-        baseNu = 0.1;
         baseOmega = MatrixUtils.createRealIdentityMatrix(D);
-        //baseOmega.setEntry(1, 1, 3);
         baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
+    }
 
+    private void initalizeBaseSticks() {
+        priorAlpha = 0.1;
+    }
+
+    private void initializeMixingCoeffs() {
         mixingCoeffs = new double[K];
+        for (int k = 0; k < this.K; k++) {
+            mixingCoeffs[k] = 1. / K;
+        }
+    }
+
+    private void initalizeAtoms(List<Datum> data) {
         atomBeta = new double[K];
         atomDOF = new double[K];
         atomOmega = new ArrayList<>(K);
@@ -79,13 +82,22 @@ public class FiniteGMM extends MeanFieldGMM {
         }
         log.debug("initialized cluster centers as: {}", atomLoc);
         for (int k = 0; k < this.K; k++) {
-            mixingCoeffs[k] = 1. / K;
             atomBeta[k] = baseBeta;
             atomDOF[k] = baseNu;
             atomOmega.add(baseOmega);
         }
+        log.debug("atomOmega: {}", atomOmega);
+    }
 
-        List<RealVector> clusterMean;
+    @Override
+    public void train(List<Datum> data) {
+        initializeBaseNormalWishart(data);
+        initalizeBaseSticks();
+        initializeMixingCoeffs();
+        initalizeAtoms(data);
+
+        int N = data.size();
+        List<Wishart> wisharts;
         // density of each point with respect to each mixture component.
         double[][] r = new double[N][K];
 
@@ -151,30 +163,6 @@ public class FiniteGMM extends MeanFieldGMM {
         }
     }
 
-    private void updateAtoms(double[][] r, List<Datum> data) {
-        double[] clusterWeight = calculateClusterWeights(r);
-        List<RealVector> weightedSum = calculateWeightedSums(data, r);
-        List<RealVector> clusterMean = new ArrayList<>(K);
-        for (int k = 0; k < this.K; k++) {
-            clusterMean.add(weightedSum.get(k).mapDivide(clusterWeight[k]));
-        }
-        List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
-        log.debug("clusterWeights: {}", clusterWeight);
-
-        for (int k = 0; k < this.K; k++) {
-            atomBeta[k] = baseBeta + clusterWeight[k];
-            atomLoc.set(k, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
-            atomDOF[k] = baseNu + 1 + clusterWeight[k];
-            RealVector adjustedMean = clusterMean.get(k).subtract(baseLoc);
-            log.debug("adjustedMean: {}", adjustedMean);
-            RealMatrix wInverse = baseOmegaInverse
-                    .add(quadForm.get(k))
-                    .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
-            log.debug("wInverse: {}", wInverse);
-            atomOmega.set(k, AlgebraUtils.invertMatrix(wInverse));
-        }
-    }
-
     /**
      * Make sure to update clusterWeight before!!!!
      * @param r
@@ -186,21 +174,6 @@ public class FiniteGMM extends MeanFieldGMM {
         }
     }
 
-    private static List<RealMatrix> calculateQuadraticForms(List<Datum> data, List<RealVector> clusterMean, double[][] r) {
-        int D = data.get(0).getMetrics().getDimension();
-        int K = clusterMean.size();
-        int N = data.size();
-        List<RealMatrix> quadForm = new ArrayList<>(K);
-        for (int k = 0; k < K; k++) {
-            RealMatrix form = new BlockRealMatrix(D, D);
-            for (int n = 0; n < N; n++) {
-                RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(k));
-                form = form.add(_diff.outerProduct(_diff).scalarMultiply(r[n][k]));
-            }
-            quadForm.add(form);
-        }
-        return quadForm;
-    }
 
     private double[] calcExQlogMixing(double[] mixingCoeffs) {
         int num = mixingCoeffs.length;
@@ -215,51 +188,6 @@ public class FiniteGMM extends MeanFieldGMM {
         return exLogMixing;
     }
 
-    private double[][] calcLogLikelihoodFixedAtoms(List<Datum> data, List<RealVector> atomLoc, double[] atomBeta, List<RealMatrix> atomOmega, double[] atomDOF) {
-        int N = data.size();
-        double[][] loglike = new double[N][K];
-        for (int k = 0; k < K; k++) {
-            for (int n = 0; n < N; n++) {
-                RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(k));
-                loglike[n][k] = -halfDimensionLn2Pi - 0.5 * (
-                        D / atomBeta[k] + atomDOF[k] * _diff.dotProduct(atomOmega.get(k).operate(_diff)));
-            }
-        }
-        return loglike;
-    }
-
-    protected static List<Wishart> constructWisharts(List<RealMatrix> omega, double[] dof) {
-        int num = omega.size();
-        List<Wishart> wisharts = new ArrayList<>(num);
-        for (int i = 0; i < num; i++) {
-            wisharts.add(new Wishart(omega.get(i), dof[i]));
-        }
-        return wisharts;
-    }
-
-    private List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
-        int N = data.size();
-        List<RealVector> sums = new ArrayList<>(K);
-        for (int k = 0; k < K; k++) {
-            RealVector sum = new ArrayRealVector(D);
-            for (int n = 0; n < N; n++) {
-                sum = sum.add(data.get(n).getMetrics().mapMultiply(r[n][k]));
-            }
-            sums.add(sum);
-        }
-        return sums;
-    }
-
-    private double[] calculateClusterWeights(double[][] r) {
-        int N = r.length;
-        double[] clusterWeight = new double[K];
-        for (int k = 0; k < K; k++) {
-            for (int n = 0; n < N; n++) {
-                clusterWeight[k] += r[n][k];
-            }
-        }
-        return clusterWeight;
-    }
 
     @Override
     public double score(Datum datum) {
