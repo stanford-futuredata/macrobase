@@ -45,6 +45,41 @@ public class NormalWishartClusters {
         halfDimensionLn2Pi = 0.5 * D * Math.log(2 * Math.PI);
     }
 
+    public void initializeBaseForDP(List<Datum> data) {
+        int dimension = data.get(0).getMetrics().getDimension();
+        baseNu = dimension;
+        log.debug("baseNu {}", baseNu);
+        double[][] boundingBox = AlgebraUtils.getBoundingBox(data);
+        double[] midpoints = new double[dimension];
+        double[] dimensionWidth = new double[dimension];
+        double R = 0;  // value of the widest dimension.
+        for (int i = 0; i < dimension; i++) {
+            dimensionWidth[i] = boundingBox[i][1] - boundingBox[i][0];
+            midpoints[i] = boundingBox[i][0] + dimensionWidth[i];
+            if (dimensionWidth[i] > R) {
+                R = dimensionWidth[i];
+            }
+        }
+        baseBeta = Math.pow(R, -2);
+        log.debug("baseNu {}", baseBeta);
+        baseLoc = new ArrayRealVector(midpoints);
+        baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
+    }
+
+    public void initializeAtomsForDP(List<Datum> data, Random random) {
+        omega = new ArrayList<>(K);
+        dof = new double[K];
+        beta= new double[K];
+
+        loc= BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+        for (int i = 0; i < K; i++) {
+            // initialize betas as if all points are from the first cluster.
+            beta[i] = 1;
+            dof[i] = baseNu;
+            omega.add(0, AlgebraUtils.invertMatrix(baseOmegaInverse));
+        }
+    }
+
     public void initalizeAtomsForFinite(List<Datum> data, String filename, Random random) {
 
         beta = new double[K];

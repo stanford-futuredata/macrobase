@@ -2,7 +2,7 @@ package macrobase.analysis.stats.mixture;
 
 import org.apache.commons.math3.special.Gamma;
 
-public class MultiComponents implements MixingComponents, StockVarInfGlobal {
+public class MultiComponents implements MixingComponents {
 
     private double priorAlpha;
     private double[] coeffs;
@@ -12,9 +12,6 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
         K = clusters;
         priorAlpha = prior;
         coeffs = new double[clusters];
-    }
-
-    public void initialize() {
         for (int i = 0; i < K; i++) {
             coeffs[i] = 1. / K;
         }
@@ -41,7 +38,6 @@ public class MultiComponents implements MixingComponents, StockVarInfGlobal {
         }
     }
 
-    @Override
     public void moveNatural(double[][] r, double pace, double portion) {
         double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
         for (int k = 0; k < K; k++) {

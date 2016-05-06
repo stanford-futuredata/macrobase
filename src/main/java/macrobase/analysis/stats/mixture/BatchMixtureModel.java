@@ -6,6 +6,7 @@ import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -81,4 +82,29 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     public abstract List<RealMatrix> getClusterCovariances();
 
     public abstract double[] getClusterProbabilities(Datum d);
+
+
+    @Override
+    public double getZScoreEquivalent(double zscore) {
+        throw new NotImplementedException("");
+    }
+
+    public boolean checkTermination(double logLikelihood, double oldLogLikelihood, int iteration) {
+        log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+
+        if (iteration >= maxIterationsToConverge) {
+            log.debug("Breaking because have already run {} iterations", iteration);
+            return true;
+        }
+
+        double improvement = (logLikelihood - oldLogLikelihood) / (-logLikelihood);
+        if (improvement >= 0 && improvement < progressCutoff) {
+            log.debug("Breaking because improvement was {} percent", improvement * 100);
+            return true;
+        } else {
+            log.debug("improvement is : {}%", improvement * 100);
+        }
+        log.debug(".........................................");
+        return false;
+    }
 }

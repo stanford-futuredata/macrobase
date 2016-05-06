@@ -51,7 +51,11 @@ public class MultivariateTDistribution {
 
     public double density(RealVector vector) {
         RealVector _diff = vector.subtract(mean);
+        log.debug("dof {}", degreesOfFreedom);
+        log.debug("prec {}", precisionMatrix);
         double prob = 1. / degreesOfFreedom * _diff.dotProduct(precisionMatrix.operate(_diff));
-        return multiplier * Math.pow(1 + prob, -(degreesOfFreedom + dimensions) / 2);
+        double x = multiplier * Math.pow(1 + prob, -(degreesOfFreedom + dimensions) / 2);
+        log.debug("x: {}", x);
+        return x;
     }
 }
