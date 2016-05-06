@@ -38,7 +38,7 @@ public class FiniteGMM extends VarGMM {
         //clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
 
         log.debug("actual training");
-        MeanFieldVariationalInference.train(this, data, mixingComponents, clusters);
+        VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
     }
 
     @Override
@@ -62,6 +62,11 @@ public class FiniteGMM extends VarGMM {
     @Override
     public double[] getClusterProportions() {
         return mixingComponents.getCoeffs();
+    }
+
+    @Override
+    protected double[] getNormClusterContrib() {
+        return mixingComponents.getNormalizedClusterProportions();
     }
 
     public double[] getPriorAdjustedClusterProportions() {

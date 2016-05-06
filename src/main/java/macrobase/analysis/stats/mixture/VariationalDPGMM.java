@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * Variational Dirichlet Process Mixture of Gaussians.
+ * Mean-Field Variational Inference for Dirichlet Process Gaussian Mixture Model.
  */
 public class VariationalDPGMM extends VarGMM {
     private static final Logger log = LoggerFactory.getLogger(VariationalDPGMM.class);
@@ -33,36 +33,16 @@ public class VariationalDPGMM extends VarGMM {
         clusters.initializeAtomsForDP(data, conf.getRandom());
 
         log.debug("actual training");
-        MeanFieldVariationalInference.train(this, data, mixingComponents, clusters);
-    }
-
-    @Override
-    public double score(Datum datum) {
-        double density = 0;
-        double[] stickLengths = mixingComponents.getClusterProportions();
-        for (int i = 0; i < predictiveDistributions.size(); i++) {
-            density += stickLengths[i] * predictiveDistributions.get(i).density(datum.getMetrics());
-        }
-        return Math.log(density);
+        VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
     }
 
     @Override
     public double[] getClusterProportions() {
-        return mixingComponents.getClusterProportions();
+        return mixingComponents.getNormalizedClusterProportions();
     }
 
     @Override
-    public double[] getClusterProbabilities(Datum d) {
-        double[] probas = new double[T];
-        double[] weights = getClusterProportions();
-        double normalizingConstant = 0;
-        for (int i = 0; i < T; i++) {
-            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());
-            normalizingConstant += probas[i];
-        }
-        for (int i = 0; i < T; i++) {
-            probas[i] /= normalizingConstant;
-        }
-        return probas;
+    protected double[] getNormClusterContrib() {
+        return mixingComponents.getNormalizedClusterProportions();
     }
 }

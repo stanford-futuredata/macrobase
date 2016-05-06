@@ -63,7 +63,7 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
 
     protected abstract void updatePredictiveDistributions();
 
-    //public void train(List<Datum> data, MixingComponents mixingComonents, NormalWishartClusters clusters, int maxIter, double improvementCutoff) {
+    //public void trainMeanField(List<Datum> data, MixingComponents mixingComonents, NormalWishartClusters clusters, int maxIter, double improvementCutoff) {
     //    double[] exLnMixingContribution;
     //    double[] lnPrecision;
     //    double[][] dataLogLike;
@@ -109,7 +109,7 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
     //}
 
         /**
-         * @param data - data to train on
+         * @param data - data to trainMeanField on
          * @param K    - run inference with K clusters
          */
 

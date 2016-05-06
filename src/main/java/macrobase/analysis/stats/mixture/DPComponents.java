@@ -1,8 +1,11 @@
 package macrobase.analysis.stats.mixture;
 
 import org.apache.commons.math3.special.Gamma;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DPComponents implements MixingComponents {
+    private static final Logger log = LoggerFactory.getLogger(DPComponents.class);
 
     // Number of truncated clusters.
     private int T;
@@ -49,7 +52,24 @@ public class DPComponents implements MixingComponents {
         }
     }
 
-    public double[] getClusterProportions() {
+    @Override
+    public void moveNatural(double[][] r, double pace, double repeat) {
+        int N = r.length;
+        double[] shape;
+        for (int t = 0; t < shapeParams.length; t++) {
+            shape = new double[2];
+            for (int n = 0; n < N; n++) {
+                shape[0] += r[n][t];
+                for (int j = t + 1; j < T; j++) {
+                    shape[1] += r[n][j];
+                }
+            }
+            shapeParams[t][0] = VariationalInference.step(shapeParams[t][0], 1 + repeat * shape[0], pace);
+            shapeParams[t][1] = VariationalInference.step(shapeParams[t][1], concentrationParameter + repeat * shape[1], pace);
+        }
+    }
+
+    public double[] getNormalizedClusterProportions() {
         double[] proportions = new double[T];
         double stickRemaining = 1;
         double expectedBreak;

@@ -28,17 +28,6 @@ public abstract class StochVarInfGMM extends MeanFieldGMM {
 
     protected abstract void updateSticks(double[][] r, double stepSize, double repeat);
 
-    public static double step(double value, double newValue, double pace) {
-        return (1 - pace) * value + pace * newValue;
-    }
-
-    public static RealVector step(RealVector start, RealVector end, double pace) {
-        return start.mapMultiply(1 - pace).add(end.mapMultiply(pace));
-    }
-
-    public static RealMatrix step(RealMatrix start, RealMatrix end, double pace) {
-        return start.scalarMultiply(1 - pace).add(end.scalarMultiply(pace));
-    }
 
     protected void updateAtoms(double[][] r, List<Datum> data, double stepSize, double repeat) {
         double[] clusterWeight = calculateClusterWeights(r);
@@ -60,22 +49,22 @@ public abstract class StochVarInfGMM extends MeanFieldGMM {
         log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < K; k++) {
-            atomBeta[k] = step(atomBeta[k], baseBeta + clusterWeight[k], stepSize);
-            atomLoc.set(k, step(atomLoc.get(k), baseLoc.mapMultiply(baseBeta).add(weightedSum.get(k)).mapDivide(atomBeta[k]), stepSize));
-            atomDOF[k] = step(atomDOF[k], baseNu + 1 + clusterWeight[k], stepSize);
+            atomBeta[k] = VariationalInference.step(atomBeta[k], baseBeta + clusterWeight[k], stepSize);
+            atomLoc.set(k, VariationalInference.step(atomLoc.get(k), baseLoc.mapMultiply(baseBeta).add(weightedSum.get(k)).mapDivide(atomBeta[k]), stepSize));
+            atomDOF[k] = VariationalInference.step(atomDOF[k], baseNu + 1 + clusterWeight[k], stepSize);
             RealVector adjustedMean = clusterMean.get(k).subtract(baseLoc);
             //log.debug("adjustedMean: {}", adjustedMean);
             RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
             //log.debug("wInverse: {}", wInverse);
-            atomOmega.set(k, step(atomOmega.get(k), AlgebraUtils.invertMatrix(wInverse), stepSize));
+            atomOmega.set(k, VariationalInference.step(atomOmega.get(k), AlgebraUtils.invertMatrix(wInverse), stepSize));
         }
     }
 
 
     /**
-     * @param data - data to train on
+     * @param data - data to trainMeanField on
      * @param K    - run inference with K clusters
      */
     public void trainSVI(List<Datum> data, int K) {

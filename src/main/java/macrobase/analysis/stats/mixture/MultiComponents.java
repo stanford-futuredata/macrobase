@@ -8,24 +8,25 @@ public class MultiComponents implements MixingComponents {
     private double[] coeffs;
     private int K;
 
+    // Auxiliaries.
+    private double sumCoeffs;
+
     public MultiComponents(double prior, int clusters) {
         K = clusters;
         priorAlpha = prior;
         coeffs = new double[clusters];
+        sumCoeffs = 0;
         for (int i = 0; i < K; i++) {
             coeffs[i] = 1. / K;
+            sumCoeffs += coeffs[i];
         }
     }
 
     @Override
     public double[] calcExpectationLog() {
         double[] exLogMixing = new double[K];
-        double sum = 0;
-        for (double coeff : coeffs) {
-            sum += coeff;
-        }
         for (int i = 0; i < K; i++) {
-            exLogMixing[i] = Gamma.digamma(coeffs[i]) - Gamma.digamma(sum);
+            exLogMixing[i] = Gamma.digamma(coeffs[i]) - Gamma.digamma(sumCoeffs);
         }
         return exLogMixing;
     }
@@ -33,16 +34,27 @@ public class MultiComponents implements MixingComponents {
     @Override
     public void update(double[][] r) {
         double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
+        sumCoeffs = 0;
         for (int k = 0; k < K; k++) {
             coeffs[k] = priorAlpha + clusterWeight[k];
+            sumCoeffs += coeffs[k];
         }
     }
 
     public void moveNatural(double[][] r, double pace, double portion) {
         double[] clusterWeight = MeanFieldGMM.calculateClusterWeights(r);
         for (int k = 0; k < K; k++) {
-            coeffs[k] = StochVarInfGMM.step(coeffs[k], priorAlpha + portion * clusterWeight[k], pace);
+            coeffs[k] = VariationalInference.step(coeffs[k], priorAlpha + portion * clusterWeight[k], pace);
         }
+    }
+
+    @Override
+    public double[] getNormalizedClusterProportions() {
+        double[] normalized = new double[coeffs.length];
+        for (int i=0; i< coeffs.length; i++) {
+            normalized[i] = coeffs[i] / sumCoeffs;
+        }
+        return normalized;
     }
 
     public double[] getCoeffs() {

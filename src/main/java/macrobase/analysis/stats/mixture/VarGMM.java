@@ -12,6 +12,8 @@ public abstract class VarGMM extends BatchMixtureModel {
     protected NormalWishartClusters clusters;
     protected List<MultivariateTDistribution> predictiveDistributions;
 
+    protected abstract double[] getNormClusterContrib();
+
     public VarGMM(MacroBaseConf conf) {
         super(conf);
     }
@@ -33,6 +35,36 @@ public abstract class VarGMM extends BatchMixtureModel {
             logLikelihood += score(d);
         }
         return logLikelihood;
+    }
+
+    @Override
+    public double score(Datum datum) {
+        double density = 0;
+        double[] cc = getNormClusterContrib();
+        for (int i = 0; i < predictiveDistributions.size(); i++) {
+            density += cc[i] * predictiveDistributions.get(i).density(datum.getMetrics());
+        }
+        return Math.log(density);
+    }
+
+    @Override
+    /**
+     * Calculates probabilities of a cluster belonging to each of the clusters.
+     * Equals the weighted probabilities of data coming from each of the clusters.
+     */
+    public double[] getClusterProbabilities(Datum d) {
+        double[] weights = getNormClusterContrib();
+        double[] probas = new double[weights.length];
+
+        double total = 0;
+        for (int i = 0; i < weights.length; i++) {
+            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());
+            total += probas[i];
+        }
+        for (int i = 0; i < weights.length; i++) {
+            probas[i] /= total;
+        }
+        return probas;
     }
 
 }

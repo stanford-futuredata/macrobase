@@ -69,9 +69,9 @@ public class NormalWishartClusters {
     public void initializeAtomsForDP(List<Datum> data, Random random) {
         omega = new ArrayList<>(K);
         dof = new double[K];
-        beta= new double[K];
+        beta = new double[K];
 
-        loc= BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+        loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
         for (int i = 0; i < K; i++) {
             // initialize betas as if all points are from the first cluster.
             beta[i] = 1;
@@ -183,14 +183,14 @@ public class NormalWishartClusters {
         log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < K; k++) {
-            beta[k] = StochVarInfGMM.step(beta[k], baseBeta + clusterWeight[k], pace);
-            loc.set(k, StochVarInfGMM.step(loc.get(k), baseLoc.mapMultiply(baseBeta).add(weightedSum.get(k)).mapDivide(beta[k]), pace));
-            dof[k] = StochVarInfGMM.step(dof[k], baseNu + 1 + clusterWeight[k], pace);
+            beta[k] = VariationalInference.step(beta[k], baseBeta + clusterWeight[k], pace);
+            loc.set(k, VariationalInference.step(loc.get(k), baseLoc.mapMultiply(baseBeta).add(weightedSum.get(k)).mapDivide(beta[k]), pace));
+            dof[k] = VariationalInference.step(dof[k], baseNu + 1 + clusterWeight[k], pace);
             RealVector adjustedMean = clusterMean.get(k).subtract(baseLoc);
             RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
-            omega.set(k, StochVarInfGMM.step(omega.get(k), AlgebraUtils.invertMatrix(wInverse), pace));
+            omega.set(k, VariationalInference.step(omega.get(k), AlgebraUtils.invertMatrix(wInverse), pace));
         }
     }
 
