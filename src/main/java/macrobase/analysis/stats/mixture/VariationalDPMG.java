@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Variational Dirichlet Process Mixture of Gaussians.
  */
-public class VariationalDPMG extends BatchMixtureModel {
+public class VariationalDPMG extends MeanFieldGMM {
     private static final Logger log = LoggerFactory.getLogger(VariationalDPMG.class);
     private final int maxIterationsToConverge;
 
@@ -24,16 +24,7 @@ public class VariationalDPMG extends BatchMixtureModel {
     private int T;
     // Concentration parameter for the Dirichlet distribution.
     private double concentrationParameter;
-    private double progressCutoff;
 
-    // Variables governing atoms.
-    // Omega and atomNu for Wishart distribution for the precision matrix of the clusters.
-    private double atomNu[];
-    private List<RealMatrix> atomOmega;
-    // Parameters for Normal distribution for atom position, N(atomLocation, (atomBeta * Lambda))
-    // where Lambda is Wishart distributed given parameters above.
-    private double atomBeta[];
-    private List<RealVector> atomLocation;
 
     // Parameters describing stick lengths, i.e. shape parameters of Beta distributions.
     private double shapeParams[][];
@@ -41,23 +32,18 @@ public class VariationalDPMG extends BatchMixtureModel {
     // Parameters for multinomial distributions for data points. i.e. density corresponding to each cluster (atom).
     private double[][] r;
 
-    // Parameters for Base Distribution of the DP process, which is Wishart-Gaussian
-    private double baseNu;
-    private RealMatrix inverseBaseOmega;  // Use inverse of baseOmega, since it is used in the update equations.
-    private double baseBeta;
-    private RealVector baseLocation;
 
     private List<MultivariateTDistribution> predictiveDistributions;
 
     private void updatePredictiveDistributions() {
-        int dimension = atomLocation.get(0).getDimension();
+        int dimension = atomLoc.get(0).getDimension();
 
         predictiveDistributions = new ArrayList<>(T);
         for (int t = 0; t < T; t++) {
-            double scale = (atomNu[t] + 1 - dimension) * atomBeta[t] / (1 + atomBeta[t]);
+            double scale = (atomDOF[t] + 1 - dimension) * atomBeta[t] / (1 + atomBeta[t]);
             RealMatrix ll = AlgebraUtils.invertMatrix(atomOmega.get(t).scalarMultiply(scale));
             // TODO: MultivariateTDistribution should support real values for 3rd parameters
-            predictiveDistributions.add(new MultivariateTDistribution(atomLocation.get(t), ll, (int) (atomNu[t] + 1 - dimension)));
+            predictiveDistributions.add(new MultivariateTDistribution(atomLoc.get(t), ll, (int) (atomDOF[t] + 1 - dimension)));
         }
     }
 
@@ -84,8 +70,8 @@ public class VariationalDPMG extends BatchMixtureModel {
             }
         }
         baseBeta = Math.pow(R, -2);
-        baseLocation = new ArrayRealVector(midpoints);
-        inverseBaseOmega = MatrixUtils.createRealIdentityMatrix(dimension);
+        baseLoc = new ArrayRealVector(midpoints);
+        baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
 
     }
 
@@ -106,13 +92,13 @@ public class VariationalDPMG extends BatchMixtureModel {
         }
 
         // atoms
-        atomLocation = gonzalezInitializeMixtureCenters(data, T);
+        atomLoc = gonzalezInitializeMixtureCenters(data, T);
         for (int i = 0; i < T; i++) {
             // initialize betas as if all points are from the first cluster.
             atomBeta[i] = 1;
 
-            atomNu[i] = baseNu;
-            atomOmega.add(0, AlgebraUtils.invertMatrix(inverseBaseOmega));
+            atomDOF[i] = baseNu;
+            atomOmega.add(0, AlgebraUtils.invertMatrix(baseOmegaInverse));
         }
 
         final double dimensionLn2 = dimension * Math.log(2);
@@ -137,12 +123,12 @@ public class VariationalDPMG extends BatchMixtureModel {
             double[] lnLambdaContribution = new double[T];
             double[] lnMixingContribution = new double[T];
             double cumulativeAlreadyAssigned = 0;
-            // for (int t=0; t<atomLocation.size(); t++) {
+            // for (int t=0; t<atomLoc.size(); t++) {
             for (int t = 0; t < T; t++) {
                 // Calculate Per cluster 0.5 ln L_t - D/2 ln(2 pi) contributions.
                 lnLambdaContribution[t] = dimensionLn2 + Math.log((new EigenDecomposition(atomOmega.get(t))).getDeterminant());
                 for (int i = 0; i < dimension; i++) {
-                    lnLambdaContribution[t] += Gamma.digamma((atomNu[t] - i) / 2);
+                    lnLambdaContribution[t] += Gamma.digamma((atomDOF[t] - i) / 2);
                 }
                 lnLambdaContribution[t] /= 2;
                 // Calculate Mixing coefficient contributions to r
@@ -155,16 +141,16 @@ public class VariationalDPMG extends BatchMixtureModel {
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int t = 0; t < T; t++) {
-                    RealVector _diff = data.get(n).getMetrics().subtract(atomLocation.get(t));
+                    RealVector _diff = data.get(n).getMetrics().subtract(atomLoc.get(t));
                     if (atomBeta[t] != 0) {
-                        lnXMuLambdaContribution = dimension / atomBeta[t] + atomNu[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
+                        lnXMuLambdaContribution = dimension / atomBeta[t] + atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
                     } else {
-                        lnXMuLambdaContribution = atomNu[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
+                        lnXMuLambdaContribution = atomDOF[t] * _diff.dotProduct(atomOmega.get(t).operate(_diff));
                     }
                     r[n][t] = Math.exp(lnMixingContribution[t] - halfDimensionLn2Pi + lnLambdaContribution[t] - lnXMuLambdaContribution);
                     normalizingConstant += r[n][t];
                 }
-                for (int t = 0; t < atomLocation.size(); t++) {
+                for (int t = 0; t < atomLoc.size(); t++) {
                     if (normalizingConstant > 0) {
                         r[n][t] /= normalizingConstant;
                     }
@@ -192,7 +178,7 @@ public class VariationalDPMG extends BatchMixtureModel {
                 S.set(t, S.get(t).scalarMultiply(1 / clusterWeight[t]));
             }
 
-            for (int t = 0; t < atomLocation.size(); t++) {
+            for (int t = 0; t < atomLoc.size(); t++) {
                 shapeParams[t][0] = 1;
                 shapeParams[t][1] = concentrationParameter;
                 for (int n = 0; n < N; n++) {
@@ -202,9 +188,9 @@ public class VariationalDPMG extends BatchMixtureModel {
                     }
                 }
                 atomBeta[t] = baseBeta + clusterWeight[t];
-                atomLocation.set(t, baseLocation.mapMultiply(baseBeta).add(clusterMean.get(t).mapMultiply(clusterWeight[t])).mapDivide(atomBeta[t]));
-                atomNu[t] = baseNu + 1 + clusterWeight[t];
-                RealMatrix wInverse = inverseBaseOmega.add(
+                atomLoc.set(t, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(t).mapMultiply(clusterWeight[t])).mapDivide(atomBeta[t]));
+                atomDOF[t] = baseNu + 1 + clusterWeight[t];
+                RealMatrix wInverse = baseOmegaInverse.add(
                         S.get(t).scalarMultiply(clusterWeight[t])).add(
                         clusterMean.get(t).outerProduct(clusterMean.get(t)).scalarMultiply(baseBeta * clusterWeight[t] / (baseBeta + clusterWeight[t])));
                 atomOmega.set(t, AlgebraUtils.invertMatrix(wInverse));
@@ -240,9 +226,9 @@ public class VariationalDPMG extends BatchMixtureModel {
     private void instantiateVariationalParameters(int numPoints, int maxNumClusters) {
         shapeParams = new double[maxNumClusters][2];
         r = new double[numPoints][maxNumClusters];
-        atomLocation = new ArrayList<>(maxNumClusters);
+        atomLoc = new ArrayList<>(maxNumClusters);
         atomOmega = new ArrayList<>(maxNumClusters);
-        atomNu = new double[maxNumClusters];
+        atomDOF = new double[maxNumClusters];
         atomBeta = new double[maxNumClusters];
     }
 
@@ -276,14 +262,14 @@ public class VariationalDPMG extends BatchMixtureModel {
 
     @Override
     public List<RealVector> getClusterCenters() {
-        return atomLocation;
+        return atomLoc;
     }
 
     @Override
     public List<RealMatrix> getClusterCovariances() {
         List<RealMatrix> covariances = new ArrayList<>(T);
         for (int t = 0; t < T; t++) {
-            covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(t).scalarMultiply(atomNu[t])));
+            covariances.add(AlgebraUtils.invertMatrix(atomOmega.get(t).scalarMultiply(atomDOF[t])));
         }
         return covariances;
     }

@@ -18,31 +18,18 @@ import java.util.List;
 /**
  * Fit Gaussian Mixture models using Variational Bayes
  */
-public class FiniteGMM extends BatchMixtureModel {
+public class FiniteGMM extends MeanFieldGMM {
     private static final Logger log = LoggerFactory.getLogger(FiniteGMM.class);
     private final String initialClusterCentersFile;
 
     private int K;  // Number of mixture components
-    private double progressCutoff;
 
     private double priorAlpha;
-    private double priorBeta;
-    private RealVector priorM;
-    private double priorNu;
-    private RealMatrix priorW;
-    private RealMatrix priorWInverse;
+
     private double[] mixingCoeffs;
     private List<MultivariateTDistribution> predictiveDistributions;
 
     private double[] clusterWeight;  // N_k (Bishop)
-
-    // Gaussian-Wishart distribution coefficients
-    // Coefficients for K Gaussian distributions
-    private List<RealVector> atomLoc;
-    private double[] atomBeta;
-    // Wishart distribution coefficients for Precision matrix (lambda)
-    private List<RealMatrix> atomOmega;
-    private double[] atomDOF;
 
     // Useful constants for each dataset.
     protected int D;
@@ -52,7 +39,6 @@ public class FiniteGMM extends BatchMixtureModel {
     public FiniteGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
-        this.progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
         log.debug("created Gaussian MM with {} mixtures", this.K);
         this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
@@ -66,14 +52,14 @@ public class FiniteGMM extends BatchMixtureModel {
 
         //priorAlpha = 1. / dimensions;
         priorAlpha = 0.1;
-        //priorBeta = 1. / dimensions;
-        priorBeta = 0.1;
-        priorM = new ArrayRealVector(D);
-        // priorNu = 1. / dimensions;
-        priorNu = 0.1;
-        priorW = MatrixUtils.createRealIdentityMatrix(D);
-        //priorW.setEntry(1, 1, 3);
-        priorWInverse = AlgebraUtils.invertMatrix(priorW);
+        //baseBeta = 1. / dimensions;
+        baseBeta = 0.1;
+        baseLoc = new ArrayRealVector(D);
+        // baseNu = 1. / dimensions;
+        baseNu = 0.1;
+        baseOmega = MatrixUtils.createRealIdentityMatrix(D);
+        //baseOmega.setEntry(1, 1, 3);
+        baseOmegaInverse = AlgebraUtils.invertMatrix(baseOmega);
 
         mixingCoeffs = new double[K];
         atomBeta = new double[K];
@@ -94,9 +80,9 @@ public class FiniteGMM extends BatchMixtureModel {
         log.debug("initialized cluster centers as: {}", atomLoc);
         for (int k = 0; k < this.K; k++) {
             mixingCoeffs[k] = 1. / K;
-            atomBeta[k] = priorBeta;
-            atomDOF[k] = priorNu;
-            atomOmega.add(priorW);
+            atomBeta[k] = baseBeta;
+            atomDOF[k] = baseNu;
+            atomOmega.add(baseOmega);
         }
 
         List<RealVector> clusterMean;
@@ -176,14 +162,14 @@ public class FiniteGMM extends BatchMixtureModel {
         log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < this.K; k++) {
-            atomBeta[k] = priorBeta + clusterWeight[k];
-            atomLoc.set(k, priorM.mapMultiply(priorBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
-            atomDOF[k] = priorNu + 1 + clusterWeight[k];
-            RealVector adjustedMean = clusterMean.get(k).subtract(priorM);
+            atomBeta[k] = baseBeta + clusterWeight[k];
+            atomLoc.set(k, baseLoc.mapMultiply(baseBeta).add(clusterMean.get(k).mapMultiply(clusterWeight[k])).mapDivide(atomBeta[k]));
+            atomDOF[k] = baseNu + 1 + clusterWeight[k];
+            RealVector adjustedMean = clusterMean.get(k).subtract(baseLoc);
             log.debug("adjustedMean: {}", adjustedMean);
-            RealMatrix wInverse = priorWInverse
+            RealMatrix wInverse = baseOmegaInverse
                     .add(quadForm.get(k))
-                    .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(priorBeta * clusterWeight[k] / (priorBeta + clusterWeight[k])));
+                    .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
             log.debug("wInverse: {}", wInverse);
             atomOmega.set(k, AlgebraUtils.invertMatrix(wInverse));
         }
