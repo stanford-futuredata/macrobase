@@ -201,9 +201,10 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         return wisharts;
     }
 
-    protected List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
+    protected static List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
         int N = data.size();
         int K = r[0].length;
+        int D = data.get(0).getMetrics().getDimension();
         List<RealVector> sums = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
             RealVector sum = new ArrayRealVector(D);
@@ -215,7 +216,7 @@ public abstract class MeanFieldGMM extends BatchMixtureModel {
         return sums;
     }
 
-    protected double[] calculateClusterWeights(double[][] r) {
+    protected static double[] calculateClusterWeights(double[][] r) {
         int N = r.length;
         int K = r[0].length;
         double[] clusterWeight = new double[K];

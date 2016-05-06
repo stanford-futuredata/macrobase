@@ -28,15 +28,15 @@ public abstract class StochVarInfGMM extends MeanFieldGMM {
 
     protected abstract void updateSticks(double[][] r, double stepSize, double repeat);
 
-    protected static double step(double value, double newValue, double pace) {
+    public static double step(double value, double newValue, double pace) {
         return (1 - pace) * value + pace * newValue;
     }
 
-    private RealVector step(RealVector start, RealVector end, double pace) {
+    public static RealVector step(RealVector start, RealVector end, double pace) {
         return start.mapMultiply(1 - pace).add(end.mapMultiply(pace));
     }
 
-    private RealMatrix step(RealMatrix start, RealMatrix end, double pace) {
+    public static RealMatrix step(RealMatrix start, RealMatrix end, double pace) {
         return start.scalarMultiply(1 - pace).add(end.scalarMultiply(pace));
     }
 
