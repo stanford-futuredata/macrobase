@@ -3,10 +3,7 @@ package macrobase.conf;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.stats.*;
-import macrobase.analysis.stats.mixture.DPGMM;
-import macrobase.analysis.stats.mixture.FiniteGMM;
-import macrobase.analysis.stats.mixture.StochVarFiniteGMM;
-import macrobase.analysis.stats.mixture.ExpectMaxGMM;
+import macrobase.analysis.stats.mixture.*;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,7 +146,7 @@ public class MacroBaseConf extends Configuration {
         EM_GMM,
         MEAN_FIELD_GMM,
         MEAN_FIELD_DPGMM,
-        SVI_GMM,
+        SVI_GMM, SVI_DPGMM,
     }
 
     public enum ContextualAPI {
@@ -216,6 +213,9 @@ public class MacroBaseConf extends Configuration {
             case SVI_GMM:
                 log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new StochVarFiniteGMM(this);
+            case SVI_DPGMM:
+                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new StochVarDPGMM(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }

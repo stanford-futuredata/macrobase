@@ -1,20 +1,26 @@
 package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.distribution.MultivariateNormal;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
 import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.BlockRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static junit.framework.TestCase.assertEquals;
 
 public class StochVarDPGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(StochVarDPGMMTest.class);
 
     /**
      * Tests Bayesian Gaussian Mixture Model on a three well separated clusters.
@@ -99,11 +105,11 @@ public class StochVarDPGMMTest {
         double[] maxProbas = {0, 0, 0};
         for (int i = 0; i < 3; i++) {
             double[] probas = dpgmm.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
-            for (int j=0; j< 3; j++) {
+            for (int j = 0; j < 3; j++) {
                 maxProbas[j] = Math.max(probas[j], maxProbas[j]);
             }
         }
-        for (int j=0; j< 3; j++) {
+        for (int j = 0; j < 3; j++) {
             assertEquals(maxProbas[j], 1, 0.01);
         }
     }
@@ -114,11 +120,11 @@ public class StochVarDPGMMTest {
      */
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.RANDOM_SEED, 0)
+                .set(MacroBaseConf.RANDOM_SEED, 2)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
-                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 30)
-                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.2)
+                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 15)
+                .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.5)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -127,7 +133,8 @@ public class StochVarDPGMMTest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
         List<Datum> data = Drainer.drainIngest(conf);
-        assertEquals(7000, data.size());
+        int totalPoints = 7000;
+        assertEquals(totalPoints, data.size());
 
         double[][] clusterMeans = {
                 {1.5, 2},
@@ -144,26 +151,28 @@ public class StochVarDPGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        StochVarDPGMM dpgmm= new StochVarDPGMM(conf);
+        double[] clusterWeights = {
+                2000,
+                3000,
+                2000,
+        };
+
+        StochVarDPGMM dpgmm = new StochVarDPGMM(conf);
         dpgmm.train(data);
 
-        List<RealVector> calculatedMeans = dpgmm.getClusterCenters();
-        List<RealMatrix> calculatedCovariances = dpgmm.getClusterCovariances();
-
+        List<MultivariateNormal> normals = new ArrayList<>(3);
         for (int i = 0; i < 3; i++) {
-            boolean identified = false;
+            normals.add(new MultivariateNormal(vectorClusterMeans.get(i), new BlockRealMatrix(clusterCovariances[i])));
+        }
+
+        Random rand = new Random();
+        for (int i = 0; i < 10; i++) {
+            Datum d = data.get(rand.nextInt(totalPoints));
+            double density = 0;
             for (int j = 0; j < 3; j++) {
-                if (calculatedMeans.get(i).getDistance(vectorClusterMeans.get(j)) < 0.1) {
-                    for (int p = 0; p < 2; p++) {
-                        for (int q = 0; q < 2; q++) {
-                            assertEquals(clusterCovariances[j][p][q], calculatedCovariances.get(i).getEntry(p, q), 0.1);
-                        }
-                    }
-                    identified = true;
-                    break;
-                }
+                density += clusterWeights[j] / totalPoints * normals.get(j).density(d.getMetrics());
             }
-            assertEquals("a cluster was not identified", true, identified);
+            assertEquals(density, Math.exp(dpgmm.score(d)), 0.02);
         }
     }
 }

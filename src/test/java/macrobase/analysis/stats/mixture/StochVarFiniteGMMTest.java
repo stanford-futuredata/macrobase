@@ -1,13 +1,12 @@
 package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.distribution.MultivariateNormal;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
-import macrobase.diagnostics.JsonUtils;
-import macrobase.diagnostics.ScoreDumper;
 import macrobase.ingest.CSVIngester;
-import macrobase.util.DiagnosticsUtils;
 import macrobase.util.Drainer;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.BlockRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -121,6 +121,7 @@ public class StochVarFiniteGMMTest {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_GMM")
+                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 20)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -129,12 +130,18 @@ public class StochVarFiniteGMMTest {
                 .set(MacroBaseConf.LOW_METRICS, "")
                 .set(MacroBaseConf.ATTRIBUTES, "");
         List<Datum> data = Drainer.drainIngest(conf);
-        assertEquals(7000, data.size());
+        int totalPoints = 7000;
+        assertEquals(totalPoints, data.size());
 
         double[][] clusterMeans = {
                 {1.5, 2},
                 {2, 0},
                 {4.5, 1},
+        };
+        double[] clusterWeights = {
+                2000,
+                3000,
+                2000,
         };
         List<RealVector> vectorClusterMeans = new ArrayList<>(3);
         for (int k = 0; k < 3; k++) {
@@ -149,41 +156,22 @@ public class StochVarFiniteGMMTest {
         StochVarFiniteGMM finiteGMM = new StochVarFiniteGMM(conf);
         finiteGMM.train(data);
 
-        List<RealVector> calculatedMeans = finiteGMM.getClusterCenters();
-        List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
-
+        List<MultivariateNormal> normals = new ArrayList<>(3);
         for (int i = 0; i < 3; i++) {
-            boolean identified = false;
-            for (int j = 0; j < 3; j++) {
-                if (calculatedMeans.get(i).getDistance(vectorClusterMeans.get(j)) < 0.1) {
-                    for (int p = 0; p < 2; p++) {
-                        for (int q = 0; q < 2; q++) {
-                            assertEquals(clusterCovariances[j][p][q], calculatedCovariances.get(i).getEntry(p, q), 0.1);
-                        }
-                    }
-                    identified = true;
-                    break;
-                }
-            }
-            assertEquals("a cluster was not identified", true, identified);
+            normals.add(new MultivariateNormal(vectorClusterMeans.get(i), new BlockRealMatrix(clusterCovariances[i])));
         }
 
-        double[][] boundaries = {
-                {0, 6.01},
-                {-2, 4.01},
-        };
-        List<Datum> scoredData = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.05);
+        Random rand = new Random();
+        for (int i = 0; i < 10; i++) {
+            Datum d = data.get(rand.nextInt(totalPoints));
+            double density = 0;
+            for (int j = 0; j < 3; j++) {
+                density += clusterWeights[j] / totalPoints * normals.get(j).density(d.getMetrics());
+            }
+            // Finite Model takes longer to converge, and since we are limiting num
+            // iterations, take a conservative limit on deviation.
+            assertEquals(density, Math.exp(finiteGMM.score(d)), 0.05);
+        }
 
-        JsonUtils.dumpAsJson(finiteGMM.getClusterCovariances(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
-        JsonUtils.dumpAsJson(finiteGMM.getClusterCenters(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(finiteGMM.getPriorAdjustedClusterProportions(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-weights.json");
-
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
-        ScoreDumper dumper = new ScoreDumper(conf);
-        dumper.dumpScores(finiteGMM, scoredData);
-
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
-        dumper = new ScoreDumper(conf);
-        dumper.dumpScores(finiteGMM, data);
     }
 }
