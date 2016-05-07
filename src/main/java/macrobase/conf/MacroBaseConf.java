@@ -146,7 +146,8 @@ public class MacroBaseConf extends Configuration {
         EM_GMM,
         MEAN_FIELD_GMM,
         MEAN_FIELD_DPGMM,
-        SVI_GMM, SVI_DPGMM,
+        SVI_GMM,
+        SVI_DPGMM,
     }
 
     public enum ContextualAPI {
