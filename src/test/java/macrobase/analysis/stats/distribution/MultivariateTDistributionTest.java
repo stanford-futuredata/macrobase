@@ -1,10 +1,7 @@
 package macrobase.analysis.stats.distribution;
 
 import org.apache.commons.math3.distribution.TDistribution;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.special.Gamma;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -93,6 +90,42 @@ public class MultivariateTDistributionTest {
                     MatrixUtils.createRealIdentityMatrix(1).scalarMultiply(var),
                     (int) mCN[2]);
             assertEquals(1. / Math.sqrt(2 * var * Math.PI), multiT.density(v), 1e-3);
+        }
+    }
+
+    /**
+     * Compare with R package mvtnorm
+     */
+    @Test
+    public void valueTest() {
+        double[][] means  = {
+                {5.8, 1.3},
+                {0.25, 10.96},
+        };
+        double[][][] covariances = {
+                {{0.18, 0.03}, {0.03, 0.27}},
+                {{0.55, 0.018}, {0.018, 0.21}},
+        };
+        double[] dofs = {
+                292.1,
+                10.7,
+        };
+
+        double[][][] points = {
+                {{5.8, 1.3}, {5.2, 2.3}},
+                {{0.25, 10.96}, {0, 10}, {1, 11}},
+        };
+
+        double[][] pdfs = {
+                {0.7287204, 0.02772672},
+                {0.4689636, 0.05175506, 0.2624979},
+        };
+
+        for (int s=0; s< means.length; s ++) {
+            MultivariateTDistribution mvtd = new MultivariateTDistribution(new ArrayRealVector(means[s]), new BlockRealMatrix(covariances[s]), dofs[s]);
+            for (int i =0; i< points[s].length; i++) {
+                assertEquals(pdfs[s][i], mvtd.density(new ArrayRealVector(points[s][i])), 1e-7);
+            }
         }
     }
 }
