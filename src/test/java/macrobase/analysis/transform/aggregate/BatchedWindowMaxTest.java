@@ -1,5 +1,6 @@
 package macrobase.analysis.transform.aggregate;
 
+import macrobase.analysis.outlier.TestOutlierUtils;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -27,7 +28,7 @@ public class BatchedWindowMaxTest {
         }
 
         BatchedWindowMax windowMax = new BatchedWindowMax();
-        Datum max = windowMax.process(data);
+        Datum max = windowMax.aggregate(data);
         assert(max.getMetrics().getEntry(0) == 1);
         assert(max.getMetrics().getEntry(1) == Integer.MAX_VALUE);
         assert(max.getMetrics().getEntry(2) == 9);
@@ -35,9 +36,26 @@ public class BatchedWindowMaxTest {
         /* Test datum with time column */
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TIME_COLUMN, 2);
         windowMax = new BatchedWindowMax(conf);
-        max = windowMax.process(data);
+        max = windowMax.aggregate(data);
         assert(max.getMetrics().getEntry(0) == 1);
         assert(max.getMetrics().getEntry(1) == Integer.MAX_VALUE);
-        assert(max.getMetrics().getEntry(2) == 0);
+    }
+
+    @Test
+    public void testWindowUpdate() throws Exception {
+        List<Datum> data = new ArrayList<>();
+        for (int i = 0; i < 10; ++i) {
+            Datum d = TestOutlierUtils.createTimeDatum(i, i);
+            data.add(d);
+        }
+
+        MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TIME_COLUMN, 0);
+        BatchedWindowMax windowMax = new BatchedWindowMax(conf);
+        // First window
+        Datum max = windowMax.updateWindow(data.subList(0, 5), new ArrayList<>());
+        assert(max.getMetrics().getEntry(1) == 4);
+        // Update window
+        max = windowMax.updateWindow(data.subList(5, 10), data.subList(0, 4));
+        assert(max.getMetrics().getEntry(1) == 9);
     }
 }

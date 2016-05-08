@@ -16,26 +16,37 @@ public class BatchedWindowCount extends BatchedWindowAggregate {
         this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
     }
 
-    public Datum process(List<Datum> new_data, List<Datum> expired_data) {
-        /* TODO: Incremental updates for window count */
-        return null;
+    public boolean paneEnabled() {return false;}
+
+    private int getCount() {
+        for (int i = 0; i < currWindow.getMetrics().getDimension(); i ++)
+            if (timeColumn == null || i != timeColumn)
+                return (int) currWindow.getMetrics().getEntry(i);
+        return 0;
     }
 
-    public Datum process(List<Datum> data) {
-        if (data.isEmpty())
-            return null;
-
-        if (timeColumn == null) {
-            return new Datum(new ArrayList<>(), data.size());
-        } else {
-            int dim = data.get(0).getMetrics().getDimension();
+    public Datum updateWindow(List<Datum> new_data, List<Datum> expired_data) {
+        if (currWindow == null) { // first window
+            currWindow = aggregate(new_data);
+        } else { // update existing window
+            int dim = new_data.get(0).getMetrics().getDimension();
             RealVector results = new ArrayRealVector(dim);
+            int new_count = getCount() + new_data.size() - expired_data.size();
             for (int i = 0; i < dim; i ++) {
-                results.setEntry(i, data.size());
+                results.setEntry(i, new_count);
             }
-            results.setEntry(timeColumn, data.get(0).getMetrics().getEntry(timeColumn));
-
-            return new Datum(new ArrayList<>(), results);
+            currWindow = new Datum(new ArrayList<>(), results);
         }
+        return currWindow;
+    }
+
+    public Datum aggregate(List<Datum> data) {
+        int dim = data.get(0).getMetrics().getDimension();
+        RealVector results = new ArrayRealVector(dim);
+        for (int i = 0; i < dim; i ++) {
+            results.setEntry(i, data.size());
+        }
+
+        return new Datum(new ArrayList<>(), results);
     }
 }

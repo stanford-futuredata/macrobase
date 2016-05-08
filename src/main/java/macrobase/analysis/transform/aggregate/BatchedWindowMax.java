@@ -9,6 +9,7 @@ import org.apache.commons.math3.linear.RealVector;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class BatchedWindowMax extends BatchedWindowAggregate {
     public BatchedWindowMax() {}
 
@@ -16,21 +17,26 @@ public class BatchedWindowMax extends BatchedWindowAggregate {
         this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
     }
 
-    public Datum process(List<Datum> new_data, List<Datum> expired_data) {
-        /* TODO: Incremental updates for window max */
-        return null;
+    public boolean paneEnabled() {return true;}
+
+    public Datum updateWindow(List<Datum> new_panes, List<Datum> expired_panes) {
+        if (currWindow == null) { // first window
+            currWindow = aggregate(new_panes);
+        } else { // update existing window
+            List<Datum> updates = new ArrayList<>();
+            updates.add(currWindow);
+            updates.add(aggregate(new_panes));
+            updates.add(aggregate(expired_panes));
+            currWindow = aggregate(updates);
+        }
+        return currWindow;
     }
 
-    public Datum process(List<Datum> data) {
-        if (data.isEmpty())
-            return null;
-
+    @Override
+    public Datum aggregate(List<Datum> data) {
         int dim = data.get(0).getMetrics().getDimension();
         RealVector results = new ArrayRealVector(dim);
         results.set(Double.MIN_VALUE);
-        /* Set time column of aggregate result to be the start time of the window. */
-        if (timeColumn != null)
-            results.setEntry(timeColumn, data.get(0).getMetrics().getEntry(timeColumn));
 
         for (Datum d : data) {
             RealVector metrics = d.getMetrics();

@@ -1,5 +1,6 @@
 package macrobase.analysis.transform.aggregate;
 
+import macrobase.analysis.outlier.TestOutlierUtils;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -23,18 +24,32 @@ public class BatchedWindowCountTest {
             data.add(d);
         }
 
-        BatchedWindowCount windowCount = new BatchedWindowCount();
-        Datum count = windowCount.process(data);
-        assert(count.getMetrics().getDimension() == 1);
-        assert(count.getMetrics().getEntry(0) == size);
-
-        /* Test datum with time column */
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TIME_COLUMN, 0);
-        windowCount = new BatchedWindowCount(conf);
-        count = windowCount.process(data);
+        BatchedWindowCount windowCount = new BatchedWindowCount(conf);
+        Datum count = windowCount.aggregate(data);
         assert(count.getMetrics().getDimension() == 3);
-        assert(count.getMetrics().getEntry(0) == 0);
         assert(count.getMetrics().getEntry(1) == size);
         assert(count.getMetrics().getEntry(2) == size);
+    }
+
+    @Test
+    public void testWindowUpdate() throws Exception {
+        List<Datum> data = new ArrayList<>();
+        for (int i = 0; i < 20; ++i) {
+            Datum d = TestOutlierUtils.createTimeDatum(i, i);
+            data.add(d);
+        }
+
+        MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TIME_COLUMN, 0);
+        BatchedWindowCount windowCount = new BatchedWindowCount(conf);
+        // First window
+        Datum count = windowCount.updateWindow(data.subList(0, 10), new ArrayList<>());
+        assert(count.getMetrics().getEntry(1) == 10);
+        // Update window
+        count = windowCount.updateWindow(data.subList(10, 11), data.subList(0, 1));
+        assert(count.getMetrics().getEntry(1) == 10);
+
+        count = windowCount.updateWindow(data.subList(11, 20), data.subList(1, 5));
+        assert(count.getMetrics().getEntry(1) == 15);
     }
 }

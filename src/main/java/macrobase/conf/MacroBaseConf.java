@@ -46,6 +46,7 @@ public class MacroBaseConf extends Configuration {
     public static final String INLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.inlierItemSummarySize";
 
     public static final String TUPLE_WINDOW = "macrobase.analysis.timeseries.tupleWindow";
+    public static final String SLIDE_SIZE = "macrobase.analysis.timeseries.slideSize";
 
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
