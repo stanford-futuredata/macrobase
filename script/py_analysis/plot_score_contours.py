@@ -31,7 +31,7 @@ def parse_args(*argument_list):
   # histogram
   parser.add_argument('--hist2d', nargs=2)
   parser.add_argument('--histogram-bins', type=int, default=100)
-  parser.add_argument('--csv', type=argparse.FileType('r'))
+  parser.add_argument('--csv')
   # centers
   parser.add_argument('--centers', type=argparse.FileType('r'))
   parser.add_argument('--weights', type=argparse.FileType('r'))

@@ -34,7 +34,7 @@ public class FiniteGMM extends VarGMM {
         mixingComponents = new MultiComponents(0.1, K);
         clusters = new NormalWishartClusters(K, data.get(0).getMetrics().getDimension());
         clusters.initializeBaseForFinite(data);
-        clusters.initalizeAtomsForFinite(data, initialClusterCentersFile, conf.getRandom());
+        clusters.initializeAtomsForFinite(data, initialClusterCentersFile, conf.getRandom());
         //clusters.initializeBase(baseLoc, baseBeta, baseOmega, baseNu);
 
         log.debug("actual training");

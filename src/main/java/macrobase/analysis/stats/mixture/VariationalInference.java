@@ -1,6 +1,7 @@
 package macrobase.analysis.stats.mixture;
 
 import macrobase.datamodel.Datum;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -48,13 +49,17 @@ public class VariationalInference {
             for (int p = 0; p < partitions; p++) {
                 // Step 0. Create the minibatch.
                 miniBatch = new ArrayList<>(desiredMinibatchSize);
-                for (int i = 0; i < N; i += partitions) {
+                RealVector center = new ArrayRealVector(data.get(0).getMetrics().getDimension());
+                for (int i = p; i < N; i += partitions) {
                     miniBatch.add(data.get(i));
+                    center = center.add(data.get(i).getMetrics());
                 }
 
                 minibatchSize = miniBatch.size();
+                center = center.mapDivide(1. * minibatchSize);
 
                 log.debug("minibatch Size = {}", minibatchSize);
+                log.debug("minibatch center = {}", center);
 
                 // Step 1. Update local variables
                 exLnMixingContribution = mixingComponents.calcExpectationLog();
@@ -65,12 +70,12 @@ public class VariationalInference {
                 // Step 2. Update global variables
                 mixingComponents.moveNatural(r, pace, 1. * N /minibatchSize);
                 clusters.moveNatural(miniBatch, r, pace, 1. * N / minibatchSize);
+            }
 
-                double oldLogLikelihood = logLikelihood;
-                logLikelihood = model.calculateLogLikelihood(data, mixingComponents, clusters);
-                if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
-                    return;
-                }
+            double oldLogLikelihood = logLikelihood;
+            logLikelihood = model.calculateLogLikelihood(data, mixingComponents, clusters);
+            if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
+                return;
             }
         }
     }

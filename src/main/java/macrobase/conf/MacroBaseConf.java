@@ -48,6 +48,9 @@ public class MacroBaseConf extends Configuration {
     public static final String EM_CUTOFF_PROGRESS = "macrobase.analysis.em.improvementCutoffRatio";
     public static final String DPM_TRUNCATING_PARAMETER = "macrobase.analysis.dpm.truncatingParameter";
     public static final String DPM_CONCENTRATION_PARAMETER = "macrobase.analysis.dpm.concentrationParameter";
+    public static final String SVI_DELAY = "macrobase.analysis.stat.svi.delay";
+    public static final String SVI_FORGETTING_RATE = "macrobase.analysis.stat.svi.forgettingRate";
+    public static final String SVI_MINIBATCH_SIZE = "macrobase.analysis.stat.svi.minibatchSize";
 
     // Algorithm to use when choosing the bandwidth for the given data.
     public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
@@ -79,7 +82,7 @@ public class MacroBaseConf extends Configuration {
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
-    
+
     public static final String CONTEXTUAL_API = "macrobase.analysis.contextual.api";
     public static final String CONTEXTUAL_API_OUTLIER_PREDICATES = "macrobase.analysis.contextual.api.outlierPredicates";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
@@ -154,7 +157,7 @@ public class MacroBaseConf extends Configuration {
         findAllContextualOutliers,
         findContextsGivenOutlierPredicate,
     }
-    
+
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
         if (seed != null) {
@@ -350,9 +353,9 @@ public class MacroBaseConf extends Configuration {
         }
         return TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
     }
-    
+
     public ContextualAPI getContextualAPI() throws ConfigurationException {
-        if(!_conf.containsKey(CONTEXTUAL_API)) {
+        if (!_conf.containsKey(CONTEXTUAL_API)) {
             return MacroBaseDefaults.CONTEXTUAL_API;
         }
         return ContextualAPI.valueOf(_conf.get(CONTEXTUAL_API));

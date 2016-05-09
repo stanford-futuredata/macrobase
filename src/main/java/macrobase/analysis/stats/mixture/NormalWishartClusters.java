@@ -106,7 +106,7 @@ public class NormalWishartClusters {
         }
     }
 
-    public void initalizeAtomsForFinite(List<Datum> data, String filename, Random random) {
+    public void initializeAtomsForFinite(List<Datum> data, String filename, Random random) {
 
         beta = new double[K];
         dof = new double[K];
@@ -162,6 +162,7 @@ public class NormalWishartClusters {
 
     public void update(List<Datum> data, double[][] r) {
         double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
+
         List<RealVector> weightedSum = calculateWeightedSums(data, r);
         List<RealVector> clusterMean = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
@@ -171,7 +172,9 @@ public class NormalWishartClusters {
                 clusterMean.add(weightedSum.get(k));
             }
         }
+        log.debug("cluster Mean {}", clusterMean);
         List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
+        log.debug("quadFrom: {}", quadForm);
 
         for (int k = 0; k < K; k++) {
             beta[k] = baseBeta + clusterWeight[k];
@@ -182,6 +185,13 @@ public class NormalWishartClusters {
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
             omega.set(k, AlgebraUtils.invertMatrix(wInverse));
+        }
+
+        log.debug("NormalWishartClusters.update");
+        for (int i = 0; i < omega.size(); i++) {
+            if (clusterWeight[i] > 1e-9) {
+                log.debug("{}: weight: {} mean: {}, cov: {}, beta: {}, dof: {}", i, clusterWeight[i], loc.get(i), omega.get(i), beta[i], dof[i]);
+            }
         }
         log.debug("clusterWeights: {}", clusterWeight);
     }
@@ -200,7 +210,13 @@ public class NormalWishartClusters {
             clusterWeight[k] *= repeat;
             weightedSum.set(k, weightedSum.get(k).mapMultiply(repeat));
         }
+        log.debug("cluster Mean {}", clusterMean);
         List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
+        log.debug("quadFrom (before): {}", quadForm);
+        for (int i = 0; i< quadForm.size(); i++) {
+            quadForm.set(i, quadForm.get(i).scalarMultiply(repeat));
+        }
+        log.debug("quadFrom (after): {}", quadForm);
         log.debug("clusterWeights: {}", clusterWeight);
 
         for (int k = 0; k < K; k++) {
@@ -212,6 +228,12 @@ public class NormalWishartClusters {
                     .add(quadForm.get(k))
                     .add(adjustedMean.outerProduct(adjustedMean).scalarMultiply(baseBeta * clusterWeight[k] / (baseBeta + clusterWeight[k])));
             omega.set(k, VariationalInference.step(omega.get(k), AlgebraUtils.invertMatrix(wInverse), pace));
+        }
+        log.debug("NormalWishartClusters.moveNatural");
+        for (int i = 0; i < omega.size(); i++) {
+            if (clusterWeight[i] > 1e-9) {
+                log.debug("{}: weight: {} mean: {}, cov: {}, beta: {}, dof: {}", i, clusterWeight[i], loc.get(i), omega.get(i), beta[i], dof[i]);
+            }
         }
     }
 

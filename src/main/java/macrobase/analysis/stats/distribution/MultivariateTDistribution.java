@@ -8,7 +8,7 @@ import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MultivariateTDistribution {
+public class MultivariateTDistribution implements MultivariateDistribution{
     private static final Logger log = LoggerFactory.getLogger(MultivariateTDistribution.class);
     private RealVector mean;
     private RealMatrix precisionMatrix;

@@ -1,6 +1,7 @@
 macrobase:
   macrobase.pipeline.class: macrobase.analysis.pipeline.GridDumpingPipeline
   macrobase.analysis.transformType: VARIATIONAL_GMM
+  macrobase.analysis.minSupport: 100
   macrobase.analysis.stat.mixtures.numMixtures: 6
   macrobase.loader.attributes: [XX, YY]
   macrobase.loader.csv.file: src/test/resources/data/3gaussians-7000points.csv.gz
@@ -10,4 +11,10 @@ macrobase:
   macrobase.loader.targetLowMetrics: []
   macrobase.query.name: ok_gaussians_finite_gmm
 post_run:
+  - plot_score_contours: "--plot density --savefig exp.png \
+    --centers target/scores/centers-ok_gaussians_finite_gmm-mixtures.json \
+    --covariances target/scores/covariances-ok_gaussians_finite_gmm-mixtures.json \
+    --weights target/scores/weights-ok_gaussians_finite_gmm-mixtures.json \
+    --csv src/test/resources/data/3gaussians-7000points.csv.gz \
+    --hist2d XX YY"
   - plot_score_contours: "--plot density --savefig"

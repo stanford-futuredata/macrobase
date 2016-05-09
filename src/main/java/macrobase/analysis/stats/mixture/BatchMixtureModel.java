@@ -91,7 +91,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     }
 
     public boolean checkTermination(double logLikelihood, double oldLogLikelihood, int iteration) {
-        log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+        log.debug("average point log likelihood after iteration {} is {}", iteration, logLikelihood);
 
         if (iteration >= maxIterationsToConverge) {
             log.debug("Breaking because have already run {} iterations", iteration);
