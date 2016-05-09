@@ -41,7 +41,7 @@ public abstract class VarGMM extends BatchMixtureModel {
         for (Datum d : data) {
             logLikelihood += score(d);
         }
-        return logLikelihood;
+        return logLikelihood / data.size();
     }
 
     @Override
@@ -52,7 +52,7 @@ public abstract class VarGMM extends BatchMixtureModel {
             density += cc[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }
         if (density == 0) {
-            log.debug("what the fuck should i do here??");
+            return -10000;
         }
         return Math.log(density);
     }
