@@ -52,14 +52,9 @@ public class VariationalInference {
                 RealVector center = new ArrayRealVector(data.get(0).getMetrics().getDimension());
                 for (int i = p; i < N; i += partitions) {
                     miniBatch.add(data.get(i));
-                    center = center.add(data.get(i).getMetrics());
                 }
 
                 minibatchSize = miniBatch.size();
-                center = center.mapDivide(1. * minibatchSize);
-
-                log.debug("minibatch Size = {}", minibatchSize);
-                log.debug("minibatch center = {}", center);
 
                 // Step 1. Update local variables
                 exLnMixingContribution = mixingComponents.calcExpectationLog();

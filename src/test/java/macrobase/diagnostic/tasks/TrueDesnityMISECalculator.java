@@ -56,11 +56,12 @@ public class TrueDesnityMISECalculator extends ConfiguredCommand<MacroBaseConf> 
             BatchScoreFeatureTransform batchTransform = new BatchScoreFeatureTransform(conf, conf.getTransformType());
 
             List<MultivariateDistribution> listDist = new ArrayList<>(3);
-            double[] weights = {2. / 7, 3. / 7, 2. / 7};
+            double[] weights = new double[3];
+            double totalW = 0;
             double[][] distData = {
-                    {1.5, 2}, {0.5, 0.4, 0.4, 0.5}, {2000},
-                    {2, 0}, {0.3, 0, 0, 0.6}, {3000},
-                    {4.5, 1}, {0.9, 0.2, 0.2, 0.3}, {2000}};
+                    {1.5, 2}, {0.5, 0.4, 0.4, 0.5}, {50000},
+                    {2, 0}, {0.3, 0, 0, 0.6}, {30000},
+                    {4.5, 1}, {0.9, 0.2, 0.2, 0.3}, {20000}};
             for (int i = 0; i < distData.length; i += 3) {
                 RealVector mean = new ArrayRealVector(distData[i + 0]);
                 double[][] covArray = new double[2][2];
@@ -68,6 +69,11 @@ public class TrueDesnityMISECalculator extends ConfiguredCommand<MacroBaseConf> 
                 covArray[1] = Arrays.copyOfRange(distData[i + 1], 2, 4);
                 RealMatrix cov = new BlockRealMatrix(covArray);
                 listDist.add(new MultivariateNormal(mean, cov));
+                weights[i / 3] = distData[i + 2][0];
+                totalW += weights[i / 3];
+            }
+            for (int i = 0; i < weights.length; i++) {
+                weights[i] /= totalW;
             }
 
             FeatureTransform amse = new TrueScoreExpDifferenceTransform(conf, batchTransform, new Mixture(listDist, weights));
@@ -86,7 +92,7 @@ public class TrueDesnityMISECalculator extends ConfiguredCommand<MacroBaseConf> 
         }
     }
 
-    private class TrueScoreExpDifferenceTransform implements FeatureTransform{
+    private class TrueScoreExpDifferenceTransform implements FeatureTransform {
         private final MBStream<Datum> output = new MBStream<>();
         private BatchScoreFeatureTransform underlyingTransform;
         private MultivariateDistribution trueDistribution;

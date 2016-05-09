@@ -43,8 +43,8 @@ public class MultiComponents implements MixingComponents {
             sumCoeffs += coeffs[k];
         }
 
-        log.debug("MultiComponents.update");
-        log.debug("coeffs: {}", coeffs);
+        //log.debug("MultiComponents.update");
+        //log.debug("coeffs: {}", coeffs);
     }
 
     public void moveNatural(double[][] r, double pace, double portion) {
@@ -54,8 +54,8 @@ public class MultiComponents implements MixingComponents {
             coeffs[k] = VariationalInference.step(coeffs[k], priorAlpha + portion * clusterWeight[k], pace);
             sumCoeffs += coeffs[k];
         }
-        log.debug("MultiComponents.moveNatural");
-        log.debug("coeffs: {}", coeffs);
+        //log.debug("MultiComponents.moveNatural");
+        //log.debug("coeffs: {}", coeffs);
     }
 
     @Override
