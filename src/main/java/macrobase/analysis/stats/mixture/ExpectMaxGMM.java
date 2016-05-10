@@ -4,6 +4,7 @@ import macrobase.analysis.stats.distribution.MultivariateNormal;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.util.TrainTestSpliter;
 import org.apache.commons.math3.linear.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,12 +31,17 @@ public class ExpectMaxGMM extends BatchMixtureModel {
 
     @Override
     public void train(List<Datum> data) {
-        trainEM(data);
+        if ( trainTestSplit > 0 && trainTestSplit < 1) {
+            TrainTestSpliter splitter = new TrainTestSpliter(data, trainTestSplit, conf.getRandom());
+            trainTestEM(splitter.getTrainData(), splitter.getTestData());
+        } else {
+            trainTestEM(data, data);
+        }
     }
 
-    private void trainEM(List<Datum> data) {
-        int N = data.size();
-        int dimensions = data.get(0).getMetrics().getDimension();
+    private void trainTestEM(List<Datum> trainData, List<Datum> testData) {
+        int N = trainData.size();
+        int dimensions = trainData.get(0).getMetrics().getDimension();
         // 1. Initialize the means and covariances and mixing coefficients,
         //    and evaluate the initial value of the log likelihood.
         mu = new ArrayList<>(this.K);
@@ -49,7 +55,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
         // Picking points uniformly does not work, because it sometimes leads
         // to a local maximum in EM optimization where two cluster are replaces with
         // twice the cluster that represents both.
-        mu = this.gonzalezInitializeMixtureCenters(data, this.K, conf.getRandom());
+        mu = this.gonzalezInitializeMixtureCenters(trainData, this.K, conf.getRandom());
         for (int k = 0; k < K; k++) {
             sigma.add(MatrixUtils.createRealIdentityMatrix(dimensions));
             mixtureDistributions.add(new MultivariateNormal(mu.get(k), sigma.get(k)));
@@ -65,7 +71,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int k = 0; k < K; k++) {
-                    gamma[n][k] = phi[k] * mixtureDistributions.get(k).density(data.get(n).getMetrics());
+                    gamma[n][k] = phi[k] * mixtureDistributions.get(k).density(trainData.get(n).getMetrics());
                     normalizingConstant += gamma[n][k];
                 }
                 for (int k = 0; k < K; k++) {
@@ -78,13 +84,13 @@ public class ExpectMaxGMM extends BatchMixtureModel {
             for (int k = 0; k < K; k++) {
                 RealVector newMu = new ArrayRealVector(dimensions);
                 for (int n = 0; n < N; n++) {
-                    newMu = newMu.add(data.get(n).getMetrics().mapMultiply(gamma[n][k]));
+                    newMu = newMu.add(trainData.get(n).getMetrics().mapMultiply(gamma[n][k]));
                 }
                 newMu = newMu.mapDivide(clusterWeight[k]);
                 RealMatrix newSigma = new BlockRealMatrix(dimensions, dimensions);
                 mu.set(k, newMu);
                 for (int n = 0; n < N; n++) {
-                    RealVector _diff = data.get(n).getMetrics().subtract(newMu);
+                    RealVector _diff = trainData.get(n).getMetrics().subtract(newMu);
                     newSigma = newSigma.add(_diff.outerProduct(_diff).scalarMultiply(gamma[n][k]));
                 }
                 newSigma = newSigma.scalarMultiply(1. / clusterWeight[k]);
@@ -99,11 +105,12 @@ public class ExpectMaxGMM extends BatchMixtureModel {
 
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
-            for (int n = 0; n < N; n++) {
-                logLikelihood += Math.log(score(data.get(n)));
+            for (int n = 0; n < testData.size(); n++) {
+                logLikelihood += Math.log(score(testData.get(n)));
             }
+            logLikelihood /= testData.size();
 
-            log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+            log.debug("per point log likelihood after iteration {} is {}", iteration, logLikelihood);
 
             log.debug("cluster likelihoods are: {}", phi);
             log.debug("cluster centers are at {}", mu);

@@ -31,10 +31,10 @@ public class VariationalInference {
 
     public static void trainStochastic(VarGMM model, List<Datum> data, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
         log.debug("data.size() {}", data.size());
-        testTrainStochastic(model, data, data, mixingComponents, clusters, desiredMinibatchSize, delay, forgettingRate);
+        trainTestStochastic(model, data, data, mixingComponents, clusters, desiredMinibatchSize, delay, forgettingRate);
     }
 
-    public static void testTrainStochastic(VarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
+    public static void trainTestStochastic(VarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
         double[] exLnMixingContribution;
         double[] lnPrecision;
         double[][] dataLogLike;
@@ -59,7 +59,6 @@ public class VariationalInference {
                 }
 
                 minibatchSize = miniBatch.size();
-                log.debug("minitbatch size: {}", minibatchSize);
 
                 // Step 1. Update local variables
                 exLnMixingContribution = mixingComponents.calcExpectationLog();

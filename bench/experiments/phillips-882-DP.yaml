@@ -1,0 +1,25 @@
+macrobase:
+  macrobase.query.name: phillips-power-time-dp
+  macrobase.pipeline.class: macrobase.analysis.pipeline.MixtureModelPipeline
+  macrobase.analysis.transformType: MEAN_FIELD_DPGMM
+  macrobase.analysis.stat.mixtures.numMixtures: 10
+  #macrobase.analysis.stat.mixtures.initalClusters: target/scores/centers-phillips-power-time-mixtures.json
+  macrobase.analysis.classify.targetGroup: "17, 9"
+  macrobase.loader.csv.file: target/phillips_data/power_usage_city_state.csv.gz
+  macrobase.analysis.em.improvementCutoffRatio: 0.0001
+  macrobase.analysis.stat.svi.delay: 1
+  macrobase.analysis.stat.svi.forgettingRate: 0.8
+  macrobase.analysis.stat.mixtures.numMixtures: 3
+  macrobase.analysis.stat.svi.minibatchSize: 5000
+  macrobase.analysis.dpm.truncatingParameter: 15
+  macrobase.analysis.dpm.concentrationParameter: 0.2
+  macrobase.diagnostic.gridPointsPerDimension: 1000
+  macrobase.loader.csv.compression: GZIP
+  macrobase.loader.loaderType: CSV_LOADER
+  macrobase.loader.attributes: [datasource_id, controller_id, city]
+  macrobase.loader.targetHighMetrics: [power_usage, time]
+  macrobase.loader.targetLowMetrics: []
+post_run:
+  - plot_score_contours: "--plot density --savefig --y-limits 0 24 --x-limits 0 45"
+  - plot_score_contours: "--plot density --savefig contours.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-power-time-dp-mixtures.json --covariances target/scores/covariances-phillips-power-time-dp-mixtures.json --weights target/scores/weights-phillips-power-time-dp-mixtures.json"
+  - plot_score_contours: "--plot noop --savefig cluster.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-power-time-dp-mixtures.json --covariances target/scores/covariances-phillips-power-time-dp-mixtures.json --weights target/scores/weights-phillips-power-time-dp-mixtures.json --csv target/phillips_data/power_usage_city_state.csv.gz  --hist2d power_usage time"

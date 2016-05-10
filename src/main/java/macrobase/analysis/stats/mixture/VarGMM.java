@@ -2,7 +2,6 @@ package macrobase.analysis.stats.mixture;
 
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -19,13 +18,11 @@ public abstract class VarGMM extends BatchMixtureModel {
     private static final Logger log = LoggerFactory.getLogger(VarGMM.class);
     protected NormalWishartClusters clusters;
     protected List<MultivariateTDistribution> predictiveDistributions;
-    protected double trainTestSplit;
 
     protected abstract double[] getNormClusterContrib();
 
     public VarGMM(MacroBaseConf conf) {
         super(conf);
-        trainTestSplit = conf.getDouble(MacroBaseConf.TRAIN_TEST_SPLIT, MacroBaseDefaults.TRAIN_TEST_SPLIT);
     }
 
     @Override

@@ -3,6 +3,7 @@ package macrobase.analysis.stats.mixture;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.util.TrainTestSpliter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,11 @@ public class StochVarDPGMM extends DPGMM {
         clusters.initializeAtomsForDP(data, conf.getRandom());
 
         log.debug("actual training");
-        VariationalInference.trainStochastic(this, data, mixingComponents, clusters, desiredMinibatchSize, delay, forgettingRate);
+        if ( trainTestSplit > 0 && trainTestSplit < 1) {
+            TrainTestSpliter splitter = new TrainTestSpliter(data, trainTestSplit, conf.getRandom());
+            VariationalInference.trainTestStochastic(this, splitter.getTrainData(), splitter.getTestData(), mixingComponents, clusters, desiredMinibatchSize, delay, forgettingRate);
+        } else {
+            VariationalInference.trainStochastic(this, data, mixingComponents, clusters, desiredMinibatchSize, delay, forgettingRate);
+        }
     }
 }

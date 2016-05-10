@@ -24,12 +24,14 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     protected final double progressCutoff;
     protected final int maxIterationsToConverge;
     protected MacroBaseConf conf;
+    protected double trainTestSplit;
 
     public BatchMixtureModel(MacroBaseConf conf) {
         super(conf);
         this.conf = conf;
         progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
         maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
+        trainTestSplit = conf.getDouble(MacroBaseConf.TRAIN_TEST_SPLIT, MacroBaseDefaults.TRAIN_TEST_SPLIT);
         log.debug("max iter = {}", maxIterationsToConverge);
     }
 
@@ -179,7 +181,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     }
 
     public boolean checkTermination(double logLikelihood, double oldLogLikelihood, int iteration) {
-        log.debug("average point log likelihood after iteration {} is {}", iteration, logLikelihood);
+        log.info("average point log likelihood after iteration {} is {}", iteration, logLikelihood);
 
         if (iteration >= maxIterationsToConverge) {
             log.debug("Breaking because have already run {} iterations", iteration);

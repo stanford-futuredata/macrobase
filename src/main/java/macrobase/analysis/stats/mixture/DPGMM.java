@@ -3,6 +3,7 @@ package macrobase.analysis.stats.mixture;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.util.TrainTestSpliter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,12 @@ public class DPGMM extends VarGMM {
         clusters.initializeAtomsForDP(data, conf.getRandom());
 
         log.debug("actual training");
-        VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
+        if ( trainTestSplit > 0 && trainTestSplit < 1) {
+            TrainTestSpliter splitter = new TrainTestSpliter(data, trainTestSplit, conf.getRandom());
+            VariationalInference.trainTestMeanField(this, splitter.getTrainData(), splitter.getTestData(), mixingComponents, clusters);
+        } else {
+            VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
+        }
     }
 
     @Override
