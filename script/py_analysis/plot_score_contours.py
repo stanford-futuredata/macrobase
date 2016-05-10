@@ -73,9 +73,7 @@ def plot_score_contours(args):
     # normalize weights to sum to 1.
     weights = json.load(args.weights)
     weights = [w / sum(weights) for w in weights]
-    print weights
     weights = [0.4 * w / max(weights) for w in weights]
-    print weights
     centers = load_cluster_parameters(args.centers)
     sigmas = load_cluster_parameters(args.covariances)
     fig = plt.figure(0)
@@ -85,6 +83,7 @@ def plot_score_contours(args):
       e = patches.Ellipse(centers[i], w, h, angle=angle)
       e.set_alpha(weights[i])
       ax.add_artist(e)
+      print i, weights[i], centers[i], sigmas[i]
     set_ax_limits(ax, args)
     x, y = zip(*centers)
     plt.scatter(x, y, s=weights)

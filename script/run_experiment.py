@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 """
 A script that runs yaml files as standalone experiments from
 bench/experiment directory.

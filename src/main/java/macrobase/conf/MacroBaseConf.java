@@ -105,6 +105,7 @@ public class MacroBaseConf extends Configuration {
     public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
     public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
     public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initalClusters";
+    public static final String TRAIN_TEST_SPLIT = "macrobase.analysis.stat.trainTestSplit";
 
     private final DatumEncoder datumEncoder;
 

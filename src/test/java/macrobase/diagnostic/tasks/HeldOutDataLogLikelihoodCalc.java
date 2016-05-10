@@ -38,11 +38,11 @@ public class HeldOutDataLogLikelihoodCalc extends ConfiguredCommand<MacroBaseCon
     private class LogeLikelihoodCalculator extends BasePipeline {
         @Override
         public List<AnalysisResult> run() throws Exception {
-            long startMs = System.currentTimeMillis();
             DataIngester ingester = conf.constructIngester();
 
             List<Datum> data = ingester.getStream().drain();
 
+            long startMs = System.currentTimeMillis();
             double keepRatio = conf.getDouble(HOLD_OUT_PERCENTAGE, 0.1);
 
             List<Datum> trainingData = new ArrayList<>((int) (data.size() * (1 - keepRatio)));

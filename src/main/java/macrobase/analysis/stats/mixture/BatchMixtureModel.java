@@ -6,8 +6,10 @@ import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.util.AlgebraUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -37,6 +39,92 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
         RealVector[] centers = gson.fromJson(reader, ArrayRealVector[].class);
         List<RealVector> vectors = Arrays.asList(centers);
         return vectors.subList(0, K);
+    }
+
+    protected static List<RealVector> proportionalRepelInitializeMixtureCenters(List<Datum> data, int K, Random rand) {
+        log.debug("proportionalRepel...");
+        List<RealVector> vectors = new ArrayList<>(K);
+        int N = data.size();
+        double[][] bbox = AlgebraUtils.getBoundingBox(data);
+        double[] lengths = new double[bbox.length];
+        double minL = Double.MAX_VALUE;
+        for (int i = 0; i < bbox.length; i++) {
+            lengths[i] = bbox[i][1] - bbox[i][0];
+            if (lengths[i] < minL) {
+                minL = lengths[i];
+            }
+        }
+        // Invert lengths.
+        for (int i = 0; i < bbox.length; i++) {
+            lengths[i] = minL / lengths[i];
+        }
+        RealMatrix S = MatrixUtils.createRealDiagonalMatrix(lengths);
+        HashSet<Integer> pointsChosen = new HashSet<Integer>();
+        int index = rand.nextInt(data.size());
+        for (int k = 0; k < K; k++) {
+            if (k > 0) {
+                double minScore = Double.MAX_VALUE;
+                for (int n = 0; n < N; n++) {
+                    if (pointsChosen.contains(n)) {
+                        continue;
+                    }
+                    double score = 0;
+                    double d2;
+                    for (int j = 0; j < k; j++) {
+                        RealVector _diff = data.get(n).getMetrics().subtract(vectors.get(j));
+                        d2 = _diff.dotProduct(S.operate(_diff));
+                        if (d2 == 0) {
+                            score = Double.MAX_VALUE;
+                            break;
+                        } else {
+                            score += 1 / d2;
+                        }
+                    }
+                    if (score < minScore) {
+                        minScore = score;
+                        index = n;
+                    }
+                }
+            }
+            System.out.print(".");
+            vectors.add(data.get(index).getMetrics());
+            pointsChosen.add(index);
+        }
+        return vectors;
+    }
+
+    protected static List<RealVector> repelInitializeMixtureCenters(List<Datum> data, int K, Random rand) {
+        List<RealVector> vectors = new ArrayList<>(K);
+        int N = data.size();
+        HashSet<Integer> pointsChosen = new HashSet<Integer>();
+        int index = rand.nextInt(data.size());
+        for (int k = 0; k < K; k++) {
+            if (k > 0) {
+                double minScore = Double.MAX_VALUE;
+                for (int n = 0; n < N; n++) {
+                    if (pointsChosen.contains(n)) {
+                        continue;
+                    }
+                    double score = 0;
+                    double distance;
+                    for (int j = 0; j < k; j++) {
+                        distance = data.get(n).getMetrics().getDistance(vectors.get(j));
+                        if (distance == 0) {
+                            score = Double.MAX_VALUE;
+                            break;
+                        } else {
+                            score += 1 / (distance * distance);
+                        }
+                    }
+                    if (score < minScore) {
+                        minScore = score;
+                        index = n;
+                    }
+                }
+            }
+            pointsChosen.add(index);
+        }
+        return vectors;
     }
 
     protected static List<RealVector> gonzalezInitializeMixtureCenters(List<Datum> data, int K, Random rand) {

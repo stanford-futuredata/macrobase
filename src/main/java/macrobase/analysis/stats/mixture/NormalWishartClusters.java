@@ -87,7 +87,8 @@ public class NormalWishartClusters {
                 R = dimensionWidth[i];
             }
         }
-        baseBeta = Math.pow(R, -2);
+        baseNu = R;
+        baseBeta = 1;
         baseLoc = new ArrayRealVector(midpoints);
         baseOmegaInverse = MatrixUtils.createRealIdentityMatrix(dimension);
     }
@@ -101,9 +102,10 @@ public class NormalWishartClusters {
         for (int i = 0; i < K; i++) {
             // initialize betas as if all points are from the first cluster.
             beta[i] = 1;
-            dof[i] = baseNu;
+            dof[i] = D;
             omega.add(0, AlgebraUtils.invertMatrix(baseOmegaInverse));
         }
+        log.debug("init loc: {}", loc);
     }
 
     public void initializeAtomsForFinite(List<Datum> data, String filename, Random random) {

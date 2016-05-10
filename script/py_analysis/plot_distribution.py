@@ -3,6 +3,8 @@ Plots a scatter plot of 2 metrics provided.
 Data could be given from postgres or a csv file.
 """
 from matplotlib.colors import LogNorm
+import sys
+import numpy as np
 import argparse
 import matplotlib
 import matplotlib.pyplot as plt
@@ -17,7 +19,7 @@ def parse_args(*argument_list):
   parser = argparse.ArgumentParser()
 
   source_group = parser.add_mutually_exclusive_group(required=True)
-  source_group.add_argument('--csv', type=argparse.FileType('r'))
+  source_group.add_argument('--csv')
   source_group.add_argument('--table', default='car_data_demo')
 
   plot_type_group = parser.add_mutually_exclusive_group(required=True)
@@ -45,8 +47,9 @@ def parse_args(*argument_list):
 
 
 def _plot_hist2d(data, args):
-  args.data[args.hist2d[0]]
-  args.data[args.hist2d[1]]
+  data = data[data[args.hist2d[0]].notnull()][data[args.hist2d[1]].notnull()]
+  if data.shape[0] < 1000:
+    sys.exit(1)
   plt.hist2d(data[args.hist2d[0]],
              data[args.hist2d[1]],
              bins=args.histogram_bins,
@@ -55,6 +58,7 @@ def _plot_hist2d(data, args):
   plt.xlabel(args.hist2d[0])
   plt.ylabel(args.hist2d[1])
   set_plot_limits(plt, args)
+  plt.title("N = {}".format(data.shape[0]))
 
 
 def plot_distribution(args):
@@ -70,6 +74,7 @@ def plot_distribution(args):
     data = pd.DataFrame(cursor.fetchall(), columns=colnames)
   else:
     data = pd.read_csv(args.csv)
+    print ' '.join(list(data.columns.values))
 
   # Set args.data, so we can pass only args to functions
   args.data = data

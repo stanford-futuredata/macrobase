@@ -99,4 +99,5 @@ public class MacroBaseDefaults {
     public static final Integer SVI_MINIBATCH_SIZE = 10000;
     public static final Double SVI_DELAY = 0.1;
     public static final Double SVI_FORGETTING_RATE = 0.01;
+    public static final Double TRAIN_TEST_SPLIT = -1.0; // Train and test on the entire dataset while training
 }

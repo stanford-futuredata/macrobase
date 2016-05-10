@@ -1,6 +1,6 @@
 macrobase:
   macrobase.pipeline.class: macrobase.analysis.pipeline.GridDumpingPipeline
-  macrobase.analysis.transformType: VARIATIONAL_GMM
+  macrobase.analysis.transformType: SVI_DPGMM
   macrobase.analysis.minSupport: 100
   macrobase.analysis.stat.mixtures.numMixtures: 6
   macrobase.loader.attributes: [XX, YY]
