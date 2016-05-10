@@ -54,6 +54,7 @@ def _plot_hist2d(data, args):
   plt.colorbar()
   plt.xlabel(args.hist2d[0])
   plt.ylabel(args.hist2d[1])
+  set_plot_limits(plt, args)
 
 
 def plot_distribution(args):

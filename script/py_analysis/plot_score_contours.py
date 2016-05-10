@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+from common import set_ax_limits
 from algebra import get_ellipse_from_covariance
 from common import add_plot_limit_args
 from common import set_plot_limits
@@ -37,6 +38,7 @@ def parse_args(*argument_list):
   parser.add_argument('--weights', type=argparse.FileType('r'))
   parser.add_argument('--covariances', type=argparse.FileType('r'))
   parser.add_argument('--savefig', nargs='?', const=SAVEFIG_INFER_VALUE)
+  parser.add_argument('--logscore', action='store_true')
   add_plot_limit_args(parser)
   args = parser.parse_args(*argument_list)
   return args
@@ -50,7 +52,10 @@ def load_json_dump(filename):
     x, y = point['metrics']['data']
     X.append(x)
     Y.append(y)
-    Z.append(point['score'])
+    if args.logscore:
+      Z.append(np.exp(point['score']))
+    else:
+      Z.append(point['score'])
   return X, Y, Z
 
 
@@ -74,12 +79,13 @@ def plot_score_contours(args):
     centers = load_cluster_parameters(args.centers)
     sigmas = load_cluster_parameters(args.covariances)
     fig = plt.figure(0)
-    ax = fig.add_subplot(111, aspect='equal')
+    ax = fig.add_subplot(111)
     for i in range(len(centers)):
       w, h, angle = get_ellipse_from_covariance(sigmas[i])
       e = patches.Ellipse(centers[i], w, h, angle=angle)
       e.set_alpha(weights[i])
       ax.add_artist(e)
+    set_ax_limits(ax, args)
     x, y = zip(*centers)
     plt.scatter(x, y, s=weights)
 
