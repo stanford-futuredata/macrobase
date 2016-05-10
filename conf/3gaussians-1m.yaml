@@ -1,0 +1,45 @@
+logging:
+  level: INFO
+  loggers: {macrobase: TRACE}
+macrobase.analysis.contextual.denseContextTau: 0.3
+macrobase.analysis.contextual.discreteAttributes: []
+macrobase.analysis.contextual.doubleAttributes: []
+macrobase.analysis.contextual.enabled: false
+macrobase.analysis.contextual.numIntervals: 10
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.minOIRatio: 3.0
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.results.store: 3gaussians-ok.json
+macrobase.analysis.targetPercentile: 0.99
+macrobase.analysis.randomSeed: 1
+macrobase.analysis.transformType: SVI_DPGMM
+# macrobase.analysis.transformType: MEAN_FIELD_DPGMM
+# macrobase.analysis.transformType: MEAN_FIELD_GMM
+# macrobase.analysis.transformType: SVI_GMM
+macrobase.analysis.em.improvementCutoffRatio: 0.000001
+macrobase.analysis.stat.svi.delay: 1
+macrobase.analysis.stat.svi.forgettingRate: 0.9
+macrobase.analysis.stat.mixtures.numMixtures: 3
+macrobase.analysis.stat.svi.minibatchSize: 1000
+macrobase.analysis.dpm.truncatingParameter: 10
+macrobase.analysis.stat.trainTestSplit: 0.9
+macrobase.analysis.dpm.concentrationParameter: 0.2
+macrobase.diagnostic.gridPointsPerDimension: 1000
+macrobase.analysis.usePercentile: true
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
+macrobase.diagnostic.dumpScoreGrid: 3gaussians-ok-grid.json
+macrobase.diagnostic.scoreDataFile: 3gaussians-ok-scored.json
+macrobase.loader.attributes: [XX, YY]
+macrobase.loader.csv.compression: GZIP
+macrobase.loader.csv.file: src/test/resources/data/3gaussians-1m.csv.gz
+macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE
+  H.dataset_id = D.id LIMIT 100000;
+macrobase.loader.db.cacheDirectory: sql_cache
+macrobase.loader.db.dbUrl: postgres
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.targetHighMetrics: [XX, YY]
+macrobase.loader.targetLowMetrics: []
+macrobase.pipeline.class: macrobase.analysis.pipeline.GridDumpingPipeline
+macrobase.query.name: 3gaussians-ok
+#macrobase.diagnostic.gaussians: [1.5,2,0.5,0.4,0.4,0.5,2000, 2,0,0.3,0,0,0.6,3000, 4.5,1,0.9,0.2,0.2,0.3,2000]
