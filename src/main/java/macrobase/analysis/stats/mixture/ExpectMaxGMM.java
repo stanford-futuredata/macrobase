@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GaussianMixtureModel extends BatchMixtureModel {
-    private static final Logger log = LoggerFactory.getLogger(GaussianMixtureModel.class);
+public class ExpectMaxGMM extends BatchMixtureModel {
+    private static final Logger log = LoggerFactory.getLogger(ExpectMaxGMM.class);
 
     private int K;  // Number of mixture components
     private double[] phi;  // Mixing coefficients, K vector
@@ -21,7 +21,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
     private List<MultivariateNormal> mixtureDistributions;
     private double EMCutoffProgress;
 
-    public GaussianMixtureModel(MacroBaseConf conf) {
+    public ExpectMaxGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         this.EMCutoffProgress = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
@@ -49,7 +49,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         // Picking points uniformly does not work, because it sometimes leads
         // to a local maximum in EM optimization where two cluster are replaces with
         // twice the cluster that represents both.
-        mu = this.gonzalezInitializeMixtureCenters(data, this.K);
+        mu = this.gonzalezInitializeMixtureCenters(data, this.K, conf.getRandom());
         for (int k = 0; k < K; k++) {
             sigma.add(MatrixUtils.createRealIdentityMatrix(dimensions));
             mixtureDistributions.add(new MultivariateNormal(mu.get(k), sigma.get(k)));
@@ -100,7 +100,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
             double oldLogLikelihood = logLikelihood;
             logLikelihood = 0;
             for (int n = 0; n < N; n++) {
-                logLikelihood += Math.log(score(data.get(n)));
+                logLikelihood += score(data.get(n));
             }
 
             log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
@@ -125,7 +125,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
         for (int k = 0; k < K; k++) {
             probability += phi[k] * mixtureDistributions.get(k).density(datum.getMetrics());
         }
-        return probability;
+        return Math.log(probability);
     }
 
     @Override
@@ -139,7 +139,7 @@ public class GaussianMixtureModel extends BatchMixtureModel {
     }
 
     @Override
-    public double[] getClusterWeights() {
+    public double[] getClusterProportions() {
         return phi;
     }
 

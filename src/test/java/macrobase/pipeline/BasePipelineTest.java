@@ -1,8 +1,8 @@
 package macrobase.pipeline;
 
 import macrobase.analysis.stats.*;
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.analysis.stats.mixture.VariationalDPMG;
+import macrobase.analysis.stats.mixture.ExpectMaxGMM;
+import macrobase.analysis.stats.mixture.DPGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
 import org.junit.Rule;
@@ -85,12 +85,12 @@ public class BasePipelineTest {
         assertTrue(conf.constructTransform(conf.getTransformType()) instanceof BayesianNormalDensity);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.GAUSSIAN_MIXTURE_EM);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof GaussianMixtureModel);
+                 MacroBaseConf.TransformType.EM_GMM);
+        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof ExpectMaxGMM);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.VARIATIONAL_DPMG);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof VariationalDPMG);
+                 MacroBaseConf.TransformType.MEAN_FIELD_DPGMM);
+        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof DPGMM);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.MOVING_AVERAGE);
