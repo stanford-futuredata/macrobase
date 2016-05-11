@@ -1,11 +1,7 @@
 package macrobase.analysis.stats.distribution;
 
 import org.apache.commons.math3.distribution.TDistribution;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.math3.linear.*;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,35 +33,6 @@ public class MultivariateTDistributionTest {
     }
 
     @Test
-    public void gammaRatioTest() {
-        int[][] nonApproximatePairs = {
-                {5, 3},
-                {7, 5},
-                {8, 6},
-                {11, 7},
-                {11, 1},
-                {22, 20},
-                {22, 12},
-        };
-        for (int[] nd : nonApproximatePairs) {
-            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio(nd[0], nd[1]), 1e-10);
-        }
-
-        int[][] approximatePairs = {
-                {4, 3},
-                {11, 2},
-                {2, 1},
-                {3, 2},
-                {6, 1},
-                {7, 2},
-                {10, 3},
-        };
-        for (int[] nd : nonApproximatePairs) {
-            assertEquals(Gamma.gamma(nd[0]/ 2.0) / Gamma.gamma(nd[1] / 2.0), MultivariateTDistribution.halfGammaRatio(nd[0], nd[1]), 1e-10);
-        }
-    }
-
-    @Test
     public void univariateMeanTest() {
         // Test that the probability at mean is roughly 1 / sqrt(2 * variance * PI)
         double[][] meanCovN = {
@@ -93,6 +60,42 @@ public class MultivariateTDistributionTest {
                     MatrixUtils.createRealIdentityMatrix(1).scalarMultiply(var),
                     (int) mCN[2]);
             assertEquals(1. / Math.sqrt(2 * var * Math.PI), multiT.density(v), 1e-3);
+        }
+    }
+
+    /**
+     * Compare with R package mvtnorm
+     */
+    @Test
+    public void valueTest() {
+        double[][] means  = {
+                {5.8, 1.3},
+                {0.25, 10.96},
+        };
+        double[][][] covariances = {
+                {{0.18, 0.03}, {0.03, 0.27}},
+                {{0.55, 0.018}, {0.018, 0.21}},
+        };
+        double[] dofs = {
+                292.1,
+                10.7,
+        };
+
+        double[][][] points = {
+                {{5.8, 1.3}, {5.2, 2.3}},
+                {{0.25, 10.96}, {0, 10}, {1, 11}},
+        };
+
+        double[][] pdfs = {
+                {0.7287204, 0.02772672},
+                {0.4689636, 0.05175506, 0.2624979},
+        };
+
+        for (int s=0; s< means.length; s ++) {
+            MultivariateTDistribution mvtd = new MultivariateTDistribution(new ArrayRealVector(means[s]), new BlockRealMatrix(covariances[s]), dofs[s]);
+            for (int i =0; i< points[s].length; i++) {
+                assertEquals(pdfs[s][i], mvtd.density(new ArrayRealVector(points[s][i])), 1e-7);
+            }
         }
     }
 }

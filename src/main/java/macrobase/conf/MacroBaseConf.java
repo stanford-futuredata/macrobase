@@ -3,9 +3,7 @@ package macrobase.conf;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.stats.*;
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.analysis.stats.mixture.VariationalDPMG;
-import macrobase.analysis.stats.mixture.VariationalGMM;
+import macrobase.analysis.stats.mixture.*;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,9 +143,11 @@ public class MacroBaseConf extends Configuration {
         MOVING_AVERAGE,
         ARIMA,
         BAYESIAN_NORMAL,
-        GAUSSIAN_MIXTURE_EM,
-        VARIATIONAL_GMM,
-        VARIATIONAL_DPMG,
+        EM_GMM,
+        MEAN_FIELD_GMM,
+        MEAN_FIELD_DPGMM,
+        SVI_GMM,
+        SVI_DPGMM,
     }
 
     public enum ContextualAPI {
@@ -202,15 +202,21 @@ public class MacroBaseConf extends Configuration {
             case BAYESIAN_NORMAL:
                 log.info("Using Bayesian Normal transform.");
                 return new BayesianNormalDensity(this);
-            case GAUSSIAN_MIXTURE_EM:
+            case EM_GMM:
                 log.info("Using Finite mixture of Gaussians (EM algorithm) transform.");
-                return new GaussianMixtureModel(this);
-            case VARIATIONAL_GMM:
+                return new ExpectMaxGMM(this);
+            case MEAN_FIELD_GMM:
                 log.info("Using Finite mixture of Gaussians (Bayesian algorithm) transform.");
-                return new VariationalGMM(this);
-            case VARIATIONAL_DPMG:
+                return new FiniteGMM(this);
+            case MEAN_FIELD_DPGMM:
                 log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
-                return new VariationalDPMG(this);
+                return new DPGMM(this);
+            case SVI_GMM:
+                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new StochVarFiniteGMM(this);
+            case SVI_DPGMM:
+                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                return new StochVarDPGMM(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }

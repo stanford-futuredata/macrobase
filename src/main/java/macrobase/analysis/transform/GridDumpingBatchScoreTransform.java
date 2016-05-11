@@ -40,7 +40,7 @@ public class GridDumpingBatchScoreTransform implements FeatureTransform {
 
         if (this.dumpMixtureComponents != null) {
             BatchMixtureModel mixtureModel = (BatchMixtureModel) underlyingTransform.getBatchTrainScore();
-            JsonUtils.tryToDumpAsJson(mixtureModel.getClusterWeights(), "weights-" + dumpMixtureComponents);
+            JsonUtils.tryToDumpAsJson(mixtureModel.getClusterProportions(), "weights-" + dumpMixtureComponents);
             JsonUtils.tryToDumpAsJson(mixtureModel.getClusterCovariances(), "covariances-" + dumpMixtureComponents);
             JsonUtils.tryToDumpAsJson(mixtureModel.getClusterCenters(), "centers-" + dumpMixtureComponents);
         }
