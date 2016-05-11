@@ -1,6 +1,5 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
@@ -17,8 +16,8 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class GaussianMixtureModelTest {
-    private static final Logger log = LoggerFactory.getLogger(GaussianMixtureModelTest.class);
+public class ExpectMaxGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(ExpectMaxGMMTest.class);
 
     @Test
     /**
@@ -26,7 +25,7 @@ public class GaussianMixtureModelTest {
      */
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, "GAUSSIAN_MIXTURE_EM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -37,7 +36,7 @@ public class GaussianMixtureModelTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
 
         double[][] clusterMeans = {
@@ -93,9 +92,10 @@ public class GaussianMixtureModelTest {
      */
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, "GAUSSIAN_MIXTURE_EM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
+                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 20)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-7000points.csv.gz")
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
@@ -104,7 +104,7 @@ public class GaussianMixtureModelTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(7000, data.size());
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
 
         double[][] clusterMeans = {

@@ -1,7 +1,5 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.mixture;
 
-import macrobase.analysis.stats.mixture.GaussianMixtureModel;
-import macrobase.analysis.stats.mixture.VariationalGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
@@ -21,8 +19,8 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class VariationalGMMTest {
-    private static final Logger log = LoggerFactory.getLogger(VariationalGMMTest.class);
+public class FiniteGMMTest {
+    private static final Logger log = LoggerFactory.getLogger(FiniteGMMTest.class);
 
     @Test
     /**
@@ -31,7 +29,7 @@ public class VariationalGMMTest {
     public void univariateToyBimodalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 2)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
@@ -42,8 +40,8 @@ public class VariationalGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(18, data.size());
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
-        variationalGMM.train(data);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        finiteGMM.train(data);
     }
 
     @Test
@@ -53,7 +51,7 @@ public class VariationalGMMTest {
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 44)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.MIXTURE_CENTERS_FILE, "src/test/resources/data/3gaussians-700.points-centers.json")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -65,23 +63,14 @@ public class VariationalGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
         List<RealVector> calculatedMeans;
 
-        int numClustersIdentified = 0;
         // Make sure we have 3 clusters. Sometimes initialization is not great.
-        variationalGMM.train(data);
+        finiteGMM.train(data);
 
-        double[] calculatedWeights = variationalGMM.getPriorAdjustedWeights();
-
-        numClustersIdentified = 0;
-        for (double weight : calculatedWeights) {
-            if (weight > 0.1) {
-                numClustersIdentified += 1;
-            }
-        }
-        calculatedMeans = variationalGMM.getClusterCenters();
-        List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();
+        calculatedMeans = finiteGMM.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
 
         double[][] clusterMeans = {
                 {2, 11},
@@ -99,7 +88,7 @@ public class VariationalGMMTest {
         };
 
 
-        GaussianMixtureModel gmm = new GaussianMixtureModel(conf);
+        ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
         List<RealVector> emMeans = gmm.getClusterCenters();
         List<RealMatrix> emCovariances = gmm.getClusterCovariances();
@@ -135,7 +124,7 @@ public class VariationalGMMTest {
         // Make sure centers belong to only one cluster.
         double[] maxProbas = {0, 0, 0};
         for (int i = 0; i < 3; i++) {
-            double[] probas = variationalGMM.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
+            double[] probas = finiteGMM.getClusterProbabilities(new Datum(new ArrayList<Integer>(), vectorClusterMeans.get(i)));
             for (int j=0; j< 3; j++) {
                 maxProbas[j] = Math.max(probas[j], maxProbas[j]);
             }
@@ -152,7 +141,7 @@ public class VariationalGMMTest {
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -178,11 +167,11 @@ public class VariationalGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
-        variationalGMM.train(data);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        finiteGMM.train(data);
 
-        List<RealVector> calculatedMeans = variationalGMM.getClusterCenters();
-        List<RealMatrix> calculatedCovariances = variationalGMM.getClusterCovariances();
+        List<RealVector> calculatedMeans = finiteGMM.getClusterCenters();
+        List<RealMatrix> calculatedCovariances = finiteGMM.getClusterCovariances();
 
         for (int i = 0; i < 3; i++) {
             boolean identified = false;
@@ -206,17 +195,17 @@ public class VariationalGMMTest {
         };
         List<Datum> scoredData = DiagnosticsUtils.createGridFixedIncrement(boundaries, 0.05);
 
-        JsonUtils.dumpAsJson(variationalGMM.getClusterCovariances(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
-        JsonUtils.dumpAsJson(variationalGMM.getClusterCenters(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-means.json");
-        JsonUtils.dumpAsJson(variationalGMM.getPriorAdjustedWeights(), "VariationalGMMTest-bivariateOkSeparatedNormalTest-weights.json");
+        JsonUtils.dumpAsJson(finiteGMM.getClusterCovariances(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-covariances.json");
+        JsonUtils.dumpAsJson(finiteGMM.getClusterCenters(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-means.json");
+        JsonUtils.dumpAsJson(finiteGMM.getPriorAdjustedClusterProportions(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-weights.json");
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
-        dumper.dumpScores(variationalGMM, scoredData);
+        dumper.dumpScores(finiteGMM, scoredData);
 
         conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
         dumper = new ScoreDumper(conf);
-        dumper.dumpScores(variationalGMM, data);
+        dumper.dumpScores(finiteGMM, data);
     }
 
     @Test
@@ -226,7 +215,7 @@ public class VariationalGMMTest {
     public void unusedOrOverlappingClusterTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
-                .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_GMM")
+                .set(MacroBaseConf.TRANSFORM_TYPE, "MEAN_FIELD_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 4)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
@@ -237,17 +226,17 @@ public class VariationalGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
-        VariationalGMM variationalGMM = new VariationalGMM(conf);
+        FiniteGMM finiteGMM = new FiniteGMM(conf);
         List<RealVector> calculatedMeans = null;
         double[] calculatedWeights = null;
 
         int numClustersIdentified = 0;
         // Sometimes there is a weird convergence into one cluster when trying to fit more than 2 clusters.
         while (numClustersIdentified < 2) {
-            variationalGMM.train(data);
+            finiteGMM.train(data);
 
-            calculatedMeans = variationalGMM.getClusterCenters();
-            calculatedWeights = variationalGMM.getPriorAdjustedWeights();
+            calculatedMeans = finiteGMM.getClusterCenters();
+            calculatedWeights = finiteGMM.getPriorAdjustedClusterProportions();
 
             numClustersIdentified = 0;
             for (double weight : calculatedWeights) {
@@ -280,7 +269,7 @@ public class VariationalGMMTest {
                 }
             }
         }
-        assertEquals(identifiedWeights[0], clusterWeights[0], 1);
-        assertEquals(identifiedWeights[1], clusterWeights[1], 1);
+        assertEquals(identifiedWeights[0] * 500, clusterWeights[0], 1);
+        assertEquals(identifiedWeights[1] * 500, clusterWeights[1], 1);
     }
 }
