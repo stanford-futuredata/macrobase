@@ -63,6 +63,19 @@ def add_plot_limit_args(parser):
   parser.add_argument('--title')
 
 
+def set_ax_limits(ax, args):
+  if args.xmin:
+    ax.set_xlim(xmin=args.xmin)
+  if args.xmax:
+    ax.set_xlim(xman=args.xman)
+  if args.x_limits:
+    print 'setting ax limits', args.x_limits
+    ax.set_xlim(args.x_limits)
+    print ax.axis()
+  if args.y_limits:
+    ax.set_ylim(args.y_limits)
+
+
 def set_plot_limits(plt, args):
   if args.xlabel:
     plt.xlabel(args.xlabel)
