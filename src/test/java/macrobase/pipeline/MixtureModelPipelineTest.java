@@ -24,7 +24,7 @@ public class MixtureModelPipelineTest {
     @Test
     public void test2ClusterOutliers() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.VARIATIONAL_GMM)
+                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.MEAN_FIELD_GMM)
                 .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
                 .set(MacroBaseConf.NUM_MIXTURES, 2)
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
@@ -71,7 +71,7 @@ public class MixtureModelPipelineTest {
     @Test
     public void testWellSeparatedOutliers() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.VARIATIONAL_GMM)
+                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.MEAN_FIELD_GMM)
                 .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
