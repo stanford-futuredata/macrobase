@@ -20,12 +20,15 @@ def parse_args(*argument_list):
   source_group.add_argument('--csv', type=argparse.FileType('r'))
   source_group.add_argument('--table', default='car_data_demo')
 
+
   plot_type_group = parser.add_mutually_exclusive_group(required=True)
   plot_type_group.add_argument('--scatter', nargs=2)
   plot_type_group.add_argument('--histogram')
   plot_type_group.add_argument('--hist2d', nargs=2)
 
   parser.add_argument('--histogram-bins', type=int, default=100)
+  parser.add_argument('--filter-num-rtus', type=int)
+  parser.add_argument('--filter-controller', type=int)
   parser.add_argument('--labels',
                       help='Labels for labeled data (different colors on the '
                            'plot)')
@@ -45,6 +48,7 @@ def parse_args(*argument_list):
 
 
 def _plot_hist2d(data, args):
+  print data.shape
   args.data[args.hist2d[0]]
   args.data[args.hist2d[1]]
   plt.hist2d(data[args.hist2d[0]],
@@ -52,6 +56,7 @@ def _plot_hist2d(data, args):
              bins=args.histogram_bins,
              norm=LogNorm())
   plt.colorbar()
+  set_plot_limits(plt, args)
   plt.xlabel(args.hist2d[0])
   plt.ylabel(args.hist2d[1])
 
@@ -69,6 +74,16 @@ def plot_distribution(args):
     data = pd.DataFrame(cursor.fetchall(), columns=colnames)
   else:
     data = pd.read_csv(args.csv)
+    if args.filter_num_rtus:
+      print 'before filtering size =', data.shape[0]
+      data = data[data['num_rtus'] == args.filter_num_rtus]
+      print 'after filtering size =', data.shape[0]
+    if args.filter_controller:
+      print 'before filtering size =', data.shape[0]
+      data = data[data['controller_id'] == args.filter_controller]
+      print 'after filtering size =', data.shape[0]
+    print 'total controller_ids included =', len(set(data['controller_id']))
+    print 'distinct num_rtus =', len(set(data['num_rtus'])), set(data['num_rtus'])
 
   # Set args.data, so we can pass only args to functions
   args.data = data
