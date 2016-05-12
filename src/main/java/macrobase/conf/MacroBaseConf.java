@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.stats.*;
 import macrobase.analysis.stats.mixture.*;
+import macrobase.analysis.transform.aggregate.*;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ public class MacroBaseConf extends Configuration {
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
     public static final String TRANSFORM_TYPE = "macrobase.analysis.transformType";
+    public static final String AGGREGATE_TYPE = "macrobase.analysis.aggregateType";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
     public static final String INPUT_RESERVOIR_SIZE = "macrobase.analysis.streaming.inputReservoirSize";
@@ -39,6 +41,7 @@ public class MacroBaseConf extends Configuration {
     public static final String INLIER_ITEM_SUMMARY_SIZE = "macrobase.analysis.streaming.inlierItemSummarySize";
 
     public static final String TUPLE_WINDOW = "macrobase.analysis.timeseries.tupleWindow";
+    public static final String WINDOW_SIZE = "macrobase.analysis.timeseries.windowSize";
 
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
@@ -163,6 +166,12 @@ public class MacroBaseConf extends Configuration {
         findContextsGivenOutlierPredicate,
     }
 
+    public enum AggregateType {
+        COUNT,
+        SUM,
+        MAX
+    }
+
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
         if (seed != null) {
@@ -227,6 +236,31 @@ public class MacroBaseConf extends Configuration {
                 return new StochVarDPGMM(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
+        }
+    }
+
+    public BatchWindowAggregate constructBatchAggregate(AggregateType aggregateType)
+            throws ConfigurationException {
+        switch (aggregateType) {
+            case MAX:
+                log.info("Using MAX aggregation.");
+                return new BatchWindowMax(this);
+            default:
+                throw new RuntimeException("Unhandled batch aggreation type!" + aggregateType);
+        }
+    }
+
+    public IncrementalWindowAggregate constructIncrementalAggregate(AggregateType aggregateType)
+            throws ConfigurationException {
+        switch (aggregateType) {
+            case SUM:
+                log.info("Using SUM aggregation.");
+                return new IncrementalWindowSum(this);
+            case COUNT:
+                log.info("Using COUNT aggregation.");
+                return new IncrementalWindowCount(this);
+            default:
+                throw new RuntimeException("Unhandled incremental aggreation type!" + aggregateType);
         }
     }
 
@@ -364,6 +398,13 @@ public class MacroBaseConf extends Configuration {
             return MacroBaseDefaults.CONTEXTUAL_API;
         }
         return ContextualAPI.valueOf(_conf.get(CONTEXTUAL_API));
+    }
+
+    public AggregateType getAggregateType() throws ConfigurationException {
+        if (!_conf.containsKey(AGGREGATE_TYPE)) {
+            return MacroBaseDefaults.AGGREGATE_TYPE;
+        }
+        return AggregateType.valueOf(_conf.get(AGGREGATE_TYPE));
     }
 
     public KDE.BandwidthAlgorithm getKDEBandwidth() {
