@@ -33,6 +33,7 @@ public class MacroBaseDefaults {
     
     // timeseries defaults
     public static final Integer TUPLE_WINDOW = 100;
+    public static final Integer WINDOW_SIZE = 86400000; // in milliseconds
 
     // MCD defaults
     public static final Double MCD_ALPHA = 0.5;
@@ -65,6 +66,7 @@ public class MacroBaseDefaults {
     public static final Integer TIME_COLUMN = null;
     public static final MacroBaseConf.TransformType TRANSFORM_TYPE = MacroBaseConf.TransformType.MAD_OR_MCD;
     public static final CSVIngester.Compression CSV_COMPRESSION = CSVIngester.Compression.UNCOMPRESSED;
+    public static final MacroBaseConf.AggregateType AGGREGATE_TYPE = MacroBaseConf.AggregateType.COUNT;
 
     public static final String DB_USER = System.getProperty("user.name");
     public static final String DB_PASSWORD = "";
