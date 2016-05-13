@@ -25,6 +25,7 @@ public class ExpectMaxGMMTest {
      */
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 2)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -92,6 +93,7 @@ public class ExpectMaxGMMTest {
      */
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
+                .set(MacroBaseConf.RANDOM_SEED, 152)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")

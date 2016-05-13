@@ -24,14 +24,13 @@ public class DPGMM extends VarGMM {
         mixingComponents = new DPComponents(concentrationParameter, T);
     }
 
-    @Override
-    public void train(List<Datum> data) {
+    public void trainTest(List<Datum> trainData, List<Datum> testData) {
         // 0. Initialize all approximating factors
-        clusters = new NormalWishartClusters(T, data.get(0).getMetrics().getDimension());
-        clusters.initializeBaseForDP(data);
-        clusters.initializeAtomsForDP(data, conf.getRandom());
+        clusters = new NormalWishartClusters(T, trainData.get(0).getMetrics().getDimension());
+        clusters.initializeBaseForDP(trainData);
+        clusters.initializeAtomsForDP(trainData, initialClusterCentersFile, conf.getRandom());
 
-        VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
+        VariationalInference.trainTestMeanField(this, trainData, testData, mixingComponents, clusters);
     }
 
     @Override

@@ -30,6 +30,7 @@ public class StochVarFiniteGMMTest {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 44)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_GMM")
+                .set(MacroBaseConf.SVI_FORGETTING_RATE, 0.01)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.MIXTURE_CENTERS_FILE, "src/test/resources/data/3gaussians-700.points-centers.json")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -120,6 +121,7 @@ public class StochVarFiniteGMMTest {
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
+                .set(MacroBaseConf.SVI_FORGETTING_RATE, 0.01)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_GMM")
                 .set(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, 20)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)

@@ -1,8 +1,11 @@
 package macrobase.analysis.stats.mixture;
 
 import org.apache.commons.math3.special.Gamma;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MultiComponents implements MixingComponents {
+    private static final Logger log = LoggerFactory.getLogger(MultiComponents.class);
 
     private double priorAlpha;
     private double[] coeffs;
@@ -43,8 +46,10 @@ public class MultiComponents implements MixingComponents {
 
     public void moveNatural(double[][] r, double pace, double portion) {
         double[] clusterWeight = VariationalInference.calculateClusterWeights(r);
+        sumCoeffs = 0;
         for (int k = 0; k < K; k++) {
             coeffs[k] = VariationalInference.step(coeffs[k], priorAlpha + portion * clusterWeight[k], pace);
+            sumCoeffs += coeffs[k];
         }
     }
 

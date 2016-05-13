@@ -9,10 +9,13 @@ import macrobase.datamodel.Datum;
 import macrobase.diagnostics.JsonUtils;
 import macrobase.diagnostics.ScoreDumper;
 import macrobase.util.AlgebraUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class GridDumpingBatchScoreTransform extends FeatureTransform {
+    private static final Logger log = LoggerFactory.getLogger(GridDumpingBatchScoreTransform.class);
 
     private final String dumpFilename;
     private final Integer dimensionsPerGrid;
@@ -25,6 +28,7 @@ public class GridDumpingBatchScoreTransform extends FeatureTransform {
         this.dumpMixtureComponents = conf.getString(MacroBaseConf.DUMP_MIXTURE_COMPONENTS, MacroBaseDefaults.DUMP_MIXTURE_COMPONENTS);
         this.underlyingTransform = batchScoreFeatureTransform;
     }
+
     @Override
     public void initialize() throws Exception {
 
@@ -33,6 +37,7 @@ public class GridDumpingBatchScoreTransform extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         underlyingTransform.consume(records);
+        log.debug("dumping");
         if (dumpFilename != null) {
             BatchTrainScore batchTrainScore = underlyingTransform.getBatchTrainScore();
             ScoreDumper.tryToDumpScoredGrid(batchTrainScore, AlgebraUtils.getBoundingBox(records), dimensionsPerGrid, dumpFilename);

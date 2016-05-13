@@ -7,7 +7,7 @@ import org.apache.commons.math3.linear.RealVector;
 /**
  * Wrapper around MultivariateNormalDistribution that operates with RealVector and RealMatrix
  */
-public class MultivariateNormal {
+public class MultivariateNormal implements MultivariateDistribution {
     private MultivariateNormalDistribution distribution;
 
     public MultivariateNormal(RealVector mean, RealMatrix sigma) {

@@ -29,7 +29,7 @@ public class VariationalInference {
         return r;
     }
 
-    public static void trainStochastic(VarGMM model, List<Datum> data, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
+    public static void trainTestStochastic(VarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
         double[] exLnMixingContribution;
         double[] lnPrecision;
         double[][] dataLogLike;
@@ -37,24 +37,24 @@ public class VariationalInference {
         int minibatchSize;
         List<Datum> miniBatch;
 
-        final int N = data.size();
-        final int partitions = N / Math.min(data.size(), desiredMinibatchSize);
+        final int N = trainData.size();
+        final int partitions = N / Math.min(trainData.size(), desiredMinibatchSize);
 
         double logLikelihood = -Double.MAX_VALUE;
         for (int iter = 1; ; iter++) {
             double pace = Math.pow(iter + delay, -forgettingRate);
             log.debug("pace = {}", pace);
+            log.debug("centers = {}", clusters.getMAPLocations());
 
             for (int p = 0; p < partitions; p++) {
+                System.out.print(".");
                 // Step 0. Create the minibatch.
                 miniBatch = new ArrayList<>(desiredMinibatchSize);
-                for (int i = 0; i < N; i += partitions) {
-                    miniBatch.add(data.get(i));
+                for (int i = p; i < N; i += partitions) {
+                    miniBatch.add(trainData.get(i));
                 }
 
                 minibatchSize = miniBatch.size();
-
-                log.debug("minibatch Size = {}", minibatchSize);
 
                 // Step 1. Update local variables
                 exLnMixingContribution = mixingComponents.calcExpectationLog();
@@ -63,40 +63,40 @@ public class VariationalInference {
                 r = VariationalInference.normalizeLogProbabilities(exLnMixingContribution, lnPrecision, dataLogLike);
 
                 // Step 2. Update global variables
-                mixingComponents.moveNatural(r, pace, 1. * N /minibatchSize);
+                mixingComponents.moveNatural(r, pace, 1. * N / minibatchSize);
                 clusters.moveNatural(miniBatch, r, pace, 1. * N / minibatchSize);
+            }
 
-                double oldLogLikelihood = logLikelihood;
-                logLikelihood = model.calculateLogLikelihood(data, mixingComponents, clusters);
-                if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
-                    return;
-                }
+            double oldLogLikelihood = logLikelihood;
+            logLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
+            if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
+                return;
             }
         }
     }
 
-    public static void trainMeanField(VarGMM model, List<Datum> data, MixingComponents mixingComponents, NormalWishartClusters clusters) {
+    public static void trainTestMeanField(VarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters) {
         log.debug("inside main trainMeanField");
         double[] exLnMixingContribution;
         double[] lnPrecision;
         double[][] dataLogLike;
         double[][] r;
 
-        int N = data.size();
+        int N = trainData.size();
         double logLikelihood = -Double.MAX_VALUE;
         for (int iter = 1; ; iter++) {
             // Step 1. update local variables
             exLnMixingContribution = mixingComponents.calcExpectationLog();
             lnPrecision = clusters.calculateExLogPrecision();
-            dataLogLike = clusters.calcLogLikelyFixedPrec(data);
+            dataLogLike = clusters.calcLogLikelyFixedPrec(trainData);
             r = VariationalInference.normalizeLogProbabilities(exLnMixingContribution, lnPrecision, dataLogLike);
 
             // Step 2. update global variables
             mixingComponents.update(r);
-            clusters.update(data, r);
+            clusters.update(trainData, r);
 
             double oldLogLikelihood = logLikelihood;
-            logLikelihood = model.calculateLogLikelihood(data, mixingComponents, clusters);
+            logLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
             if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
                 break;
             }

@@ -15,20 +15,27 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 public abstract class BatchMixtureModel extends BatchTrainScore {
     private static final Logger log = LoggerFactory.getLogger(BatchMixtureModel.class);
     protected final double progressCutoff;
     protected final int maxIterationsToConverge;
     protected MacroBaseConf conf;
+    protected double trainTestSplit;
+    protected final String initialClusterCentersFile;
 
     public BatchMixtureModel(MacroBaseConf conf) {
         super(conf);
         this.conf = conf;
         progressCutoff = conf.getDouble(MacroBaseConf.ITERATIVE_PROGRESS_CUTOFF_RATIO, MacroBaseDefaults.ITERATIVE_PROGRESS_CUTOFF_RATIO);
         maxIterationsToConverge = conf.getInt(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MAX_ITERATIONS_TO_CONVERGE);
+        trainTestSplit = conf.getDouble(MacroBaseConf.TRAIN_TEST_SPLIT, MacroBaseDefaults.TRAIN_TEST_SPLIT);
         log.debug("max iter = {}", maxIterationsToConverge);
+        this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
     public static List<RealVector> initializeClustersFromFile(String filename, int K) throws FileNotFoundException {
@@ -36,35 +43,37 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
         JsonReader reader = new JsonReader(new FileReader(filename));
         RealVector[] centers = gson.fromJson(reader, ArrayRealVector[].class);
         List<RealVector> vectors = Arrays.asList(centers);
-        return vectors.subList(0, K);
+        if(vectors.size() > K) {
+            return vectors.subList(0, K);
+        } else {
+            return vectors;
+        }
+    }
+
+    protected static List<RealVector> gonzalezInitializeMixtureCenters(List<RealVector> pickedVectors, List<Datum> data, int K, Random rand) {
+        List<RealVector> vectors = new ArrayList<>(pickedVectors);
+        int index = rand.nextInt(data.size());
+        for (int k = pickedVectors.size(); k < K; k++) {
+            double maxDistance = 0;
+            for (int n = 0; n < data.size(); n++) {
+                double distance = 0;
+                for (int j = 0; j < k; j++) {
+                    distance += data.get(n).getMetrics().getDistance(vectors.get(j));
+                }
+                if (distance > maxDistance) {
+                    maxDistance = distance;
+                    index = n;
+                }
+            }
+            vectors.add(data.get(index).getMetrics());
+        }
+        return vectors;
     }
 
     protected static List<RealVector> gonzalezInitializeMixtureCenters(List<Datum> data, int K, Random rand) {
         List<RealVector> vectors = new ArrayList<>(K);
-        int N = data.size();
-        HashSet<Integer> pointsChosen = new HashSet<Integer>();
-        int index = rand.nextInt(data.size());
-        for (int k = 0; k < K; k++) {
-            if (k > 0) {
-                double maxDistance = 0;
-                for (int n = 0; n < N; n++) {
-                    if (pointsChosen.contains(n)) {
-                        continue;
-                    }
-                    double distance = 0;
-                    for (int j = 0; j < k; j++) {
-                        distance += data.get(n).getMetrics().getDistance(vectors.get(j));
-                    }
-                    if (distance > maxDistance) {
-                        maxDistance = distance;
-                        index = n;
-                    }
-                }
-            }
-            vectors.add(data.get(index).getMetrics());
-            pointsChosen.add(index);
-        }
-        return vectors;
+        vectors.add(data.get(rand.nextInt(data.size())).getMetrics());
+        return gonzalezInitializeMixtureCenters(vectors, data, K, rand);
     }
 
     /**
@@ -91,7 +100,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     }
 
     public boolean checkTermination(double logLikelihood, double oldLogLikelihood, int iteration) {
-        log.debug("log likelihood after iteration {} is {}", iteration, logLikelihood);
+        log.debug("average point log likelihood after iteration {} is {}", iteration, logLikelihood);
 
         if (iteration >= maxIterationsToConverge) {
             log.debug("Breaking because have already run {} iterations", iteration);

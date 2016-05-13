@@ -3,8 +3,11 @@ package macrobase.analysis.stats.distribution;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.special.Gamma;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Wishart {
+    private static final Logger log = LoggerFactory.getLogger(Wishart.class);
     private final double logDetOmega;
     private RealMatrix omega;
     private double nu;
@@ -14,7 +17,12 @@ public class Wishart {
         this.omega = omega;
         this.nu = nu;
         this.D = omega.getColumnDimension();
-        this.logDetOmega = Math.log((new EigenDecomposition(omega)).getDeterminant());
+        if (omega.getRowDimension() == 2) {
+            this.logDetOmega = Math.log(omega.getEntry(0, 0) * omega.getEntry(1, 1) - omega.getEntry(1, 0) * omega.getEntry(0, 1));
+        } else {
+            log.debug("omega: {}", omega);
+            this.logDetOmega = Math.log((new EigenDecomposition(omega)).getDeterminant());
+        }
     }
 
     /**

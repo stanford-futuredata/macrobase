@@ -106,12 +106,27 @@ public class NormalWishartClusters {
      * Initializes atom (component) distributions. This method works great with DP mixture model.
      * @param data
      */
-    public void initializeAtomsForDP(List<Datum> data, Random random) {
+    public void initializeAtomsForDP(List<Datum> data, String filename, Random random) {
         omega = new ArrayList<>(K);
         dof = new double[K];
         beta = new double[K];
 
-        loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+        // if filename was provided, initialize K atoms (points) from file,
+        // if the file contains less than K points, take those points as seeds.
+        if (filename != null) {
+            try {
+                loc = BatchMixtureModel.initializeClustersFromFile(filename, K);
+                log.debug("loc : {}", loc);
+                if(loc.size() < K) {
+                    loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(loc, data, K, random);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+            }
+        } else {
+            loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
+        }
         for (int i = 0; i < K; i++) {
             // initialize betas as if all points are from the first cluster.
             beta[i] = 1;
@@ -130,10 +145,14 @@ public class NormalWishartClusters {
         dof = new double[K];
         omega = new ArrayList<>(K);
 
-        // Initialize
+        // if filename was provided, initialize K atoms (points) from file,
+        // if the file contains less than K points, take those points as seeds.
         if (filename != null) {
             try {
                 loc = BatchMixtureModel.initializeClustersFromFile(filename, K);
+                if(loc.size() < K) {
+                    loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(loc, data, K, random);
+                }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
@@ -219,7 +238,9 @@ public class NormalWishartClusters {
             weightedSum.set(k, weightedSum.get(k).mapMultiply(repeat));
         }
         List<RealMatrix> quadForm = calculateQuadraticForms(data, clusterMean, r);
-        log.debug("clusterWeights: {}", clusterWeight);
+        for (int i = 0; i< quadForm.size(); i++) {
+            quadForm.set(i, quadForm.get(i).scalarMultiply(repeat));
+        }
 
         for (int k = 0; k < K; k++) {
             beta[k] = VariationalInference.step(beta[k], baseBeta + clusterWeight[k], pace);
@@ -246,8 +267,10 @@ public class NormalWishartClusters {
     public List<RealMatrix> getMAPCovariances() {
         List<RealMatrix> covariances = new ArrayList<>(omega.size());
         for (int i = 0; i < omega.size(); i++) {
-            covariances.add(AlgebraUtils.invertMatrix(omega.get(i).scalarMultiply(dof[i])));
+            double scale = (dof[i] + 1 - D) * beta[i] / (1 + beta[i]);
+            covariances.add(AlgebraUtils.invertMatrix(omega.get(i).scalarMultiply(scale)));
         }
+        log.debug("covariances: {}", covariances);
         return covariances;
     }
 

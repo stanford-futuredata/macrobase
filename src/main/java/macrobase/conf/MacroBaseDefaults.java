@@ -102,4 +102,9 @@ public class MacroBaseDefaults {
     public static final String SCORED_DATA_FILE = null;
     public static final Integer NUM_SCORE_GRID_POINTS_PER_DIMENSION = 1000;
     public static final String DUMP_MIXTURE_COMPONENTS = null;
+    public static final Integer SVI_MINIBATCH_SIZE = 10000;
+    public static final Double SVI_DELAY = 1.0;
+    public static final Double SVI_FORGETTING_RATE = 0.9;
+    public static final Double TRAIN_TEST_SPLIT = -1.0; // Train and test on the entire dataset while training
+    public static final Double KDE_PROPORTION_OF_DATA_TO_USE = 0.01;
 }

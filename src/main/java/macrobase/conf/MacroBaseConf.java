@@ -48,6 +48,9 @@ public class MacroBaseConf extends Configuration {
     public static final String ITERATIVE_PROGRESS_CUTOFF_RATIO = "macrobase.analysis.stat.iterative.improvementCutoffRatio";
     public static final String DPM_TRUNCATING_PARAMETER = "macrobase.analysis.stat.dpm.truncatingParameter";
     public static final String DPM_CONCENTRATION_PARAMETER = "macrobase.analysis.stat.dpm.concentrationParameter";
+    public static final String SVI_DELAY = "macrobase.analysis.stat.svi.delay";
+    public static final String SVI_FORGETTING_RATE = "macrobase.analysis.stat.svi.forgettingRate";
+    public static final String SVI_MINIBATCH_SIZE = "macrobase.analysis.stat.svi.minibatchSize";
 
     // Algorithm to use when choosing the bandwidth for the given data.
     public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
@@ -83,7 +86,7 @@ public class MacroBaseConf extends Configuration {
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
-    
+
     public static final String CONTEXTUAL_API = "macrobase.analysis.contextual.api";
     public static final String CONTEXTUAL_API_OUTLIER_PREDICATES = "macrobase.analysis.contextual.api.outlierPredicates";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
@@ -105,7 +108,8 @@ public class MacroBaseConf extends Configuration {
     public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
     public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
     public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
-    public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initalClusters";
+    public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initialClusters";
+    public static final String TRAIN_TEST_SPLIT = "macrobase.analysis.stat.trainTestSplit";
 
     private final DatumEncoder datumEncoder;
 
@@ -158,7 +162,7 @@ public class MacroBaseConf extends Configuration {
         findAllContextualOutliers,
         findContextsGivenOutlierPredicate,
     }
-    
+
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
         if (seed != null) {
@@ -354,9 +358,9 @@ public class MacroBaseConf extends Configuration {
         }
         return TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
     }
-    
+
     public ContextualAPI getContextualAPI() throws ConfigurationException {
-        if(!_conf.containsKey(CONTEXTUAL_API)) {
+        if (!_conf.containsKey(CONTEXTUAL_API)) {
             return MacroBaseDefaults.CONTEXTUAL_API;
         }
         return ContextualAPI.valueOf(_conf.get(CONTEXTUAL_API));

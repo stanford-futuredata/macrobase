@@ -34,7 +34,7 @@ public class BeforeAfterDumpingBatchScoreFeatureTransform extends FeatureTransfo
 
         if (this.dumpFilename != null) {
             List<MetricsAndMetrics> beforeAndAfter = new ArrayList<>(initalRecords.size());
-            for (int i = 0; i < initalRecords.size(); i++) {
+            for (int i = 0; i < transferredRecords.size(); i++) {
                 beforeAndAfter.add(new MetricsAndMetrics(initalRecords.get(i).getMetrics(), transferredRecords.get(i).getMetrics()));
             }
             JsonUtils.tryToDumpAsJson(beforeAndAfter, this.dumpFilename);
