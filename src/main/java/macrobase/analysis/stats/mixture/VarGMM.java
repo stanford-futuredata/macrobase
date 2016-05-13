@@ -3,6 +3,7 @@ package macrobase.analysis.stats.mixture;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import macrobase.util.TrainTestSpliter;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -16,6 +17,8 @@ import java.util.List;
  */
 public abstract class VarGMM extends BatchMixtureModel {
     private static final Logger log = LoggerFactory.getLogger(VarGMM.class);
+
+    public static final double ZERO_LOG_SCORE = -10000;
     protected NormalWishartClusters clusters;
     protected List<MultivariateTDistribution> predictiveDistributions;
 
@@ -24,6 +27,19 @@ public abstract class VarGMM extends BatchMixtureModel {
     public VarGMM(MacroBaseConf conf) {
         super(conf);
     }
+
+    @Override
+    public void train(List<Datum> data) {
+        if ( trainTestSplit > 0 && trainTestSplit < 1) {
+            TrainTestSpliter splitter = new TrainTestSpliter(data, trainTestSplit, conf.getRandom());
+            trainTest(splitter.getTrainData(), splitter.getTestData());
+        } else {
+            trainTest(data, data);
+        }
+    }
+
+    public abstract void trainTest(List<Datum> trainData, List<Datum> testData);
+
 
     @Override
     public List<RealMatrix> getClusterCovariances() {
@@ -56,7 +72,7 @@ public abstract class VarGMM extends BatchMixtureModel {
             density += cc[i] * predictiveDistributions.get(i).density(datum.getMetrics());
         }
         if (density == 0) {
-            return -10000;
+            return this.ZERO_LOG_SCORE;
         }
         return Math.log(density);
     }

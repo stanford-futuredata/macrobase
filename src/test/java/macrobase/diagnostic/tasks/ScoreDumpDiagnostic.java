@@ -1,6 +1,5 @@
 package macrobase.diagnostic.tasks;
 
-import macrobase.util.Drainer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.dropwizard.cli.ConfiguredCommand;
@@ -11,6 +10,7 @@ import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
+import macrobase.util.Drainer;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

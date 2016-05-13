@@ -77,6 +77,7 @@ def set_ax_limits(ax, args):
 
 
 def set_plot_limits(plt, args):
+  print 'setting plot limits'
   if args.xlabel:
     plt.xlabel(args.xlabel)
   if args.ylabel:

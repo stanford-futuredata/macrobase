@@ -29,6 +29,7 @@ public class StochVarDPGMMTest {
     public void bivariateWellSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 8)
+                .set(MacroBaseConf.SVI_FORGETTING_RATE, 0.01)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
                 .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.3)
@@ -67,12 +68,15 @@ public class StochVarDPGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
+        log.debug("weights: {}", dpgmm.getClusterProportions());
+
 
         ExpectMaxGMM gmm = new ExpectMaxGMM(conf);
         gmm.train(data);
         List<RealVector> emMeans = gmm.getClusterCenters();
         List<RealMatrix> emCovariances = gmm.getClusterCovariances();
 
+        log.debug("cov: {}", calculatedCovariances);
         for (int i = 0; i < 3; i++) {
             boolean identified = false;
             for (int j = 0; j < 3; j++) {
@@ -121,6 +125,7 @@ public class StochVarDPGMMTest {
     public void bivariateOkSeparatedNormalTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 2)
+                .set(MacroBaseConf.SVI_FORGETTING_RATE, 0.01)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
                 .set(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, 15)

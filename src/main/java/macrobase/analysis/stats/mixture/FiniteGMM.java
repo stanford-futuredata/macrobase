@@ -13,7 +13,6 @@ import java.util.List;
  */
 public class FiniteGMM extends VarGMM {
     private static final Logger log = LoggerFactory.getLogger(FiniteGMM.class);
-    protected final String initialClusterCentersFile;
 
     protected int K;  // Number of mixture components
 
@@ -24,41 +23,18 @@ public class FiniteGMM extends VarGMM {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         log.debug("created Gaussian MM with {} mixtures", this.K);
-        this.initialClusterCentersFile = conf.getString(MacroBaseConf.MIXTURE_CENTERS_FILE, null);
     }
 
     @Override
-    public void train(List<Datum> data) {
+    public void trainTest(List<Datum> trainData, List<Datum> testData) {
         // 0. Initialize all approximating factors
         mixingComponents = new MultiComponents(0.1, K);
-        clusters = new NormalWishartClusters(K, data.get(0).getMetrics().getDimension());
-        clusters.initializeBaseForFinite(data);
-        clusters.initializeAtomsForFinite(data, initialClusterCentersFile, conf.getRandom());
+        clusters = new NormalWishartClusters(K, trainData.get(0).getMetrics().getDimension());
+        clusters.initializeBaseForFinite(trainData);
+        clusters.initializeAtomsForFinite(trainData, initialClusterCentersFile, conf.getRandom());
 
-        VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
+        VariationalInference.trainTestMeanField(this, trainData, testData, mixingComponents, clusters);
     }
-
-    /**
-     * @param datum
-     * @return log probability density of the given datum
-     */
-    @Override
-    public double score(Datum datum) {
-        double density = 0;
-        double sum_alpha = 0;
-        double[] mixingCoeffs = mixingComponents.getCoeffs();
-        double prior = mixingComponents.getPrior();
-        for (int k = 0; k < this.K; k++) {
-            // If the mixture is very improbable, skip.
-            if (Math.abs(mixingCoeffs[k] - prior) < 1e-4) {
-                continue;
-            }
-            sum_alpha += mixingCoeffs[k];
-            density += mixingCoeffs[k] * this.predictiveDistributions.get(k).density(datum.getMetrics());
-        }
-        return Math.log(density / sum_alpha);
-    }
-
 
     @Override
     public double[] getClusterProportions() {
@@ -86,7 +62,7 @@ public class FiniteGMM extends VarGMM {
     @Override
     public double[] getClusterProbabilities(Datum d) {
         double[] probas = new double[K];
-        double[] weights = getClusterProportions();
+        double[] weights = getNormClusterContrib();
         double normalizingConstant = 0;
         for (int i = 0; i < K; i++) {
             probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());

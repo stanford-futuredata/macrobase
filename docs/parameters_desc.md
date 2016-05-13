@@ -219,6 +219,32 @@ used in the KDE outlier detection algorithm.
   Controls how many possible mixtures to have when doing Variational Inference approximation.
   </td>
 </tr>
+  <td><code>macrobase.analysis.stat.svi.forgettingRate</code></td>
+  <td><code>0.9</code></td>
+  <td>
+  This is a <b>Stochastic Variational Inference-only</b> parameter.
+  Controls the speed of stochastic gradient descent. Higher values
+  will keep the speed high as iterations grow.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.stat.svi.delay</code></td>
+  <td><code>1.0</code></td>
+  <td>
+  This is a <b>Stochastic Variational Inference-only</b> parameter.
+  Controls the speed of stochastic gradient descent, unless you
+  know that you need to change this paramater don't. Control the
+  speed using `macrobase.analysis.stat.svi.forgettingRate`.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.stat.svi.minibatchSize</code></td>
+  <td><code>10000</code></td>
+  <td>
+  This is a <b>Stochastic Variational Inference-only</b> parameter.
+  Controls the size of minibatch to use to split the data into smaller chunks (minibatches).
+  </td>
+</tr>
 </table>
 
 ## Streaming-specific parameters
