@@ -44,6 +44,10 @@ public abstract class VarGMM extends BatchMixtureModel {
         return logLikelihood / data.size();
     }
 
+    /**
+     * @param datum
+     * @return log probability density of the given datum (or -10000 if probability density is 0)
+     */
     @Override
     public double score(Datum datum) {
         double density = 0;

@@ -7,7 +7,7 @@ macrobase:
   macrobase.analysis.stat.mixtures.numMixtures: 5
   macrobase.analysis.stat.mixtures.initalClusters: target/scores/centers-phillips-GA-Nrtu-mixtures.json
   macrobase.loader.csv.file: target/phillips_data/power_usage_city_state_rtus-3000ppid.csv
-  macrobase.analysis.em.improvementCutoffRatio: 0.0001
+  macrobase.analysis.stat.iterative.improvementCutoffRatio: 0.0001
   macrobase.loader.csv.compression: UNCOMPRESSED
   macrobase.loader.loaderType: CSV_LOADER
   macrobase.loader.attributes: [datasource_id, controller_id, city, num_rtus]

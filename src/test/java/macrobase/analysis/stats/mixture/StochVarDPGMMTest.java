@@ -123,7 +123,7 @@ public class StochVarDPGMMTest {
                 .set(MacroBaseConf.RANDOM_SEED, 2)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_DPGMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
-                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 15)
+                .set(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, 15)
                 .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.5)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")

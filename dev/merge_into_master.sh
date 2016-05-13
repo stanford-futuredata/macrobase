@@ -20,3 +20,4 @@ git rebase -i origin/master
 git checkout master
 git merge --ff-only ${working_branch}
 git push origin master
+echo "run \`git branch -D ${working_branch}\` to remove the previous branch"
