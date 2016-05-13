@@ -1,7 +1,6 @@
 package macrobase.pipeline;
 
 import com.google.common.collect.Lists;
-
 import macrobase.analysis.contextualoutlier.Context;
 import macrobase.analysis.contextualoutlier.Interval;
 import macrobase.analysis.contextualoutlier.IntervalDiscrete;
@@ -9,13 +8,13 @@ import macrobase.analysis.pipeline.BasicContextualBatchedPipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.ContextualAnalysisResult;
 import macrobase.conf.MacroBaseConf;
-import org.junit.*;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static junit.framework.TestCase.assertEquals;
-
 import java.util.List;
+
+import static junit.framework.TestCase.assertEquals;
 
 public class BasicContextualBatchPipelineTest {
     private static final Logger log = LoggerFactory.getLogger(BasicContextualBatchPipelineTest.class);
@@ -37,7 +36,7 @@ public class BasicContextualBatchPipelineTest {
                 .set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1", "C2"))
                 .set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
                 .set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10)
-                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE, "temp.txt");
+                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
@@ -77,7 +76,7 @@ public class BasicContextualBatchPipelineTest {
                 .set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10)
                 .set(MacroBaseConf.CONTEXTUAL_API, "findContextsGivenOutlierPredicate")
                 .set(MacroBaseConf.CONTEXTUAL_API_OUTLIER_PREDICATES, "C3 = c1")
-                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE, "temp.txt");
+                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
