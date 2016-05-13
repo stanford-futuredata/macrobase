@@ -38,6 +38,10 @@ public class FiniteGMM extends VarGMM {
         VariationalInference.trainMeanField(this, data, mixingComponents, clusters);
     }
 
+    /**
+     * @param datum
+     * @return log probability density of the given datum
+     */
     @Override
     public double score(Datum datum) {
         double density = 0;

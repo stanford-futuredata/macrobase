@@ -121,7 +121,7 @@ public class StochVarFiniteGMMTest {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.RANDOM_SEED, 4)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "SVI_GMM")
-                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 20)
+                .set(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, 20)
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)

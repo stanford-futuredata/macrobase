@@ -186,6 +186,39 @@ of the kernel in the KDE outlier deteciton algorithm.
 used in the KDE outlier detection algorithm.
   </td>
 </tr>
+<tr>
+  <td><code>macrobase.analysis.stat.iterative.improvementCutoffRatio</code></td>
+  <td><code>ITERATIVE_PROGRESS_CUTOFF_RATIO</code></td>
+  <td>
+  This is a <b>Mixture Model</b> parameter. Controls when to stop
+  iterations of iterative algorithms (e.g. Expectation Maximization)
+  when learning the best parameters.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.stat.iterative.maxIterations</code></td>
+  <td><code>MAX_ITERATIONS_TO_CONVERGE</code></td>
+  <td>
+  This is a <b>Mixture Model</b> parameter. Controls maximum number
+  of iterations allowed for iterative algorithms (e.g. Expectation
+  Maximization) when learning the best parameters.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.stat.dpm.concentrationParameter</code></td>
+  <td><code>DPM_CONCENTRATION_PARAMETER</code></td>
+  <td>
+  This is the <b>Dirichlet Process</b> concentration parameter.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.stat.dpm.truncatingParameter</code></td>
+  <td><code>DPM_TRUNCATING_PARAMETER</code></td>
+  <td>
+  This is a <b>Dirichlet Process</b> parameter used for Variational Inference.
+  Controls how many possible mixtures to have when doing Variational Inference approximation.
+  </td>
+</tr>
 </table>
 
 ## Streaming-specific parameters

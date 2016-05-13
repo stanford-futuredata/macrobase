@@ -24,7 +24,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
     public ExpectMaxGMM(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
-        this.EMCutoffProgress = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
+        this.EMCutoffProgress = conf.getDouble(MacroBaseConf.ITERATIVE_PROGRESS_CUTOFF_RATIO, MacroBaseDefaults.ITERATIVE_PROGRESS_CUTOFF_RATIO);
         log.debug("created Gaussian MM with {} mixtures", this.K);
     }
 
@@ -119,6 +119,10 @@ public class ExpectMaxGMM extends BatchMixtureModel {
         }
     }
 
+    /**
+     * @param datum
+     * @return log probability density of the given datum
+     */
     @Override
     public double score(Datum datum) {
         double probability = 0;

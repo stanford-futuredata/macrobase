@@ -43,11 +43,11 @@ public class MacroBaseConf extends Configuration {
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
 
-    public static final String MIXTURE_MAX_ITERATIONS_TO_CONVERGE = "macrobase.analysis.stat.mixtures.maxIterations";
     public static final String NUM_MIXTURES = "macrobase.analysis.stat.mixtures.numMixtures";
-    public static final String EM_CUTOFF_PROGRESS = "macrobase.analysis.em.improvementCutoffRatio";
-    public static final String DPM_TRUNCATING_PARAMETER = "macrobase.analysis.dpm.truncatingParameter";
-    public static final String DPM_CONCENTRATION_PARAMETER = "macrobase.analysis.dpm.concentrationParameter";
+    public static final String MAX_ITERATIONS_TO_CONVERGE = "macrobase.analysis.stat.iterative.maxIterations";
+    public static final String ITERATIVE_PROGRESS_CUTOFF_RATIO = "macrobase.analysis.stat.iterative.improvementCutoffRatio";
+    public static final String DPM_TRUNCATING_PARAMETER = "macrobase.analysis.stat.dpm.truncatingParameter";
+    public static final String DPM_CONCENTRATION_PARAMETER = "macrobase.analysis.stat.dpm.concentrationParameter";
 
     // Algorithm to use when choosing the bandwidth for the given data.
     public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
@@ -97,8 +97,8 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = "macrobase.analysis.contextual.pruning.distributionForTraining";
     public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = "macrobase.analysis.contextual.pruning.distributionForScoring";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
-    public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
 
+    public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
     public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
     public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
     public static final String DUMP_SCORE_GRID = "macrobase.diagnostic.dumpScoreGrid";
