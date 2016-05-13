@@ -26,8 +26,8 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
     public BatchMixtureModel(MacroBaseConf conf) {
         super(conf);
         this.conf = conf;
-        progressCutoff = conf.getDouble(MacroBaseConf.EM_CUTOFF_PROGRESS, MacroBaseDefaults.EM_CUTOFF_PROGRESS);
-        maxIterationsToConverge = conf.getInt(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MIXTURE_MAX_ITERATIONS_TO_CONVERGE);
+        progressCutoff = conf.getDouble(MacroBaseConf.ITERATIVE_PROGRESS_CUTOFF_RATIO, MacroBaseDefaults.ITERATIVE_PROGRESS_CUTOFF_RATIO);
+        maxIterationsToConverge = conf.getInt(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, MacroBaseDefaults.MAX_ITERATIONS_TO_CONVERGE);
         log.debug("max iter = {}", maxIterationsToConverge);
     }
 

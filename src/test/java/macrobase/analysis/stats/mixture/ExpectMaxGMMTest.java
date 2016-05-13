@@ -95,7 +95,7 @@ public class ExpectMaxGMMTest {
                 .set(MacroBaseConf.TRANSFORM_TYPE, "EM_GMM")
                 .set(MacroBaseConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
-                .set(MacroBaseConf.MIXTURE_MAX_ITERATIONS_TO_CONVERGE, 20)
+                .set(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, 20)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-7000points.csv.gz")
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
