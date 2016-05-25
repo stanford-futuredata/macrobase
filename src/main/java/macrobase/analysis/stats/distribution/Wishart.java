@@ -20,7 +20,6 @@ public class Wishart {
         if (omega.getRowDimension() == 2) {
             this.logDetOmega = Math.log(omega.getEntry(0, 0) * omega.getEntry(1, 1) - omega.getEntry(1, 0) * omega.getEntry(0, 1));
         } else {
-            log.debug("omega: {}", omega);
             this.logDetOmega = Math.log((new EigenDecomposition(omega)).getDeterminant());
         }
     }

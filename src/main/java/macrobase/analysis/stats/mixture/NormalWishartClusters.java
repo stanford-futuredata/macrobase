@@ -121,6 +121,7 @@ public class NormalWishartClusters {
                     loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(loc, data, K, random);
                 }
             } catch (FileNotFoundException e) {
+                log.debug("failed to initialized from file");
                 e.printStackTrace();
                 loc = BatchMixtureModel.gonzalezInitializeMixtureCenters(data, K, random);
             }
@@ -270,7 +271,6 @@ public class NormalWishartClusters {
             double scale = (dof[i] + 1 - D) * beta[i] / (1 + beta[i]);
             covariances.add(AlgebraUtils.invertMatrix(omega.get(i).scalarMultiply(scale)));
         }
-        log.debug("covariances: {}", covariances);
         return covariances;
     }
 

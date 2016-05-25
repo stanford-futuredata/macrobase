@@ -90,7 +90,7 @@ public class MacroBaseDefaults {
     
     public static final Integer NUM_MIXTURES = 2;
     public static final Double ITERATIVE_PROGRESS_CUTOFF_RATIO = 0.00001;
-    public static final Integer DPM_TRUNCATING_PARAMETER = 50;
+    public static final Integer DPM_TRUNCATING_PARAMETER = 20;
     public static final Double DPM_CONCENTRATION_PARAMETER = 1.;
     public static final Integer MAX_ITERATIONS_TO_CONVERGE = 100;
 

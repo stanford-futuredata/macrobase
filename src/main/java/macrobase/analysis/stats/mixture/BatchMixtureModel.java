@@ -112,7 +112,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
             log.debug("Breaking because improvement was {} percent", improvement * 100);
             return true;
         } else {
-            log.debug("improvement is : {}%", improvement * 100);
+            log.debug("improvement is : {} percent", improvement * 100);
         }
         log.debug(".........................................");
         return false;

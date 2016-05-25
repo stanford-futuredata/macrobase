@@ -19,19 +19,25 @@ import java.util.List;
  */
 public class MixtureGroupClassifier extends OutlierClassifier {
     private static final Logger log = LoggerFactory.getLogger(MixtureGroupClassifier.class);
-    private final RealVector targetLocation;
+    private RealVector targetLocation;
     private final BatchMixtureModel mixtureModel;
 
     MBStream<OutlierClassificationResult> results = new MBStream<>();
+    private int targetClusterIndex = -1;
 
     public MixtureGroupClassifier(MacroBaseConf conf, BatchMixtureModel mixtureModel) throws ConfigurationException {
-        List<Double> list = conf.getDoubleList(MacroBaseConf.TARGET_GROUP);
+        List<Double> list = conf.getDoubleList(MacroBaseConf.TARGET_GROUP, null);
         Double[] array = new Double[list.size()];
         for (int i = 0; i < list.size(); i++) {
             array[i] = list.get(i);
         }
         this.targetLocation = new ArrayRealVector(array);
         this.mixtureModel = mixtureModel;
+    }
+
+    public MixtureGroupClassifier(MacroBaseConf conf, BatchMixtureModel mixtureModel, int targetClusterIndex) throws ConfigurationException {
+        this.mixtureModel = mixtureModel;
+        this.targetClusterIndex = targetClusterIndex;
     }
 
     @Override
@@ -41,24 +47,17 @@ public class MixtureGroupClassifier extends OutlierClassifier {
 
     @Override
     public void consume(List<Datum> records) throws Exception {
-        log.debug("got {} records", records.size());
+        if (targetClusterIndex < 0) {
+            setTargetClusterIndex(records);
+        }
+        log.debug("target cluster index is {}", targetClusterIndex);
+
         List<RealVector> clusters = mixtureModel.getClusterCenters();
         int K = clusters.size();
         log.debug("cluster center are: {}", clusters);
-        log.debug("target cluster is: {}", targetLocation);
-        int targetClusterIndex = -1;
-        double distanceToClosestCluster = Double.MAX_VALUE;
-        for (int i = 0; i < K; i++) {
-            double dist = clusters.get(i).getDistance(targetLocation);
-            if (dist < distanceToClosestCluster) {
-                distanceToClosestCluster = dist;
-                targetClusterIndex = i;
-            }
-        }
-        log.debug("target cluster index is {}", targetClusterIndex);
         for (Datum d : records) {
             boolean isOutlier = true;
-            for (int i =0 ; i< K; i++) {
+            for (int i = 0; i < K; i++) {
                 if (d.getMetrics().getEntry(i) > d.getMetrics().getEntry(targetClusterIndex)) {
                     isOutlier = false;
                     break;
@@ -76,5 +75,23 @@ public class MixtureGroupClassifier extends OutlierClassifier {
     @Override
     public MBStream<OutlierClassificationResult> getStream() throws Exception {
         return results;
+    }
+
+    public void setTargetClusterIndex(List<Datum> records) {
+        log.debug("got {} records", records.size());
+        List<RealVector> clusters = mixtureModel.getClusterCenters();
+        int K = clusters.size();
+        log.debug("cluster center are: {}", clusters);
+        log.debug("target cluster is: {}", targetLocation);
+        int targetClusterIndex = -1;
+        double distanceToClosestCluster = Double.MAX_VALUE;
+        for (int i = 0; i < K; i++) {
+            double dist = clusters.get(i).getDistance(targetLocation);
+            if (dist < distanceToClosestCluster) {
+                distanceToClosestCluster = dist;
+                targetClusterIndex = i;
+            }
+        }
+        this.targetClusterIndex = targetClusterIndex;
     }
 }

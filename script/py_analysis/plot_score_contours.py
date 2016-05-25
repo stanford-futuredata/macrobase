@@ -33,7 +33,7 @@ def parse_args(*argument_list):
                       choices=['density', 'components', 'difference', 'noop'])
   # histogram
   parser.add_argument('--hist2d', nargs=2)
-  parser.add_argument('--histogram-bins', type=int, default=100)
+  parser.add_argument('--histogram-bins', type=int, default=96)
   parser.add_argument('--csv')
   # centers
   parser.add_argument('--centers', type=argparse.FileType('r'))
@@ -59,7 +59,7 @@ def load_json_dump(filename):
     x, y = point['metrics']['data']
     X.append(x)
     Y.append(y)
-    if args.logscore:
+    if False and args.logscore:
       Z.append(np.exp(point['score']))
     else:
       Z.append(point['score'])
@@ -119,9 +119,10 @@ def plot_score_contours(args):
     kwargs['sigmaxy'] = sigmas[i][0][1]
     return kwargs
 
-  Zgaussians = weights[0] * mlab.bivariate_normal(X, Y, **format_args(0))
-  for i in range(1, len(centers)):
-    Zgaussians += weights[i] * mlab.bivariate_normal(X, Y, **format_args(i))
+  if len(weights):
+    Zgaussians = weights[0] * mlab.bivariate_normal(X, Y, **format_args(0))
+    for i in range(1, len(centers)):
+      Zgaussians += weights[i] * mlab.bivariate_normal(X, Y, **format_args(i))
 
   if args.plot == 'components':
     CS = plt.contour(X, Y, Zgaussians, linewidth=10000, inline=1)
