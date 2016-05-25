@@ -299,6 +299,13 @@ public class MacroBaseConf extends Configuration {
         return _conf.get(key).length() > 0 ? Arrays.asList(_conf.get(key).split(",[ ]*")).stream().map(Double::parseDouble).collect(Collectors.toList()) : new ArrayList<>();
     }
 
+    public List<Double> getDoubleList(String key, List<Double> defaultValue) throws ConfigurationException {
+        if (_conf.containsKey(key)) {
+            return getDoubleList(key);
+        }
+        return defaultValue;
+    }
+
     public Integer getInt(String key) throws ConfigurationException {
         if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);

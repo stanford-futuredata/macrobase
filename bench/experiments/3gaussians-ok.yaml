@@ -1,5 +1,6 @@
 macrobase:
-  macrobase.pipeline.class: macrobase.analysis.pipeline.GridDumpingPipeline
+  macrobase.pipeline.class: macrobase.analysis.pipeline.MixtureModelPipeline
+  macrobase.analysis.stat.dpm.truncatingParameter: 15
   macrobase.analysis.transformType: SVI_DPGMM
   macrobase.analysis.minSupport: 100
   macrobase.analysis.stat.mixtures.numMixtures: 6
