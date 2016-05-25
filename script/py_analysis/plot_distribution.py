@@ -3,6 +3,7 @@ Plots a scatter plot of 2 metrics provided.
 Data could be given from postgres or a csv file.
 """
 from matplotlib.colors import LogNorm
+from mpl_toolkits.mplot3d import Axes3D
 import sys
 import numpy as np
 import argparse
@@ -22,11 +23,11 @@ def parse_args(*argument_list):
   source_group.add_argument('--csv')
   source_group.add_argument('--table', default='car_data_demo')
 
-
   plot_type_group = parser.add_mutually_exclusive_group(required=True)
   plot_type_group.add_argument('--scatter', nargs=2)
   plot_type_group.add_argument('--histogram')
   plot_type_group.add_argument('--hist2d', nargs=2)
+  plot_type_group.add_argument('--scatter3d', nargs=3)
 
   parser.add_argument('--histogram-bins', type=int, default=100)
   parser.add_argument('--filter-num-rtus', type=int)
@@ -47,6 +48,17 @@ def parse_args(*argument_list):
   if args.csv is None:
     set_db_connection(args)
   return args
+
+
+def plot_scatter3d(data, args):
+  data = data[data[args.scatter3d[0]].notnull()][data[args.scatter3d[1]].notnull()][data[args.scatter3d[2]].notnull()]
+  data = data[:100000]
+  print len(data)
+  fig = plt.figure()
+  ax = fig.add_subplot(111, projection='3d')
+  ax.scatter(data[args.scatter3d[0]],
+             data[args.scatter3d[1]],
+             data[args.scatter3d[2]])
 
 
 def _plot_hist2d(data, args):
@@ -146,9 +158,12 @@ def plot_distribution(args):
       plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
   elif args.hist2d is not None:
     _plot_hist2d(data, args)
+  elif args.scatter3d is not None:
+    plot_scatter3d(data, args)
 
   plt.legend()
-  set_plot_limits(plt, args)
+  if not args.scatter3d:
+    set_plot_limits(plt, args)
   if args.savefig is not None:
     plt.savefig(args.savefig, dpi=320)
     plt.clf()

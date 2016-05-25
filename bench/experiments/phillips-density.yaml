@@ -3,9 +3,9 @@ macrobase:
   macrobase.pipeline.class: macrobase.analysis.pipeline.MixtureModelPipeline
   macrobase.analysis.transformType: SVI_DPGMM
   macrobase.analysis.stat.mixtures.numMixtures: 10
-  macrobase.analysis.stat.mixtures.initalClusters: /Users/arsen/Workspace/centers.json
+  macrobase.analysis.stat.mixtures.initialClusters: /Users/arsen/Workspace/centers.json
   macrobase.analysis.stat.iterative.improvementCutoffRatio: 0.0001
-  macrobase.analysis.classify.targetGroup: "17, 9"
+  # macrobase.analysis.classify.targetGroup: "22, 11"
   macrobase.diagnostic.dumpMixtureComponents: target/score/phillips-Nrtu.json
   macrobase.loader.csv.file: target/phillips_data/power_usage_city_state_rtus.csv
   macrobase.analysis.stat.svi.delay: 1

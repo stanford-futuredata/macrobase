@@ -45,6 +45,8 @@ public class VariationalInference {
             double pace = Math.pow(iter + delay, -forgettingRate);
             log.debug("pace = {}", pace);
             log.debug("centers = {}", clusters.getMAPLocations());
+            log.debug("covariances = {}", clusters.getMAPCovariances());
+            log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
 
             for (int p = 0; p < partitions; p++) {
                 System.out.print(".");
@@ -70,6 +72,9 @@ public class VariationalInference {
             double oldLogLikelihood = logLikelihood;
             logLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
             if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
+                log.debug("centers = {}", clusters.getMAPLocations());
+                log.debug("covariances = {}", clusters.getMAPCovariances());
+                log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
                 return;
             }
         }
