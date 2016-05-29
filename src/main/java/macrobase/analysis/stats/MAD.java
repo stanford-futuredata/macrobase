@@ -5,6 +5,7 @@ import com.codahale.metrics.Timer;
 import macrobase.MacroBase;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import org.ddogleg.sorting.QuickSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,12 +46,13 @@ public class MAD extends BatchTrainScore {
         for (int i = 0; i < len; i++) {
             metrics[i] = data.get(i).getMetrics().getEntry(0);
         }
-        Arrays.sort(metrics);
 
         if (len % 2 == 0) {
+            QuickSelect.select(metrics, len/2, len);
             median = (metrics[len / 2 - 1] + metrics[len / 2]) / 2;
         } else {
-            median = metrics[(int) Math.ceil(len / 2)];
+            int k = (int) Math.ceil(len / 2);
+            median = QuickSelect.select(metrics, k, len);
         }
         context.stop();
 

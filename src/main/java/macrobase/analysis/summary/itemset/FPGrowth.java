@@ -199,8 +199,13 @@ public class FPGrowth {
 
         public void insertDatum(List<Datum> datums) {
             for (Datum d : datums) {
-                List<Integer> filtered = d.getAttributes().stream().filter(
-                        i -> frequentItemCounts.containsKey(i)).collect(Collectors.toList());
+                List<Integer> filtered = new ArrayList<>();
+
+                for(Integer attr : d.getAttributes()) {
+                    if(frequentItemCounts.containsKey(attr)) {
+                        filtered.add(attr);
+                    }
+                }
 
                 if (!filtered.isEmpty()) {
                     filtered.sort((i1, i2) -> frequentItemOrder.get(i2).compareTo(frequentItemOrder.get(i1)));
