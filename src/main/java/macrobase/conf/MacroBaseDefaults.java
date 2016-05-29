@@ -16,6 +16,7 @@ public class MacroBaseDefaults {
     public static final Double TARGET_PERCENTILE = .99;
     public static final Double MIN_OI_RATIO = 3.;
     public static final Double MIN_SUPPORT = 0.001;
+    public static final Boolean ATTRIBUTE_COMBINATIONS = true;
     public static final Long RANDOM_SEED = null;
     public static final Boolean USE_PERCENTILE = true;
     public static final Boolean USE_ZSCORE = false;

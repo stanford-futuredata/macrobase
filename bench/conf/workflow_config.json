@@ -15,38 +15,6 @@
     ]
   },
   {
-    "macrobase.loader.targetLowMetrics": [ "data_count_minutes" ],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
-    "isBatchJob": true,
-    "macrobase.loader.attributes": [
-      "userid"
-    ],
-    "macrobase.query.name": "cmtDatasetSimple",
-    "macrobase.loader.targetHighMetrics": []
-  },
-  {
-    "macrobase.loader.targetLowMetrics": [ "data_count_minutes" ],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
-    "isBatchJob": true,
-    "macrobase.loader.attributes": [
-      "build_version",
-      "app_version",
-      "deviceid",
-      "hardware_carrier",
-      "state",
-      "hardware_model"
-    ],
-    "macrobase.query.name": "cmtDatasetComplex",
-    "macrobase.loader.targetHighMetrics": [
-      "data_count_accel_samples",
-      "data_count_netloc_samples",
-      "data_count_gps_samples",
-      "distance_mapmatched_km",
-      "distance_gps_km",
-      "battery_drain_rate_per_hour"
-    ]
-  },
-  {
     "macrobase.loader.targetLowMetrics": [],
     "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": true,
@@ -85,7 +53,7 @@
     ],
     "macrobase.query.name": "milanTelecomSimple",
     "macrobase.loader.targetHighMetrics": [
-	"call_in_activity"
+      "call_in_activity"
     ]
   },
   {
@@ -177,37 +145,6 @@
     ]
   },
   {
-    "macrobase.loader.targetLowMetrics": [ "data_count_minutes" ],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
-    "isBatchJob": false,
-    "macrobase.loader.attributes": [
-      "userid"
-    ],
-    "macrobase.query.name": "cmtDatasetSimpleStreaming",
-    "macrobase.loader.targetHighMetrics": []
-  },
-  {
-    "macrobase.loader.targetLowMetrics":  [ "data_count_minutes" ],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id LIMIT 10000000;",
-    "isBatchJob": false,
-    "macrobase.loader.attributes": [
-      "build_version",
-      "app_version",
-      "deviceid",
-      "hardware_carrier",
-      "state",
-      "hardware_model"
-    ],
-    "macrobase.query.name": "cmtDatasetComplexStreaming",
-    "macrobase.loader.targetHighMetrics": [
-      "data_count_accel_samples",
-      "data_count_netloc_samples",
-      "data_count_gps_samples",
-      "distance_mapmatched_km",
-      "Distance_gps_km"
-    ]
-  },
-  {
     "macrobase.loader.targetLowMetrics": [],
     "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": false,
@@ -220,7 +157,7 @@
     ],
     "macrobase.analysis.minOIRatio": 1.0
   },
- {
+  {
     "macrobase.loader.targetLowMetrics": [],
     "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
     "isBatchJob": false,
@@ -235,8 +172,8 @@
       "accident_severity",
       "number_of_vehicles"
     ],
-   "macrobase.analysis.minOIRatio": 1.0
- },
+    "macrobase.analysis.minOIRatio": 1.0
+  },
   {
     "macrobase.loader.targetLowMetrics": [],
     "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
@@ -246,7 +183,7 @@
     ],
     "macrobase.query.name": "milanTelecomSimpleStreaming",
     "macrobase.loader.targetHighMetrics": [
-	"call_in_activity"
+      "call_in_activity"
     ]
   },
   {
@@ -318,6 +255,146 @@
       "com_nam"
     ],
     "macrobase.query.name": "fedDisbursementsComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "dis_amo"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "isBatchJob": true,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "road_surface_conditions",
+      "urban_or_rural_area",
+      "speed_limit"
+    ],
+    "macrobase.query.name": "accidentsComplexNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "number_of_casualties",
+      "accident_severity",
+      "number_of_vehicles"
+    ],
+    "macrobase.analysis.minOIRatio": 1.0
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "isBatchJob": true,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "square_id",
+      "country_code"
+    ],
+    "macrobase.query.name": "milanTelecomComplexNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "sms_in_activity",
+      "sms_out_activity",
+      "call_in_activity",
+      "call_out_activity",
+      "internet_traffic_activity"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "isBatchJob": true,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "cand_nm",
+      "contbr_nm",
+      "contbr_zip",
+      "contbr_employer",
+      "contbr_employer"
+    ],
+    "macrobase.query.name": "campaignExpendituresComplexNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "contb_receipt_amt"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "isBatchJob": true,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "can_id",
+      "com_id",
+      "rec_nam",
+      "rec_zip",
+      "com_nam"
+    ],
+    "macrobase.query.name": "fedDisbursementsComplexNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "dis_amo"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "road_surface_conditions",
+      "urban_or_rural_area",
+      "speed_limit"
+    ],
+    "macrobase.query.name": "accidentsComplexStreamingNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "number_of_casualties",
+      "accident_severity",
+      "number_of_vehicles"
+    ],
+    "macrobase.analysis.minOIRatio": 1.0
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "square_id",
+      "country_code"
+    ],
+    "macrobase.query.name": "milanTelecomComplexStreamingNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "sms_in_activity",
+      "sms_out_activity",
+      "call_in_activity",
+      "call_out_activity",
+      "internet_traffic_activity"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "cand_nm",
+      "contbr_nm",
+      "contbr_zip",
+      "contbr_employer",
+      "contbr_employer"
+    ],
+    "macrobase.query.name": "campaignExpendituresComplexStreamingNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "contb_receipt_amt"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "isBatchJob": false,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "can_id",
+      "com_id",
+      "rec_nam",
+      "rec_zip",
+      "com_nam"
+    ],
+    "macrobase.query.name": "fedDisbursementsComplexStreamingNoCombo",
     "macrobase.loader.targetHighMetrics": [
       "dis_amo"
     ]

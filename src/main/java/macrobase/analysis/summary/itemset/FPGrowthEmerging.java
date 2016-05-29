@@ -21,9 +21,14 @@ public class FPGrowthEmerging {
     private final Timer outlierFPGrowth = MacroBase.metrics.timer(name(FPGrowthEmerging.class, "outlierFPGrowth"));
     private final Timer inlierRatio = MacroBase.metrics.timer(name(FPGrowthEmerging.class, "inlierRatio"));
 
+    private final boolean combinationsEnabled;
 
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
+
+    public FPGrowthEmerging(boolean combinationsEnabled) {
+        this.combinationsEnabled = combinationsEnabled;
+    }
 
     private List<ItemsetResult> getSingletonItemsets(List<Datum> inliers,
                                                      List<Datum> outliers,
@@ -70,7 +75,7 @@ public class FPGrowthEmerging {
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
-        if (inliers.get(0).getAttributes().size() == 1) {
+        if (!combinationsEnabled || inliers.get(0).getAttributes().size() == 1) {
             return getSingletonItemsets(inliers, outliers, minSupport, minRatio, encoder);
         }
 

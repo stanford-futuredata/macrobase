@@ -51,7 +51,9 @@ public class EWStreamingSummarizer extends Summarizer {
                                                                         minSupport,
                                                                         minOIRatio,
                                                                         decayRate,
-                                                                        attributes.size());
+                                                                        attributes.size(),
+                                                                        conf.getBoolean(MacroBaseConf.ATTRIBUTE_COMBINATIONS,
+                                                                                        MacroBaseDefaults.ATTRIBUTE_COMBINATIONS));
 
         summaryUpdater = new Periodic(conf.getDecayType(),
                                       summaryPeriod,

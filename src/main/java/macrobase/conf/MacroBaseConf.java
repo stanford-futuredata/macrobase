@@ -24,6 +24,8 @@ public class MacroBaseConf extends Configuration {
     public static final String TARGET_PERCENTILE = "macrobase.analysis.targetPercentile";
     public static final String MIN_SUPPORT = "macrobase.analysis.minSupport";
     public static final String MIN_OI_RATIO = "macrobase.analysis.minOIRatio";
+    public static final String ATTRIBUTE_COMBINATIONS = "macrobase.analysis.summary.findAttributeCombinations";
+
     public static final String RANDOM_SEED = "macrobase.analysis.randomSeed";
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";

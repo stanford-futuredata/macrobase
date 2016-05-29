@@ -22,7 +22,8 @@ public class BatchSummarizer extends Summarizer {
     private final DatumEncoder encoder;
 
     public BatchSummarizer(MacroBaseConf conf) {
-        fpg = new FPGrowthEmerging();
+        fpg = new FPGrowthEmerging(conf.getBoolean(MacroBaseConf.ATTRIBUTE_COMBINATIONS,
+                                                   MacroBaseDefaults.ATTRIBUTE_COMBINATIONS));
         minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
         minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
         encoder = conf.getEncoder();
