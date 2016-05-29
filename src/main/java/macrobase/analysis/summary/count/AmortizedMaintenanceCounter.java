@@ -1,10 +1,13 @@
 package macrobase.analysis.summary.count;
 
 import com.google.common.collect.Lists;
+import org.ddogleg.sorting.QuickSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +16,7 @@ import java.util.Map;
     - Item counts are overreported.
     - Once we have seen 1/threshold items, size is >= 1/threshold items.
 
- This is SpaceSaving but with:
+ This is similar to SpaceSaving but with:
    - O(1) update and O(items*log(k)) maintenance
      (normally O(log(k)) update)
    - unlimited space overhead within an epoch (normally O(k))
@@ -56,21 +59,23 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
         }
 
         if (counts.size() > maxStableSize) {
-            List<Map.Entry<Integer, Double>> a = Lists.newArrayList(counts.entrySet());
-            a.sort((e1, e2) -> e1.getValue().compareTo(e2.getValue()));
-
-            double prevVal = -1;
-            int toRemove = counts.size() - maxStableSize;
-
-            log.trace("Removing {} items from counts", toRemove);
+            double[] countValues = new double[counts.size()];
+            Iterator<Double> di = counts.values().iterator();
+            for (int i = 0; i < countValues.length; ++i) {
+                countValues[i] = di.next();
+            }
+            double thresh = QuickSelect.select(countValues, maxStableSize, countValues.length);
 
             prevEpochMaxEvicted = Double.MIN_VALUE;
 
-            for (int i = 0; i < toRemove; ++i) {
-                Map.Entry<Integer, Double> entry = a.get(i);
-                counts.remove(entry.getKey());
-                if (entry.getValue() > prevEpochMaxEvicted) {
-                    prevEpochMaxEvicted = entry.getValue();
+            for (Iterator<Map.Entry<Integer, Double>> it = counts.entrySet().iterator(); it.hasNext(); ) {
+                Map.Entry<Integer, Double> entry = it.next();
+
+                if(entry.getValue() < thresh) {
+                    it.remove();
+                    if (entry.getValue() > prevEpochMaxEvicted) {
+                        prevEpochMaxEvicted = entry.getValue();
+                    }
                 }
             }
         }
