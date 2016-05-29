@@ -128,6 +128,14 @@ Points with scores in the <code>targetPercentile</code> or greater will be marke
   </td>
 </tr>
 <tr>
+  <td><code>macrobase.analysis.summary.findAttributeCombinations</code></td>
+  <td><code>true</code></td>
+  <td>
+  Produce summaries by searching for attribute combinations (true) or just single attributes (false).
+  Searching for single attributes will be faster.
+  </td>
+</tr>
+<tr>
   <td><code>macrobase.analysis.zScore</code> and <code>macrobase.analysis.useZScore</code></td>
   <td><code>3.0</code> and <code>false</code></td>
   <td>
