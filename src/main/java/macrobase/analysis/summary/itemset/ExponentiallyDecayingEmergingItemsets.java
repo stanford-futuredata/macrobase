@@ -45,16 +45,20 @@ public class ExponentiallyDecayingEmergingItemsets {
     private final StreamingFPGrowth inlierPatternSummary = new StreamingFPGrowth(0);
     private final int attributeDimension;
 
+    private final boolean combinationsEnabled;
+
     public ExponentiallyDecayingEmergingItemsets(int inlierSummarySize,
                                                  int outlierSummarySize,
                                                  double minSupportOutlier,
                                                  double minRatio,
                                                  double exponentialDecayRate,
-                                                 int attributeDimension) {
+                                                 int attributeDimension,
+                                                 boolean combinationsEnabled) {
         this.minSupportOutlier = minSupportOutlier;
         this.minRatio = minRatio;
         this.exponentialDecayRate = exponentialDecayRate;
         this.attributeDimension = attributeDimension;
+        this.combinationsEnabled = combinationsEnabled;
 
         outlierCountSummary = new AmortizedMaintenanceCounter(outlierSummarySize);
         inlierCountSummary = new AmortizedMaintenanceCounter(inlierSummarySize);
@@ -80,7 +84,7 @@ public class ExponentiallyDecayingEmergingItemsets {
     }
 
     private void updateModels(boolean doDecay) {
-        if (attributeDimension == 1) {
+        if (!combinationsEnabled || attributeDimension == 1) {
             return;
         }
 
@@ -129,7 +133,7 @@ public class ExponentiallyDecayingEmergingItemsets {
         numOutliers++;
         outlierCountSummary.observe(outlier.getAttributes());
 
-        if (attributeDimension > 1) {
+        if (!combinationsEnabled || attributeDimension > 1) {
             outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.getAttributes());
         }
     }
@@ -138,7 +142,7 @@ public class ExponentiallyDecayingEmergingItemsets {
     public void markInlier(Datum inlier) {
         numInliers++;
         inlierCountSummary.observe(inlier.getAttributes());
-        if (attributeDimension > 1) {
+        if (!combinationsEnabled || attributeDimension > 1) {
             inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
         }
     }
@@ -183,7 +187,7 @@ public class ExponentiallyDecayingEmergingItemsets {
     public List<ItemsetResult> getItemsets(DatumEncoder encoder) {
         List<ItemsetResult> singleItemsets = getSingleItemItemsets(encoder);
 
-        if (attributeDimension == 1) {
+        if (!combinationsEnabled || attributeDimension == 1) {
             return singleItemsets;
         }
 
