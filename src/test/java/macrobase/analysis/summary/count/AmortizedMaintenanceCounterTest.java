@@ -12,11 +12,11 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-public class FastButBigSpaceSavingTest {
+public class AmortizedMaintenanceCounterTest {
 
     @Test
     public void simpleTest() {
-        FastButBigSpaceSaving ss = new FastButBigSpaceSaving(10);
+        AmortizedMaintenanceCounter ss = new AmortizedMaintenanceCounter(10);
         ss.observe(1);
         ss.observe(1);
         ss.observe(1);
@@ -34,7 +34,7 @@ public class FastButBigSpaceSavingTest {
 
     @Test
     public void overflowTest() {
-        FastButBigSpaceSaving ss = new FastButBigSpaceSaving(10);
+        AmortizedMaintenanceCounter ss = new AmortizedMaintenanceCounter(10);
 
         for (int i = 0; i < 10; ++i) {
             ss.observe(i);
@@ -53,7 +53,7 @@ public class FastButBigSpaceSavingTest {
         final int CAPACITY = 15;
         final double EPSILON = 1.0/CAPACITY;
 
-        FastButBigSpaceSaving ss = new FastButBigSpaceSaving(CAPACITY);
+        AmortizedMaintenanceCounter ss = new AmortizedMaintenanceCounter(CAPACITY);
 
         Random r = new Random(0);
 
