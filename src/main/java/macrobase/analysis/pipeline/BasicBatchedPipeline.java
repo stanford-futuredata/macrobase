@@ -35,6 +35,7 @@ public class BasicBatchedPipeline extends BasePipeline {
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
+        System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
         FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());

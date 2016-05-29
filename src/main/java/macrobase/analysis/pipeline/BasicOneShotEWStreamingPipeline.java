@@ -35,8 +35,8 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
+        System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
-
 
         MBStream<Datum> streamData = new MBStream<>(data);
 
