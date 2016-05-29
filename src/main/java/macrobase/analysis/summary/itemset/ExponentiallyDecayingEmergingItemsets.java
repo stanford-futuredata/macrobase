@@ -11,7 +11,7 @@ import java.util.Set;
 
 import macrobase.MacroBase;
 import macrobase.analysis.summary.count.ApproximateCount;
-import macrobase.analysis.summary.count.FastButBigSpaceSaving;
+import macrobase.analysis.summary.count.AmortizedMaintenanceCounter;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.datamodel.Datum;
@@ -56,8 +56,8 @@ public class ExponentiallyDecayingEmergingItemsets {
         this.exponentialDecayRate = exponentialDecayRate;
         this.attributeDimension = attributeDimension;
 
-        outlierCountSummary = new FastButBigSpaceSaving(outlierSummarySize);
-        inlierCountSummary = new FastButBigSpaceSaving(inlierSummarySize);
+        outlierCountSummary = new AmortizedMaintenanceCounter(outlierSummarySize);
+        inlierCountSummary = new AmortizedMaintenanceCounter(inlierSummarySize);
         outlierPatternSummary = new StreamingFPGrowth(minSupportOutlier);
     }
 

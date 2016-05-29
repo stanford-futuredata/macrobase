@@ -30,8 +30,8 @@ import java.util.Map;
      4.) discard lower items, updating min if necessary
 
  */
-public class FastButBigSpaceSaving extends ApproximateCount {
-    private static final Logger log = LoggerFactory.getLogger(FastButBigSpaceSaving.class);
+public class AmortizedMaintenanceCounter extends ApproximateCount {
+    private static final Logger log = LoggerFactory.getLogger(AmortizedMaintenanceCounter.class);
 
     private HashMap<Integer, Double> counts = new HashMap<>();
     private double totalCount = 0;
@@ -39,7 +39,7 @@ public class FastButBigSpaceSaving extends ApproximateCount {
 
     private double prevEpochMaxEvicted = 0;
 
-    public FastButBigSpaceSaving(int maxStableSize) {
+    public AmortizedMaintenanceCounter(int maxStableSize) {
         this.maxStableSize = maxStableSize;
     }
 
