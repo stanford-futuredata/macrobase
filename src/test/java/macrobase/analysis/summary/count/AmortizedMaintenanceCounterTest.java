@@ -1,18 +1,21 @@
 package macrobase.analysis.summary.count;
 
-/**
- * Created by pbailis on 12/24/15.
- */
 
+import com.google.common.base.Stopwatch;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
 public class AmortizedMaintenanceCounterTest {
+    private static final Logger log = LoggerFactory.getLogger(AmortizedMaintenanceCounterTest.class);
+
 
     @Test
     public void simpleTest() {
@@ -78,7 +81,7 @@ public class AmortizedMaintenanceCounterTest {
             assertEquals(trueCnt.get(cnt.getKey()), cnt.getValue(), N*EPSILON);
         }
 
-        assertEquals(0, ss.getCount(ITEMS+1), 1e-10);
+        assertEquals(0, ss.getCount(ITEMS + 1), 1e-10);
         int key = cnts.keySet().iterator().next();
         assertEquals(cnts.get(key), ss.getCount(key), 1e-10);
     }
