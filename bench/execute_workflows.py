@@ -65,6 +65,21 @@ def parse_results(results_file):
         lines = f.read().split('\n')
         for i in xrange(len(lines)):
             line = lines[i]
+
+            if "load time" in line:
+                load_time_ms = int(line.split(" ")[-1].split("ms")[0])
+            if "execution time" in line:
+                execution_time_ms = int(line.split(" ")[-1].split("ms")[0])
+            if "summarization time" in line:
+                summarization_time_ms = int(line.split(" ")[-1].split("ms")[0])
+            if "outliers" in line:
+                num_outliers = float(line.split(" ")[-1])
+            if "inliers" in line:
+                num_inliers = float(line.split(" ")[-1])
+
+            if "num itemsets" in line:
+                num_itemsets = double(line.split(" ")[-1])
+                
             if line.startswith("DEBUG"):
                 if "time" in line:
                     line = line.split("...ended")[1].strip()
@@ -72,21 +87,10 @@ def parse_results(results_file):
                     time_type = line_tokens[0].strip()
                     time = int(line_tokens[1][6:-4])
                     times[time_type] = time
-                elif "itemsets" in line:
-                    line = line.split("Number of itemsets:")[1].strip()
-                    num_itemsets = int(line)
                 elif "iterations" in line:
                     line = line.split(
                         "Number of iterations in MCD step:")[1].strip()
                     num_iterations = int(line)
-                elif "Tuples / second w/o itemset mining" in line:
-                    line = line.split("Tuples / second w/o itemset mining = ")[1]
-                    tuples_per_second_no_itemset_mining = float(
-                        line.split("tuples / second")[0].strip())
-                elif "Tuples / second" in line:
-                    line = line.split("Tuples / second = ")[1]
-                    tuples_per_second = float(
-                        line.split("tuples / second")[0].strip())
             if "Columns" in line:
                 j = i + 1
                 itemset = dict()
@@ -98,6 +102,13 @@ def parse_results(results_file):
                     j += 1
                 if itemset != {}:
                     itemsets.append(itemset)
+
+    
+    tuples = num_outliers + num_inliers
+    tuples_per_second_no_itemset_mining = tuples/(execution_time_ms/1000.)
+    tuples_per_second = tuples/((summarization_time_ms + execution_time_ms)/1000.)
+    num_itemsets = len(itemsets)
+
     return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
             tuples_per_second_no_itemset_mining)
 
@@ -234,7 +245,7 @@ def parse_args():
                         type=argparse.FileType('r'),
                         default='conf/sweeping_parameters_config.json',
                         help='File with a dictionary of parameters to sweep')
-    parser.add_argument('--number-of-runs', default=5, type=int,
+    parser.add_argument('--number-of-runs', default=1, type=int,
                         help='Number of times to run a workload with same '
                              'parameters.')
     parser.add_argument('--compile', action='store_true',
