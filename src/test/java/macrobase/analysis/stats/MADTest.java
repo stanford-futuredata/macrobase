@@ -34,6 +34,27 @@ public class MADTest {
     }
 
     @Test
+    public void zeroMADTest() {
+        MAD m = new MAD(new MacroBaseConf());
+
+        List<Datum> data = new ArrayList<>();
+        for (int i = 0; i < 30; ++i) {
+            double[] sample = new double[1];
+            if (i == 0 || i  >= 28) {
+                sample[0] = 5;
+            }
+            else {
+                sample[0] = 10;
+            }
+            data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample)));
+        }
+
+        m.train(data);
+        assertEquals(27, m.score(data.get(0)), 0);
+        assertEquals(0, m.score(data.get(2)), 0);
+    }
+
+    @Test
     public void zScoreTest() {
         MAD m = new MAD(new MacroBaseConf());
 
