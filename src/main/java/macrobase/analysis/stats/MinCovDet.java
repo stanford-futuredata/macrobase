@@ -167,7 +167,7 @@ public class MinCovDet extends BatchTrainScore {
         List<MetricsWithScore> ret = new ArrayList<>(k);
 
         for(MetricsWithScore mws : scores) {
-            if(mws.score < cutoff) {
+            if(mws.score <= cutoff) {
                 ret.add(mws);
             }
 
