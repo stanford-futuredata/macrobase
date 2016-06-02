@@ -191,10 +191,5 @@
       <artifactId>JRI</artifactId>
       <version>0.9-7</version>
     </dependency>
-    <dependency>
-      <groupId>org.ddogleg</groupId>
-      <artifactId>ddogleg</artifactId>
-      <version>0.9</version>
-    </dependency>
   </dependencies>
 </project>

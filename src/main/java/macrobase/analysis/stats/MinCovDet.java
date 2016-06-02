@@ -24,7 +24,6 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.ddogleg.sorting.QuickSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,34 +148,19 @@ public class MinCovDet extends BatchTrainScore {
     private List<MetricsWithScore> findKClosest(int k, List<? extends HasMetrics> data) {
         List<MetricsWithScore> scores = new ArrayList<>();
 
-        double[] scoreVec = new double[data.size()];
-
         for (int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
-            Double score = getMahalanobis(mean, inverseCov, d.getMetrics());
-            scores.add(new MetricsWithScore(d.getMetrics(), score));
-            scoreVec[i] = score;
+            scores.add(new MetricsWithScore(d.getMetrics(),
+                                            getMahalanobis(mean, inverseCov, d.getMetrics())));
         }
 
         if (scores.size() < k) {
             return scores;
         }
 
-        double cutoff = QuickSelect.select(scoreVec, k, scoreVec.length);
+        scores.sort((a, b) -> a.getScore().compareTo(b.getScore()));
 
-        List<MetricsWithScore> ret = new ArrayList<>(k);
-
-        for(MetricsWithScore mws : scores) {
-            if(mws.score <= cutoff) {
-                ret.add(mws);
-            }
-
-            if(ret.size() == k) {
-                break;
-            }
-        }
-
-        return ret;
+        return scores.subList(0, k);
     }
 
     // helper method
