@@ -22,8 +22,8 @@ default_args = {
 
   "macrobase.analysis.streaming.inputReservoirSize": 10000,
   "macrobase.analysis.streaming.scoreReservoirSize": 10000,
-  "macrobase.analysis.streaming.inlierItemSummarySize": 10000,
-  "macrobase.analysis.streaming.outlierItemSummarySize": 10000,
+  "macrobase.analysis.streaming.inlierItemSummarySize": 100000,
+  "macrobase.analysis.streaming.outlierItemSummarySize": 100000,
   "macrobase.analysis.streaming.summaryUpdatePeriod": 100000,
   "macrobase.analysis.streaming.modelUpdatePeriod": 100000,
 
