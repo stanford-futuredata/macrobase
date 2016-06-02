@@ -1,5 +1,6 @@
 package macrobase.analysis.pipeline.stream;
 
+import com.google.common.collect.Lists;
 import macrobase.datamodel.Datum;
 
 import java.util.ArrayList;
@@ -36,8 +37,9 @@ public class MBStream<T> {
             ret = output;
             output = new ArrayList<>();
         } else {
-            ret = output.subList(0, maxElements);
-            output = output.subList(maxElements, output.size());
+            List<T> remove = output.subList(0, maxElements);
+            ret = Lists.newArrayList(remove);
+            remove.clear();
         }
 
         return ret;
