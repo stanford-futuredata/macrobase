@@ -35,6 +35,9 @@ import java.util.Map;
 public class AmortizedMaintenanceCounter extends ApproximateCount {
     private static final Logger log = LoggerFactory.getLogger(AmortizedMaintenanceCounter.class);
 
+    private double decayFactor = 1;
+    private static final double DECAY_RESET_THRESHOLD = Double.MAX_VALUE*.9;
+
     private HashMap<Integer, Double> counts = new HashMap<>();
     private double totalCount = 0;
     private final int maxStableSize;
@@ -47,21 +50,12 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
 
     @Override
     public void multiplyAllCounts(Double by) {
-        totalCount *= by;
+        decayFactor /= by;
 
-        log.trace("Decaying; {} items stored", counts.size());
-
-        for (Map.Entry<Integer, Double> entry : counts.entrySet()) {
-            double newValue = entry.getValue() * by;
-            counts.put(entry.getKey(), newValue);
-
-        }
-
-	if (counts.size() > maxStableSize) {
+        if (counts.size() > maxStableSize) {
             List<Map.Entry<Integer, Double>> a = Lists.newArrayList(counts.entrySet());
             a.sort((e1, e2) -> e1.getValue().compareTo(e2.getValue()));
 
-            double prevVal = -1;
             int toRemove = counts.size() - maxStableSize;
 
             log.trace("Removing {} items from counts", toRemove);
@@ -83,26 +77,44 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
     }
 
     public HashMap<Integer, Double> getCounts() {
+        resetDecayFactor();
         return counts;
+    }
+
+    private void resetDecayFactor() {
+        log.trace("Decaying; {} items stored", counts.size());
+
+        for (Map.Entry<Integer, Double> entry : counts.entrySet()) {
+            double newValue = entry.getValue()/decayFactor;
+            counts.put(entry.getKey(), newValue);
+        }
+
+        decayFactor = 1;
     }
 
     @Override
     public void observe(Integer item, double count) {
+        count *= decayFactor;
+
         Double value = counts.get(item);
         if (value == null) {
             value = prevEpochMaxEvicted + count;
-            totalCount += prevEpochMaxEvicted + count;
+            totalCount += value;
         } else {
             value += count;
             totalCount += count;
         }
 
         counts.put(item, value);
+
+        if(value > DECAY_RESET_THRESHOLD && decayFactor > 1) {
+            resetDecayFactor();
+        }
     }
 
     @Override
     public double getTotalCount() {
-        return totalCount;
+        return totalCount/decayFactor;
     }
 
     @Override
@@ -112,6 +124,6 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
             return 0;
         }
 
-        return ret;
+        return ret/decayFactor;
     }
 }
