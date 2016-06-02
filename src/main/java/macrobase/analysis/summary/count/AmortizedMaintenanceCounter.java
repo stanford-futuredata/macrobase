@@ -1,7 +1,6 @@
 package macrobase.analysis.summary.count;
 
 import com.google.common.collect.Lists;
-import org.ddogleg.sorting.QuickSelect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,24 +57,22 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
 
         }
 
-        if (counts.size() > maxStableSize) {
-            double[] countValues = new double[counts.size()];
-            Iterator<Double> di = counts.values().iterator();
-            for (int i = 0; i < countValues.length; ++i) {
-                countValues[i] = di.next();
-            }
-            double thresh = QuickSelect.select(countValues, maxStableSize, countValues.length);
+	if (counts.size() > maxStableSize) {
+            List<Map.Entry<Integer, Double>> a = Lists.newArrayList(counts.entrySet());
+            a.sort((e1, e2) -> e1.getValue().compareTo(e2.getValue()));
+
+            double prevVal = -1;
+            int toRemove = counts.size() - maxStableSize;
+
+            log.trace("Removing {} items from counts", toRemove);
 
             prevEpochMaxEvicted = Double.MIN_VALUE;
 
-            for (Iterator<Map.Entry<Integer, Double>> it = counts.entrySet().iterator(); it.hasNext(); ) {
-                Map.Entry<Integer, Double> entry = it.next();
-
-                if(entry.getValue() < thresh) {
-                    it.remove();
-                    if (entry.getValue() > prevEpochMaxEvicted) {
-                        prevEpochMaxEvicted = entry.getValue();
-                    }
+            for (int i = 0; i < toRemove; ++i) {
+                Map.Entry<Integer, Double> entry = a.get(i);
+                counts.remove(entry.getKey());
+                if (entry.getValue() > prevEpochMaxEvicted) {
+                    prevEpochMaxEvicted = entry.getValue();
                 }
             }
         }
