@@ -87,17 +87,21 @@ public class EWStreamingSummarizer extends Summarizer {
                 streamingSummarizer.markInlier(result.getDatum());
             }
         }
+    }
 
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
+    public Summarizer summarize() {
         Stopwatch sw = Stopwatch.createStarted();
         List<ItemsetResult> isr = streamingSummarizer.getItemsets(encoder);
         output.add(new Summary(isr,
                                streamingSummarizer.getInlierCount(),
                                streamingSummarizer.getOutlierCount(),
                                sw.elapsed(TimeUnit.MILLISECONDS)));
-    }
-
-    @Override
-    public void shutdown() {
-
+        return this;
     }
 }
