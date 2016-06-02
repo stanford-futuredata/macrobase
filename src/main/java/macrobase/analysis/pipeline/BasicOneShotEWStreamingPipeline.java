@@ -15,6 +15,7 @@ import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
 import macrobase.analysis.transform.EWFeatureTransform;
+import org.apache.commons.math3.stat.descriptive.summary.Sum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,20 +46,17 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
 
         MBStream<Datum> streamData = new MBStream<>(data);
 
-        MBOperator<Datum, OutlierClassificationResult> ocr =
+        Summarizer summarizer = new EWStreamingSummarizer(conf);
+        MBOperator<Datum, Summary> pipeline =
                 new EWFeatureTransform(conf)
-                .then(new EWAppxPercentileOutlierClassifier(conf), batchSize);
+                .then(new EWAppxPercentileOutlierClassifier(conf), batchSize)
+                .then(summarizer, batchSize);
 
         while(streamData.remaining() > 0) {
-            ocr.consume(streamData.drain(batchSize));
+            pipeline.consume(streamData.drain(batchSize));
         }
 
-        MBStream<OutlierClassificationResult> ocrs = ocr.getStream();
-
-        Summarizer summarizer = new EWStreamingSummarizer(conf);
-        summarizer.consume(ocrs.drain());
-
-        Summary result = summarizer.getStream().drain().get(0);
+        Summary result = summarizer.summarize().getStream().drain().get(0);
 
         final long totalMs = sw.elapsed(TimeUnit.MILLISECONDS) - loadMs;
         final long summarizeMs = result.getCreationTimeMs();

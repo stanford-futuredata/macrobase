@@ -85,6 +85,7 @@ public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
 
     @Override
     public void consume(List<Datum> records) {
+        List<OutlierClassificationResult> batchResult = new ArrayList<>(records.size());
         for(Datum d : records) {
             tupleCount ++;
 
@@ -99,16 +100,18 @@ public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
                     updateThreshold(percentile);
 
                     for(Datum di: warmupInput) {
-                        output.add(new OutlierClassificationResult(di, d.getMetrics().getNorm() > currentThreshold));
+                        batchResult.add(new OutlierClassificationResult(di, d.getMetrics().getNorm() > currentThreshold));
                     }
                     warmupInput.clear();
                 }
 
                 double norm = d.getMetrics().getNorm();
                 reservoir.insert(new DatumWithNorm(d, norm));
-                output.add(new OutlierClassificationResult(d, norm > currentThreshold));
+                batchResult.add(new OutlierClassificationResult(d, norm > currentThreshold));
             }
         }
+
+        output.add(batchResult);
     }
 
     @Override
