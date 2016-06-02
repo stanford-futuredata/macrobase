@@ -74,7 +74,9 @@ public class MacroBaseDefaults {
     public static final String DB_PASSWORD = "";
     public static final String DB_NAME = "postgres";
     public static final String DB_URL = "localhost";
-    
+    public static final Integer DB_CACHE_CHUNK_SIZE = 1000000;
+
+
     //contextual outlier detection defaults
     public static final MacroBaseConf.ContextualAPI CONTEXTUAL_API = MacroBaseConf.ContextualAPI.findAllContextualOutliers;
     public static final String CONTEXTUAL_API_OUTLIER_PREDICATES  = "";
