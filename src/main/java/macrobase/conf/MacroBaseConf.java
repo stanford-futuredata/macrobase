@@ -89,6 +89,8 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_NAME = "macrobase.loader.db.database";
     public static final String DB_URL = "macrobase.loader.db.url";
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
+    public static final String DB_CACHE_CHUNK_SIZE = "macrobase.loader.db.cacheChunkSizeTuples";
+
 
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";

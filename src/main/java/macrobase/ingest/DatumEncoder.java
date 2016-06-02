@@ -1,5 +1,6 @@
 package macrobase.ingest;
 
+import macrobase.datamodel.Datum;
 import macrobase.ingest.result.ColumnValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,9 @@ public class DatumEncoder {
     private HashMap<Integer, Integer> integerToColumn = new HashMap<>();
 
     private Integer nextKey = 0;
+
+    // kryo
+    public DatumEncoder() {}
 
     // kind of a hack...
     public void copy(DatumEncoder other) {
