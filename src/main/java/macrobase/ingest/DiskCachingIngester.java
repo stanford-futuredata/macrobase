@@ -6,6 +6,7 @@ import com.esotericsoftware.kryo.io.Output;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.xerial.snappy.SnappyInputStream;
 import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -48,41 +50,18 @@ public class DiskCachingIngester extends DataIngester {
         return output;
     }
 
-
-    private static class CachedData {
-        private DatumEncoder encoder;
-        private List<Datum> data;
-
-        public CachedData() {
-        }
-
-        public CachedData(DatumEncoder encoder, List<Datum> data) {
-            this.encoder = encoder;
-            this.data = data;
-        }
-
-        public DatumEncoder getEncoder() {
-            return encoder;
-        }
-
-        public List<Datum> getData() {
-            return data;
-        }
-    }
-
-
     private void initialize() throws Exception {
         if(output == null) {
             List<Datum> data;
             data = readInData();
             if (data == null || data.size() == 0) {
-		data = innerIngester.getStream().drain();
+		        data = innerIngester.getStream().drain();
                 log.info("Writing out loaded data...");
                 writeOutData(data);
                 log.info("...done writing!");
             }
-	    output = new MBStream<>();
-	    output.add(data);
+            output = new MBStream<>();
+            output.add(data);
         }
     }
 
@@ -106,8 +85,6 @@ public class DiskCachingIngester extends DataIngester {
     }
 
     private void writeOutData(List<Datum> data) throws IOException {
-        CachedData d = new CachedData(conf.getEncoder(), data);
-
         OutputStream outputStream = new SnappyOutputStream(new BufferedOutputStream(new FileOutputStream(
                 fileDir + "/" + convertFileName(timeColumn,
                         attributes,
@@ -119,7 +96,31 @@ public class DiskCachingIngester extends DataIngester {
 
         Kryo kryo = new Kryo();
         Output output = new Output(outputStream);
-        kryo.writeObject(output, d);
+        kryo.writeObject(output, conf.getEncoder());
+
+        final int BATCHSIZE = conf.getInt(MacroBaseConf.DB_CACHE_CHUNK_SIZE,
+                                          MacroBaseDefaults.DB_CACHE_CHUNK_SIZE);
+        List<List<Datum>> batches = new ArrayList<>();
+
+        if(data.size() > BATCHSIZE) {
+            int idx = 0;
+            while(idx != data.size()) {
+                List<Datum> batch = new ArrayList<>();
+                for(int j = 0; j < BATCHSIZE && idx != data.size(); ++j) {
+                    batch.add(data.get(idx));
+                    idx++;
+                }
+                batches.add(batch);
+            }
+        } else {
+            batches.add(data);
+        }
+
+        kryo.writeObject(output, batches.size());
+        for(List<Datum> batch : batches) {
+            kryo.writeClassAndObject(output, batch);
+        }
+
         output.close();
     }
 
@@ -141,11 +142,25 @@ public class DiskCachingIngester extends DataIngester {
 
         Kryo kryo = new Kryo();
         Input input = new Input(inputStream);
-        CachedData cachedData = kryo.readObject(input, CachedData.class);
+
+        DatumEncoder cachedEncoder = kryo.readObject(input, DatumEncoder.class);
+
+        Integer numBatches = kryo.readObject(input, Integer.class);
+        List<Datum> output = null;
+
+        for(int i = 0; i < numBatches; ++i) {
+            List<Datum> fromDisk = (List<Datum>) kryo.readClassAndObject(input);
+            if(output == null) {
+                output = fromDisk;
+            } else {
+                output.addAll(fromDisk);
+            }
+        }
+
         log.info("...loaded!");
 
-        conf.getEncoder().copy(cachedData.getEncoder());
-        return cachedData.getData();
+        conf.getEncoder().copy(cachedEncoder);
+        return output;
     }
 
 }
