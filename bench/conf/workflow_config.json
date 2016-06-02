@@ -398,5 +398,103 @@
     "macrobase.loader.targetHighMetrics": [
       "dis_amo"
     ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM network LIMIT 4000000;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [
+      "hostname"
+    ],
+    "macrobase.query.name": "networkSimple",
+    "macrobase.loader.targetHighMetrics": [
+      "value"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM network LIMIT 4000000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "hostname"
+    ],
+    "macrobase.query.name": "networkSimple",
+    "macrobase.loader.targetHighMetrics": [
+      "value"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [
+      "store", "name", "zipcode", "item"
+    ],
+    "macrobase.query.name": "liquorComplex",
+    "macrobase.loader.targetHighMetrics": [
+      "total", "bottle_qty"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "isBatchJob": true,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "store", "name", "zipcode", "item"
+    ],
+    "macrobase.query.name": "liquorComplexNoCombo",
+    "macrobase.loader.targetHighMetrics": [
+      "total", "bottle_qty"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "isBatchJob": false,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "store", "name", "zipcode", "item"
+    ],
+    "macrobase.query.name": "liquorComplexNoComboStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "total", "bottle_qty"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "store", "name", "zipcode", "item"
+    ],
+    "macrobase.query.name": "liquorComplexStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "total", "bottle_qty"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [
+      "store"
+    ],
+    "macrobase.query.name": "liquorSimple",
+    "macrobase.loader.targetHighMetrics": [
+      "total"
+    ]
+  },
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "store"
+    ],
+    "macrobase.query.name": "liquorSimpleStreaming",
+    "macrobase.loader.targetHighMetrics": [
+      "total"
+    ]
   }
 ]
