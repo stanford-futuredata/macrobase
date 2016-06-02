@@ -67,6 +67,7 @@ public class EWFeatureTransform extends FeatureTransform {
 
     @Override
     public void consume(List<Datum> records) {
+        List<Datum> batchOutput = new ArrayList<>(records.size());
         for(Datum d : records) {
             tupleCount ++;
 
@@ -79,7 +80,7 @@ public class EWFeatureTransform extends FeatureTransform {
                 if(tupleCount == warmupCount) {
                     scorer.train(reservoir.getReservoir());
                     for(Datum di: warmupInput) {
-                        output.add(new Datum(di, scorer.score(di)));
+                        batchOutput.add(new Datum(di, scorer.score(di)));
                     }
 
                     warmupInput.clear();
@@ -88,9 +89,11 @@ public class EWFeatureTransform extends FeatureTransform {
                 retrainer.runIfNecessary();
                 decayer.runIfNecessary();
                 reservoir.insert(d);
-                output.add(new Datum(d, scorer.score(d)));
+                batchOutput.add(new Datum(d, scorer.score(d)));
             }
         }
+
+        output.add(batchOutput);
     }
 
     @Override
