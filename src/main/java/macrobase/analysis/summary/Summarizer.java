@@ -5,7 +5,9 @@ import macrobase.analysis.result.OutlierClassificationResult;
 
 /**
  * Consumes OutlierClassification Result tuple-at-a-time, but returns summaries
- # when there has been an update.
+ # when requested via `summarize()`.
  */
 
-public abstract class Summarizer extends MBOperator<OutlierClassificationResult, Summary> { }
+public abstract class Summarizer extends MBOperator<OutlierClassificationResult, Summary> {
+  public abstract  Summarizer summarize();
+}

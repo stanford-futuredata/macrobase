@@ -55,7 +55,7 @@ public class BasicContextualBatchedPipeline extends BasePipeline {
             log.info("Context: " + context.print(conf.getEncoder()));
             BatchSummarizer summarizer = new BatchSummarizer(conf);
             summarizer.consume(context2Outliers.get(context));
-            Summary result = summarizer.getStream().drain().get(0);
+            Summary result = summarizer.summarize().getStream().drain().get(0);
             long summarizeMs = result.getCreationTimeMs();
             ContextualAnalysisResult ar = new ContextualAnalysisResult(context, result.getNumOutliers(),
                                                                        result.getNumInliers(),

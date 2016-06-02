@@ -51,7 +51,7 @@ public class MixtureModelPipeline extends BasePipeline {
             BatchSummarizer summarizer = new BatchSummarizer(conf);
             summarizer.consume(outlierClassifier.getStream().drain());
 
-            Summary result = summarizer.getStream().drain().get(0);
+            Summary result = summarizer.summarize().getStream().drain().get(0);
             final long endMs = System.currentTimeMillis();
             final long loadMs = loadEndMs - startMs;
             final long totalMs = endMs - loadEndMs;
@@ -75,7 +75,7 @@ public class MixtureModelPipeline extends BasePipeline {
                 BatchSummarizer summarizer = new BatchSummarizer(conf);
                 summarizer.consume(outlierClassifier.getStream().drain());
 
-                Summary summary = summarizer.getStream().drain().get(0);
+                Summary summary = summarizer.summarize().getStream().drain().get(0);
                 results.add(new AnalysisResult(
                         summary.getNumOutliers(),
                         summary.getNumInliers(),

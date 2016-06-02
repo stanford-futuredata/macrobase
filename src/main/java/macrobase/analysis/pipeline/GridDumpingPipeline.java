@@ -54,7 +54,7 @@ public class GridDumpingPipeline extends BasePipeline {
         BatchSummarizer summarizer = new BatchSummarizer(conf);
         summarizer.consume(outlierClassifier.getStream().drain());
 
-        Summary result = summarizer.getStream().drain().get(0);
+        Summary result = summarizer.summarize().getStream().drain().get(0);
 
         final long endMs = System.currentTimeMillis();
         final long loadMs = loadEndMs - startMs;

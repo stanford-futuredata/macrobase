@@ -39,6 +39,8 @@ public class BatchSummarizer extends Summarizer {
 
     }
 
+    private Summary summary = null;
+
     @Override
     public void consume(List<OutlierClassificationResult> records) {
         List<Datum> outliers = new ArrayList<>();
@@ -58,14 +60,24 @@ public class BatchSummarizer extends Summarizer {
                 minOIRatio,
                 encoder);
 
-        output.add(new Summary(isr,
-                               inliers.size(),
-                               outliers.size(),
-                               sw.elapsed(TimeUnit.MILLISECONDS)));
+        summary = new Summary(isr,
+                              inliers.size(),
+                              outliers.size(),
+                              sw.elapsed(TimeUnit.MILLISECONDS));
     }
 
     @Override
     public void shutdown() {
 
+    }
+
+    @Override
+    public Summarizer summarize() {
+        if (summary != null) {
+            output.add(summary);
+            summary = null;
+        }
+
+        return this;
     }
 }
