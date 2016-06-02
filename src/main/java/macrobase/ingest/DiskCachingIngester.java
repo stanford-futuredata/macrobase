@@ -76,14 +76,13 @@ public class DiskCachingIngester extends DataIngester {
             List<Datum> data;
             data = readInData();
             if (data == null || data.size() == 0) {
-                output = innerIngester.getStream();
+		data = innerIngester.getStream().drain();
                 log.info("Writing out loaded data...");
                 writeOutData(data);
                 log.info("...done writing!");
-            } else {
-                output = new MBStream<>();
-                output.add(data);
             }
+	    output = new MBStream<>();
+	    output.add(data);
         }
     }
 
