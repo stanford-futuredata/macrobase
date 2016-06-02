@@ -1,6 +1,7 @@
 package macrobase.analysis.pipeline;
 
 import com.google.common.base.Stopwatch;
+import macrobase.MacroBase;
 import macrobase.analysis.classify.EWAppxPercentileOutlierClassifier;
 import macrobase.analysis.pipeline.operator.MBOperator;
 import macrobase.analysis.pipeline.stream.MBStream;
@@ -10,6 +11,7 @@ import macrobase.analysis.summary.EWStreamingSummarizer;
 import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
 import macrobase.analysis.transform.EWFeatureTransform;
@@ -32,6 +34,9 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
 
     @Override
     public List<AnalysisResult> run() throws Exception {
+        final int batchSize = conf.getInt(MacroBaseConf.TUPLE_BATCH_SIZE,
+                                          MacroBaseDefaults.TUPLE_BATCH_SIZE);
+
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
@@ -42,10 +47,10 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
 
         MBOperator<Datum, OutlierClassificationResult> ocr =
                 new EWFeatureTransform(conf)
-                .then(new EWAppxPercentileOutlierClassifier(conf), 1000);
+                .then(new EWAppxPercentileOutlierClassifier(conf), batchSize);
 
         while(streamData.remaining() > 0) {
-            ocr.consume(streamData.drain(1000));
+            ocr.consume(streamData.drain(batchSize));
         }
 
         MBStream<OutlierClassificationResult> ocrs = ocr.getStream();

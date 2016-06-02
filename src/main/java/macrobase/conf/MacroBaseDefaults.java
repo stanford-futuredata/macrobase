@@ -23,6 +23,7 @@ public class MacroBaseDefaults {
 
     // streaming defaults
     public static final Integer WARMUP_COUNT = 10000;
+    public static final Integer TUPLE_BATCH_SIZE = 10000;
     public static final Integer INPUT_RESERVOIR_SIZE = 10000;
     public static final Integer SCORE_RESERVOIR_SIZE = 10000;
     public static final Double SUMMARY_UPDATE_PERIOD = 100000.;

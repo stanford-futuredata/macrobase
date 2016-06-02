@@ -324,6 +324,13 @@ the reservoir sorted).
   </td>
 </tr>
 <tr>
+  <td><code>macrobase.analysis.streaming.tupleBatchSize</code></td>
+  <td><code>10,000</code></td>
+  <td>
+  Batch size for passing tuples between stages in streaming.
+  </td>
+</tr>
+<tr>
   <td><code>macrobase.analysis.streaming.warmupCount</code></td>
   <td><code>10,000</code></td>
   <td>
