@@ -21,6 +21,7 @@ macrobase.analysis.zscore.threshold: 3.0
 macrobase.analysis.usePercentile: true
 macrobase.analysis.targetPercentile: 0.99
 
+macrobase.analysis.streaming.tupleBatchSize: 10000
 macrobase.analysis.streaming.inputReservoirSize: 10000
 macrobase.analysis.streaming.scoreReservoirSize: 10000
 
