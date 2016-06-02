@@ -33,6 +33,7 @@ public class MacroBaseConf extends Configuration {
     public static final String AGGREGATE_TYPE = "macrobase.analysis.aggregateType";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
+    public static final String TUPLE_BATCH_SIZE = "macrobase.analysis.streaming.tupleBatchSize";
     public static final String INPUT_RESERVOIR_SIZE = "macrobase.analysis.streaming.inputReservoirSize";
     public static final String SCORE_RESERVOIR_SIZE = "macrobase.analysis.streaming.scoreReservoirSize";
     public static final String SUMMARY_UPDATE_PERIOD = "macrobase.analysis.streaming.summaryUpdatePeriod";
