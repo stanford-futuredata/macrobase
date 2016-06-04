@@ -16,7 +16,7 @@ public class DatumWithNorm {
 
     public DatumWithNorm(Datum d) {
         this.datum = d;
-        this.norm = d.getMetrics().getNorm();
+        this.norm = d.norm();
     }
 
     public DatumWithNorm(Datum d, double norm) {
