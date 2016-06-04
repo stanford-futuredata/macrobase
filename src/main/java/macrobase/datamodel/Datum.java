@@ -67,8 +67,17 @@ public class Datum implements HasMetrics {
         return attributes;
     }
 
+
+    public List<Integer> attributes() {
+        return attributes;
+    }
+
     @Override
     public RealVector getMetrics() {
+        return metrics;
+    }
+
+    public RealVector metrics() {
         return metrics;
     }
 
@@ -110,5 +119,13 @@ public class Datum implements HasMetrics {
             return new ArrayRealVector(0);
         }
     }
+
+    public double norm() {
+        return getMetrics().getNorm();
+    }
+
+
+
+
 
 }
