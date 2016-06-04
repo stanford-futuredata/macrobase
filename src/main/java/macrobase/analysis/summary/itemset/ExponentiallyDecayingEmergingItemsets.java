@@ -134,16 +134,16 @@ public class ExponentiallyDecayingEmergingItemsets {
         outlierCountSummary.observe(outlier.getAttributes());
 
         if (!combinationsEnabled || attributeDimension > 1) {
-            outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.getAttributes());
+            outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.attributes());
         }
     }
 
     // TODO: don't track *all* inliers
     public void markInlier(Datum inlier) {
         numInliers++;
-        inlierCountSummary.observe(inlier.getAttributes());
+        inlierCountSummary.observe(inlier.attributes());
         if (!combinationsEnabled || attributeDimension > 1) {
-            inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.getAttributes());
+            inlierPatternSummary.insertTransactionStreamingFalseNegative(inlier.attributes());
         }
     }
 
