@@ -12,6 +12,7 @@ import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
+import macrobase.analysis.transform.LinearMetricNormalizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
@@ -42,7 +43,9 @@ public class SampleComparePipeline extends BasePipeline {
     public List<AnalysisResult> run() throws Exception {
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
-        List<Datum> data = ingester.getStream().drain();
+        FeatureTransform normalizer = new LinearMetricNormalizer();
+        normalizer.consume(ingester.getStream().drain());
+        List<Datum> data = normalizer.getStream().drain();
         System.gc();
 
         FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());

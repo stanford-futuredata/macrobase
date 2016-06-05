@@ -18,6 +18,7 @@ import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
+import macrobase.analysis.transform.LinearMetricNormalizer;
 import macrobase.bench.compare.itemcount.SpaceSavingHeap;
 import macrobase.bench.compare.summary.CubeCompare;
 import macrobase.bench.compare.summary.DataXRayCompare;
@@ -87,8 +88,13 @@ public class HeavyHittersComparePipeline extends BasePipeline {
     public List<AnalysisResult> run() throws Exception {
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
-        List<Datum> data = ingester.getStream().drain();
+        FeatureTransform normalizer = new LinearMetricNormalizer();
+        normalizer.consume(ingester.getStream().drain());
+        List<Datum> data = normalizer.getStream().drain();
         System.gc();
+
+        if(data.size() > 1000000)
+            data = data.subList(0, 1000000);
 
         Stopwatch tsw = Stopwatch.createUnstarted();
         tsw.start();

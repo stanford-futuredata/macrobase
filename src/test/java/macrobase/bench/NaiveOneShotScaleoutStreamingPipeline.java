@@ -13,6 +13,8 @@ import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.transform.EWFeatureTransform;
+import macrobase.analysis.transform.FeatureTransform;
+import macrobase.analysis.transform.LinearMetricNormalizer;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -50,7 +52,9 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
 
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
-        List<Datum> data = ingester.getStream().drain();
+        FeatureTransform normalizer = new LinearMetricNormalizer();
+        normalizer.consume(ingester.getStream().drain());
+        List<Datum> data = normalizer.getStream().drain();
         System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
