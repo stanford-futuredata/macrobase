@@ -3,9 +3,10 @@ import json
 import os
 
 from time import strftime
+from string import lstrip
 
 
-testing_dir = "workflows"
+testing_dir = "output"
 batch_template_conf_file = "batch_template.conf"
 streaming_template_conf_file = "streaming_template.conf"
 
@@ -48,10 +49,15 @@ def process_config_parameters(config_parameters):
 def create_config_file(config_parameters, conf_file):
     template_conf_file = batch_template_conf_file \
         if config_parameters["isBatchJob"] else streaming_template_conf_file
+
     template_conf_contents = open(template_conf_file, 'r').read()
     conf_contents = template_conf_contents % config_parameters
     with open(conf_file, 'w') as f:
         f.write(conf_contents)
+
+        # override default pipeline
+        if "macrobase.pipeline.class" in config_parameters:
+            f.write("macrobase.pipeline.class: %s\n" % (config_parameters["macrobase.pipeline.class"]))
 
 
 def parse_results(results_file):
@@ -121,10 +127,12 @@ def get_stats(value_list):
     return mean, stddev
 
 
-def run_workload(config_parameters, number_of_runs, print_itemsets=True):
+def run_workload(config_parameters, number_of_runs, print_itemsets=True,
+                 extra_env_args="", parse=True):
     sub_dir = os.path.join(os.getcwd(),
                            testing_dir,
                            config_parameters["macrobase.query.name"],
+                           extra_env_args,
                            strftime("%m-%d-%H:%M:%S"))
     os.system("mkdir -p %s" % sub_dir)
     # For now, we only run metrics with MCD and MAD: MCD for
@@ -139,6 +147,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
     conf_file = os.path.join(sub_dir, conf_file)
+
     create_config_file(config_parameters, conf_file)
     cmd = "pipeline"
 
@@ -151,14 +160,18 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
 
     for i in xrange(number_of_runs):
         results_file = os.path.join(sub_dir, "results%d.txt" % i)
-        macrobase_cmd = '''java ${{JAVA_OPTS}} \\
-            -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
+        macrobase_cmd = '''java ${{JAVA_OPTS}} {extra_env_args} \\
+            -cp "src/main/resources/:target/classes:target/test-classes:target/lib/*:target/dependency/*" \\
             macrobase.MacroBase {cmd} {conf_file} \\
             > {results_file} 2>&1'''.format(
-            cmd=cmd, conf_file=conf_file, results_file=results_file)
+            extra_env_args=extra_env_args, cmd=cmd, conf_file=conf_file, results_file=results_file)
         print 'running the following command:'
         print macrobase_cmd
         os.system("cd ..; %s" % macrobase_cmd)
+
+        if not parse:
+            continue
+
         (times, num_itemsets, num_iterations, itemsets,
             tuples_per_second, tuples_per_second_no_itemset_mining) = parse_results(results_file)
 
@@ -173,6 +186,9 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
             all_itemsets.add(frozenset(itemset.items()))
         all_tuples_per_second.append(tuples_per_second)
         all_tuples_per_second_no_itemset_mining.append(tuples_per_second_no_itemset_mining)
+
+    if not parse:
+        return
 
     mean_and_stddev_times = dict()
     for time_type in all_times:
@@ -237,6 +253,13 @@ def _add_camel_case_argument(parser, argument, **kwargs):
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--diagnostic',
+                        help="Diagnostic pipeline to run (optional)")
+    parser.add_argument('--target_workflows', nargs='+',
+                        help='Run only specified workflows (optional)')
+
+    parser.add_argument('--extra_env_args',
+                        help='Extra environmental args (optional)')
     parser.add_argument('--workflow-config',
                         type=argparse.FileType('r'),
                         default='conf/workflow_config.json',
@@ -272,10 +295,17 @@ if __name__ == '__main__':
         if default_override is not None and key in defaults:
             defaults[key] = default_override
 
-    run_all_workloads(args.workflows, defaults, args.number_of_runs)
-    for parameter_name, values in args.sweeping_parameters.iteritems():
-        for parameter_value in values:
-            run_all_workloads(args.workflows, defaults,
-                              args.number_of_runs,
-                              sweeping_parameter_name=parameter_name,
-                              sweeping_parameter_value=parameter_value)
+    if not args.diagnostic:
+        run_all_workloads(args.workflows, defaults, args.number_of_runs)
+    else:
+        testing_dir= testing_dir+"/"+args.diagnostic
+        for config_parameters_raw in args.workflows:
+            # if we've specified workflows, use them, otherwise test on all
+            if ((args.target_workflows
+                 and config_parameters_raw["macrobase.query.name"] in args.target_workflows)
+                or
+                (not args.target_workflows) or len(args.target_workflows) == 0):
+                config_parameters = defaults.copy()
+                config_parameters.update(config_parameters_raw)
+                config_parameters["macrobase.pipeline.class"] = args.diagnostic
+                run_workload(config_parameters, args.number_of_runs, extra_env_args=lstrip(args.extra_env_args) if args.extra_env_args else "", parse=False)

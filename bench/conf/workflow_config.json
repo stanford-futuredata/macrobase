@@ -1,22 +1,7 @@
 [
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM sensor_data_demo;",
-    "isBatchJob": true,
-    "macrobase.loader.attributes": [
-      "device_id",
-      "state",
-      "model",
-      "firmware_version"
-    ],
-    "macrobase.query.name": "testTasks",
-    "macrobase.loader.targetHighMetrics": [
-      "power_drain"
-    ]
-  },
-  {
-    "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "road_surface_conditions"
@@ -29,7 +14,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "road_surface_conditions",
@@ -46,7 +31,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "square_id"
@@ -58,7 +43,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "square_id",
@@ -75,7 +60,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "cand_nm"
@@ -87,7 +72,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "cand_nm",
@@ -103,7 +88,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "can_id"
@@ -115,7 +100,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "can_id",
@@ -131,22 +116,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM sensor_data_demo;",
-    "isBatchJob": false,
-    "macrobase.loader.attributes": [
-      "device_id",
-      "state",
-      "model",
-      "firmware_version"
-    ],
-    "macrobase.query.name": "testTasksStreaming",
-    "macrobase.loader.targetHighMetrics": [
-      "power_drain"
-    ]
-  },
-  {
-    "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "road_surface_conditions"
@@ -159,7 +129,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "road_surface_conditions",
@@ -176,7 +146,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "square_id"
@@ -188,7 +158,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "square_id",
@@ -205,7 +175,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "cand_nm"
@@ -217,7 +187,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "cand_nm",
@@ -233,7 +203,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "can_id"
@@ -245,7 +215,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "can_id",
@@ -261,7 +231,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -279,7 +249,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -297,7 +267,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -314,7 +284,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -331,7 +301,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -349,7 +319,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM milan_telecom LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -367,7 +337,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -384,7 +354,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 10000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -401,7 +371,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM network LIMIT 4000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM network LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "hostname"
@@ -413,19 +383,19 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM network LIMIT 4000000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM network LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "hostname"
     ],
-    "macrobase.query.name": "networkSimple",
+    "macrobase.query.name": "networkSimpleStreaming",
     "macrobase.loader.targetHighMetrics": [
       "value"
     ]
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "store", "name", "zipcode", "item"
@@ -437,7 +407,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -450,7 +420,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
     "macrobase.loader.attributes": [
@@ -463,7 +433,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "store", "name", "zipcode", "item"
@@ -475,7 +445,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor LIMIT 100000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": [
       "store"
@@ -487,7 +457,7 @@
   },
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM iowa_liquor LIMIT 100000;",
     "isBatchJob": false,
     "macrobase.loader.attributes": [
       "store"
@@ -495,6 +465,88 @@
     "macrobase.query.name": "liquorSimpleStreaming",
     "macrobase.loader.targetHighMetrics": [
       "total"
+    ]
+  },
+  {
+    "macrobase.loader.db.baseQuery": "SELECT * FROM telematics_anon LIMIT 100000;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [
+      "A1", "A2", "A3", "A4", "A5", "A6"
+    ],
+    "macrobase.query.name": "telematicsComplex",
+    "macrobase.loader.targetLowMetrics": [
+	"M0"
+    ],
+    "macrobase.loader.targetHighMetrics": [
+      "M1", "M2", "M3", "M4", "M5", "M6"
+    ]
+  },
+  {
+    "macrobase.loader.db.baseQuery": "SELECT * FROM telematics_anon LIMIT 100000;",
+    "isBatchJob": true,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "A1", "A2", "A3", "A4", "A5", "A6"
+    ],
+    "macrobase.query.name": "telematicsComplexNoCombo",
+    "macrobase.loader.targetLowMetrics": [
+	"M0"
+    ],
+    "macrobase.loader.targetHighMetrics": [
+      "M1", "M2", "M3", "M4", "M5", "M6"
+    ]
+  },
+  {
+    "macrobase.loader.db.baseQuery": "SELECT * FROM telematics_anon LIMIT 100000;",
+    "isBatchJob": false,
+    "macrobase.macrobase.analysis.summary.findAttributeCombinations": false,
+    "macrobase.loader.attributes": [
+      "A1", "A2", "A3", "A4", "A5", "A6"
+    ],
+    "macrobase.query.name": "telematicsComplexNoComboStreaming",
+    "macrobase.loader.targetLowMetrics": [
+	"M0"
+    ],
+    "macrobase.loader.targetHighMetrics": [
+      "M1", "M2", "M3", "M4", "M5", "M6"
+    ]
+  },
+  {
+    "macrobase.loader.db.baseQuery": "SELECT * FROM telematics_anon LIMIT 100000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "A1", "A2", "A3", "A4", "A5", "A6"
+    ],
+    "macrobase.query.name": "telematicsComplexStreaming",
+    "macrobase.loader.targetLowMetrics": [
+	"M0"
+    ],
+    "macrobase.loader.targetHighMetrics": [
+      "M1", "M2", "M3", "M4", "M5", "M6"
+    ]
+  },
+  {
+    "macrobase.loader.db.baseQuery": "SELECT * FROM telematics_anon LIMIT 100000;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": [
+      "A0"
+    ],
+    "macrobase.query.name": "telematicsSimple",
+    "macrobase.loader.targetHighMetrics": [],
+    "macrobase.loader.targetLowMetrics": [
+      "M0"
+    ]
+  },
+  {
+    "macrobase.loader.db.baseQuery": "SELECT * FROM telematics_anon LIMIT 100000;",
+    "isBatchJob": false,
+    "macrobase.loader.attributes": [
+      "A0"
+    ],
+    "macrobase.query.name": "telematicsSimpleStreaming",
+    "macrobase.loader.targetHighMetrics": [],
+    "macrobase.loader.targetLowMetrics": [
+      "M0"
     ]
   }
 ]

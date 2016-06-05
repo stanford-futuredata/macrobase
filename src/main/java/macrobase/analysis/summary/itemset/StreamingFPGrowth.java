@@ -706,9 +706,16 @@ public class StreamingFPGrowth {
     }
 
     public void decayAndResetFrequentItems(Map<Integer, Double> newFrequentItems, double decayRate) {
-        Set<Integer> toRemove = Sets.difference(fp.frequentItemOrder.keySet(),
-                                                newFrequentItems.keySet()).immutableCopy();
-        fp.frequentItemCounts = newFrequentItems;
+        Set<Integer> toRemove;
+
+        if(newFrequentItems != null) {
+            fp.frequentItemCounts = newFrequentItems;
+            toRemove = Sets.difference(fp.frequentItemOrder.keySet(),
+                                       newFrequentItems.keySet()).immutableCopy();
+        } else {
+            toRemove = new HashSet<>();
+        }
+        
         fp.updateFrequentItemOrder();
         if (decayRate > 0) {
             fp.decayWeights(fp.root, (1 - decayRate));
