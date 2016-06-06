@@ -260,7 +260,7 @@ public class SummaryComparePipeline extends BasePipeline {
 
             Future r = st.submit((Runnable) () -> {
                 DecisionTreeCompare dtc = new DecisionTreeCompare(10);
-                dtc.compare(scored);
+                dtc.compare(inlier_data, outlier_data);
             });
 
             try {
