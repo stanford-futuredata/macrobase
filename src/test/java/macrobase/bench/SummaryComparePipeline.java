@@ -55,7 +55,7 @@ public class SummaryComparePipeline extends BasePipeline {
 
     @Override
     public List<AnalysisResult> run() throws Exception {
-        Stopwatch sw = Stopwatch.createStarted();
+        Stopwatch sw1 = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         FeatureTransform normalizer = new LinearMetricNormalizer();
         normalizer.consume(ingester.getStream().drain());
@@ -107,8 +107,8 @@ public class SummaryComparePipeline extends BasePipeline {
         ExecutorService st = Executors.newCachedThreadPool();
 
         for(int i = 0; i < iterations; ++i) {
+            Stopwatch sw = Stopwatch.createStarted();
 
-            sw.start();
             FPGrowth out_fpg = new FPGrowth();
             List<ItemsetWithCount> outlier_items = out_fpg.getItemsetsWithSupportRatio(out_txns, .001);
             FPGrowth in_fpg = new FPGrowth();
@@ -177,8 +177,7 @@ public class SummaryComparePipeline extends BasePipeline {
         }
 
         for(int i = 0; i < iterations; ++i) {
-
-            sw.start();
+            Stopwatch sw = Stopwatch.createStarted();
 
             Future r = st.submit((Runnable) () -> {
                 CubeCompare cub = new CubeCompare();
@@ -212,7 +211,7 @@ public class SummaryComparePipeline extends BasePipeline {
 
 
         for(int i = 0; i < iterations; ++i) {
-            sw.start();
+            Stopwatch sw = Stopwatch.createStarted();
 
             FPGrowthEmerging fpg = new FPGrowthEmerging(true);
 
@@ -233,7 +232,7 @@ public class SummaryComparePipeline extends BasePipeline {
         for(int i = 0; i < iterations; ++i) {
 
 
-            sw.start();
+            Stopwatch sw = Stopwatch.createStarted();
 
             Future r = st.submit((Runnable) () -> {
                 DecisionTreeCompare dtc = new DecisionTreeCompare(100);
@@ -256,7 +255,7 @@ public class SummaryComparePipeline extends BasePipeline {
         }
 
         for(int i = 0; i < iterations; ++i) {
-
+            Stopwatch sw = Stopwatch.createStarted();
 
             Future r = st.submit((Runnable) () -> {
                 DecisionTreeCompare dtc = new DecisionTreeCompare(10);
@@ -288,11 +287,11 @@ public class SummaryComparePipeline extends BasePipeline {
 
 
         for(int i = 0; i < iterations; ++i) {
+            Stopwatch sw = Stopwatch.createStarted();
 
 
             System.gc();
 
-            sw.start();
             Future r = st.submit((Runnable) () -> {
                 Apriori out_apriori = new Apriori();
                 out_apriori.getItemsets(out_txns, .001);
@@ -317,7 +316,7 @@ public class SummaryComparePipeline extends BasePipeline {
 
         for(int i = 0; i < iterations; ++i) {
 
-            sw.start();
+            Stopwatch sw = Stopwatch.createStarted();
 
             Future r = st.submit((Runnable) () -> {
                 DataXRayCompare xr = new DataXRayCompare();
