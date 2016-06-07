@@ -70,6 +70,10 @@ public class MacroBaseConf extends Configuration {
     public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
 
     public static final String RANDOM_PROJECTION_K = "macrobase.analysis.randomProjection.k";
+    
+    public static final String ARIMA_PREDICT_SIZE = "macrobase.analysis.arima.predictSize";
+    public static final String ARIMA_FFT_PERIOD = "macrobase.analysis.arima.fftPeriod";
+    public static final String ARIMA_FFT_K = "macrobase.analysis.arima.fftK";
 
     public static final String TRUNCATE_K = "macrobase.analysis.truncate.k";
 
@@ -238,6 +242,9 @@ public class MacroBaseConf extends Configuration {
             case SVI_DPGMM:
                 log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new StochVarDPGMM(this);
+            case ARIMA:
+                log.info("Using ARIMA transform.");
+                return new ARIMA(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }

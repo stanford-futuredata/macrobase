@@ -56,6 +56,10 @@ public class MacroBaseDefaults {
     // RandomProjection default
     public static final Integer RANDOM_PROJECTION_K = 10;
 
+    // ARIMA defaults
+    public static final Integer ARIMA_FFT_PERIOD = null;
+    public static final Integer ARIMA_FFT_K = null;
+
     // Truncate default
     public static final Integer TRUNCATE_K = 10;
 
