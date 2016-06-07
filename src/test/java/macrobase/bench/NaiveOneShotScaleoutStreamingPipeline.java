@@ -112,6 +112,7 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
         sw.reset();
         sw.start();
         startSem.release(parallelism);
+        executor.shutdown();
         executor.awaitTermination(1000, TimeUnit.DAYS);
         sw.stop();
 
