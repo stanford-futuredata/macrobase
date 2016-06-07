@@ -11,10 +11,10 @@ import java.io.UnsupportedEncodingException;
 public class JsonUtils {
 
     public static void dumpAsJson(Object object, String filename) throws FileNotFoundException, UnsupportedEncodingException {
-
         Gson gson = new GsonBuilder()
                 .enableComplexMapKeySerialization()
                 .serializeNulls()
+                .serializeSpecialFloatingPointValues()
                 .setPrettyPrinting()
                 .setVersion(1.0)
                 .create();
@@ -22,6 +22,7 @@ public class JsonUtils {
         dir.mkdirs();
         PrintStream out = new PrintStream(new File(dir, filename), "UTF-8");
         out.println(gson.toJson(object));
+        out.close();
     }
 
     public static void tryToDumpAsJson(Object object, String filename) {
