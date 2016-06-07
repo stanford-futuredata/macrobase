@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.DumpClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
+import macrobase.analysis.contextualoutlier.Interval;
 import macrobase.analysis.pipeline.BasePipeline;
 import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.result.AnalysisResult;
@@ -50,26 +51,39 @@ public class SampleComparePipeline extends BasePipeline {
         List<Datum> data = normalizer.getStream().drain();
         System.gc();
 
-        FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());
-        ft.consume(data);
+        BatchTrainScore goldtrain = conf.constructTransform(conf.getTransformType());
 
-        List<Datum> scored = ft.getStream().drain();
+        sw.reset();
+        sw.start();
+        goldtrain.train(data);
+        List<Datum> scored = new ArrayList<>(data.size());
+        for(Datum d : data) {
+            scored.add(new Datum(d, goldtrain.score(d)));
+        }
+        sw.stop();
 
         scored.sort((a, b) -> ((Double) a.norm())
                 .compareTo(b.norm()));
 
         OutlierClassifier gold = new BatchingPercentileClassifier(conf);
+        gold.consume(scored);
         List<OutlierClassificationResult> goldResult = gold.getStream().drain();
 
-        Set<Datum> goldOutliers = Sets.newHashSet(
-                goldResult.stream().filter(d -> d.isOutlier()).map(a -> a.getDatum()).collect(Collectors.toList()));
-        Set<Datum> goldInliers = Sets.newHashSet(
+        Set<Long> goldOutliers = Sets.newHashSet(
+                goldResult.stream().filter(d -> d.isOutlier()).map(a -> a.getDatum().getParentID()).collect(
+                        Collectors.toList()));
+        Set<Long> goldInliers = Sets.newHashSet(
+                goldResult.stream().filter(d -> !d.isOutlier()).map(a -> a.getDatum().getParentID()).collect(
+                        Collectors.toList()));
+
+        Set<Datum> goldInlierData = Sets.newHashSet(
                 goldResult.stream().filter(d -> !d.isOutlier()).map(a -> a.getDatum()).collect(Collectors.toList()));
 
-        Map<Datum, Double> goldScores = new HashMap<>();
+
+        Map<Long, Double> goldScores = new HashMap<>();
         double goldTotal = 0;
         for(OutlierClassificationResult d : goldResult) {
-            goldScores.put(d.getDatum(), d.getDatum().norm());
+            goldScores.put(d.getDatum().getParentID(), d.getDatum().norm());
             goldTotal += d.getDatum().norm();
         }
 
@@ -91,10 +105,9 @@ public class SampleComparePipeline extends BasePipeline {
             for(int i = 0; i < ITERATIONS; ++i) {
                 BatchTrainScore batchTrainScore = conf.constructTransform(conf.getTransformType());
 
-                List<Datum> data_cp = Lists.newArrayList(data);
-                Collections.shuffle(data_cp);
+                Collections.shuffle(data);
 
-                List<Datum> sample = data_cp.subList(0, (int) (data.size() * h));
+                List<Datum> sample = data.subList(0, (int) (data.size() * h));
 
                 log.debug("Sample size is {}", sample.size());
 
@@ -107,7 +120,7 @@ public class SampleComparePipeline extends BasePipeline {
                 }
                 sw.stop();
                 times.add((double) sw.elapsed(TimeUnit.MICROSECONDS));
-                
+
                 scored2.sort((a, b) -> ((Double) a.norm())
                         .compareTo(b.norm()));
 
@@ -117,7 +130,7 @@ public class SampleComparePipeline extends BasePipeline {
 
                 double sum_squares = 0;
                 for(OutlierClassificationResult d : curResult) {
-                    sum_squares += Math.pow(goldScores.get(d.getDatum()) - d.getDatum().norm(), 2);
+                    sum_squares += Math.pow(goldScores.get(d.getDatum().getParentID()) - d.getDatum().norm(), 2);
                 }
 
                 log.info("sum squares: {}; data size: {}", sum_squares, curResult.size());
@@ -129,18 +142,15 @@ public class SampleComparePipeline extends BasePipeline {
                          curResult.get(0).getDatum().norm(),
                          goldResult.get(0).getDatum().norm());
 
-                /*
                 double sum_squares_go = 0;
-                for(Datum d : goldInliers) {
-                    sum_squares_go += Math.pow(goldScores.get(d) - detector.score(d), 2);
+                for(Datum d : goldInlierData) {
+                    sum_squares_go += Math.pow(goldScores.get(d.getParentID()) - batchTrainScore.score(d), 2);
                 }
                 double rmse_go = Math.sqrt(sum_squares_go/goldInliers.size());
 
                 log.info("RMSE_GOLD_INLIERS: {}", rmse_go);
 
                 goldInlierRMSEs.add(rmse_go);
-                                */
-
 
                 Set<Datum> curOutliers = Sets.newHashSet(
                         curResult.stream().filter(d -> d.isOutlier()).map(a -> a.getDatum()).collect(
@@ -150,13 +160,13 @@ public class SampleComparePipeline extends BasePipeline {
 
                 double right = 0;
                 for(Datum o : curOutliers) {
-                    if(goldOutliers.contains(o)) {
+                    if(goldOutliers.contains(o.getParentID())) {
                         right += 1;
                     }
                 }
 
                 for(Datum o : curInliers) {
-                    if(goldInliers.contains(o)) {
+                    if(goldInliers.contains(o.getParentID())) {
                         right += 1;
                     }
                 }
