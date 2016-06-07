@@ -38,7 +38,6 @@ public class RatioSupportSweepPipeline extends BasePipeline {
 
     @Override
     public List<AnalysisResult> run() throws Exception {
-        Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         FeatureTransform normalizer = new LinearMetricNormalizer();
         normalizer.consume(ingester.getStream().drain());
@@ -75,9 +74,7 @@ public class RatioSupportSweepPipeline extends BasePipeline {
 
         for(int i = 0; i < iterations; ++i) {
             for (double support : supports) {
-                sw.stop();
-                sw.reset();
-                sw.start();
+                Stopwatch sw = Stopwatch.createStarted();
                 FPGrowthEmerging fpg = new FPGrowthEmerging(true);
                 List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(inliers,
                                                                                 outliers,
@@ -90,7 +87,7 @@ public class RatioSupportSweepPipeline extends BasePipeline {
             }
 
             for (double ratio : ratios) {
-                sw.start();
+                Stopwatch sw = Stopwatch.createStarted();
                 FPGrowthEmerging fpg = new FPGrowthEmerging(true);
                 List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(inliers,
                                                                                 outliers,
