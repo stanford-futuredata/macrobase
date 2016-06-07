@@ -10,6 +10,8 @@ import macrobase.analysis.pipeline.BasePipeline;
 import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.OutlierClassificationResult;
+import macrobase.analysis.stats.BatchTrainScore;
+import macrobase.analysis.stats.MinCovDet;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.analysis.transform.LinearMetricNormalizer;
@@ -87,7 +89,7 @@ public class SampleComparePipeline extends BasePipeline {
             }
 
             for(int i = 0; i < ITERATIONS; ++i) {
-                FeatureTransform ft2 = new BatchScoreFeatureTransform(conf, conf.getTransformType());
+                BatchTrainScore batchTrainScore = conf.constructTransform(conf.getTransformType());
 
                 List<Datum> data_cp = Lists.newArrayList(data);
                 Collections.shuffle(data_cp);
@@ -98,14 +100,15 @@ public class SampleComparePipeline extends BasePipeline {
 
                 sw.reset();
                 sw.start();
-                ft2.consume(data_cp);
+                batchTrainScore.train(sample);
+                List<Datum> scored2 = new ArrayList<>(data.size());
+                for(Datum d : data) {
+                    scored2.add(new Datum(d, batchTrainScore.score(d)));
+                }
                 sw.stop();
                 times.add((double) sw.elapsed(TimeUnit.MICROSECONDS));
-
-
-                List<Datum> scored2 = ft.getStream().drain();
-
-                scored.sort((a, b) -> ((Double) a.norm())
+                
+                scored2.sort((a, b) -> ((Double) a.norm())
                         .compareTo(b.norm()));
 
                 OutlierClassifier thisoc = new BatchingPercentileClassifier(conf);
@@ -117,8 +120,8 @@ public class SampleComparePipeline extends BasePipeline {
                     sum_squares += Math.pow(goldScores.get(d.getDatum()) - d.getDatum().norm(), 2);
                 }
 
-                log.info("sum squares: {}; data size: {}", sum_squares, data.size());
-                double rmse = Math.sqrt(sum_squares/data.size());
+                log.info("sum squares: {}; data size: {}", sum_squares, curResult.size());
+                double rmse = Math.sqrt(sum_squares/curResult.size());
 
                 log.info("RMSE: {}", rmse);
 

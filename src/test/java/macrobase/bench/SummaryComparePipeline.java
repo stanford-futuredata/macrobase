@@ -337,7 +337,7 @@ public class SummaryComparePipeline extends BasePipeline {
             System.gc();
 
         }
-        
+
         System.exit(0);
 
         return Arrays.asList(new AnalysisResult(0, 0, 0, 0, 0, new ArrayList<>()));
