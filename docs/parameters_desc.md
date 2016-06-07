@@ -86,6 +86,13 @@ the rows or columns Macrobase needs to look at. For example,
   Directory location of local cache.
   </td>
 </tr>
+<tr>
+  <td><code>macrobase.loader.timeColumn</code></td>
+  <td>(none)</td>
+  <td>
+  For relevant algorithms, set the index of the time column. The time column must currently be specified as part of <code>macrobase.loader.targetLowMetrics</code>, and this parameter specifies the time column's index inside targetLowMetrics. The values in the column must be sorted, and specified as integers.
+  </td>
+</tr>
 </table>
 
 ## Analysis-specific parameters
@@ -97,9 +104,9 @@ workloads.
 <tr><th>Name</th><th>Default</th><th>Meaning</th></tr>
 <tr>
   <td><code>macrobase.analysis.transformType</code></td>
-  <td><code>MCD_OR_MAD</code></td>
+  <td><code>MAD_OR_MCD</code></td>
   <td>
-  Type of outlier detection algorithm to use.
+  Type of outlier detection algorithm to use. The default means [MAD](https://en.wikipedia.org/wiki/Median_absolute_deviation) will be used if there is only one (i.e. single-dimensional) metric, MAD otherwise.
   </td>
 </tr>
 <tr>
@@ -149,6 +156,20 @@ will be marked as outliers.
   <td><code>null</code></td>
   <td>
   Controls the seed of the random number generator.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.timeseries.tupleWindow</code></td>
+  <td><code>100</code></td>
+  <td>
+  For relevant algorithms, the number of tuples to use in each time window.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.timeseries.windowSize</code></td>
+  <td><code>86400000</code></td>
+  <td>
+  For relevant algorithms, the range of timestamps (based on <code>macrobase.loader.timeColumn</code>) to aggregate into each time window.
   </td>
 </tr>
 </table>
@@ -251,6 +272,27 @@ used in the KDE outlier detection algorithm.
   <td>
   This is a <b>Stochastic Variational Inference-only</b> parameter.
   Controls the size of minibatch to use to split the data into smaller chunks (minibatches).
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.arima.predictSize</code></td>
+  <td>Equal to <code>macrobase.analysis.timeseries.tupleWindow</code></td>
+  <td>
+  How far out (in tuples) to predict each time. Smaller values will likely lead to more responsive and accurate predictions, but are computationally more expensive.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.arima.fftPeriod</code></td>
+  <td>(None)</td>
+  <td>
+  If specified, use FFT with this period to handle seasonal component of the timeseries. Both this and <code>macrobase.analysis.arima.fftK</code> must be specified for this to be used.
+  </td>
+</tr>
+<tr>
+  <td><code>macrobase.analysis.arima.fftK</code></td>
+  <td>(None)</td>
+  <td>
+  If specified, use FFT with this value of k to handle seasonal component of the timeseries. Both this and <code>macrobase.analysis.arima.fftPeriod</code> must be specified for this to be used.
   </td>
 </tr>
 </table>

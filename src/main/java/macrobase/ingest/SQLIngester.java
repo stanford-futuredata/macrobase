@@ -177,15 +177,13 @@ public abstract class SQLIngester extends DataIngester {
                     Iterables.concat(attributes, lowMetrics, highMetrics, contextualDiscreteAttributes,
                             contextualDoubleAttributes, auxiliaryAttributes).spliterator(), false)
                     .collect(Collectors.joining(", "));
-            if (timeColumn != null) {
-                targetColumns += ", " + timeColumn;
-            }
             String sql = String.format("SELECT %s FROM (%s) baseQuery",
                     targetColumns,
                     orderByTimeColumn(removeSqlJunk(baseQuery), timeColumn));
             if (timeColumn != null) {
                 // Both nested and outer query need to be ordered
-                sql += " ORDER BY " + timeColumn;
+                String timeColumnName = lowMetrics.get(timeColumn);
+                sql += " ORDER BY " + timeColumnName;
             }
             Statement stmt = connection.createStatement();
             resultSet = stmt.executeQuery(sql);
@@ -226,8 +224,8 @@ public abstract class SQLIngester extends DataIngester {
 
     private List<Integer> getAttrs(ResultSet rs, DatumEncoder encoder, int rsStartIndex) throws SQLException {
         List<Integer> attrList = new ArrayList<>(attributes.size());
-        for (int i = rsStartIndex; i <= attributes.size(); ++i) {
-            attrList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
+        for (int i = 0; i < attributes.size(); ++i) {
+            attrList.add(encoder.getIntegerEncoding(i + rsStartIndex, rs.getString(i + rsStartIndex)));
         }
         return attrList;
     }
@@ -289,7 +287,7 @@ public abstract class SQLIngester extends DataIngester {
                 throw new RuntimeException("baseQuery currently shouldn't contain ORDER BY if timeColumn is specified.");
             }
 
-            String timeColumnName = conf.getEncoder().getAttributeName(timeColumn);
+            String timeColumnName = lowMetrics.get(timeColumn);
             String orderBy = " ORDER BY " + timeColumnName;
             if (Pattern.compile(LIMIT_REGEX).matcher(sql).find()) {
                 return sql.replaceAll(LIMIT_REGEX, orderBy + " $1");
