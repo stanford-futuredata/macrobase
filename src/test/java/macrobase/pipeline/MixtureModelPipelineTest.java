@@ -35,7 +35,7 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("Cluster")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
+                .set(MacroBaseConf.SCORE_DUMP_FILE, "tmp.json")
                 .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
                 .set(MacroBaseConf.TARGET_GROUP, "2")
                 .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
@@ -88,7 +88,7 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("Cluster")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
+                .set(MacroBaseConf.SCORE_DUMP_FILE, "tmp.json")
                 .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
                 .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
@@ -136,7 +136,7 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
+                .set(MacroBaseConf.SCORE_DUMP_FILE, "tmp.json")
                 .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
                 .set(MacroBaseConf.TARGET_GROUP, "2, 11")
                 .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)

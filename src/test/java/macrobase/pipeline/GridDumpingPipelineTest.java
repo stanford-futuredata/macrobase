@@ -32,7 +32,7 @@ public class GridDumpingPipelineTest {
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("XX"))
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
+                .set(MacroBaseConf.SCORE_DUMP_FILE, "tmp.json")
                 .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
                 .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")

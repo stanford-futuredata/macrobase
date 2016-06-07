@@ -105,7 +105,7 @@ public class MacroBaseDefaults {
             .put(MacroBaseConf.CLASSIFIER_DUMP, false)
             .build();
     public static final String DUMP_SCORE_GRID = null;
-    public static final String SCORED_DATA_FILE = null;
+    public static final String SCORE_DUMP_FILE = null;
     public static final Integer NUM_SCORE_GRID_POINTS_PER_DIMENSION = 1000;
     public static final String DUMP_MIXTURE_COMPONENTS = null;
     public static final Integer SVI_MINIBATCH_SIZE = 10000;

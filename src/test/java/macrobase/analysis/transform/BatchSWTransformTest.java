@@ -1,8 +1,9 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.outlier.TestOutlierUtils;
+import macrobase.analysis.TestUtils;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -21,7 +22,7 @@ public class BatchSWTransformTest {
         conf.set(MacroBaseConf.AGGREGATE_TYPE, MacroBaseConf.AggregateType.MAX);
 
         for (int i = 0; i < 100; ++i) {
-            Datum d = TestOutlierUtils.createTimeDatum(i, 100 - i);
+            Datum d = TestUtils.createTimeDatum(i, 100 - i);
             data.add(d);
         }
     }

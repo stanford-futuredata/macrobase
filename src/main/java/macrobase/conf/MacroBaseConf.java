@@ -110,11 +110,10 @@ public class MacroBaseConf extends Configuration {
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
     public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
-    public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
+    public static final String SCORE_DUMP_FILE = "macrobase.diagnostic.dumpScoreFile";
     public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
     public static final String DUMP_SCORE_GRID = "macrobase.diagnostic.dumpScoreGrid";
     public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
-    public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
     public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
     public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initialClusters";
     public static final String TRAIN_TEST_SPLIT = "macrobase.analysis.stat.trainTestSplit";

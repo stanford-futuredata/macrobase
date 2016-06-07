@@ -17,7 +17,7 @@ public class ScoreDumper {
 
     public ScoreDumper(MacroBaseConf conf) {
         this.conf = conf;
-        this.scoreFile = conf.getString(MacroBaseConf.SCORED_DATA_FILE, "");
+        this.scoreFile = conf.getString(MacroBaseConf.SCORE_DUMP_FILE, "");
     }
 
     public void dumpScores(BatchTrainScore batchTrainScore, List<Datum> data) {
