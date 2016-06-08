@@ -1,8 +1,9 @@
 package macrobase.analysis.transform.aggregate;
 
-import macrobase.analysis.outlier.TestOutlierUtils;
+import macrobase.analysis.TestUtils;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class IncrementalWindowSumTest {
     public void testWindowUpdate() throws Exception {
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
-            Datum d = TestOutlierUtils.createTimeDatum(i, i);
+            Datum d = TestUtils.createTimeDatum(i, i);
             data.add(d);
         }
 

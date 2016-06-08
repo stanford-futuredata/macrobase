@@ -54,7 +54,7 @@ public class DPGMMTest {
                 .set(MacroBaseConf.RANDOM_SEED, 40)
                 .set(MacroBaseConf.TRANSFORM_TYPE, "VARIATIONAL_DPMM")
                 .set(MacroBaseConf.DPM_TRUNCATING_PARAMETER, 10)
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.csv")
+                .set(MacroBaseConf.SCORE_DUMP_FILE, "tmp.csv")
                 .set(MacroBaseConf.MAX_ITERATIONS_TO_CONVERGE, 15)
                 .set(MacroBaseConf.DPM_CONCENTRATION_PARAMETER, 0.2)
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
@@ -81,11 +81,11 @@ public class DPGMMTest {
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCenters(), "DPGMMTest-bivariateWellSeparatedNormalTest-means.json");
         JsonUtils.dumpAsJson(variationalDPGM.getClusterProportions(), "DPGMMTest-bivariateWellSeparatedNormalTest-weights.json");
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-grid.json");
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE, "3gaussians-700-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
         dumper.dumpScores(variationalDPGM, boundaries, 0.05);
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-700-data.json");
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE, "3gaussians-700-data.json");
         dumper = new ScoreDumper(conf);
         dumper.dumpScores(variationalDPGM, data);
 
@@ -197,11 +197,11 @@ public class DPGMMTest {
         JsonUtils.dumpAsJson(variationalDPGM.getClusterCenters(), "DPGMMTest-bivariateOkSeparatedNormalTest-means.json");
         JsonUtils.dumpAsJson(variationalDPGM.getClusterProportions(), "DPGMMTest-bivariateOkSeparatedNormalTest-weights.json");
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE, "3gaussians-7k-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
         dumper.dumpScores(variationalDPGM, boundaries, 0.05);
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE, "3gaussians-7k-data.json");
         dumper = new ScoreDumper(conf);
         dumper.dumpScores(variationalDPGM, data);
     }

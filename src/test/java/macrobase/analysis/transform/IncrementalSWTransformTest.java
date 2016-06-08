@@ -1,8 +1,9 @@
 package macrobase.analysis.transform;
 
-import macrobase.analysis.outlier.TestOutlierUtils;
+import macrobase.analysis.TestUtils;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -20,7 +21,7 @@ public class IncrementalSWTransformTest {
         conf.set(MacroBaseConf.TIME_COLUMN, 0);
 
         for (int i = 0; i < 100; ++i) {
-            Datum d = TestOutlierUtils.createTimeDatum(i, i);
+            Datum d = TestUtils.createTimeDatum(i, i);
             data.add(d);
         }
     }

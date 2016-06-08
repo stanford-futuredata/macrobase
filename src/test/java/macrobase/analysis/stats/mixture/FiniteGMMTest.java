@@ -199,11 +199,11 @@ public class FiniteGMMTest {
         JsonUtils.dumpAsJson(finiteGMM.getClusterCenters(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-means.json");
         JsonUtils.dumpAsJson(finiteGMM.getPriorAdjustedClusterProportions(), "FiniteGMMTest-bivariateOkSeparatedNormalTest-weights.json");
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-grid.json");
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE, "3gaussians-7k-grid.json");
         ScoreDumper dumper = new ScoreDumper(conf);
         dumper.dumpScores(finiteGMM, scoredData);
 
-        conf.set(MacroBaseConf.SCORE_DUMP_FILE_CONFIG_PARAM, "3gaussians-7k-data.json");
+        conf.set(MacroBaseConf.SCORE_DUMP_FILE, "3gaussians-7k-data.json");
         dumper = new ScoreDumper(conf);
         dumper.dumpScores(finiteGMM, data);
     }

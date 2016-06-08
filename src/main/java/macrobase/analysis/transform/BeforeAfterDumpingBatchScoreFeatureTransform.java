@@ -18,7 +18,7 @@ public class BeforeAfterDumpingBatchScoreFeatureTransform extends FeatureTransfo
     private final MBStream<Datum> output = new MBStream<>();
 
     public BeforeAfterDumpingBatchScoreFeatureTransform(MacroBaseConf conf, FeatureTransform transform) throws ConfigurationException {
-        this.dumpFilename = conf.getString(MacroBaseConf.SCORED_DATA_FILE, MacroBaseDefaults.SCORED_DATA_FILE);
+        this.dumpFilename = conf.getString(MacroBaseConf.SCORE_DUMP_FILE, MacroBaseDefaults.SCORE_DUMP_FILE);
         this.underlyingTransform = transform;
     }
 

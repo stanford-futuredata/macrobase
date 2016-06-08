@@ -44,5 +44,7 @@ public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
         MacroBase.reporter.report();
 
         log.info("Result: {}", results);
+        // Required to shutdown JRI if it is running
+        System.exit(0);
     }
 }

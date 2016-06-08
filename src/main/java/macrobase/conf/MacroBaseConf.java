@@ -70,6 +70,10 @@ public class MacroBaseConf extends Configuration {
     public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
 
     public static final String RANDOM_PROJECTION_K = "macrobase.analysis.randomProjection.k";
+    
+    public static final String ARIMA_PREDICT_SIZE = "macrobase.analysis.arima.predictSize";
+    public static final String ARIMA_FFT_PERIOD = "macrobase.analysis.arima.fftPeriod";
+    public static final String ARIMA_FFT_K = "macrobase.analysis.arima.fftK";
 
     public static final String TRUNCATE_K = "macrobase.analysis.truncate.k";
 
@@ -110,11 +114,10 @@ public class MacroBaseConf extends Configuration {
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
     public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
-    public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
+    public static final String SCORE_DUMP_FILE = "macrobase.diagnostic.dumpScoreFile";
     public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
     public static final String DUMP_SCORE_GRID = "macrobase.diagnostic.dumpScoreGrid";
     public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
-    public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
     public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
     public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initialClusters";
     public static final String TRAIN_TEST_SPLIT = "macrobase.analysis.stat.trainTestSplit";
@@ -239,6 +242,9 @@ public class MacroBaseConf extends Configuration {
             case SVI_DPGMM:
                 log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new StochVarDPGMM(this);
+            case ARIMA:
+                log.info("Using ARIMA transform.");
+                return new ARIMA(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }
