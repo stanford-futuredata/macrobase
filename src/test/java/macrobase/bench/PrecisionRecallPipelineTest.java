@@ -109,7 +109,6 @@ public class PrecisionRecallPipelineTest extends BasePipeline {
 
             if(r.nextDouble() < pointNoise) {
                 val = extraneous.sample();
-                attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(outlierClusters*2 + i));
             } else if(isOutlier) {
                 val = outliers.sample();
             } else {

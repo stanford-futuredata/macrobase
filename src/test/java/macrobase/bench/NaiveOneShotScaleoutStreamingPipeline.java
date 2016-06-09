@@ -117,7 +117,7 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
         sw.stop();
 
 
-        final long totalMs = sw.elapsed(TimeUnit.MILLISECONDS) - loadMs;
+        final long totalMs = sw.elapsed(TimeUnit.MILLISECONDS);
         final long summarizeMs = totalMs;
         final long executeMs = totalMs;
 
