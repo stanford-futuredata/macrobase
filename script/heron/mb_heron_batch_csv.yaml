@@ -1,0 +1,27 @@
+macrobase.query.name: testTasks
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicBatchedPipeline
+
+macrobase.loader.attributes: [component, hostname, container]
+macrobase.loader.targetLowMetrics: []
+macrobase.loader.targetHighMetrics: [__execute-latency/default,__execute-count/default,__fail-count/default,__jvm-process-cpu-load,__jvm-memory-used-mb,__jvm-gc-collection-time-ms]
+
+macrobase.analysis.transformType: MAD_OR_MCD
+
+macrobase.loader.loaderType: CSV_LOADER
+# modify as needed
+macrobase.loader.csv.file: out.csv
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE
