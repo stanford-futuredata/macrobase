@@ -6,9 +6,12 @@ import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.pipeline.BasePipeline;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.analysis.sample.ExponentiallyBiasedAChao;
+import macrobase.analysis.stats.MAD;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
+import macrobase.analysis.summary.count.AmortizedMaintenanceCounter;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.analysis.transform.LinearMetricNormalizer;
@@ -16,14 +19,19 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -37,118 +45,224 @@ public class StreamEvolutionPipelineTest extends BasePipeline {
         return this;
     }
 
-    private Summary execute(List<Datum> input, MacroBaseConf conf) throws Exception {
-        FeatureTransform ft = new BatchScoreFeatureTransform(conf, MacroBaseConf.TransformType.MAD);
-        ft.consume(input);
-
-        OutlierClassifier oc = new BatchingPercentileClassifier(conf);
-        oc.consume(ft.getStream().drain());
-
-        Summarizer bs = new BatchSummarizer(conf);
-        bs.consume(oc.getStream().drain());
-        Summary result = bs.summarize().getStream().drain().get(0);
-
-        return result;
-    }
-
     @Override
     public List<AnalysisResult> run() throws Exception {
-        conf.set(MacroBaseConf.MIN_SUPPORT, 0.001);
-        conf.set(MacroBaseConf.MIN_OI_RATIO, 3);
-        runOnConf("OI3");
+        runOnConf("MB", .99999999, 100, false);
+        runOnConf("EVERY", .999999 , 100, true);
+        runOnConf("UNIFORM", 0, 0, false);
 
-        conf.set(MacroBaseConf.MIN_OI_RATIO, 0);
-        runOnConf("OI0");
 
         return Arrays.asList(new AnalysisResult(0, 0, 0, 0, 0, new ArrayList<>()));
     }
 
-    private void runOnConf(String prefix) throws Exception {
-        int numPoints = 1000000;
-        double percentageOutliers = 0.01;
+    private void runOnConf(String prefix, double decayrate, int decaysPerInterval, boolean every) throws Exception {
+        Random r = new Random(0);
+        int NUM_SPIKE = 10000;
+        int SPIKE_LEN = 4;
 
-        for(Double labelNoise : Lists.newArrayList(0d, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)) {
-            for (Integer outlierClusters : Lists.newArrayList(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)) {
-                trial(prefix+"labelNoise", numPoints, percentageOutliers, outlierClusters, labelNoise, 0);
+        int INTERVAL_LEN = 1000000;
+
+        int SPIKE_REPEAT_FACTOR = 10;
+
+        int capacity = 200;
+        int numServers = 100;
+        int badServerOne = 1;
+
+        int ptlograte = 1000;
+
+        int retrainRate = 100;
+        int reportsPerInterval = 50;
+
+        int reservoirWarmup = 1000;
+        int percentileWarmup = 2000;
+
+
+        List<Integer> pointsPerInterval = Lists.newArrayList(INTERVAL_LEN,
+                                                             INTERVAL_LEN, INTERVAL_LEN,
+                                                             INTERVAL_LEN, INTERVAL_LEN,
+                                                             INTERVAL_LEN, INTERVAL_LEN, INTERVAL_LEN);
+
+
+
+        RandomGenerator g = new MersenneTwister(0);
+
+        NormalDistribution inliers = new NormalDistribution(g, 10, 10);
+        NormalDistribution outliers = new NormalDistribution(g, 70, 10);
+        UniformRealDistribution noise = new UniformRealDistribution(g, 70, 200);
+
+        MAD m = new MAD(conf);
+        ExponentiallyBiasedAChao<Datum> reservoir = new ExponentiallyBiasedAChao<>(capacity, decayrate);
+        ExponentiallyBiasedAChao<Double> scoreReservoir = new ExponentiallyBiasedAChao<>(capacity, decayrate);
+
+        AmortizedMaintenanceCounter inlierCount = new AmortizedMaintenanceCounter(100000);
+        AmortizedMaintenanceCounter outlierCount = new AmortizedMaintenanceCounter(100000);
+
+        double threshPctile = 0.95;
+        double curThresh = 0;
+
+
+        int reportNo = 0;
+
+
+
+        for(int intervalNo = 0; intervalNo < pointsPerInterval.size(); ++intervalNo) {
+
+            List<Double> valsSinceReport = new ArrayList<>();
+
+            reservoir.advancePeriod();
+            scoreReservoir.advancePeriod();
+
+
+            // interval 3, change default outlier and inlier ratios
+            if(intervalNo == 3) {
+                inliers = new NormalDistribution(g, 40, 10);
+                outliers = new NormalDistribution(g, -10, 10);
             }
-        }
 
-        for(Double pointNoise : Lists.newArrayList(0d, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)) {
-            for (Integer outlierClusters : Lists.newArrayList(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)) {
-                trial(prefix+"pointNoise", numPoints, percentageOutliers, outlierClusters, 0, pointNoise);
-            }
-        }
-    }
-
-    private void trial(String name, int numPoints, double percentageOutliers, int outlierClusters, double labelNoise, double pointNoise) throws Exception {
-        NormalDistribution inliers = new NormalDistribution(10, 10);
-        NormalDistribution outliers = new NormalDistribution(70, 10);
-        NormalDistribution extraneous = new NormalDistribution(70, 10);
-
-
-
-        conf.getEncoder().copy(new DatumEncoder());
-        conf.getEncoder().recordAttributeName(0, "ATTR");
-
-        HashSet<String> trueOutlierAttributes = new HashSet<>();
-
-        for(Integer i = 0; i < outlierClusters; ++i) {
-            trueOutlierAttributes.add(i.toString());
-        }
-
-        List<Datum> data = new ArrayList<>();
-
-        Random r = new Random();
-
-        for(Integer i = 0; i < numPoints; ++i) {
-            double val;
-            Integer attr = null;
-
-            boolean isOutlier = ((((float)i / numPoints) < percentageOutliers));
-
-            if(r.nextDouble() < pointNoise) {
-                val = extraneous.sample();
-            } else if(isOutlier) {
-                val = outliers.sample();
-            } else {
-                val = inliers.sample();
+            if(intervalNo == 6) {
+                outliers = new NormalDistribution(85, 10);
             }
 
-            boolean outlierLabel = isOutlier;
 
-            if(r.nextDouble() < labelNoise) {
-                outlierLabel = !outlierLabel;
+
+
+            log.info("INTERVAL: {}", intervalNo);
+            int intervalPoints = pointsPerInterval.get(intervalNo);
+
+            Set<Integer> reportTimes = new HashSet<>();
+
+            int reportspacing = INTERVAL_LEN / reportsPerInterval;
+            for(int i = 1; i < reportsPerInterval; ++i) {
+                reportTimes.add(reportspacing*i);
             }
 
-            if(attr == null) {
-                if (outlierLabel) {
-                    attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(i % outlierClusters));
+            log.info("{}", reportTimes);
+
+
+            for(int ptno = 0; ptno < intervalPoints; ++ptno) {
+
+                boolean spiking = intervalNo == 6 && ptno > reportspacing*24 + 2000 && ptno < NUM_SPIKE*SPIKE_LEN + reportspacing * 24 + 4000;
+
+                int server = r.nextInt(numServers);
+                double val;
+
+                // if we're in 1 or 4, then start the misbehaving server
+                if(server == badServerOne && (intervalNo == 1 || intervalNo == 4) && ptno > intervalPoints/4) {
+                    val = outliers.sample();
                 } else {
-                    attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(
-                            (i % outlierClusters) + outlierClusters));
+                    val = inliers.sample();
+                }
+
+                // special interval, first we have a crazy spike, then the other server behaves poorly
+                if(spiking) {
+                    if (server != badServerOne) {
+                        val = noise.sample();
+                    } else {
+                        val = inliers.sample();
+                    }
+                }
+
+                // log points
+                if(server == badServerOne) {
+                    log.debug("BADSERVER_VAL {} {} {}", prefix, reportNo+(valsSinceReport.size()/((float)intervalPoints/reportsPerInterval)), val);
+                }
+                else if (ptno % ptlograte == 0) {
+                    log.debug("OTHER_VAL {} {} {}", prefix, reportNo+(valsSinceReport.size()/((float)intervalPoints/reportsPerInterval)), val);
+                }
+
+                Datum d = new Datum(Lists.newArrayList(server), val);
+
+
+                if(!spiking) {
+                    reservoir.insert(d);
+                    valsSinceReport.add(val);
+                } else {
+                    for(int i = 0; i < SPIKE_REPEAT_FACTOR; ++i) {
+                        reservoir.insert(d);
+                        valsSinceReport.add(val);
+                    }
+                }
+
+                // warmup
+                if(intervalNo == 0 && ptno < reservoirWarmup) {
+                    continue;
+                }
+
+                // retrain model (not critical)
+                if((intervalNo == 0 && ptno == reservoirWarmup)
+                   || (intervalNo == 0 && ptno > reservoirWarmup && ptno % retrainRate == 0)
+                   || (intervalNo != 0 && ptno % retrainRate == 0)) {
+                    m.train(reservoir.getReservoir());
+                }
+
+                // actually report this
+                if(reportTimes.contains(ptno)) {
+                    int numPoints = valsSinceReport.size();
+                   Double avg = valsSinceReport.stream().reduce((a, b) -> a + b).get()/valsSinceReport.size();
+
+                    List<Datum> resPoints = reservoir.getReservoir();
+                    Collections.sort(resPoints, (a, b) -> Double.compare(a.norm(), b.norm()));
+                    double res_avg = resPoints.stream().map(i -> i.norm()).reduce((a, b)-> a+b).get()/resPoints.size(); //resPoints.get((int)(resPoints.size()*.95)).norm();
+                    //
+                    log.info("OI: {} {}", outlierCount.getCount(badServerOne), inlierCount.getCount(badServerOne));
+
+                    double oi = outlierCount.getCount(badServerOne)/inlierCount.getCount(badServerOne);
+                    log.debug("OUTPUT: {} {} {} {} {} {}", prefix, reportNo, numPoints, avg, res_avg, oi);
+
+                    valsSinceReport.clear();
+
+                    reportNo+= 1;
+                }
+
+                // if we're advancing every single tuple, then do so.
+                if(every) {
+                    reservoir.advancePeriod();
+                    scoreReservoir.advancePeriod();
+                }
+
+
+                if(decaysPerInterval != 0 && ptno % ((int)((double)intervalPoints)/decaysPerInterval) == 0) {
+                    inlierCount.multiplyAllCounts(.5);
+                    outlierCount.multiplyAllCounts(.5);
+
+
+                    if(!every) {
+                        reservoir.advancePeriod();
+                        scoreReservoir.advancePeriod();
+                    }
+                }
+
+                // recompute thresholds based on reservoir
+                if((intervalNo == 0 && ptno == percentileWarmup)
+                   || (intervalNo == 0 && ptno > percentileWarmup && ptno % retrainRate == 0)
+                   || (intervalNo != 0 && ptno % retrainRate == 0)) {
+                    List<Double> scores = scoreReservoir.getReservoir();
+                    Collections.sort(scores);
+                    curThresh = scores.get((int)(threshPctile * scores.size()));
+                }
+
+                double score = m.score(d);
+
+                if(!spiking) {
+                    scoreReservoir.insert(score);
+                } else {
+                    for(int i = 0; i < SPIKE_REPEAT_FACTOR; ++i) {
+                        scoreReservoir.insert(score);
+                    }
+                }
+
+
+                if(intervalNo == 0 && ptno < percentileWarmup) {
+                    continue;
+                }
+
+                if(score > curThresh) {
+                    outlierCount.observe(server, 1);
+                } else {
+                    inlierCount.observe(server, 1);
                 }
             }
-
-            data.add(new Datum(Lists.newArrayList(attr), val));
         }
 
-        FeatureTransform normalizer = new LinearMetricNormalizer();
-        normalizer.consume(data);
-        data = normalizer.getStream().drain();
-
-        System.gc();
-        Stopwatch sw = Stopwatch.createStarted();
-        Summary s = execute(data, conf);
-        sw.stop();
-
-        List<String> foundOutlierAttributes = s.getItemsets().stream().map(i -> i.getItems().get(0).getValue()).collect(
-                Collectors.toList());
-
-        double precision = foundOutlierAttributes.size() > 0 ? foundOutlierAttributes.stream().filter(a -> trueOutlierAttributes.contains(a)).count()/((float)(foundOutlierAttributes.size())) : 0;
-        double recall = foundOutlierAttributes.stream().filter(a -> trueOutlierAttributes.contains(a)).count()/((float)(trueOutlierAttributes.size()));
-
-        log.error("TRIAL: {}, CLUSTERS: {}, PRECISION: {}, RECALL: {}, NUM_SUMMARIES: {}, TIME: {}, LABELNOISE: {}, POINTNOISE: {}",
-                  name, outlierClusters, precision, recall, s.getItemsets().size(), sw.elapsed(
-                TimeUnit.MILLISECONDS), labelNoise, pointNoise);
     }
 }

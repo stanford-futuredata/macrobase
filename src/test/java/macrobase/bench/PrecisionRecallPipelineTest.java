@@ -17,6 +17,9 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,11 +85,11 @@ public class PrecisionRecallPipelineTest extends BasePipeline {
     }
 
     private void trial(String name, int numPoints, double percentageOutliers, int outlierClusters, double labelNoise, double pointNoise) throws Exception {
-        NormalDistribution inliers = new NormalDistribution(10, 10);
-        NormalDistribution outliers = new NormalDistribution(70, 10);
-        NormalDistribution extraneous = new NormalDistribution(70, 10);
+        RandomGenerator g = new MersenneTwister(0);
 
-
+        NormalDistribution inliers = new NormalDistribution(g, 10, 10);
+        NormalDistribution outliers = new NormalDistribution(g, 70, 10);
+        UniformRealDistribution extraneous = new UniformRealDistribution(g, 0, 80);
 
         conf.getEncoder().copy(new DatumEncoder());
         conf.getEncoder().recordAttributeName(0, "ATTR");
