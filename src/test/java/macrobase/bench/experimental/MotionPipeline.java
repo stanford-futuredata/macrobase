@@ -67,7 +67,7 @@ public class MotionPipeline extends BasePipeline {
 
     private static final double POINTS_PER_SEC = 5;
     private static final double SCALEDOWN_FACTOR = 10;
-    private static final double PERIOD_LENGTH_SEC = 4;
+    private static final double PERIOD_LENGTH_SEC = 3;
 
     private class CVDatum extends Datum {
         public Mat videoMat;
@@ -106,7 +106,11 @@ public class MotionPipeline extends BasePipeline {
 
                 RealVector dvec = new ArrayRealVector(cGray.rows()*cGray.cols());
 
-                final DenseOpticalFlow tvl1 = createOptFlow_DualTVL1();
+                final DualTVL1OpticalFlow tvl1 = createOptFlow_DualTVL1();
+                tvl1.setOuterIterations(1);
+                tvl1.setWarpingsNumber(1);
+                tvl1.setScaleStep(0.8);
+                tvl1.setTau(0.25);
                 tvl1.calc(pGray, cGray, Optical_Flow);
 
                 FloatIndexer idx = Optical_Flow.createIndexer();
@@ -140,6 +144,45 @@ public class MotionPipeline extends BasePipeline {
         }
     }
 
+    private class PixelSubtractorFeatureTransform extends FeatureTransform {
+        private MBStream<Datum> output = new MBStream<>();
+
+        @Override
+        public void initialize() throws Exception {
+
+        }
+
+        @Override
+        public void consume(List<Datum> records) throws Exception {
+
+            Mat prevMat = null;
+
+            for(Datum dd : records) {
+                CVDatum cvd = (CVDatum) dd;
+
+                if(prevMat == null) {
+                    prevMat = cvd.videoMat;
+                    continue;
+                }
+
+                Mat d = new Mat(prevMat.rows(),prevMat.cols());
+                subtract(cvd.videoMat, prevMat, d);
+
+                output.add(new Datum(cvd.attributes(), mean(d).get()));
+            }
+        }
+
+        @Override
+        public void shutdown() throws Exception {
+
+        }
+
+        @Override
+        public MBStream<Datum> getStream() throws Exception {
+            return output;
+        }
+    }
+
     private class VideoLoader implements MBProducer<Datum> {
         MBStream<Datum> out = new MBStream<>();
         public VideoLoader(String inputDirectory, String framesDirectory) throws Exception{
@@ -149,13 +192,13 @@ public class MotionPipeline extends BasePipeline {
 
             log.info("folder {}, {}", inputFolder, framesDirectory);
 
+            int no = 0;
             for(File fn : inputFolder.listFiles()) {
                 String sourceFile = fn.getName();
 
                 File outputFolder = new File(framesDirectory + "/" + fn.getName().replaceAll(".mpg", ""));
                 outputFolder.mkdirs();
-
-
+                
                 FFmpegFrameGrabber g = new FFmpegFrameGrabber(fn.getAbsoluteFile());
                 Java2DFrameConverter fc = new Java2DFrameConverter();
 
@@ -208,7 +251,8 @@ public class MotionPipeline extends BasePipeline {
                         int encodedFileName = conf.getEncoder().getIntegerEncoding(1, sourceFile);
                         conf.getEncoder().recordAttributeName(1, "period");
                         int encodedTime = conf.getEncoder().getIntegerEncoding(1,
-                                                                               String.format("period-%d-start-sec-%d",
+                                                                               String.format("%s-period-%d-start-sec-%d",
+                                                                                             sourceFile,
                                                                                              period,
                                                                                              (int) (period * PERIOD_LENGTH_SEC)));
 
@@ -242,7 +286,7 @@ public class MotionPipeline extends BasePipeline {
         Summarizer s = new BatchSummarizer(conf);
 
         Stopwatch flowTimer = Stopwatch.createStarted();
-        MBGroupBy gb = new MBGroupBy(Lists.newArrayList(0), () -> new OpticalFlowFeatureTransform());
+        MBGroupBy gb = new MBGroupBy(Lists.newArrayList(0), () -> new PixelSubtractorFeatureTransform());
         gb.consume(v.getStream().drain());
         long opticalFlowTime = flowTimer.elapsed(TimeUnit.MILLISECONDS);
 
@@ -263,6 +307,8 @@ public class MotionPipeline extends BasePipeline {
         log.info("took {}ms ({} tuples/sec)",
                  totalMs,
                  (result.getNumInliers() + result.getNumOutliers()) / (double) totalMs * 1000);
+
+        result.getItemsets().sort((a, b) -> -Double.compare(a.getSupport(), b.getSupport()));
 
         return Arrays.asList(new AnalysisResult(result.getNumOutliers(),
                                                 result.getNumInliers(),

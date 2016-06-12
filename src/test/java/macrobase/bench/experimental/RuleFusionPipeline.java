@@ -1,6 +1,7 @@
 package macrobase.bench.experimental;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.DumpClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
@@ -26,9 +27,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+
+
 public class RuleFusionPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(RuleFusionPipeline.class);
-
     @Override
     public Pipeline initialize(MacroBaseConf conf) throws Exception {
         super.initialize(conf);
@@ -47,7 +49,8 @@ public class RuleFusionPipeline extends BasePipeline {
         public void consume(List<Datum> records) throws Exception {
             List<OutlierClassificationResult> results = new ArrayList<>();
             for(Datum d : records) {
-                if(d.getMetrics().getEntry(d.getMetrics().getDimension()-1) < .45) {
+                double v = d.getMetrics().getEntry(d.getMetrics().getDimension()-1);
+                if(v > 0 && v < .45) {
                     results.add(new OutlierClassificationResult(d, true));
                 } else {
                     results.add(new OutlierClassificationResult(d, false));
