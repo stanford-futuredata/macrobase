@@ -191,5 +191,12 @@
       <artifactId>JRI</artifactId>
       <version>0.9-7</version>
     </dependency>
+    <dependency>
+      <groupId>org.bytedeco</groupId>
+      <artifactId>javacv</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>
