@@ -102,9 +102,30 @@ public class SummaryComparePipeline extends BasePipeline {
             }
         }
         final int iterations = 5;
-        final int timeout_min = 20;
+        long timeout_ms = 20;
 
         ExecutorService st = Executors.newCachedThreadPool();
+
+        for(int i = 0; i < iterations; ++i) {
+            Stopwatch sw = Stopwatch.createStarted();
+
+            FPGrowthEmerging fpg = new FPGrowthEmerging(true);
+
+            fpg.getEmergingItemsetsWithMinSupport(inlier_data,
+                                                  outlier_data,
+                                                  .001,
+                                                  3,
+                                                  conf.getEncoder());
+            sw.stop();
+            long fpge = sw.elapsed(TimeUnit.MICROSECONDS);
+            log.debug("fpge took {}", fpge);
+            sw.reset();
+
+
+            timeout_ms = sw.elapsed(TimeUnit.MILLISECONDS)*1200;
+
+            System.gc();
+        }
 
         for(int i = 0; i < iterations; ++i) {
             Stopwatch sw = Stopwatch.createStarted();
@@ -185,7 +206,8 @@ public class SummaryComparePipeline extends BasePipeline {
             });
 
             try {
-                r.get(timeout_min, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
+                r.cancel(true);
             } catch (Exception e) {
                 log.debug("caught {}", e);
             }
@@ -196,9 +218,10 @@ public class SummaryComparePipeline extends BasePipeline {
             });
 
             try {
-                r.get(timeout_min*60, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 log.debug("caught {}", e);
+                r.cancel(true);
             }
 
             sw.stop();
@@ -207,25 +230,6 @@ public class SummaryComparePipeline extends BasePipeline {
 
             System.gc();
 
-        }
-
-
-        for(int i = 0; i < iterations; ++i) {
-            Stopwatch sw = Stopwatch.createStarted();
-
-            FPGrowthEmerging fpg = new FPGrowthEmerging(true);
-
-            fpg.getEmergingItemsetsWithMinSupport(inlier_data,
-                                                  outlier_data,
-                                                  .001,
-                                                  3,
-                                                  conf.getEncoder());
-            sw.stop();
-            log.debug("fpge took {}", sw.elapsed(TimeUnit.MICROSECONDS));
-            sw.reset();
-
-
-            System.gc();
         }
 
 
@@ -240,9 +244,10 @@ public class SummaryComparePipeline extends BasePipeline {
             });
 
             try {
-                r.get(timeout_min, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 log.debug("caught {}", e);
+                r.cancel(true);
             }
 
 
@@ -263,15 +268,16 @@ public class SummaryComparePipeline extends BasePipeline {
             });
 
             try {
-                r.get(timeout_min, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 log.debug("caught {}", e);
             }
 
             try {
-                r.get(timeout_min, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
             } catch (Exception e) {
                 log.debug("caught {}", e);
+                r.cancel(true);
             }
 
 
@@ -300,7 +306,8 @@ public class SummaryComparePipeline extends BasePipeline {
             });
 
             try {
-                r.get(timeout_min, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
+                r.cancel(true);
             } catch (Exception e) {
                 log.debug("caught {}", e);
             }
@@ -324,7 +331,8 @@ public class SummaryComparePipeline extends BasePipeline {
             });
 
             try {
-                r.get(timeout_min, TimeUnit.MINUTES);
+                r.get(timeout_ms, TimeUnit.MILLISECONDS);
+                r.cancel(true);
             } catch (Exception e) {
                 log.debug("caught {}", e);
             }
