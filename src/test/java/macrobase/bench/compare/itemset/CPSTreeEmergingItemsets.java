@@ -94,18 +94,13 @@ public class CPSTreeEmergingItemsets {
 
     public void markOutlier(Datum outlier) {
         numOutliers++;
-
-        if (!combinationsEnabled || attributeDimension > 1) {
-            outlierPatternSummary.insertTransactionStreamingExact(outlier.attributes());
-        }
+        outlierPatternSummary.insertTransactionStreamingExact(outlier.attributes());
     }
 
     // TODO: don't track *all* inliers
     public void markInlier(Datum inlier) {
         numInliers++;
-        if (!combinationsEnabled || attributeDimension > 1) {
-            inlierPatternSummary.insertTransactionStreamingExact(inlier.attributes());
-        }
+        inlierPatternSummary.insertTransactionStreamingExact(inlier.attributes());
     }
 
     public List<ItemsetResult> getItemsets(DatumEncoder encoder) {
