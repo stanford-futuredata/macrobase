@@ -203,25 +203,15 @@ public class SummaryComparePipeline extends BasePipeline {
             Future r = st.submit((Runnable) () -> {
                 CubeCompare cub = new CubeCompare();
                 cub.compare(inliers);
-            });
-
-            try {
-                r.get(timeout_ms, TimeUnit.MILLISECONDS);
-                r.cancel(true);
-            } catch (Exception e) {
-                log.debug("caught {}", e);
-            }
-
-            Future r2 = st.submit((Runnable) () -> {
                 CubeCompare cubo = new CubeCompare();
                 cubo.compare(outliers);
             });
 
             try {
                 r.get(timeout_ms, TimeUnit.MILLISECONDS);
+                r.cancel(true);
             } catch (Exception e) {
                 log.debug("caught {}", e);
-                r.cancel(true);
             }
 
             sw.stop();
