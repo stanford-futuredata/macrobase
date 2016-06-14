@@ -60,8 +60,6 @@ public class CPSTreeEmergingItemsets {
         outlierPatternSummary = new StreamingFPGrowth(minSupportOutlier);
     }
 
-    Map<Integer, Double> interestingItems;
-
     public Double getInlierCount() {
         return numInliers;
     }
@@ -82,11 +80,11 @@ public class CPSTreeEmergingItemsets {
 
     private void updateModels(boolean doDecay) {
         Timer.Context ot = outlierDecayTime.time();
-        outlierPatternSummary.decayAndResetFrequentItems(interestingItems, doDecay ? exponentialDecayRate : 0);
+        outlierPatternSummary.decayAndResetFrequentItems(null, doDecay ? exponentialDecayRate : 0);
         ot.stop();
 
         Timer.Context it = inlierDecayTime.time();
-        inlierPatternSummary.decayAndResetFrequentItems(interestingItems, doDecay ? exponentialDecayRate : 0);
+        inlierPatternSummary.decayAndResetFrequentItems(null, doDecay ? exponentialDecayRate : 0);
         it.stop();
     }
 
