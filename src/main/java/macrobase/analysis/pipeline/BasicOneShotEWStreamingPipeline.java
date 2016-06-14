@@ -47,7 +47,6 @@ public class BasicOneShotEWStreamingPipeline extends BasePipeline {
         FeatureTransform normalizer = new LinearMetricNormalizer();
         normalizer.consume(ingester.getStream().drain());
         List<Datum> data = normalizer.getStream().drain();
-        Collections.shuffle(data);
         System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 

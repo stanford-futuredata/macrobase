@@ -60,7 +60,10 @@ public class SummaryComparePipeline extends BasePipeline {
         FeatureTransform normalizer = new LinearMetricNormalizer();
         normalizer.consume(ingester.getStream().drain());
         List<Datum> data = normalizer.getStream().drain();
-        
+
+        if(data.size() > 1000000) {
+            data = data.subList(0, 1000000);
+        }
         System.gc();
 
         FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());
