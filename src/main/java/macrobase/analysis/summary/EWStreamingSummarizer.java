@@ -78,14 +78,15 @@ public class EWStreamingSummarizer extends Summarizer {
     public void consume(List<OutlierClassificationResult> records) {
         for(OutlierClassificationResult result : records) {
             count++;
-            summaryUpdater.runIfNecessary();
-            summarizationTimer.runIfNecessary();
 
             if(result.isOutlier()) {
                 streamingSummarizer.markOutlier(result.getDatum());
             } else {
                 streamingSummarizer.markInlier(result.getDatum());
             }
+
+            summaryUpdater.runIfNecessary();
+            summarizationTimer.runIfNecessary();
         }
     }
 

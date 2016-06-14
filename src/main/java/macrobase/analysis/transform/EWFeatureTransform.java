@@ -83,7 +83,7 @@ public class EWFeatureTransform extends FeatureTransform {
 
                     warmupInput.clear();
                 }
-                
+
                 reservoir.insert(d);
                 batchOutput.add(new Datum(d, scorer.score(d)));
             }
