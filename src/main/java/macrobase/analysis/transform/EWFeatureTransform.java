@@ -74,8 +74,6 @@ public class EWFeatureTransform extends FeatureTransform {
             if(tupleCount < warmupCount) {
                 warmupInput.add(d);
                 reservoir.insert(d);
-                retrainer.runIfNecessary();
-                decayer.runIfNecessary();
             } else {
                 if(tupleCount == warmupCount) {
                     scorer.train(reservoir.getReservoir());
@@ -85,12 +83,13 @@ public class EWFeatureTransform extends FeatureTransform {
 
                     warmupInput.clear();
                 }
-
-                retrainer.runIfNecessary();
-                decayer.runIfNecessary();
+                
                 reservoir.insert(d);
                 batchOutput.add(new Datum(d, scorer.score(d)));
             }
+
+            retrainer.runIfNecessary();
+            decayer.runIfNecessary();
         }
 
         output.add(batchOutput);
