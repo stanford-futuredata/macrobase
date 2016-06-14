@@ -60,6 +60,7 @@ public class SummaryComparePipeline extends BasePipeline {
         FeatureTransform normalizer = new LinearMetricNormalizer();
         normalizer.consume(ingester.getStream().drain());
         List<Datum> data = normalizer.getStream().drain();
+        
         System.gc();
 
         FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());
@@ -91,7 +92,7 @@ public class SummaryComparePipeline extends BasePipeline {
 
 
         for(OutlierClassificationResult d : scored) {
-            if(d.isOutlier()) {
+            if(!d.isOutlier()) {
                 in_txns.add(Sets.newHashSet(d.getDatum().getAttributes()));
                 inliers.add(d);
                 inlier_data.add(d.getDatum());
@@ -119,10 +120,11 @@ public class SummaryComparePipeline extends BasePipeline {
             sw.stop();
             long fpge = sw.elapsed(TimeUnit.MICROSECONDS);
             log.debug("fpge took {}", fpge);
-            sw.reset();
 
 
             timeout_ms = sw.elapsed(TimeUnit.MILLISECONDS)*1200;
+            sw.reset();
+
 
             System.gc();
         }
