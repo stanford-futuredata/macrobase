@@ -125,12 +125,14 @@ public class SummaryComparePipeline extends BasePipeline {
             log.debug("fpge took {}", fpge);
 
 
-            timeout_ms = sw.elapsed(TimeUnit.MILLISECONDS)*1200;
+            timeout_ms = sw.elapsed(TimeUnit.MILLISECONDS)* 1200;
             sw.reset();
 
 
             System.gc();
         }
+
+        timeout_ms = 1200000;
 
         for(int i = 0; i < iterations; ++i) {
             Stopwatch sw = Stopwatch.createStarted();
