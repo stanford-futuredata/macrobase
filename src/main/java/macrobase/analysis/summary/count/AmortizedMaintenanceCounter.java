@@ -93,6 +93,8 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
             counts.put(entry.getKey(), newValue);
         }
 
+        totalCount /= decayFactor;
+
         decayFactor = 1;
     }
 
