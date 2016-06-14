@@ -51,6 +51,11 @@ public class SampleComparePipeline extends BasePipeline {
         List<Datum> data = normalizer.getStream().drain();
         System.gc();
 
+        Map<Long, Datum> originalData = new HashMap<>();
+        for(Datum d : data) {
+            originalData.put(d.getID(), d);
+        }
+
         BatchTrainScore goldtrain = conf.constructTransform(conf.getTransformType());
 
         sw.reset();
@@ -144,7 +149,8 @@ public class SampleComparePipeline extends BasePipeline {
 
                 double sum_squares_go = 0;
                 for(Datum d : goldInlierData) {
-                    sum_squares_go += Math.pow(goldScores.get(d.getParentID()) - batchTrainScore.score(d), 2);
+                    sum_squares_go += Math.pow(goldScores.get(d.getParentID())
+                                               - batchTrainScore.score(originalData.get(d.getParentID())), 2);
                 }
                 double rmse_go = Math.sqrt(sum_squares_go/goldInliers.size());
 
