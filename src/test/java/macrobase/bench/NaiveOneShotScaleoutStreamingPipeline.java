@@ -113,7 +113,7 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
         startSem.release(parallelism);
         executor.shutdown();
         executor.awaitTermination(1000, TimeUnit.DAYS);
-        long totalMs = st - System.currentTimeMillis();
+        long totalMs = System.currentTimeMillis() - st;
 
         final long summarizeMs = totalMs;
         final long executeMs = totalMs;
