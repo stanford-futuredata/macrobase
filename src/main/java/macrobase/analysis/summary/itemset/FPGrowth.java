@@ -483,12 +483,11 @@ public class FPGrowth {
     // ugh, this is a really ugly function sig, but it's efficient
     public List<ItemsetWithCount> getCounts(
             List<Datum> transactions,
-            Map<Integer, Double> initialCounts,
-            Set<Integer> targetItems,
+            Map<Integer, Double> supportedInlierCountsToCheck,
             List<ItemsetWithCount> toCount) {
         FPTree countTree = new FPTree();
 
-        countTree.setFrequentCounts(initialCounts);
+        countTree.setFrequentCounts(supportedInlierCountsToCheck);
         Stopwatch sw = Stopwatch.createStarted();
         countTree.insertDatum(transactions);
         log.info("tree insertion took {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
