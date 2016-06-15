@@ -1,6 +1,7 @@
 package macrobase.analysis.summary.itemset;
 
 import com.codahale.metrics.Timer;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import macrobase.MacroBase;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -486,23 +488,19 @@ public class FPGrowth {
             List<ItemsetWithCount> toCount) {
         FPTree countTree = new FPTree();
 
-        Map<Integer, Double> frequentCounts = new HashMap<>();
-
-        for (Integer i : targetItems) {
-            Double initialCount = initialCounts.get(i);
-            if (initialCount == null) {
-                initialCount = 0.;
-            }
-            frequentCounts.put(i, initialCount);
-        }
-
-        countTree.setFrequentCounts(frequentCounts);
+        countTree.setFrequentCounts(initialCounts);
+        Stopwatch sw = Stopwatch.createStarted();
         countTree.insertDatum(transactions);
+        log.info("tree insertion took {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
 
+
+        sw.reset();
+        sw.start();
         List<ItemsetWithCount> ret = new ArrayList<>();
         for (ItemsetWithCount c : toCount) {
             ret.add(new ItemsetWithCount(c.getItems(), countTree.getSupport(c.getItems())));
         }
+        log.info("tree probing took {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
 
         return ret;
     }
