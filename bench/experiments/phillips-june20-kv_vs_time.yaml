@@ -1,0 +1,23 @@
+macrobase:
+  macrobase.query.name: phillips-jun20-kw_vs_time
+  macrobase.pipeline.class: macrobase.analysis.pipeline.MixtureModelPipeline
+  macrobase.diagnostic.dumpMixtureComponents: target/score/phillips-jun20-kw_vs_time.json
+  macrobase.loader.db.dbUrl: postgres
+  macrobase.loader.db.baseQuery: SELECT * FROM retail_time_of_day WHERE datasource_id<>9858;
+  macrobase.loader.loaderType: POSTGRES_LOADER
+  # macrobase.loader.csv.file: /Users/arsen/Workspace/phillips_data/phillips-process-data/time_of_day.csv
+  # macrobase.loader.csv.compression: UNCOMPRESSED
+  macrobase.loader.attributes: [controller_id, city, num_rtus, lighting_state,combined_rtu_mode]
+  macrobase.loader.targetHighMetrics: [reading, time_of_day]
+  macrobase.loader.targetLowMetrics: []
+  macrobase.analysis.transformType: SVI_DPGMM
+  macrobase.analysis.stat.mixtures.initialClusters: /Users/arsen/Workspace/kw_vs_time_centers.json
+  macrobase.analysis.stat.iterative.improvementCutoffRatio: 0.0001
+  macrobase.analysis.stat.svi.delay: 1
+  macrobase.analysis.stat.svi.forgettingRate: 0.9
+  macrobase.analysis.stat.svi.minibatchSize: 10000
+  macrobase.analysis.stat.dpm.truncatingParameter: 15
+  macrobase.analysis.stat.dpm.concentrationParameter: 0.2
+  macrobase.diagnostic.gridPointsPerDimension: 1000
+post_run:
+  - plot_score_contours: "--plot density --savefig --y-limits 0 24 --x-limits 0 70"

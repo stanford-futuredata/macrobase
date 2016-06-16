@@ -1,6 +1,11 @@
-
 server:
     rootPath: /api/*
+    applicationConnectors:
+        - type: http
+          port: 6666
+    adminConnectors:
+        - type: http
+          port: 6667
 
 logging:
   level: INFO
