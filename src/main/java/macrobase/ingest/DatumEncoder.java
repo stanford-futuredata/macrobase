@@ -16,6 +16,8 @@ public class DatumEncoder {
 
     private HashMap<Integer, String> attributeDimensionNameMap = new HashMap<>();
     private HashMap<Integer, Map<String, Integer>> integerEncoding = new HashMap<>();
+    private HashMap<Integer, Map<Integer, String>> stringEncoding = new HashMap<>();
+
     private HashMap<Integer, Integer> integerToColumn = new HashMap<>();
 
     private Integer nextKey = 0;
@@ -34,6 +36,12 @@ public class DatumEncoder {
         for (Map.Entry<Integer, Map<String, Integer>> entry :
                 other.integerEncoding.entrySet()) {
             integerEncoding.put(entry.getKey(), entry.getValue());
+        }
+
+        stringEncoding.clear();
+        for (Map.Entry<Integer, Map<Integer, String>> entry :
+                other.stringEncoding.entrySet()) {
+            stringEncoding.put(entry.getKey(), entry.getValue());
         }
 
         integerToColumn.clear();
@@ -59,13 +67,7 @@ public class DatumEncoder {
         int matchingColumn = integerToColumn.get(encodedAttr);
 
         String columnName = attributeDimensionNameMap.get(matchingColumn);
-        Map<String, Integer> columnEncoding = integerEncoding.get(matchingColumn);
-        String columnValue = null;
-        for (Map.Entry<String, Integer> ce : columnEncoding.entrySet()) {
-            if (ce.getValue() == encodedAttr) {
-                columnValue = ce.getKey();
-            }
-        }
+        String columnValue = stringEncoding.get(matchingColumn).get(encodedAttr);
 
         return new ColumnValue(columnName, columnValue);
     }
@@ -89,14 +91,17 @@ public class DatumEncoder {
 
     public int getIntegerEncoding(int dimension, String attr) {
         integerEncoding.computeIfAbsent(dimension, key -> new HashMap<>());
+        stringEncoding.computeIfAbsent(dimension, key -> new HashMap<>());
 
+        Map<String, Integer> integerMapDimensionMap = integerEncoding.get(dimension);
+        Map<Integer, String> stringDimensionMap = stringEncoding.get(dimension);
 
-        Map<String, Integer> dimensionMap = integerEncoding.get(dimension);
-        Integer ret = dimensionMap.get(attr);
+        Integer ret = integerMapDimensionMap.get(attr);
         if (ret == null) {
             ret = nextKey;
             integerToColumn.put(nextKey, dimension);
-            dimensionMap.put(attr, ret);
+            integerMapDimensionMap.put(attr, ret);
+            stringDimensionMap.put(ret, attr);
             nextKey++;
         }
 
