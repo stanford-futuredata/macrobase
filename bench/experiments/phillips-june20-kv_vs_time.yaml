@@ -11,7 +11,7 @@ macrobase:
   macrobase.loader.targetHighMetrics: [reading, time_of_day]
   macrobase.loader.targetLowMetrics: []
   macrobase.analysis.transformType: SVI_DPGMM
-  macrobase.analysis.stat.mixtures.initialClusters: /Users/arsen/Workspace/kw_vs_time_centers.json
+  macrobase.analysis.stat.mixtures.initialClusters: bench/experiments/kw_vs_time_centers.json
   macrobase.analysis.stat.iterative.improvementCutoffRatio: 0.0001
   macrobase.analysis.stat.svi.delay: 1
   macrobase.analysis.stat.svi.forgettingRate: 0.9
