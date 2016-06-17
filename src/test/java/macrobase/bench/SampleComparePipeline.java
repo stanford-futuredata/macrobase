@@ -158,21 +158,21 @@ public class SampleComparePipeline extends BasePipeline {
 
                 goldInlierRMSEs.add(rmse_go);
 
-                Set<Datum> curOutliers = Sets.newHashSet(
-                        curResult.stream().filter(d -> d.isOutlier()).map(a -> a.getDatum()).collect(
+                Set<Long> curOutliers = Sets.newHashSet(
+                        curResult.stream().filter(d -> d.isOutlier()).map(a -> a.getDatum().getParentID()).collect(
                                 Collectors.toList()));
-                Set<Datum> curInliers = Sets.newHashSet(
-                        curResult.stream().filter(d -> !d.isOutlier()).map(a -> a.getDatum()).collect(Collectors.toList()));
+                Set<Long> curInliers = Sets.newHashSet(
+                        curResult.stream().filter(d -> !d.isOutlier()).map(a -> a.getDatum().getParentID()).collect(Collectors.toList()));
 
                 double right = 0;
-                for(Datum o : curOutliers) {
-                    if(goldOutliers.contains(o.getParentID())) {
+                for(Long o : curOutliers) {
+                    if(goldOutliers.contains(o)) {
                         right += 1;
                     }
                 }
 
-                for(Datum o : curInliers) {
-                    if(goldInliers.contains(o.getParentID())) {
+                for(Long o : curInliers) {
+                    if(goldInliers.contains(o)) {
                         right += 1;
                     }
                 }
