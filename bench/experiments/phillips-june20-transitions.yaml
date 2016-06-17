@@ -1,0 +1,13 @@
+macrobase:
+  macrobase.query.name: phillips-jun20-kw_vs_time
+  macrobase.pipeline.class: macrobase.analysis.pipeline.WeirdTransitionPipeline
+  macrobase.diagnostic.dumpMixtureComponents: target/score/phillips-jun20-kw_vs_time.json
+  macrobase.loader.db.dbUrl: postgres
+  macrobase.loader.db.baseQuery: SELECT T.*,CS.num_rtus FROM retail_transitions T LEFT JOIN retail_controller_stats CS ON T.controller_id=CS.controller_id;
+  macrobase.loader.loaderType: POSTGRES_LOADER
+  # macrobase.loader.loaderType: CSV_LOADER
+  # macrobase.loader.csv.file: target/phillips_data/transition.csv
+  macrobase.loader.csv.compression: UNCOMPRESSED
+  macrobase.loader.attributes: [controller_id, num_rtus]
+  macrobase.loader.targetHighMetrics: [transition]
+  macrobase.loader.targetLowMetrics: []
