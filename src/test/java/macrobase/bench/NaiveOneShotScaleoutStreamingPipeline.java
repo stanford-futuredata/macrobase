@@ -43,7 +43,7 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
     }
 
     public static final String SCALEOUT = "macrobase.naive.scaleout.factor";
-    public static final int NUM_PASSES = 5;
+    public static final int NUM_PASSES = 20;
 
     @Override
     public List<AnalysisResult> run() throws Exception {
@@ -66,7 +66,7 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
             partitionedData.add(new ArrayList<>());
         }
 
-        for(int i = 0; i < (data.size()/parallelism)*parallelism; ++i) {
+        for(int i = 0; i < data.size(); ++i) {
             partitionedData.get(i % parallelism).add(data.get(i));
         }
 
