@@ -66,8 +66,9 @@ def _plot_hist2d(data, args):
   data = data[data[args.hist2d[0]].notnull()][data[args.hist2d[1]].notnull()]
   if data.shape[0] < 1000:
     sys.exit(1)
-  plt.hist2d(data[args.hist2d[0]].astype(float),
-             data[args.hist2d[1]].astype(float),
+  df = data.replace([np.inf, -np.inf], np.nan).dropna(subset=args.hist2d)
+  plt.hist2d(df[args.hist2d[0]].astype(float),
+             df[args.hist2d[1]].astype(float),
              bins=args.histogram_bins,
              norm=LogNorm())
   plt.colorbar()
@@ -90,8 +91,10 @@ def plot_distribution(args):
       print 'before filtering size =', data.shape[0]
       data = data[data['controller_id'] == args.filter_controller]
       print 'after filtering size =', data.shape[0]
-    print 'total controller_ids included =', len(set(data['controller_id']))
-    print 'distinct num_rtus =', len(set(data['num_rtus'])), set(data['num_rtus'])
+    if 'controller_id' in data:
+      print 'total controller_ids included =', len(set(data['controller_id']))
+    if 'num_rtus' in data:
+      print 'distinct num_rtus =', len(set(data['num_rtus'])), set(data['num_rtus'])
   else:
     cursor = args.db_connection.cursor()
     cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")  # noqa
@@ -156,9 +159,12 @@ def plot_distribution(args):
       plt.hist(data_to_plot, args.histogram_bins, histtype='bar',
                color=colors_to_use, label=labels_to_show)
     else:
-      plt.hist(data[args.histogram].astype(float),
+      df = data.replace([np.inf, -np.inf], np.nan).dropna(subset=[args.histogram])
+      plt.hist(df[args.histogram].astype(float),
                bins=args.histogram_bins,
                label=args.histogram)
+      plt.yscale('log')
+
     plt.xlabel(args.histogram)
     if args.scale_down:
       plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))

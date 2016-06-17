@@ -45,6 +45,7 @@ def parse_args():
     python script/run_experiment.py bench/conf/treekde-test.yaml
   """)
   parser.add_argument('experiment_yaml', type=argparse.FileType('r'))
+  parser.add_argument('--config-override', type=argparse.FileType('r'))
   parser.add_argument('--remove-cached-data', action='store_true')
   parser.add_argument('--rename', help='Give a new name to the experiment')
   parser.add_argument('--title-add', help='A title modifier')
@@ -140,6 +141,8 @@ if __name__ == '__main__':
   with open('conf/batch.yaml', 'r') as infile:
     config = yaml.load(infile)
     config.update(experiment['macrobase'])
+    if args.config_override:
+      config.update(yaml.load(args.config_override))
     config[SCORE_DUMP_FILE_CONFIG_PARAM] = taskname + '.json'
     config[SCORED_DATA_FILE] = '{name}-scored.json'.format(name=taskname)
     config[DUMP_SCORE_GRID] = '{name}-grid.json'.format(name=taskname)

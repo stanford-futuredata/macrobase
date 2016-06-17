@@ -5,8 +5,6 @@ macrobase:
   macrobase.loader.db.dbUrl: postgres
   macrobase.loader.db.baseQuery: SELECT * FROM retail_time_of_day WHERE datasource_id<>9858;
   macrobase.loader.loaderType: POSTGRES_LOADER
-  # macrobase.loader.csv.file: /Users/arsen/Workspace/phillips_data/phillips-process-data/time_of_day.csv
-  # macrobase.loader.csv.compression: UNCOMPRESSED
   macrobase.loader.attributes: [controller_id, city, num_rtus, lighting_state,combined_rtu_mode]
   macrobase.loader.targetHighMetrics: [reading, time_of_day]
   macrobase.loader.targetLowMetrics: []
