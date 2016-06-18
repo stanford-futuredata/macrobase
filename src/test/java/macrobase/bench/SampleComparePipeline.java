@@ -119,12 +119,13 @@ public class SampleComparePipeline extends BasePipeline {
                 sw.reset();
                 sw.start();
                 batchTrainScore.train(sample);
+                sw.stop();
+                times.add((double) sw.elapsed(TimeUnit.MICROSECONDS));
+
                 List<Datum> scored2 = new ArrayList<>(data.size());
                 for(Datum d : data) {
                     scored2.add(new Datum(d, batchTrainScore.score(d)));
                 }
-                sw.stop();
-                times.add((double) sw.elapsed(TimeUnit.MICROSECONDS));
 
                 scored2.sort((a, b) -> ((Double) a.norm())
                         .compareTo(b.norm()));
