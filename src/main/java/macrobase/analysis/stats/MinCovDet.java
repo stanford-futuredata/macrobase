@@ -7,9 +7,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Counter;
 
+import com.google.common.base.Stopwatch;
 import macrobase.MacroBase;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -179,6 +181,7 @@ public class MinCovDet extends BatchTrainScore {
 
     @Override
     public void train(List<Datum> data) {
+        Stopwatch sw = Stopwatch.createStarted();
         // for now, only handle multivariate case...
         assert (data.iterator().next().getMetrics().getDimension() == p);
         assert (p > 1);
@@ -238,7 +241,7 @@ public class MinCovDet extends BatchTrainScore {
             numIterations++;
         }
 
-        log.debug("Number of iterations in MCD step: {}", numIterations);
+        log.debug("Number of iterations in MCD step: {} ({}ms)", numIterations, sw.elapsed(TimeUnit.MILLISECONDS));
 
         log.trace("mean: {}", mean);
         log.trace("cov: {}", cov);

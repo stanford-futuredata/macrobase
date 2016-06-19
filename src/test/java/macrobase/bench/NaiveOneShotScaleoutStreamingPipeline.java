@@ -43,7 +43,7 @@ public class NaiveOneShotScaleoutStreamingPipeline extends BasePipeline {
     }
 
     public static final String SCALEOUT = "macrobase.naive.scaleout.factor";
-    public static final int NUM_PASSES = 20;
+    public static final int NUM_PASSES = 5;
 
     @Override
     public List<AnalysisResult> run() throws Exception {
