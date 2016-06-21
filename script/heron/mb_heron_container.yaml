@@ -24,4 +24,4 @@ logging:
   level: INFO
 
   loggers:
-    "macrobase": TRACE
+    "macrobase": DEBUG
