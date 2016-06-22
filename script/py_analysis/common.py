@@ -15,6 +15,8 @@ class MacrobaseArgAction(argparse.Action):
 def add_macrobase_args(parser):
   parser.add_argument('--macrobase-loader-db-url', action=MacrobaseArgAction)
   parser.add_argument('--macrobase-loader-db-user', action=MacrobaseArgAction)
+  parser.add_argument('--macrobase-loader-db-password',
+                      action=MacrobaseArgAction)
   parser.add_argument('--macrobase-analysis-kde-bandwidthMultiplier',
                       type=float,
                       action=MacrobaseArgAction)

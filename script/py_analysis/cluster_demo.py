@@ -30,7 +30,7 @@ support_regex = re.compile('support: (\d+[.]\d+)')
 records_regex = re.compile('records: (\d+[.]\d+)')
 ratio_regex = re.compile('ratio: (\d+[.]\d+)')
 infinity_ratio_regex = re.compile('ratio: Infinity')
-column_regex = re.compile(r'(datasource_id|controller_id|city)')
+column_regex = re.compile(r'(combined_rtu_mode|lighting_state|datasource_id|controller_id|city)')
 separator_regex = re.compile('-----')
 
 
@@ -110,6 +110,9 @@ def get_closest_cluster(centers, x, y):
 
 
 def sanitize(x):
+  print(x)
+  if 'controller_id' not in x[3] or 'city' not in x[3]:
+    return '\n'.join(['\t{} = {}'.format(key, value) for key, value in x[3].items()] + ['\t{}'.format(y) for y in [x[2], x[1]]])
   if type(x[2]) is str:
     return '\tcid = {:10s}\n\tcity = {}\n\tratio = {}\n\tin cluster points = {:d}'.format(x[3]['controller_id'], x[3]['city'], x[2], x[1])
   # return '%s, %s\n%.2f %d' % (x[3]['controller_id'], x[3]['city'], x[2], x[1])

@@ -23,7 +23,6 @@ public class MixtureModelPipeline extends BasePipeline {
 
     public Pipeline initialize(MacroBaseConf conf) throws Exception {
         super.initialize(conf);
-        conf.sanityCheckBatch();
         return this;
     }
 
