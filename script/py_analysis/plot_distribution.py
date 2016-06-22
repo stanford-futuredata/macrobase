@@ -21,7 +21,8 @@ def parse_args(*argument_list):
 
   source_group = parser.add_mutually_exclusive_group(required=True)
   source_group.add_argument('--csv')
-  source_group.add_argument('--table', default='car_data_demo')
+  source_group.add_argument('--table')
+  source_group.add_argument('--query')
 
   plot_type_group = parser.add_mutually_exclusive_group(required=True)
   plot_type_group.add_argument('--scatter', nargs=2)
@@ -65,8 +66,9 @@ def _plot_hist2d(data, args):
   data = data[data[args.hist2d[0]].notnull()][data[args.hist2d[1]].notnull()]
   if data.shape[0] < 1000:
     sys.exit(1)
-  plt.hist2d(data[args.hist2d[0]],
-             data[args.hist2d[1]],
+  df = data.replace([np.inf, -np.inf], np.nan).dropna(subset=args.hist2d)
+  plt.hist2d(df[args.hist2d[0]].astype(float),
+             df[args.hist2d[1]].astype(float),
              bins=args.histogram_bins,
              norm=LogNorm())
   plt.colorbar()
@@ -78,17 +80,7 @@ def _plot_hist2d(data, args):
 
 
 def plot_distribution(args):
-  if args.csv is None:
-    cursor = args.db_connection.cursor()
-    cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")  # noqa
-    print cursor.fetchall()
-    sql = """
-      SELECT {select} FROM {table};
-    """.format(select='*', table=args.table)
-    print sql
-    colnames = [desc[0] for desc in cursor.description]
-    data = pd.DataFrame(cursor.fetchall(), columns=colnames)
-  else:
+  if args.csv is not None:
     data = pd.read_csv(args.csv)
     print ' '.join(list(data.columns.values))
     if args.filter_num_rtus:
@@ -99,8 +91,24 @@ def plot_distribution(args):
       print 'before filtering size =', data.shape[0]
       data = data[data['controller_id'] == args.filter_controller]
       print 'after filtering size =', data.shape[0]
-    print 'total controller_ids included =', len(set(data['controller_id']))
-    print 'distinct num_rtus =', len(set(data['num_rtus'])), set(data['num_rtus'])
+    if 'controller_id' in data:
+      print 'total controller_ids included =', len(set(data['controller_id']))
+    if 'num_rtus' in data:
+      print 'distinct num_rtus =', len(set(data['num_rtus'])), set(data['num_rtus'])
+  else:
+    cursor = args.db_connection.cursor()
+    cursor.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")  # noqa
+    if args.query:
+      with open(args.query, 'r') as infile:
+        sql = ''.join(list(infile))
+    else:
+      sql = """
+        SELECT {select} FROM {table};
+      """.format(select='*', table=args.table)
+    print sql
+    cursor.execute(sql)
+    colnames = [desc[0] for desc in cursor.description]
+    data = pd.DataFrame(cursor.fetchall(), columns=colnames)
 
   # Set args.data, so we can pass only args to functions
   args.data = data
@@ -151,8 +159,12 @@ def plot_distribution(args):
       plt.hist(data_to_plot, args.histogram_bins, histtype='bar',
                color=colors_to_use, label=labels_to_show)
     else:
-      plt.hist(data[args.histogram], args.histogram_bins,
+      df = data.replace([np.inf, -np.inf], np.nan).dropna(subset=[args.histogram])
+      plt.hist(df[args.histogram].astype(float),
+               bins=args.histogram_bins,
                label=args.histogram)
+      plt.yscale('log')
+
     plt.xlabel(args.histogram)
     if args.scale_down:
       plt.ylim(ymax=int(data_size * args.miscellaneous_cutoff))
@@ -162,7 +174,7 @@ def plot_distribution(args):
     plot_scatter3d(data, args)
 
   plt.legend()
-  if not args.scatter3d:
+  if not args.scatter3d and not args.histogram:
     set_plot_limits(plt, args)
   if args.savefig is not None:
     plt.savefig(args.savefig, dpi=320)
