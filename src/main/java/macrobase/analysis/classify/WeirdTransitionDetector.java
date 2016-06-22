@@ -18,6 +18,8 @@ public class WeirdTransitionDetector extends OutlierClassifier {
         Integer[] badTransitionsArray = {13, 14, 16, 23, 24, 26, 31, 32, 41, 42, 61, 62};
         badTransitions = new HashSet<>();
         badTransitions.addAll(Arrays.asList(badTransitionsArray));
+        Integer[] suspiciousTransitionsArray = {25, 52, 45, 54, 56, 65};
+        badTransitions.addAll(Arrays.asList(suspiciousTransitionsArray));
     }
 
     @Override

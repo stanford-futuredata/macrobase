@@ -1,13 +1,16 @@
 package macrobase.runtime.resources;
 
 import macrobase.MacroBase;
-import macrobase.analysis.pipeline.BasicBatchedPipeline;
-import macrobase.conf.MacroBaseConf;
+import macrobase.analysis.pipeline.WeirdTransitionPipeline;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.conf.MacroBaseConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
@@ -38,7 +41,7 @@ public class AnalyzeResource extends BaseResource {
         conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
         conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
-        List<AnalysisResult> results = new BasicBatchedPipeline().initialize(conf).run();
+        List<AnalysisResult> results = new WeirdTransitionPipeline().initialize(conf).run();
 
         for(AnalysisResult result: results) {
             if (result.getItemSets().size() > 1000) {
