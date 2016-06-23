@@ -1,0 +1,809 @@
+Welcome to
+  _   _   _   _   _   _   _   _   _  
+ / \ / \ / \ / \ / \ / \ / \ / \ / \ 
+( m | a | c | r | o | b | a | s | e )
+ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ 
+
+DEBUG [2016-06-17 08:14:02,227] macrobase.analysis.pipeline.BasePipeline: Running query phillips-Nrtu
+DEBUG [2016-06-17 08:14:02,232] macrobase.analysis.pipeline.BasePipeline: CONFIG:
+macrobase.analysis.contextual.denseContextTau: 0.3
+macrobase.analysis.contextual.discreteAttributes: 
+macrobase.analysis.contextual.doubleAttributes: 
+macrobase.analysis.contextual.numIntervals: 10
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
+macrobase.analysis.minOIRatio: 3.0
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.results.store: phillips-Nrtu.json
+macrobase.analysis.stat.dpm.concentrationParameter: 0.2
+macrobase.analysis.stat.dpm.truncatingParameter: 15
+macrobase.analysis.stat.iterative.improvementCutoffRatio: 1.0E-4
+macrobase.analysis.stat.mixtures.initialClusters: /Users/arsen/Workspace/centers.json
+macrobase.analysis.stat.mixtures.numMixtures: 3
+macrobase.analysis.stat.svi.delay: 1
+macrobase.analysis.stat.svi.forgettingRate: 0.8
+macrobase.analysis.stat.svi.minibatchSize: 10000
+macrobase.analysis.targetPercentile: 0.99
+macrobase.analysis.transformType: SVI_DPGMM
+macrobase.analysis.usePercentile: true
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
+macrobase.diagnostic.dumpMixtureComponents: phillips-Nrtu-mixtures.json
+macrobase.diagnostic.dumpScoreGrid: phillips-Nrtu-grid.json
+macrobase.diagnostic.gridPointsPerDimension: 1000
+macrobase.diagnostic.scoreDataFile: phillips-Nrtu-scored.json
+macrobase.loader.attributes: datasource_id,controller_id,city,num_rtus
+macrobase.loader.csv.compression: UNCOMPRESSED
+macrobase.loader.csv.file: target/phillips_data/power_usage_city_state_rtus.csv
+macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
+macrobase.loader.db.cacheDirectory: sql_cache
+macrobase.loader.db.dbUrl: postgres
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.targetHighMetrics: power_usage,time
+macrobase.loader.targetLowMetrics: 
+macrobase.pipeline.class: macrobase.analysis.pipeline.MixtureModelPipeline
+macrobase.query.name: phillips-Nrtu
+INFO  [2016-06-17 08:14:08,019] macrobase.ingest.CSVIngester: 0/1728804 bad rows
+INFO  [2016-06-17 08:14:08,027] macrobase.conf.MacroBaseConf: Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.
+DEBUG [2016-06-17 08:14:08,030] macrobase.analysis.stats.mixture.BatchMixtureModel: max iter = 100
+DEBUG [2016-06-17 08:14:08,261] macrobase.analysis.stats.mixture.NormalWishartClusters: loc : [{2; 21}, {2; 1}, {7; 10}, {12; 10}, {17; 10}, {21; 16}, {25; 10}, {35; 12}, {10; 15}, {21; 15}]
+DEBUG [2016-06-17 08:14:09,514] macrobase.analysis.stats.mixture.VariationalInference: pace = 0.5743491774985174
+DEBUG [2016-06-17 08:14:09,516] macrobase.analysis.stats.mixture.VariationalInference: centers = [{2; 21}, {2; 1}, {7; 10}, {12; 10}, {17; 10}, {21; 16}, {25; 10}, {35; 12}, {10; 15}, {21; 15}, {179.312; 9.6166666667}, {179.312; 9.6166666667}, {179.312; 9.6166666667}, {179.312; 9.6166666667}, {179.312; 9.6166666667}]
+DEBUG [2016-06-17 08:14:09,518] macrobase.analysis.stats.mixture.VariationalInference: covariances = [Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}, Array2DRowRealMatrix{{2.0,-0.0},{-0.0,2.0}}]
+.DEBUG [2016-06-17 08:14:09,518] macrobase.analysis.stats.mixture.VariationalInference: weights = [0.8333333333333334, 0.13888888888888887, 0.023148148148148136, 0.003858024691358022, 6.430041152263367E-4, 1.0716735253772278E-4, 1.78612254229538E-5, 2.9768709038256312E-6, 4.96145150637605E-7, 8.269085843960077E-8, 1.3781809739933457E-8, 2.296968289988909E-9, 3.8282804833148485E-10, 6.380467472191412E-11, 1.0634112453652355E-11]
+...........................................................................................................................................................................DEBUG [2016-06-17 08:14:41,408] macrobase.analysis.stats.mixture.BatchMixtureModel: average point log likelihood after iteration 1 is -6.324089156025256
+DEBUG [2016-06-17 08:14:41,409] macrobase.analysis.stats.mixture.BatchMixtureModel: improvement is : Infinity percent
+DEBUG [2016-06-17 08:14:41,409] macrobase.analysis.stats.mixture.BatchMixtureModel: .........................................
+DEBUG [2016-06-17 08:14:41,409] macrobase.analysis.stats.mixture.VariationalInference: pace = 0.41524364653850576
+DEBUG [2016-06-17 08:14:41,409] macrobase.analysis.stats.mixture.VariationalInference: centers = [{2.0969123939; 20.6379584355}, {11.4115779491; 4.5952704747}, {4.4768227222; 20.2154088545}, {2.3503092572; 1.038324399}, {4.3263892439; 2.06384644}, {11.9856235298; 9.3604526473}, {17.5813792932; 12.5579700573}, {18.9315629854; 15.9787668916}, {10.5102536819; 13.3272529217}, {0.2329261348; 1.2993334843}, {24.1185635801; 10.7004364781}, {34.7095425489; 10.6602655367}, {43.7255413066; 9.8092133584}, {0.3189674278; 0.1791434315}, {19.2199968532; 4.4640198019}]
+DEBUG [2016-06-17 08:14:41,410] macrobase.analysis.stats.mixture.VariationalInference: covariances = [Array2DRowRealMatrix{{0.6899814861,-0.0444876577},{-0.0444876577,3.7689724517}}, Array2DRowRealMatrix{{14.6802174216,1.6938720148},{1.6938720148,3.3626990807}}, Array2DRowRealMatrix{{3.849961353,1.2290176818},{1.2290176818,4.7455458052}}, Array2DRowRealMatrix{{0.5317721015,-0.0141840924},{-0.0141840924,0.5042734874}}, Array2DRowRealMatrix{{3.491372671,-0.6596690586},{-0.6596690586,1.3001804277}}, Array2DRowRealMatrix{{20.9758502401,0.1401738828},{0.1401738828,7.2412829613}}, Array2DRowRealMatrix{{11.0641136899,-3.2534949106},{-3.2534949106,7.6746485902}}, Array2DRowRealMatrix{{35.2132159099,-1.8617594787},{-1.8617594787,1.7775120594}}, Array2DRowRealMatrix{{18.4737703495,2.2439174701},{2.2439174701,18.0515076062}}, Array2DRowRealMatrix{{0.0048607721,-0.0079561023},{-0.0079561023,0.8439328274}}, Array2DRowRealMatrix{{9.0556409239,-0.665989731},{-0.665989731,15.7989744604}}, Array2DRowRealMatrix{{19.8013573501,3.7071167372},{3.7071167372,17.9305446735}}, Array2DRowRealMatrix{{515.5792005906,9.3425608698},{9.3425608698,21.3604989545}}, Array2DRowRealMatrix{{0.015121982,0.0009958483},{0.0009958483,0.014900798}}, Array2DRowRealMatrix{{11.1076022727,-0.3396914505},{-0.3396914505,2.3975895683}}]
+.DEBUG [2016-06-17 08:14:41,411] macrobase.analysis.stats.mixture.VariationalInference: weights = [0.11860049844750788, 0.13353428559651487, 0.0635027861388494, 0.038856882149721446, 0.03772244178610488, 0.1562356528330647, 0.1023746930003085, 0.09402448534939838, 0.10645327711666876, 0.0017788738632648514, 0.0558920847144107, 0.030888538210872386, 0.017539147372450783, 1.5616749494833836E-4, 0.04244007024606004]
+...........................................................................................................................................................................DEBUG [2016-06-17 08:15:10,768] macrobase.analysis.stats.mixture.BatchMixtureModel: average point log likelihood after iteration 2 is -6.322559283282183
+DEBUG [2016-06-17 08:15:10,768] macrobase.analysis.stats.mixture.BatchMixtureModel: improvement is : 0.024197048608436994 percent
+DEBUG [2016-06-17 08:15:10,768] macrobase.analysis.stats.mixture.BatchMixtureModel: .........................................
+DEBUG [2016-06-17 08:15:10,768] macrobase.analysis.stats.mixture.VariationalInference: pace = 0.32987697769322355
+DEBUG [2016-06-17 08:15:10,768] macrobase.analysis.stats.mixture.VariationalInference: centers = [{2.1000737953; 20.6056857929}, {10.9636207524; 4.4644298749}, {4.5478166772; 20.3987202618}, {2.3464005231; 1.0324229854}, {4.1895303932; 1.9970103598}, {12.9978449221; 9.1147094028}, {17.1097690766; 13.3055101003}, {18.7247523763; 16.1189572418}, {9.6665185557; 13.2033648784}, {0.2296611449; 1.2953660253}, {23.6598434228; 11.0685512436}, {34.1266485851; 10.6570282196}, {44.9453708851; 9.725033101}, {0.2849119134; 0.1419860405}, {18.8374363108; 4.2728015539}]
+DEBUG [2016-06-17 08:15:10,768] macrobase.analysis.stats.mixture.VariationalInference: covariances = [Array2DRowRealMatrix{{0.6927552304,-0.0368838194},{-0.0368838194,3.8845630674}}, Array2DRowRealMatrix{{14.5911975408,1.7157003006},{1.7157003006,3.2118197157}}, Array2DRowRealMatrix{{3.8555003181,0.9921769773},{0.9921769773,4.5707772865}}, Array2DRowRealMatrix{{0.5059827304,-0.0122437692},{-0.0122437692,0.4869848047}}, Array2DRowRealMatrix{{3.2804445031,-0.645662941},{-0.645662941,1.2277445842}}, Array2DRowRealMatrix{{21.4125576159,-1.0438107686},{-1.0438107686,7.6421394283}}, Array2DRowRealMatrix{{10.9435851003,-2.461936583},{-2.461936583,5.1943800647}}, Array2DRowRealMatrix{{35.1085046753,-2.1071202917},{-2.1071202917,1.5999298926}}, Array2DRowRealMatrix{{18.4608073598,5.2456724711},{5.2456724711,19.4639189645}}, Array2DRowRealMatrix{{0.0052587049,-0.0073041704},{-0.0073041704,0.721977683}}, Array2DRowRealMatrix{{9.2291452032,0.5686988287},{0.5686988287,13.9308360017}}, Array2DRowRealMatrix{{24.4719140331,4.0861621766},{4.0861621766,17.5348381728}}, Array2DRowRealMatrix{{518.1880444029,9.2122397853},{9.2122397853,21.2435098926}}, Array2DRowRealMatrix{{0.0114168786,-0.0001610134},{-0.0001610134,0.0098486151}}, Array2DRowRealMatrix{{17.3043525741,-0.0682619675},{-0.0682619675,2.1425603787}}]
+.DEBUG [2016-06-17 08:15:10,770] macrobase.analysis.stats.mixture.VariationalInference: weights = [0.12046290493077273, 0.11891047060047176, 0.06239683027070868, 0.03777662364672742, 0.03598026933019245, 0.19149205051607915, 0.09092101894500842, 0.08787102735687342, 0.09799952010908812, 0.0018377187132287889, 0.05760371095745511, 0.03465862233860981, 0.016209789601262237, 1.730009212556271E-4, 0.04570632608206782]
+...........................................................................................................................................................................DEBUG [2016-06-17 08:15:40,070] macrobase.analysis.stats.mixture.BatchMixtureModel: average point log likelihood after iteration 3 is -6.321089358132137
+DEBUG [2016-06-17 08:15:40,070] macrobase.analysis.stats.mixture.BatchMixtureModel: improvement is : 0.023254301066865223 percent
+DEBUG [2016-06-17 08:15:40,070] macrobase.analysis.stats.mixture.BatchMixtureModel: .........................................
+DEBUG [2016-06-17 08:15:40,070] macrobase.analysis.stats.mixture.VariationalInference: pace = 0.27594593229224296
+DEBUG [2016-06-17 08:15:40,070] macrobase.analysis.stats.mixture.VariationalInference: centers = [{2.1011444963; 20.6340385824}, {10.4848472629; 4.3772366523}, {4.5321627836; 20.4588318617}, {2.356869509; 1.0330799813}, {4.1205465908; 2.0351358988}, {13.5989009863; 8.924178165}, {16.8370837769; 13.8004479407}, {18.3668722295; 16.3330722898}, {9.5792068841; 13.3714885151}, {0.2314347623; 1.329880213}, {23.3682200023; 11.2687986165}, {33.7322492973; 10.6464725013}, {45.4417358494; 9.6703611295}, {0.2738171383; 0.1285548371}, {18.0481544382; 4.0953762601}]
+DEBUG [2016-06-17 08:15:40,071] macrobase.analysis.stats.mixture.VariationalInference: covariances = [Array2DRowRealMatrix{{0.6908642905,-0.0264751579},{-0.0264751579,3.8854852976}}, Array2DRowRealMatrix{{11.8696071301,1.3488829446},{1.3488829446,3.1442266993}}, Array2DRowRealMatrix{{3.8473054826,1.0597320729},{1.0597320729,4.5905945652}}, Array2DRowRealMatrix{{0.5131158522,-0.0142900928},{-0.0142900928,0.4797340251}}, Array2DRowRealMatrix{{3.2436980794,-0.7149704534},{-0.7149704534,1.2746510752}}, Array2DRowRealMatrix{{23.6607613069,-1.2697591874},{-1.2697591874,7.579100341}}, Array2DRowRealMatrix{{11.2298518574,-0.9057935231},{-0.9057935231,2.9861269754}}, Array2DRowRealMatrix{{37.3416157911,-2.6164552892},{-2.6164552892,1.3394837219}}, Array2DRowRealMatrix{{18.1448182762,5.7307040092},{5.7307040092,19.1421838861}}, Array2DRowRealMatrix{{0.0054535367,-0.0063561856},{-0.0063561856,0.6636883088}}, Array2DRowRealMatrix{{9.7444202005,0.8793960494},{0.8793960494,13.2727280112}}, Array2DRowRealMatrix{{26.5853690638,4.1311011842},{4.1311011842,17.4114396128}}, Array2DRowRealMatrix{{515.2940952087,9.2813443716},{9.2813443716,21.1303705526}}, Array2DRowRealMatrix{{0.0103801851,-0.0000791713},{-0.0000791713,0.0080333688}}, Array2DRowRealMatrix{{20.104123987,-0.1916968598},{-0.1916968598,1.7442890722}}]
+.DEBUG [2016-06-17 08:15:40,072] macrobase.analysis.stats.mixture.VariationalInference: weights = [0.12053859790796129, 0.10276643342240092, 0.06188919005595295, 0.037982753140517175, 0.036432580827997045, 0.21839037497044003, 0.0848583742996, 0.07944778839496809, 0.09564238456006875, 0.0018863752636923635, 0.05986888953793797, 0.03624123166860316, 0.015752163155544497, 1.8080334042875582E-4, 0.048121943773447425]
+...........................................................................................................................................................................DEBUG [2016-06-17 08:16:07,140] macrobase.analysis.stats.mixture.BatchMixtureModel: average point log likelihood after iteration 4 is -6.320608446102696
+DEBUG [2016-06-17 08:16:07,140] macrobase.analysis.stats.mixture.BatchMixtureModel: Breaking because improvement was 0.007608635047428477 percent
+DEBUG [2016-06-17 08:16:07,140] macrobase.analysis.stats.mixture.VariationalInference: centers = [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:07,140] macrobase.analysis.stats.mixture.VariationalInference: covariances = [Array2DRowRealMatrix{{0.6879349305,-0.0198465672},{-0.0198465672,3.888321587}}, Array2DRowRealMatrix{{10.5291785297,1.5416896568},{1.5416896568,3.0524815647}}, Array2DRowRealMatrix{{3.8342385022,1.0800691825},{1.0800691825,4.6038479497}}, Array2DRowRealMatrix{{0.5079381905,-0.0143890746},{-0.0143890746,0.4709537707}}, Array2DRowRealMatrix{{3.0811303426,-0.7698283061},{-0.7698283061,1.3139082587}}, Array2DRowRealMatrix{{23.8153360106,-0.4446019232},{-0.4446019232,8.1222164452}}, Array2DRowRealMatrix{{11.2806330979,-0.6775858497},{-0.6775858497,2.8031519206}}, Array2DRowRealMatrix{{39.1881498271,-2.8155776947},{-2.8155776947,1.2215264786}}, Array2DRowRealMatrix{{18.0960506139,5.5289415854},{5.5289415854,18.814744504}}, Array2DRowRealMatrix{{0.0055371043,-0.0055153114},{-0.0055153114,0.625228276}}, Array2DRowRealMatrix{{9.9014735921,0.8618874115},{0.8618874115,12.861332829}}, Array2DRowRealMatrix{{28.1596096195,4.2887227253},{4.2887227253,17.3589858591}}, Array2DRowRealMatrix{{513.4356870692,9.4748290709},{9.4748290709,21.0053468345}}, Array2DRowRealMatrix{{0.0100654113,0.0000422333},{0.0000422333,0.0072224099}}, Array2DRowRealMatrix{{20.7919404418,-0.10746874},{-0.10746874,1.8113045348}}]
+DEBUG [2016-06-17 08:16:07,141] macrobase.analysis.stats.mixture.VariationalInference: weights = [0.12040402640673298, 0.09003484637051296, 0.06154227851204512, 0.03761435579538162, 0.03586525294743455, 0.23427363206504212, 0.08415141864457572, 0.07265141001140357, 0.09490589919626037, 0.0019132537858349904, 0.0605624540160673, 0.037177721415726, 0.015428494295234024, 1.841133560446426E-4, 0.053290727500841656]
+DEBUG [2016-06-17 08:16:13,836] macrobase.analysis.transform.BatchMixtureCoeffTransform: mixture model took: 125805 milliseconds
+DEBUG [2016-06-17 08:16:13,836] macrobase.analysis.transform.GridDumpingBatchScoreTransform: dumping
+DEBUG [2016-06-17 08:16:24,334] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 0
+DEBUG [2016-06-17 08:16:24,334] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:25,076] macrobase.analysis.summary.itemset.FPGrowth: count required: 233
+DEBUG [2016-06-17 08:16:25,122] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 46
+DEBUG [2016-06-17 08:16:25,126] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 4
+DEBUG [2016-06-17 08:16:25,534] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 1
+DEBUG [2016-06-17 08:16:25,534] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:26,070] macrobase.analysis.summary.itemset.FPGrowth: count required: 163
+DEBUG [2016-06-17 08:16:26,070] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 0
+DEBUG [2016-06-17 08:16:26,071] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 1
+DEBUG [2016-06-17 08:16:26,362] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 2
+DEBUG [2016-06-17 08:16:26,362] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:26,793] macrobase.analysis.summary.itemset.FPGrowth: count required: 86
+DEBUG [2016-06-17 08:16:26,831] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 38
+DEBUG [2016-06-17 08:16:26,834] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 3
+DEBUG [2016-06-17 08:16:27,210] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 3
+DEBUG [2016-06-17 08:16:27,210] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:27,656] macrobase.analysis.summary.itemset.FPGrowth: count required: 70
+DEBUG [2016-06-17 08:16:27,656] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 0
+DEBUG [2016-06-17 08:16:27,656] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:28,877] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 4
+DEBUG [2016-06-17 08:16:28,877] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:29,264] macrobase.analysis.summary.itemset.FPGrowth: count required: 63
+DEBUG [2016-06-17 08:16:29,271] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 7
+DEBUG [2016-06-17 08:16:29,271] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:29,537] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 5
+DEBUG [2016-06-17 08:16:29,537] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:30,122] macrobase.analysis.summary.itemset.FPGrowth: count required: 426
+DEBUG [2016-06-17 08:16:30,122] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 0
+DEBUG [2016-06-17 08:16:30,122] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:30,334] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 6
+DEBUG [2016-06-17 08:16:30,334] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:30,772] macrobase.analysis.summary.itemset.FPGrowth: count required: 153
+DEBUG [2016-06-17 08:16:30,772] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 0
+DEBUG [2016-06-17 08:16:30,772] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:31,006] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 7
+DEBUG [2016-06-17 08:16:31,006] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:31,466] macrobase.analysis.summary.itemset.FPGrowth: count required: 152
+DEBUG [2016-06-17 08:16:31,466] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 0
+DEBUG [2016-06-17 08:16:31,466] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:31,701] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 8
+DEBUG [2016-06-17 08:16:31,701] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:32,131] macrobase.analysis.summary.itemset.FPGrowth: count required: 109
+DEBUG [2016-06-17 08:16:32,172] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 41
+DEBUG [2016-06-17 08:16:32,173] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 1
+DEBUG [2016-06-17 08:16:32,493] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 9
+DEBUG [2016-06-17 08:16:32,493] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:32,841] macrobase.analysis.summary.itemset.FPGrowth: count required: 3
+DEBUG [2016-06-17 08:16:32,843] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 2
+DEBUG [2016-06-17 08:16:32,844] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:33,153] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 10
+DEBUG [2016-06-17 08:16:33,153] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:33,598] macrobase.analysis.summary.itemset.FPGrowth: count required: 96
+DEBUG [2016-06-17 08:16:33,603] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 5
+DEBUG [2016-06-17 08:16:33,603] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:33,892] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 11
+DEBUG [2016-06-17 08:16:33,892] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:34,300] macrobase.analysis.summary.itemset.FPGrowth: count required: 61
+DEBUG [2016-06-17 08:16:34,315] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 15
+DEBUG [2016-06-17 08:16:34,315] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:34,644] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 12
+DEBUG [2016-06-17 08:16:34,644] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:35,051] macrobase.analysis.summary.itemset.FPGrowth: count required: 14
+DEBUG [2016-06-17 08:16:35,055] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 4
+DEBUG [2016-06-17 08:16:35,056] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 1
+DEBUG [2016-06-17 08:16:35,388] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 13
+DEBUG [2016-06-17 08:16:35,389] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:35,749] macrobase.analysis.summary.itemset.FPGrowth: count required: 0
+DEBUG [2016-06-17 08:16:35,750] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 1
+DEBUG [2016-06-17 08:16:35,750] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+DEBUG [2016-06-17 08:16:36,076] macrobase.analysis.classify.MixtureGroupClassifier: target cluster index is 14
+DEBUG [2016-06-17 08:16:36,076] macrobase.analysis.classify.MixtureGroupClassifier: cluster center are: [{2.101431567; 20.6573513922}, {10.2253454884; 4.2541104052}, {4.5147081316; 20.494392057}, {2.3536486334; 1.0280452591}, {3.9955281221; 2.0562752246}, {13.5519158661; 8.8607855615}, {16.8212104334; 13.9969057894}, {18.3488474931; 16.4226852192}, {9.5678703594; 13.4971016992}, {0.2340019826; 1.359997445}, {23.2585458192; 11.4061440104}, {33.4268409381; 10.5853933209}, {45.714990934; 9.6084744693}, {0.2674771245; 0.1234477382}, {17.7620849366; 4.1359635465}]
+DEBUG [2016-06-17 08:16:36,484] macrobase.analysis.summary.itemset.FPGrowth: count required: 92
+DEBUG [2016-06-17 08:16:36,484] macrobase.analysis.summary.itemset.FPGrowth: FPTree load: 0
+DEBUG [2016-06-17 08:16:36,484] macrobase.analysis.summary.itemset.FPGrowth: FPTree mine: 0
+6/17/16 4:16:36 AM =============================================================
+
+-- Timers ----------------------------------------------------------------------
+macrobase.analysis.summary.itemset.FPGrowth.fpMine
+             count = 15
+         mean rate = 1.29 calls/second
+     1-minute rate = 1.05 calls/second
+     5-minute rate = 1.01 calls/second
+    15-minute rate = 1.00 calls/second
+               min = 0.01 milliseconds
+               max = 3.28 milliseconds
+              mean = 0.55 milliseconds
+            stddev = 0.86 milliseconds
+            median = 0.20 milliseconds
+              75% <= 0.60 milliseconds
+              95% <= 3.28 milliseconds
+              98% <= 3.28 milliseconds
+              99% <= 3.28 milliseconds
+            99.9% <= 3.28 milliseconds
+macrobase.analysis.summary.itemset.FPGrowth.insertTransactions
+             count = 15
+         mean rate = 1.29 calls/second
+     1-minute rate = 1.05 calls/second
+     5-minute rate = 1.01 calls/second
+    15-minute rate = 1.00 calls/second
+               min = 0.00 milliseconds
+               max = 33.52 milliseconds
+              mean = 7.29 milliseconds
+            stddev = 11.42 milliseconds
+            median = 1.50 milliseconds
+              75% <= 10.23 milliseconds
+              95% <= 33.52 milliseconds
+              98% <= 33.52 milliseconds
+              99% <= 33.52 milliseconds
+            99.9% <= 33.52 milliseconds
+macrobase.analysis.summary.itemset.FPGrowth.itemCounts
+             count = 15
+         mean rate = 1.29 calls/second
+     1-minute rate = 1.05 calls/second
+     5-minute rate = 1.01 calls/second
+    15-minute rate = 1.00 calls/second
+               min = 0.01 milliseconds
+               max = 12.25 milliseconds
+              mean = 2.91 milliseconds
+            stddev = 4.39 milliseconds
+            median = 0.97 milliseconds
+              75% <= 3.99 milliseconds
+              95% <= 12.25 milliseconds
+              98% <= 12.25 milliseconds
+              99% <= 12.25 milliseconds
+            99.9% <= 12.25 milliseconds
+macrobase.analysis.summary.itemset.FPGrowthEmerging.inlierRatio
+             count = 15
+         mean rate = 1.22 calls/second
+     1-minute rate = 0.85 calls/second
+     5-minute rate = 0.81 calls/second
+    15-minute rate = 0.80 calls/second
+               min = 211.25 milliseconds
+               max = 1220.58 milliseconds
+              mean = 355.43 milliseconds
+            stddev = 231.27 milliseconds
+            median = 308.67 milliseconds
+              75% <= 332.65 milliseconds
+              95% <= 1220.58 milliseconds
+              98% <= 1220.58 milliseconds
+              99% <= 1220.58 milliseconds
+            99.9% <= 1220.58 milliseconds
+macrobase.analysis.summary.itemset.FPGrowthEmerging.outlierFPGrowth
+             count = 15
+         mean rate = 1.22 calls/second
+     1-minute rate = 1.03 calls/second
+     5-minute rate = 1.01 calls/second
+    15-minute rate = 1.00 calls/second
+               min = 0.22 milliseconds
+               max = 58.70 milliseconds
+              mean = 11.62 milliseconds
+            stddev = 17.98 milliseconds
+            median = 3.22 milliseconds
+              75% <= 15.11 milliseconds
+              95% <= 58.70 milliseconds
+              98% <= 58.70 milliseconds
+              99% <= 58.70 milliseconds
+            99.9% <= 58.70 milliseconds
+macrobase.analysis.summary.itemset.FPGrowthEmerging.singleItemCounts
+             count = 15
+         mean rate = 1.22 calls/second
+     1-minute rate = 1.03 calls/second
+     5-minute rate = 1.01 calls/second
+    15-minute rate = 1.00 calls/second
+               min = 269.85 milliseconds
+               max = 464.91 milliseconds
+              mean = 339.70 milliseconds
+            stddev = 56.35 milliseconds
+            median = 326.93 milliseconds
+              75% <= 359.45 milliseconds
+              95% <= 464.91 milliseconds
+              98% <= 464.91 milliseconds
+              99% <= 464.91 milliseconds
+            99.9% <= 464.91 milliseconds
+
+
+INFO  [2016-06-17 08:16:36,737] macrobase.runtime.command.MacroBasePipelineCommand: Result: [outliers: 233136.000000
+inliers: 1495668.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.051794
+records: 12075.000000
+ratio: 3.260642
+
+Columns:
+	city: Savannah
+	datasource_id: 110727
+	controller_id: 21998241
+
+-----
+
+, outliers: 163536.000000
+inliers: 1565268.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+-----
+
+, outliers: 86107.000000
+inliers: 1642697.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.081956
+records: 7057.000000
+ratio: 4.629773
+
+Columns:
+	datasource_id: 114962
+	controller_id: 21951366
+	city: Port Charlotte
+
+-----
+
+support: 0.080969
+records: 6972.000000
+ratio: 4.014596
+
+Columns:
+	datasource_id: 6256
+	controller_id: 25857
+	city: Champaign
+
+-----
+
+support: 0.076939
+records: 6625.000000
+ratio: 4.708581
+
+Columns:
+	controller_id: 44166
+	city: Moultrie
+	datasource_id: 8390
+
+-----
+
+support: 0.071783
+records: 6181.000000
+ratio: 4.307169
+
+Columns:
+	datasource_id: 5202
+	controller_id: 18017
+	city: Erie
+
+-----
+
+support: 0.059786
+records: 5148.000000
+ratio: 3.172376
+
+Columns:
+	datasource_id: 47599
+	controller_id: 10545150
+	city: Festus
+
+-----
+
+, outliers: 70108.000000
+inliers: 1658696.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+-----
+
+, outliers: 63981.000000
+inliers: 1664823.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.060799
+records: 3890.000000
+ratio: 3.168772
+
+Columns:
+	city: Savannah
+	datasource_id: 110727
+	controller_id: 21998241
+
+-----
+
+, outliers: 426261.000000
+inliers: 1302543.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+-----
+
+, outliers: 153828.000000
+inliers: 1574976.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+-----
+
+, outliers: 152865.000000
+inliers: 1575939.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+-----
+
+, outliers: 109985.000000
+inliers: 1618819.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.079602
+records: 8755.000000
+ratio: 4.758876
+
+Columns:
+	city: Savannah
+	datasource_id: 110727
+	controller_id: 21998241
+
+-----
+
+support: 0.076056
+records: 8365.000000
+ratio: 5.609906
+
+Columns:
+	controller_id: 10551645
+	city: Kanapolis
+	datasource_id: 47703
+
+-----
+
+support: 0.074356
+records: 8178.000000
+ratio: 5.725551
+
+Columns:
+	datasource_id: 7985
+	controller_id: 40557
+	city: Franklin
+
+-----
+
+support: 0.062172
+records: 6838.000000
+ratio: 8.459729
+
+Columns:
+	datasource_id: 6924
+	controller_id: 31041
+	city: Wilson
+
+-----
+
+support: 0.055126
+records: 6063.000000
+ratio: 5.283200
+
+Columns:
+	datasource_id: 46989
+	controller_id: 10422125
+	city: Somerset
+
+-----
+
+support: 0.049207
+records: 5412.000000
+ratio: 3.384896
+
+Columns:
+	datasource_id: 11252
+	controller_id: 73965
+	city: Akron
+
+-----
+
+, outliers: 3737.000000
+inliers: 1725067.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.714744
+records: 2671.000000
+ratio: 37.180570
+
+Columns:
+	city: Savannah
+	datasource_id: 110727
+	controller_id: 21998241
+
+-----
+
+support: 0.190527
+records: 712.000000
+ratio: 18.236260
+
+Columns:
+	datasource_id: 6924
+	controller_id: 31041
+	city: Wilson
+
+-----
+
+support: 0.054054
+records: 202.000000
+ratio: 4.098403
+
+Columns:
+	datasource_id: 46989
+	controller_id: 10422125
+	city: Somerset
+
+-----
+
+, outliers: 96094.000000
+inliers: 1632710.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.062876
+records: 6042.000000
+ratio: 3.414654
+
+Columns:
+	datasource_id: 47599
+	controller_id: 10545150
+	city: Festus
+
+-----
+
+support: 0.057319
+records: 5508.000000
+ratio: 3.579328
+
+Columns:
+	datasource_id: 9373
+	controller_id: 54125
+	city: Pikeville
+
+-----
+
+, outliers: 61646.000000
+inliers: 1667158.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.232813
+records: 14352.000000
+ratio: 15.072670
+
+Columns:
+	datasource_id: 6256
+	controller_id: 25857
+	city: Champaign
+
+-----
+
+support: 0.180352
+records: 11118.000000
+ratio: 12.910638
+
+Columns:
+	datasource_id: 7096
+	controller_id: 32766
+	city: Warner Robbins
+
+-----
+
+support: 0.104630
+records: 6450.000000
+ratio: 5.881918
+
+Columns:
+	datasource_id: 47599
+	controller_id: 10545150
+	city: Festus
+
+-----
+
+support: 0.101223
+records: 6240.000000
+ratio: 5.399466
+
+Columns:
+	datasource_id: 8494
+	controller_id: 45822
+	city: Brick
+
+-----
+
+support: 0.080622
+records: 4970.000000
+ratio: 4.239362
+
+Columns:
+	datasource_id: 6472
+	controller_id: 27741
+	city: Lansing
+	num_rtus: 4
+
+-----
+
+, outliers: 14875.000000
+inliers: 1713929.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.528538
+records: 7862.000000
+ratio: 28.097028
+
+Columns:
+	datasource_id: 6256
+	controller_id: 25857
+	city: Champaign
+
+-----
+
+support: 0.241546
+records: 3593.000000
+ratio: 12.103999
+
+Columns:
+	datasource_id: 7148
+	controller_id: 33825
+	city: Yorkville
+
+-----
+
+support: 0.144336
+records: 2147.000000
+ratio: 6.998667
+
+Columns:
+	datasource_id: 8494
+	controller_id: 45822
+	city: Brick
+
+-----
+
+support: 0.074756
+records: 1112.000000
+ratio: 3.734501
+
+Columns:
+	datasource_id: 53252
+	controller_id: 10558142
+	city: Burnsville
+
+-----
+
+support: 0.006992
+records: 104.000000
+ratio: Infinity
+
+Columns:
+	datasource_id: 175687
+	controller_id: 33758241
+	city: Saint Paul
+	num_rtus: 1
+
+-----
+
+, outliers: 412.000000
+inliers: 1728392.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+support: 0.541262
+records: 223.000000
+ratio: 26.271080
+
+Columns:
+	city: Savannah
+	datasource_id: 110727
+	controller_id: 21998241
+
+-----
+
+support: 0.235437
+records: 97.000000
+ratio: 21.833203
+
+Columns:
+	datasource_id: 6924
+	controller_id: 31041
+	city: Wilson
+
+-----
+
+support: 0.109223
+records: 45.000000
+ratio: 6.237178
+
+Columns:
+	controller_id: 10551645
+	city: Kanapolis
+	datasource_id: 47703
+
+-----
+
+support: 0.058252
+records: 24.000000
+ratio: 3.450767
+
+Columns:
+	datasource_id: 7985
+	controller_id: 40557
+	city: Franklin
+
+-----
+
+support: 0.048544
+records: 20.000000
+ratio: 3.658434
+
+Columns:
+	datasource_id: 46989
+	controller_id: 10422125
+	city: Somerset
+
+-----
+
+, outliers: 92233.000000
+inliers: 1636571.000000
+load time 0ms
+execution time: 0ms
+summarization time: 0ms
+
+-----
+
+-----
+
+]
+it has to be a synthetic experiment for now
+{}
+running the following command:
+java  -Xms128m -Xmx16G \
+      -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \
+      macrobase.MacroBase pipeline conf/custom/phillips-Nrtu.yaml
+running following plot command:
+python script/py_analysis/plot_score_contours.py --plot density --savefig --y-limits 0 24 --x-limits 0 45 --scored-grid target/scores/phillips-Nrtu-grid.json
+setting plot limits
+saving figure to -  target/plots/phillips-Nrtu-grid.png
+running following plot command:
+python script/py_analysis/plot_score_contours.py --plot density --savefig contours.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-Nrtu-mixtures.json --covariances target/scores/covariances-phillips-Nrtu-mixtures.json --weights target/scores/weights-phillips-Nrtu-mixtures.json --scored-grid target/scores/phillips-Nrtu-grid.json
+0 0.205578451737 [2.1014315670171144, 20.657351392164326] [[0.6879349305013176, -0.019846567234302004], [-0.019846567234302007, 3.888321586963419]]
+1 0.153725958106 [10.225345488423706, 4.254110405170201] [[10.529178529735896, 1.541689656781786], [1.541689656781786, 3.052481564683352]]
+2 0.105077601725 [4.514708131584814, 20.49439205700091] [[3.8342385022118095, 1.0800691825086257], [1.0800691825086257, 4.60384794971878]]
+3 0.0642229438522 [2.3536486334130666, 1.028045259060464] [[0.5079381905223291, -0.014389074563473662], [-0.014389074563473664, 0.47095377073463773]]
+4 0.0612365166857 [3.9955281221186256, 2.0562752246240574] [[3.081130342553594, -0.7698283060805344], [-0.7698283060805343, 1.3139082586698843]]
+5 0.4 [13.551915866097515, 8.860785561513094] [[23.815336010620243, -0.4446019232444382], [-0.44460192324443826, 8.122216445220486]]
+6 0.143680563455 [16.82121043336738, 13.9969057893508] [[11.280633097948842, -0.6775858497279325], [-0.6775858497279326, 2.8031519206369984]]
+7 0.124045389779 [18.348847493129952, 16.422685219166276] [[39.18814982709057, -2.815577694707218], [-2.8155776947072177, 1.2215264786202142]]
+8 0.162042818664 [9.567870359438418, 13.49710169923117] [[18.096050613876194, 5.528941585385084], [5.528941585385083, 18.814744503962732]]
+9 0.00326669931903 [0.2340019825634984, 1.3599974450065826] [[0.005537104270542884, -0.00551531140122823], [-0.005515311401228228, 0.6252282759950581]]
+10 0.103404644359 [23.258545819246628, 11.406144010388932] [[9.901473592057442, 0.8618874115352401], [0.8618874115352402, 12.861332828951957]]
+11 0.0634774320747 [33.42684093810817, 10.58539332085679] [[28.159609619509066, 4.2887227252858295], [4.2887227252858295, 17.35898585914912]]
+12 0.0263426902281 [45.71499093402963, 9.60847446930505] [[513.4356870691691, 9.474829070890928], [9.47482907089093, 21.005346834473077]]
+13 0.00031435608766 [0.2674771244517901, 0.12344773822388955] [[0.010065411250080281, 4.2233272591350825e-05], [4.2233272591350744e-05, 0.007222409880364681]]
+14 0.0909888612408 [17.762084936559816, 4.135963546461017] [[20.79194044181575, -0.10746873999670756], [-0.10746873999670759, 1.811304534846527]]
+setting ax limits [0.0, 45.0]
+(0.0, 45.0, 0.0, 1.0)
+setting plot limits
+saving figure to -  contours.png
+running following plot command:
+python script/py_analysis/plot_score_contours.py --plot noop --savefig cluster.png --y-limits 0 24 --x-limits 0 45 --centers target/scores/centers-phillips-Nrtu-mixtures.json --covariances target/scores/covariances-phillips-Nrtu-mixtures.json --weights target/scores/weights-phillips-Nrtu-mixtures.json --csv target/phillips_data/power_usage_city_state_rtus.csv --hist2d power_usage time --scored-grid target/scores/phillips-Nrtu-grid.json
+0 0.205578451737 [2.1014315670171144, 20.657351392164326] [[0.6879349305013176, -0.019846567234302004], [-0.019846567234302007, 3.888321586963419]]
+1 0.153725958106 [10.225345488423706, 4.254110405170201] [[10.529178529735896, 1.541689656781786], [1.541689656781786, 3.052481564683352]]
+2 0.105077601725 [4.514708131584814, 20.49439205700091] [[3.8342385022118095, 1.0800691825086257], [1.0800691825086257, 4.60384794971878]]
+3 0.0642229438522 [2.3536486334130666, 1.028045259060464] [[0.5079381905223291, -0.014389074563473662], [-0.014389074563473664, 0.47095377073463773]]
+4 0.0612365166857 [3.9955281221186256, 2.0562752246240574] [[3.081130342553594, -0.7698283060805344], [-0.7698283060805343, 1.3139082586698843]]
+5 0.4 [13.551915866097515, 8.860785561513094] [[23.815336010620243, -0.4446019232444382], [-0.44460192324443826, 8.122216445220486]]
+6 0.143680563455 [16.82121043336738, 13.9969057893508] [[11.280633097948842, -0.6775858497279325], [-0.6775858497279326, 2.8031519206369984]]
+7 0.124045389779 [18.348847493129952, 16.422685219166276] [[39.18814982709057, -2.815577694707218], [-2.8155776947072177, 1.2215264786202142]]
+8 0.162042818664 [9.567870359438418, 13.49710169923117] [[18.096050613876194, 5.528941585385084], [5.528941585385083, 18.814744503962732]]
+9 0.00326669931903 [0.2340019825634984, 1.3599974450065826] [[0.005537104270542884, -0.00551531140122823], [-0.005515311401228228, 0.6252282759950581]]
+10 0.103404644359 [23.258545819246628, 11.406144010388932] [[9.901473592057442, 0.8618874115352401], [0.8618874115352402, 12.861332828951957]]
+11 0.0634774320747 [33.42684093810817, 10.58539332085679] [[28.159609619509066, 4.2887227252858295], [4.2887227252858295, 17.35898585914912]]
+12 0.0263426902281 [45.71499093402963, 9.60847446930505] [[513.4356870691691, 9.474829070890928], [9.47482907089093, 21.005346834473077]]
+13 0.00031435608766 [0.2674771244517901, 0.12344773822388955] [[0.010065411250080281, 4.2233272591350825e-05], [4.2233272591350744e-05, 0.007222409880364681]]
+14 0.0909888612408 [17.762084936559816, 4.135963546461017] [[20.79194044181575, -0.10746873999670756], [-0.10746873999670759, 1.811304534846527]]
+setting ax limits [0.0, 45.0]
+(0.0, 45.0, 0.0, 24.0)
+setting plot limits
+setting plot limits
+setting plot limits
+saving figure to -  cluster.png
