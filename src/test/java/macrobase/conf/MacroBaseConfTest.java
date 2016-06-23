@@ -6,6 +6,11 @@ import com.google.common.collect.Lists;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
+import macrobase.ingest.CSVIngester;
+import macrobase.ingest.CachingSQLIngesterTest;
+import macrobase.ingest.DiskCachingIngester;
+import macrobase.ingest.MySQLIngester;
+import macrobase.ingest.PostgresIngester;
 import org.junit.*;
 
 import java.io.File;
@@ -112,5 +117,31 @@ public class MacroBaseConfTest {
         assertArrayEquals(stringList.toArray(), conf.getStringList("this.is.a.stringList").toArray());
         assertArrayEquals(stringList.toArray(), conf.getStringList("this.is.a.stringList.without.spaces").toArray());
         assertArrayEquals(stringList.toArray(), conf.getStringList("this.is.a.stringList.with.mixed.spaces").toArray());
+    }
+
+    @Test
+    public void testIngester() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf();
+
+        conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("testattr"));
+        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("lm1"));
+        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("hm1"));
+        conf.set(MacroBaseConf.BASE_QUERY, Lists.newArrayList("basequery"));
+        conf.set(MacroBaseConf.DB_CACHE_DIR, "cachedir");
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER);
+        assertTrue(conf.constructIngester() instanceof CSVIngester);
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.MYSQL_LOADER);
+        assertTrue(conf.constructIngester() instanceof MySQLIngester);
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CACHING_MYSQL_LOADER);
+        assertTrue(conf.constructIngester() instanceof DiskCachingIngester);
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.POSTGRES_LOADER);
+        assertTrue(conf.constructIngester() instanceof PostgresIngester);
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CACHING_POSTGRES_LOADER);
+        assertTrue(conf.constructIngester() instanceof DiskCachingIngester);
     }
 }
