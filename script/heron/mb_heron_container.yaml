@@ -7,9 +7,13 @@ macrobase.loader.targetHighMetrics: [__execute_latency_default,__execute_count_d
 
 macrobase.analysis.transformType: MAD_OR_MCD
 
-macrobase.loader.loaderType: POSTGRES_LOADER
+macrobase.loader.loaderType: MYSQL_LOADER
 # modify as needed
 macrobase.loader.db.baseQuery: SELECT * FROM heron_data;
+#macrobase.loader.db.user:
+#macrobase.loader.db.password:
+#macrobase.loader.db.database:
+#macrobase.loader.db.url:
 
 macrobase.analysis.minSupport: 0.001
 macrobase.analysis.minOIRatio: 3.0
