@@ -1,6 +1,8 @@
 
 import sys
 import psycopg2
+import MySQLdb
+
 
 import numpy as np
 import scipy.io as sio
@@ -12,7 +14,13 @@ from os import system, environ
 
 from collections import defaultdict
 
-conn = psycopg2.connect("dbname=postgres")
+postgres = False
+
+if postgres:
+    conn = psycopg2.connect("dbname=postgres")
+else:
+    conn = MySQLdb.connect(host="host", db="heron-data")
+
 times = pd.io.sql.read_sql('SELECT min(time), max(time) FROM heron_data;',con=conn)
 
 st = times.iloc[0]["min"]
