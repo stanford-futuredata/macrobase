@@ -7,7 +7,6 @@ macrobase.loader.targetHighMetrics: []
 macrobase.loader.timeColumn: timestamp
 
 macrobase.loader.db.cacheDirectory: cache
-macrobase.loader.db.dbUrl: postgres
 macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
 
 macrobase.analysis.transformType: MOVING_AVERAGE
