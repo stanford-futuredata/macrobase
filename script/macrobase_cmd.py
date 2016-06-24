@@ -2,8 +2,8 @@ import os
 import sys
 
 
-def run_macrobase(cmd='pipeline', conf='conf/batch.conf', profiler=None,
-                  **kwargs):
+def run_macrobase(cmd='pipeline', conf='conf/batch.conf', save_log=None,
+                  profiler=None, **kwargs):
   extra_args = ' '.join(['-D{key}={value}'.format(key=key, value=value)
                          for key, value in kwargs.items()])
   if profiler == 'yourkit':
@@ -12,6 +12,8 @@ def run_macrobase(cmd='pipeline', conf='conf/batch.conf', profiler=None,
       -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
       macrobase.MacroBase {cmd} {conf_file}'''.format(
       cmd=cmd, conf_file=conf, extra_args=extra_args)
+  if save_log is not None:
+    macrobase_cmd += ' > {}'.format(save_log)
   print 'running the following command:'
   print macrobase_cmd
   exit_status = os.system(macrobase_cmd)

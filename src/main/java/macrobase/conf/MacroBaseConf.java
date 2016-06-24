@@ -235,13 +235,13 @@ public class MacroBaseConf extends Configuration {
                 log.info("Using Finite mixture of Gaussians (Bayesian algorithm) transform.");
                 return new FiniteGMM(this);
             case MEAN_FIELD_DPGMM:
-                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                log.info("Using Infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new DPGMM(this);
             case SVI_GMM:
-                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                log.info("Using Stochastic Finite mixture of Gaussians (Bayesian algorithm) transform.");
                 return new StochVarFiniteGMM(this);
             case SVI_DPGMM:
-                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
+                log.info("Using Stochastic Infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
                 return new StochVarDPGMM(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);

@@ -1,5 +1,7 @@
 import argparse
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+import pandas as pd
 import numpy as np
 from matplotlib import patches
 import re
@@ -9,8 +11,11 @@ from algebra import get_ellipse_from_covariance
 
 def parse_args(*argument_list):
   parser = argparse.ArgumentParser()
-  parser.add_argument('log_file')
+  parser.add_argument('--log-file', required=True)
   parser.add_argument('--save')
+  parser.add_argument('--csv')
+  parser.add_argument('--hist2d', nargs=2)
+  parser.add_argument('--exaggerate-ellipses', type=float, default=1)
   parser.add_argument('--update-interval', type=int, default=500,
                       help='interval between frames in milliseconds')
   args = parser.parse_args(*argument_list)
@@ -66,12 +71,14 @@ def update_weights(lines, i):
   return [float(x) for x in coeffs_text.split(',')]
 
 
-def convert_into_ellipses(data):
+def convert_into_ellipses(data, axis_scale=1.):
   list_of_lists = []
   for weights, atoms in data:
     _list = []
     for i, (center, sigma) in enumerate(atoms):
+      # print('..', len(list_of_lists), i, center)
       w, h, angle = get_ellipse_from_covariance(sigma)
+      w, h = axis_scale * w, axis_scale * h
       e = patches.Ellipse(center, w, h, angle=angle, label='%d' % i)
       e.set_alpha(weights[i])
       _list.append(e)
@@ -123,11 +130,21 @@ def plot_per_iteration(args):
   with open(args.log_file) as infile:
     lines = list(infile)
   data = extract_data(lines, atoms_regex, update_atoms_easy, mixing_regex, update_weights)
-  list_of_lists = convert_into_ellipses(data)
+
+  list_of_lists = convert_into_ellipses(data, axis_scale=args.exaggerate_ellipses)
+
+  if args.csv and args.hist2d:
+    df = pd.read_csv(args.csv)
+    x = df[args.hist2d[0]]
+    y = df[args.hist2d[1]]
+
+  def _plot_hist2d(ax):
+    if args.csv and args.hist2d:
+      ax.hist2d(x, y, bins=96, norm=LogNorm())
 
   def init():
-    ax.set_xlim([0, 70])
-    ax.set_ylim([0, 24])
+    ax.set_xlim([0, 7])
+    ax.set_ylim([-2, 5])
 
   def animate(i):
     print 'animate', i
@@ -135,6 +152,7 @@ def plot_per_iteration(args):
     ax.set_xlabel('power_usage')
     ax.set_ylabel('time of day')
     ax.set_title('%d' % i)
+    _plot_hist2d(ax)
     # arts = original_clusters()
     # for a in arts:
     #   ax.add_artist(a)

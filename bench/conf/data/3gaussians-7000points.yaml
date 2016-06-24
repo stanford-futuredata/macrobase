@@ -1,0 +1,6 @@
+macrobase.loader.attributes: [XX, YY]
+macrobase.loader.csv.compression: GZIP
+macrobase.loader.csv.file: src/test/resources/data/3gaussians-7000points.csv.gz
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.targetHighMetrics: [XX, YY]
+macrobase.loader.targetLowMetrics: []

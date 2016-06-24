@@ -1,0 +1,5 @@
+macrobase.analysis.transformType: SVI_GMM
+macrobase.analysis.stat.mixtures.numMixtures: 3
+macrobase.analysis.stat.svi.delay: 1
+macrobase.analysis.stat.svi.forgettingRate: 0.001
+macrobase.analysis.stat.svi.minibatchSize: 10000

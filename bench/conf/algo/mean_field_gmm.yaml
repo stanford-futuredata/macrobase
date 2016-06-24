@@ -1,0 +1,2 @@
+macrobase.analysis.transformType: MEAN_FIELD_GMM
+macrobase.analysis.stat.mixtures.numMixtures: 3

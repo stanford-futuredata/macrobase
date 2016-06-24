@@ -90,6 +90,10 @@ public class VariationalInference {
         int N = trainData.size();
         double logLikelihood = -Double.MAX_VALUE;
         for (int iter = 1; ; iter++) {
+
+            log.debug("centers = {}", clusters.getMAPLocations());
+            log.debug("covariances = {}", clusters.getMAPCovariances());
+            log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
             // Step 1. update local variables
             exLnMixingContribution = mixingComponents.calcExpectationLog();
             lnPrecision = clusters.calculateExLogPrecision();
@@ -103,6 +107,9 @@ public class VariationalInference {
             double oldLogLikelihood = logLikelihood;
             logLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
             if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
+                log.debug("centers = {}", clusters.getMAPLocations());
+                log.debug("covariances = {}", clusters.getMAPCovariances());
+                log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
                 break;
             }
         }
