@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Random;
 
 public class HeldOutDataLogLikelihoodCalc extends ConfiguredCommand<MacroBaseConf> {
-    private static final Logger log = LoggerFactory.getLogger(TrueDensityISECalculator.class);
+    private static final Logger log = LoggerFactory.getLogger(HeldOutDataLogLikelihoodCalc.class);
 
     public HeldOutDataLogLikelihoodCalc() {
         super("loglike", "Calculate log likelihood on held out data.");
