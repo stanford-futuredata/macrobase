@@ -107,11 +107,11 @@ def run_dump_stats(args):
   csv_rows = []
   for time_type, _dict in _json.items():
     for alg, _list in _dict.items():
-      csv_rows.append([alg, time_type, np.mean(_list)])
+      csv_rows.append([alg, time_type, 1000. * 1e5 / np.mean(_list)])
   if args.save_csv is None:
     print(', '.join(csv_header))
     for row in csv_rows:
-      print(', '.join([str(x) for x in row]))
+      print('{}, {}, {:.1f} '.format(*row))
     return
   with open(args.save_csv, 'w') as outfile:
     writer = csv.writer(outfile)
