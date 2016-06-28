@@ -9,6 +9,7 @@ import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -22,7 +23,6 @@ import java.util.Random;
 
 public class HeldOutDataLogLikelihoodCalc extends ConfiguredCommand<MacroBaseConf> {
     private static final Logger log = LoggerFactory.getLogger(TrueDensityISECalculator.class);
-    public static final String HOLD_OUT_PERCENTAGE = "macrobase.diagnostic.holdOutPercentage";
 
     public HeldOutDataLogLikelihoodCalc() {
         super("loglike", "Calculate log likelihood on held out data.");
@@ -43,7 +43,11 @@ public class HeldOutDataLogLikelihoodCalc extends ConfiguredCommand<MacroBaseCon
             List<Datum> data = ingester.getStream().drain();
 
             long startMs = System.currentTimeMillis();
-            double keepRatio = conf.getDouble(HOLD_OUT_PERCENTAGE, 0.1);
+            double trainTestSplit = conf.getDouble(MacroBaseConf.TRAIN_TEST_SPLIT, MacroBaseDefaults.TRAIN_TEST_SPLIT);
+
+            assert ( trainTestSplit > 0 && trainTestSplit < 1);
+
+            double keepRatio = 1 - trainTestSplit;
 
             List<Datum> trainingData = new ArrayList<>((int) (data.size() * (1 - keepRatio)));
             List<Datum> testData = new ArrayList<>((int) (data.size() * keepRatio));
