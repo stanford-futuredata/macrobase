@@ -17,6 +17,6 @@ def exp_bench_dir(workload):
     'bench',
     'workflows',
     workload['macrobase.query.name'],
-    strftime('%m-%d-%H:%M:%S'))
+    strftime('%m-%d-%H_%M_%S'))
   makedirs_p(sub_dir)
   return sub_dir

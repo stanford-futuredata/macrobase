@@ -97,6 +97,8 @@ def _run(workload, _dir):
     os.system('cat {}'.format(config_filename))
     run_diagnostic('loglike', config_filename, save_log=log_filename)
     os.system('grep tuples {}'.format(log_filename))
+    _command = 'grep point {}'.format(log_filename)
+    os.system(_command)
 
 
 def plot_violines(data):
@@ -183,8 +185,9 @@ def run_single_experiment(args):
 
   _dir = exp_bench_dir(experiment)
   log_filename = os.path.join(_dir, 'log.txt')
-  os.system('grep pace {}'.format(log_filename))
-  os.system('grep iteration {} | wc -l'.format(log_filename))
+  print(_command)
+  os.system(_command)
+  # os.system('grep iteration {} | wc -l'.format(log_filename))
 
 if __name__ == '__main__':
   args = parse_args()
