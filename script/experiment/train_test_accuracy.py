@@ -1,3 +1,8 @@
+"""
+Compare speeds of different algorithm for training and testing.
+e.g.
+  python script/experiment/train_test_accuracy.py run --data bench/conf/data/cmt-5d-100k.yaml --algorithms bench/conf/algo/
+"""
 from __future__ import print_function
 import argparse
 import csv
