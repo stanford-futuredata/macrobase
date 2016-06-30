@@ -6,6 +6,7 @@ e.g.
 from __future__ import print_function
 import argparse
 import csv
+from datetime import datetime
 import numpy as np
 import seaborn as sns
 import json
@@ -27,12 +28,20 @@ def parse_args():
   stats_parser.set_defaults(func=run_dump_stats)
   stats_parser.add_argument('experiment_dir')
   stats_parser.add_argument('--save-csv')
-  plot_parser = subparsers.add_parser('plot')
-  plot_parser.set_defaults(func=run_plot_extracted)
-  plot_parser.add_argument('experiment_dir')
-  plot_parser.add_argument('--savefig')
+  plot_iter_parser = subparsers.add_parser('plot_loglike_over_iterations')
+  plot_iter_parser.set_defaults(func=run_plot_loglike_over_iterations)
+  plot_iter_parser.add_argument('experiment_dir')
+  plot_iter_parser.add_argument('--savefig')
+  plot_time_parser = subparsers.add_parser('plot_loglike_over_time')
+  plot_time_parser.set_defaults(func=run_plot_loglike_over_time)
+  plot_time_parser.add_argument('experiment_dir')
+  plot_time_parser.add_argument('--savefig')
+  plot_dist_parser = subparsers.add_parser('plot_iteration_distribution')
+  plot_dist_parser.set_defaults(func=run_plot_iteration_distribution)
+  plot_dist_parser.add_argument('experiment_dir')
+  plot_dist_parser.add_argument('--savefig')
   extract_parser = subparsers.add_parser('extract')
-  extract_parser.set_defaults(func=run_extract_train_score_speed)
+  extract_parser.set_defaults(func=run_extract_statistics)
   extract_parser.add_argument('experiment_dir')
   run_parser = subparsers.add_parser('run')
   run_parser.set_defaults(func=run_loglikelihood_evolution)
@@ -67,26 +76,113 @@ def _filename_without_ext(file_path):
   return os.path.basename(file_path).rsplit('.')[-2]
 
 
-def extract_train_score_speed(exp_dir):
-  train_times = defaultdict(list)
-  score_times = defaultdict(list)
+loglike_regex = re.compile('test loglike = ([-]?\d+[.]\d+)')
+time_regex = re.compile('DEBUG \[(\d{4}[-]\d{2}[-]\d{2} \d{2}:\d{2}:\d{2},\d{3})\]')
+time_format = '%Y-%m-%d %H:%M:%S,%f'
+iteration_start_regex = re.compile(r'macrobase.analysis.stats.mixture.Variational')
+
+def _time(logline):
+  timestring = time_regex.search(logline).group(1) + '000'  # convert milliseconds to microseconds
+  t = datetime.strptime(timestring, time_format)
+  return t
+
+def extract_logfile_stats(logfile):
+  stats = {'iterations': []}
+  with open(logfile, 'r') as infile:
+    last_iteration_complete_time = None
+    t0 = None
+    for line in infile:
+      if t0 is None and iteration_start_regex.search(line) is not None:
+        t0 = _time(line)
+        stats['algo_start_time'] = t0
+        last_iteration_complete_time = t0
+      ll_search = loglike_regex.search(line)
+      if ll_search is not None:
+        loglike = float(ll_search.group(1))
+        t = _time(line)
+        if last_iteration_complete_time is not None:
+          delta_t = t - last_iteration_complete_time
+        last_iteration_complete_time = t
+        stats['iterations'].append({'loglike': loglike, 't': t, 'delta_t': delta_t})
+  return stats
+  
+
+def extract_statistics(exp_dir):
+  stats = defaultdict(list)
   for alg in os.listdir(exp_dir):
+    print('....')
+    print(alg)
     if not os.path.isdir(os.path.join(exp_dir, alg)):
       print('not dir', alg)
       continue
     for _try in os.listdir(os.path.join(exp_dir, alg)):
-      with open(os.path.join(exp_dir, alg, _try, 'log.txt')) as logfile:
-        lines = [l for l in logfile if re.search('took', l)]
-      for line in lines:
-        train_ms = re.search('training took (\d+)ms', line)
-        score_ms = re.search('scoring took (\d+)ms', line)
-        if train_ms is not None:
-          train_times[alg].append(int(train_ms.group(1)))
-        if score_ms is not None:
-          score_times[alg].append(int(score_ms.group(1)))
-  with open(os.path.join(exp_dir, 'times.json'), 'w') as outfile:
-    json.dump({'train_times': train_times,
-               'score_times': score_times}, outfile)
+      try_logfile = os.path.join(exp_dir, alg, _try, 'log.txt')
+      try_stats = extract_logfile_stats(try_logfile)
+      stats[alg].append(try_stats)
+      _mean = np.mean([x['delta_t'].total_seconds() for x in try_stats['iterations']])
+      # print('{:.3f} seconds'.format(_mean))
+  return stats
+
+
+colors = 'r c m y k b g'.split()
+
+
+def run_plot_loglike_over_iterations(args):
+  stats = extract_statistics(args.experiment_dir)
+  for k, (alg, alg_stats) in enumerate(stats.items()):
+    # print(alg_stats)
+    for i, alg_try_stats in enumerate(alg_stats):
+      # print(alg_try_stats)
+      ll = [x['loglike'] for x in alg_try_stats['iterations']]
+      if len(ll):
+        plt.plot(ll, label='{} try {}'.format(alg, i), color=colors[k])
+  plt.xlabel('iterations')
+  plt.ylabel('log likelihood of heldout data')
+  plt.legend(loc='lower right')
+  plt.savefig('loglike_vs_iteration.png', dpi=320)
+
+
+def run_plot_loglike_over_time(args):
+  stats = extract_statistics(args.experiment_dir)
+  for k, (alg, alg_stats) in enumerate(stats.items()):
+    # print(alg_stats)
+    for i, alg_try_stats in enumerate(alg_stats):
+      # print(alg_try_stats)
+      ll = [x['loglike'] for x in alg_try_stats['iterations']]
+      tt = [x['t'] for x in alg_try_stats['iterations']]
+      tt_start_sec = [(t - tt[0]).total_seconds() for t in tt]
+      if len(ll):
+        plt.plot(tt_start_sec, ll, label='{} try {}'.format(alg, i), color=colors[k])
+  plt.xlabel('time (seconds)')
+  plt.ylabel('log likelihood of heldout data')
+  plt.legend(loc='lower right')
+  plt.savefig('loglike_vs_time.png', dpi=320)
+
+
+def run_plot_iteration_distribution(args):
+  stats = extract_statistics(args.experiment_dir)
+  deltas = []
+  for k, (alg, alg_stats) in enumerate(stats.items()):
+    # print(alg_stats)
+    for i, alg_try_stats in enumerate(alg_stats):
+      # print(alg_try_stats)
+      deltas.extend([(x['delta_t'].total_seconds(), alg, i) for x in alg_try_stats['iterations']])
+  secs, algs, tries = zip(*deltas)
+  df = pd.DataFrame()
+  df['time_seconds'] = secs
+  df['algorithm'] = algs
+  df['try'] = tries
+  
+  sns.violinplot(y='algorithm', x='time_seconds', data=df)
+  plt.savefig('iteration_times.png', dpi=320)
+
+  means = df.groupby(['algorithm', 'try']).mean()
+  means.rename(columns={'time_seconds': 'mean_seconds'}, inplace=True)
+  medians = df.groupby(['algorithm', 'try']).median()
+  medians.rename(columns={'time_seconds': 'median_seconds'}, inplace=True)
+  stat_df = pd.concat([means, medians], axis=1)
+  print(stat_df)
+  stat_df.to_csv('stats.csv')
 
 
 def _run(workload, _dir):
@@ -106,50 +202,32 @@ def plot_violines(data):
 
 
 def run_dump_stats(args):
-  extract_train_score_speed(args.experiment_dir)
-  with open(os.path.join(args.experiment_dir, 'times.json')) as infile:
-    _json = json.load(infile)
-
-  csv_header = ['algorithm', 'tt', 'mean_ms']
-  csv_rows = []
-  for time_type, _dict in _json.items():
-    for alg, _list in _dict.items():
-      csv_rows.append([alg, time_type, 1000. * 1e5 / np.mean(_list)])
-  if args.save_csv is None:
-    print(', '.join(csv_header))
-    for row in csv_rows:
-      print('{}, {}, {:.1f} '.format(*row))
-    return
-  with open(args.save_csv, 'w') as outfile:
-    writer = csv.writer(outfile)
-    writer.writerow(csv_header)
-    for row in csv_rows:
-      writer.writerow(row)
+  extract_statistics(args.experiment_dir)
 
 
-def run_plot_extracted(args):
-  extract_train_score_speed(args.experiment_dir)
-  with open(os.path.join(args.experiment_dir, 'times.json')) as infile:
-    _json = json.load(infile)
-  what, algos, values = [], [], []
-  for time_type, _dict in _json.items():
-    for alg, _list in _dict.items():
-      what.extend(len(_list) * [time_type])
-      algos.extend(len(_list) * [alg])
-      values.extend(_list)
-  df = pd.DataFrame()
-  df['tt'] = what
-  df['algorithm'] = algos
-  df['ms'] = values
-  plot_violines(df)
-  if args.savefig:
-    plt.savefig(args.savefig, dpi=320)
-  else:
-    plt.show()
+# def run_plot_extracted(args):
+#   extract_statistics(args.experiment_dir)
+#   with open(os.path.join(args.experiment_dir, 'times.json')) as infile:
+#     _json = json.load(infile)
+#   what, algos, values = [], [], []
+#   for time_type, _dict in _json.items():
+#     for alg, _list in _dict.items():
+#       what.extend(len(_list) * [time_type])
+#       algos.extend(len(_list) * [alg])
+#       values.extend(_list)
+#   df = pd.DataFrame()
+#   df['tt'] = what
+#   df['algorithm'] = algos
+#   df['ms'] = values
+#   plot_violines(df)
+#   if args.savefig:
+#     plt.savefig(args.savefig, dpi=320)
+#   else:
+#     plt.show()
 
 
-def run_extract_train_score_speed(args):
-  extract_train_score_speed(args.experiment_dir)
+def run_extract_statistics(args):
+  extract_statistics(args.experiment_dir)
 
 
 def run_loglikelihood_evolution(args):
@@ -171,7 +249,7 @@ def run_loglikelihood_evolution(args):
                           str(repeat))
       makedirs_p(_dir)
       _run(workload, _dir)
-  extract_train_score_speed(exp_dir)
+  extract_statistics(exp_dir)
 
 
 def run_single_experiment(args):
@@ -181,13 +259,12 @@ def run_single_experiment(args):
   print(experiment)
   experiment.update(yaml.load(args.data))
   experiment.update(yaml.load(args.algo))
-  _run(experiment, exp_bench_dir(experiment))
-
   _dir = exp_bench_dir(experiment)
+  _run(experiment, _dir)
+
   log_filename = os.path.join(_dir, 'log.txt')
-  print(_command)
-  os.system(_command)
-  # os.system('grep iteration {} | wc -l'.format(log_filename))
+  os.system('grep log {}'.format(log_filename))
+  extract_logfile_stats(log_filename)
 
 if __name__ == '__main__':
   args = parse_args()
