@@ -105,7 +105,9 @@ public class VariationalInference {
             clusters.update(trainData, r);
 
             double oldLogLikelihood = logLikelihood;
-            logLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
+            logLikelihood = model.calculateLogLikelihood(trainData, mixingComponents, clusters);
+            double testLogLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
+            log.debug("test loglike = {}", testLogLikelihood);
             if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
                 log.debug("centers = {}", clusters.getMAPLocations());
                 log.debug("covariances = {}", clusters.getMAPCovariances());
