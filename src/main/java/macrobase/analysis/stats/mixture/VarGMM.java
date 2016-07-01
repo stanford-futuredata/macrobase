@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * A class that combines methods for all variational inference
- # subclasses that use a type of Gaussian Mixture Model
+ * # subclasses that use a type of Gaussian Mixture Model
  */
 public abstract class VarGMM extends BatchMixtureModel {
     private static final Logger log = LoggerFactory.getLogger(VarGMM.class);
@@ -30,7 +30,7 @@ public abstract class VarGMM extends BatchMixtureModel {
 
     @Override
     public void train(List<Datum> data) {
-        if ( trainTestSplit > 0 && trainTestSplit < 1) {
+        if (trainTestSplit > 0 && trainTestSplit < 1) {
             TrainTestSpliter splitter = new TrainTestSpliter(data, trainTestSplit, conf.getRandom());
             trainTest(splitter.getTrainData(), splitter.getTestData());
         } else {
@@ -73,6 +73,12 @@ public abstract class VarGMM extends BatchMixtureModel {
         }
         if (density == 0) {
             return this.ZERO_LOG_SCORE;
+        }
+        if (Double.isNaN(Math.log(density))) {
+            log.debug("total density = {}", density);
+            for (int i = 0; i < predictiveDistributions.size(); i++) {
+                log.debug("cc = {}, density = {}", cc[i], predictiveDistributions.get(i).density(datum.getMetrics()));
+            }
         }
         return Math.log(density);
     }
