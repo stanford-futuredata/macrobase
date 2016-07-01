@@ -70,8 +70,16 @@ public class VariationalInference {
             }
 
             double oldLogLikelihood = logLikelihood;
-            logLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
+            logLikelihood = model.calculateLogLikelihood(trainData, mixingComponents, clusters);
+            double testLogLikelihood = model.calculateLogLikelihood(testData, mixingComponents, clusters);
+            log.debug("test loglike = {}", testLogLikelihood);
             if (model.checkTermination(logLikelihood, oldLogLikelihood, iter)) {
+                log.debug("centers = {}", clusters.getMAPLocations());
+                log.debug("covariances = {}", clusters.getMAPCovariances());
+                log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
+                return;
+            }
+            if (Math.abs(oldLogLikelihood - logLikelihood) < 1e-8) {
                 log.debug("centers = {}", clusters.getMAPLocations());
                 log.debug("covariances = {}", clusters.getMAPCovariances());
                 log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
