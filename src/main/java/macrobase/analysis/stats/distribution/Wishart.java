@@ -20,7 +20,12 @@ public class Wishart {
         if (omega.getRowDimension() == 2) {
             this.logDetOmega = Math.log(omega.getEntry(0, 0) * omega.getEntry(1, 1) - omega.getEntry(1, 0) * omega.getEntry(0, 1));
         } else {
-            this.logDetOmega = Math.log((new EigenDecomposition(omega)).getDeterminant());
+            try {
+                this.logDetOmega = Math.log((new EigenDecomposition(omega)).getDeterminant());
+            } catch (Exception e) {
+                log.debug("matrix: {}", omega);
+                throw e;
+            }
         }
     }
 
