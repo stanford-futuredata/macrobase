@@ -170,7 +170,7 @@ public class NormalWishartClusters {
     }
 
     public void initializeBaseForFinite(List<Datum> data) {
-        baseNu = 0.1;
+        baseNu = D;
         baseBeta = 0.1;
         baseLoc = new ArrayRealVector(D);
         baseOmega = MatrixUtils.createRealIdentityMatrix(D);
