@@ -79,7 +79,7 @@ public class VariationalInference {
                 log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
                 return;
             }
-            if (Math.abs(oldLogLikelihood - logLikelihood) < 1e-8) {
+            if (Math.abs((oldLogLikelihood - logLikelihood) / logLikelihood) < 1e-8) {
                 log.debug("centers = {}", clusters.getMAPLocations());
                 log.debug("covariances = {}", clusters.getMAPCovariances());
                 log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
