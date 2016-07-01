@@ -41,6 +41,9 @@ public class MultivariateTDistribution implements MultivariateDistribution{
         }
         RealVector _diff = vector.subtract(mean);
         double prob = 1. / dof * _diff.dotProduct(precisionMatrix.operate(_diff));
+        if (Double.isNaN(prob)) {
+            log.debug("mean, prec, dof, vector = {}, {}, {}", mean, precisionMatrix, dof, vector);
+        }
         return multiplier * Math.pow(1 + prob, -(dof + D) / 2);
     }
 }
