@@ -1,0 +1,8 @@
+macrobase.loader.attributes: [data_count_minutes]
+macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D where H.dataset_id = D.id ORDER BY random() LIMIT 1000000;
+macrobase.loader.db.cacheDirectory: sql_cache
+macrobase.loader.db.user: pbailis
+macrobase.loader.db.url: localhost:5050
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
+macrobase.loader.targetHighMetrics: [data_count_minutes, data_trip_length, distance_mapmatched_km, score_accel_per_sec_ntile, score_accel_per_km_ntile]
+macrobase.loader.targetLowMetrics: []
