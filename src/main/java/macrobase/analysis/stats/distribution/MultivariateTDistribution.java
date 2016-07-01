@@ -33,6 +33,10 @@ public class MultivariateTDistribution implements MultivariateDistribution{
         this.multiplier = Math.exp(Gamma.logGamma(0.5 * (D + dof)) - Gamma.logGamma(0.5 * dof)) /
                 Math.pow(Math.PI * dof, 0.5 * D) /
                 Math.pow(determinant, 0.5);
+        if (Double.isNaN(multiplier)) {
+            log.debug("multiplier is NaN {}", multiplier);
+            log.debug("mean, prec, dof = {}, {}, {}", mean, precisionMatrix, dof);
+        }
     }
 
     public double density(RealVector vector) {
@@ -42,7 +46,7 @@ public class MultivariateTDistribution implements MultivariateDistribution{
         RealVector _diff = vector.subtract(mean);
         double prob = 1. / dof * _diff.dotProduct(precisionMatrix.operate(_diff));
         if (Double.isNaN(prob)) {
-            log.debug("mean, prec, dof, vector = {}, {}, {}", mean, precisionMatrix, dof, vector);
+            log.debug("mean, prec, dof, vector = {}, {}, {}, {}", mean, precisionMatrix, dof, vector);
         }
         return multiplier * Math.pow(1 + prob, -(dof + D) / 2);
     }
