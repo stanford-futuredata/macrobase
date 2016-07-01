@@ -59,7 +59,7 @@ public class AlgebraUtils {
         if (matrix.getRowDimension() == 1) {
             return matrix.getEntry(0, 0);
         } else if (matrix.getRowDimension() == 2) {
-            return matrix.getEntry(0, 0) * matrix.getEntry(1, 1) - matrix.getEntry(1, 0) * matrix.getEntry(0, 1));
+            return matrix.getEntry(0, 0) * matrix.getEntry(1, 1) - matrix.getEntry(1, 0) * matrix.getEntry(0, 1);
         } else {
             return new LUDecomposition(matrix).getDeterminant();
         }
