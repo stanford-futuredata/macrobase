@@ -260,6 +260,9 @@ public class NormalWishartClusters {
         for (int k = 0; k < this.K; k++) {
             double scale = (dof[k] + 1 - D) * beta[k] / (1 + beta[k]);
             RealMatrix ll = AlgebraUtils.invertMatrix(omega.get(k).scalarMultiply(scale));
+            if (dof[k] + 1 - D < 0) {
+                log.debug("wtf!! dof[{}] = {}", k, dof[k]);
+            }
             predictiveDistributions.add(new MultivariateTDistribution(loc.get(k), ll, dof[k] + 1 - D));
         }
         return predictiveDistributions;
