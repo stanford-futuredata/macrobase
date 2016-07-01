@@ -2,6 +2,7 @@ package macrobase.util;
 
 import macrobase.datamodel.Datum;
 import macrobase.datamodel.DatumComparator;
+import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -46,5 +47,21 @@ public class AlgebraUtils {
             boundaries[i][1] = maxI.getMetrics().getEntry(i);
         }
         return boundaries;
+    }
+
+    /**
+     * Calculates determinant of a matrix using different algorithms based on dimensions.
+     * @param matrix
+     * @return
+     */
+    public static double calcDeterminant(RealMatrix matrix) {
+        assert matrix.getRowDimension() == matrix.getColumnDimension();
+        if (matrix.getRowDimension() == 1) {
+            return matrix.getEntry(0, 0);
+        } else if (matrix.getRowDimension() == 2) {
+            return matrix.getEntry(0, 0) * matrix.getEntry(1, 1) - matrix.getEntry(1, 0) * matrix.getEntry(0, 1));
+        } else {
+            return new LUDecomposition(matrix).getDeterminant();
+        }
     }
 }

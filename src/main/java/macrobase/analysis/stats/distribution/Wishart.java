@@ -1,6 +1,6 @@
 package macrobase.analysis.stats.distribution;
 
-import org.apache.commons.math3.linear.EigenDecomposition;
+import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.special.Gamma;
 import org.slf4j.Logger;
@@ -17,16 +17,7 @@ public class Wishart {
         this.omega = omega;
         this.nu = nu;
         this.D = omega.getColumnDimension();
-        if (omega.getRowDimension() == 2) {
-            this.logDetOmega = Math.log(omega.getEntry(0, 0) * omega.getEntry(1, 1) - omega.getEntry(1, 0) * omega.getEntry(0, 1));
-        } else {
-            try {
-                this.logDetOmega = Math.log((new EigenDecomposition(omega)).getDeterminant());
-            } catch (Exception e) {
-                log.debug("matrix: {}", omega);
-                throw e;
-            }
-        }
+        this.logDetOmega = Math.log(AlgebraUtils.calcDeterminant(omega));
     }
 
     /**
