@@ -74,7 +74,7 @@ public class HeavyHittersComparePipeline extends BasePipeline {
         double ret = 0;
         for(Map.Entry<Integer, Double> ae : actual.entrySet()) {
             Double appxval = appx.getCount(ae.getKey());
-            ret += Math.abs(ae.getValue()-appxval);
+            ret += Math.abs(appxval-ae.getValue())/ae.getValue();
         }
 
         return ret / actual.size();
@@ -124,7 +124,7 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                 Collections.sort(trueVals);
                 Collections.reverse(trueVals);
 
-                double minHHVal = trueVals.get(Math.min(trueVals.size()-1, size));
+                double minHHVal = trueVals.get(Math.min(trueVals.size() - 1, size));
                 Map<Integer, Double> trueHHs = Maps.newHashMap();
                 for(Map.Entry<Integer, Double> e : trueValue.getCounts().entrySet()) {
                     if(e.getValue() >= minHHVal) {
@@ -132,7 +132,7 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                     }
                 }
 
-                for (int i = 0; i < 5; ++i) {
+                for (int i = 0; i < 10; ++i) {
                     SpaceSavingHeap ssh = new SpaceSavingHeap(size);
                     SpaceSavingList ssl = new SpaceSavingList(size);
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
@@ -173,8 +173,8 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
 
                     log.debug("DATASIZE: {}", data.size());
-                    ssh.multiplyAllCounts(1/weight);
-                    ssl.multiplyAllCounts(1/weight);
+                    ssh.multiplyAllCounts(1 /weight);
+                    ssl.multiplyAllCounts(1 /weight);
                     fbsl.multiplyAllCounts(1/weight);
                     log.debug("SSH_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssh, rr), compute_are(trueHHs, ssh));
                     log.debug("SSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssl, rr), compute_are(trueHHs,
