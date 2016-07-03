@@ -62,7 +62,7 @@ public class ContaminationTest extends BasePipeline {
 
     @Override
     public List<AnalysisResult> run() throws Exception {
-        final int numPoints = 10000000;
+        final int numPoints = 1000000;
 
         Integer metricDimensions = 2;
         for(Double percentageOutliers : Lists.newArrayList(0.01, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5)) {
