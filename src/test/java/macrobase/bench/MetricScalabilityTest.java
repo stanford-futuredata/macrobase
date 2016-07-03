@@ -67,7 +67,7 @@ public class MetricScalabilityTest extends BasePipeline {
                     }
 
                     double[] pts = new double[metricDimensions];
-                    for (int pno = 0; pno < metricDimensions; ++i) {
+                    for (int pno = 0; pno < metricDimensions; ++pno) {
                         double val;
 
                         if (isOutlier) {
@@ -92,7 +92,7 @@ public class MetricScalabilityTest extends BasePipeline {
                 bts.getStream().drain();
                 sw.stop();
 
-                double thru = ((double) data.size()) / sw.elapsed(TimeUnit.SECONDS);
+                double thru = ((double) data.size()) / sw.elapsed(TimeUnit.MICROSECONDS) * 1000000;
 
                 log.error("MCD TIME: {} {} {}", metricDimensions, sw.elapsed(TimeUnit.MILLISECONDS),
                           thru);
