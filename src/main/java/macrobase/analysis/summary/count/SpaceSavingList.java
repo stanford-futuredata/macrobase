@@ -136,7 +136,7 @@ public class SpaceSavingList extends ApproximateCount {
         CounterToken token = digest.get(item);
 
         if (token == null) {
-            return 0;
+            return groupHead.differential;
         }
 
         CounterGroup group = token.group;

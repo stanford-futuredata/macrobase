@@ -127,7 +127,7 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
     public double getCount(int item) {
         Double ret = counts.get(item);
         if (ret == null) {
-            return 0;
+            return prevEpochMaxEvicted;
         }
 
         return ret/decayFactor;

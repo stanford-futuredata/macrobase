@@ -70,15 +70,10 @@ public class HeavyHittersComparePipeline extends BasePipeline {
         return tsw.elapsed(TimeUnit.MICROSECONDS);
     }
 
-    private double compute_are(Map<Integer, Double> actual, Map<Integer, Double> appx) {
+    private double compute_are(Map<Integer, Double> actual, ApproximateCount appx) {
         double ret = 0;
         for(Map.Entry<Integer, Double> ae : actual.entrySet()) {
-            Double appxval = appx.get(ae.getKey());
-
-            if(appxval == null) {
-                appxval = 0.;
-            }
-
+            Double appxval = appx.getCount(ae.getKey());
             ret += Math.abs(ae.getValue()-appxval);
         }
 
@@ -143,11 +138,11 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
 
                     log.debug("DATASIZE: {}", data.size());
-                    log.debug("SSH {} {} {} {}", size, rr, bench_native_decay(data, ssh, rr), compute_are(trueHHs, ssh.getCounts()));
+                    log.debug("SSH {} {} {} {}", size, rr, bench_native_decay(data, ssh, rr), compute_are(trueHHs, ssh));
                     log.debug("SSL {} {} {} {}", size, rr, bench_native_decay(data, ssl, rr), compute_are(trueHHs,
-                                                                                                          ssl.getCounts()));
+                                                                                                          ssl));
                     log.debug("FBSL {} {} {} {}", size, rr, bench_native_decay(data, fbsl, rr), compute_are(trueHHs,
-                                                                                                            fbsl.getCounts()));
+                                                                                                            fbsl));
                 }
 
                 trueValue = new AmortizedMaintenanceCounter(1000000000);
@@ -178,10 +173,13 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
 
                     log.debug("DATASIZE: {}", data.size());
-                    log.debug("SSH_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssh, rr), compute_are(trueHHs, ssh.getCounts())/weight);
+                    ssh.multiplyAllCounts(1/weight);
+                    ssl.multiplyAllCounts(1/weight);
+                    fbsl.multiplyAllCounts(1/weight);
+                    log.debug("SSH_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssh, rr), compute_are(trueHHs, ssh));
                     log.debug("SSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssl, rr), compute_are(trueHHs,
-                                                                                                          ssl.getCounts())/weight);
-                    log.debug("FBSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, fbsl, rr), compute_are(trueHHs, fbsl.getCounts())/weight);
+                                                                                                          ssl));
+                    log.debug("FBSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, fbsl, rr), compute_are(trueHHs, fbsl));
                 }
             }
         }
