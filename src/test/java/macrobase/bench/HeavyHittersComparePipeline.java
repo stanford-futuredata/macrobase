@@ -115,14 +115,14 @@ public class HeavyHittersComparePipeline extends BasePipeline {
         int[] refreshRates = {100000, 10000, 1000000};
         int[] sizes = {10, 100, 1000, 10000, 100000, 1000000};
         for (int rr : refreshRates) {
-            AmortizedMaintenanceCounter trueValue = new AmortizedMaintenanceCounter(1000000000);
-            bench_native_decay(data, trueValue, rr);
-
-            List<Double> trueVals = Lists.newArrayList(trueValue.getCounts().values());
-            Collections.sort(trueVals);
-            Collections.reverse(trueVals);
-
             for (int size : sizes) {
+                AmortizedMaintenanceCounter trueValue = new AmortizedMaintenanceCounter(1000000000);
+                bench_native_decay(data, trueValue, rr);
+
+                List<Double> trueVals = Lists.newArrayList(trueValue.getCounts().values());
+                Collections.sort(trueVals);
+                Collections.reverse(trueVals);
+
                 double minHHVal = trueVals.get(size);
                 Map<Integer, Double> trueHHs = Maps.newHashMap();
                 for(Map.Entry<Integer, Double> e : trueHHs.entrySet()) {
@@ -144,16 +144,38 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                                                                                                             fbsl.getCounts()));
                 }
 
+                trueValue = new AmortizedMaintenanceCounter(1000000000);
+                bench_external_decay(data, trueValue, rr);
+
+                trueVals = Lists.newArrayList(trueValue.getCounts().values());
+                Collections.sort(trueVals);
+                Collections.reverse(trueVals);
+
+                minHHVal = trueVals.get(size);
+                trueHHs = Maps.newHashMap();
+                for(Map.Entry<Integer, Double> e : trueHHs.entrySet()) {
+                    if(e.getValue() > minHHVal) {
+                        trueHHs.put(e.getKey(), e.getValue());
+                    }
+                }
+
+                double weight = 1;
+                for(int tup = 0; tup < data.size(); ++tup) {
+                    if(tup % rr == 0) {
+                        weight /= .95;
+                    }
+                }
+
                 for (int i = 0; i < 5; ++i) {
                     SpaceSavingHeap ssh = new SpaceSavingHeap(size);
                     SpaceSavingList ssl = new SpaceSavingList(size);
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
 
                     log.debug("DATASIZE: {}", data.size());
-                    log.debug("SSH_EXT {} {} {} {}", size, rr, bench_native_decay(data, ssh, rr), compute_are(trueHHs, ssh.getCounts()));
-                    log.debug("SSL_EXT {} {} {} {}", size, rr, bench_native_decay(data, ssl, rr), compute_are(trueHHs,
-                                                                                                          ssl.getCounts()));
-                    log.debug("FBSL_EXT {} {} {} {}", size, rr, bench_native_decay(data, fbsl, rr), compute_are(trueHHs, fbsl.getCounts()));
+                    log.debug("SSH_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssh, rr), compute_are(trueHHs, ssh.getCounts())/weight);
+                    log.debug("SSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssl, rr), compute_are(trueHHs,
+                                                                                                          ssl.getCounts())/weight);
+                    log.debug("FBSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, fbsl, rr), compute_are(trueHHs, fbsl.getCounts())/weight);
                 }
             }
         }
