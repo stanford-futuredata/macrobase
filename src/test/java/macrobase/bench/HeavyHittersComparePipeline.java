@@ -73,7 +73,7 @@ public class HeavyHittersComparePipeline extends BasePipeline {
     private double compute_are(Map<Integer, Double> actual, Map<Integer, Double> appx) {
         double ret = 0;
         for(Map.Entry<Integer, Double> ae : actual.entrySet()) {
-            ret += ae.getValue()-appx.get(ae.getKey());
+            ret += Math.abs(ae.getValue()-appx.get(ae.getKey()));
         }
 
         return ret / actual.size();
