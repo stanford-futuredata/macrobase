@@ -124,7 +124,7 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                 Collections.sort(trueVals);
                 Collections.reverse(trueVals);
 
-                double minHHVal = (Math.min(trueVals.size()-1, size));
+                double minHHVal = trueVals.get(Math.min(trueVals.size()-1, size));
                 Map<Integer, Double> trueHHs = Maps.newHashMap();
                 for(Map.Entry<Integer, Double> e : trueValue.getCounts().entrySet()) {
                     if(e.getValue() >= minHHVal) {
