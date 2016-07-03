@@ -79,7 +79,7 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                 appxval = 0.;
             }
 
-            ret += Math.abs(ae.getValue()-appx.get(ae.getKey()));
+            ret += Math.abs(ae.getValue()-appxval);
         }
 
         return ret / actual.size();
@@ -131,8 +131,8 @@ public class HeavyHittersComparePipeline extends BasePipeline {
 
                 double minHHVal = trueVals.get(size);
                 Map<Integer, Double> trueHHs = Maps.newHashMap();
-                for(Map.Entry<Integer, Double> e : trueHHs.entrySet()) {
-                    if(e.getValue() > minHHVal) {
+                for(Map.Entry<Integer, Double> e : trueValue.getCounts().entrySet()) {
+                    if(e.getValue() >= minHHVal) {
                         trueHHs.put(e.getKey(), e.getValue());
                     }
                 }
@@ -159,8 +159,8 @@ public class HeavyHittersComparePipeline extends BasePipeline {
 
                 minHHVal = trueVals.get(size);
                 trueHHs = Maps.newHashMap();
-                for(Map.Entry<Integer, Double> e : trueHHs.entrySet()) {
-                    if(e.getValue() > minHHVal) {
+                for(Map.Entry<Integer, Double> e : trueValue.getCounts().entrySet()) {
+                    if(e.getValue() >= minHHVal) {
                         trueHHs.put(e.getKey(), e.getValue());
                     }
                 }
