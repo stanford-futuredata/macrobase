@@ -137,12 +137,17 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                     SpaceSavingList ssl = new SpaceSavingList(size);
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
 
+                    System.gc();
                     log.debug("DATASIZE: {}", data.size());
+                    System.gc();
                     log.debug("SSH {} {} {} {}", size, rr, bench_native_decay(data, ssh, rr), compute_are(trueHHs, ssh));
+                    System.gc();
                     log.debug("SSL {} {} {} {}", size, rr, bench_native_decay(data, ssl, rr), compute_are(trueHHs,
                                                                                                           ssl));
+                    System.gc();
                     log.debug("FBSL {} {} {} {}", size, rr, bench_native_decay(data, fbsl, rr), compute_are(trueHHs,
                                                                                                             fbsl));
+                    System.gc();
                 }
 
                 trueValue = new AmortizedMaintenanceCounter(1000000000);
@@ -167,19 +172,28 @@ public class HeavyHittersComparePipeline extends BasePipeline {
                     }
                 }
 
-                for (int i = 0; i < 5; ++i) {
+                for (int i = 0; i < 10; ++i) {
                     SpaceSavingHeap ssh = new SpaceSavingHeap(size);
                     SpaceSavingList ssl = new SpaceSavingList(size);
                     AmortizedMaintenanceCounter fbsl = new AmortizedMaintenanceCounter(size);
 
+                    System.gc();
                     log.debug("DATASIZE: {}", data.size());
-                    ssh.multiplyAllCounts(1 /weight);
+                    ssh.multiplyAllCounts(1 / weight);
                     ssl.multiplyAllCounts(1 /weight);
                     fbsl.multiplyAllCounts(1/weight);
-                    log.debug("SSH_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssh, rr), compute_are(trueHHs, ssh));
+                    System.gc();
+
+                    log.debug("SSH_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssh, rr),
+                              compute_are(trueHHs, ssh));
+                    System.gc();
+
                     log.debug("SSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, ssl, rr), compute_are(trueHHs,
-                                                                                                          ssl));
-                    log.debug("FBSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, fbsl, rr), compute_are(trueHHs, fbsl));
+                                                                                                                ssl));
+                    System.gc();
+                    log.debug("FBSL_EXT {} {} {} {}", size, rr, bench_external_decay(data, fbsl, rr),
+                              compute_are(trueHHs, fbsl));
+                    System.gc();
                 }
             }
         }
