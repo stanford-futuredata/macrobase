@@ -68,17 +68,17 @@ public class PrecisionRecallPipelineTest extends BasePipeline {
     }
 
     private void runOnConf(String prefix) throws Exception {
-        int numPoints = 1000000;
+        int numPoints = 10000000;
         double percentageOutliers = 0.01;
 
         for(Double labelNoise : Lists.newArrayList(0d, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)) {
-            for (Integer outlierClusters : Lists.newArrayList(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)) {
+            for (Integer outlierClusters : Lists.newArrayList(10, 100, 1000, 10000)) {
                 trial(prefix+"labelNoise", numPoints, percentageOutliers, outlierClusters, labelNoise, 0);
             }
         }
 
         for(Double pointNoise : Lists.newArrayList(0d, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)) {
-            for (Integer outlierClusters : Lists.newArrayList(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048)) {
+            for (Integer outlierClusters : Lists.newArrayList(10, 100, 1000, 10000)) {
                 trial(prefix+"pointNoise", numPoints, percentageOutliers, outlierClusters, 0, pointNoise);
             }
         }
@@ -129,7 +129,7 @@ public class PrecisionRecallPipelineTest extends BasePipeline {
                     attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(i % outlierClusters));
                 } else {
                     attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(
-                            (r.nextInt((int)(outlierClusters/percentageOutliers))) + outlierClusters));
+                            (r.nextInt((int)(outlierClusters*(1-percentageOutliers)/(percentageOutliers)))) + outlierClusters));
                 }
             }
 
