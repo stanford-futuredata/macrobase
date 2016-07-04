@@ -129,7 +129,7 @@ public class PrecisionRecallPipelineTest extends BasePipeline {
                     attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(i % outlierClusters));
                 } else {
                     attr = conf.getEncoder().getIntegerEncoding(0, String.valueOf(
-                            (i % outlierClusters) + outlierClusters));
+                            (r.nextInt((int)(outlierClusters/percentageOutliers))) + outlierClusters));
                 }
             }
 
