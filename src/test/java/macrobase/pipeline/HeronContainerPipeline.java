@@ -46,7 +46,7 @@ public class HeronContainerPipeline extends BasePipeline {
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
         List<String> attrs = conf.getStringList(MacroBaseConf.ATTRIBUTES);
-        int instanceIdx = attrs.indexOf("instance");
+        int instanceIdx = attrs.indexOf("component");
         int topologyIdx = attrs.indexOf("topology");
 
         MBGroupBy gb = new MBGroupBy(Lists.newArrayList(instanceIdx, topologyIdx),
