@@ -3,6 +3,7 @@ package macrobase.analysis.stats;
 import static com.codahale.metrics.MetricRegistry.name;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -11,6 +12,7 @@ import java.util.Set;
 import com.codahale.metrics.Counter;
 
 import macrobase.MacroBase;
+import macrobase.analysis.transform.aggregate.PaneAggregate;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -19,6 +21,8 @@ import macrobase.datamodel.HasMetrics;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -73,7 +77,9 @@ public class MinCovDet extends BatchTrainScore {
 
     // efficient only when k << allData.size()
     private List<Datum> chooseKRandom(List<Datum> allData, final int k) {
-        assert (k < allData.size());
+        if(k >= allData.size()) {
+            return allData;
+        }
 
         List<Datum> ret = new ArrayList<>();
         Set<Integer> alreadyChosen = new HashSet<>();
@@ -177,6 +183,10 @@ public class MinCovDet extends BatchTrainScore {
         }
     }
 
+    private RealMatrix D;
+    private RealMatrix DCDSqrtInverse;
+    private boolean hasCov = false;
+
     @Override
     public void train(List<Datum> data) {
         // for now, only handle multivariate case...
@@ -238,10 +248,26 @@ public class MinCovDet extends BatchTrainScore {
             numIterations++;
         }
 
-        log.debug("Number of iterations in MCD step: {}", numIterations);
+        D = new Array2DRowRealMatrix(cov.getRowDimension(), cov.getColumnDimension());
+        for (int d = 0; d < cov.getRowDimension(); ++d) {
+            if(cov.getEntry(d, d) == 0) {
+                cov.setEntry(d, d, 0.0000000001);
+            }
 
-        log.trace("mean: {}", mean);
-        log.trace("cov: {}", cov);
+            D.setEntry(d, d, 1 / Math.sqrt(cov.getEntry(d, d)));
+        }
+
+        RealMatrix DCD = D.multiply(cov).multiply(D);
+
+        for(int i = 0; i < DCD.getColumnDimension(); ++i) {
+            for(int j = 0; j < DCD.getColumnDimension(); ++j) {
+                if(Double.isNaN(DCD.getEntry(i, j))) {
+                    DCD.setEntry(j, i, 0);
+                }
+            }
+        }
+
+        DCDSqrtInverse = new SingularValueDecomposition(new EigenDecomposition(DCD).getSquareRoot()).getSolver().getInverse();
     }
 
     @Override
@@ -268,5 +294,19 @@ public class MinCovDet extends BatchTrainScore {
         // for normal distribution, mahalanobis distance is chi-squared
         // https://en.wikipedia.org/wiki/Mahalanobis_distance#Normal_distributions
         return (new ChiSquaredDistribution(p)).inverseCumulativeProbability(cdf);
+    }
+
+    //http://users.mct.open.ac.uk/paul.garthwaite/QuadraticForms.pdf
+    public double[] computeContribution(RealVector x) {
+
+
+        RealVector w = DCDSqrtInverse.multiply(D).preMultiply(x);
+        RealVector q = w.ebeMultiply(w);
+        double [] ret = q.toArray();
+        for(int i = 0; i < ret.length; ++i) {
+            ret[i] *= ret[i];
+        }
+
+        return ret;
     }
 }

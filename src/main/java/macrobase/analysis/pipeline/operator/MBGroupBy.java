@@ -55,7 +55,10 @@ public class MBGroupBy extends MBOperator<Datum, Datum> {
         }
 
         for(Map.Entry<List<Integer>, List<Datum>> entry : dataMap.entrySet()) {
-            transformMap.get(entry.getKey()).consume(entry.getValue());
+            // hack to avoid small groups
+            if(entry.getValue().size() > 4) {
+                transformMap.get(entry.getKey()).consume(entry.getValue());
+            }
         }
     }
 

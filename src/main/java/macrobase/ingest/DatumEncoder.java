@@ -87,6 +87,11 @@ public class DatumEncoder {
         return ret;
     }
 
+    public int getIntegerEncoding(List<String> attrs, ColumnValue value) {
+        int idx = attrs.indexOf(value.getColumn())+1;
+        return integerEncoding.get(idx).get(value.getValue());
+    }
+
     public int getIntegerEncoding(int dimension, String attr) {
         integerEncoding.computeIfAbsent(dimension, key -> new HashMap<>());
 

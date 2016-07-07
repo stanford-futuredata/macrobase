@@ -10,6 +10,7 @@ public class ItemsetResult {
     private double numRecords;
     private double ratioToInliers;
     private List<ColumnValue> items;
+    public String additional = "";
 
     public ItemsetResult(double support,
                          double numRecords,
@@ -31,11 +32,12 @@ public class ItemsetResult {
         return String.format("support: %f\n" +
                              "records: %f\n" +
                              "ratio: %f\n" +
-                             "\nColumns:\n%s\n\n",
+                             "\nColumns:\n%s\n%s\n",
                              support,
                              numRecords,
                              ratioToInliers,
-                             joiner.toString());
+                             joiner.toString(),
+                             additional.length() > 0 ? "\n" + additional + "\n" : additional);
     }
 
     public double getSupport() {

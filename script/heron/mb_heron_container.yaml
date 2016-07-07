@@ -5,7 +5,9 @@ macrobase.loader.attributes: [component, hostname, container, topology, instance
 macrobase.loader.targetLowMetrics: []
 macrobase.loader.targetHighMetrics: [__execute_latency_default,__execute_count_default,__fail_count_default,__jvm_process_cpu_load,__jvm_memory_used_mb,__jvm_gc_collection_time_ms]
 
-macrobase.analysis.transformType: MAD_OR_MCD
+heron.groupby.attributes: [topology, component]
+
+macrobase.analysis.transformType: MCD
 
 macrobase.loader.loaderType: MYSQL_LOADER
 # modify as needed
