@@ -259,6 +259,8 @@ public class MinCovDet extends BatchTrainScore {
 
         RealMatrix DCD = D.multiply(cov).multiply(D);
 
+        log.info("DCD is {}", DCD);
+
         for(int i = 0; i < DCD.getColumnDimension(); ++i) {
             for(int j = 0; j < DCD.getColumnDimension(); ++j) {
                 if(Double.isNaN(DCD.getEntry(i, j))) {
@@ -266,6 +268,8 @@ public class MinCovDet extends BatchTrainScore {
                 }
             }
         }
+
+        log.info("DCD' is {}", DCD);
 
         DCDSqrtInverse = new SingularValueDecomposition(new EigenDecomposition(DCD).getSquareRoot()).getSolver().getInverse();
     }
