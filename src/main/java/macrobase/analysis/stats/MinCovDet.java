@@ -22,6 +22,7 @@ import macrobase.datamodel.HasMetrics;
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.CholeskyDecomposition;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -251,7 +252,7 @@ public class MinCovDet extends BatchTrainScore {
         D = new Array2DRowRealMatrix(cov.getRowDimension(), cov.getColumnDimension());
         for (int d = 0; d < cov.getRowDimension(); ++d) {
             if(cov.getEntry(d, d) == 0) {
-                cov.setEntry(d, d, 0.0000000001);
+                cov.setEntry(d, d, 0.00000000001);
             }
 
             D.setEntry(d, d, 1 / Math.sqrt(cov.getEntry(d, d)));
@@ -271,7 +272,15 @@ public class MinCovDet extends BatchTrainScore {
 
         log.info("DCD' is {}", DCD);
 
-        DCDSqrtInverse = new SingularValueDecomposition(new EigenDecomposition(DCD).getSquareRoot()).getSolver().getInverse();
+        RealMatrix DCDsqrt;
+        try {
+            DCDsqrt = new EigenDecomposition(DCD).getSquareRoot();
+        } catch (Exception e ) {
+            log.info("got exception during decomposition {}", e);
+            DCDsqrt = new CholeskyDecomposition(DCD).getL();
+        }
+
+        DCDSqrtInverse = new SingularValueDecomposition(DCDsqrt).getSolver().getInverse();
     }
 
     @Override
