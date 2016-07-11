@@ -1,11 +1,7 @@
 package macrobase.analysis.pipeline;
 
-import macrobase.analysis.classify.BatchingPercentileClassifier;
-import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.stats.mixture.VarGMM;
-import macrobase.analysis.summary.BatchSummarizer;
-import macrobase.analysis.summary.Summary;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -75,7 +71,9 @@ public class CarefulInitializationPipeline extends BasePipeline {
             }
         }
 
+        log.debug("picking index = {}, score = {}", bestIndex, bestScore);
         VarGMM varGMM = varGMMs.get(bestIndex);
+        log.debug("centers = {}", varGMM.getClusterCenters());
 
         varGMM.sviTrainToConvergeAndMonitor(globalTrainData, globalTestData);
 
