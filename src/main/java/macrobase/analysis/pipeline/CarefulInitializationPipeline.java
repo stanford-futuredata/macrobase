@@ -40,7 +40,7 @@ public class CarefulInitializationPipeline extends BasePipeline {
 
         Random rand = conf.getRandom();
         List<List<Datum>> dataList = new ArrayList<>(numTransforms);
-        for (int i = 0; i < 1 + numTransforms; i++) {
+        for (int i = 0;i < numTransforms; i++) {
             // 1 + N lists, N for training, 1 for testing.
             dataList.add(new ArrayList<>());
         }
@@ -50,7 +50,7 @@ public class CarefulInitializationPipeline extends BasePipeline {
         globalTrainData = trainTestSpliter.getTrainData();
 
         for (Datum d : globalTrainData) {
-            int index = rand.nextInt(1 + numTransforms);
+            int index = rand.nextInt(numTransforms);
             dataList.get(index).add(d);
         }
 
@@ -62,7 +62,14 @@ public class CarefulInitializationPipeline extends BasePipeline {
             //VariationalInference.trainTestMeanField(batchVarGMMs.get(i), );
             log.debug("sublist {} size = {}", i, dataList.get(i).size());
             varGMMs.get(i).sviLoop(dataList.get(i));
-            double meanLogLike = varGMMs.get(i).meanLogLike(dataList.get(numTransforms));
+            double sumMeanLogLike = 0;
+            for (int j=0; j < numTransforms; j++) {
+                if (i == j) {
+                    continue;
+                }
+                sumMeanLogLike += varGMMs.get(i).meanLogLike(dataList.get(j));
+            }
+            double meanLogLike = sumMeanLogLike / (numTransforms - 1);
             log.debug("test score: {}", meanLogLike);
             if (meanLogLike > bestScore) {
                 bestIndex = i;
