@@ -68,6 +68,7 @@ public class CarefulInitializationPipeline extends BasePipeline {
             log.debug("test score: {}", meanLogLike);
             if (meanLogLike > bestScore) {
                 bestIndex = i;
+                bestScore = meanLogLike;
             }
         }
 
