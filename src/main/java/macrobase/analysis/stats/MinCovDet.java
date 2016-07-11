@@ -3,7 +3,6 @@ package macrobase.analysis.stats;
 import static com.codahale.metrics.MetricRegistry.name;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -12,7 +11,6 @@ import java.util.Set;
 import com.codahale.metrics.Counter;
 
 import macrobase.MacroBase;
-import macrobase.analysis.transform.aggregate.PaneAggregate;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
@@ -21,14 +19,8 @@ import macrobase.datamodel.HasMetrics;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.CholeskyDecomposition;
-import org.apache.commons.math3.linear.EigenDecomposition;
-import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.linear.SingularMatrixException;
-import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.apache.commons.math3.linear.*;
+import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,7 +150,7 @@ public class MinCovDet extends BatchTrainScore {
         for (int i = 0; i < data.size(); ++i) {
             HasMetrics d = data.get(i);
             scores.add(new MetricsWithScore(d.getMetrics(),
-                                            getMahalanobis(mean, inverseCov, d.getMetrics())));
+                    getMahalanobis(mean, inverseCov, d.getMetrics())));
         }
 
         if (scores.size() < k) {
@@ -277,7 +269,7 @@ public class MinCovDet extends BatchTrainScore {
             DCDsqrt = new EigenDecomposition(DCD).getSquareRoot();
         } catch (Exception e ) {
             log.info("got exception during decomposition {}", e);
-            DCDsqrt = new CholeskyDecomposition(DCD).getL();
+            DCDsqrt = getSquareRoot(new EigenDecomposition(DCD));
         }
 
         DCDSqrtInverse = new SingularValueDecomposition(DCDsqrt).getSolver().getInverse();
@@ -321,5 +313,23 @@ public class MinCovDet extends BatchTrainScore {
         }
 
         return ret;
+    }
+
+    private RealMatrix getSquareRoot(EigenDecomposition eigenDecomp) {
+        final double [] realEigenvalues = eigenDecomp.getRealEigenvalues();
+        final double[] sqrtEigenValues = new double[realEigenvalues.length];
+        for (int i = 0; i < realEigenvalues.length; i++) {
+            double eigenValue = realEigenvalues[i];
+            if (eigenValue <= 0) {
+                log.warn(String.format("Eigen Value %d is <= 0: %.10f", i, eigenValue));
+                eigenValue = 0;
+            }
+            sqrtEigenValues[i] = FastMath.sqrt(eigenValue);
+        }
+        final RealMatrix sqrtEigen = MatrixUtils.createRealDiagonalMatrix(sqrtEigenValues);
+        final RealMatrix v = eigenDecomp.getV();
+        final RealMatrix vT = eigenDecomp.getVT();
+
+        return v.multiply(sqrtEigen).multiply(vT);
     }
 }
