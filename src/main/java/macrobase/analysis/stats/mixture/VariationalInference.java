@@ -30,16 +30,6 @@ public class VariationalInference {
     }
 
     public static void trainTestStochastic(BatchVarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
-        double[] exLnMixingContribution;
-        double[] lnPrecision;
-        double[][] dataLogLike;
-        double[][] r;
-        int minibatchSize;
-        List<Datum> miniBatch;
-
-        final int N = trainData.size();
-        final int partitions = N / Math.min(trainData.size(), desiredMinibatchSize);
-
         double logLikelihood = -Double.MAX_VALUE;
         for (int iter = 1; ; iter++) {
             double pace = Math.pow(iter + delay, -forgettingRate);
@@ -48,26 +38,7 @@ public class VariationalInference {
             log.debug("covariances = {}", clusters.getMAPCovariances());
             log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
 
-            for (int p = 0; p < partitions; p++) {
-                System.out.print(".");
-                // Step 0. Create the minibatch.
-                miniBatch = new ArrayList<>(desiredMinibatchSize);
-                for (int i = p; i < N; i += partitions) {
-                    miniBatch.add(trainData.get(i));
-                }
-
-                minibatchSize = miniBatch.size();
-
-                // Step 1. Update local variables
-                exLnMixingContribution = mixingComponents.calcExpectationLog();
-                lnPrecision = clusters.calculateExLogPrecision();
-                dataLogLike = clusters.calcLogLikelyFixedPrec(miniBatch);
-                r = VariationalInference.normalizeLogProbabilities(exLnMixingContribution, lnPrecision, dataLogLike);
-
-                // Step 2. Update global variables
-                mixingComponents.moveNatural(r, pace, 1. * N / minibatchSize);
-                clusters.moveNatural(miniBatch, r, pace, 1. * N / minibatchSize);
-            }
+            loopStochVar(model.mixingComponents, model.clusters, trainData, desiredMinibatchSize, pace);
 
             double oldLogLikelihood = logLikelihood;
             logLikelihood = model.calculateLogLikelihood(trainData, mixingComponents, clusters);
@@ -85,6 +56,39 @@ public class VariationalInference {
                 log.debug("weights = {}", mixingComponents.getNormalizedClusterProportions());
                 return;
             }
+        }
+    }
+
+    public static void loopStochVar(MixingComponents mixingComponents, NormalWishartClusters clusters, List<Datum> trainData, int desiredMinibatchSize, double pace) {
+        double[] exLnMixingContribution;
+        double[] lnPrecision;
+        double[][] dataLogLike;
+        double[][] r;
+        int minibatchSize;
+        List<Datum> miniBatch;
+
+        final int N = trainData.size();
+        final int partitions = N / Math.min(trainData.size(), desiredMinibatchSize);
+
+        for (int p = 0; p < partitions; p++) {
+            System.out.print(".");
+            // Step 0. Create the minibatch.
+            miniBatch = new ArrayList<>(desiredMinibatchSize);
+            for (int i = p; i < N; i += partitions) {
+                miniBatch.add(trainData.get(i));
+            }
+
+            minibatchSize = miniBatch.size();
+
+            // Step 1. Update local variables
+            exLnMixingContribution = mixingComponents.calcExpectationLog();
+            lnPrecision = clusters.calculateExLogPrecision();
+            dataLogLike = clusters.calcLogLikelyFixedPrec(miniBatch);
+            r = VariationalInference.normalizeLogProbabilities(exLnMixingContribution, lnPrecision, dataLogLike);
+
+            // Step 2. Update global variables
+            mixingComponents.moveNatural(r, pace, 1. * N / minibatchSize);
+            clusters.moveNatural(miniBatch, r, pace, 1. * N / minibatchSize);
         }
     }
 

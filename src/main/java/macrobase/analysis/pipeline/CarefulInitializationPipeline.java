@@ -3,9 +3,10 @@ package macrobase.analysis.pipeline;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.AnalysisResult;
-import macrobase.analysis.stats.mixture.BatchVarGMM;
+import macrobase.analysis.stats.mixture.VarGMM;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
+import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
@@ -35,9 +36,9 @@ public class CarefulInitializationPipeline extends BasePipeline {
         long loadEndMs = System.currentTimeMillis();
 
         final int numTransforms = 10;
-        List<BatchVarGMM> batchVarGMMs = new ArrayList<>(numTransforms);
+        List<VarGMM> varGMMs = new ArrayList<>(numTransforms);
         for (int i = 0; i < numTransforms; i++) {
-            batchVarGMMs.add((BatchVarGMM) conf.constructTransform(conf.getTransformType()));
+            varGMMs.add(new VarGMM(conf));
         }
 
         Random rand = conf.getRandom();
@@ -46,43 +47,65 @@ public class CarefulInitializationPipeline extends BasePipeline {
             // 1 + N lists, N for training, 1 for testing.
             dataList.add(new ArrayList<>());
         }
+        List<Datum> globalTrainData = new ArrayList<>();
+        List<Datum> globalTestData = new ArrayList<>();
+
         for (Datum d : data) {
             int index = rand.nextInt(1 + numTransforms);
             dataList.get(index).add(d);
+            if (index < numTransforms) {
+                globalTrainData.add(d);
+            } else {
+                globalTestData.add(d);
+            }
         }
+
+        int bestIndex = -1;
+        double bestScore = -Double.MAX_VALUE;
 
         for (int i = 0; i < numTransforms; i++) {
-            batchVarGMMs.get(i).initialize(dataList.get(i));
+            varGMMs.get(i).initialize(dataList.get(i));
             //VariationalInference.trainTestMeanField(batchVarGMMs.get(i), );
             log.debug("sublist {} size = {}", i, dataList.get(i).size());
+            varGMMs.get(i).sviLoop(dataList.get(i));
+            double meanLogLike = varGMMs.get(i).meanLogLike(dataList.get(numTransforms));
+            log.debug("test score: {}", meanLogLike);
+            if (meanLogLike > bestScore) {
+                bestIndex = i;
+            }
         }
 
-        OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf);
-        //outlierClassifier.consume(dumpingTransform.getStream().drain());
-        // FIXME:
-        outlierClassifier.consume(data);
+        VarGMM varGMM = varGMMs.get(bestIndex);
 
-        BatchSummarizer summarizer = new BatchSummarizer(conf);
-        summarizer.consume(outlierClassifier.getStream().drain());
+        varGMM.sviTrainToConvergeAndMonitor(globalTrainData, globalTestData);
 
-        Summary result = summarizer.summarize().getStream().drain().get(0);
+        final long trainEndMs = System.currentTimeMillis();
+        varGMM.meanLogLike(globalTestData);
 
         final long endMs = System.currentTimeMillis();
         final long loadMs = loadEndMs - startMs;
-        final long totalMs = endMs - loadEndMs;
-        final long summarizeMs = result.getCreationTimeMs();
-        final long executeMs = totalMs - result.getCreationTimeMs();
+        final long trainMs = trainEndMs - loadEndMs;
+        final long testMs = endMs - trainEndMs;
+        final long execMs = endMs - loadEndMs;
 
         log.info("took {}ms ({} tuples/sec)",
-                totalMs,
-                (result.getNumInliers() + result.getNumOutliers()) / (double) totalMs * 1000);
+                execMs,
+                (data.size()) / (double) execMs * 1000);
 
-        return Arrays.asList(new AnalysisResult(result.getNumOutliers(),
-                result.getNumInliers(),
+        log.info("training took {}ms ({} tuples/sec)",
+                trainMs,
+                (data.size()) / (double) trainMs * 1000);
+
+        log.info("scoring took {}ms ({} tuples/sec)",
+                testMs,
+                (data.size()) / (double) testMs * 1000);
+
+        return Arrays.asList(new AnalysisResult(0,
+                0,
                 loadMs,
-                executeMs,
-                summarizeMs,
-                result.getItemsets()));
+                execMs,
+                0,
+                new ArrayList<ItemsetResult>()));
     }
 
 }
