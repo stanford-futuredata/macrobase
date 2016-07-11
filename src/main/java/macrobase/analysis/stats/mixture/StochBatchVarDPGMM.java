@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class StochVarDPGMM extends DPGMM {
-    private static final Logger log = LoggerFactory.getLogger(StochVarDPGMM.class);
+public class StochBatchVarDPGMM extends DPGMM {
+    private static final Logger log = LoggerFactory.getLogger(StochBatchVarDPGMM.class);
     private final int desiredMinibatchSize;
     private final double delay;
     private final double forgettingRate;
 
-    public StochVarDPGMM(MacroBaseConf conf) {
+    public StochBatchVarDPGMM(MacroBaseConf conf) {
         super(conf);
         desiredMinibatchSize = conf.getInt(MacroBaseConf.SVI_MINIBATCH_SIZE, MacroBaseDefaults.SVI_MINIBATCH_SIZE);
         delay = conf.getDouble(MacroBaseConf.SVI_DELAY, MacroBaseDefaults.SVI_DELAY);

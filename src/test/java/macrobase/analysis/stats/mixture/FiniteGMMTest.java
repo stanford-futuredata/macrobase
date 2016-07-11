@@ -40,7 +40,7 @@ public class FiniteGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(18, data.size());
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteGMMBatch finiteGMM = new FiniteGMMBatch(conf);
         finiteGMM.train(data);
     }
 
@@ -63,7 +63,7 @@ public class FiniteGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteGMMBatch finiteGMM = new FiniteGMMBatch(conf);
         List<RealVector> calculatedMeans;
 
         // Make sure we have 3 clusters. Sometimes initialization is not great.
@@ -167,7 +167,7 @@ public class FiniteGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteGMMBatch finiteGMM = new FiniteGMMBatch(conf);
         finiteGMM.train(data);
 
         List<RealVector> calculatedMeans = finiteGMM.getClusterCenters();
@@ -226,7 +226,7 @@ public class FiniteGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteGMMBatch finiteGMM = new FiniteGMMBatch(conf);
         List<RealVector> calculatedMeans = null;
         double[] calculatedWeights = null;
 

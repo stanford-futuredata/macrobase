@@ -15,16 +15,17 @@ import java.util.List;
  * A class that combines methods for all variational inference
  * # subclasses that use a type of Gaussian Mixture Model
  */
-public abstract class VarGMM extends BatchMixtureModel {
-    private static final Logger log = LoggerFactory.getLogger(VarGMM.class);
+public abstract class BatchVarGMM extends BatchMixtureModel {
+    private static final Logger log = LoggerFactory.getLogger(BatchVarGMM.class);
 
     public static final double ZERO_LOG_SCORE = -10000;
     protected NormalWishartClusters clusters;
+    protected MixingComponents mixingComponents;
     protected List<MultivariateTDistribution> predictiveDistributions;
 
     protected abstract double[] getNormClusterContrib();
 
-    public VarGMM(MacroBaseConf conf) {
+    public BatchVarGMM(MacroBaseConf conf) {
         super(conf);
     }
 
@@ -37,6 +38,8 @@ public abstract class VarGMM extends BatchMixtureModel {
             trainTest(data, data);
         }
     }
+
+    public abstract void initialize(List<Datum> trainData);
 
     public abstract void trainTest(List<Datum> trainData, List<Datum> testData);
 
@@ -103,4 +106,11 @@ public abstract class VarGMM extends BatchMixtureModel {
         return probas;
     }
 
+    public NormalWishartClusters getClusters() {
+        return clusters;
+    }
+
+    public MixingComponents getMixingComponents() {
+        return mixingComponents;
+    }
 }

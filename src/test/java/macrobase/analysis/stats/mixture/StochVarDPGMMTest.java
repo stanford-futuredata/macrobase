@@ -44,7 +44,7 @@ public class StochVarDPGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        StochVarDPGMM dpgmm = new StochVarDPGMM(conf);
+        StochBatchVarDPGMM dpgmm = new StochBatchVarDPGMM(conf);
         List<RealVector> calculatedMeans;
 
         // Make sure we have 3 clusters. Sometimes initialization is not great.
@@ -162,7 +162,7 @@ public class StochVarDPGMMTest {
                 2000,
         };
 
-        StochVarDPGMM dpgmm = new StochVarDPGMM(conf);
+        StochBatchVarDPGMM dpgmm = new StochBatchVarDPGMM(conf);
         dpgmm.train(data);
 
         List<MultivariateNormal> normals = new ArrayList<>(3);

@@ -11,9 +11,9 @@ import java.util.List;
 /**
  * Mean-Field Variational Inference for Dirichlet Process Gaussian Mixture Model.
  */
-public class DPGMM extends VarGMM {
+public class DPGMM extends BatchVarGMM {
     private static final Logger log = LoggerFactory.getLogger(DPGMM.class);
-    protected DPComponents mixingComponents;
+    //protected DPComponents mixingComponents;
 
     protected final int T;
 
@@ -24,12 +24,17 @@ public class DPGMM extends VarGMM {
         mixingComponents = new DPComponents(concentrationParameter, T);
     }
 
-    public void trainTest(List<Datum> trainData, List<Datum> testData) {
+    @Override
+    public void initialize(List<Datum> trainData) {
         // 0. Initialize all approximating factors
         clusters = new NormalWishartClusters(T, trainData.get(0).getMetrics().getDimension());
         clusters.initializeBaseForDP(trainData);
         clusters.initializeAtomsForDP(trainData, initialClusterCentersFile, conf.getRandom());
 
+    }
+
+    public void trainTest(List<Datum> trainData, List<Datum> testData) {
+        initialize(trainData);
         VariationalInference.trainTestMeanField(this, trainData, testData, mixingComponents, clusters);
     }
 

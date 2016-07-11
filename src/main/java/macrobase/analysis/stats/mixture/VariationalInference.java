@@ -29,7 +29,7 @@ public class VariationalInference {
         return r;
     }
 
-    public static void trainTestStochastic(VarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
+    public static void trainTestStochastic(BatchVarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters, int desiredMinibatchSize, double delay, double forgettingRate) {
         double[] exLnMixingContribution;
         double[] lnPrecision;
         double[][] dataLogLike;
@@ -88,7 +88,24 @@ public class VariationalInference {
         }
     }
 
-    public static void trainTestMeanField(VarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters) {
+    public static void loopMeanField(BatchVarGMM model, List<Datum> trainData) {
+
+        double[] exLnMixingContribution;
+        double[] lnPrecision;
+        double[][] dataLogLike;
+        double[][] r;
+
+        exLnMixingContribution = model.mixingComponents.calcExpectationLog();
+        lnPrecision = model.clusters.calculateExLogPrecision();
+        dataLogLike = model.clusters.calcLogLikelyFixedPrec(trainData);
+        r = VariationalInference.normalizeLogProbabilities(exLnMixingContribution, lnPrecision, dataLogLike);
+
+        // Step 2. update global variables
+        model.mixingComponents.update(r);
+        model.clusters.update(trainData, r);
+    }
+
+    public static void trainTestMeanField(BatchVarGMM model, List<Datum> trainData, List<Datum> testData, MixingComponents mixingComponents, NormalWishartClusters clusters) {
         log.debug("inside main trainMeanField");
         double[] exLnMixingContribution;
         double[] lnPrecision;

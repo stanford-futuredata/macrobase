@@ -42,7 +42,7 @@ public class StochVarFiniteGMMTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
 
-        StochVarFiniteGMM finiteGMM = new StochVarFiniteGMM(conf);
+        StochBatchVarFiniteGMM finiteGMM = new StochBatchVarFiniteGMM(conf);
         List<RealVector> calculatedMeans;
 
         // Make sure we have 3 clusters. Sometimes initialization is not great.
@@ -155,7 +155,7 @@ public class StochVarFiniteGMMTest {
                 {{0.9, 0.2}, {0.2, 0.3}},
         };
 
-        StochVarFiniteGMM finiteGMM = new StochVarFiniteGMM(conf);
+        StochBatchVarFiniteGMM finiteGMM = new StochBatchVarFiniteGMM(conf);
         finiteGMM.train(data);
 
         List<MultivariateNormal> normals = new ArrayList<>(3);

@@ -11,28 +11,32 @@ import java.util.List;
 /**
  * Fit Gaussian Mixture models using Variational Bayes
  */
-public class FiniteGMM extends VarGMM {
-    private static final Logger log = LoggerFactory.getLogger(FiniteGMM.class);
+public class FiniteGMMBatch extends BatchVarGMM {
+    private static final Logger log = LoggerFactory.getLogger(FiniteGMMBatch.class);
 
     protected int K;  // Number of mixture components
 
     // Components.
     protected MultiComponents mixingComponents;
 
-    public FiniteGMM(MacroBaseConf conf) {
+    public FiniteGMMBatch(MacroBaseConf conf) {
         super(conf);
         this.K = conf.getInt(MacroBaseConf.NUM_MIXTURES, MacroBaseDefaults.NUM_MIXTURES);
         log.debug("created Gaussian MM with {} mixtures", this.K);
     }
 
     @Override
-    public void trainTest(List<Datum> trainData, List<Datum> testData) {
+    public void initialize(List<Datum> trainData) {
         // 0. Initialize all approximating factors
         mixingComponents = new MultiComponents(0.1, K);
         clusters = new NormalWishartClusters(K, trainData.get(0).getMetrics().getDimension());
         clusters.initializeBaseForFinite(trainData);
         clusters.initializeAtomsForFinite(trainData, initialClusterCentersFile, conf.getRandom());
+    }
 
+    @Override
+    public void trainTest(List<Datum> trainData, List<Datum> testData) {
+        initialize(trainData);
         VariationalInference.trainTestMeanField(this, trainData, testData, mixingComponents, clusters);
     }
 

@@ -16,7 +16,7 @@ import java.util.Random;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class VarGMMTest {
+public class BatchVarGMMTest {
 
     @Test
     /**
@@ -61,7 +61,7 @@ public class VarGMMTest {
                 2000,
         };
 
-        FiniteGMM finiteGMM = new FiniteGMM(conf);
+        FiniteGMMBatch finiteGMM = new FiniteGMMBatch(conf);
         finiteGMM.train(data);
 
         List<MultivariateNormal> normals = new ArrayList<>(3);
