@@ -6,6 +6,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
+import macrobase.util.TrainTestSpliter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,17 +44,14 @@ public class CarefulInitializationPipeline extends BasePipeline {
             // 1 + N lists, N for training, 1 for testing.
             dataList.add(new ArrayList<>());
         }
-        List<Datum> globalTrainData = new ArrayList<>();
-        List<Datum> globalTestData = new ArrayList<>();
+        List<Datum> globalTrainData;
 
-        for (Datum d : data) {
+        TrainTestSpliter trainTestSpliter = new TrainTestSpliter(data, 0.9, conf.getRandom());
+        globalTrainData = trainTestSpliter.getTrainData();
+
+        for (Datum d : globalTrainData) {
             int index = rand.nextInt(1 + numTransforms);
             dataList.get(index).add(d);
-            if (index < numTransforms) {
-                globalTrainData.add(d);
-            } else {
-                globalTestData.add(d);
-            }
         }
 
         int bestIndex = -1;
@@ -76,10 +74,10 @@ public class CarefulInitializationPipeline extends BasePipeline {
         VarGMM varGMM = varGMMs.get(bestIndex);
         log.debug("centers = {}", varGMM.getClusterCenters());
 
-        varGMM.sviTrainToConvergeAndMonitor(globalTrainData, globalTestData);
+        varGMM.sviTrainToConvergeAndMonitor(globalTrainData, trainTestSpliter.getTestData());
 
         final long trainEndMs = System.currentTimeMillis();
-        varGMM.meanLogLike(globalTestData);
+        varGMM.meanLogLike(trainTestSpliter.getTestData());
 
         final long endMs = System.currentTimeMillis();
         final long loadMs = loadEndMs - startMs;
@@ -93,11 +91,11 @@ public class CarefulInitializationPipeline extends BasePipeline {
 
         log.info("training took {}ms ({} tuples/sec)",
                 trainMs,
-                (data.size()) / (double) trainMs * 1000);
+                (trainTestSpliter.getTrainData().size()) / (double) trainMs * 1000);
 
         log.info("scoring took {}ms ({} tuples/sec)",
                 testMs,
-                (data.size()) / (double) testMs * 1000);
+                (trainTestSpliter.getTestData().size()) / (double) testMs * 1000);
 
         return Arrays.asList(new AnalysisResult(0,
                 0,
