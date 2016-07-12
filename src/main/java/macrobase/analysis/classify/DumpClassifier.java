@@ -69,7 +69,7 @@ public class DumpClassifier extends OutlierClassifier {
 
     @Override
     public void shutdown() throws Exception {
-
+        out.close();
     }
 
     @Override

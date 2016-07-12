@@ -66,6 +66,7 @@ public class DumpClassifierTest {
         dumper.consume(data);
 
         List<OutlierClassificationResult> results = dumper.getStream().drain();
+        dumper.shutdown();
 
         assertEquals(results.size(), data.size());
         OutlierClassificationResult first = results.get(0);
