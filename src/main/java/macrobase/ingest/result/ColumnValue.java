@@ -20,4 +20,9 @@ public class ColumnValue {
     public ColumnValue() {
         // JACKSON
     }
+
+    @Override
+    public int hashCode() {
+        return column.hashCode()+value.hashCode();
+    }
 }
