@@ -1,0 +1,33 @@
+macrobase.query.name: testTasks
+macrobase.pipeline.class: macrobase.pipeline.HeronContainerMultiMADPipeline
+
+macrobase.loader.attributes: [component, hostname, container, topology, instance]
+macrobase.loader.targetLowMetrics: []
+macrobase.loader.targetHighMetrics: [__execute_count_default, __jvm_process_cpu_load, __jvm_uptime_secs, __jvm_other_threads_cpu_time_nanos]
+
+heron.groupby.attributes: [topology, component]
+
+macrobase.analysis.transformType: MAD
+
+macrobase.loader.loaderType: MYSQL_LOADER
+# modify as needed
+macrobase.loader.db.baseQuery: SELECT * FROM ads_production_eventbus_s0_streaming_updates_13_hours_uptime;
+#macrobase.loader.db.user:
+#macrobase.loader.db.password:
+#macrobase.loader.db.database:
+#macrobase.loader.db.url:
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 10.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": DEBUG

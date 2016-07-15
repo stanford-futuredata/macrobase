@@ -71,7 +71,7 @@ public class HeronContainerMultiMADPipeline extends BasePipeline {
             groupByIndices.add(attrs.indexOf(a));
         }
 
-        Map<List<ColumnValue>, List<ItemsetResult>> commonItemsets = new HashMap<>();
+        Map<Integer, List<ItemsetResult>> commonItemsets = new HashMap<>();
 
         long totalMs = 0, summarizeMs = 0, executeMs = 0;
         double numOutliers = 0;
@@ -97,8 +97,8 @@ public class HeronContainerMultiMADPipeline extends BasePipeline {
             summarizeMs += result.getCreationTimeMs();
             executeMs += totalMs - result.getCreationTimeMs();
 
-            numInliers = result.getNumInliers();
-            numOutliers = result.getNumOutliers();
+            numInliers += result.getNumInliers();
+            numOutliers += result.getNumOutliers();
 
             log.info("dim {} took {}ms ({} tuples/sec)",
                      metricNo,
@@ -106,11 +106,11 @@ public class HeronContainerMultiMADPipeline extends BasePipeline {
                      (result.getNumInliers() + result.getNumOutliers()) / (double) totalMs * 1000);
 
             for (ItemsetResult r : result.getItemsets()) {
-                List<ItemsetResult> matchingItemsets = commonItemsets.get(r.getItems());
+                List<ItemsetResult> matchingItemsets = commonItemsets.get(r.getItems().hashCode());
 
                 if (matchingItemsets == null) {
                     matchingItemsets = new ArrayList<>();
-                    commonItemsets.put(r.getItems(), matchingItemsets);
+                    commonItemsets.put(r.getItems().hashCode(), matchingItemsets);
                 }
 
                 matchingItemsets.add(r);
@@ -120,12 +120,17 @@ public class HeronContainerMultiMADPipeline extends BasePipeline {
 
         List<ItemsetResult> combinedItemsets = new ArrayList<>();
 
-        for(List<ItemsetResult> isrs : commonItemsets.values()) {
-            double sumSupport = 0, sumRecords = 0, sumRatios = 0;
+        for (List<ItemsetResult> isrs : commonItemsets.values()) {
+            double sumOutliers = 0, sumRecords = 0, sumRatios = 0;
+            for (ItemsetResult item : isrs) {
+                sumOutliers += item.getNumRecords() / item.getSupport();
+                sumRecords += item.getNumRecords();
+                sumRatios += item.getRatioToInliers();
+            }
 
-            ItemsetResult combined = new ItemsetResult(sumSupport/isrs.size(),
-                                                       sumRecords/isrs.size(),
-                                                       sumRatios/isrs.size(),
+            ItemsetResult combined = new ItemsetResult(sumRecords / sumOutliers,
+                                                       sumRecords / isrs.size(),
+                                                       sumRatios / isrs.size(),
                                                        isrs.get(0).getItems());
 
             combined.additional = "anomalous metrics: "+
@@ -136,8 +141,8 @@ public class HeronContainerMultiMADPipeline extends BasePipeline {
             combinedItemsets.add(combined);
         }
 
-        return Arrays.asList(new AnalysisResult(numOutliers,
-                numInliers,
+        return Arrays.asList(new AnalysisResult(numOutliers / metrics.size(),
+                numInliers / metrics.size(),
                 loadMs,
                 executeMs,
                 summarizeMs,
