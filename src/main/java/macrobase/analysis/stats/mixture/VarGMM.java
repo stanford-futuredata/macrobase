@@ -1,5 +1,6 @@
 package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.cluster.KMeans;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -73,6 +74,10 @@ public class VarGMM {
             default:
                 throw new RuntimeException("Unhandled transform class!" + conf.getTransformType());
         }
+    }
+    public void kmeansInitialize(List<Datum> trainData) {
+        KMeans kMeans = new KMeans(K);
+        kMeans.emIterate(trainData, conf.getRandom());
     }
 
     public void initialize(List<Datum> trainData) {
