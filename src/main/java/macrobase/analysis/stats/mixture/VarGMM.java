@@ -35,6 +35,11 @@ public class VarGMM {
     protected int K;
     protected boolean isFinite;
 
+    public enum AtomInitializationAlgorithm {
+        GONZALEZ,
+        KMEANS_RANDOM,
+    }
+
 
     public VarGMM(MacroBaseConf conf) throws ConfigurationException {
         this.conf = conf;

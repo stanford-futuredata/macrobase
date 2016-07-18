@@ -70,6 +70,7 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
         return vectors;
     }
 
+
     protected static List<RealVector> gonzalezInitializeMixtureCenters(List<Datum> data, int K, Random rand) {
         List<RealVector> vectors = new ArrayList<>(K);
         vectors.add(data.get(rand.nextInt(data.size())).getMetrics());

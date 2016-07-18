@@ -51,6 +51,7 @@ public class AlgebraUtils {
 
     /**
      * Calculates determinant of a matrix using different algorithms based on dimensions.
+     *
      * @param matrix
      * @return
      */
@@ -63,5 +64,13 @@ public class AlgebraUtils {
         } else {
             return new LUDecomposition(matrix).getDeterminant();
         }
+    }
+
+    public static RealVector calcMean(List<RealVector> vectors) {
+        RealVector mean = vectors.get(0);
+        for (int i = 1; i < vectors.size(); i++) {
+            mean = mean.add(vectors.get(i));
+        }
+        return mean.mapDivide(vectors.size());
     }
 }

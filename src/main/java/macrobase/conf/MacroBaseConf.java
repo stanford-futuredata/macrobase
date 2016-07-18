@@ -58,6 +58,10 @@ public class MacroBaseConf extends Configuration {
     public static final String SVI_FORGETTING_RATE = "macrobase.analysis.stat.svi.forgettingRate";
     public static final String SVI_MINIBATCH_SIZE = "macrobase.analysis.stat.svi.minibatchSize";
 
+    // Variational
+    public static final String BASE_DISTRIBUTION_INIT_ALGORITHM = "macrobase.analysis.stat.mixture.baseInitAlgorithm";
+    public static final String CLUSTER_INITIALIZATION_ALGORITHM = "macrobase.analysis.stat.mixture.clusterInitAlgorithm";
+
     // Algorithm to use when choosing the bandwidth for the given data.
     public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
     public static final String KDE_PROPORTION_OF_DATA_TO_USE = "macrobase.analysis.kde.proportionOfDataToUse";
