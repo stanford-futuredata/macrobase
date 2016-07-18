@@ -1,5 +1,6 @@
 package macrobase.analysis.stats.mixture;
 
+import macrobase.analysis.stats.cluster.KMeans;
 import macrobase.analysis.stats.distribution.MultivariateTDistribution;
 import macrobase.analysis.stats.distribution.Wishart;
 import macrobase.datamodel.Datum;
@@ -279,5 +280,21 @@ public class NormalWishartClusters {
 
     public List<RealVector> getMAPLocations() {
         return loc;
+    }
+
+    public void kMeansInitializeAtoms(List<Datum> trainData, Random random) {
+
+        KMeans kMeans = new KMeans(K);
+        loc = kMeans.emIterate(trainData, random);
+        beta = new double[K];
+        dof = new double[K];
+        omega = new ArrayList<>(K);
+
+        log.debug("initialized cluster centers as: {}", loc);
+        for (int k = 0; k < this.K; k++) {
+            beta[k] = baseBeta;
+            dof[k] = baseNu;
+            omega.add(baseOmega);
+        }
     }
 }
