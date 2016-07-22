@@ -95,9 +95,8 @@ public class BigDAWGIngester extends DataIngester {
         CloseableHttpResponse response = httpclient.execute(httpPost);
         log.debug("{}", response.toString());
 
-        StringEntity responseEntity = (StringEntity) response.getEntity();
-        InputStream inputStream = responseEntity.getContent();
-        log.debug("inputStream: {}", inputStream.read());
+        InputStream responseStream = response.getEntity().getContent();
+        log.debug("responseStream: {}", responseStream.read());
         Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(bigdawgSql);
 
