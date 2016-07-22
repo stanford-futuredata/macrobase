@@ -14,6 +14,8 @@ import macrobase.runtime.resources.RowSetResource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealVector;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -109,12 +111,12 @@ public class BigDAWGIngester extends DataIngester {
     public Schema getSchema(String baseQuery) throws Exception {
 
 
-        String sql= String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
+        String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
 
         CSVParser csvParser = query(sql);
 
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
-        for (String name: csvParser.getHeaderMap().keySet()) {
+        for (String name : csvParser.getHeaderMap().keySet()) {
             columns.add(new Schema.SchemaColumn(name, "????"));
         }
 
@@ -151,7 +153,7 @@ public class BigDAWGIngester extends DataIngester {
         schema = csvParser.getHeaderMap();
 
         Map<Integer, String> reverseSchema = new HashMap<>();
-        for(Map.Entry<String, Integer> entry : schema.entrySet()){
+        for (Map.Entry<String, Integer> entry : schema.entrySet()) {
             reverseSchema.put(entry.getValue(), entry.getKey());
         }
 
@@ -166,7 +168,7 @@ public class BigDAWGIngester extends DataIngester {
         while (rawIterator.hasNext()) {
             CSVRecord record = rawIterator.next();
             List<ColumnValue> columnValues = Lists.newArrayList();
-            for (int i=0; i < schema.size(); i++) {
+            for (int i = 0; i < schema.size(); i++) {
                 columnValues.add(
                         new ColumnValue(reverseSchema.get(i), record.get(i))
                 );
@@ -177,6 +179,55 @@ public class BigDAWGIngester extends DataIngester {
         return new RowSet(rows);
     }
 
+    private Datum parseRecord(CSVRecord record, Map<String, Integer> headerMap) throws NumberFormatException {
+        int vecPos = 0;
+
+        RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
+        for (String metric : lowMetrics) {
+            double val = Math.pow(Math.max(Double.parseDouble(record.get(metric)), 0.1), -1);
+            metricVec.setEntry(vecPos, val);
+            vecPos += 1;
+        }
+
+        for (String metric : highMetrics) {
+            metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
+            vecPos += 1;
+        }
+
+        List<Integer> attrList = new ArrayList<>(attributes.size());
+        for (String attr : attributes) {
+            int pos = headerMap.get(attr);
+            attrList.add(conf.getEncoder().getIntegerEncoding(pos + 1, record.get(pos)));
+        }
+
+        List<Integer> contextualDiscreteAttributesValues = null;
+        if (!contextualDiscreteAttributes.isEmpty()) {
+            contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
+
+            for (String attr : contextualDiscreteAttributes) {
+                int pos = headerMap.get(attr);
+                contextualDiscreteAttributesValues.add(conf.getEncoder().getIntegerEncoding(pos + 1, record.get(pos)));
+            }
+        }
+
+        RealVector contextualDoubleAttributesValues = null;
+
+        if (!contextualDoubleAttributes.isEmpty()) {
+            contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
+            vecPos = 0;
+            for (String attr : contextualDoubleAttributes) {
+                contextualDoubleAttributesValues.setEntry(vecPos, Double.parseDouble(record.get(attr)));
+                vecPos += 1;
+            }
+        }
+
+        return new Datum(
+                attrList,
+                metricVec,
+                contextualDiscreteAttributesValues,
+                contextualDoubleAttributesValues
+        );
+    }
 
     @Override
     public MBStream<Datum> getStream() throws Exception {
@@ -194,17 +245,25 @@ public class BigDAWGIngester extends DataIngester {
 
         CSVParser csvParser = query(sql);
 
+        // Load all records into memory to filter out rows with missing data
+        Iterator<CSVRecord> rawIterator = csvParser.iterator();
+
+        MBStream<Datum> dataStream = new MBStream<>();
+
+        int badRows = 0;
+        int numRows = 0;
         while (rawIterator.hasNext()) {
             try {
                 CSVRecord record = rawIterator.next();
-                Datum curRow = parseRecord(record);
+                Datum curRow = parseRecord(record, csvParser.getHeaderMap());
                 dataStream.add(curRow);
                 numRows++;
             } catch (NumberFormatException e) {
                 badRows++;
             }
         }
-
+        log.info("{}/{} bad rows", badRows, numRows);
+        return dataStream;
     }
 }
 

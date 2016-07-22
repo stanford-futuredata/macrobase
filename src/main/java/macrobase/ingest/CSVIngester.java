@@ -71,7 +71,7 @@ public class CSVIngester extends DataIngester {
         }
 
         List<Integer> contextualDiscreteAttributesValues = null;
-        if(!contextualDiscreteAttributes.isEmpty()) {
+        if (!contextualDiscreteAttributes.isEmpty()) {
             contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
 
             for (String attr : contextualDiscreteAttributes) {
@@ -82,7 +82,7 @@ public class CSVIngester extends DataIngester {
 
         RealVector contextualDoubleAttributesValues = null;
 
-        if(!contextualDoubleAttributes.isEmpty()) {
+        if (!contextualDoubleAttributes.isEmpty()) {
             contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
             vecPos = 0;
             for (String attr : contextualDoubleAttributes) {
@@ -112,7 +112,7 @@ public class CSVIngester extends DataIngester {
 
     @Override
     public MBStream<Datum> getStream() throws Exception {
-        if(!loaded) {
+        if (!loaded) {
             long st = System.currentTimeMillis();
 
             filename = conf.getString(MacroBaseConf.CSV_INPUT_FILE);
