@@ -18,7 +18,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -90,15 +89,12 @@ public class BigDAWGIngester extends DataIngester {
 
         log.debug("bigdawg query: {}", bigdawgSql);
         StringEntity body = new StringEntity(bigdawgSql);
-                //ContentType.create("text/plain", "UTF-8"));
 
         httpPost.setEntity(body);
-        try {
-            CloseableHttpResponse response = httpclient.execute(httpPost);
-            log.debug("{}", response.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        CloseableHttpResponse response = httpclient.execute(httpPost);
+        log.debug("{}", response.toString());
+
+        log.debug("entity:: {}", response.getEntity());
         Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(bigdawgSql);
 
