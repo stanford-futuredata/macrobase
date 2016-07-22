@@ -89,9 +89,10 @@ public class BigDAWGIngester extends DataIngester {
         String bigdawgSql = String.format("bdrel(%s LIMIT 1);", removeSqlJunk(removeLimit(baseQuery)));
 
         log.debug("bigdawg query: {}", bigdawgSql);
-        StringEntity myEntity = new StringEntity(bigdawgSql);
+        StringEntity body = new StringEntity(bigdawgSql);
                 //ContentType.create("text/plain", "UTF-8"));
 
+        httpPost.setEntity(body);
         try {
             CloseableHttpResponse response = httpclient.execute(httpPost);
             log.debug("{}", response.toString());
