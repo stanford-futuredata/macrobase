@@ -87,9 +87,10 @@ public class BigDAWGIngester extends DataIngester {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(dbUrl);
 
-        String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
+        String bigdawgSql = String.format("bdrel(%s LIMIT 1);", removeSqlJunk(removeLimit(baseQuery)));
 
-        StringEntity myEntity = new StringEntity(sql,
+        log.debug("bigdawg query: {}", bigdawgSql);
+        StringEntity myEntity = new StringEntity(bigdawgSql,
                 ContentType.create("text/plain", "UTF-8"));
 
         try {
@@ -99,7 +100,7 @@ public class BigDAWGIngester extends DataIngester {
             e.printStackTrace();
         }
         Statement stmt = connection.createStatement();
-        ResultSet rs = stmt.executeQuery(sql);
+        ResultSet rs = stmt.executeQuery(bigdawgSql);
 
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
 
