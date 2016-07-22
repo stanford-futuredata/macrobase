@@ -136,6 +136,8 @@ public class MacroBaseConf extends Configuration {
             return new DiskCachingIngester(this, new PostgresIngester(this));
         } else if (ingesterType == DataIngesterType.MYSQL_LOADER) {
             return new MySQLIngester(this);
+        } else if (ingesterType == DataIngesterType.BIGDAWG_LOADER) {
+            return new BigDAWGIngester(this);
         } else if (ingesterType == DataIngesterType.CACHING_MYSQL_LOADER) {
             return new DiskCachingIngester(this, new MySQLIngester(this));
         }
@@ -278,6 +280,7 @@ public class MacroBaseConf extends Configuration {
         POSTGRES_LOADER,
         CACHING_POSTGRES_LOADER,
         MYSQL_LOADER,
+        BIGDAWG_LOADER,
         CACHING_MYSQL_LOADER
     }
 
