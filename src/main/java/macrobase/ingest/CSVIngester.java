@@ -4,6 +4,9 @@ import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.result.RowSet;
+import macrobase.ingest.result.Schema;
+import macrobase.runtime.resources.RowSetResource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -11,6 +14,7 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -94,6 +98,17 @@ public class CSVIngester extends DataIngester {
                 contextualDoubleAttributesValues
         );
     }
+
+    @Override
+    public Schema getSchema(String baseQuery) throws Exception {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public RowSet getRows(String baseQuery, List<RowSetResource.RowSetRequest.RowRequestPair> preds, int limit, int offset) throws Exception {
+        throw new NotImplementedException();
+    }
+
 
     @Override
     public MBStream<Datum> getStream() throws Exception {

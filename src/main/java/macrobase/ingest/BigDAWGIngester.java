@@ -81,8 +81,8 @@ public class BigDAWGIngester extends DataIngester {
         return sql.replaceAll(";", "");
     }
 
-    public Schema getSchema(String baseQuery)
-            throws SQLException {
+    @Override
+    public Schema getSchema(String baseQuery) throws Exception {
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(dbUrl);
