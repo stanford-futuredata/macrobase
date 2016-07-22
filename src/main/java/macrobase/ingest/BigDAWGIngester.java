@@ -1,5 +1,6 @@
 package macrobase.ingest;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
@@ -21,6 +22,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -28,6 +30,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class BigDAWGIngester extends DataIngester {
     private static final Logger log = LoggerFactory.getLogger(BigDAWGIngester.class);
@@ -67,6 +71,24 @@ public class BigDAWGIngester extends DataIngester {
         }
     }
 
+    private CSVParser query(String sql) throws IOException {
+        String bodyString = String.format("bdrel(%s);", sql);
+        log.debug("bigdawg query: {}", bodyString);
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(dbUrl);
+        httpPost.setEntity(new StringEntity(bodyString));
+        CloseableHttpResponse response = httpclient.execute(httpPost);
+        log.debug("{}", response.toString());
+
+        InputStream responseStream = response.getEntity().getContent();
+        Reader streamReader = new InputStreamReader(responseStream);
+        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.TDF.withHeader());
+        log.debug("headerMap: {}", csvParser.getHeaderMap());
+
+        return csvParser;
+    }
+
     public void connect() throws ConfigurationException, SQLException {
         //initializeResultSet();
 
@@ -89,23 +111,11 @@ public class BigDAWGIngester extends DataIngester {
 
         String sql= String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
 
-        String bodyString = String.format("bdrel(%s);", sql);
-        log.debug("bigdawg query: {}", bodyString);
-
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost(dbUrl);
-        httpPost.setEntity(new StringEntity(bodyString));
-        CloseableHttpResponse response = httpclient.execute(httpPost);
-        log.debug("{}", response.toString());
-
-        InputStream responseStream = response.getEntity().getContent();
-        Reader streamReader = new InputStreamReader(responseStream);
-        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.TDF.withHeader());
-        log.debug("headerMap: {}", csvParser.getHeaderMap());
+        CSVParser csvParser = query(sql);
 
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
         for (String name: csvParser.getHeaderMap().keySet()) {
-            columns.add(new Schema.SchemaColumn(name, "numeric"));
+            columns.add(new Schema.SchemaColumn(name, "????"));
         }
 
         return new Schema(columns);
@@ -135,21 +145,7 @@ public class BigDAWGIngester extends DataIngester {
 
         sql += String.format(" LIMIT %d OFFSET %d", limit, offset);
 
-
-        String bodyString = String.format("bdrel(%s);", sql);
-        log.debug("bigdawg query: {}", bodyString);
-
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost(dbUrl);
-        httpPost.setEntity(new StringEntity(bodyString));
-        CloseableHttpResponse response = httpclient.execute(httpPost);
-        log.debug("{}", response.toString());
-
-        InputStream responseStream = response.getEntity().getContent();
-        Reader streamReader = new InputStreamReader(responseStream);
-        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.TDF.withHeader());
-        log.debug("headerMap: {}", csvParser.getHeaderMap());
-
+        CSVParser csvParser = query(sql);
 
         Map<String, Integer> schema;
         schema = csvParser.getHeaderMap();
@@ -181,9 +177,34 @@ public class BigDAWGIngester extends DataIngester {
         return new RowSet(rows);
     }
 
+
     @Override
     public MBStream<Datum> getStream() throws Exception {
-        return null;
+
+        String targetColumns = StreamSupport.stream(
+                Iterables.concat(attributes, lowMetrics, highMetrics, contextualDiscreteAttributes,
+                        contextualDoubleAttributes, auxiliaryAttributes).spliterator(), false)
+                .collect(Collectors.joining(", "));
+        if (timeColumn != null) {
+            targetColumns += ", " + timeColumn;
+        }
+        String sql = String.format("SELECT %s FROM (%s) baseQuery",
+                targetColumns,
+                removeSqlJunk(baseQuery));
+
+        CSVParser csvParser = query(sql);
+
+        while (rawIterator.hasNext()) {
+            try {
+                CSVRecord record = rawIterator.next();
+                Datum curRow = parseRecord(record);
+                dataStream.add(curRow);
+                numRows++;
+            } catch (NumberFormatException e) {
+                badRows++;
+            }
+        }
+
     }
 }
 
