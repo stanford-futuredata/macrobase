@@ -18,6 +18,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -94,7 +95,9 @@ public class BigDAWGIngester extends DataIngester {
         CloseableHttpResponse response = httpclient.execute(httpPost);
         log.debug("{}", response.toString());
 
-        log.debug("entity:: {}", response.getEntity());
+        StringEntity responseEntity = (StringEntity) response.getEntity();
+        InputStream inputStream = responseEntity.getContent();
+        log.debug("inputStream: {}", inputStream.read());
         Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(bigdawgSql);
 
