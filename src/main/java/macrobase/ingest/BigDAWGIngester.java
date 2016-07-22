@@ -12,6 +12,7 @@ import macrobase.ingest.result.Schema;
 import macrobase.runtime.resources.RowSetResource;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -27,8 +28,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class BigDAWGIngester extends DataIngester {
     private static final Logger log = LoggerFactory.getLogger(BigDAWGIngester.class);
@@ -87,14 +87,14 @@ public class BigDAWGIngester extends DataIngester {
     @Override
     public Schema getSchema(String baseQuery) throws Exception {
 
+
+        String sql= String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
+
+        StringEntity body = new StringEntity(String.format("bdrel (%s);", sql));
+        log.debug("bigdawg query: {}", body);
+
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(dbUrl);
-
-        String bigdawgSql = String.format("bdrel(%s LIMIT 1);", removeSqlJunk(removeLimit(baseQuery)));
-
-        log.debug("bigdawg query: {}", bigdawgSql);
-        StringEntity body = new StringEntity(bigdawgSql);
-
         httpPost.setEntity(body);
         CloseableHttpResponse response = httpclient.execute(httpPost);
         log.debug("{}", response.toString());
@@ -112,10 +112,11 @@ public class BigDAWGIngester extends DataIngester {
         return new Schema(columns);
     }
 
+    @Override
     public RowSet getRows(String baseQuery,
                           List<RowSetResource.RowSetRequest.RowRequestPair> preds,
                           int limit,
-                          int offset) throws SQLException {
+                          int offset) throws Exception {
         // initializeConnection();
         // TODO handle time column here
         Statement stmt = connection.createStatement();
@@ -136,16 +137,43 @@ public class BigDAWGIngester extends DataIngester {
 
         sql += String.format(" LIMIT %d OFFSET %d", limit, offset);
 
-        ResultSet rs = stmt.executeQuery(sql);
+        StringEntity body = new StringEntity(String.format("bdrel (%s);", sql));
+
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(dbUrl);
+        httpPost.setEntity(body);
+        CloseableHttpResponse response = httpclient.execute(httpPost);
+        log.debug("{}", response.toString());
+
+        InputStream responseStream = response.getEntity().getContent();
+        Reader streamReader = new InputStreamReader(responseStream);
+        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.TDF.withHeader());
+        log.debug("headerMap: {}", csvParser.getHeaderMap());
+
+
+        Map<String, Integer> schema;
+        schema = csvParser.getHeaderMap();
+
+        Map<Integer, String> reverseSchema = new HashMap<>();
+        for(Map.Entry<String, Integer> entry : schema.entrySet()){
+            reverseSchema.put(entry.getValue(), entry.getKey());
+        }
+
+        for (Map.Entry<String, Integer> se : schema.entrySet()) {
+            conf.getEncoder().recordAttributeName(se.getValue() + 1, se.getKey());
+        }
+
+        // Load all records into memory to filter out rows with missing data
+        Iterator<CSVRecord> rawIterator = csvParser.iterator();
 
         List<RowSet.Row> rows = Lists.newArrayList();
-        while (rs.next()) {
+        while (rawIterator.hasNext()) {
+            CSVRecord record = rawIterator.next();
             List<ColumnValue> columnValues = Lists.newArrayList();
-
-            for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
+            for (int i=0; i < schema.size(); i++) {
                 columnValues.add(
-                        new ColumnValue(rs.getMetaData().getColumnName(i),
-                                rs.getString(i)));
+                        new ColumnValue(reverseSchema.get(i), record.get(i))
+                );
             }
             rows.add(new RowSet.Row(columnValues));
         }
