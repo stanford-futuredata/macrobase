@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,39 +36,23 @@ import java.util.stream.StreamSupport;
 public class BigDAWGIngester extends DataIngester {
     private static final Logger log = LoggerFactory.getLogger(BigDAWGIngester.class);
 
-    private Connection connection;
     private final String dbUrl;
-    private String dbName;
     private final Integer timeColumn;
-
     protected final String baseQuery;
-    protected ResultSet resultSet;
-
-
-    private final MBStream<Datum> output = new MBStream<>();
-    private boolean connected = false;
-
     private static final String LIMIT_REGEX = "(LIMIT\\s\\d+)";
-
-    public BigDAWGIngester(MacroBaseConf conf) throws ConfigurationException, SQLException {
-        this(conf, null);
-    }
 
     @Override
     public String getBaseQuery() {
         return null;
     }
 
-    public BigDAWGIngester(MacroBaseConf conf, Connection connection) throws ConfigurationException, SQLException {
+    public BigDAWGIngester(MacroBaseConf conf) throws ConfigurationException, SQLException {
         super(conf);
 
         baseQuery = conf.getString(MacroBaseConf.BASE_QUERY);
         dbUrl = conf.getString(MacroBaseConf.DB_URL, MacroBaseDefaults.DB_URL);
         timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
 
-        if (connection != null) {
-            this.connection = connection;
-        }
     }
 
     private CSVParser query(String sql) throws IOException {
@@ -91,14 +73,6 @@ public class BigDAWGIngester extends DataIngester {
         return csvParser;
     }
 
-    public void connect() throws ConfigurationException, SQLException {
-        //initializeResultSet();
-
-        // while(!resultSet.isLast()) {
-        //     output.add(getNext());
-        // }
-    }
-
     private String removeLimit(String sql) {
         return sql.replaceAll(LIMIT_REGEX, "");
     }
@@ -109,14 +83,12 @@ public class BigDAWGIngester extends DataIngester {
 
     @Override
     public Schema getSchema(String baseQuery) throws Exception {
-
-
         String sql = String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
 
         CSVParser csvParser = query(sql);
-
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
         for (String name : csvParser.getHeaderMap().keySet()) {
+            // TODO: Figure out how to get schema information from BigDAWG
             columns.add(new Schema.SchemaColumn(name, "????"));
         }
 
@@ -141,7 +113,6 @@ public class BigDAWGIngester extends DataIngester {
             } else {
                 sql += " AND ";
             }
-
             sql += sj.toString();
         }
 
