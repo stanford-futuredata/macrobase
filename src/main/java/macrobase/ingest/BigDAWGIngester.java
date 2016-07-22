@@ -101,7 +101,7 @@ public class BigDAWGIngester extends DataIngester {
 
         InputStream responseStream = response.getEntity().getContent();
         Reader streamReader = new InputStreamReader(responseStream);
-        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.DEFAULT.withHeader());
+        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.TDF.withHeader());
         log.debug("headerMap: {}", csvParser.getHeaderMap());
 
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
