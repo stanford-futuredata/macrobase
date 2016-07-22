@@ -90,12 +90,12 @@ public class BigDAWGIngester extends DataIngester {
 
         String sql= String.format("%s LIMIT 1", removeSqlJunk(removeLimit(baseQuery)));
 
-        StringEntity body = new StringEntity(String.format("bdrel (%s);", sql));
-        log.debug("bigdawg query: {}", body);
+        String bodyString = String.format("bdrel(%s);", sql);
+        log.debug("bigdawg query: {}", bodyString);
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(dbUrl);
-        httpPost.setEntity(body);
+        httpPost.setEntity(new StringEntity(bodyString));
         CloseableHttpResponse response = httpclient.execute(httpPost);
         log.debug("{}", response.toString());
 
@@ -137,7 +137,7 @@ public class BigDAWGIngester extends DataIngester {
 
         sql += String.format(" LIMIT %d OFFSET %d", limit, offset);
 
-        StringEntity body = new StringEntity(String.format("bdrel (%s);", sql));
+        StringEntity body = new StringEntity(String.format("bdrel(%s);", sql));
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(dbUrl);
