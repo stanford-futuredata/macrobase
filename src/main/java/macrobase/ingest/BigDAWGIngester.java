@@ -10,6 +10,8 @@ import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
 import macrobase.runtime.resources.RowSetResource;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -19,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -96,15 +100,13 @@ public class BigDAWGIngester extends DataIngester {
         log.debug("{}", response.toString());
 
         InputStream responseStream = response.getEntity().getContent();
-        log.debug("responseStream: {}", responseStream.read());
-        Statement stmt = connection.createStatement();
-        ResultSet rs = stmt.executeQuery(bigdawgSql);
+        Reader streamReader = new InputStreamReader(responseStream);
+        CSVParser csvParser = new CSVParser(streamReader, CSVFormat.DEFAULT.withHeader());
+        log.debug("headerMap: {}", csvParser.getHeaderMap());
 
         List<Schema.SchemaColumn> columns = Lists.newArrayList();
-
-        for (int i = 1; i <= rs.getMetaData().getColumnCount(); ++i) {
-            columns.add(new Schema.SchemaColumn(rs.getMetaData().getColumnName(i),
-                    rs.getMetaData().getColumnTypeName(i)));
+        for (String name: csvParser.getHeaderMap().keySet()) {
+            columns.add(new Schema.SchemaColumn(name, "numeric"));
         }
 
         return new Schema(columns);
