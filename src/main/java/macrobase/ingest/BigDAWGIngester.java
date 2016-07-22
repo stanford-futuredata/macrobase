@@ -27,7 +27,6 @@ import java.io.Reader;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.*;
 
 public class BigDAWGIngester extends DataIngester {
@@ -119,7 +118,6 @@ public class BigDAWGIngester extends DataIngester {
                           int offset) throws Exception {
         // initializeConnection();
         // TODO handle time column here
-        Statement stmt = connection.createStatement();
         String sql = removeSqlJunk(removeLimit(baseQuery));
 
         if (preds.size() > 0) {
@@ -137,11 +135,13 @@ public class BigDAWGIngester extends DataIngester {
 
         sql += String.format(" LIMIT %d OFFSET %d", limit, offset);
 
-        StringEntity body = new StringEntity(String.format("bdrel(%s);", sql));
+
+        String bodyString = String.format("bdrel(%s);", sql);
+        log.debug("bigdawg query: {}", bodyString);
 
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(dbUrl);
-        httpPost.setEntity(body);
+        httpPost.setEntity(new StringEntity(bodyString));
         CloseableHttpResponse response = httpclient.execute(httpPost);
         log.debug("{}", response.toString());
 
