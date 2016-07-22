@@ -12,7 +12,6 @@ import macrobase.ingest.result.Schema;
 import macrobase.runtime.resources.RowSetResource;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -90,8 +89,8 @@ public class BigDAWGIngester extends DataIngester {
         String bigdawgSql = String.format("bdrel(%s LIMIT 1);", removeSqlJunk(removeLimit(baseQuery)));
 
         log.debug("bigdawg query: {}", bigdawgSql);
-        StringEntity myEntity = new StringEntity(bigdawgSql,
-                ContentType.create("text/plain", "UTF-8"));
+        StringEntity myEntity = new StringEntity(bigdawgSql);
+                //ContentType.create("text/plain", "UTF-8"));
 
         try {
             CloseableHttpResponse response = httpclient.execute(httpPost);
