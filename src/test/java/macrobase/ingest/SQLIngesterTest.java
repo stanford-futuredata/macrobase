@@ -41,6 +41,19 @@ public class SQLIngesterTest {
     }
 
     @Test
+    public void testJDBCProperties() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf();
+        conf.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
+        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
+        conf.set(MacroBaseConf.JDBC_PROPERTIES, "{sslfactory=org.postgresql.ssl.NonValidatingFactory, ssl=true}");
+        Map<String, String> properties = new PostgresIngester(conf).getJDBCProperties();
+        assertEquals("org.postgresql.ssl.NonValidatingFactory", properties.get("sslfactory"));
+        assertEquals("true", properties.get("ssl"));
+    }
+
+    @Test
     public void testSchema() throws Exception {
         JDBCMockObjectFactory factory = new JDBCMockObjectFactory();
         factory.registerMockDriver();
