@@ -1,38 +1,29 @@
-
 import sys
-import psycopg2
 import MySQLdb
-
-
-import numpy as np
-import scipy.io as sio
-import matplotlib.pyplot as plt
-import pandas as pd
-from scipy import stats
-import math
 from os import system, environ
+from datetime import timedelta
 
-from collections import defaultdict
+conn = MySQLdb.connect(host="", db="", user="", passwd="")
 
-postgres = False
+cursor = conn.cursor()
+cursor.execute("USE herondatabase;")
 
-if postgres:
-    conn = psycopg2.connect("dbname=postgres")
-else:
-    conn = MySQLdb.connect(host="host", db="heron-data")
+cursor.execute('SELECT min(time) FROM heron_data;')
+st = cursor.fetchone()[0]
+cursor.execute('SELECT max(time) FROM heron_data;')
+en = cursor.fetchone()[0]
+print st, en
 
-times = pd.io.sql.read_sql('SELECT min(time), max(time) FROM heron_data;',con=conn)
+# ranges = pd.date_range(st, en, freq='6H')
+# print ranges
 
-st = times.iloc[0]["min"]
-en = times.iloc[0]["max"]
+BASE_JAVA_OPTS = ""
+if "JAVA_OPTS" in environ: BASE_JAVA_OPTS = environ["JAVA_OPTS"]
 
-ranges = pd.date_range(st, en, freq='6H')
-
-BASE_JAVA_OPTS = environ["JAVA_OPTS"] if "JAVA_OPTS" in environ else ""
-
-for i in range(0, len(ranges)-1):
-    r_st = ranges[i]
-    r_en = ranges[i+1]
+# for i in range(0, len(ranges)-1):
+while (st < en):
+    r_st = st
+    r_en = st+timedelta(hours=4)
 
     print r_st, r_en
 
@@ -40,5 +31,6 @@ for i in range(0, len(ranges)-1):
     f = open("/tmp/container.yaml", "a")
     f.write('\nmacrobase.loader.db.baseQuery: \"SELECT * FROM heron_data WHERE time >= \'{}\' AND time < \'{}\';\"\n'.format(r_st, r_en))
     f.close()
-    system('cd ../../; mkdir heron_output; bin/pipeline.sh /tmp/container.yaml | tee heron_output/from-{}-to-{}.out'.format(str(r_st).replace(':', '-').replace(' ', '_'), str(r_en).replace(':', '-').replace(' ', '_')))
+    system('cd ../../; mkdir heron_output; java -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*:target/test-classes" macrobase.MacroBase pipeline /tmp/container.yaml | tee heron_output/from-{}-to-{}.out'.format(str(r_st).replace(':', '-').replace(' ', '_'), str(r_en).replace(':', '-').replace(' ', '_')))
     
+    st = st+timedelta(hours=4)
