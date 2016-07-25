@@ -24,9 +24,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -81,6 +79,10 @@ public abstract class SQLIngester extends DataIngester {
         while(!resultSet.isLast()) {
             output.add(getNext());
         }
+    }
+
+    protected Map<String, String> getJDBCProperties() {
+        return conf.getMap(MacroBaseConf.JDBC_PROPERTIES);
     }
 
     private String removeLimit(String sql) {
@@ -156,6 +158,7 @@ public abstract class SQLIngester extends DataIngester {
 
             factory.setDriverClass(getDriverClass());
             factory.setUrl(String.format("%s//%s/%s", getJDBCUrlPrefix(), dbUrl, dbName));
+            factory.setProperties(getJDBCProperties());
 
             if (dbUser != null) {
                 factory.setUser(this.dbUser);

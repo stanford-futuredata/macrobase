@@ -83,6 +83,9 @@ public class MacroBaseConf extends Configuration {
     public static final String HIGH_METRICS = "macrobase.loader.targetHighMetrics";
     public static final String AUXILIARY_ATTRIBUTES = "macrobase.loader.auxiliaryAttributes";
 
+
+    public static final String JDBC_PROPERTIES = "macrobase.ingest.jdbc.properties";
+
     public static final String BASE_QUERY = "macrobase.loader.db.baseQuery";
     public static final String DB_USER = "macrobase.loader.db.user";
     public static final String DB_PASSWORD = "macrobase.loader.db.password";
@@ -335,6 +338,22 @@ public class MacroBaseConf extends Configuration {
             return Double.parseDouble(_conf.get(key));
         }
         return defaultValue;
+    }
+
+    public Map<String, String> getMap(String key) {
+        if (!_conf.containsKey(key)) {
+            return new HashMap<>();
+        }
+
+        Map<String, String> properties = new HashMap<>();
+        for (String property : Arrays.asList(_conf.get(key).split(", |[{}]"))) {
+            if (property.isEmpty()) {
+                continue;
+            }
+            String[] keyValue = property.split("=", 2);
+            properties.put(keyValue[0], keyValue[1]);
+        }
+        return properties;
     }
 
     public List<Double> getDoubleList(String key) throws ConfigurationException {
