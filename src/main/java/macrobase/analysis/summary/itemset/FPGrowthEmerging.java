@@ -75,6 +75,10 @@ public class FPGrowthEmerging {
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
+        if (inliers.isEmpty() || outliers.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
         if (!combinationsEnabled || inliers.get(0).getAttributes().size() == 1) {
             return getSingletonItemsets(inliers, outliers, minSupport, minRatio, encoder);
         }
