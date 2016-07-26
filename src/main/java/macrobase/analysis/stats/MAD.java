@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -92,7 +91,11 @@ public class MAD extends BatchTrainScore {
     @Override
     public double score(Datum datum) {
         double point = datum.getMetrics().getEntry(0);
-        return Math.abs(point - median) / (MAD);
+        if (Math.abs(point - median) < 1e-5) {
+            return 0;
+        } else {
+            return Math.abs(point - median) / (MAD);
+        }
     }
 
     @Override
