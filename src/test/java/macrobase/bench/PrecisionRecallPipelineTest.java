@@ -72,13 +72,13 @@ public class PrecisionRecallPipelineTest extends BasePipeline {
         double percentageOutliers = 0.01;
 
         for(Double labelNoise : Lists.newArrayList(0d, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)) {
-            for (Integer outlierClusters : Lists.newArrayList(10, 100, 1000, 512, 256, 128)) {
+            for (Integer outlierClusters : Lists.newArrayList(64, 128, 256)) {
                 trial(prefix+"labelNoise", numPoints, percentageOutliers, outlierClusters, labelNoise, 0);
             }
         }
 
         for(Double pointNoise : Lists.newArrayList(0d, 0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5)) {
-            for (Integer outlierClusters : Lists.newArrayList(10, 100, 1000, 512, 256, 128)) {
+            for (Integer outlierClusters : Lists.newArrayList(64, 128, 256)) {
                 trial(prefix+"pointNoise", numPoints, percentageOutliers, outlierClusters, 0, pointNoise);
             }
         }
