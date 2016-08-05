@@ -1,4 +1,4 @@
-package macrobase.pipeline;
+package macrobase.analysis.pipeline;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;

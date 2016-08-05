@@ -14,6 +14,7 @@ import java.util.List;
 
 public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
     private static final Logger log = LoggerFactory.getLogger(MacroBasePipelineCommand.class);
+    private static List<AnalysisResult> returnedResults;
 
     public MacroBasePipelineCommand() {
         super("pipeline", "Run pipeline without starting server.");
@@ -44,5 +45,10 @@ public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
         MacroBase.reporter.report();
 
         log.info("Result: {}", results);
+        returnedResults = results;
+    }
+
+    public static List<AnalysisResult> getReturnedResults() {
+        return returnedResults;
     }
 }

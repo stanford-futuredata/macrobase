@@ -5,6 +5,10 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import java.util.List;
 import java.util.StringJoiner;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class AnalysisResult {
     private double numOutliers;
     private double numInliers;
@@ -25,6 +29,25 @@ public class AnalysisResult {
         this.loadTime = loadTime;
         this.summarizationTime = summarizationTime;
         this.itemSets = itemSets;
+    }
+
+    public JSONObject toJsonObject() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("outliers", numOutliers);
+            jsonObject.put("inliers", numInliers);
+            jsonObject.put("load time", loadTime);
+            jsonObject.put("execution time", executionTime);
+            jsonObject.put("summarization time", summarizationTime);
+            JSONArray jsonArray = new JSONArray();
+            for (ItemsetResult item : itemSets) {
+                jsonArray.put(item.toJsonObject());
+            }
+            jsonObject.put("result", jsonArray);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
     }
 
     @Override

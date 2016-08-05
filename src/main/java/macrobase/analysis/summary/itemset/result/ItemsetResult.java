@@ -1,6 +1,10 @@
 package macrobase.analysis.summary.itemset.result;
 
+import macrobase.analysis.result.AnalysisResult;
 import macrobase.ingest.result.ColumnValue;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.List;
 import java.util.StringJoiner;
@@ -20,6 +24,24 @@ public class ItemsetResult {
         this.numRecords = numRecords;
         this.ratioToInliers = ratioToInliers;
         this.items = items;
+    }
+
+    public JSONObject toJsonObject() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("support", support);
+            jsonObject.put("records", numRecords);
+            jsonObject.put("ratio", ratioToInliers);
+            JSONArray jsonArray = new JSONArray();
+            for (ColumnValue item : items) {
+                jsonArray.put(item.toJsonObject());
+            }
+            jsonObject.put("Columns", jsonArray);
+            jsonObject.put("Additional", additional);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
     }
 
     public String prettyPrint() {

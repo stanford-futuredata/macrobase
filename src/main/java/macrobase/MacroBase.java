@@ -1,9 +1,12 @@
 package macrobase;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import macrobase.analysis.result.AnalysisResult;
 import macrobase.runtime.MacroBaseServer;
 
+import macrobase.runtime.command.MacroBasePipelineCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +27,16 @@ public class MacroBase {
     private static final Logger log = LoggerFactory.getLogger(MacroBase.class);
 
     public static void main(String[] args) throws Exception {
-        System.out.println("Welcome to\n" +
+        log.info("Welcome to\n" +
                            "  _   _   _   _   _   _   _   _   _  \n" +
                            " / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ / \\ \n" +
                            "( m | a | c | r | o | b | a | s | e )\n" +
                            " \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \n");
 
         MacroBaseServer.main(args);
+    }
+
+    public List<AnalysisResult> getPipelineCommandReturnedResults() {
+        return MacroBasePipelineCommand.getReturnedResults();
     }
 }
