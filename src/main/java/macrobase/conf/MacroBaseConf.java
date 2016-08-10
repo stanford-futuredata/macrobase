@@ -98,6 +98,24 @@ public class MacroBaseConf extends Configuration {
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
 
+    // Queries given as a JSON string. Example:
+    // {
+    //   "queries": [
+    //     {
+    //       "project": "my-project",
+    //       "filter": "metric.type=\"custom.googleapis.com/test\"",
+    //       "alignmentPeriod": "300s",
+    //       "perSeriesAligner": "ALIGN_MEAN",
+    //       "crossSeriesReducer": "REDUCE_NONE",
+    //       "groupByFields": []
+    //     }
+    //   ]
+    // }
+    public static final String GOOGLE_MONITORING_QUERIES = "macrobase.loader.googlemonitoring.queries";
+    // Start and end times given in RFC3339 format. Example: "2016-08-08T12:00:00.0000Z"
+    public static final String GOOGLE_MONITORING_START_TIME = "macrobase.loader.googlemonitoring.startTime";
+    public static final String GOOGLE_MONITORING_END_TIME = "macrobase.loader.googlemonitoring.endTime";
+
     public static final String CONTEXTUAL_API = "macrobase.analysis.contextual.api";
     public static final String CONTEXTUAL_API_OUTLIER_PREDICATES = "macrobase.analysis.contextual.api.outlierPredicates";
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
@@ -141,6 +159,8 @@ public class MacroBaseConf extends Configuration {
             return new MySQLIngester(this);
         } else if (ingesterType == DataIngesterType.CACHING_MYSQL_LOADER) {
             return new DiskCachingIngester(this, new MySQLIngester(this));
+        } else if (ingesterType == DataIngesterType.GOOGLE_MONITORING_LOADER) {
+            return new GoogleMonitoringIngester(this);
         }
 
         throw new ConfigurationException(String.format("Unknown data loader type: %s", ingesterType));
@@ -281,7 +301,8 @@ public class MacroBaseConf extends Configuration {
         POSTGRES_LOADER,
         CACHING_POSTGRES_LOADER,
         MYSQL_LOADER,
-        CACHING_MYSQL_LOADER
+        CACHING_MYSQL_LOADER,
+        GOOGLE_MONITORING_LOADER,
     }
 
 

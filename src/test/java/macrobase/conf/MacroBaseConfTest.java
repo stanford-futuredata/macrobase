@@ -6,9 +6,11 @@ import com.google.common.collect.Lists;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.validation.BaseValidator;
+import macrobase.conf.MacroBaseConf.DataIngesterType;
 import macrobase.ingest.CSVIngester;
 import macrobase.ingest.CachingSQLIngesterTest;
 import macrobase.ingest.DiskCachingIngester;
+import macrobase.ingest.GoogleMonitoringIngester;
 import macrobase.ingest.MySQLIngester;
 import macrobase.ingest.PostgresIngester;
 import org.junit.*;
@@ -143,5 +145,8 @@ public class MacroBaseConfTest {
 
         conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CACHING_POSTGRES_LOADER);
         assertTrue(conf.constructIngester() instanceof DiskCachingIngester);
+
+        conf.set(MacroBaseConf.DATA_LOADER_TYPE, DataIngesterType.GOOGLE_MONITORING_LOADER);
+        assertTrue(conf.constructIngester() instanceof GoogleMonitoringIngester);
     }
 }
