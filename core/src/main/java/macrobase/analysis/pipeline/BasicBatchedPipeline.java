@@ -2,7 +2,6 @@ package macrobase.analysis.pipeline;
 
 import com.google.common.base.Stopwatch;
 import macrobase.analysis.classify.BatchingPercentileClassifier;
-import macrobase.analysis.classify.DumpClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.summary.BatchSummarizer;
@@ -42,11 +41,6 @@ public class BasicBatchedPipeline extends BasePipeline {
         ft.consume(data);
 
         OutlierClassifier oc = new BatchingPercentileClassifier(conf);
-
-        if (conf.getBoolean(MacroBaseConf.CLASSIFIER_DUMP)) {
-            String queryName = conf.getString(MacroBaseConf.QUERY_NAME);
-            oc = new DumpClassifier(conf, oc, queryName);
-        }
 
         oc.consume(ft.getStream().drain());
 
