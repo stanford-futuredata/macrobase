@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>macrobase</groupId>
-            <artifactId>macrobase-tools</artifactId>
+            <artifactId>macrobase-contrib</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
