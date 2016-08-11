@@ -211,8 +211,6 @@ public class SQLIngesterTest {
                 assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
                 curValInt++;
             }
-
-            assertEquals(curValInt, d.getAuxiliaries().getEntry(0), 0);
         }
 
         assertTrue(firstVals.isEmpty());
@@ -314,8 +312,6 @@ public class SQLIngesterTest {
         conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
         conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
         conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, auxiliaryAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
         DatumEncoder encoder = conf.getEncoder();
@@ -345,22 +341,6 @@ public class SQLIngesterTest {
                 assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
                 curValInt++;
             }
-
-            for(int i = 0; i < NUM_CONTEXTUAL_DISCRETE; ++i){
-            	 assertEquals(curValInt, (Integer) Integer.parseInt(encoder.getAttribute(d.getContextualDiscreteAttributes().get(i)).getValue()));
-                 curValInt++;
-            }
-            
-            for(int i = 0; i < NUM_CONTEXTUAL_DOUBLE; ++i){
-            	  assertEquals(curValInt, d.getContextualDoubleAttributes().getEntry(i), 0);
-                  curValInt++;
-            }
-            
-            for(int i = 0; i < NUM_AUXILIARY; ++i) {
-            	assertEquals(curValInt, d.getAuxiliaries().getEntry(i), 0);
-            	curValInt++;
-            }
-            
         }
 
         assertTrue(firstVals.isEmpty());

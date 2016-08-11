@@ -13,19 +13,19 @@ public class ContextTest {
 
     @Test
     public void contextTest() {
-        Datum d1 = new Datum(Arrays.asList(1),1.0);
-        Datum d2 = new Datum(Arrays.asList(2),2.0);
-        Datum d3 = new Datum(Arrays.asList(3),3.0);
-        Datum d4 = new Datum(Arrays.asList(4),4.0);
-        Datum d5 = new Datum(Arrays.asList(5),5.0);
-        List<Datum> data = new ArrayList<Datum>();
+        ContextualDatum d1 = new ContextualDatum(Arrays.asList(1),1.0);
+        ContextualDatum d2 = new ContextualDatum(Arrays.asList(2),2.0);
+        ContextualDatum d3 = new ContextualDatum(Arrays.asList(3),3.0);
+        ContextualDatum d4 = new ContextualDatum(Arrays.asList(4),4.0);
+        ContextualDatum d5 = new ContextualDatum(Arrays.asList(5),5.0);
+        List<ContextualDatum> data = new ArrayList<>();
         data.add(d1);
         data.add(d2);
         data.add(d3);
         data.add(d4);
         data.add(d5);
         
-        HashSet<Datum> sample = new HashSet<Datum>();
+        HashSet<ContextualDatum> sample = new HashSet<>();
         sample.add(d1);
         sample.add(d3);
         sample.add(d5);

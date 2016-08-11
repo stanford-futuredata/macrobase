@@ -177,8 +177,7 @@ public abstract class SQLIngester extends DataIngester {
 
         if (resultSet == null) {
             String targetColumns = StreamSupport.stream(
-                    Iterables.concat(attributes, lowMetrics, highMetrics, contextualDiscreteAttributes,
-                            contextualDoubleAttributes, auxiliaryAttributes).spliterator(), false)
+                    Iterables.concat(attributes, lowMetrics, highMetrics).spliterator(), false)
                     .collect(Collectors.joining(", "));
             if (timeColumn != null) {
                 targetColumns += ", " + timeColumn;
@@ -214,17 +213,7 @@ public abstract class SQLIngester extends DataIngester {
         List<Integer> attrList = getAttrs(resultSet, conf.getEncoder(), 1);
         RealVector metricVec = getMetrics(resultSet, attrList.size() + 1);
 
-        List<Integer> contextualDiscreteAttrValues = getContextualDiscreteAttrs(resultSet, conf.getEncoder(), attrList.size() + metricVec.getDimension() + 1);
-        RealVector contextualDoubleAttrValues = getContextualDoubleAttrs(resultSet, attrList.size() + metricVec.getDimension() + contextualDiscreteAttrValues.size() + 1);
-
-        Datum datum = new Datum(attrList, metricVec, contextualDiscreteAttrValues, contextualDoubleAttrValues);
-
-        // Set auxilaries on the datum if user specified
-        if (auxiliaryAttributes.size() > 0) {
-            RealVector auxilaries = getAuxiliaries(resultSet, attrList.size() + metricVec.getDimension() + contextualDiscreteAttrValues.size() + contextualDoubleAttrValues.getDimension() + 1);
-            datum.setAuxiliaries(auxilaries);
-        }
-        return datum;
+        return new Datum(attrList, metricVec);
     }
 
     private List<Integer> getAttrs(ResultSet rs, DatumEncoder encoder, int rsStartIndex) throws SQLException {
@@ -253,35 +242,6 @@ public abstract class SQLIngester extends DataIngester {
         }
         return metricVec;
     }
-
-    private RealVector getAuxiliaries(ResultSet rs,
-                                      int rsStartIndex) throws SQLException {
-        RealVector auxilaries = new ArrayRealVector(auxiliaryAttributes.size());
-        for (int i = 0; i < auxiliaryAttributes.size(); ++i) {
-            auxilaries.setEntry(i, rs.getDouble(i + rsStartIndex));
-        }
-        return auxilaries;
-    }
-
-    private List<Integer> getContextualDiscreteAttrs(ResultSet rs, DatumEncoder encoder, int rsStartIndex) throws SQLException {
-        List<Integer> contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
-        for (int i = 0; i < contextualDiscreteAttributes.size(); ++i) {
-            contextualDiscreteAttributesValues.add(encoder.getIntegerEncoding(i + rsStartIndex, rs.getString(i + rsStartIndex)));
-        }
-        return contextualDiscreteAttributesValues;
-    }
-
-    private RealVector getContextualDoubleAttrs(ResultSet rs, int rsStartIndex) throws SQLException {
-        RealVector contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
-
-        for (int i = 0; i < contextualDoubleAttributes.size(); ++i) {
-            double val = rs.getDouble(i + rsStartIndex);
-            contextualDoubleAttributesValues.setEntry(i, val);
-
-        }
-        return contextualDoubleAttributesValues;
-    }
-
 
     // Shield your eyes, mere mortals, from this glorious hideousness.
     private String orderByTimeColumn(String sql, @Nullable Integer timeColumn) {

@@ -1,0 +1,68 @@
+Welcome to
+  _   _   _   _   _   _   _   _   _  
+ / \ / \ / \ / \ / \ / \ / \ / \ / \ 
+( m | a | c | r | o | b | a | s | e )
+ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ 
+
+DEBUG [2016-06-09 22:23:58,672] macrobase.analysis.pipeline.BasePipeline: Running query telematicsSimple
+DEBUG [2016-06-09 22:23:58,678] macrobase.analysis.pipeline.BasePipeline: CONFIG:
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
+macrobase.analysis.minOIRatio: 3.0
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.targetPercentile: 0.99
+macrobase.analysis.transformType: MAD_OR_MCD
+macrobase.analysis.usePercentile: true
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
+macrobase.loader.attributes: A0
+macrobase.loader.db.baseQuery: SELECT * FROM telematics_anon LIMIT 100000;
+macrobase.loader.db.cacheDirectory: sql_cache
+macrobase.loader.db.password: None
+macrobase.loader.db.user: pbailis
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
+macrobase.loader.targetHighMetrics: 
+macrobase.loader.targetLowMetrics: M0
+macrobase.pipeline.class: macrobase.bench.PrecisionRecallPipelineTest
+macrobase.query.name: telematicsSimple
+INFO  [2016-06-09 22:24:06,556] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:07,230] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.552623728964481
+DEBUG [2016-06-09 22:24:07,253] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:07,254] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 14.218369198954727
+ERROR [2016-06-09 22:24:07,571] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 1, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 1, TIME: 997, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:11,470] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:11,889] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.572987519991327
+DEBUG [2016-06-09 22:24:11,908] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:11,909] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 13.863541459640361
+ERROR [2016-06-09 22:24:12,044] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 2, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 2, TIME: 573, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:15,666] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:15,974] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.574427416873412
+DEBUG [2016-06-09 22:24:15,992] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:15,995] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 14.26941567715049
+ERROR [2016-06-09 22:24:16,099] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 4, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 4, TIME: 433, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:19,983] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:20,248] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.535663831972599
+DEBUG [2016-06-09 22:24:20,259] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:20,262] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 14.096407544760943
+ERROR [2016-06-09 22:24:20,358] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 8, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 8, TIME: 374, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:24,119] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:24,387] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.5769381689789705
+DEBUG [2016-06-09 22:24:24,401] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:24,402] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 14.110367137072274
+ERROR [2016-06-09 22:24:24,510] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 16, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 16, TIME: 390, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:27,975] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:28,264] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.5601881630884105
+DEBUG [2016-06-09 22:24:28,278] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:28,282] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 14.786396924485638
+ERROR [2016-06-09 22:24:28,394] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 32, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 32, TIME: 418, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:32,467] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:32,816] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.5592915311751465
+DEBUG [2016-06-09 22:24:32,829] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:32,831] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 14.321415528871388
+ERROR [2016-06-09 22:24:33,046] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 64, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 64, TIME: 577, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:36,786] macrobase.conf.MacroBaseConf: Using MAD transform.
+DEBUG [2016-06-09 22:24:37,095] macrobase.analysis.classify.BatchingPercentileClassifier: 0.99 Percentile Cutoff: 5.574311877404115
+DEBUG [2016-06-09 22:24:37,114] macrobase.analysis.classify.BatchingPercentileClassifier: Median: 1.0
+DEBUG [2016-06-09 22:24:37,115] macrobase.analysis.classify.BatchingPercentileClassifier: Max: 15.27045673342382
+ERROR [2016-06-09 22:24:37,325] macrobase.bench.PrecisionRecallPipelineTest: TRIAL: OI3labelNoise, CLUSTERS: 128, PRECISION: 1.0, RECALL: 1.0, NUM_SUMMARIES: 128, TIME: 538, LABELNOISE: 0.0, POINTNOISE: 0.0
+INFO  [2016-06-09 22:24:42,884] macrobase.conf.MacroBaseConf: Using MAD transform.

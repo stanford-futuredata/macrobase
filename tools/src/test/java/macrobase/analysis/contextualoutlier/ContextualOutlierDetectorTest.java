@@ -7,9 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import junit.framework.TestCase;
+import macrobase.MacroBase;
+import macrobase.analysis.contextualoutlier.conf.ContextualConf;
 import macrobase.analysis.result.OutlierClassificationResult;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -19,6 +23,22 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
 public class ContextualOutlierDetectorTest {
+
+    private Datum makeDatum(MacroBaseConf conf, List<Integer> attributes, RealVector metrics, List<Integer> contextualDiscreteAttributes, RealVector contextualDoubleAttributes) {
+        Datum ret = new Datum(attributes, metrics);
+        for(int i = 0; i < contextualDiscreteAttributes.size(); ++i) {
+            ret.getAttributes().add(conf.getEncoder().getIntegerEncoding(i, String.valueOf(contextualDiscreteAttributes.get(i))));
+        }
+
+        int consumed = contextualDiscreteAttributes.size();
+
+        for(int i = consumed; i < consumed + contextualDoubleAttributes.getDimension(); ++i) {
+            ret.getAttributes().add(conf.getEncoder().getIntegerEncoding(i, String.valueOf(contextualDoubleAttributes.getEntry(
+                    i-consumed))));
+        }
+
+        return ret;
+    }
 
     @Test
     public void testContextualDiscreteAttribute() throws Exception {
@@ -30,10 +50,16 @@ public class ContextualOutlierDetectorTest {
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
         contextualDiscreteAttributes.add("C1_Discrete");
         List<String> contextualDoubleAttributes = new ArrayList<String>();
-        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4);
-        conf.set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10);
+
+        List<String> attributes = new ArrayList<>();
+        attributes.addAll(contextualDiscreteAttributes);
+        attributes.addAll(contextualDoubleAttributes);
+
+        conf.set(MacroBaseConf.ATTRIBUTES, attributes);
+        conf.set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4);
+        conf.set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10);
         conf.set(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, 3.0);
         conf.getEncoder().recordAttributeName(1, "A1");
         conf.getEncoder().recordAttributeName(2, "C1_Discrete");
@@ -50,18 +76,24 @@ public class ContextualOutlierDetectorTest {
             } else {
                 c1[0] = 1;
             }
-            data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample),
-                               new ArrayList<Integer>(Arrays.asList(c1)),
+            data.add(makeDatum(conf, new ArrayList<>(), new ArrayRealVector(sample),
+                               new ArrayList<>(Arrays.asList(c1)),
                                new ArrayRealVector()));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
+
+        ContextualTransformer transformer = new ContextualTransformer(conf);
+        transformer.consume(data);
+        List<ContextualDatum> cdata = transformer.getStream().drain();
+
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(cdata);
         TestCase.assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
             TestCase.assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1_Discrete");
             TestCase.assertEquals(intervals.get(0) instanceof IntervalDiscrete, true);
-            assertEquals(((IntervalDiscrete) intervals.get(0)).getValue(), 1);
+            assertEquals("1",
+                         conf.getEncoder().getAttribute(((IntervalDiscrete) intervals.get(0)).getValue()).getValue());
         }
     }
 
@@ -76,10 +108,16 @@ public class ContextualOutlierDetectorTest {
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
         List<String> contextualDoubleAttributes = new ArrayList<String>();
         contextualDoubleAttributes.add("C1_Double");
-        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4);
-        conf.set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10);
+
+        List<String> attributes = new ArrayList<>();
+        attributes.addAll(contextualDiscreteAttributes);
+        attributes.addAll(contextualDoubleAttributes);
+
+        conf.set(MacroBaseConf.ATTRIBUTES, attributes);
+        conf.set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4);
+        conf.set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10);
         ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 100; ++i) {
@@ -93,11 +131,16 @@ public class ContextualOutlierDetectorTest {
             } else {
                 c1[0] = 1;
             }
-            data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample),
+            data.add(makeDatum(conf, new ArrayList<>(), new ArrayRealVector(sample),
                                new ArrayList<Integer>(),
                                new ArrayRealVector(c1)));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
+
+        ContextualTransformer transformer = new ContextualTransformer(conf);
+        transformer.consume(data);
+        List<ContextualDatum> cdata = transformer.getStream().drain();
+
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(cdata);
         TestCase.assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
@@ -109,7 +152,6 @@ public class ContextualOutlierDetectorTest {
         }
     }
 
-    @Test
     public void testTwoAttributesContext() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
@@ -121,10 +163,16 @@ public class ContextualOutlierDetectorTest {
         contextualDiscreteAttributes.add("C1_Discrete");
         List<String> contextualDoubleAttributes = new ArrayList<String>();
         contextualDoubleAttributes.add("C2_Double");
-        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.3);
-        conf.set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10);
+
+        List<String> attributes = new ArrayList<>();
+        attributes.addAll(contextualDiscreteAttributes);
+        attributes.addAll(contextualDoubleAttributes);
+
+        conf.set(MacroBaseConf.ATTRIBUTES, attributes);
+        conf.set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.3);
+        conf.set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10);
         ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 120; ++i) {
@@ -146,11 +194,16 @@ public class ContextualOutlierDetectorTest {
             } else {
                 c2[0] = 1.0;
             }
-            data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample),
+            data.add(makeDatum(conf, new ArrayList<>(), new ArrayRealVector(sample),
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector(c2)));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
+
+        ContextualTransformer transformer = new ContextualTransformer(conf);
+        transformer.consume(data);
+        List<ContextualDatum> cdata = transformer.getStream().drain();
+
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(cdata);
         TestCase.assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
@@ -165,7 +218,7 @@ public class ContextualOutlierDetectorTest {
         }
     }
 
-    @Test
+
     public void testTwoAttributesContext2() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
@@ -177,11 +230,17 @@ public class ContextualOutlierDetectorTest {
         contextualDiscreteAttributes.add("C1_Discrete");
         List<String> contextualDoubleAttributes = new ArrayList<String>();
         contextualDoubleAttributes.add("C2_Double");
-        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.3);
-        conf.set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10);
-        conf.set(MacroBaseConf.CONTEXTUAL_MAX_PREDICATES, 1);
+
+        List<String> attributes = new ArrayList<>();
+        attributes.addAll(contextualDiscreteAttributes);
+        attributes.addAll(contextualDoubleAttributes);
+
+        conf.set(MacroBaseConf.ATTRIBUTES, attributes);
+        conf.set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.3);
+        conf.set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10);
+        conf.set(ContextualConf.CONTEXTUAL_MAX_PREDICATES, 1);
         ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 120; ++i) {
@@ -203,15 +262,19 @@ public class ContextualOutlierDetectorTest {
             } else {
                 c2[0] = 1.0;
             }
-            data.add(new Datum(new ArrayList<>(), new ArrayRealVector(sample),
+            data.add(makeDatum(conf, new ArrayList<>(), new ArrayRealVector(sample),
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector(c2)));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
+        ContextualTransformer transformer = new ContextualTransformer(conf);
+        transformer.consume(data);
+        List<ContextualDatum> cdata = transformer.getStream().drain();
+
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(cdata);
         TestCase.assertEquals(context2Outliers.size(), 0);
     }
 
-    @Test
+
     public void testContextualGivenOutliers() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
@@ -221,10 +284,16 @@ public class ContextualOutlierDetectorTest {
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
         contextualDiscreteAttributes.add("C1_Discrete");
         List<String> contextualDoubleAttributes = new ArrayList<String>();
-        conf.set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
-        conf.set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4);
-        conf.set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10);
+
+        List<String> attributes = new ArrayList<>();
+        attributes.addAll(contextualDiscreteAttributes);
+        attributes.addAll(contextualDoubleAttributes);
+
+        conf.set(MacroBaseConf.ATTRIBUTES, attributes);
+        conf.set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, contextualDiscreteAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, contextualDoubleAttributes);
+        conf.set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4);
+        conf.set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10);
         conf.set(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, 3.0);
         conf.getEncoder().recordAttributeName(1, "A1");
         conf.getEncoder().recordAttributeName(2, "C1_Discrete");
@@ -242,25 +311,36 @@ public class ContextualOutlierDetectorTest {
             } else {
                 c1[0] = 1;
             }
-            ArrayList<Integer> contexutalDiscreteIntegers = new ArrayList<Integer>();
-            contexutalDiscreteIntegers.add(c1[0]);
-            Datum datum = new Datum(new ArrayList<>(), new ArrayRealVector(sample),
-                                    contexutalDiscreteIntegers,
+            ArrayList<Integer> contextualDiscreteIntegers = new ArrayList<Integer>();
+            contextualDiscreteIntegers.add(c1[0]);
+            Datum datum = makeDatum(conf, new ArrayList<>(), new ArrayRealVector(sample),
+                                    contextualDiscreteIntegers,
                                     new ArrayRealVector());
             data.add(datum);
             if (i < 3) {
                 inputOutliers.add(datum);
             }
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextGivenOutliers(data,
-                                                                                                         inputOutliers);
+
+        ContextualTransformer transformer = new ContextualTransformer(conf);
+        transformer.consume(data);
+        List<ContextualDatum> cdata = transformer.getStream().drain();
+
+        ContextualTransformer transformer2 = new ContextualTransformer(conf);
+        transformer2.consume(inputOutliers);
+        List<ContextualDatum> coutliers = transformer2.getStream().drain();
+
+
+        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextGivenOutliers(cdata,
+                                                                                                         coutliers);
         TestCase.assertEquals(context2Outliers.size(), 1);
         for (Context context : context2Outliers.keySet()) {
             List<Interval> intervals = context.getIntervals();
             TestCase.assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1_Discrete");
             TestCase.assertEquals(intervals.get(0) instanceof IntervalDiscrete, true);
-            assertEquals(((IntervalDiscrete) intervals.get(0)).getValue(), 1);
+            assertEquals("1",
+                         conf.getEncoder().getAttribute(((IntervalDiscrete) intervals.get(0)).getValue()).getValue());
         }
     }
 }

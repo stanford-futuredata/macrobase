@@ -1,0 +1,27 @@
+Welcome to
+  _   _   _   _   _   _   _   _   _  
+ / \ / \ / \ / \ / \ / \ / \ / \ / \ 
+( m | a | c | r | o | b | a | s | e )
+ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ \_/ 
+
+DEBUG [2016-06-10 09:22:06,939] macrobase.analysis.pipeline.BasePipeline: Running query telematicsSimple
+DEBUG [2016-06-10 09:22:06,949] macrobase.analysis.pipeline.BasePipeline: CONFIG:
+macrobase.analysis.mcd.alpha: 0.5
+macrobase.analysis.mcd.stoppingDelta: 0.001
+macrobase.analysis.minOIRatio: 3.0
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.targetPercentile: 0.99
+macrobase.analysis.transformType: MAD_OR_MCD
+macrobase.analysis.usePercentile: true
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 3.0
+macrobase.loader.attributes: A0
+macrobase.loader.db.baseQuery: SELECT * FROM telematics_anon LIMIT 100000;
+macrobase.loader.db.cacheDirectory: sql_cache
+macrobase.loader.db.password: None
+macrobase.loader.db.user: pbailis
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
+macrobase.loader.targetHighMetrics: 
+macrobase.loader.targetLowMetrics: M0
+macrobase.pipeline.class: macrobase.bench.PrecisionRecallPipelineTest
+macrobase.query.name: telematicsSimple

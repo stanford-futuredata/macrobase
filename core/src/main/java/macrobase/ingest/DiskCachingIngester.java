@@ -69,17 +69,13 @@ public class DiskCachingIngester extends DataIngester {
                                    List<String> attributes,
                                    List<String> lowMetrics,
                                    List<String> highMetrics,
-                                   List<String> contextualDiscreteAttributes,
-                                   List<String> contextualDoubleAttributes,
                                    String baseQuery) {
         String timeColumnName = conf.getEncoder().getAttributeName(timeColumn);
-        int hashCode = String.format("T-%s::A-%s::L%s::H%s::CDis%s::CDou%s::BQ%s",
+        int hashCode = String.format("T-%s::A-%s::L%s::H%s::BQ%s",
                 timeColumnName,
                 attributes.toString(),
                 lowMetrics.toString(),
                 highMetrics.toString(),
-                contextualDiscreteAttributes.toString(),
-                contextualDoubleAttributes.toString(),
                 baseQuery).replace(" ", "_").hashCode();
         return Integer.toString(hashCode);
     }
@@ -90,8 +86,6 @@ public class DiskCachingIngester extends DataIngester {
                         attributes,
                         lowMetrics,
                         highMetrics,
-                        contextualDiscreteAttributes,
-                        contextualDoubleAttributes,
                         innerIngester.getBaseQuery()))), 16384);
 
         Kryo kryo = new Kryo();
@@ -129,8 +123,6 @@ public class DiskCachingIngester extends DataIngester {
                 attributes,
                 lowMetrics,
                 highMetrics,
-                contextualDiscreteAttributes,
-                contextualDoubleAttributes,
                 this.innerIngester.getBaseQuery()));
         if (!f.exists()) {
             log.info("Data did not exist; going to read from SQL.");

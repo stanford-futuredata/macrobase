@@ -116,18 +116,6 @@ public class MacroBaseConf extends Configuration {
     public static final String GOOGLE_MONITORING_START_TIME = "macrobase.loader.googlemonitoring.startTime";
     public static final String GOOGLE_MONITORING_END_TIME = "macrobase.loader.googlemonitoring.endTime";
 
-    public static final String CONTEXTUAL_API = "macrobase.analysis.contextual.api";
-    public static final String CONTEXTUAL_API_OUTLIER_PREDICATES = "macrobase.analysis.contextual.api.outlierPredicates";
-    public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
-    public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
-    public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
-    public static final String CONTEXTUAL_NUMINTERVALS = "macrobase.analysis.contextual.numIntervals";
-    public static final String CONTEXTUAL_MAX_PREDICATES = "macrobase.analysis.contextual.maxPredicates";
-    public static final String CONTEXTUAL_OUTPUT_FILE = "macrobase.analysis.contextual.outputFile";
-    public static final String CONTEXTUAL_PRUNING_DENSITY = "macrobase.analysis.contextual.pruning.density";
-    public static final String CONTEXTUAL_PRUNING_DEPENDENCY = "macrobase.analysis.contextual.pruning.dependency";
-    public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = "macrobase.analysis.contextual.pruning.distributionForTraining";
-    public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = "macrobase.analysis.contextual.pruning.distributionForScoring";
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
     public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
@@ -191,11 +179,6 @@ public class MacroBaseConf extends Configuration {
         MEAN_FIELD_DPGMM,
         SVI_GMM,
         SVI_DPGMM,
-    }
-
-    public enum ContextualAPI {
-        findAllContextualOutliers,
-        findContextsGivenOutlierPredicate,
     }
 
     public enum AggregateType {
@@ -449,13 +432,6 @@ public class MacroBaseConf extends Configuration {
             return MacroBaseDefaults.TRANSFORM_TYPE;
         }
         return TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
-    }
-
-    public ContextualAPI getContextualAPI() throws ConfigurationException {
-        if (!_conf.containsKey(CONTEXTUAL_API)) {
-            return MacroBaseDefaults.CONTEXTUAL_API;
-        }
-        return ContextualAPI.valueOf(_conf.get(CONTEXTUAL_API));
     }
 
     public AggregateType getAggregateType() throws ConfigurationException {

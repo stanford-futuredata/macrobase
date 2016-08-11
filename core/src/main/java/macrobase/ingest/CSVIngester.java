@@ -66,32 +66,9 @@ public class CSVIngester extends DataIngester {
             attrList.add(conf.getEncoder().getIntegerEncoding(pos + 1, record.get(pos)));
         }
 
-        List<Integer> contextualDiscreteAttributesValues = null;
-        if(!contextualDiscreteAttributes.isEmpty()) {
-            contextualDiscreteAttributesValues = new ArrayList<>(contextualDiscreteAttributes.size());
-
-            for (String attr : contextualDiscreteAttributes) {
-                int pos = schema.get(attr);
-                contextualDiscreteAttributesValues.add(conf.getEncoder().getIntegerEncoding(pos + 1, record.get(pos)));
-            }
-        }
-
-        RealVector contextualDoubleAttributesValues = null;
-
-        if(!contextualDoubleAttributes.isEmpty()) {
-            contextualDoubleAttributesValues = new ArrayRealVector(contextualDoubleAttributes.size());
-            vecPos = 0;
-            for (String attr : contextualDoubleAttributes) {
-                contextualDoubleAttributesValues.setEntry(vecPos, Double.parseDouble(record.get(attr)));
-                vecPos += 1;
-            }
-        }
-
         return new Datum(
                 attrList,
-                metricVec,
-                contextualDiscreteAttributesValues,
-                contextualDoubleAttributesValues
+                metricVec
         );
     }
 

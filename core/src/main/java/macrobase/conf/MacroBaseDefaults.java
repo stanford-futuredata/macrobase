@@ -76,22 +76,6 @@ public class MacroBaseDefaults {
     public static final String DB_URL = "localhost";
     public static final Integer DB_CACHE_CHUNK_SIZE = 1000000;
 
-
-    //contextual outlier detection defaults
-    public static final MacroBaseConf.ContextualAPI CONTEXTUAL_API = MacroBaseConf.ContextualAPI.findAllContextualOutliers;
-    public static final String CONTEXTUAL_API_OUTLIER_PREDICATES  = "";
-    public static final Double CONTEXTUAL_DENSECONTEXTTAU = 0.5;
-    public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
-    public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
-    public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
-    public static final Integer CONTEXTUAL_MAX_PREDICATES = Integer.MAX_VALUE;
-    public static final String CONTEXTUAL_OUTPUT_FILE = null;
-    public static final Boolean CONTEXTUAL_PRUNING_DENSITY = true;
-    public static final Boolean CONTEXTUAL_PRUNING_DEPENDENCY = true;
-    public static final Boolean CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = true;
-    public static final Boolean CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = true;
-    public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
-    
     public static final Integer NUM_MIXTURES = 2;
     public static final Double ITERATIVE_PROGRESS_CUTOFF_RATIO = 0.00001;
     public static final Integer DPM_TRUNCATING_PARAMETER = 20;
@@ -113,4 +97,5 @@ public class MacroBaseDefaults {
     public static final Double SVI_FORGETTING_RATE = 0.9;
     public static final Double TRAIN_TEST_SPLIT = -1.0; // Train and test on the entire dataset while training
     public static final Double KDE_PROPORTION_OF_DATA_TO_USE = 0.01;
+    public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
 }

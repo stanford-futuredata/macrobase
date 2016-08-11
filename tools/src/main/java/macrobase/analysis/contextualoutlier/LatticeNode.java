@@ -30,7 +30,7 @@ public class LatticeNode {
         denseContexts.add(c);
     }
 
-    public LatticeNode join(LatticeNode other, List<Datum> data, double tau) {
+    public LatticeNode join(LatticeNode other, List<ContextualDatum> data, double tau) {
         List<Integer> newDimensions = joinedDimensions(other);
         if (newDimensions == null)
             return null;

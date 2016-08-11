@@ -28,8 +28,8 @@ public class Context {
     //the outlier detector used for detection in this context
     private BatchTrainScore detector;
     //the following is for context pruning
-    private HashSet<Datum> sample = new HashSet<Datum>();
-    private HashSet<Datum> globalSample = new HashSet<Datum>();
+    private HashSet<ContextualDatum> sample = new HashSet<ContextualDatum>();
+    private HashSet<ContextualDatum> globalSample = new HashSet<ContextualDatum>();
     private boolean densityPruning;
     private boolean dependencyPruning;
     private double alpha;
@@ -37,7 +37,7 @@ public class Context {
     /**
      * Global context
      */
-    public Context(HashSet<Datum> sample, boolean densityPruning, boolean dependencyPruning, double alpha) {
+    public Context(HashSet<ContextualDatum> sample, boolean densityPruning, boolean dependencyPruning, double alpha) {
         this.sample = sample;
         this.globalSample = sample;
         this.densityPruning = densityPruning;
@@ -56,7 +56,7 @@ public class Context {
         dimensions.add(dimension);
         intervals.add(interval);
         parents.add(parent);
-        for (Datum d : parent.sample) {
+        for (ContextualDatum d : parent.sample) {
             if (containDatum(d)) {
                 sample.add(d);
             }
@@ -83,7 +83,7 @@ public class Context {
         this.alpha = parent1.alpha;
     }
 
-    public BitSet getContextualBitSet(List<Datum> data, Map<Context, BitSet> context2BitSet) {
+    public BitSet getContextualBitSet(List<ContextualDatum> data, Map<Context, BitSet> context2BitSet) {
         //global context
         if (parents.size() == 0) {
             BitSet bs = new BitSet(data.size());
@@ -115,7 +115,7 @@ public class Context {
      * @param datum
      * @return
      */
-    public boolean containDatum(Datum datum) {
+    public boolean containDatum(ContextualDatum datum) {
         int discreteDimensions = datum.getContextualDiscreteAttributes().size();
         int doubleDimensions = datum.getContextualDoubleAttributes().getDimension();
         int totalDimensions = discreteDimensions + doubleDimensions;
@@ -143,7 +143,7 @@ public class Context {
      * @param other
      * @return
      */
-    public Context join(Context other, List<Datum> data, double tau) {
+    public Context join(Context other, List<ContextualDatum> data, double tau) {
         //create new dimensions and intervals
         List<Integer> newDimensions = new ArrayList<Integer>();
         List<Interval> newIntervals = new ArrayList<Interval>();
@@ -222,14 +222,14 @@ public class Context {
         Context p1 = c.getParents().get(0);
         Context p2 = c.getParents().get(1);
         boolean sample_p1_p2 = true;
-        for (Datum d : p1.getSample()) {
+        for (ContextualDatum d : p1.getSample()) {
             if (!p2.containDatum(d)) {
                 sample_p1_p2 = false;
                 break;
             }
         }
         boolean sample_p2_p1 = true;
-        for (Datum d : p2.getSample()) {
+        for (ContextualDatum d : p2.getSample()) {
             if (!p1.containDatum(d)) {
                 sample_p2_p1 = false;
                 break;
@@ -275,7 +275,7 @@ public class Context {
         this.size = size;
     }
 
-    public HashSet<Datum> getSample() {
+    public HashSet<ContextualDatum> getSample() {
         return sample;
     }
 

@@ -1,7 +1,6 @@
 package macrobase.analysis.pipeline;
 
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseConf.ContextualAPI;
 import macrobase.conf.MacroBaseConf.DataIngesterType;
 import macrobase.conf.MacroBaseConf.TransformType;
 import macrobase.conf.MacroBaseDefaults;
@@ -22,17 +21,13 @@ public abstract class BasePipeline implements Pipeline {
     protected Double minSupport;
     protected Double targetPercentile;
     protected Double zScore;
-    protected Integer contextualNumIntervals;
     protected List<String> attributes;
-    protected List<String> contextualDiscreteAttributes;
-    protected List<String> contextualDoubleAttributes;
     protected List<String> highMetrics;
     protected List<String> lowMetrics;
     protected String queryName;
     protected String storeAnalysisResults;
 
-    protected ContextualAPI contextualAPI;
-    
+
     protected MacroBaseConf conf;
 
     @Override
@@ -59,7 +54,6 @@ public abstract class BasePipeline implements Pipeline {
         storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS,
                                               MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
 
-        contextualAPI = conf.getContextualAPI();
         return this;
     }
 }

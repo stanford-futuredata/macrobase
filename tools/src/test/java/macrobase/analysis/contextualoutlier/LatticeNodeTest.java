@@ -15,7 +15,7 @@ public class LatticeNodeTest {
         LatticeNode node1 = new LatticeNode(1);
         LatticeNode node2 = new LatticeNode(2);
         
-        List<Datum> data = new ArrayList<Datum>();
+        List<ContextualDatum> data = new ArrayList<>();
         
         LatticeNode node01 = node0.join(node1, data, 1.0);
         LatticeNode node02 = node0.join(node2, data, 1.0);

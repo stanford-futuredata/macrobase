@@ -157,8 +157,6 @@ public class CachingSQLIngesterTest {
                 assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
                 curValInt++;
             }
-
-            assertEquals(curValInt, d.getAuxiliaries().getEntry(0), 0);
         }
 
         assertTrue(firstVals.isEmpty());
@@ -191,8 +189,6 @@ public class CachingSQLIngesterTest {
                 assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
                 curValInt++;
             }
-
-            assertEquals(curValInt, d.getAuxiliaries().getEntry(0), 0);
         }
 
         assertTrue(firstVals2.isEmpty());
@@ -309,8 +305,6 @@ public class CachingSQLIngesterTest {
                 assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
                 curValInt++;
             }
-
-            assertEquals(curValInt, d.getAuxiliaries().getEntry(0), 0);
         }
 
         assertTrue(firstVals.isEmpty());
@@ -343,8 +337,6 @@ public class CachingSQLIngesterTest {
                 assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
                 curValInt++;
             }
-
-            assertEquals(curValInt, d.getAuxiliaries().getEntry(0), 0);
         }
 
         assertTrue(firstVals2.isEmpty());

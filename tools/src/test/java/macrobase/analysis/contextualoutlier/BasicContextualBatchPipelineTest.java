@@ -1,11 +1,8 @@
-package macrobase.analysis.pipeline;
+package macrobase.analysis.contextualoutlier;
 
 import com.google.common.collect.Lists;
 import junit.framework.TestCase;
-import macrobase.analysis.contextualoutlier.Context;
-import macrobase.analysis.contextualoutlier.Interval;
-import macrobase.analysis.contextualoutlier.IntervalDiscrete;
-import macrobase.analysis.pipeline.BasicContextualBatchedPipeline;
+import macrobase.analysis.contextualoutlier.conf.ContextualConf;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.ContextualAnalysisResult;
 import macrobase.conf.MacroBaseConf;
@@ -33,11 +30,11 @@ public class BasicContextualBatchPipelineTest {
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simpleContextual.csv")
-                .set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
-                .set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1", "C2"))
-                .set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
-                .set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10)
-                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
+                .set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
+                .set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1", "C2"))
+                .set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
+                .set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10)
+                .set(ContextualConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
@@ -65,19 +62,19 @@ public class BasicContextualBatchPipelineTest {
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
-                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList()) // loader
+                .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("C1", "C2", "C3")) // loader
                 .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList())
                 .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A"))
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simpleContextual.csv")
-                .set(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
-                .set(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1", "C2", "C3"))
-                .set(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
-                .set(MacroBaseConf.CONTEXTUAL_NUMINTERVALS, 10)
-                .set(MacroBaseConf.CONTEXTUAL_API, "findContextsGivenOutlierPredicate")
-                .set(MacroBaseConf.CONTEXTUAL_API_OUTLIER_PREDICATES, "C3 = c1")
-                .set(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
+                .set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
+                .set(ContextualConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, Lists.newArrayList("C1", "C2", "C3"))
+                .set(ContextualConf.CONTEXTUAL_DENSECONTEXTTAU, 0.4)
+                .set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10)
+                .set(ContextualConf.CONTEXTUAL_API, "findContextsGivenOutlierPredicate")
+                .set(ContextualConf.CONTEXTUAL_API_OUTLIER_PREDICATES, "C3 = c1")
+                .set(ContextualConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
         conf.loadSystemProperties();
         conf.sanityCheckBatch();
 
