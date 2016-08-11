@@ -196,5 +196,10 @@
       <artifactId>JRI</artifactId>
       <version>0.9-7</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-monitoring</artifactId>
+      <version>v3-rev6-1.22.0</version>
+    </dependency>
   </dependencies>
 </project>
