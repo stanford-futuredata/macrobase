@@ -1,6 +1,7 @@
-package macrobase.pipeline;
+package macrobase.analysis.pipeline;
 
 import com.google.common.collect.Lists;
+import junit.framework.TestCase;
 import macrobase.analysis.contextualoutlier.Context;
 import macrobase.analysis.contextualoutlier.Interval;
 import macrobase.analysis.contextualoutlier.IntervalDiscrete;
@@ -47,9 +48,9 @@ public class BasicContextualBatchPipelineTest {
             ContextualAnalysisResult ar = (ContextualAnalysisResult)curAR;
             Context context = ar.getContext();
             List<Interval> intervals = context.getIntervals();
-            assertEquals(intervals.size(), 1);
+            TestCase.assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1");
-            assertEquals(intervals.get(0) instanceof IntervalDiscrete, true);
+            TestCase.assertEquals(intervals.get(0) instanceof IntervalDiscrete, true);
             assertEquals( ((IntervalDiscrete)intervals.get(0)).getValue(), 0);   
         }
 
@@ -87,9 +88,9 @@ public class BasicContextualBatchPipelineTest {
             ContextualAnalysisResult ar = (ContextualAnalysisResult)curAR;
             Context context = ar.getContext();
             List<Interval> intervals = context.getIntervals();
-            assertEquals(intervals.size(), 1);
+            TestCase.assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1");
-            assertEquals(intervals.get(0) instanceof IntervalDiscrete, true);
+            TestCase.assertEquals(intervals.get(0) instanceof IntervalDiscrete, true);
             assertEquals( ((IntervalDiscrete)intervals.get(0)).getValue(), 0);
         }
 

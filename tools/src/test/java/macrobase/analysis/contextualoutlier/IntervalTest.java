@@ -1,6 +1,8 @@
 package macrobase.analysis.contextualoutlier;
 
 import static org.junit.Assert.*;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 import macrobase.ingest.DatumEncoder;
@@ -14,8 +16,8 @@ public class IntervalTest {
        e.recordAttributeName(0, "testColumn");
        int encoded0 = e.getIntegerEncoding(0, "attrValue0");
        int encoded1 = e.getIntegerEncoding(0, "attrValue1");
-       assertEquals(encoded0,0);
-       assertEquals(encoded1,1);
+       Assert.assertEquals(encoded0, 0);
+       Assert.assertEquals(encoded1, 1);
        assertEquals(interval.print(e).contains("attrValue1"),true);
    }
    

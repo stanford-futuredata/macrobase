@@ -1,4 +1,4 @@
-package macrobase.pipeline;
+package macrobase.analysis.pipeline;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -9,6 +9,7 @@ import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
 import macrobase.ingest.result.ColumnValue;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,7 @@ public class MixtureModelPipelineTest {
         conf.sanityCheckBatch();
 
         AnalysisResult ar = (new MixtureModelPipeline().initialize(conf)).run().get(0);
-        assertEquals(1, ar.getItemSets().size());
+        Assert.assertEquals(1, ar.getItemSets().size());
 
         HashSet<String> toFindColumn = Sets.newHashSet("Cluster");
         HashSet<String> toFindValue = Sets.newHashSet("first");
@@ -56,18 +57,18 @@ public class MixtureModelPipelineTest {
 
         for (ColumnValue cv : ar.getItemSets().get(0).getItems()) {
             log.debug("column {}", cv.getColumn());
-            assertTrue(toFindColumn.contains(cv.getColumn()));
+            Assert.assertTrue(toFindColumn.contains(cv.getColumn()));
             toFindColumn.remove(cv.getColumn());
             log.debug("value {}", cv.getValue());
-            assertTrue(toFindValue.contains(cv.getValue()));
+            Assert.assertTrue(toFindValue.contains(cv.getValue()));
             toFindValue.remove(cv.getValue());
         }
 
-        assertEquals(0, toFindColumn.size());
-        assertEquals(0, toFindValue.size());
+        Assert.assertEquals(0, toFindColumn.size());
+        Assert.assertEquals(0, toFindValue.size());
 
-        assertEquals(ar.getNumInliers(), 9, 1e-9);
-        assertEquals(ar.getNumOutliers(), 9, 1e-9);
+        Assert.assertEquals(ar.getNumInliers(), 9, 1e-9);
+        Assert.assertEquals(ar.getNumOutliers(), 9, 1e-9);
     }
 
     /**
@@ -100,28 +101,28 @@ public class MixtureModelPipelineTest {
         conf.sanityCheckBatch();
 
         List<AnalysisResult> results = (new MixtureModelPipeline().initialize(conf)).run();
-        assertEquals(2, results.size());
+        Assert.assertEquals(2, results.size());
 
         HashSet<String> toFindValue = Sets.newHashSet("first", "second");
 
         for (int i = 0; i < results.size(); i++) {
             AnalysisResult ar = results.get(i);
-            assertEquals(1, ar.getItemSets().size());
+            Assert.assertEquals(1, ar.getItemSets().size());
             ItemsetResult is = ar.getItemSets().get(0);
 
             for (ColumnValue cv : is.getItems()) {
                 log.debug("column {}", cv.getColumn());
-                assertEquals("Cluster", cv.getColumn());
+                Assert.assertEquals("Cluster", cv.getColumn());
                 log.debug("value {}", cv.getValue());
-                assertTrue(toFindValue.contains(cv.getValue()));
+                Assert.assertTrue(toFindValue.contains(cv.getValue()));
                 toFindValue.remove(cv.getValue());
             }
 
-            assertEquals(ar.getNumInliers(), 9, 1e-9);
-            assertEquals(ar.getNumOutliers(), 9, 1e-9);
+            Assert.assertEquals(ar.getNumInliers(), 9, 1e-9);
+            Assert.assertEquals(ar.getNumOutliers(), 9, 1e-9);
         }
 
-        assertEquals(0, toFindValue.size());
+        Assert.assertEquals(0, toFindValue.size());
     }
 
     @Test
@@ -149,9 +150,9 @@ public class MixtureModelPipelineTest {
         conf.sanityCheckBatch();
 
         AnalysisResult ar = (new MixtureModelPipeline().initialize(conf)).run().get(0);
-        assertEquals(0, ar.getItemSets().size());
+        Assert.assertEquals(0, ar.getItemSets().size());
 
-        assertEquals(ar.getNumInliers(), 500, 1e-9);
-        assertEquals(ar.getNumOutliers(), 200, 1e-9);
+        Assert.assertEquals(ar.getNumInliers(), 500, 1e-9);
+        Assert.assertEquals(ar.getNumOutliers(), 200, 1e-9);
     }
 }

@@ -1,4 +1,4 @@
-package macrobase.pipeline;
+package macrobase.analysis.pipeline;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -7,6 +7,7 @@ import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
 import macrobase.ingest.result.ColumnValue;
+import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ public class GridDumpingPipelineTest {
         conf.sanityCheckBatch();
 
         AnalysisResult ar = (new GridDumpingPipeline().initialize(conf)).run().get(0);
-        assertEquals(1, ar.getItemSets().size());
+        Assert.assertEquals(1, ar.getItemSets().size());
 
         HashSet<String> toFindColumn = Sets.newHashSet("XX");
         HashSet<String> toFindValue = Sets.newHashSet("-5.8");
@@ -52,17 +53,17 @@ public class GridDumpingPipelineTest {
 
         for (ColumnValue cv : ar.getItemSets().get(0).getItems()) {
             log.debug("column {}", cv.getColumn());
-            assertTrue(toFindColumn.contains(cv.getColumn()));
+            Assert.assertTrue(toFindColumn.contains(cv.getColumn()));
             toFindColumn.remove(cv.getColumn());
             log.debug("value {}", cv.getValue());
-            assertTrue(toFindValue.contains(cv.getValue()));
+            Assert.assertTrue(toFindValue.contains(cv.getValue()));
             toFindValue.remove(cv.getValue());
         }
 
-        assertEquals(0, toFindColumn.size());
-        assertEquals(0, toFindValue.size());
+        Assert.assertEquals(0, toFindColumn.size());
+        Assert.assertEquals(0, toFindValue.size());
 
-        assertEquals(ar.getNumInliers(), 19, 1e-9);
-        assertEquals(ar.getNumOutliers(), 1, 1e-9);
+        Assert.assertEquals(ar.getNumInliers(), 19, 1e-9);
+        Assert.assertEquals(ar.getNumOutliers(), 1, 1e-9);
     }
 }

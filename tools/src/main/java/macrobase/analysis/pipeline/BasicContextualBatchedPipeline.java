@@ -8,14 +8,12 @@ import macrobase.analysis.result.OutlierClassificationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.contextualoutlier.Context;
 import macrobase.analysis.contextualoutlier.ContextualOutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.ContextualAnalysisResult;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseConf.ContextualAPI;
 import macrobase.datamodel.Datum;
