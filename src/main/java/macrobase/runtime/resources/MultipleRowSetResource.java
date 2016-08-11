@@ -1,6 +1,7 @@
 package macrobase.runtime.resources;
 
 import macrobase.conf.MacroBaseConf;
+import macrobase.ingest.DataIngester;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.SQLIngester;
 
@@ -35,7 +36,7 @@ public class MultipleRowSetResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public List<RowSet> getRows(MultipleRowSetRequest request) throws Exception {
         conf.set(MacroBaseConf.DB_URL, request.pgUrl);
-        SQLIngester loader = getLoader();
+        DataIngester loader = getLoader();
         List<RowSet> lr = new ArrayList<RowSet>();
         for(List<RowSetResource.RowSetRequest.RowRequestPair> columnValue : request.columnValues){
             lr.add(loader.getRows(request.baseQuery,

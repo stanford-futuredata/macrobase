@@ -8,6 +8,9 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.result.RowSet;
+import macrobase.ingest.result.Schema;
+import macrobase.runtime.resources.RowSetResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyInputStream;
@@ -34,6 +37,17 @@ public class DiskCachingIngester extends DataIngester {
         if (!cacheDir.exists()) {
             cacheDir.mkdirs();
         }
+    }
+
+
+    @Override
+    public Schema getSchema(String baseQuery) throws Exception {
+        return innerIngester.getSchema(baseQuery);
+    }
+
+    @Override
+    public RowSet getRows(String baseQuery, List<RowSetResource.RowSetRequest.RowRequestPair> preds, int limit, int offset) throws Exception {
+        return innerIngester.getRows(baseQuery, preds, limit, offset);
     }
 
     @Override
