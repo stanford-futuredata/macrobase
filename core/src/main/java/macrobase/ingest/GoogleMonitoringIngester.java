@@ -55,12 +55,7 @@ public class GoogleMonitoringIngester extends DataIngester {
     public GoogleMonitoringIngester(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
     }
-
-    @Override
-    public String getBaseQuery() {
-        return "";
-    }
-
+    
     @Override
     public MBStream<Datum> getStream() throws Exception {
         if (!loaded) {

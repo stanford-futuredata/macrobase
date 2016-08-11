@@ -24,6 +24,4 @@ public abstract class DataIngester implements MBProducer<Datum> {
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
     }
-
-    public abstract String getBaseQuery();
 }

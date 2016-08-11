@@ -37,11 +37,6 @@ public class DiskCachingIngester extends DataIngester {
     }
 
     @Override
-    public String getBaseQuery() {
-        return innerIngester.getBaseQuery();
-    }
-
-    @Override
     public MBStream<Datum> getStream() throws Exception {
         if(output == null) {
             initialize();
@@ -86,7 +81,9 @@ public class DiskCachingIngester extends DataIngester {
                         attributes,
                         lowMetrics,
                         highMetrics,
-                        innerIngester.getBaseQuery()))), 16384);
+                        conf.getString(MacroBaseConf.BASE_QUERY,
+                                       conf.getString(MacroBaseConf.QUERY_NAME,
+                                                      "cachedQuery"))))), 16384);
 
         Kryo kryo = new Kryo();
         Output output = new Output(outputStream);
@@ -120,10 +117,12 @@ public class DiskCachingIngester extends DataIngester {
 
     private List<Datum> readInData() throws IOException {
         File f = new File(fileDir + "/" + convertFileName(timeColumn,
-                attributes,
-                lowMetrics,
-                highMetrics,
-                this.innerIngester.getBaseQuery()));
+                                attributes,
+                                lowMetrics,
+                                highMetrics,
+                                conf.getString(MacroBaseConf.BASE_QUERY,
+                                               conf.getString(MacroBaseConf.QUERY_NAME,
+                                                              "cachedQuery"))));
         if (!f.exists()) {
             log.info("Data did not exist; going to read from SQL.");
             return null;

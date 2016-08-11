@@ -261,10 +261,4 @@ public abstract class SQLIngester extends DataIngester {
             }
         }
     }
-
-    @Override
-    public String getBaseQuery() {
-        return baseQuery;
-    }
-
 }

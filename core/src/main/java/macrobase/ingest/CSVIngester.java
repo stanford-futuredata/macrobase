@@ -39,12 +39,7 @@ public class CSVIngester extends DataIngester {
     public CSVIngester(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
     }
-
-    @Override
-    public String getBaseQuery() {
-        return filename;
-    }
-
+    
     private Datum parseRecord(CSVRecord record) throws NumberFormatException {
         int vecPos = 0;
 
