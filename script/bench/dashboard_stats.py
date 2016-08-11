@@ -1,7 +1,7 @@
 import argparse
 import json
-from execute_workflows import default_args
-from execute_workflows import run_workload
+from script.bench.execute_workflows import default_args
+from script.bench.execute_workflows import run_workload
 
 
 def run_all_workloads(configurations):
