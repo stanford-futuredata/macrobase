@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -38,8 +39,11 @@ public class MultipleRowSetResource extends BaseResource {
         SQLIngester loader = getLoader();
         List<RowSet> lr = new ArrayList<RowSet>();
         for(List<RowSetResource.RowSetRequest.RowRequestPair> columnValue : request.columnValues){
+            HashMap<String, String> preds = new HashMap<>();
+            columnValue.stream().forEach(a -> preds.put(a.column, a.value));
+
             lr.add(loader.getRows(request.baseQuery,
-                        columnValue,
+                        preds,
                         request.limit,
                         request.offset));
         }

@@ -2,7 +2,7 @@ package macrobase;
 
 import java.util.concurrent.TimeUnit;
 
-import macrobase.runtime.MacroBaseServer;
+import macrobase.runtime.MacroBaseApplication;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +30,6 @@ public class MacroBase {
                            "( m | a | c | r | o | b | a | s | e )\n" +
                            " \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \\_/ \n");
 
-        MacroBaseServer.main(args);
+        MacroBaseApplication.main(args);
     }
 }

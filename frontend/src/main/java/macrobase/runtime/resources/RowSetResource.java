@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.HashMap;
 import java.util.List;
 
 @Path("/rows")
@@ -38,8 +39,12 @@ public class RowSetResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public RowSet getRows(RowSetRequest request) throws Exception {
         conf.set(MacroBaseConf.DB_URL, request.pgUrl);
+
+        HashMap<String, String> preds = new HashMap<>();
+        request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));
+
         return getLoader().getRows(request.baseQuery,
-                                   request.columnValues,
+                                   preds,
                                    request.limit,
                                    request.offset);
     }

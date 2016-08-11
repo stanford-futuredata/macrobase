@@ -13,7 +13,6 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
-import macrobase.runtime.resources.RowSetResource;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
@@ -112,7 +111,7 @@ public abstract class SQLIngester extends DataIngester {
     }
 
     public RowSet getRows(String baseQuery,
-                          List<RowSetResource.RowSetRequest.RowRequestPair> preds,
+                          Map<String, String> preds,
                           int limit,
                           int offset) throws SQLException {
         initializeConnection();
@@ -122,7 +121,7 @@ public abstract class SQLIngester extends DataIngester {
 
         if (preds.size() > 0) {
             StringJoiner sj = new StringJoiner(" AND ");
-            preds.stream().forEach(e -> sj.add(String.format("%s = '%s'", e.column, e.value)));
+            preds.entrySet().stream().forEach(e -> sj.add(String.format("%s = '%s'", e.getKey(), e.getValue())));
 
             if (!sql.toLowerCase().contains("where")) {
                 sql += " WHERE ";

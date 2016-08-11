@@ -15,8 +15,10 @@
   </properties>
 
     <modules>
-        <module>core</module>
-        <module>tools</module>
+      <module>assembly</module>
+      <module>core</module>
+      <module>frontend</module>
+      <module>tools</module>
     </modules>
 
   <dependencies>
@@ -25,6 +27,26 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-core</artifactId>
+      <version>${dropwizard.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-assets</artifactId>
+      <version>${dropwizard.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-logging</artifactId>
+      <version>${dropwizard.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.dropwizard</groupId>
+      <artifactId>dropwizard-db</artifactId>
+      <version>${dropwizard.version}</version>
     </dependency>
   </dependencies>
 
@@ -37,71 +59,6 @@
       <configuration>
         <source>1.8</source>
         <target>1.8</target>
-      </configuration>
-    </plugin>
-    <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-dependency-plugin</artifactId>
-    <executions>
-      <execution>
-        <id>copy-dependencies</id>
-        <phase>prepare-package</phase>
-        <goals>
-          <goal>copy-dependencies</goal>
-        </goals>
-        <configuration>
-          <outputDirectory>${project.build.directory}/lib/</outputDirectory>
-          <overWriteReleases>false</overWriteReleases>
-          <overWriteSnapshots>false</overWriteSnapshots>
-          <overWriteIfNewer>true</overWriteIfNewer>
-        </configuration>
-      </execution>
-    </executions>
-  </plugin>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-shade-plugin</artifactId>
-      <version>2.3</version>
-      <configuration>
-        <createDependencyReducedPom>true</createDependencyReducedPom>
-        <filters>
-          <filter>
-            <artifact>*:*</artifact>
-            <excludes>
-              <exclude>META-INF/*.SF</exclude>
-              <exclude>META-INF/*.DSA</exclude>
-              <exclude>META-INF/*.RSA</exclude>
-            </excludes>
-          </filter>
-        </filters>
-      </configuration>
-      <executions>
-        <execution>
-          <phase>package</phase>
-          <goals>
-            <goal>shade</goal>
-          </goals>
-          <configuration>
-            <transformers>
-              <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                <mainClass>macrobase.MacroBase</mainClass>
-              </transformer>
-            </transformers>
-          </configuration>
-        </execution>
-      </executions>
-    </plugin>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-jar-plugin</artifactId>
-      <version>2.4</version>
-      <configuration>
-        <archive>
-          <manifest>
-            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-          </manifest>
-        </archive>
       </configuration>
     </plugin>
   </plugins>

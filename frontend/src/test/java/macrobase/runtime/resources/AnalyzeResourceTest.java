@@ -2,14 +2,11 @@ package macrobase.runtime.resources;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import macrobase.analysis.pipeline.BasicBatchedPipeline;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.result.ColumnValue;
-import macrobase.pipeline.BasePipelineTest;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -62,8 +59,5 @@ public class AnalyzeResourceTest {
 
         assertEquals(0, toFindColumn.size());
         assertEquals(0, toFindValue.size());
-
-        assertEquals(BasePipelineTest.countLines("src/test/resources/data/simple.csv"),
-                     ar.getNumInliers()+ar.getNumOutliers(), 0);
     }
 }

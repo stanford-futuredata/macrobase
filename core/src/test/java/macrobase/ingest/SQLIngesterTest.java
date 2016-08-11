@@ -12,7 +12,6 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.result.ColumnValue;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.result.Schema;
-import macrobase.runtime.resources.RowSetResource;
 import org.junit.Test;
 
 import java.sql.Connection;
@@ -416,13 +415,13 @@ public class SQLIngesterTest {
 
         SQLIngester loader = new TestSQLIngester(conf, connection);
         loader.connect();
-        List<RowSetResource.RowSetRequest.RowRequestPair> pairs = new ArrayList<>();
-        RowSetResource.RowSetRequest.RowRequestPair rrp = new RowSetResource.RowSetRequest.RowRequestPair();
-        rrp.column = "c1";
-        rrp.value = "v1";
-        pairs.add(rrp);
+
+        Map<String, String> preds = new HashMap<>();
+
+        preds.put("c1", "v1");
+
         RowSet rs = loader.getRows(conf.getString(MacroBaseConf.BASE_QUERY),
-                                       pairs,
+                                       preds,
                                        100,
                                        1000);
 
