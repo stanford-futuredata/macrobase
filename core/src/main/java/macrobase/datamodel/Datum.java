@@ -35,7 +35,7 @@ public class Datum {
         this.id = idGen.incrementAndGet();
         this.parentDatumID = oldDatum.getID();
         this.metrics = metrics;
-        this.attributes = oldDatum.getAttributes();
+        this.attributes = oldDatum.attributes();
     }
 
     public Datum(List<Integer> attributes, double... doubleMetrics) {
@@ -51,11 +51,6 @@ public class Datum {
     public int getTime(Integer timeColumn) {
         return (int) metrics.getEntry(timeColumn);
     }
-
-    public List<Integer> getAttributes() {
-        return attributes;
-    }
-
 
     public List<Integer> attributes() {
         return attributes;
@@ -76,7 +71,7 @@ public class Datum {
     public String toString() {
         return String.format(
                 "metrics: %s, encoded attributes: %s",
-                metrics().toString(), getAttributes().toString());
+                metrics().toString(), attributes().toString());
     }
 
     public double norm() {

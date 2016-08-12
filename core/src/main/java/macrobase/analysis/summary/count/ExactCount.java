@@ -15,7 +15,7 @@ public class ExactCount {
 
     public ExactCount count(List<Datum> data) {
         for (Datum d : data) {
-            for (int i : d.getAttributes()) {
+            for (int i : d.attributes()) {
                 Double curVal = counts.get(i);
                 if (curVal == null) {
                     curVal = 0.;

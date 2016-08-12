@@ -71,7 +71,7 @@ public class DumpClassifierTest {
         assertEquals(results.size(), data.size());
         OutlierClassificationResult first = results.get(0);
         assertEquals(true, first.isOutlier());
-        assertEquals(1, first.getDatum().getAttributes().get(0).intValue());
+        assertEquals(1, first.getDatum().attributes().get(0).intValue());
 
         Path filePath = Paths.get(dumper.getFilePath());
         assertTrue(Files.exists(filePath));

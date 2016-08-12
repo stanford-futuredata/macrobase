@@ -131,7 +131,7 @@ public class ExponentiallyDecayingEmergingItemsets {
 
     public void markOutlier(Datum outlier) {
         numOutliers++;
-        outlierCountSummary.observe(outlier.getAttributes());
+        outlierCountSummary.observe(outlier.attributes());
 
         if (!combinationsEnabled || attributeDimension > 1) {
             outlierPatternSummary.insertTransactionStreamingFalseNegative(outlier.attributes());

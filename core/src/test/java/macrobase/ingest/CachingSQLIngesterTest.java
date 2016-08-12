@@ -135,7 +135,7 @@ public class CachingSQLIngesterTest {
         List<Datum> data = new DiskCachingIngester(conf, new TestSQLIngester(conf, connection)).getStream().drain();
 
         for (Datum d : data) {
-            String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
+            String firstValString = encoder.getAttribute(d.attributes().get(0)).getValue();
             Integer curValInt = Integer.parseInt(firstValString);
             assertTrue(firstVals.contains(firstValString));
             firstVals.remove(firstValString);
@@ -143,7 +143,7 @@ public class CachingSQLIngesterTest {
             column = 0;
             for(int i = 0; i < NUM_ATTRS; ++i) {
                 assertEquals(curValInt,
-                             (Integer) Integer.parseInt(encoder.getAttribute(d.getAttributes().get(i)).getValue()));
+                             (Integer) Integer.parseInt(encoder.getAttribute(d.attributes().get(i)).getValue()));
                 curValInt++;
                 column++;
             }
@@ -167,7 +167,7 @@ public class CachingSQLIngesterTest {
         List<Datum> data2 = new DiskCachingIngester(conf, t).getStream().drain();
 
         for (Datum d : data2) {
-            String firstValString = encoder2.getAttribute(d.getAttributes().get(0)).getValue();
+            String firstValString = encoder2.getAttribute(d.attributes().get(0)).getValue();
             Integer curValInt = Integer.parseInt(firstValString);
             assertTrue(firstVals2.contains(firstValString));
             firstVals2.remove(firstValString);
@@ -175,7 +175,7 @@ public class CachingSQLIngesterTest {
             column = 0;
             for(int i = 0; i < NUM_ATTRS; ++i) {
                 assertEquals(curValInt,
-                             (Integer) Integer.parseInt(encoder2.getAttribute(d.getAttributes().get(i)).getValue()));
+                             (Integer) Integer.parseInt(encoder2.getAttribute(d.attributes().get(i)).getValue()));
                 curValInt++;
                 column++;
             }
@@ -283,7 +283,7 @@ public class CachingSQLIngesterTest {
         List<Datum> data = new DiskCachingIngester(conf, new TestSQLIngester(conf, connection)).getStream().drain();
 
         for (Datum d : data) {
-            String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
+            String firstValString = encoder.getAttribute(d.attributes().get(0)).getValue();
             Integer curValInt = Integer.parseInt(firstValString);
             assertTrue(firstVals.contains(firstValString));
             firstVals.remove(firstValString);
@@ -291,7 +291,7 @@ public class CachingSQLIngesterTest {
             column = 0;
             for(int i = 0; i < NUM_ATTRS; ++i) {
                 assertEquals(curValInt,
-                             (Integer) Integer.parseInt(encoder.getAttribute(d.getAttributes().get(i)).getValue()));
+                             (Integer) Integer.parseInt(encoder.getAttribute(d.attributes().get(i)).getValue()));
                 curValInt++;
                 column++;
             }
@@ -315,7 +315,7 @@ public class CachingSQLIngesterTest {
         List<Datum> data2 = new DiskCachingIngester(conf, t).getStream().drain();
 
         for (Datum d : data2) {
-            String firstValString = encoder2.getAttribute(d.getAttributes().get(0)).getValue();
+            String firstValString = encoder2.getAttribute(d.attributes().get(0)).getValue();
             Integer curValInt = Integer.parseInt(firstValString);
             assertTrue(firstVals2.contains(firstValString));
             firstVals2.remove(firstValString);
@@ -323,7 +323,7 @@ public class CachingSQLIngesterTest {
             column = 0;
             for(int i = 0; i < NUM_ATTRS; ++i) {
                 assertEquals(curValInt,
-                             (Integer) Integer.parseInt(encoder2.getAttribute(d.getAttributes().get(i)).getValue()));
+                             (Integer) Integer.parseInt(encoder2.getAttribute(d.attributes().get(i)).getValue()));
                 curValInt++;
                 column++;
             }

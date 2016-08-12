@@ -75,7 +75,7 @@ public class FPGrowthEmerging {
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
-        if (!combinationsEnabled || inliers.get(0).getAttributes().size() == 1) {
+        if (!combinationsEnabled || inliers.get(0).attributes().size() == 1) {
             return getSingletonItemsets(inliers, outliers, minSupport, minRatio, encoder);
         }
 
@@ -93,7 +93,7 @@ public class FPGrowthEmerging {
         for (Datum d : outliers) {
             Set<Integer> txn = null;
 
-            for (int i : d.getAttributes()) {
+            for (int i : d.attributes()) {
                 double outlierCount = outlierCounts.get(i);
                 if (outlierCount >= supportCountRequired) {
                     Number inlierCount = inlierCounts.get(i);

@@ -7,18 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import junit.framework.TestCase;
-import macrobase.MacroBase;
 import macrobase.analysis.contextualoutlier.conf.ContextualConf;
 import macrobase.analysis.result.OutlierClassificationResult;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-
-import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
@@ -27,13 +22,13 @@ public class ContextualOutlierDetectorTest {
     private Datum makeDatum(MacroBaseConf conf, List<Integer> attributes, RealVector metrics, List<Integer> contextualDiscreteAttributes, RealVector contextualDoubleAttributes) {
         Datum ret = new Datum(attributes, metrics);
         for(int i = 0; i < contextualDiscreteAttributes.size(); ++i) {
-            ret.getAttributes().add(conf.getEncoder().getIntegerEncoding(i, String.valueOf(contextualDiscreteAttributes.get(i))));
+            ret.attributes().add(conf.getEncoder().getIntegerEncoding(i, String.valueOf(contextualDiscreteAttributes.get(i))));
         }
 
         int consumed = contextualDiscreteAttributes.size();
 
         for(int i = consumed; i < consumed + contextualDoubleAttributes.getDimension(); ++i) {
-            ret.getAttributes().add(conf.getEncoder().getIntegerEncoding(i, String.valueOf(contextualDoubleAttributes.getEntry(
+            ret.attributes().add(conf.getEncoder().getIntegerEncoding(i, String.valueOf(contextualDoubleAttributes.getEntry(
                     i-consumed))));
         }
 

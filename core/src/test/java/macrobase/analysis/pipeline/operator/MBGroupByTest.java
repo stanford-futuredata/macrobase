@@ -34,7 +34,7 @@ public class MBGroupByTest {
                                                       sum += d.metrics().getNorm();
                                                   }
 
-                                                  output.add(new Datum(records.get(0).getAttributes(), sum));
+                                                  output.add(new Datum(records.get(0).attributes(), sum));
                                               }
 
                                               @Override
@@ -67,8 +67,8 @@ public class MBGroupByTest {
         assertEquals(groupSums.size(), transformed.size());
 
         for(Datum t : transformed) {
-            assertTrue(groupSums.containsKey(t.getAttributes()));
-            assertEquals(groupSums.get(t.getAttributes()), t.metrics().getNorm(), 0.0);
+            assertTrue(groupSums.containsKey(t.attributes()));
+            assertEquals(groupSums.get(t.attributes()), t.metrics().getNorm(), 0.0);
         }
     }
 }

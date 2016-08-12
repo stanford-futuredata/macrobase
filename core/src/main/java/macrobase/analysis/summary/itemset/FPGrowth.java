@@ -201,7 +201,7 @@ public class FPGrowth {
             for (Datum d : datums) {
                 List<Integer> filtered = new ArrayList<>();
 
-                for(Integer attr : d.getAttributes()) {
+                for(Integer attr : d.attributes()) {
                     if(frequentItemCounts.containsKey(attr)) {
                         filtered.add(attr);
                     }

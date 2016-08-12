@@ -188,7 +188,7 @@ public class SQLIngesterTest {
         List<Datum> data = ingester.getStream().drain();
 
         for (Datum d : data) {
-            String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
+            String firstValString = encoder.getAttribute(d.attributes().get(0)).getValue();
             Integer curValInt = Integer.parseInt(firstValString);
             assertTrue(firstVals.contains(firstValString));
             firstVals.remove(firstValString);
@@ -196,7 +196,7 @@ public class SQLIngesterTest {
             column = 0;
             for(int i = 0; i < NUM_ATTRS; ++i) {
                 assertEquals(curValInt,
-                             (Integer) Integer.parseInt(encoder.getAttribute(d.getAttributes().get(i)).getValue()));
+                             (Integer) Integer.parseInt(encoder.getAttribute(d.attributes().get(i)).getValue()));
                 curValInt++;
                 column++;
             }
@@ -318,7 +318,7 @@ public class SQLIngesterTest {
         List<Datum> data = ingester.getStream().drain();
 
         for (Datum d : data) {
-            String firstValString = encoder.getAttribute(d.getAttributes().get(0)).getValue();
+            String firstValString = encoder.getAttribute(d.attributes().get(0)).getValue();
             Integer curValInt = Integer.parseInt(firstValString);
             assertTrue(firstVals.contains(firstValString));
             firstVals.remove(firstValString);
@@ -326,7 +326,7 @@ public class SQLIngesterTest {
             column = 0;
             for(int i = 0; i < NUM_ATTRS; ++i) {
                 assertEquals(curValInt,
-                             (Integer) Integer.parseInt(encoder.getAttribute(d.getAttributes().get(i)).getValue()));
+                             (Integer) Integer.parseInt(encoder.getAttribute(d.attributes().get(i)).getValue()));
                 curValInt++;
                 column++;
             }

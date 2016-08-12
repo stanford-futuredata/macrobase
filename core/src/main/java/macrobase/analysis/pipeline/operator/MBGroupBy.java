@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class MBGroupBy extends MBOperator<Datum, Datum> {
     private final List<Integer> groupByColumn;
@@ -39,7 +38,7 @@ public class MBGroupBy extends MBOperator<Datum, Datum> {
         for(Datum d : records) {
             List<Integer> groupValues = new ArrayList<>(groupByColumn.size());
             for(Integer group : groupByColumn) {
-                groupValues.add(d.getAttributes().get(group));
+                groupValues.add(d.attributes().get(group));
             }
 
             List<Datum> t = dataMap.get(groupValues);
