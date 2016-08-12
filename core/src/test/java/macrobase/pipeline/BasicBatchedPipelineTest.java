@@ -40,7 +40,6 @@ public class BasicBatchedPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
@@ -81,7 +80,6 @@ public class BasicBatchedPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
@@ -119,7 +117,6 @@ public class BasicBatchedPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);
@@ -159,7 +156,6 @@ public class BasicBatchedPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicBatchedPipeline ba = new BasicBatchedPipeline();
         ba.initialize(conf);

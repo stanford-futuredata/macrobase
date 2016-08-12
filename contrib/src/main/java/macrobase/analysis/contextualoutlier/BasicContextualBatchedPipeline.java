@@ -26,7 +26,6 @@ public class BasicContextualBatchedPipeline extends BasePipeline {
     @Override
     public Pipeline initialize(MacroBaseConf conf) throws Exception {
         super.initialize(conf);
-        conf.sanityCheckBatch();
         return this;
     }
 

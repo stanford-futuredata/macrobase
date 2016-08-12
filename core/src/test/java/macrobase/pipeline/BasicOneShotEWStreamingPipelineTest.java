@@ -50,7 +50,6 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckStreaming();
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
@@ -91,7 +90,6 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckStreaming();
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
@@ -132,7 +130,6 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);
@@ -183,7 +180,6 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicOneShotEWStreamingPipeline sa = new BasicOneShotEWStreamingPipeline();
         sa.initialize(conf);

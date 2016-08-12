@@ -25,7 +25,6 @@ public class GridDumpingPipeline extends BasePipeline {
 
     public Pipeline initialize(MacroBaseConf conf) throws Exception {
         super.initialize(conf);
-        conf.sanityCheckBatch();
         return this;
     }
 

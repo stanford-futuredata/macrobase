@@ -41,7 +41,6 @@ public class GridDumpingPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/20points.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         AnalysisResult ar = (new GridDumpingPipeline().initialize(conf)).run().get(0);
         Assert.assertEquals(1, ar.getItemSets().size());

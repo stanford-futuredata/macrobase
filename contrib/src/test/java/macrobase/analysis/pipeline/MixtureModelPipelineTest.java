@@ -45,7 +45,6 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/toy2gaussians.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         AnalysisResult ar = (new MixtureModelPipeline().initialize(conf)).run().get(0);
         Assert.assertEquals(1, ar.getItemSets().size());
@@ -95,7 +94,6 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/toy2gaussians.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         List<AnalysisResult> results = (new MixtureModelPipeline().initialize(conf)).run();
         Assert.assertEquals(2, results.size());
@@ -142,7 +140,6 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-700points.csv.gz");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         AnalysisResult ar = (new MixtureModelPipeline().initialize(conf)).run().get(0);
         Assert.assertEquals(0, ar.getItemSets().size());

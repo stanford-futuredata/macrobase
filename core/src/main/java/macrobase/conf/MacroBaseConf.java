@@ -287,7 +287,8 @@ public class MacroBaseConf extends Configuration {
         if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
-        return _conf.get(key).length() > 0 ? Arrays.asList(_conf.get(key).split(",[ ]*")).stream().map(Double::parseDouble).collect(Collectors.toList()) : new ArrayList<>();
+        return _conf.get(key).length() > 0 ? Arrays.asList(_conf.get(key).split(",[ ]*")).stream().map(
+                Double::parseDouble).collect(Collectors.toList()) : new ArrayList<>();
     }
 
     public List<Double> getDoubleList(String key, List<Double> defaultValue) throws ConfigurationException {
@@ -296,6 +297,7 @@ public class MacroBaseConf extends Configuration {
         }
         return defaultValue;
     }
+
 
     public Integer getInt(String key) throws ConfigurationException {
         if (!_conf.containsKey(key)) {
@@ -359,26 +361,6 @@ public class MacroBaseConf extends Configuration {
                 .sorted((a, b) -> a.getKey().compareTo(b.getKey()))
                 .map(e -> e.getKey() + ": " + e.getValue())
                 .collect(Collectors.joining("\n"));
-    }
-
-    private void sanityCheckBase() throws ConfigurationException {
-        if (getBoolean(USE_PERCENTILE, false) && getBoolean(USE_ZSCORE, false)) {
-            throw new ConfigurationException(String.format("Can only select one of %s or %s",
-                    USE_PERCENTILE,
-                    USE_ZSCORE));
-        } else if (!(getBoolean(USE_PERCENTILE, false) || getBoolean(USE_ZSCORE, false))) {
-            throw new ConfigurationException(String.format("Must select one of %s or %s",
-                    USE_PERCENTILE,
-                    USE_ZSCORE));
-        }
-    }
-
-    public void sanityCheckBatch() throws ConfigurationException {
-        sanityCheckBase();
-    }
-
-    public void sanityCheckStreaming() throws ConfigurationException {
-        sanityCheckBase();
     }
 
     public void loadSystemProperties() {

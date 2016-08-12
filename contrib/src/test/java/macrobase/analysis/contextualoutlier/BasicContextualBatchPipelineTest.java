@@ -34,7 +34,6 @@ public class BasicContextualBatchPipelineTest {
                 .set(ContextualConf.CONTEXTUAL_NUMINTERVALS, 10)
                 .set(ContextualConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicContextualBatchedPipeline pipeline = new BasicContextualBatchedPipeline();
         pipeline.initialize(conf);
@@ -72,7 +71,6 @@ public class BasicContextualBatchPipelineTest {
                 .set(ContextualConf.CONTEXTUAL_API_OUTLIER_PREDICATES, "C3 = c1")
                 .set(ContextualConf.CONTEXTUAL_OUTPUT_FILE, "target/temp.txt");
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         BasicContextualBatchedPipeline pipeline = new BasicContextualBatchedPipeline();
         pipeline.initialize(conf);

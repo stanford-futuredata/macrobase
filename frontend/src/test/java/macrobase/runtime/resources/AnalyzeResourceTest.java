@@ -26,7 +26,6 @@ public class AnalyzeResourceTest {
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
         conf.loadSystemProperties();
-        conf.sanityCheckBatch();
 
         AnalyzeResource resource = new AnalyzeResource(conf);
         AnalyzeResource.AnalysisRequest r = new AnalyzeResource.AnalysisRequest();
