@@ -1,4 +1,4 @@
-macrobase.query.name: testTasks
+macrobase.query.name: streamingQuery
 macrobase.pipeline.class: macrobase.analysis.pipeline.BasicOneShotEWStreamingPipeline
 
 macrobase.loader.attributes: [device_id, firmware_version]
@@ -44,4 +44,4 @@ logging:
   level: INFO
 
   loggers:
-    "macrobase": TRACE
+    "macrobase": INFO
