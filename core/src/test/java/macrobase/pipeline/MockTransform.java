@@ -22,9 +22,4 @@ public class MockTransform extends BatchTrainScore {
     public double score(Datum datum) {
         return 0;
     }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        return 0;
-    }
 }

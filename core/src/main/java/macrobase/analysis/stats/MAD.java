@@ -94,10 +94,7 @@ public class MAD extends BatchTrainScore {
         return Math.abs(point - median) / (MAD);
     }
 
-    @Override
     public double getZScoreEquivalent(double zscore) {
-        double ret = zscore / MAD_TO_ZSCORE_COEFFICIENT;
-        log.trace("setting zscore of {} threshold to {}", zscore, ret);
-        return ret;
+        return zscore / MAD_TO_ZSCORE_COEFFICIENT;
     }
 }

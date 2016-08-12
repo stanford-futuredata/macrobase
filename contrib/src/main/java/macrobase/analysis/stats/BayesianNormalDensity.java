@@ -86,9 +86,4 @@ public class BayesianNormalDensity extends BatchTrainScore {
     public double getDensity(Datum datum) {
         return distribution.density(datum.metrics());
     }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        throw new RuntimeException("not implemented.");
-    }
 }

@@ -92,12 +92,6 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
 
     public abstract double[] getClusterProbabilities(Datum d);
 
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        throw new NotImplementedException("Mixture Models don't have z-score equivalent");
-    }
-
     public boolean checkTermination(double logLikelihood, double oldLogLikelihood, int iteration) {
         log.debug("average point log likelihood after iteration {} is {}", iteration, logLikelihood);
 

@@ -154,7 +154,7 @@ public class KDE extends BatchTrainScore {
                                                              2) * data.size() * this.proportionOfDataToUse;
                 final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
                 log.info("covariance Scale: {}", covarianceScale);
-                RealMatrix covariance = this.getCovariance(data);
+                RealMatrix covariance = Covariance.getCovariance(data);
                 log.info("covariance of the data is: {}", covariance);
                 bandwidth = covariance.scalarMultiply(covarianceScale);
             case MANUAL:
@@ -205,11 +205,4 @@ public class KDE extends BatchTrainScore {
         }
         return -_score * this.scoreScalingFactor;
     }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        throw new RuntimeException("ZScore equivalence is not implemented yet.");
-    }
-
-
 }

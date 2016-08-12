@@ -1,7 +1,6 @@
 package macrobase.analysis.classify;
 
 import macrobase.analysis.pipeline.stream.MBStream;
-import macrobase.analysis.result.DatumWithNorm;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.sample.ExponentiallyBiasedAChao;
 import macrobase.conf.MacroBaseConf;

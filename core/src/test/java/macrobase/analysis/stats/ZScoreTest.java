@@ -32,11 +32,4 @@ public class ZScoreTest {
         assertEquals(1.714816, z.score(data.get(data.size() - 1)), 1e-5);
         assertEquals(0.017321, z.score(data.get(50)), 1e-5);
     }
-
-    @Test
-    public void zScoreEquivalentTest() {
-        ZScore z = new ZScore(new MacroBaseConf());
-        assertEquals(1, z.getZScoreEquivalent(1), 0);
-        assertEquals(20, z.getZScoreEquivalent(20), 0);
-    }
 }

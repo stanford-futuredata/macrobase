@@ -50,10 +50,4 @@ public abstract class TimeSeriesScore extends BatchTrainScore {
         addToWindow(datum);
         return scoreWindow();
     }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        return 0;
-    }
-
 }

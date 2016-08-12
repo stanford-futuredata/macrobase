@@ -46,9 +46,4 @@ public class ZScore extends BatchTrainScore {
         double point = datum.metrics().getEntry(0);
         return Math.abs(point - mean) / std;
     }
-
-    @Override
-    public double getZScoreEquivalent(double zscore) {
-        return zscore;
-    }
 }

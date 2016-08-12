@@ -174,7 +174,7 @@ public class MinCovDet extends BatchTrainScore {
         context.stop();
 
         context = covarianceComputation.time();
-        cov = getCovariance(initialSubset);
+        cov = Covariance.getCovariance(initialSubset);
         updateInverseCovariance();
         context.stop();
 
@@ -196,7 +196,7 @@ public class MinCovDet extends BatchTrainScore {
             context.stop();
 
             context = covarianceComputation.time();
-            cov = getCovariance(newH);
+            cov = Covariance.getCovariance(newH);
             updateInverseCovariance();
             context.stop();
 
@@ -240,7 +240,6 @@ public class MinCovDet extends BatchTrainScore {
         return mean;
     }
 
-    @Override
     public double getZScoreEquivalent(double zscore) {
         // compute zscore to CDF
         double cdf = (new NormalDistribution()).cumulativeProbability(zscore);
