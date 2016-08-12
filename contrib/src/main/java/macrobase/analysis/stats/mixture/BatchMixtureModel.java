@@ -57,21 +57,21 @@ public abstract class BatchMixtureModel extends BatchTrainScore {
             for (int n = 0; n < data.size(); n++) {
                 double distance = 0;
                 for (int j = 0; j < k; j++) {
-                    distance += data.get(n).getMetrics().getDistance(vectors.get(j));
+                    distance += data.get(n).metrics().getDistance(vectors.get(j));
                 }
                 if (distance > maxDistance) {
                     maxDistance = distance;
                     index = n;
                 }
             }
-            vectors.add(data.get(index).getMetrics());
+            vectors.add(data.get(index).metrics());
         }
         return vectors;
     }
 
     protected static List<RealVector> gonzalezInitializeMixtureCenters(List<Datum> data, int K, Random rand) {
         List<RealVector> vectors = new ArrayList<>(K);
-        vectors.add(data.get(rand.nextInt(data.size())).getMetrics());
+        vectors.add(data.get(rand.nextInt(data.size())).metrics());
         return gonzalezInitializeMixtureCenters(vectors, data, K, rand);
     }
 

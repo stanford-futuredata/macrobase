@@ -41,7 +41,7 @@ public class BayesianNormalDensity extends BatchTrainScore {
     @Override
     public void train(List<Datum> data) {
         System.out.println("training in ...");
-        int dimensions = data.get(0).getMetrics().getDimension();
+        int dimensions = data.get(0).metrics().getDimension();
         priorMean = new ArrayRealVector(dimensions);
         priorVarianceScale = 1;
         priorDegreesOfFreedom = 1;
@@ -50,13 +50,13 @@ public class BayesianNormalDensity extends BatchTrainScore {
 
         RealVector sampleSum = new ArrayRealVector(dimensions);
         for (Datum datum : data) {
-            sampleSum = sampleSum.add(datum.getMetrics());
+            sampleSum = sampleSum.add(datum.metrics());
         }
         RealVector sampleMean = sampleSum.mapDivide(N);
         RealMatrix sampleCovarianceSum = new BlockRealMatrix(dimensions, dimensions);
         RealVector diff;
         for (Datum datum : data) {
-            diff = datum.getMetrics().subtract(sampleMean);
+            diff = datum.metrics().subtract(sampleMean);
             sampleCovarianceSum = sampleCovarianceSum.add(diff.outerProduct(diff));
         }
         posteriorVarianceScale = priorVarianceScale + N;
@@ -84,7 +84,7 @@ public class BayesianNormalDensity extends BatchTrainScore {
     }
 
     public double getDensity(Datum datum) {
-        return distribution.density(datum.getMetrics());
+        return distribution.density(datum.metrics());
     }
 
     @Override

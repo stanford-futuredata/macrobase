@@ -41,7 +41,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
     private void trainTestEM(List<Datum> trainData, List<Datum> testData) {
         int N = trainData.size();
         log.debug("N = {}", N);
-        int dimensions = trainData.get(0).getMetrics().getDimension();
+        int dimensions = trainData.get(0).metrics().getDimension();
         // 1. Initialize the means and covariances and mixing coefficients,
         //    and evaluate the initial value of the log likelihood.
         mu = new ArrayList<>(this.K);
@@ -71,7 +71,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
             for (int n = 0; n < N; n++) {
                 double normalizingConstant = 0;
                 for (int k = 0; k < K; k++) {
-                    gamma[n][k] = phi[k] * mixtureDistributions.get(k).density(trainData.get(n).getMetrics());
+                    gamma[n][k] = phi[k] * mixtureDistributions.get(k).density(trainData.get(n).metrics());
                     normalizingConstant += gamma[n][k];
                 }
                 for (int k = 0; k < K; k++) {
@@ -84,13 +84,13 @@ public class ExpectMaxGMM extends BatchMixtureModel {
             for (int k = 0; k < K; k++) {
                 RealVector newMu = new ArrayRealVector(dimensions);
                 for (int n = 0; n < N; n++) {
-                    newMu = newMu.add(trainData.get(n).getMetrics().mapMultiply(gamma[n][k]));
+                    newMu = newMu.add(trainData.get(n).metrics().mapMultiply(gamma[n][k]));
                 }
                 newMu = newMu.mapDivide(clusterWeight[k]);
                 RealMatrix newSigma = new BlockRealMatrix(dimensions, dimensions);
                 mu.set(k, newMu);
                 for (int n = 0; n < N; n++) {
-                    RealVector _diff = trainData.get(n).getMetrics().subtract(newMu);
+                    RealVector _diff = trainData.get(n).metrics().subtract(newMu);
                     newSigma = newSigma.add(_diff.outerProduct(_diff).scalarMultiply(gamma[n][k]));
                 }
                 newSigma = newSigma.scalarMultiply(1. / clusterWeight[k]);
@@ -134,7 +134,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
     public double score(Datum datum) {
         double probability = 0;
         for (int k = 0; k < K; k++) {
-            probability += phi[k] * mixtureDistributions.get(k).density(datum.getMetrics());
+            probability += phi[k] * mixtureDistributions.get(k).density(datum.metrics());
         }
         return Math.log(probability);
     }
@@ -159,7 +159,7 @@ public class ExpectMaxGMM extends BatchMixtureModel {
         double[] probas = new double[K];
         double normalizingConstant = 0;
         for (int k = 0; k < K; k++) {
-            probas[k] = phi[k] * mixtureDistributions.get(k).density(d.getMetrics());
+            probas[k] = phi[k] * mixtureDistributions.get(k).density(d.metrics());
             normalizingConstant += probas[k];
         }
         for (int k = 0; k < K; k++) {

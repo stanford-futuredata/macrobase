@@ -1,11 +1,9 @@
 package macrobase.analysis.stats;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
 import macrobase.analysis.summary.result.DatumWithScore;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
-import macrobase.datamodel.HasMetrics;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.Covariance;
@@ -125,12 +123,12 @@ public abstract class BatchTrainScore {
         return new BatchResult(inliers, outliers);
     }
 
-    protected RealMatrix getCovariance(List<? extends HasMetrics> data) {
-        int rank = data.get(0).getMetrics().getDimension();
+    protected RealMatrix getCovariance(List<Datum> data) {
+        int rank = data.get(0).metrics().getDimension();
         RealMatrix ret = new Array2DRowRealMatrix(data.size(), rank);
         int index = 0;
-        for (HasMetrics d : data) {
-            ret.setRow(index, d.getMetrics().toArray());
+        for (Datum d : data) {
+            ret.setRow(index, d.metrics().toArray());
             index += 1;
         }
 

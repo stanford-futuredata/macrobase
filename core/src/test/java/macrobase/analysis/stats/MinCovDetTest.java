@@ -63,7 +63,7 @@ public class MinCovDetTest {
         RealVector mean = trainer.getMean();
 
         for (Datum d : testData) {
-            assertEquals(trainer.score(d), getMahalanobisApache(mean, inverseCov, d.getMetrics()), 0.01);
+            assertEquals(trainer.score(d), getMahalanobisApache(mean, inverseCov, d.metrics()), 0.01);
         }
     }
 }

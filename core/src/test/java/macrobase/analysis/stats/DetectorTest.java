@@ -28,7 +28,7 @@ public class DetectorTest {
 
         @Override
         public double score(Datum datum) {
-            if(datum.getMetrics().getEntry(0) == 0) {
+            if(datum.metrics().getEntry(0) == 0) {
                 return INLIER_SCORE;
             } else {
                 return OUTLIER_SCORE;
@@ -70,12 +70,12 @@ public class DetectorTest {
         DummyDetector detector = new DummyDetector(new MacroBaseConf());
         BatchTrainScore.BatchResult or = detector.classifyBatchByPercentile(data, PERCENTILE_THRESH);
         for (DatumWithScore d : or.getInliers()) {
-            assertEquals(0, d.getDatum().getMetrics().getEntry(0), 0);
+            assertEquals(0, d.getDatum().metrics().getEntry(0), 0);
             assertEquals(INLIER_SCORE, d.getScore(), 0);
         }
 
         for (DatumWithScore d : or.getOutliers()) {
-            assertEquals(1, d.getDatum().getMetrics().getEntry(0), 0);
+            assertEquals(1, d.getDatum().metrics().getEntry(0), 0);
             assertEquals(OUTLIER_SCORE, d.getScore(), 0);
         }
 
@@ -91,12 +91,12 @@ public class DetectorTest {
         BatchTrainScore.BatchResult or = detector.classifyBatchByZScoreEquivalent(data, 3);
 
         for (DatumWithScore d : or.getInliers()) {
-            assertEquals(0, d.getDatum().getMetrics().getEntry(0), 0);
+            assertEquals(0, d.getDatum().metrics().getEntry(0), 0);
             assertEquals(INLIER_SCORE, d.getScore(), 0);
         }
 
         for (DatumWithScore d : or.getOutliers()) {
-            assertEquals(1, d.getDatum().getMetrics().getEntry(0), 0);
+            assertEquals(1, d.getDatum().metrics().getEntry(0), 0);
             assertEquals(OUTLIER_SCORE, d.getScore(), 0);
         }
 

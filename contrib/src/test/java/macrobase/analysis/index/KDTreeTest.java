@@ -70,7 +70,7 @@ public class KDTreeTest {
 
 
         double[][] boundaries;
-        int dimensions = data.get(0).getMetrics().getDimension();
+        int dimensions = data.get(0).metrics().getDimension();
 
         // Check boundaries for a normal tree.
         node = new KDTree(data, 4);

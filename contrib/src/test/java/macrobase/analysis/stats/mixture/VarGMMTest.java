@@ -73,7 +73,7 @@ public class VarGMMTest {
             Datum d = data.get(rand.nextInt(totalPoints));
             double density = 0;
             for (int j = 0; j < 3; j++) {
-                density += clusterWeights[j] / totalPoints * normals.get(j).density(d.getMetrics());
+                density += clusterWeights[j] / totalPoints * normals.get(j).density(d.metrics());
             }
             // Finite Model takes longer to converge, and since we are limiting num
             // iterations, take a conservative limit on deviation.

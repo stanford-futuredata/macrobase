@@ -33,7 +33,7 @@ public class RandomProjectionTest {
         rp.consume(data);
         List<Datum> transformed = rp.getStream().drain();
         for (Datum td: transformed) {
-            double transformed_dimension = td.getMetrics().getDimension();
+            double transformed_dimension = td.metrics().getDimension();
             assertTrue(transformed_dimension == k);
         }
 

@@ -175,7 +175,7 @@ public class StochVarDPGMMTest {
             Datum d = data.get(rand.nextInt(totalPoints));
             double density = 0;
             for (int j = 0; j < 3; j++) {
-                density += clusterWeights[j] / totalPoints * normals.get(j).density(d.getMetrics());
+                density += clusterWeights[j] / totalPoints * normals.get(j).density(d.metrics());
             }
             assertEquals(density, Math.exp(dpgmm.score(d)), 0.02);
         }

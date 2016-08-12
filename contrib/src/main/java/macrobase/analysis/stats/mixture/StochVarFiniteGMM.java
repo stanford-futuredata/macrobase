@@ -23,7 +23,7 @@ public class StochVarFiniteGMM extends FiniteGMM {
     @Override
     public void trainTest(List<Datum> trainData, List<Datum> testData) {
         mixingComponents = new MultiComponents(0.1, K);
-        clusters = new NormalWishartClusters(K, trainData.get(0).getMetrics().getDimension());
+        clusters = new NormalWishartClusters(K, trainData.get(0).metrics().getDimension());
         clusters.initializeBaseForFinite(trainData);
         clusters.initializeAtomsForFinite(trainData, initialClusterCentersFile, conf.getRandom());
 

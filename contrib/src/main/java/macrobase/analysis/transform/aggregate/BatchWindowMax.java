@@ -21,12 +21,12 @@ public class BatchWindowMax extends BatchWindowAggregate {
         if (data.isEmpty())
             return new Datum(new ArrayList<>(), new ArrayRealVector(dim));
 
-        dim = data.get(0).getMetrics().getDimension();
+        dim = data.get(0).metrics().getDimension();
         RealVector results = new ArrayRealVector(dim);
         results.set(Double.MIN_VALUE);
 
         for (Datum d : data) {
-            RealVector metrics = d.getMetrics();
+            RealVector metrics = d.metrics();
             for (int i = 0; i < dim; i ++) {
                 if (timeColumn != null && i == timeColumn)
                     continue;

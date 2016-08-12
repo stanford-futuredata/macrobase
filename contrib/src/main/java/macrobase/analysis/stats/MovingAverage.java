@@ -48,7 +48,7 @@ public class MovingAverage extends TimeSeriesScore {
         } else {
             int weight = newDatum.getTime(timeColumn) - getLatestDatum().getTime(timeColumn);
             if (window.size() == 1) {
-                windowSum = new ArrayRealVector(newDatum.getMetrics()
+                windowSum = new ArrayRealVector(newDatum.metrics()
                         .getDimension());
                 // Remove and re-add first datum with the correct weight
                 Datum first = window.remove().getDatum();
@@ -61,7 +61,7 @@ public class MovingAverage extends TimeSeriesScore {
     }
 
     private void addDatumWithWeight(Datum d, int weight) {
-        windowSum = windowSum.add(d.getMetrics().mapMultiply(weight));
+        windowSum = windowSum.add(d.metrics().mapMultiply(weight));
         weightTotal += weight;
         window.add(new DatumWithInfo(d, weight));
     }
@@ -75,7 +75,7 @@ public class MovingAverage extends TimeSeriesScore {
         DatumWithInfo head = window.remove();
         int oldWeight = head.getWeight();
         weightTotal -= oldWeight;
-        windowSum = windowSum.subtract(head.getDatum().getMetrics()
+        windowSum = windowSum.subtract(head.getDatum().metrics()
                 .mapMultiply(oldWeight));
     }
 
@@ -84,7 +84,7 @@ public class MovingAverage extends TimeSeriesScore {
         if (windowSum == null) {
             return 0;
         }
-        RealVector latest = getLatestDatum().getMetrics();
+        RealVector latest = getLatestDatum().metrics();
         RealVector average = windowSum.mapDivide(weightTotal);
         double percentDiff = 0;
         for (int i = 0; i < average.getDimension(); i++) {

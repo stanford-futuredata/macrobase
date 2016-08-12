@@ -1,7 +1,5 @@
 package macrobase.analysis.stats;
 
-import com.google.common.collect.Lists;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
@@ -11,8 +9,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Random;
 
@@ -80,7 +76,7 @@ public class BayesianNormalDensityTest {
         for (int i =0 ; i < 100; i++ ) {
             index = rand.nextInt(data.size());
             d = data.get(index);
-            assertEquals(standardNormal.density(d.getMetrics().getEntry(0)), bayesianNormal.getDensity(d), 0.01);
+            assertEquals(standardNormal.density(d.metrics().getEntry(0)), bayesianNormal.getDensity(d), 0.01);
         }
     }
 
@@ -115,7 +111,7 @@ public class BayesianNormalDensityTest {
         for (int i =0 ; i < 100; i++ ) {
             index = rand.nextInt(data.size());
             d = data.get(index);
-            assertEquals(bivariateNormal.density(d.getMetrics().toArray()), bayesianNormal.getDensity(d), 1e-3);
+            assertEquals(bivariateNormal.density(d.metrics().toArray()), bayesianNormal.getDensity(d), 1e-3);
         }
     }
 }

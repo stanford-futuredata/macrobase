@@ -35,7 +35,7 @@ public class RandomProjection extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         if (!hasConsumed) {
-            n = records.get(0).getMetrics().getDimension();
+            n = records.get(0).metrics().getDimension();
             mean = new ArrayRealVector(n);
             covV = new ArrayRealVector(n, 1d/n);
             covM = new DiagonalMatrix(covV.toArray());
@@ -45,7 +45,7 @@ public class RandomProjection extends FeatureTransform {
             hasConsumed = true;
         }
         for (Datum d: records){
-            metricVector = d.getMetrics();
+            metricVector = d.metrics();
             transformedVector = randomProjectionMatrix.operate(metricVector);
             output.add(new Datum(d,transformedVector));
         }

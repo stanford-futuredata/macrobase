@@ -26,7 +26,6 @@ import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.util.MemoryUtil;
@@ -470,13 +469,13 @@ public class ContextualOutlierDetector {
         double[] values1 = new double[sample1.size()];
         int i = 0;
         for (Datum d : sample1) {
-            values1[i] = d.getMetrics().getEntry(0);
+            values1[i] = d.metrics().getEntry(0);
             i++;
         }
         double[] values2 = new double[sample2.size()];
         int j = 0;
         for (Datum d : sample2) {
-            values2[j] = d.getMetrics().getEntry(0);
+            values2[j] = d.metrics().getEntry(0);
             j++;
         }
         double pValue = TestUtils.kolmogorovSmirnovTest(values1, values2);

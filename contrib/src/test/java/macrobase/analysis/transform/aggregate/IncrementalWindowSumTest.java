@@ -22,13 +22,13 @@ public class IncrementalWindowSumTest {
         IncrementalWindowSum windowSum = new IncrementalWindowSum(conf);
         // First window
         Datum sum = windowSum.updateWindow(data.subList(0, 10), new ArrayList<>());
-        assert(sum.getMetrics().getEntry(1) == 45);
+        assert(sum.metrics().getEntry(1) == 45);
         // Update window
         sum = windowSum.updateWindow(data.subList(10, 11), data.subList(0, 1));
-        assert(sum.getMetrics().getEntry(1) == 55);
+        assert(sum.metrics().getEntry(1) == 55);
         sum = windowSum.updateWindow(data.subList(11, 20), data.subList(1, 5));
-        assert(sum.getMetrics().getEntry(1) == 180);
+        assert(sum.metrics().getEntry(1) == 180);
         sum = windowSum.updateWindow(new ArrayList<>(), data.subList(5, 10));
-        assert(sum.getMetrics().getEntry(1) == 145);
+        assert(sum.metrics().getEntry(1) == 145);
     }
 }

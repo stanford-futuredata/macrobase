@@ -28,7 +28,7 @@ public class Truncate extends FeatureTransform{
     @Override
     public void consume(List<Datum> records) throws Exception {
         for (Datum d: records){
-            metricVector = d.getMetrics();
+            metricVector = d.metrics();
             transformedVector = metricVector.getSubVector(0,k);
             output.add(new Datum(d,transformedVector));
         }

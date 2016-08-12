@@ -16,27 +16,27 @@ public class BatchWindowMaxTest {
         List<Datum> data = new ArrayList<>();
         for (int i = 0; i < 10; i ++) {
             Datum d = new Datum(new ArrayList<>(), new ArrayRealVector(3));
-            d.getMetrics().setEntry(0, 1);
+            d.metrics().setEntry(0, 1);
             if (i == 0) {
-                d.getMetrics().setEntry(1, r.nextInt());
+                d.metrics().setEntry(1, r.nextInt());
             } else {
-                d.getMetrics().setEntry(1, Integer.MAX_VALUE);
+                d.metrics().setEntry(1, Integer.MAX_VALUE);
             }
-            d.getMetrics().setEntry(2, i);
+            d.metrics().setEntry(2, i);
             data.add(d);
         }
 
         BatchWindowMax windowMax = new BatchWindowMax();
         Datum max = windowMax.aggregate(data);
-        assert(max.getMetrics().getEntry(0) == 1);
-        assert(max.getMetrics().getEntry(1) == Integer.MAX_VALUE);
-        assert(max.getMetrics().getEntry(2) == 9);
+        assert(max.metrics().getEntry(0) == 1);
+        assert(max.metrics().getEntry(1) == Integer.MAX_VALUE);
+        assert(max.metrics().getEntry(2) == 9);
 
         /* Test datum with time column */
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TIME_COLUMN, 2);
         windowMax = new BatchWindowMax(conf);
         max = windowMax.aggregate(data);
-        assert(max.getMetrics().getEntry(0) == 1);
-        assert(max.getMetrics().getEntry(1) == Integer.MAX_VALUE);
+        assert(max.metrics().getEntry(0) == 1);
+        assert(max.metrics().getEntry(1) == Integer.MAX_VALUE);
     }
 }

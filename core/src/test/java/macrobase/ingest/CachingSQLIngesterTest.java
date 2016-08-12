@@ -149,12 +149,12 @@ public class CachingSQLIngesterTest {
             }
 
             for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.getMetrics().getEntry(i), 0);
+                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
                 curValInt++;
             }
 
             for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
-                assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
+                assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
         }
@@ -181,12 +181,12 @@ public class CachingSQLIngesterTest {
             }
 
             for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.getMetrics().getEntry(i), 0);
+                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
                 curValInt++;
             }
 
             for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
-                assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
+                assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
         }
@@ -297,12 +297,12 @@ public class CachingSQLIngesterTest {
             }
 
             for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.getMetrics().getEntry(i), 0);
+                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
                 curValInt++;
             }
 
             for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
-                assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
+                assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
         }
@@ -329,12 +329,12 @@ public class CachingSQLIngesterTest {
             }
 
             for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.getMetrics().getEntry(i), 0);
+                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
                 curValInt++;
             }
 
             for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
-                assertEquals(curValInt, d.getMetrics().getEntry(i), 0);
+                assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
         }

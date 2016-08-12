@@ -2,7 +2,6 @@ package macrobase.analysis.index;
 
 import macrobase.datamodel.Datum;
 import macrobase.datamodel.DatumComparator;
-import macrobase.datamodel.HasMetrics;
 import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -35,7 +34,7 @@ public class KDTree {
      */
     public KDTree(List<Datum> data, int leafCapacity) {
         this.leafCapacity = leafCapacity;
-        this.k = data.get(0).getMetrics().getDimension();
+        this.k = data.get(0).metrics().getDimension();
         this.boundaries = new double[k][2];
 
         boundaries = AlgebraUtils.getBoundingBox(data);
@@ -65,7 +64,7 @@ public class KDTree {
             Datum belowSplit = data.get(splitIndex - 1);
             Datum aboveSplit = data.get(splitIndex);
             this.splitValue = 0.5 * (
-                    aboveSplit.getMetrics().getEntry(splitDimension) + belowSplit.getMetrics().getEntry(splitDimension)
+                    aboveSplit.metrics().getEntry(splitDimension) + belowSplit.metrics().getEntry(splitDimension)
             );
 
             this.loChild = new KDTree(data.subList(0, splitIndex), leafCapacity);
@@ -83,9 +82,9 @@ public class KDTree {
             RealVector sum = new ArrayRealVector(this.k);
 
             int index = 0;
-            for (HasMetrics d : data) {
-                ret.setRow(index, d.getMetrics().toArray());
-                sum = sum.add(d.getMetrics());
+            for (Datum d : data) {
+                ret.setRow(index, d.metrics().toArray());
+                sum = sum.add(d.metrics());
                 index += 1;
             }
 
@@ -104,7 +103,7 @@ public class KDTree {
         double[] minDifferences = new double[k];
         double[] maxDifferences = new double[k];
 
-        RealVector metrics = queryDatum.getMetrics();
+        RealVector metrics = queryDatum.metrics();
         for (int i=0; i<k; i++) {
             double deltaLo = metrics.getEntry(i) - this.boundaries[i][0];
             double deltaHi = this.boundaries[i][1] - metrics.getEntry(i);
@@ -137,7 +136,7 @@ public class KDTree {
      * @return array with min, max distances squared
      */
     public double[] estimateL2DistanceSquared(Datum queryDatum) {
-        RealVector vector = queryDatum.getMetrics();
+        RealVector vector = queryDatum.metrics();
         double[] estimates = new double[2];
         for (int i=0; i<k; i++) {
             double deltaLo = vector.getEntry(i) - this.boundaries[i][0];
@@ -165,7 +164,7 @@ public class KDTree {
     }
 
     public boolean isInsideBoundaries(Datum queryDatum) {
-        RealVector vector = queryDatum.getMetrics();
+        RealVector vector = queryDatum.metrics();
         for (int i=0; i<k; i++) {
             if (vector.getEntry(i) < this.boundaries[i][0] || vector.getEntry(i) > this.boundaries[i][1]) {
                 return false;
@@ -221,7 +220,7 @@ public class KDTree {
         else {
             String all = "<KDNode>:\n";
             for (Datum datum: this.items) {
-                all += String.format("%s - %s\n", tabs, datum.getMetrics());
+                all += String.format("%s - %s\n", tabs, datum.metrics());
             }
             return all;
         }

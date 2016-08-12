@@ -41,7 +41,7 @@ public class DiagnosticsUtilsTest {
         };
         boolean[] pointsSeen = new boolean[9];
         for (Datum datum : grid) {
-            double[] array = datum.getMetrics().toArray();
+            double[] array = datum.metrics().toArray();
             for (int i = 0 ; i < 9 ; i++) {
                 if (Math.abs(array[0] - expectedGrid[i][0]) < 0.01 &&  Math.abs(array[1] - expectedGrid[i][1]) < 0.01) {
                     pointsSeen[i] = true;
@@ -57,7 +57,7 @@ public class DiagnosticsUtilsTest {
         assertEquals(grid2.size(), 9);
         for (int i = 0; i < 9; i++) {
             for (int d=0; d < 2; d++) {
-                assertEquals(grid.get(i).getMetrics().getEntry(d), grid2.get(i).getMetrics().getEntry(d), 1e-5);
+                assertEquals(grid.get(i).metrics().getEntry(d), grid2.get(i).metrics().getEntry(d), 1e-5);
             }
         }
     }
@@ -75,8 +75,8 @@ public class DiagnosticsUtilsTest {
         assertEquals(3, grid.size());
         grid = DiagnosticsUtils.createGridFixedSize(boundaries, 6);
         assertEquals(6, grid.size());
-        assertEquals(1.8, grid.get(4).getMetrics().getEntry(0), 1e-5);
-        assertEquals(1.2, grid.get(1).getMetrics().getEntry(0), 1e-5);
+        assertEquals(1.8, grid.get(4).metrics().getEntry(0), 1e-5);
+        assertEquals(1.2, grid.get(1).metrics().getEntry(0), 1e-5);
 
     }
 }

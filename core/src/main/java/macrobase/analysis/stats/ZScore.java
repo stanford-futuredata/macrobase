@@ -26,8 +26,8 @@ public class ZScore extends BatchTrainScore {
 
         Timer.Context context = meanComputation.time();
         for (Datum d : data) {
-            assert (d.getMetrics().getDimension() == 1);
-            sum += d.getMetrics().getEntry(0);
+            assert (d.metrics().getDimension() == 1);
+            sum += d.metrics().getEntry(0);
         }
         mean = sum / data.size();
         context.stop();
@@ -35,7 +35,7 @@ public class ZScore extends BatchTrainScore {
         context = stddevComputation.time();
         double ss = 0;
         for (Datum d : data) {
-            ss += Math.pow(mean - d.getMetrics().getEntry(0), 2);
+            ss += Math.pow(mean - d.metrics().getEntry(0), 2);
         }
         std = Math.sqrt(ss / data.size());
         context.stop();
@@ -43,7 +43,7 @@ public class ZScore extends BatchTrainScore {
 
     @Override
     public double score(Datum datum) {
-        double point = datum.getMetrics().getEntry(0);
+        double point = datum.metrics().getEntry(0);
         return Math.abs(point - mean) / std;
     }
 

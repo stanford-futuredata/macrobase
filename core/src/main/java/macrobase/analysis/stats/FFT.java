@@ -31,7 +31,7 @@ public class FFT extends FeatureTransform {
     @Override
     public void consume(List<Datum> records) throws Exception {
         for (Datum d: records){
-            metricVector = d.getMetrics();
+            metricVector = d.metrics();
             // TODO: look for decent FFT implementation that doesn't need pwr of 2
             nextPowTwo = Math.max(2,2*Integer.highestOneBit(metricVector.getDimension()-1));
             paddedInput = metricVector.append(new ArrayRealVector(nextPowTwo - metricVector.getDimension()));

@@ -42,7 +42,7 @@ public class TruncateTest {
         t.consume(data);
         List<Datum> transformed = t.getStream().drain();
         for (Datum td: transformed) {
-            double[] val = td.getMetrics().toArray();
+            double[] val = td.metrics().toArray();
             assertArrayEquals(expected_return[index++], val,0);
         }
 

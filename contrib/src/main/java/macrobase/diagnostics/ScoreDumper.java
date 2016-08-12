@@ -25,7 +25,7 @@ public class ScoreDumper {
         List<MetricsAndScore> metricsAndScores = new ArrayList<>(data.size());
         for (Datum d : data) {
             double score = batchTrainScore.score(d);
-            metricsAndScores.add(new MetricsAndScore(d.getMetrics(), score));
+            metricsAndScores.add(new MetricsAndScore(d.metrics(), score));
         }
         try {
             JsonUtils.dumpAsJson(metricsAndScores, scoreFile);
@@ -45,7 +45,7 @@ public class ScoreDumper {
         List<Datum> gridData = DiagnosticsUtils.createGridFixedSize(boundingBox, pointsPerDimension);
 
         List<MetricsAndScore> scoredGrid = gridData.stream()
-                .map(d -> new MetricsAndScore(d.getMetrics(), batchTrainScore.score(d)))
+                .map(d -> new MetricsAndScore(d.metrics(), batchTrainScore.score(d)))
                 .collect(Collectors.toList());
         JsonUtils.tryToDumpAsJson(scoredGrid, filename);
     }

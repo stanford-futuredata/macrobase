@@ -1,6 +1,5 @@
 package macrobase.ingest;
 
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +28,8 @@ public class CSVIngesterTest {
         List<Datum> data = ingester.getStream().drain();
 
         Datum datum = data.get(0);
-        assertEquals(43, datum.getMetrics().getEntry(0), 0.0);
-        assertEquals(45, datum.getMetrics().getEntry(1), 0.0);
+        assertEquals(43, datum.metrics().getEntry(0), 0.0);
+        assertEquals(45, datum.metrics().getEntry(1), 0.0);
     }
 
     @Test
@@ -52,7 +50,7 @@ public class CSVIngesterTest {
         int count = 0;
         for(Datum d : data) {
             if (count == 3) {
-                assertEquals(5, d.getMetrics().getEntry(0), 0.0);
+                assertEquals(5, d.metrics().getEntry(0), 0.0);
             }
             count++;
         }

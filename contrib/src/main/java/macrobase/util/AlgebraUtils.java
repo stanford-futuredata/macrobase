@@ -36,14 +36,14 @@ public class AlgebraUtils {
      * @return
      */
     public static double[][] getBoundingBox(List<Datum> data) {
-        int D = data.get(0).getMetrics().getDimension();
+        int D = data.get(0).metrics().getDimension();
         double[][] boundaries = new double[D][2];
         // Calculate boundaries of the data in the tree
         for (int i = 0; i < D; i++) {
             Datum maxI = Collections.max(data, new DatumComparator(i));
             Datum minI = Collections.min(data, new DatumComparator(i));
-            boundaries[i][0] = minI.getMetrics().getEntry(i);
-            boundaries[i][1] = maxI.getMetrics().getEntry(i);
+            boundaries[i][0] = minI.metrics().getEntry(i);
+            boundaries[i][1] = maxI.metrics().getEntry(i);
         }
         return boundaries;
     }

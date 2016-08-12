@@ -91,7 +91,7 @@ public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
 
             if(tupleCount < warmupCount) {
                 warmupInput.add(d);
-                DatumWithNorm dwn = new DatumWithNorm(d, d.getMetrics().getNorm());
+                DatumWithNorm dwn = new DatumWithNorm(d, d.metrics().getNorm());
                 reservoir.insert(dwn);
                 reservoirDecayer.runIfNecessary();
                 percentileUpdater.runIfNecessary();
@@ -100,12 +100,12 @@ public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
                     updateThreshold(percentile);
 
                     for(Datum di: warmupInput) {
-                        batchResult.add(new OutlierClassificationResult(di, d.getMetrics().getNorm() > currentThreshold));
+                        batchResult.add(new OutlierClassificationResult(di, d.metrics().getNorm() > currentThreshold));
                     }
                     warmupInput.clear();
                 }
 
-                double norm = d.getMetrics().getNorm();
+                double norm = d.metrics().getNorm();
                 reservoir.insert(new DatumWithNorm(d, norm));
                 batchResult.add(new OutlierClassificationResult(d, norm > currentThreshold));
             }

@@ -35,7 +35,7 @@ public class IncrementalSlidingWindowTransform extends SlidingWindowTransform {
     private void aggregateWindow() {
         List<Datum> expiredSlide = slideWindow();
         Datum newWindow = windowAggregate.updateWindow(newSlide, expiredSlide);
-        newWindow.getMetrics().setEntry(timeColumn, windowStart);
+        newWindow.metrics().setEntry(timeColumn, windowStart);
         output.add(newWindow);
         newSlide.clear();
         windowStart += this.slideSize;

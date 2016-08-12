@@ -12,14 +12,14 @@ public class LinearMetricNormalizer extends FeatureTransform {
 
     @Override
     public void consume(List<Datum> data) {
-        int dimensions = data.get(0).getMetrics().getDimension();
+        int dimensions = data.get(0).metrics().getDimension();
 
         RealVector metricWiseMinVec = new ArrayRealVector(dimensions);
         RealVector metricWiseMaxVec = new ArrayRealVector(dimensions);
 
         for (Datum d : data) {
             for (int i = 0; i < dimensions; i++) {
-                double val = d.getMetrics().getEntry(i);
+                double val = d.metrics().getEntry(i);
 
                 if (metricWiseMinVec.getEntry(i) > val) {
                     metricWiseMinVec.setEntry(i, val);
@@ -32,7 +32,7 @@ public class LinearMetricNormalizer extends FeatureTransform {
         }
 
         for (Datum d : data) {
-            RealVector metrics = d.getMetrics().copy();
+            RealVector metrics = d.metrics().copy();
             for (int dim = 0; dim < metrics.getDimension(); ++dim) {
                 double dimMin = metricWiseMinVec.getEntry(dim);
                 double dimMax = metricWiseMaxVec.getEntry(dim);

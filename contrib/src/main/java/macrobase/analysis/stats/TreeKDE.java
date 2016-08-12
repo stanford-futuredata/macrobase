@@ -69,7 +69,7 @@ public class TreeKDE extends KDE {
                 } else {
                     double _score = 0.0;
                     for (Datum child : tree.getItems()) {
-                        RealVector difference = datum.getMetrics().subtract(child.getMetrics());
+                        RealVector difference = datum.metrics().subtract(child.metrics());
                         double _diff = this.scaledKernelDensity(difference);
                         _score += _diff;
                     }

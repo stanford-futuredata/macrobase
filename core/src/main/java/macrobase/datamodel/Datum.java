@@ -4,11 +4,10 @@ import com.google.common.collect.Lists;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Datum implements HasMetrics {
+public class Datum {
     private static AtomicLong idGen = new AtomicLong();
 
     private final Long id;
@@ -25,7 +24,7 @@ public class Datum implements HasMetrics {
     public Datum(Datum oldDatum) {
         this();
         this.attributes = Lists.newArrayList(oldDatum.attributes);
-        this.metrics = oldDatum.getMetrics().copy();
+        this.metrics = oldDatum.metrics().copy();
     }
 
     public Datum(Datum oldDatum, double... doubleMetrics) {
@@ -62,11 +61,6 @@ public class Datum implements HasMetrics {
         return attributes;
     }
 
-    @Override
-    public RealVector getMetrics() {
-        return metrics;
-    }
-
     public RealVector metrics() {
         return metrics;
     }
@@ -82,10 +76,10 @@ public class Datum implements HasMetrics {
     public String toString() {
         return String.format(
                 "metrics: %s, encoded attributes: %s",
-                getMetrics().toString(), getAttributes().toString());
+                metrics().toString(), getAttributes().toString());
     }
 
     public double norm() {
-        return getMetrics().getNorm();
+        return metrics().getNorm();
     }
 }

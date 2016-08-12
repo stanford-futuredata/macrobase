@@ -90,7 +90,7 @@ public class BinnedKDE extends KDE {
     public double score(Datum datum) {
         // TODO: now only supports 1D datum
         for (int d = 0; d < 1; d++) {
-            double pointValue = datum.getMetrics().getEntry(d);
+            double pointValue = datum.metrics().getEntry(d);
             double binDouble = (pointValue - this.minimums[d]) / delta;
             return -densityEstimates[d][(int) binDouble];
         }
@@ -110,7 +110,7 @@ public class BinnedKDE extends KDE {
             int size = data.size();
             double[] dataIn1D = new double[size];
             for (int i = 0; i < size; i++) {
-                dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
+                dataIn1D[i] = data.get(i).metrics().getEntry(d);
             }
 
             Arrays.sort(dataIn1D);
@@ -119,7 +119,7 @@ public class BinnedKDE extends KDE {
             this.delta = (this.maximums[d] - this.minimums[d]) / numIntervals;
 
             for (int i = 0; i < size; i++) {
-                double pointValue = data.get(i).getMetrics().getEntry(d);
+                double pointValue = data.get(i).metrics().getEntry(d);
                 double binDouble = (pointValue - this.minimums[d]) / delta;
                 int lowerBin = (int) binDouble;
                 // Assign weights to lower and upper bins linearly proportional to distances

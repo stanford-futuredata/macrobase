@@ -37,8 +37,8 @@ public class IncrementalSlidingWindowTransformTest {
         assertTrue(transformed.size() == 3);
         for (int i = 0; i < 3; i ++) {
             Datum d = transformed.get(i);
-            assertTrue(d.getMetrics().getEntry(0) == i * 5);
-            assertTrue(d.getMetrics().getEntry(1) == 10);
+            assertTrue(d.metrics().getEntry(0) == i * 5);
+            assertTrue(d.metrics().getEntry(1) == 10);
         }
     }
 
@@ -54,8 +54,8 @@ public class IncrementalSlidingWindowTransformTest {
         assertTrue(transformed.size() == 3);
         for (int i = 0; i < 3; i ++) {
             Datum d = transformed.get(i);
-            assertTrue(d.getMetrics().getEntry(0) == i * 5);
-            assertTrue(d.getMetrics().getEntry(1) == 45 + 50 * i);
+            assertTrue(d.metrics().getEntry(0) == i * 5);
+            assertTrue(d.metrics().getEntry(1) == 45 + 50 * i);
         }
     }
 
@@ -70,11 +70,11 @@ public class IncrementalSlidingWindowTransformTest {
         assertTrue(transformed.size() == 4);
         for (int i = 0; i < 4; i++) {
             Datum d = transformed.get(i);
-            assertTrue(d.getMetrics().getEntry(0) == i * 25);
+            assertTrue(d.metrics().getEntry(0) == i * 25);
             if (i == 3)
-                assertTrue(d.getMetrics().getEntry(1) == 25);
+                assertTrue(d.metrics().getEntry(1) == 25);
             else
-                assertTrue(d.getMetrics().getEntry(1) == 35);
+                assertTrue(d.metrics().getEntry(1) == 35);
         }
     }
 
@@ -86,14 +86,14 @@ public class IncrementalSlidingWindowTransformTest {
         sw.shutdown();
         List<Datum> transformed = sw.getStream().drain();
         assertTrue(transformed.size() == 4);
-        assertTrue(transformed.get(0).getMetrics().getEntry(0) == 0);
-        assertTrue(transformed.get(0).getMetrics().getEntry(1) == 30);
-        assertTrue(transformed.get(1).getMetrics().getEntry(0) == 25);
-        assertTrue(transformed.get(1).getMetrics().getEntry(1) == 21);
-        assertTrue(transformed.get(2).getMetrics().getEntry(0) == 50);
-        assertTrue(transformed.get(2).getMetrics().getEntry(1) == 0);
-        assertTrue(transformed.get(3).getMetrics().getEntry(0) == 75);
-        assertTrue(transformed.get(3).getMetrics().getEntry(1) == 20);
+        assertTrue(transformed.get(0).metrics().getEntry(0) == 0);
+        assertTrue(transformed.get(0).metrics().getEntry(1) == 30);
+        assertTrue(transformed.get(1).metrics().getEntry(0) == 25);
+        assertTrue(transformed.get(1).metrics().getEntry(1) == 21);
+        assertTrue(transformed.get(2).metrics().getEntry(0) == 50);
+        assertTrue(transformed.get(2).metrics().getEntry(1) == 0);
+        assertTrue(transformed.get(3).metrics().getEntry(0) == 75);
+        assertTrue(transformed.get(3).metrics().getEntry(1) == 20);
     }
 
     @Test

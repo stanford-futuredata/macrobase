@@ -28,7 +28,7 @@ public class FiniteGMM extends VarGMM {
     public void trainTest(List<Datum> trainData, List<Datum> testData) {
         // 0. Initialize all approximating factors
         mixingComponents = new MultiComponents(0.1, K);
-        clusters = new NormalWishartClusters(K, trainData.get(0).getMetrics().getDimension());
+        clusters = new NormalWishartClusters(K, trainData.get(0).metrics().getDimension());
         clusters.initializeBaseForFinite(trainData);
         clusters.initializeAtomsForFinite(trainData, initialClusterCentersFile, conf.getRandom());
 
@@ -64,7 +64,7 @@ public class FiniteGMM extends VarGMM {
         double[] weights = getNormClusterContrib();
         double normalizingConstant = 0;
         for (int i = 0; i < K; i++) {
-            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());
+            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.metrics());
             normalizingConstant += probas[i];
         }
         for (int i = 0; i < K; i++) {

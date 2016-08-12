@@ -25,7 +25,7 @@ public class DPGMM extends VarGMM {
 
     public void trainTest(List<Datum> trainData, List<Datum> testData) {
         // 0. Initialize all approximating factors
-        clusters = new NormalWishartClusters(T, trainData.get(0).getMetrics().getDimension());
+        clusters = new NormalWishartClusters(T, trainData.get(0).metrics().getDimension());
         clusters.initializeBaseForDP(trainData);
         clusters.initializeAtomsForDP(trainData, initialClusterCentersFile, conf.getRandom());
 

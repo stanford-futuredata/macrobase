@@ -21,7 +21,7 @@ public class IncrementalWindowCount extends IncrementalWindowAggregate {
             return currWindow;
 
         if (currWindow == null) {
-            dim = new_data.get(0).getMetrics().getDimension();
+            dim = new_data.get(0).metrics().getDimension();
         }
         count += new_data.size() - old_data.size();
         RealVector results = new ArrayRealVector(dim);

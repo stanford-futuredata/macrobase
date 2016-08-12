@@ -99,7 +99,7 @@ public class GoogleMonitoringIngesterTest {
         GoogleMonitoringIngester ingester = new GoogleMonitoringIngester(conf);
         Datum datum = ingester.processRecord(record);
 
-        assertEquals(77, datum.getMetrics().getEntry(0), 0.0);
+        assertEquals(77, datum.metrics().getEntry(0), 0.0);
         assertEquals(0, datum.getAttributes().get(0), 0.0);
         assertEquals(1, datum.getAttributes().get(1), 0.0);
     }
@@ -315,15 +315,15 @@ public class GoogleMonitoringIngesterTest {
         List<Datum> data = stream.drain();
         assertEquals(3, data.size(), 0.0);
 
-        assertEquals(77, data.get(0).getMetrics().getEntry(0), 0.0);
+        assertEquals(77, data.get(0).metrics().getEntry(0), 0.0);
         assertEquals(0, data.get(0).getAttributes().get(0), 0.0);
         assertEquals(1, data.get(0).getAttributes().get(1), 0.0);
 
-        assertEquals(88, data.get(1).getMetrics().getEntry(0), 0.0);
+        assertEquals(88, data.get(1).metrics().getEntry(0), 0.0);
         assertEquals(0, data.get(1).getAttributes().get(0), 0.0);
         assertEquals(2, data.get(1).getAttributes().get(1), 0.0);
 
-        assertEquals(99, data.get(2).getMetrics().getEntry(0), 0.0);
+        assertEquals(99, data.get(2).metrics().getEntry(0), 0.0);
         assertEquals(0, data.get(2).getAttributes().get(0), 0.0);
         assertEquals(1, data.get(2).getAttributes().get(1), 0.0);
     }

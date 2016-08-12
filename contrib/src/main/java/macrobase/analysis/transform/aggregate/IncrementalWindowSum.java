@@ -21,14 +21,14 @@ public class IncrementalWindowSum extends IncrementalWindowAggregate {
 
         RealVector results;
         if (currWindow != null) {
-            results = new ArrayRealVector(currWindow.getMetrics());
+            results = new ArrayRealVector(currWindow.metrics());
         } else {
-            dim = new_data.get(0).getMetrics().getDimension();
+            dim = new_data.get(0).metrics().getDimension();
             results = new ArrayRealVector(dim);
         }
        // Add new data
         for (Datum d : new_data) {
-            RealVector metrics = d.getMetrics();
+            RealVector metrics = d.metrics();
             for (int i = 0; i < dim; i ++) {
                 if (timeColumn != null && i == timeColumn)
                     continue;
@@ -37,7 +37,7 @@ public class IncrementalWindowSum extends IncrementalWindowAggregate {
         }
         // Remove old data
         for (Datum d : old_data) {
-            RealVector metrics = d.getMetrics();
+            RealVector metrics = d.metrics();
             for (int i = 0; i < dim; i ++) {
                 if (timeColumn != null && i == timeColumn)
                     continue;

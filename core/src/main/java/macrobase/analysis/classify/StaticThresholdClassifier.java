@@ -30,7 +30,7 @@ public class StaticThresholdClassifier extends OutlierClassifier {
     @Override
     public void consume(List<Datum> records) {
         for(Datum r : records) {
-            results.add(new OutlierClassificationResult(r, threshold < r.getMetrics().getNorm()));
+            results.add(new OutlierClassificationResult(r, threshold < r.metrics().getNorm()));
         }
     }
 

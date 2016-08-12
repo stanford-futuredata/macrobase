@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -38,12 +37,12 @@ public class MAD extends BatchTrainScore {
     @Override
     public void train(List<Datum> data) {
         Timer.Context context = medianComputation.time();
-        assert (data.get(0).getMetrics().getDimension() == 1);
+        assert (data.get(0).metrics().getDimension() == 1);
 
         int len = data.size();
         double[] metrics = new double[data.size()];
         for (int i = 0; i < len; i++) {
-            metrics[i] = data.get(i).getMetrics().getEntry(0);
+            metrics[i] = data.get(i).metrics().getEntry(0);
         }
 	Arrays.sort(metrics);
 
@@ -91,7 +90,7 @@ public class MAD extends BatchTrainScore {
 
     @Override
     public double score(Datum datum) {
-        double point = datum.getMetrics().getEntry(0);
+        double point = datum.metrics().getEntry(0);
         return Math.abs(point - median) / (MAD);
     }
 

@@ -3,8 +3,10 @@ package macrobase.analysis.stats;
 import static com.codahale.metrics.MetricRegistry.name;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -15,7 +17,6 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
-import macrobase.datamodel.HasMetrics;
 
 import org.apache.commons.math3.distribution.ChiSquaredDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
@@ -39,25 +40,6 @@ public class MinCovDet extends BatchTrainScore {
             name(MinCovDet.class, "determinantComputation"));
     private final Timer findKClosest = MacroBase.metrics.timer(name(MinCovDet.class, "findKClosest"));
     private final Counter singularCovariances = MacroBase.metrics.counter(name(MinCovDet.class, "singularCovariances"));
-
-    static class MetricsWithScore implements HasMetrics {
-        private RealVector metrics;
-        private Double score;
-
-        public MetricsWithScore(RealVector metrics,
-                                double score) {
-            this.metrics = metrics;
-            this.score = score;
-        }
-
-        public RealVector getMetrics() {
-            return metrics;
-        }
-
-        public Double getScore() {
-            return score;
-        }
-    }
 
     // p == dataset dimension
     private final int p;
@@ -130,11 +112,11 @@ public class MinCovDet extends BatchTrainScore {
         return Math.sqrt(diagSum + 2 * nonDiagSum);
     }
 
-    private RealVector getMean(List<? extends HasMetrics> data) {
+    private RealVector getMean(List<Datum> data) {
         RealVector vec = null;
 
-        for (HasMetrics d : data) {
-            RealVector dvec = d.getMetrics();
+        for (Datum d : data) {
+            RealVector dvec = d.metrics();
             if (vec == null) {
                 vec = dvec;
             } else {
@@ -145,22 +127,19 @@ public class MinCovDet extends BatchTrainScore {
         return vec.mapDivide(data.size());
     }
 
-    private List<MetricsWithScore> findKClosest(int k, List<? extends HasMetrics> data) {
-        List<MetricsWithScore> scores = new ArrayList<>();
-
-        for (int i = 0; i < data.size(); ++i) {
-            HasMetrics d = data.get(i);
-            scores.add(new MetricsWithScore(d.getMetrics(),
-                                            getMahalanobis(mean, inverseCov, d.getMetrics())));
+    private List<Datum> findKClosest(int k, List<Datum> data) {
+        if (data.size() < k) {
+            return data;
         }
 
-        if (scores.size() < k) {
-            return scores;
+        Map<Datum, Double> scoreMap = new HashMap<>(data.size());
+        for (Datum d : data) {
+            scoreMap.put(d, getMahalanobis(mean, inverseCov, d.metrics()));
         }
 
-        scores.sort((a, b) -> a.getScore().compareTo(b.getScore()));
+        data.sort((a, b) -> scoreMap.get(a).compareTo(scoreMap.get(b)));
 
-        return scores.subList(0, k);
+        return data.subList(0, k);
     }
 
     // helper method
@@ -180,14 +159,14 @@ public class MinCovDet extends BatchTrainScore {
     @Override
     public void train(List<Datum> data) {
         // for now, only handle multivariate case...
-        assert (data.iterator().next().getMetrics().getDimension() == p);
+        assert (data.iterator().next().metrics().getDimension() == p);
         assert (p > 1);
 
         int h = (int) Math.floor((data.size() + p + 1) * alpha);
 
         // select initial dataset
         Timer.Context context = chooseKRandom.time();
-        List<? extends HasMetrics> initialSubset = chooseKRandom(data, h);
+        List<Datum> initialSubset = chooseKRandom(data, h);
         context.stop();
 
         context = meanComputation.time();
@@ -209,7 +188,7 @@ public class MinCovDet extends BatchTrainScore {
         int numIterations = 1;
         while (true) {
             context = findKClosest.time();
-            List<? extends HasMetrics> newH = findKClosest(h, data);
+            List<Datum> newH = findKClosest(h, data);
             context.stop();
 
             context = meanComputation.time();
@@ -246,7 +225,7 @@ public class MinCovDet extends BatchTrainScore {
 
     @Override
     public double score(Datum datum) {
-        return getMahalanobis(mean, inverseCov, datum.getMetrics());
+        return getMahalanobis(mean, inverseCov, datum.metrics());
     }
 
     public RealMatrix getCovariance() {

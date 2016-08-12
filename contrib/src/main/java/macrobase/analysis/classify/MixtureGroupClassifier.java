@@ -59,7 +59,7 @@ public class MixtureGroupClassifier extends OutlierClassifier {
         for (Datum d : records) {
             boolean isOutlier = true;
             for (int i = 0; i < K; i++) {
-                if (d.getMetrics().getEntry(i) > d.getMetrics().getEntry(targetClusterIndex)) {
+                if (d.metrics().getEntry(i) > d.metrics().getEntry(targetClusterIndex)) {
                     isOutlier = false;
                     break;
                 }

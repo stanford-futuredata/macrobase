@@ -31,10 +31,10 @@ public class StaticThresholdClassifierTest {
         int outlierCount = 0;
         for(OutlierClassificationResult oc : results) {
             if(oc.isOutlier()) {
-                assertTrue(oc.getDatum().getMetrics().getNorm() > 49.99);
+                assertTrue(oc.getDatum().metrics().getNorm() > 49.99);
                 outlierCount++;
             } else {
-                assertTrue(oc.getDatum().getMetrics().getNorm() < 49.99);
+                assertTrue(oc.getDatum().metrics().getNorm() < 49.99);
             }
         }
 

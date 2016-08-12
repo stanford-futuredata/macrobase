@@ -17,9 +17,9 @@ public class LinearMetricNormalizerTest {
         List<Datum> data = new ArrayList<>();
         for(int i = 0; i < 10; ++i) {
             Datum d = new Datum(new ArrayList<>(), new ArrayRealVector(3));
-            d.getMetrics().setEntry(0, r.nextInt());
-            d.getMetrics().setEntry(1, r.nextInt());
-            d.getMetrics().setEntry(2, r.nextInt());
+            d.metrics().setEntry(0, r.nextInt());
+            d.metrics().setEntry(1, r.nextInt());
+            d.metrics().setEntry(2, r.nextInt());
             data.add(d);
         }
 
@@ -28,7 +28,7 @@ public class LinearMetricNormalizerTest {
         List<Datum> transformed = lmn.getStream().drain();
         for(Datum d : transformed) {
             for(int dim = 0; dim < 3; ++dim) {
-                Double val = d.getMetrics().getEntry(dim);
+                Double val = d.metrics().getEntry(dim);
                 assertTrue(val >= 0);
                 assertTrue(val <= 1);
             }

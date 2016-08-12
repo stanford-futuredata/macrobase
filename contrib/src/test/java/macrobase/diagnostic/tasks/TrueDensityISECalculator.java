@@ -126,7 +126,7 @@ public class TrueDensityISECalculator extends ConfiguredCommand<MacroBaseConf> {
             double squaredSum = 0;
 
             for (Datum d : grid) {
-                squaredSum += Math.pow(Math.exp(underlyingBatchTrainScore.score(d)) - trueDistribution.density(d.getMetrics()), 2);
+                squaredSum += Math.pow(Math.exp(underlyingBatchTrainScore.score(d)) - trueDistribution.density(d.metrics()), 2);
             }
             log.debug("squaredSum: {}", squaredSum);
 

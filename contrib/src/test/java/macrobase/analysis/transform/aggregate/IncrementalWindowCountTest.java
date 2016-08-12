@@ -21,13 +21,13 @@ public class IncrementalWindowCountTest {
         IncrementalWindowCount windowCount = new IncrementalWindowCount(conf);
         // First window
         Datum count = windowCount.updateWindow(data.subList(0, 10), new ArrayList<>());
-        assert(count.getMetrics().getEntry(1) == 10);
+        assert(count.metrics().getEntry(1) == 10);
         // Update window
         count = windowCount.updateWindow(data.subList(10, 11), data.subList(0, 1));
-        assert(count.getMetrics().getEntry(1) == 10);
+        assert(count.metrics().getEntry(1) == 10);
         count = windowCount.updateWindow(data.subList(11, 20), data.subList(1, 5));
-        assert(count.getMetrics().getEntry(1) == 15);
+        assert(count.metrics().getEntry(1) == 15);
         count = windowCount.updateWindow(new ArrayList<>(), data.subList(5, 10));
-        assert(count.getMetrics().getEntry(1) == 10);
+        assert(count.metrics().getEntry(1) == 10);
     }
 }

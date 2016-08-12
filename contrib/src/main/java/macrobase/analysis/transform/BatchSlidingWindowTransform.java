@@ -30,7 +30,7 @@ public class BatchSlidingWindowTransform extends SlidingWindowTransform {
     private void aggregateWindow() {
         slideWindow();
         Datum newWindow = windowAggregate.aggregate(currWindow);
-        newWindow.getMetrics().setEntry(timeColumn, windowStart);
+        newWindow.metrics().setEntry(timeColumn, windowStart);
         output.add(newWindow);
         windowStart += this.slideSize;
     }

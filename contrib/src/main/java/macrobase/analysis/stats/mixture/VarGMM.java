@@ -69,7 +69,7 @@ public abstract class VarGMM extends BatchMixtureModel {
         double density = 0;
         double[] cc = getNormClusterContrib();
         for (int i = 0; i < predictiveDistributions.size(); i++) {
-            density += cc[i] * predictiveDistributions.get(i).density(datum.getMetrics());
+            density += cc[i] * predictiveDistributions.get(i).density(datum.metrics());
         }
         if (density == 0) {
             return this.ZERO_LOG_SCORE;
@@ -88,7 +88,7 @@ public abstract class VarGMM extends BatchMixtureModel {
 
         double total = 0;
         for (int i = 0; i < weights.length; i++) {
-            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.getMetrics());
+            probas[i] = weights[i] * predictiveDistributions.get(i).density(d.metrics());
             total += probas[i];
         }
         for (int i = 0; i < weights.length; i++) {

@@ -72,7 +72,7 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
                 .set(MacroBaseConf.USE_PERCENTILE, true)
                 .set(MacroBaseConf.MIN_OI_RATIO, 1)
-                .set(MacroBaseConf.MIN_SUPPORT, .06)
+                .set(MacroBaseConf.MIN_SUPPORT, .05)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.DECAY_RATE, .01) // streaming
                 .set(MacroBaseConf.WARMUP_COUNT, 30)

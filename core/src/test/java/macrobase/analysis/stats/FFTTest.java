@@ -25,7 +25,7 @@ public class FFTTest {
         fft.consume(data);
         List<Datum> transformed = fft.getStream().drain();
         for (Datum td: transformed){
-            double[] val = td.getMetrics().toArray();
+            double[] val = td.metrics().toArray();
             assertEquals(64,val.length);
             assertArrayEquals(expected_return, val, 1e-5);
         }
@@ -42,7 +42,7 @@ public class FFTTest {
         fft.consume(data);
         List<Datum> transformed = fft.getStream().drain();
         for (Datum td: transformed){
-            double[] val = td.getMetrics().toArray();
+            double[] val = td.metrics().toArray();
             assertEquals(64,val.length);
             assertArrayEquals(expected_return, val, 1e-5);
         }
@@ -75,7 +75,7 @@ public class FFTTest {
         fft.consume(data);
         List<Datum> transformed = fft.getStream().drain();
         for (Datum td: transformed){
-            double[] val = td.getMetrics().toArray();
+            double[] val = td.metrics().toArray();
             assertArrayEquals(expected_return[index++], val, 1e-5);
         }
 

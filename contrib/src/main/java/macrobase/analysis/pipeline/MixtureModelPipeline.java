@@ -68,7 +68,7 @@ public class MixtureModelPipeline extends BasePipeline {
                     result.getItemsets()));
         } else {
             List<AnalysisResult> results = new ArrayList<>();
-            for (int i = 0; i < transferedData.get(0).getMetrics().getDimension(); i++) {
+            for (int i = 0; i < transferedData.get(0).metrics().getDimension(); i++) {
                 OutlierClassifier outlierClassifier = new MixtureGroupClassifier(conf, mixtureProbabilityTransform.getMixtureModel(), i);
                 outlierClassifier.consume(transferedData);
 

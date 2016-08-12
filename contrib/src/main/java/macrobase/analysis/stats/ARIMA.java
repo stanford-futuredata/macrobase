@@ -55,12 +55,12 @@ public class ARIMA extends TimeSeriesScore {
     @Override
     public void train(List<Datum> data) {
         super.train(data);
-        assert (data.get(0).getMetrics().getDimension() == 1);
+        assert (data.get(0).metrics().getDimension() == 1);
     }
 
     @Override
     public void addToWindow(Datum datum) {
-        double value = datum.getMetrics().getEntry(0);
+        double value = datum.metrics().getEntry(0);
         window.add(value);
 
         if (predictions != null) {

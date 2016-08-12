@@ -3,7 +3,6 @@ package macrobase.analysis.stats;
 import macrobase.analysis.stats.kernel.EpanchnikovMulticativeKernel;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -125,7 +124,7 @@ public class KDE extends BatchTrainScore {
      * @param data
      */
     protected void setBandwidth(List<Datum> data) {
-        this.metricsDimensions = data.get(0).getMetrics().getDimension();
+        this.metricsDimensions = data.get(0).metrics().getDimension();
         RealMatrix bandwidth = MatrixUtils.createRealIdentityMatrix(metricsDimensions);
         log.debug("running with bandwidthAlgorithm: {}", bandwidthAlgorithm);
         switch (bandwidthAlgorithm) {
@@ -135,7 +134,7 @@ public class KDE extends BatchTrainScore {
                     int size = data.size();
                     double[] dataIn1D = new double[size];
                     for (int i = 0; i < size; i++) {
-                        dataIn1D[i] = data.get(i).getMetrics().getEntry(d);
+                        dataIn1D[i] = data.get(i).metrics().getEntry(d);
                     }
                     Percentile quantile = new Percentile();
                     final double twentyfive = quantile.evaluate(dataIn1D, 25);
@@ -200,7 +199,7 @@ public class KDE extends BatchTrainScore {
     public double score(Datum datum) {
         double _score = 0.0;
         for (int i = 0; i < densityPopulation.size(); i++) {
-            RealVector difference = datum.getMetrics().subtract(densityPopulation.get(i).getMetrics());
+            RealVector difference = datum.metrics().subtract(densityPopulation.get(i).metrics());
             double _diff = scaledKernelDensity(difference);
             _score += _diff;
         }

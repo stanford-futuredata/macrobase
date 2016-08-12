@@ -49,14 +49,14 @@ public class NormalWishartClusters {
     }
 
     protected static List<RealMatrix> calculateQuadraticForms(List<Datum> data, List<RealVector> clusterMean, double[][] r) {
-        int D = data.get(0).getMetrics().getDimension();
+        int D = data.get(0).metrics().getDimension();
         int K = clusterMean.size();
         int N = data.size();
         List<RealMatrix> quadForm = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
             RealMatrix form = new BlockRealMatrix(D, D);
             for (int n = 0; n < N; n++) {
-                RealVector _diff = data.get(n).getMetrics().subtract(clusterMean.get(k));
+                RealVector _diff = data.get(n).metrics().subtract(clusterMean.get(k));
                 form = form.add(_diff.outerProduct(_diff).scalarMultiply(r[n][k]));
             }
             quadForm.add(form);
@@ -67,12 +67,12 @@ public class NormalWishartClusters {
     protected static List<RealVector> calculateWeightedSums(List<Datum> data, double[][] r) {
         int N = data.size();
         int K = r[0].length;
-        int D = data.get(0).getMetrics().getDimension();
+        int D = data.get(0).metrics().getDimension();
         List<RealVector> sums = new ArrayList<>(K);
         for (int k = 0; k < K; k++) {
             RealVector sum = new ArrayRealVector(D);
             for (int n = 0; n < N; n++) {
-                sum = sum.add(data.get(n).getMetrics().mapMultiply(r[n][k]));
+                sum = sum.add(data.get(n).metrics().mapMultiply(r[n][k]));
             }
             sums.add(sum);
         }
@@ -84,7 +84,7 @@ public class NormalWishartClusters {
      * @param data
      */
     public void initializeBaseForDP(List<Datum> data) {
-        int dimension = data.get(0).getMetrics().getDimension();
+        int dimension = data.get(0).metrics().getDimension();
         baseNu = dimension;
         double[][] boundingBox = AlgebraUtils.getBoundingBox(data);
         double[] midpoints = new double[dimension];
@@ -190,7 +190,7 @@ public class NormalWishartClusters {
         double[][] loglike = new double[N][K];
         for (int k = 0; k < K; k++) {
             for (int n = 0; n < N; n++) {
-                RealVector _diff = data.get(n).getMetrics().subtract(loc.get(k));
+                RealVector _diff = data.get(n).metrics().subtract(loc.get(k));
                 loglike[n][k] = -halfDimensionLn2Pi - 0.5 * (
                         D / beta[k] + dof[k] * _diff.dotProduct(omega.get(k).operate(_diff)));
             }
