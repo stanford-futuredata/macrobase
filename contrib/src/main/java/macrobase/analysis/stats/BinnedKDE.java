@@ -5,7 +5,6 @@ import java.util.List;
 
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
-import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -56,7 +55,7 @@ public class BinnedKDE extends KDE {
         // TODO: now only supports 1D!!!!
         kernelWeights = new double[metricsDimensions][numBins];
 
-        double binsThatMatter = kernel.effectTiveSupportWidth1D() * Math.sqrt(
+        double binsThatMatter = kernel.effectiveSupportWidth1D() * Math.sqrt(
                 this.bandwidth.getEntry(0, 0)) * this.numIntervals / (this.maximums[0] - this.minimums[0]);
         log.debug("binsThatMatter: {}", binsThatMatter);
         this.L = Math.min((int) binsThatMatter, this.numIntervals);

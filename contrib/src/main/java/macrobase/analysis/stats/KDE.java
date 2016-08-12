@@ -156,7 +156,7 @@ public class KDE extends BatchTrainScore {
                 final double covarianceScale = Math.pow(constNumerator / constDenominator, 0.2);
                 log.info("covariance Scale: {}", covarianceScale);
                 RealMatrix covariance = this.getCovariance(data);
-                log.info("Covarience of the data is: {}", covariance);
+                log.info("covariance of the data is: {}", covariance);
                 bandwidth = covariance.scalarMultiply(covarianceScale);
             case MANUAL:
                 break;

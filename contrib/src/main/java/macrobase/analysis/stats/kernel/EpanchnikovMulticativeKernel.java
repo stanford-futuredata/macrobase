@@ -50,7 +50,7 @@ public class EpanchnikovMulticativeKernel extends Kernel {
     }
 
     @Override
-    public double effectTiveSupportWidth1D() {
+    public double effectiveSupportWidth1D() {
         return 1.0;
     }
 }

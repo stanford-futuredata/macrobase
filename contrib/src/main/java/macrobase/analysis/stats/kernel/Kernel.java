@@ -13,5 +13,5 @@ public abstract class Kernel {
 
     public abstract double secondMoment1D();
 
-    public abstract double effectTiveSupportWidth1D();
+    public abstract double effectiveSupportWidth1D();
 }

@@ -51,7 +51,7 @@ public class TreeKDE extends KDE {
 
         // Instead of scaling scores we scale acceptance
         this.onePointTolerance = bandwidthDeterminantSqrt * accuracy;
-        log.info("using accuray = {}", accuracy);
+        log.info("using accuracy = {}", accuracy);
         log.debug("onePointTolerance = {}", onePointTolerance);
     }
 
