@@ -25,9 +25,7 @@ public class BasicContextualBatchPipelineTest {
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList()) // loader
-                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList())
-                .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A"))
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("A"))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simpleContextual.csv")
                 .set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())
@@ -63,9 +61,7 @@ public class BasicContextualBatchPipelineTest {
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("C1", "C2", "C3")) // loader
-                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList())
-                .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A"))
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("A"))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simpleContextual.csv")
                 .set(ContextualConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, Lists.newArrayList())

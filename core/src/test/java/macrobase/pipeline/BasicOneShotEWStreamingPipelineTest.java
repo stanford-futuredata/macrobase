@@ -44,9 +44,8 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE, 1000)
                 .set(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE, 1000)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3", "A4")) // loader
-                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A5"))
-                .set(MacroBaseConf.HIGH_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("A5"))
+                .set(MacroBaseConf.LOW_METRIC_TRANSFORM, Lists.newArrayList("A5"))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
@@ -86,9 +85,8 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.MCD_ALPHA, .5) // outlier detector
                 .set(MacroBaseConf.MCD_STOPPING_DELTA, 1e-3)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A1", "A2", "A3")) // loader
-                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("A4", "A5"))
-                .set(MacroBaseConf.HIGH_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("A4", "A5"))
+                .set(MacroBaseConf.LOW_METRIC_TRANSFORM, Lists.newArrayList("A4", "A5"))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 
@@ -128,9 +126,7 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE, 1000)
                 .set(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE, 1000)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("device_id")) // loader
-                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("power_drain"))
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("power_drain"))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");
@@ -180,9 +176,8 @@ public class BasicOneShotEWStreamingPipelineTest {
                 .set(MacroBaseConf.INLIER_ITEM_SUMMARY_SIZE, 1000)
                 .set(MacroBaseConf.OUTLIER_ITEM_SUMMARY_SIZE, 1000)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("device_id", "model", "firmware_version")) // loader
-                .set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("temperature"))
-                .set(MacroBaseConf.HIGH_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("temperature"))
+                .set(MacroBaseConf.LOW_METRIC_TRANSFORM, Lists.newArrayList("temperature"))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/sensor10k.csv.gz");

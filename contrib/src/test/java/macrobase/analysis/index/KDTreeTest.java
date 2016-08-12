@@ -27,8 +27,7 @@ public class KDTreeTest {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A2", "A5"));
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A1", "A3", "A4"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("A1", "A3", "A4"));
         loader = new CSVIngester(conf);
         data = loader.getStream().drain();
     }
@@ -38,8 +37,7 @@ public class KDTreeTest {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/verySimple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("x", "y", "z"));
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("x", "y", "z"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("x", "y", "z"));
         loader = new CSVIngester(conf);
         data = loader.getStream().drain();
     }

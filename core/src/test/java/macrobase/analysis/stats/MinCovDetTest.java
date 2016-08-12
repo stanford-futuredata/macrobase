@@ -51,10 +51,9 @@ public class MinCovDetTest {
         }
 
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.LOW_METRICS, new ArrayList<String>())
                 .set(MacroBaseConf.MCD_STOPPING_DELTA, 0.0001)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
-                .set(MacroBaseConf.HIGH_METRICS, Arrays.asList(new String[dim]));
+                .set(MacroBaseConf.METRICS, Arrays.asList(new String[dim]));
         MinCovDet trainer = new MinCovDet(conf);
 
         trainer.train(testData);

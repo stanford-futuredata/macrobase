@@ -6,13 +6,11 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class DataIngester implements MBProducer<Datum> {
     protected final List<String> attributes;
-    protected final List<String> highMetrics;
-    protected final List<String> lowMetrics;
+    protected final List<String> metrics;
     protected final MacroBaseConf conf;
     protected final Integer timeColumn;
 
@@ -21,7 +19,6 @@ public abstract class DataIngester implements MBProducer<Datum> {
 
         timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
-        lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
-        highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
+        metrics = conf.getStringList(MacroBaseConf.METRICS);
     }
 }

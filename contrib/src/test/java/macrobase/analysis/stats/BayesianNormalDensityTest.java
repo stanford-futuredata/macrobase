@@ -24,8 +24,7 @@ public class BayesianNormalDensityTest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         List<Datum> data = conf.constructIngester().getStream().drain();
@@ -56,8 +55,7 @@ public class BayesianNormalDensityTest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         NormalDistribution standardNormal = new NormalDistribution(0, 1);
@@ -88,8 +86,7 @@ public class BayesianNormalDensityTest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         double[] means = {0, 0};

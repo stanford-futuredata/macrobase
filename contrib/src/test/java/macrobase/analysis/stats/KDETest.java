@@ -1,6 +1,5 @@
 package macrobase.analysis.stats;
 
-import com.google.common.collect.Lists;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -10,8 +9,6 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,8 +45,7 @@ public class KDETest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         List<Datum> data = Drainer.drainIngest(conf);

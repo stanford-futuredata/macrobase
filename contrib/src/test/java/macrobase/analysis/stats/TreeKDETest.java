@@ -1,7 +1,5 @@
 package macrobase.analysis.stats;
 
-import com.google.common.collect.Lists;
-import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
@@ -11,8 +9,6 @@ import org.apache.commons.math3.linear.RealVector;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,7 +16,6 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.*;
 
 public class TreeKDETest {
 
@@ -31,8 +26,7 @@ public class TreeKDETest {
                 .set(TreeKDE.KDE_BANDWIDTH_ALGORITHM, "OVERSMOOTHED")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/verySimple.csv")
-                .set(MacroBaseConf.HIGH_METRICS, "x")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "x")
                 .set(MacroBaseConf.ATTRIBUTES, "")
                 .set(TreeKDE.KDTREE_LEAF_CAPACITY, 2);
 
@@ -58,8 +52,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         List<Datum> data = Drainer.drainIngest(conf);
@@ -94,8 +87,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         List<Datum> data = Drainer.drainIngest(conf);
@@ -148,8 +140,7 @@ public class TreeKDETest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/20points.csv")
-                .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX")
                 .set(MacroBaseConf.ATTRIBUTES, "");
 
         List<Datum> data = Drainer.drainIngest(conf);

@@ -22,7 +22,6 @@ public class AnalyzeResourceTest {
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
 

@@ -1,8 +1,7 @@
 macrobase:
   macrobase.loader.db.baseQuery: SELECT * FROM campaign_expenditures LIMIT 1000000;
-  macrobase.loader.targetHighMetrics:
+  macrobase.loader.metrics:
     - contb_receipt_amt
-  macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes:
     - cand_nm
   macrobase.loader.auxiliaryAttributes: []

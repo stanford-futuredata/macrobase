@@ -33,8 +33,7 @@ public class VarGMMTest {
                 .set(GMMConf.TRAIN_TEST_SPLIT, 0.9)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-7000points.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
         List<Datum> data = Drainer.drainIngest(conf);
         int totalPoints = 7000;

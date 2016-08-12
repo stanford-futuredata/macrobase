@@ -21,8 +21,7 @@ public class CSVIngesterTest {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A2","A5"));
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("A1","A3","A4"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("A1","A3","A4"));
         CSVIngester ingester = new CSVIngester(conf);
 
         List<Datum> data = ingester.getStream().drain();
@@ -41,8 +40,7 @@ public class CSVIngesterTest {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/missingdata.csv");
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("a1"));
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("m1","m2"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("m1","m2"));
 
         CSVIngester ingester = new CSVIngester(conf);
         List<Datum> data = ingester.getStream().drain();

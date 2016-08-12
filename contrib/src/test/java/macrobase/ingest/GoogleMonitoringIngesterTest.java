@@ -11,6 +11,8 @@ import com.google.api.services.monitoring.v3.model.TimeInterval;
 import com.google.api.services.monitoring.v3.model.TimeSeries;
 import com.google.api.services.monitoring.v3.model.TypedValue;
 import com.google.common.collect.Lists;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,8 +51,7 @@ public class GoogleMonitoringIngesterTest {
         conf.set(GoogleMonitoringIngester.GOOGLE_MONITORING_END_TIME, "2016-08-09T00:00:00Z");
 
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("attr1", "attr2"));
-        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList());
-        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("custom.googleapis.com/test"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("custom.googleapis.com/test"));
     }
 
     @Test
@@ -225,7 +226,7 @@ public class GoogleMonitoringIngesterTest {
         ListTimeSeriesResponse response = new ListTimeSeriesResponse();
         response.setTimeSeries(Lists.newArrayList(ts1, ts2, ts3, ts4));
 
-        Set<String> allMetrics = new HashSet<>();
+        List<String> allMetrics = new ArrayList<>();
         allMetrics.add("custom.googleapis.com/test");
 
         Map<String, Map<String, Record>> byTime = new TreeMap<>();

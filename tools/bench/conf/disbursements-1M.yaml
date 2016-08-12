@@ -1,7 +1,6 @@
 macrobase:
   macrobase.loader.db.baseQuery: SELECT * FROM fed_disbursements LIMIT 1000000;
-  macrobase.loader.targetHighMetrics: [dis_amo]
-  macrobase.loader.targetLowMetrics: []
+  macrobase.loader.metrics: [dis_amo]
   macrobase.loader.attributes:
     - "can_id"
     - "com_id"

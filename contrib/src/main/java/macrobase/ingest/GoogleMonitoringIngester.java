@@ -81,11 +81,7 @@ public class GoogleMonitoringIngester extends DataIngester {
             String queryStart = conf.getString(GOOGLE_MONITORING_START_TIME);
             String queryEnd = conf.getString(GOOGLE_MONITORING_END_TIME);
 
-            Set<String> allMetrics = new HashSet<>();
-            allMetrics.addAll(lowMetrics);
-            allMetrics.addAll(highMetrics);
-
-            if (allMetrics.size() == 0) {
+            if (metrics.size() == 0) {
                 throw new IllegalArgumentException("No metrics selected.");
             }
 
@@ -125,7 +121,7 @@ public class GoogleMonitoringIngester extends DataIngester {
                     ListTimeSeriesResponse response = request.execute();
                     log.trace("Response: {}", response.toPrettyString());
 
-                    processResponse(response, allMetrics, byTime);
+                    processResponse(response, metrics, byTime);
                     pageToken = response.getNextPageToken();
                 } while (pageToken != null && !pageToken.isEmpty());
             }
@@ -147,7 +143,7 @@ public class GoogleMonitoringIngester extends DataIngester {
     }
 
     // Package scope to allow testing.
-    void processResponse(ListTimeSeriesResponse response, Set<String> allMetrics,
+    void processResponse(ListTimeSeriesResponse response, List<String> allMetrics,
                          Map<String, Map<String, Record>> byTime) {
 
         for (TimeSeries ts : response.getTimeSeries()) {
@@ -215,12 +211,8 @@ public class GoogleMonitoringIngester extends DataIngester {
     // Package scope to allow testing.
     Datum processRecord(Record rec) throws Exception {
         int idx = 0;
-        RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-        for (String metric : lowMetrics) {
-            metricVec.setEntry(idx, Math.pow(Math.max(rec.values.get(metric), 0.1), -1));
-            ++idx;
-        }
-        for (String metric : highMetrics) {
+        RealVector metricVec = new ArrayRealVector(metrics.size());
+        for (String metric : metrics) {
             metricVec.setEntry(idx, rec.values.get(metric));
             ++idx;
         }

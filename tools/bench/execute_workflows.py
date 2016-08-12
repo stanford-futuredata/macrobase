@@ -129,8 +129,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     os.system("mkdir -p %s" % sub_dir)
     # For now, we only run metrics with MCD and MAD: MCD for
     # dimensionalities greater than 1, MAD otherwise.
-    dim = (len(config_parameters["macrobase.loader.targetHighMetrics"]) +
-           len(config_parameters["macrobase.loader.targetLowMetrics"]))
+    dim = (len(config_parameters["macrobase.loader.metrics"]))
     if dim > 1:
         config_parameters["macrobase.analysis.detectorType"] = "MCD"
     else:

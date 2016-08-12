@@ -2,7 +2,6 @@ package macrobase.runtime.resources;
 
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
-import macrobase.ingest.PostgresIngester;
 import macrobase.ingest.SQLIngester;
 
 import java.io.IOException;
@@ -19,8 +18,7 @@ abstract public class BaseResource {
     protected SQLIngester getLoader() throws ConfigurationException, SQLException, IOException {
         // by default, REST calls may not have these defined.
         conf.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.METRICS, new ArrayList<>());
         return (SQLIngester) conf.constructIngester();
     }
 }

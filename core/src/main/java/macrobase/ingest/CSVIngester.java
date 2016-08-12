@@ -43,14 +43,8 @@ public class CSVIngester extends DataIngester {
     private Datum parseRecord(CSVRecord record) throws NumberFormatException {
         int vecPos = 0;
 
-        RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
-        for (String metric : lowMetrics) {
-            double val = Math.pow(Math.max(Double.parseDouble(record.get(metric)), 0.1), -1);
-            metricVec.setEntry(vecPos, val);
-            vecPos += 1;
-        }
-
-        for (String metric : highMetrics) {
+        RealVector metricVec = new ArrayRealVector(metrics.size());
+        for (String metric : metrics) {
             metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
             vecPos += 1;
         }

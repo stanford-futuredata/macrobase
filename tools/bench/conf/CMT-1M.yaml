@@ -1,6 +1,6 @@
 macrobase:
   macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id AND userid IS NOT NULL LIMIT 1000000;
-  macrobase.loader.targetHighMetrics:
+  macrobase.loader.metrics:
     - data_count_minutes
 #    - data_count_accel_samples
 #    - data_count_netloc_samples
@@ -8,7 +8,6 @@ macrobase:
 #    - distance_mapmatched_km
 #    - distance_gps_km
 #    - battery_drain_rate_per_hour
-  macrobase.loader.targetLowMetrics: []
   macrobase.loader.attributes: [userid]
   macrobase.loader.auxiliaryAttributes: []
   macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE

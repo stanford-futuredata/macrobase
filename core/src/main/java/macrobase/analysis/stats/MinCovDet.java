@@ -74,7 +74,7 @@ public class MinCovDet extends BatchTrainScore {
     public MinCovDet(MacroBaseConf conf) {
         super(conf);
         try {
-            this.p = conf.getStringList(MacroBaseConf.LOW_METRICS).size() + conf.getStringList(MacroBaseConf.HIGH_METRICS).size();
+            this.p = conf.getStringList(MacroBaseConf.METRICS).size();
         } catch (ConfigurationException e) {
             // Should never happen, but to avoid having to add throws
             // declaration, we re-throw as RuntimeException.

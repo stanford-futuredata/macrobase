@@ -32,12 +32,10 @@ public class GridDumpingPipelineTest {
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
-                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("XX"))
+                .set(MacroBaseConf.METRICS, Lists.newArrayList("XX"))
                 .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
                 .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
                 .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER)
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/20points.csv");

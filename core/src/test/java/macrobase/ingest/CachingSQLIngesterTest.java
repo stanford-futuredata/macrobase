@@ -106,14 +106,6 @@ public class CachingSQLIngesterTest {
             column++;
         }
 
-        List<String> auxiliaryAttributes = new ArrayList<>();
-        for(int i = 0; i < NUM_AUXILIARY; ++i) {
-            String metricName = String.format("auxiliary%d", i);
-            metaData.setColumnName(column, metricName);
-            auxiliaryAttributes.add(metricName);
-            column++;
-        }
-
         Set<String> firstVals2 = Sets.newHashSet(firstVals);
 
         metaData.setColumnCount(DIMENSION);
@@ -122,11 +114,13 @@ public class CachingSQLIngesterTest {
 
         statementHandler.prepareGlobalResultSet(result);
 
+        List<String> allMetrics = new ArrayList<>();
+        allMetrics.addAll(lowMetrics);
+        allMetrics.addAll(highMetrics);
+
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, attributes);
-        conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
-        conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
-        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, auxiliaryAttributes);
+        conf.set(MacroBaseConf.METRICS, allMetrics);
         conf.set(MacroBaseConf.DB_CACHE_DIR, folder.newFolder());
 
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
@@ -148,12 +142,7 @@ public class CachingSQLIngesterTest {
                 column++;
             }
 
-            for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
-                curValInt++;
-            }
-
-            for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
+            for(int i = 0; i < NUM_LOW+NUM_HIGH; ++i) {
                 assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
@@ -180,12 +169,7 @@ public class CachingSQLIngesterTest {
                 column++;
             }
 
-            for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
-                curValInt++;
-            }
-
-            for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
+            for(int i = 0; i < NUM_LOW+NUM_HIGH; ++i) {
                 assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
@@ -253,14 +237,6 @@ public class CachingSQLIngesterTest {
             column++;
         }
 
-        List<String> auxiliaryAttributes = new ArrayList<>();
-        for(int i = 0; i < NUM_AUXILIARY; ++i) {
-            String metricName = String.format("auxiliary%d", i);
-            metaData.setColumnName(column, metricName);
-            auxiliaryAttributes.add(metricName);
-            column++;
-        }
-
         Set<String> firstVals2 = Sets.newHashSet(firstVals);
 
         metaData.setColumnCount(DIMENSION);
@@ -269,11 +245,13 @@ public class CachingSQLIngesterTest {
 
         statementHandler.prepareGlobalResultSet(result);
 
+        List<String> allMetrics = new ArrayList<>();
+        allMetrics.addAll(lowMetrics);
+        allMetrics.addAll(highMetrics);
+
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, attributes);
-        conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
-        conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
-        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, auxiliaryAttributes);
+        conf.set(MacroBaseConf.METRICS, allMetrics);
         conf.set(MacroBaseConf.DB_CACHE_DIR, folder.newFolder());
 
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
@@ -296,12 +274,7 @@ public class CachingSQLIngesterTest {
                 column++;
             }
 
-            for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
-                curValInt++;
-            }
-
-            for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
+            for(int i = 0; i < NUM_LOW+NUM_HIGH; ++i) {
                 assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
@@ -328,12 +301,7 @@ public class CachingSQLIngesterTest {
                 column++;
             }
 
-            for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
-                curValInt++;
-            }
-
-            for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
+            for(int i = 0; i < NUM_LOW+NUM_HIGH; ++i) {
                 assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }

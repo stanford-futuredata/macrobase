@@ -35,13 +35,11 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("Cluster")) // loader
-                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.HIGH_METRICS, "XX")
+                .set(MacroBaseConf.METRICS, "XX")
                 .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
                 .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
                 .set(GMMConf.TARGET_GROUP, "2")
                 .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/toy2gaussians.csv");
@@ -88,12 +86,10 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("Cluster")) // loader
-                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.HIGH_METRICS, "XX")
+                .set(MacroBaseConf.METRICS, "XX")
                 .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
                 .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
                 .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/toy2gaussians.csv");
@@ -136,13 +132,11 @@ public class MixtureModelPipelineTest {
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
-                .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
                 .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
                 .set(GMMConf.TARGET_GROUP, "2, 11")
                 .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
-                .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-700points.csv.gz");

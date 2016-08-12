@@ -39,8 +39,7 @@ public class ContextualOutlierDetectorTest {
     public void testContextualDiscreteAttribute() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+        conf.set(MacroBaseConf.METRICS, Arrays.asList("A1"));
         conf.set(MacroBaseConf.TRANSFORM_TYPE, "MAD");
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
         contextualDiscreteAttributes.add("C1_Discrete");
@@ -96,8 +95,7 @@ public class ContextualOutlierDetectorTest {
     public void testContextualDoubleAttribute() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+        conf.set(MacroBaseConf.METRICS, Arrays.asList("A1"));
         conf.set(MacroBaseConf.TRANSFORM_TYPE, "MAD");
         conf.set(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, 3.0);
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
@@ -150,8 +148,7 @@ public class ContextualOutlierDetectorTest {
     public void testTwoAttributesContext() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+        conf.set(MacroBaseConf.METRICS, Arrays.asList("A1"));
         conf.set(MacroBaseConf.TRANSFORM_TYPE, "MAD");
         conf.set(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, 3.0);
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
@@ -217,8 +214,7 @@ public class ContextualOutlierDetectorTest {
     public void testTwoAttributesContext2() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+        conf.set(MacroBaseConf.METRICS, Arrays.asList("A1"));
         conf.set(MacroBaseConf.TRANSFORM_TYPE, "MAD");
         conf.set(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, 3.0);
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
@@ -273,8 +269,7 @@ public class ContextualOutlierDetectorTest {
     public void testContextualGivenOutliers() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, Arrays.asList("A1"));
+        conf.set(MacroBaseConf.METRICS, Arrays.asList("A1"));
         conf.set(MacroBaseConf.TRANSFORM_TYPE, "MAD");
         List<String> contextualDiscreteAttributes = new ArrayList<String>();
         contextualDiscreteAttributes.add("C1_Discrete");

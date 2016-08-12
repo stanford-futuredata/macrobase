@@ -24,7 +24,9 @@ import java.util.stream.DoubleStream;
  * `R.home()` inside R).
  */
 public class ARIMA extends TimeSeriesScore {
-    public static final String R_LOG_FILE = null;
+    public static final String R_LOG_FILE_DEFAULT = null;
+    public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
+
     private static final Logger log = LoggerFactory.getLogger(ARIMA.class);
     private Queue<Double> window = new LinkedList<Double>();
     private Double latestScore;
@@ -43,8 +45,7 @@ public class ARIMA extends TimeSeriesScore {
         }
         re.eval("library(forecast)");
 
-        String logFile = conf.getString(MacroBaseConf.R_LOG_FILE,
-                R_LOG_FILE);
+        String logFile = conf.getString(R_LOG_FILE, R_LOG_FILE_DEFAULT);
         if (logFile != null) {
             re.eval("log <- file('" + logFile + "')");
             re.eval("sink(log, append=TRUE)");

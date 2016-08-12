@@ -43,8 +43,7 @@ public class SQLIngesterTest {
     public void testJDBCProperties() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
         conf.set(MacroBaseConf.JDBC_PROPERTIES, "{sslfactory=org.postgresql.ssl.NonValidatingFactory, ssl=true}");
         Map<String, String> properties = new PostgresIngester(conf).getJDBCProperties();
@@ -85,8 +84,7 @@ public class SQLIngesterTest {
 
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList(fakeColumns));
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
 
@@ -161,25 +159,19 @@ public class SQLIngesterTest {
             column++;
         }
 
-        List<String> auxiliaryAttributes = new ArrayList<>();
-        for(int i = 0; i < NUM_AUXILIARY; ++i) {
-            String metricName = String.format("auxiliary%d", i);
-            metaData.setColumnName(column, metricName);
-            auxiliaryAttributes.add(metricName);
-            column++;
-        }
-
         metaData.setColumnCount(DIMENSION);
 
         result.setResultSetMetaData(metaData);
 
         statementHandler.prepareGlobalResultSet(result);
 
+        List<String> allMetrics = new ArrayList<>();
+        allMetrics.addAll(lowMetrics);
+        allMetrics.addAll(highMetrics);
+
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, attributes);
-        conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
-        conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
-        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, auxiliaryAttributes);
+        conf.set(MacroBaseConf.METRICS, allMetrics);
 
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
@@ -201,12 +193,7 @@ public class SQLIngesterTest {
                 column++;
             }
 
-            for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
-                curValInt++;
-            }
-
-            for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
+            for(int i = 0; i < NUM_LOW+NUM_HIGH; ++i) {
                 assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
@@ -275,42 +262,19 @@ public class SQLIngesterTest {
             column++;
         }
 
-        List<String> auxiliaryAttributes = new ArrayList<>();
-        for(int i = 0; i < NUM_AUXILIARY; ++i) {
-            String metricName = String.format("auxiliary%d", i);
-            metaData.setColumnName(column, metricName);
-            auxiliaryAttributes.add(metricName);
-            column++;
-        }
-
-        List<String> contextualDiscreteAttributes = new ArrayList<>();
-        for(int i = 0; i < NUM_CONTEXTUAL_DISCRETE; ++i) {
-            String metricName = String.format("contextualDiscrete%d", i);
-            metaData.setColumnName(column, metricName);
-            contextualDiscreteAttributes.add(metricName);
-            column++;
-        }
-
-        List<String> contextualDoubleAttributes = new ArrayList<>();
-        for(int i = 0; i < NUM_CONTEXTUAL_DISCRETE; ++i) {
-            String metricName = String.format("contextualDouble%d", i);
-            metaData.setColumnName(column, metricName);
-            contextualDoubleAttributes.add(metricName);
-            column++;
-        }
-        
-        
         metaData.setColumnCount(DIMENSION);
 
         result.setResultSetMetaData(metaData);
 
         statementHandler.prepareGlobalResultSet(result);
 
+        List<String> allMetrics = new ArrayList<>();
+        allMetrics.addAll(lowMetrics);
+        allMetrics.addAll(highMetrics);
+
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, attributes);
-        conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
-        conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
-        conf.set(MacroBaseConf.AUXILIARY_ATTRIBUTES, auxiliaryAttributes);
+        conf.set(MacroBaseConf.METRICS, allMetrics);
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
         DatumEncoder encoder = conf.getEncoder();
@@ -331,12 +295,7 @@ public class SQLIngesterTest {
                 column++;
             }
 
-            for(int i = 0; i < NUM_LOW; ++i) {
-                assertEquals(Math.pow(Math.max(curValInt, 0.1), -1), d.metrics().getEntry(i), 0);
-                curValInt++;
-            }
-
-            for(int i = NUM_LOW; i < NUM_LOW+NUM_HIGH; ++i) {
+            for(int i = 0; i < NUM_LOW+NUM_HIGH; ++i) {
                 assertEquals(curValInt, d.metrics().getEntry(i), 0);
                 curValInt++;
             }
@@ -407,10 +366,13 @@ public class SQLIngesterTest {
 
         statementHandler.prepareGlobalResultSet(result);
 
+        List<String> allMetrics = new ArrayList<>();
+        allMetrics.addAll(lowMetrics);
+        allMetrics.addAll(highMetrics);
+
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, attributes);
-        conf.set(MacroBaseConf.LOW_METRICS, lowMetrics);
-        conf.set(MacroBaseConf.HIGH_METRICS, highMetrics);
+        conf.set(MacroBaseConf.METRICS, allMetrics);
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test LIMIT 10000;");
 
         SQLIngester loader = new TestSQLIngester(conf, connection);

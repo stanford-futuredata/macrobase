@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/analyze")
@@ -31,11 +32,16 @@ public class AnalyzeResource extends BaseResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public List<AnalysisResult> getAnalysis(AnalysisRequest request) throws Exception {
+
+        List<String> allMetrics = new ArrayList<>();
+        allMetrics.addAll(request.highMetrics);
+        allMetrics.addAll(request.lowMetrics);
+
         conf.set(MacroBaseConf.DB_URL, request.pgUrl);
         conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
         conf.set(MacroBaseConf.ATTRIBUTES, request.attributes);
-        conf.set(MacroBaseConf.HIGH_METRICS, request.highMetrics);
-        conf.set(MacroBaseConf.LOW_METRICS, request.lowMetrics);
+        conf.set(MacroBaseConf.METRICS, allMetrics);
+        conf.set(MacroBaseConf.LOW_METRIC_TRANSFORM, request.lowMetrics);
         conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
         List<AnalysisResult> results = new BasicBatchedPipeline().initialize(conf).run();

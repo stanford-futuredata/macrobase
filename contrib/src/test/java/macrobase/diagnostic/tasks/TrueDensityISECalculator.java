@@ -30,69 +30,57 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TrueDensityISECalculator extends ConfiguredCommand<MacroBaseConf> {
+public class TrueDensityISECalculator extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(TrueDensityISECalculator.class);
 
-    public TrueDensityISECalculator() {
-        super("ise", "Dump true density related statistics.");
-    }
-
     @Override
-    protected void run(Bootstrap<MacroBaseConf> bootstrap, Namespace namespace, MacroBaseConf macroBaseConf) throws Exception {
-        AMSETask task = new AMSETask();
-        task.initialize(macroBaseConf);
-        task.run();
-    }
+    public List<AnalysisResult> run() throws Exception {
+        long startMs = System.currentTimeMillis();
+        DataIngester ingester = conf.constructIngester();
 
-    private class AMSETask extends BasePipeline {
-        @Override
-        public List<AnalysisResult> run() throws Exception {
-            long startMs = System.currentTimeMillis();
-            DataIngester ingester = conf.constructIngester();
+        List<Datum> data = ingester.getStream().drain();
+        long loadEndMs = System.currentTimeMillis();
 
-            List<Datum> data = ingester.getStream().drain();
-            long loadEndMs = System.currentTimeMillis();
+        BatchScoreFeatureTransform batchTransform = new BatchScoreFeatureTransform(conf);
 
-            BatchScoreFeatureTransform batchTransform = new BatchScoreFeatureTransform(conf);
-
-            List<MultivariateDistribution> listDist = new ArrayList<>(3);
-            double[] weights = new double[3];
-            double totalW = 0;
-            double[][] distData = {
-                    {1.5, 2}, {0.5, 0.4, 0.4, 0.5}, {50000},
-                    {2, 0}, {0.3, 0, 0, 0.6}, {30000},
-                    {4.5, 1}, {0.9, 0.2, 0.2, 0.3}, {20000}};
-            for (int i = 0; i < distData.length; i += 3) {
-                RealVector mean = new ArrayRealVector(distData[i + 0]);
-                double[][] covArray = new double[2][2];
-                covArray[0] = Arrays.copyOfRange(distData[i + 1], 0, 2);
-                covArray[1] = Arrays.copyOfRange(distData[i + 1], 2, 4);
-                RealMatrix cov = new BlockRealMatrix(covArray);
-                listDist.add(new MultivariateNormal(mean, cov));
-                weights[i / 3] = distData[i + 2][0];
-                totalW += weights[i / 3];
-            }
-            for (int i = 0; i < weights.length; i++) {
-                weights[i] /= totalW;
-            }
-
-            FeatureTransform amse = new TrueScoreExpDifferenceTransform(conf, batchTransform, new Mixture(listDist, weights));
-            amse.consume(data);
-
-            final long endMs = System.currentTimeMillis();
-            final long loadMs = loadEndMs - startMs;
-            final long totalMs = endMs - loadEndMs;
-
-            return Arrays.asList(new AnalysisResult(0,
-                    0,
-                    loadMs,
-                    totalMs,
-                    0,
-                    new ArrayList<ItemsetResult>()));
+        List<MultivariateDistribution> listDist = new ArrayList<>(3);
+        double[] weights = new double[3];
+        double totalW = 0;
+        double[][] distData = {
+                {1.5, 2}, {0.5, 0.4, 0.4, 0.5}, {50000},
+                {2, 0}, {0.3, 0, 0, 0.6}, {30000},
+                {4.5, 1}, {0.9, 0.2, 0.2, 0.3}, {20000}};
+        for (int i = 0; i < distData.length; i += 3) {
+            RealVector mean = new ArrayRealVector(distData[i + 0]);
+            double[][] covArray = new double[2][2];
+            covArray[0] = Arrays.copyOfRange(distData[i + 1], 0, 2);
+            covArray[1] = Arrays.copyOfRange(distData[i + 1], 2, 4);
+            RealMatrix cov = new BlockRealMatrix(covArray);
+            listDist.add(new MultivariateNormal(mean, cov));
+            weights[i / 3] = distData[i + 2][0];
+            totalW += weights[i / 3];
         }
+        for (int i = 0; i < weights.length; i++) {
+            weights[i] /= totalW;
+        }
+
+        FeatureTransform amse = new TrueScoreExpDifferenceTransform(conf, batchTransform, new Mixture(listDist, weights));
+        amse.consume(data);
+
+        final long endMs = System.currentTimeMillis();
+        final long loadMs = loadEndMs - startMs;
+        final long totalMs = endMs - loadEndMs;
+
+        return Arrays.asList(new AnalysisResult(0,
+                0,
+                loadMs,
+                totalMs,
+                0,
+                new ArrayList<ItemsetResult>()));
     }
 
     private class TrueScoreExpDifferenceTransform extends FeatureTransform {
+
         private final MBStream<Datum> output = new MBStream<>();
         private BatchScoreFeatureTransform underlyingTransform;
         private MultivariateDistribution trueDistribution;

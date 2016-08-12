@@ -1,13 +1,13 @@
 macrobase.query.name: testTasks
 macrobase.pipeline.class: macrobase.analysis.pipeline.BasicOneShotEWStreamingPipeline
 
-macrobase.loader.attributes: [userid, app_version]
-macrobase.loader.targetLowMetrics: [data_count_minutes]
-macrobase.loader.targetHighMetrics: []
+macrobase.loader.attributes: [device_id, firmware_version]
+macrobase.loader.metrics: [power_drain]
+macrobase.analysis.metrics.lowTransform: []
 
-macrobase.analysis.transformType: MCD
+macrobase.analysis.transformType: MAD_OR_MCD
 
-macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 10000000;
+macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
 
 macrobase.analysis.minSupport: 0.001
 macrobase.analysis.minOIRatio: 3.0

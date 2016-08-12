@@ -44,8 +44,7 @@ public class BasePipelineTest {
     public void testConstructors() throws Exception {
         MacroBaseConf conf = new MacroBaseConf();
         conf.set(MacroBaseConf.ATTRIBUTES, new ArrayList<>());
-        conf.set(MacroBaseConf.LOW_METRICS, new ArrayList<>());
-        conf.set(MacroBaseConf.HIGH_METRICS, new ArrayList<>());
+        conf.set(MacroBaseConf.METRICS, new ArrayList<>());
         conf.set(MacroBaseConf.BASE_QUERY, "SELECT * FROM test;");
 
         conf.set(MacroBaseConf.DATA_LOADER_TYPE,

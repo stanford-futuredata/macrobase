@@ -1,25 +1,15 @@
 package macrobase.conf;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Lists;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
-import io.dropwizard.validation.BaseValidator;
-import macrobase.analysis.pipeline.stream.MBStream;
-import macrobase.conf.MacroBaseConf.DataIngesterType;
-import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
-import macrobase.ingest.CachingSQLIngesterTest;
-import macrobase.ingest.DataIngester;
 import macrobase.ingest.DiskCachingIngester;
 import macrobase.ingest.MySQLIngester;
 import macrobase.ingest.PostgresIngester;
 import org.junit.*;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -128,8 +118,7 @@ public class MacroBaseConfTest {
         MacroBaseConf conf = new MacroBaseConf();
 
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("testattr"));
-        conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList("lm1"));
-        conf.set(MacroBaseConf.HIGH_METRICS, Lists.newArrayList("hm1"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("lm1"));
         conf.set(MacroBaseConf.BASE_QUERY, Lists.newArrayList("basequery"));
         conf.set(MacroBaseConf.DB_CACHE_DIR, "cachedir");
 

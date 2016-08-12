@@ -38,8 +38,7 @@ public class StochVarDPGMMTest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-700points.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(700, data.size());
@@ -134,8 +133,7 @@ public class StochVarDPGMMTest {
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/3gaussians-7000points.csv.gz")
-                .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.LOW_METRICS, "")
+                .set(MacroBaseConf.METRICS, "XX, YY")
                 .set(MacroBaseConf.ATTRIBUTES, "");
         List<Datum> data = Drainer.drainIngest(conf);
         int totalPoints = 7000;

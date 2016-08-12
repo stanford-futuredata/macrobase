@@ -176,7 +176,7 @@ public abstract class SQLIngester extends DataIngester {
 
         if (resultSet == null) {
             String targetColumns = StreamSupport.stream(
-                    Iterables.concat(attributes, lowMetrics, highMetrics).spliterator(), false)
+                    Iterables.concat(attributes, metrics).spliterator(), false)
                     .collect(Collectors.joining(", "));
             if (timeColumn != null) {
                 targetColumns += ", " + timeColumn;
@@ -225,17 +225,10 @@ public abstract class SQLIngester extends DataIngester {
 
     private RealVector getMetrics(ResultSet rs, int rsStartIndex)
             throws SQLException {
-        RealVector metricVec = new ArrayRealVector(lowMetrics.size() + highMetrics.size());
+        RealVector metricVec = new ArrayRealVector(metrics.size());
         int vecPos = 0;
 
-        for (int i = 0; i < lowMetrics.size(); ++i, ++vecPos) {
-            double val = Math.pow(Math.max(rs.getDouble(i + rsStartIndex), 0.1), -1);
-            metricVec.setEntry(vecPos, val);
-        }
-
-        rsStartIndex += lowMetrics.size();
-
-        for (int i = 0; i < highMetrics.size(); ++i, ++vecPos) {
+        for (int i = 0; i < metrics.size(); ++i, ++vecPos) {
             double val = rs.getDouble(i + rsStartIndex);
             metricVec.setEntry(vecPos, val);
         }

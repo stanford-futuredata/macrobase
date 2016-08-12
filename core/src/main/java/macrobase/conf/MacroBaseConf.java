@@ -51,14 +51,11 @@ public class MacroBaseConf extends Configuration {
 
     public static final String TRUNCATE_K = "macrobase.analysis.truncate.k";
 
-    public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
-
     public static final String DATA_LOADER_TYPE = "macrobase.loader.loaderType";
     public static final String TIME_COLUMN = "macrobase.loader.timeColumn";
     public static final String ATTRIBUTES = "macrobase.loader.attributes";
-    public static final String LOW_METRICS = "macrobase.loader.targetLowMetrics";
-    public static final String HIGH_METRICS = "macrobase.loader.targetHighMetrics";
-    public static final String AUXILIARY_ATTRIBUTES = "macrobase.loader.auxiliaryAttributes";
+    public static final String METRICS = "macrobase.loader.metrics";
+    public static final String LOW_METRIC_TRANSFORM = "macrobase.analysis.metrics.lowTransform";
 
     public static final String JDBC_PROPERTIES = "macrobase.ingest.jdbc.properties";
 
@@ -182,7 +179,7 @@ public class MacroBaseConf extends Configuration {
 
         switch (transformType) {
             case MAD_OR_MCD:
-                int metricsDimensions = this.getStringList(LOW_METRICS).size() + this.getStringList(HIGH_METRICS).size();
+                int metricsDimensions = this.getStringList(METRICS).size();
                 if (metricsDimensions == 1) {
                     log.info("By default: using MAD transform for dimension 1 metric.");
                     return new MAD(this);

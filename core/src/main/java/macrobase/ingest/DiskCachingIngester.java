@@ -38,7 +38,7 @@ public class DiskCachingIngester extends DataIngester {
 
     @Override
     public MBStream<Datum> getStream() throws Exception {
-        if(output == null) {
+        if (output == null) {
             initialize();
         }
 
@@ -46,11 +46,11 @@ public class DiskCachingIngester extends DataIngester {
     }
 
     private void initialize() throws Exception {
-        if(output == null) {
+        if (output == null) {
             List<Datum> data;
             data = readInData();
             if (data == null || data.size() == 0) {
-		        data = innerIngester.getStream().drain();
+                data = innerIngester.getStream().drain();
                 log.info("Writing out loaded data...");
                 writeOutData(data);
                 log.info("...done writing!");
@@ -62,28 +62,25 @@ public class DiskCachingIngester extends DataIngester {
 
     private String convertFileName(Integer timeColumn,
                                    List<String> attributes,
-                                   List<String> lowMetrics,
-                                   List<String> highMetrics,
+                                   List<String> metrics,
                                    String baseQuery) {
         String timeColumnName = conf.getEncoder().getAttributeName(timeColumn);
-        int hashCode = String.format("T-%s::A-%s::L%s::H%s::BQ%s",
-                timeColumnName,
-                attributes.toString(),
-                lowMetrics.toString(),
-                highMetrics.toString(),
-                baseQuery).replace(" ", "_").hashCode();
+        int hashCode = String.format("T-%s::A-%s::M%s::BQ%s",
+                                     timeColumnName,
+                                     attributes.toString(),
+                                     metrics.toString(),
+                                     baseQuery).replace(" ", "_").hashCode();
         return Integer.toString(hashCode);
     }
 
     private void writeOutData(List<Datum> data) throws IOException {
         OutputStream outputStream = new SnappyOutputStream(new BufferedOutputStream(new FileOutputStream(
                 fileDir + "/" + convertFileName(timeColumn,
-                        attributes,
-                        lowMetrics,
-                        highMetrics,
-                        conf.getString(MacroBaseConf.BASE_QUERY,
-                                       conf.getString(MacroBaseConf.QUERY_NAME,
-                                                      "cachedQuery"))))), 16384);
+                                                attributes,
+                                                metrics,
+                                                conf.getString(MacroBaseConf.BASE_QUERY,
+                                                               conf.getString(MacroBaseConf.QUERY_NAME,
+                                                                              "cachedQuery"))))), 16384);
 
         Kryo kryo = new Kryo();
         Output output = new Output(outputStream);
@@ -93,11 +90,11 @@ public class DiskCachingIngester extends DataIngester {
                                           MacroBaseDefaults.DB_CACHE_CHUNK_SIZE);
         List<List<Datum>> batches = new ArrayList<>();
 
-        if(data.size() > BATCHSIZE) {
+        if (data.size() > BATCHSIZE) {
             int idx = 0;
-            while(idx != data.size()) {
+            while (idx != data.size()) {
                 List<Datum> batch = new ArrayList<>();
-                for(int j = 0; j < BATCHSIZE && idx != data.size(); ++j) {
+                for (int j = 0; j < BATCHSIZE && idx != data.size(); ++j) {
                     batch.add(data.get(idx));
                     idx++;
                 }
@@ -108,7 +105,7 @@ public class DiskCachingIngester extends DataIngester {
         }
 
         kryo.writeObject(output, batches.size());
-        for(List<Datum> batch : batches) {
+        for (List<Datum> batch : batches) {
             kryo.writeClassAndObject(output, batch);
         }
 
@@ -117,12 +114,11 @@ public class DiskCachingIngester extends DataIngester {
 
     private List<Datum> readInData() throws IOException {
         File f = new File(fileDir + "/" + convertFileName(timeColumn,
-                                attributes,
-                                lowMetrics,
-                                highMetrics,
-                                conf.getString(MacroBaseConf.BASE_QUERY,
-                                               conf.getString(MacroBaseConf.QUERY_NAME,
-                                                              "cachedQuery"))));
+                                                          attributes,
+                                                          metrics,
+                                                          conf.getString(MacroBaseConf.BASE_QUERY,
+                                                                         conf.getString(MacroBaseConf.QUERY_NAME,
+                                                                                        "cachedQuery"))));
         if (!f.exists()) {
             log.info("Data did not exist; going to read from SQL.");
             return null;
@@ -139,9 +135,9 @@ public class DiskCachingIngester extends DataIngester {
         Integer numBatches = kryo.readObject(input, Integer.class);
         List<Datum> output = null;
 
-        for(int i = 0; i < numBatches; ++i) {
+        for (int i = 0; i < numBatches; ++i) {
             List<Datum> fromDisk = (List<Datum>) kryo.readClassAndObject(input);
-            if(output == null) {
+            if (output == null) {
                 output = fromDisk;
             } else {
                 output.addAll(fromDisk);

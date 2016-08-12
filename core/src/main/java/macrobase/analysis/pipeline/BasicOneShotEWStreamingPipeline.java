@@ -10,6 +10,7 @@ import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.EWStreamingSummarizer;
 import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
+import macrobase.analysis.transform.LowMetricTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -41,6 +42,13 @@ public class    BasicOneShotEWStreamingPipeline extends BasePipeline {
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
+
+        if(conf.isSet(MacroBaseConf.LOW_METRIC_TRANSFORM)) {
+            LowMetricTransform lmt = new LowMetricTransform(conf);
+            lmt.consume(data);
+            data = lmt.getStream().drain();
+        }
+
         System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 

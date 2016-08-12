@@ -9,6 +9,7 @@ import macrobase.analysis.summary.Summarizer;
 import macrobase.analysis.summary.Summary;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
+import macrobase.analysis.transform.LowMetricTransform;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
@@ -34,6 +35,13 @@ public class BasicBatchedPipeline extends BasePipeline {
         Stopwatch sw = Stopwatch.createStarted();
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
+
+        if(conf.isSet(MacroBaseConf.LOW_METRIC_TRANSFORM)) {
+            LowMetricTransform lmt = new LowMetricTransform(conf);
+            lmt.consume(data);
+            data = lmt.getStream().drain();
+        }
+
         System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
