@@ -497,7 +497,7 @@ public class ContextualOutlierDetector {
      * @throws ConfigurationException
      */
     private BatchTrainScore constructDetector() throws ConfigurationException {
-        return conf.constructTransform(conf.getTransformType());
+        return conf.constructTransform();
     }
 
     /**

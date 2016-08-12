@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
 import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.stats.*;
-import macrobase.analysis.stats.mixture.*;
 import macrobase.analysis.transform.aggregate.*;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
@@ -51,32 +50,11 @@ public class MacroBaseConf extends Configuration {
     public static final String MCD_ALPHA = "macrobase.analysis.mcd.alpha";
     public static final String MCD_STOPPING_DELTA = "macrobase.analysis.mcd.stoppingDelta";
 
-    public static final String NUM_MIXTURES = "macrobase.analysis.stat.mixtures.numMixtures";
-    public static final String MAX_ITERATIONS_TO_CONVERGE = "macrobase.analysis.stat.iterative.maxIterations";
-    public static final String ITERATIVE_PROGRESS_CUTOFF_RATIO = "macrobase.analysis.stat.iterative.improvementCutoffRatio";
-    public static final String DPM_TRUNCATING_PARAMETER = "macrobase.analysis.stat.dpm.truncatingParameter";
-    public static final String DPM_CONCENTRATION_PARAMETER = "macrobase.analysis.stat.dpm.concentrationParameter";
-    public static final String SVI_DELAY = "macrobase.analysis.stat.svi.delay";
-    public static final String SVI_FORGETTING_RATE = "macrobase.analysis.stat.svi.forgettingRate";
-    public static final String SVI_MINIBATCH_SIZE = "macrobase.analysis.stat.svi.minibatchSize";
-
-    // Algorithm to use when choosing the bandwidth for the given data.
-    public static final String KDE_BANDWIDTH_ALGORITHM = "macrobase.analysis.kde.bandwidthAlgorithm";
-    public static final String KDE_PROPORTION_OF_DATA_TO_USE = "macrobase.analysis.kde.proportionOfDataToUse";
-
-    // Multiplies the bandwidth that was gotten algorithmically by this given constant (double).
-    public static final String KDE_BANDWIDTH_MULTIPLIER = "macrobase.analysis.kde.bandwidthMultiplier";
-    public static final String KDE_KERNEL_TYPE = "macrobase.analysis.kde.kernelType";
-    public static final String BINNED_KDE_BINS = "macrobase.analysis.binnedKde.numBins";
-    public static final String KDTREE_LEAF_CAPACITY = "macrobase.analysis.treeKde.leafCapacity";
-    public static final String TREE_KDE_ACCURACY = "macrobase.analysis.treeKde.accuracy";
-
     public static final String RANDOM_PROJECTION_K = "macrobase.analysis.randomProjection.k";
 
     public static final String TRUNCATE_K = "macrobase.analysis.truncate.k";
 
     public static final String R_LOG_FILE = "macrobase.analysis.r.logfile";
-    public static final String STORE_ANALYSIS_RESULTS = "macrobase.analysis.results.store";
 
     public static final String DATA_LOADER_TYPE = "macrobase.loader.loaderType";
     public static final String TIME_COLUMN = "macrobase.loader.timeColumn";
@@ -84,7 +62,6 @@ public class MacroBaseConf extends Configuration {
     public static final String LOW_METRICS = "macrobase.loader.targetLowMetrics";
     public static final String HIGH_METRICS = "macrobase.loader.targetHighMetrics";
     public static final String AUXILIARY_ATTRIBUTES = "macrobase.loader.auxiliaryAttributes";
-
 
     public static final String JDBC_PROPERTIES = "macrobase.ingest.jdbc.properties";
 
@@ -101,16 +78,6 @@ public class MacroBaseConf extends Configuration {
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
-    public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
-    public static final String SCORE_DUMP_FILE_CONFIG_PARAM = "macrobase.diagnostic.dumpScoreFile";
-    public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
-    public static final String DUMP_SCORE_GRID = "macrobase.diagnostic.dumpScoreGrid";
-    public static final String NUM_SCORE_GRID_POINTS_PER_DIMENSION = "macrobase.diagnostic.gridPointsPerDimension";
-    public static final String SCORED_DATA_FILE = "macrobase.diagnostic.scoreDataFile";
-    public static final String DUMP_MIXTURE_COMPONENTS = "macrobase.diagnostic.dumpMixtureComponents";
-    public static final String MIXTURE_CENTERS_FILE = "macrobase.analysis.stat.mixtures.initialClusters";
-    public static final String TRAIN_TEST_SPLIT = "macrobase.analysis.stat.trainTestSplit";
-
     private final DatumEncoder datumEncoder;
 
     public MacroBaseConf() {
@@ -125,7 +92,9 @@ public class MacroBaseConf extends Configuration {
         }
 
         try {
-            ingesterType = DataIngesterType.valueOf(_conf.get(DATA_LOADER_TYPE));
+            if(ingesterType == null) {
+                ingesterType = DataIngesterType.valueOf(_conf.get(DATA_LOADER_TYPE));
+            }
         } catch (IllegalArgumentException e) {
             try {
                 Class c = Class.forName(_conf.get(DATA_LOADER_TYPE));
@@ -172,17 +141,7 @@ public class MacroBaseConf extends Configuration {
         MAD,
         MCD,
         ZSCORE,
-        KDE,
-        BINNED_KDE,
-        TREE_KDE,
-        MOVING_AVERAGE,
-        ARIMA,
-        BAYESIAN_NORMAL,
-        EM_GMM,
-        MEAN_FIELD_GMM,
-        MEAN_FIELD_DPGMM,
-        SVI_GMM,
-        SVI_DPGMM,
+        MOVING_AVERAGE
     }
 
     public enum AggregateType {
@@ -200,8 +159,36 @@ public class MacroBaseConf extends Configuration {
         }
     }
 
-    public BatchTrainScore constructTransform(TransformType transformType)
+    public BatchTrainScore constructTransform()
             throws ConfigurationException {
+
+        TransformType transformType = null;
+
+        if(!_conf.containsKey(TRANSFORM_TYPE)) {
+            transformType = MacroBaseDefaults.TRANSFORM_TYPE;
+        }
+
+        try {
+            if(transformType == null) {
+                transformType = TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
+            }
+        } catch (IllegalArgumentException e) {
+            try {
+                Class c = Class.forName(_conf.get(TRANSFORM_TYPE));
+                Constructor<?> cons = c.getConstructor(MacroBaseConf.class);
+                Object ao = cons.newInstance(this);
+
+                if (!(ao instanceof BatchTrainScore)) {
+                    throw new ConfigurationException(String.format("%s is not an instance of BatchTrainScore", ao.toString()));
+                }
+
+                return (BatchTrainScore)ao;
+            } catch (Exception e2) {
+                log.error("an error occurred creating transform", e2);
+                throw new ConfigurationException(String.format("error instantiating transform of type %s: %s", _conf.get(TRANSFORM_TYPE), e2.getMessage()));
+            }
+        }
+
         switch (transformType) {
             case MAD_OR_MCD:
                 int metricsDimensions = this.getStringList(LOW_METRICS).size() + this.getStringList(HIGH_METRICS).size();
@@ -223,36 +210,9 @@ public class MacroBaseConf extends Configuration {
             case ZSCORE:
                 log.info("Using ZScore transform.");
                 return new ZScore(this);
-            case KDE:
-                log.info("Using KDE transform.");
-                return new KDE(this);
-            case BINNED_KDE:
-                log.info("Using BinnedKDE transform.");
-                return new BinnedKDE(this);
-            case TREE_KDE:
-                log.info("Using TreeKDE transform.");
-                return new TreeKDE(this);
             case MOVING_AVERAGE:
                 log.info("Using Moving Average transform.");
                 return new MovingAverage(this);
-            case BAYESIAN_NORMAL:
-                log.info("Using Bayesian Normal transform.");
-                return new BayesianNormalDensity(this);
-            case EM_GMM:
-                log.info("Using Finite mixture of Gaussians (EM algorithm) transform.");
-                return new ExpectMaxGMM(this);
-            case MEAN_FIELD_GMM:
-                log.info("Using Finite mixture of Gaussians (Bayesian algorithm) transform.");
-                return new FiniteGMM(this);
-            case MEAN_FIELD_DPGMM:
-                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
-                return new DPGMM(this);
-            case SVI_GMM:
-                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
-                return new StochVarFiniteGMM(this);
-            case SVI_DPGMM:
-                log.info("Using infinite mixture of Gaussians (DP Bayesian algorithm) transform.");
-                return new StochVarDPGMM(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
         }
@@ -406,14 +366,10 @@ public class MacroBaseConf extends Configuration {
     }
 
     public Boolean getBoolean(String key) throws ConfigurationException {
-        if (_conf.containsKey(key) || MacroBaseDefaults.DEFAULT_BOOLEANS.containsKey(key)) {
-            return getBoolean(
-                    key,
-                    MacroBaseDefaults.DEFAULT_BOOLEANS.get(key)
-            );
-        } else {
+        if (!_conf.containsKey(key)) {
             throw new MissingParameterException(key);
         }
+        return getBoolean(key, null);
     }
 
     public Boolean getBoolean(String key, Boolean defaultValue) {
@@ -423,32 +379,11 @@ public class MacroBaseConf extends Configuration {
         return defaultValue;
     }
 
-    public TransformType getTransformType() throws ConfigurationException {
-        if (!_conf.containsKey(TRANSFORM_TYPE)) {
-            return MacroBaseDefaults.TRANSFORM_TYPE;
-        }
-        return TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
-    }
-
     public AggregateType getAggregateType() throws ConfigurationException {
         if (!_conf.containsKey(AGGREGATE_TYPE)) {
             return MacroBaseDefaults.AGGREGATE_TYPE;
         }
         return AggregateType.valueOf(_conf.get(AGGREGATE_TYPE));
-    }
-
-    public KDE.BandwidthAlgorithm getKDEBandwidth() {
-        if (!_conf.containsKey(KDE_BANDWIDTH_ALGORITHM)) {
-            return MacroBaseDefaults.KDE_BANDWIDTH_ALGORITHM;
-        }
-        return KDE.BandwidthAlgorithm.valueOf(_conf.get(KDE_BANDWIDTH_ALGORITHM));
-    }
-
-    public KDE.KernelType getKDEKernelType() {
-        if (!_conf.containsKey(KDE_KERNEL_TYPE)) {
-            return MacroBaseDefaults.KDE_KERNEL_TYPE;
-        }
-        return KDE.KernelType.valueOf(_conf.get(KDE_KERNEL_TYPE));
     }
 
     public CSVIngester.Compression getCsvCompression() {

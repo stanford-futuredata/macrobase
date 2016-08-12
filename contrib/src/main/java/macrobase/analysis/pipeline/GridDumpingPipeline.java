@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class GridDumpingPipeline extends BasePipeline {
+    public static final String CLASSIFIER_DUMP = "macrobase.diagnostic.dumpClassifier";
     private static final Logger log = LoggerFactory.getLogger(GridDumpingPipeline.class);
 
     public Pipeline initialize(MacroBaseConf conf) throws Exception {
@@ -36,7 +37,7 @@ public class GridDumpingPipeline extends BasePipeline {
         List<Datum> data = ingester.getStream().drain();
         long loadEndMs = System.currentTimeMillis();
 
-        BatchScoreFeatureTransform batchTransform = new BatchScoreFeatureTransform(conf, conf.getTransformType());
+        BatchScoreFeatureTransform batchTransform = new BatchScoreFeatureTransform(conf);
         FeatureTransform gridDumpingTransform = new GridDumpingBatchScoreTransform(conf, batchTransform);
         gridDumpingTransform.initialize();
         FeatureTransform dumpingTransform = new BeforeAfterDumpingBatchScoreFeatureTransform(conf, gridDumpingTransform);
@@ -46,7 +47,7 @@ public class GridDumpingPipeline extends BasePipeline {
         OutlierClassifier outlierClassifier = new BatchingPercentileClassifier(conf);
         outlierClassifier.consume(dumpingTransform.getStream().drain());
 
-        if (conf.getBoolean(MacroBaseConf.CLASSIFIER_DUMP)) {
+        if (conf.getBoolean(CLASSIFIER_DUMP, false)) {
             String queryName = conf.getString(MacroBaseConf.QUERY_NAME);
             outlierClassifier = new DumpClassifier(conf, outlierClassifier, queryName);
         }

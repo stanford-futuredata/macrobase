@@ -14,7 +14,6 @@ public abstract class BasePipeline implements Pipeline {
 
     protected Boolean forceUsePercentile;
     protected Boolean forceUseZScore;
-    protected TransformType transformType;
     protected Double minOIRatio;
     protected Double minSupport;
     protected Double targetPercentile;
@@ -23,8 +22,6 @@ public abstract class BasePipeline implements Pipeline {
     protected List<String> highMetrics;
     protected List<String> lowMetrics;
     protected String queryName;
-    protected String storeAnalysisResults;
-
 
     protected MacroBaseConf conf;
 
@@ -40,16 +37,12 @@ public abstract class BasePipeline implements Pipeline {
         targetPercentile = conf.getDouble(MacroBaseConf.TARGET_PERCENTILE, MacroBaseDefaults.TARGET_PERCENTILE);
         minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
         minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
-        transformType = conf.getTransformType();
         forceUsePercentile = conf.getBoolean(MacroBaseConf.USE_PERCENTILE, MacroBaseDefaults.USE_PERCENTILE);
         forceUseZScore = conf.getBoolean(MacroBaseConf.USE_ZSCORE, MacroBaseDefaults.USE_ZSCORE);
 
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
-
-        storeAnalysisResults = conf.getString(MacroBaseConf.STORE_ANALYSIS_RESULTS,
-                                              MacroBaseDefaults.STORE_ANALYSIS_RESULTS);
 
         return this;
     }

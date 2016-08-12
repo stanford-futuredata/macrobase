@@ -15,9 +15,15 @@ public class BatchScoreFeatureTransform extends FeatureTransform {
     private boolean requiresTraining = true;
     protected final MBStream<Datum> output = new MBStream<>();
 
-    public BatchScoreFeatureTransform(MacroBaseConf conf, MacroBaseConf.TransformType transformType)
+    public BatchScoreFeatureTransform(MacroBaseConf conf)
             throws ConfigurationException {
-        this.batchTrainScore = conf.constructTransform(transformType);
+        this.batchTrainScore = conf.constructTransform();
+        this.conf = conf;
+    }
+
+    public BatchScoreFeatureTransform(MacroBaseConf conf, BatchTrainScore bts)
+            throws ConfigurationException {
+        this.batchTrainScore = bts;
         this.conf = conf;
     }
 

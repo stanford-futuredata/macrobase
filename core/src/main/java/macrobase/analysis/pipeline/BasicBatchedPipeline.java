@@ -37,7 +37,7 @@ public class BasicBatchedPipeline extends BasePipeline {
         System.gc();
         final long loadMs = sw.elapsed(TimeUnit.MILLISECONDS);
 
-        FeatureTransform ft = new BatchScoreFeatureTransform(conf, conf.getTransformType());
+        FeatureTransform ft = new BatchScoreFeatureTransform(conf);
         ft.consume(data);
 
         OutlierClassifier oc = new BatchingPercentileClassifier(conf);

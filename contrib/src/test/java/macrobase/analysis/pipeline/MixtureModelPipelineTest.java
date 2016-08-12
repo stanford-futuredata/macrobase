@@ -2,11 +2,12 @@ package macrobase.analysis.pipeline;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import macrobase.analysis.pipeline.GridDumpingPipeline;
-import macrobase.analysis.pipeline.MixtureModelPipeline;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.analysis.stats.mixture.GMMConf;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.transform.GridDumpingBatchScoreTransform;
 import macrobase.conf.MacroBaseConf;
+import macrobase.diagnostics.ScoreDumper;
 import macrobase.ingest.CSVIngester;
 import macrobase.ingest.result.ColumnValue;
 import org.junit.Assert;
@@ -27,19 +28,19 @@ public class MixtureModelPipelineTest {
     @Test
     public void test2ClusterOutliersWithTargetGroup() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.MEAN_FIELD_GMM)
+                .set(MacroBaseConf.TRANSFORM_TYPE, "macrobase.analysis.stats.mixture.FiniteGMM")
                 .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
-                .set(MacroBaseConf.NUM_MIXTURES, 2)
+                .set(GMMConf.NUM_MIXTURES, 2)
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("Cluster")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
-                .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
-                .set(MacroBaseConf.TARGET_GROUP, "2")
-                .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
+                .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
+                .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
+                .set(GMMConf.TARGET_GROUP, "2")
+                .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
@@ -80,18 +81,18 @@ public class MixtureModelPipelineTest {
     @Test
     public void test2ClusterOutliersWithoutTargetGroup() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.MEAN_FIELD_GMM)
+                .set(MacroBaseConf.TRANSFORM_TYPE, "macrobase.analysis.stats.mixture.FiniteGMM")
                 .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
-                .set(MacroBaseConf.NUM_MIXTURES, 2)
+                .set(GMMConf.NUM_MIXTURES, 2)
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("Cluster")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, "XX")
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
-                .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
-                .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
+                .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
+                .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
+                .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
@@ -128,19 +129,19 @@ public class MixtureModelPipelineTest {
     @Test
     public void testWellSeparatedOutliers() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(MacroBaseConf.TRANSFORM_TYPE, MacroBaseConf.TransformType.MEAN_FIELD_GMM)
+                .set(MacroBaseConf.TRANSFORM_TYPE, "macrobase.analysis.stats.mixture.FiniteGMM")
                 .set(MacroBaseConf.USE_PERCENTILE, true) // Forced to pick.
-                .set(MacroBaseConf.NUM_MIXTURES, 3)
+                .set(GMMConf.NUM_MIXTURES, 3)
                 .set(MacroBaseConf.MIN_OI_RATIO, .01)
                 .set(MacroBaseConf.MIN_SUPPORT, .01)
                 .set(MacroBaseConf.RANDOM_SEED, 0)
                 .set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("XX")) // loader
                 .set(MacroBaseConf.LOW_METRICS, new ArrayList<>())
                 .set(MacroBaseConf.HIGH_METRICS, "XX, YY")
-                .set(MacroBaseConf.SCORED_DATA_FILE, "tmp.json")
-                .set(MacroBaseConf.DUMP_SCORE_GRID, "grid.json")
-                .set(MacroBaseConf.TARGET_GROUP, "2, 11")
-                .set(MacroBaseConf.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
+                .set(ScoreDumper.SCORED_DATA_FILE, "tmp.json")
+                .set(GridDumpingBatchScoreTransform.DUMP_SCORE_GRID, "grid.json")
+                .set(GMMConf.TARGET_GROUP, "2, 11")
+                .set(GridDumpingBatchScoreTransform.NUM_SCORE_GRID_POINTS_PER_DIMENSION, 20)
                 .set(MacroBaseConf.AUXILIARY_ATTRIBUTES, "")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)

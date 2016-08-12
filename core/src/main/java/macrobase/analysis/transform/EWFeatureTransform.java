@@ -26,7 +26,6 @@ public class EWFeatureTransform extends FeatureTransform {
 
     public EWFeatureTransform(MacroBaseConf conf) throws ConfigurationException {
         this(conf,
-             conf.getTransformType(),
              conf.getInt(MacroBaseConf.WARMUP_COUNT, MacroBaseDefaults.WARMUP_COUNT),
              conf.getInt(MacroBaseConf.INPUT_RESERVOIR_SIZE, MacroBaseDefaults.INPUT_RESERVOIR_SIZE),
              conf.getDecayType(),
@@ -37,7 +36,6 @@ public class EWFeatureTransform extends FeatureTransform {
     }
 
     public EWFeatureTransform(MacroBaseConf conf,
-                              MacroBaseConf.TransformType transformType,
                               int warmupCount,
                               int sampleSize,
                               MacroBaseConf.PeriodType decayPeriodType,
@@ -45,7 +43,7 @@ public class EWFeatureTransform extends FeatureTransform {
                               double decayRate,
                               MacroBaseConf.PeriodType trainingPeriodType,
                               double trainingPeriod) throws ConfigurationException {
-        scorer = conf.constructTransform(transformType);
+        scorer = conf.constructTransform();
 
         reservoir = new ExponentiallyBiasedAChao<>(sampleSize, decayRate, conf.getRandom());
 

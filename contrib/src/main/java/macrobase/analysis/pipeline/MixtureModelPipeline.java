@@ -3,6 +3,7 @@ package macrobase.analysis.pipeline;
 import macrobase.analysis.classify.MixtureGroupClassifier;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.analysis.stats.mixture.GMMConf;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
 import macrobase.analysis.transform.BatchMixtureCoeffTransform;
@@ -34,7 +35,7 @@ public class MixtureModelPipeline extends BasePipeline {
         List<Datum> data = ingester.getStream().drain();
         long loadEndMs = System.currentTimeMillis();
 
-        BatchMixtureCoeffTransform mixtureProbabilityTransform = new BatchMixtureCoeffTransform(conf, conf.getTransformType());
+        BatchMixtureCoeffTransform mixtureProbabilityTransform = new BatchMixtureCoeffTransform(conf);
         FeatureTransform gridDumpingTransform = new GridDumpingBatchScoreTransform(conf, mixtureProbabilityTransform);
         gridDumpingTransform.initialize();
         gridDumpingTransform.consume(data);
@@ -42,7 +43,7 @@ public class MixtureModelPipeline extends BasePipeline {
         List<Datum> transferedData = gridDumpingTransform.getStream().drain();
 
 
-        if (conf.isSet(MacroBaseConf.TARGET_GROUP)) {
+        if (conf.isSet(GMMConf.TARGET_GROUP)) {
 
             OutlierClassifier outlierClassifier = new MixtureGroupClassifier(conf, mixtureProbabilityTransform.getMixtureModel());
             outlierClassifier.consume(transferedData);

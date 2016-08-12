@@ -1,8 +1,6 @@
 package macrobase.pipeline;
 
 import macrobase.analysis.stats.*;
-import macrobase.analysis.stats.mixture.ExpectMaxGMM;
-import macrobase.analysis.stats.mixture.DPGMM;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.CSVIngester;
 import org.junit.Rule;
@@ -58,43 +56,20 @@ public class BasePipelineTest {
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.MAD);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof MAD);
+        assertTrue(conf.constructTransform() instanceof MAD);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.MCD);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof MinCovDet);
+        assertTrue(conf.constructTransform() instanceof MinCovDet);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
                  MacroBaseConf.TransformType.ZSCORE);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof ZScore);
+        assertTrue(conf.constructTransform() instanceof ZScore);
 
         conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.KDE);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof KDE);
+                 "macrobase.pipeline.MockTransform");
+        assertTrue(conf.constructTransform() instanceof MockTransform);
 
-        conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.BINNED_KDE);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof BinnedKDE);
-
-        conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.TREE_KDE);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof TreeKDE);
-
-        conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.BAYESIAN_NORMAL);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof BayesianNormalDensity);
-
-        conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.EM_GMM);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof ExpectMaxGMM);
-
-        conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.MEAN_FIELD_DPGMM);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof DPGMM);
-
-        conf.set(MacroBaseConf.TRANSFORM_TYPE,
-                 MacroBaseConf.TransformType.MOVING_AVERAGE);
-        assertTrue(conf.constructTransform(conf.getTransformType()) instanceof MovingAverage);
     }
 
 }

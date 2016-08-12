@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class BasicOneShotEWStreamingPipeline extends BasePipeline {
+public class    BasicOneShotEWStreamingPipeline extends BasePipeline {
     private static final Logger log = LoggerFactory.getLogger(BasicOneShotEWStreamingPipeline.class);
 
     @Override
