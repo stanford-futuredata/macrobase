@@ -18,7 +18,7 @@ public class IncrementalWindowSumTest {
         }
 
         MacroBaseConf conf = new MacroBaseConf().set(MacroBaseConf.TIME_COLUMN, 0);
-        conf.set(MacroBaseConf.AGGREGATE_TYPE, MacroBaseConf.AggregateType.SUM);
+        conf.set(AggregateConf.AGGREGATE_TYPE, AggregateConf.AggregateType.SUM);
         IncrementalWindowSum windowSum = new IncrementalWindowSum(conf);
         // First window
         Datum sum = windowSum.updateWindow(data.subList(0, 10), new ArrayList<>());

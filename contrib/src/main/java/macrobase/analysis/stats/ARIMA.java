@@ -23,7 +23,7 @@ import java.util.stream.DoubleStream;
  * environment variable appropriately (you can get its value by running
  * `R.home()` inside R).
  */
-public class ARIMA extends TimeSeriesOutlierDetector {
+public class ARIMA extends TimeSeriesScore {
     public static final String R_LOG_FILE = null;
     private static final Logger log = LoggerFactory.getLogger(ARIMA.class);
     private Queue<Double> window = new LinkedList<Double>();

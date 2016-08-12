@@ -6,12 +6,12 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 
-public abstract class TimeSeriesOutlierDetector extends BatchTrainScore {
+public abstract class TimeSeriesScore extends BatchTrainScore {
     protected final int tupleWindowSize;
     protected final Integer timeColumn;
     private int currentTupleWindowSize;
 
-    public TimeSeriesOutlierDetector(MacroBaseConf conf) {
+    public TimeSeriesScore(MacroBaseConf conf) {
         super(conf);
         this.tupleWindowSize = conf.getInt(MacroBaseConf.TUPLE_WINDOW, MacroBaseDefaults.TUPLE_WINDOW);
         this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);

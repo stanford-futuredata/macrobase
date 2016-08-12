@@ -2,9 +2,7 @@ package macrobase.conf;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
-import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.stats.*;
-import macrobase.analysis.transform.aggregate.*;
 import macrobase.ingest.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +29,6 @@ public class MacroBaseConf extends Configuration {
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
     public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
     public static final String TRANSFORM_TYPE = "macrobase.analysis.transformType";
-    public static final String AGGREGATE_TYPE = "macrobase.analysis.aggregateType";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
     public static final String TUPLE_BATCH_SIZE = "macrobase.analysis.streaming.tupleBatchSize";
@@ -144,12 +141,6 @@ public class MacroBaseConf extends Configuration {
         MOVING_AVERAGE
     }
 
-    public enum AggregateType {
-        COUNT,
-        SUM,
-        MAX
-    }
-
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
         if (seed != null) {
@@ -210,36 +201,8 @@ public class MacroBaseConf extends Configuration {
             case ZSCORE:
                 log.info("Using ZScore transform.");
                 return new ZScore(this);
-            case MOVING_AVERAGE:
-                log.info("Using Moving Average transform.");
-                return new MovingAverage(this);
             default:
                 throw new RuntimeException("Unhandled transform class!" + transformType);
-        }
-    }
-
-    public BatchWindowAggregate constructBatchAggregate(AggregateType aggregateType)
-            throws ConfigurationException {
-        switch (aggregateType) {
-            case MAX:
-                log.info("Using MAX aggregation.");
-                return new BatchWindowMax(this);
-            default:
-                throw new RuntimeException("Unhandled batch aggreation type!" + aggregateType);
-        }
-    }
-
-    public IncrementalWindowAggregate constructIncrementalAggregate(AggregateType aggregateType)
-            throws ConfigurationException {
-        switch (aggregateType) {
-            case SUM:
-                log.info("Using SUM aggregation.");
-                return new IncrementalWindowSum(this);
-            case COUNT:
-                log.info("Using COUNT aggregation.");
-                return new IncrementalWindowCount(this);
-            default:
-                throw new RuntimeException("Unhandled incremental aggreation type!" + aggregateType);
         }
     }
 
@@ -377,13 +340,6 @@ public class MacroBaseConf extends Configuration {
             return Boolean.parseBoolean(_conf.get(key));
         }
         return defaultValue;
-    }
-
-    public AggregateType getAggregateType() throws ConfigurationException {
-        if (!_conf.containsKey(AGGREGATE_TYPE)) {
-            return MacroBaseDefaults.AGGREGATE_TYPE;
-        }
-        return AggregateType.valueOf(_conf.get(AGGREGATE_TYPE));
     }
 
     public CSVIngester.Compression getCsvCompression() {

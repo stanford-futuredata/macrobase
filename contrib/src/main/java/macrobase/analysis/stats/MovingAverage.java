@@ -12,7 +12,7 @@ import macrobase.datamodel.Datum;
 /*
  * Simple moving average.
  */
-public class MovingAverage extends TimeSeriesOutlierDetector {
+public class MovingAverage extends TimeSeriesScore {
     Deque<DatumWithInfo> window = new ArrayDeque<DatumWithInfo>();
     int weightTotal;
     private RealVector windowSum;

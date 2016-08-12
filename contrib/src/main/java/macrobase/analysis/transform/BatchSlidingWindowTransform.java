@@ -1,6 +1,7 @@
 package macrobase.analysis.transform;
 
 import macrobase.analysis.pipeline.stream.MBStream;
+import macrobase.analysis.transform.aggregate.AggregateConf;
 import macrobase.analysis.transform.aggregate.BatchWindowAggregate;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -9,12 +10,12 @@ import macrobase.datamodel.Datum;
 
 import java.util.List;
 
-public class BatchSWTransform extends SlidingWindowTransform {
+public class BatchSlidingWindowTransform extends SlidingWindowTransform {
     private BatchWindowAggregate windowAggregate;
 
-    public BatchSWTransform(MacroBaseConf conf, int slideSize) throws ConfigurationException {
-        MacroBaseConf.AggregateType aggregateType = conf.getAggregateType();
-        this.windowAggregate = conf.constructBatchAggregate(aggregateType);
+    public BatchSlidingWindowTransform(MacroBaseConf conf, int slideSize) throws ConfigurationException {
+        AggregateConf.AggregateType aggregateType = AggregateConf.getAggregateType(conf);
+        this.windowAggregate = AggregateConf.constructBatchAggregate(conf, aggregateType);
         this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
         this.slideSize = slideSize;
         this.windowSize = conf.getInt(MacroBaseConf.WINDOW_SIZE, MacroBaseDefaults.WINDOW_SIZE);
