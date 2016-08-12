@@ -14,9 +14,7 @@ public abstract class BasePipeline implements Pipeline {
 
     protected Boolean forceUsePercentile;
     protected Boolean forceUseZScore;
-    protected DataIngesterType dataIngesterType;
     protected TransformType transformType;
-    protected Double contextualDenseContextTau;
     protected Double minOIRatio;
     protected Double minSupport;
     protected Double targetPercentile;
@@ -46,7 +44,6 @@ public abstract class BasePipeline implements Pipeline {
         forceUsePercentile = conf.getBoolean(MacroBaseConf.USE_PERCENTILE, MacroBaseDefaults.USE_PERCENTILE);
         forceUseZScore = conf.getBoolean(MacroBaseConf.USE_ZSCORE, MacroBaseDefaults.USE_ZSCORE);
 
-        dataIngesterType = conf.getDataLoaderType();
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);

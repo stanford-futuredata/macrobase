@@ -44,9 +44,9 @@ public class GoogleMonitoringIngesterTest {
             "`perSeriesAligner`: `ALIGN_MEAN`," +
             "`crossSeriesReducer`: `REDUCE_MEAN`," +
             "`groupByFields`: [`foo`, `project`]}]}";
-        conf.set(MacroBaseConf.GOOGLE_MONITORING_QUERIES, queryJson.replace('`', '"'));
-        conf.set(MacroBaseConf.GOOGLE_MONITORING_START_TIME, "2016-08-08T00:00:00Z");
-        conf.set(MacroBaseConf.GOOGLE_MONITORING_END_TIME, "2016-08-09T00:00:00Z");
+        conf.set(GoogleMonitoringIngester.GOOGLE_MONITORING_QUERIES, queryJson.replace('`', '"'));
+        conf.set(GoogleMonitoringIngester.GOOGLE_MONITORING_START_TIME, "2016-08-08T00:00:00Z");
+        conf.set(GoogleMonitoringIngester.GOOGLE_MONITORING_END_TIME, "2016-08-09T00:00:00Z");
 
         conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("attr1", "attr2"));
         conf.set(MacroBaseConf.LOW_METRICS, Lists.newArrayList());
@@ -56,7 +56,7 @@ public class GoogleMonitoringIngesterTest {
     @Test
     public void testGetQueries() throws Exception {
         GoogleMonitoringIngester ingester = new GoogleMonitoringIngester(conf);
-        QueryConf queryConf = ingester.getQueries(conf.getString(MacroBaseConf.GOOGLE_MONITORING_QUERIES));
+        QueryConf queryConf = ingester.getQueries(conf.getString(GoogleMonitoringIngester.GOOGLE_MONITORING_QUERIES));
 
         assertEquals(1, queryConf.getQueries().size());
 

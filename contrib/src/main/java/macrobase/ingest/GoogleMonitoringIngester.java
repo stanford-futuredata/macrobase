@@ -45,6 +45,24 @@ import java.util.List;
 public class GoogleMonitoringIngester extends DataIngester {
     private static final Logger log = LoggerFactory.getLogger(GoogleMonitoringIngester.class);
 
+    // Queries given as a JSON string. Example:
+    // {
+    //   "queries": [
+    //     {
+    //       "project": "my-project",
+    //       "filter": "metric.type=\"custom.googleapis.com/test\"",
+    //       "alignmentPeriod": "300s",
+    //       "perSeriesAligner": "ALIGN_MEAN",
+    //       "crossSeriesReducer": "REDUCE_NONE",
+    //       "groupByFields": []
+    //     }
+    //   ]
+    // }
+    public static final String GOOGLE_MONITORING_QUERIES = "macrobase.loader.googlemonitoring.queries";
+    // Start and end times given in RFC3339 format. Example: "2016-08-08T12:00:00.0000Z"
+    public static final String GOOGLE_MONITORING_START_TIME = "macrobase.loader.googlemonitoring.startTime";
+    public static final String GOOGLE_MONITORING_END_TIME = "macrobase.loader.googlemonitoring.endTime";
+
     private MBStream<Datum> dataStream;
 
     private boolean loaded = false;
@@ -55,13 +73,13 @@ public class GoogleMonitoringIngester extends DataIngester {
     public GoogleMonitoringIngester(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
     }
-    
+
     @Override
     public MBStream<Datum> getStream() throws Exception {
         if (!loaded) {
-            QueryConf queryConf = getQueries(conf.getString(MacroBaseConf.GOOGLE_MONITORING_QUERIES));
-            String queryStart = conf.getString(MacroBaseConf.GOOGLE_MONITORING_START_TIME);
-            String queryEnd = conf.getString(MacroBaseConf.GOOGLE_MONITORING_END_TIME);
+            QueryConf queryConf = getQueries(conf.getString(GOOGLE_MONITORING_QUERIES));
+            String queryStart = conf.getString(GOOGLE_MONITORING_START_TIME);
+            String queryEnd = conf.getString(GOOGLE_MONITORING_END_TIME);
 
             Set<String> allMetrics = new HashSet<>();
             allMetrics.addAll(lowMetrics);

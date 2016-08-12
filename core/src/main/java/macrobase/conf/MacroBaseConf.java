@@ -2,6 +2,7 @@ package macrobase.conf;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import io.dropwizard.Configuration;
+import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.stats.*;
 import macrobase.analysis.stats.mixture.*;
 import macrobase.analysis.transform.aggregate.*;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -94,27 +96,8 @@ public class MacroBaseConf extends Configuration {
     public static final String DB_CACHE_DIR = "macrobase.loader.db.cacheDirectory";
     public static final String DB_CACHE_CHUNK_SIZE = "macrobase.loader.db.cacheChunkSizeTuples";
 
-
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
-
-    // Queries given as a JSON string. Example:
-    // {
-    //   "queries": [
-    //     {
-    //       "project": "my-project",
-    //       "filter": "metric.type=\"custom.googleapis.com/test\"",
-    //       "alignmentPeriod": "300s",
-    //       "perSeriesAligner": "ALIGN_MEAN",
-    //       "crossSeriesReducer": "REDUCE_NONE",
-    //       "groupByFields": []
-    //     }
-    //   ]
-    // }
-    public static final String GOOGLE_MONITORING_QUERIES = "macrobase.loader.googlemonitoring.queries";
-    // Start and end times given in RFC3339 format. Example: "2016-08-08T12:00:00.0000Z"
-    public static final String GOOGLE_MONITORING_START_TIME = "macrobase.loader.googlemonitoring.startTime";
-    public static final String GOOGLE_MONITORING_END_TIME = "macrobase.loader.googlemonitoring.endTime";
 
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
 
@@ -136,7 +119,30 @@ public class MacroBaseConf extends Configuration {
     }
 
     public DataIngester constructIngester() throws ConfigurationException, SQLException, IOException {
-        DataIngesterType ingesterType = getDataLoaderType();
+        DataIngesterType ingesterType = null;
+        if (!_conf.containsKey(DATA_LOADER_TYPE)) {
+            ingesterType = MacroBaseDefaults.DATA_LOADER_TYPE;
+        }
+
+        try {
+            ingesterType = DataIngesterType.valueOf(_conf.get(DATA_LOADER_TYPE));
+        } catch (IllegalArgumentException e) {
+            try {
+                Class c = Class.forName(_conf.get(DATA_LOADER_TYPE));
+                Constructor<?> cons = c.getConstructor(MacroBaseConf.class);
+                Object ao = cons.newInstance(this);
+
+                if (!(ao instanceof DataIngester)) {
+                    throw new ConfigurationException(String.format("%s is not an instance of DataIngester", ao.toString()));
+                }
+
+                return (DataIngester)ao;
+            } catch (Exception e2) {
+                log.error("an error occurred creating ingester", e2);
+                throw new ConfigurationException(String.format("error instantiating ingester of type %s: %s", _conf.get(DATA_LOADER_TYPE), e2.getMessage()));
+            }
+        }
+
         if (ingesterType == DataIngesterType.CSV_LOADER) {
             return new CSVIngester(this);
         } else if (ingesterType == DataIngesterType.POSTGRES_LOADER) {
@@ -147,8 +153,6 @@ public class MacroBaseConf extends Configuration {
             return new MySQLIngester(this);
         } else if (ingesterType == DataIngesterType.CACHING_MYSQL_LOADER) {
             return new DiskCachingIngester(this, new MySQLIngester(this));
-        } else if (ingesterType == DataIngesterType.GOOGLE_MONITORING_LOADER) {
-            return new GoogleMonitoringIngester(this);
         }
 
         throw new ConfigurationException(String.format("Unknown data loader type: %s", ingesterType));
@@ -284,8 +288,7 @@ public class MacroBaseConf extends Configuration {
         POSTGRES_LOADER,
         CACHING_POSTGRES_LOADER,
         MYSQL_LOADER,
-        CACHING_MYSQL_LOADER,
-        GOOGLE_MONITORING_LOADER,
+        CACHING_MYSQL_LOADER
     }
 
 
@@ -418,13 +421,6 @@ public class MacroBaseConf extends Configuration {
             return Boolean.parseBoolean(_conf.get(key));
         }
         return defaultValue;
-    }
-
-    public DataIngesterType getDataLoaderType() throws ConfigurationException {
-        if (!_conf.containsKey(DATA_LOADER_TYPE)) {
-            return MacroBaseDefaults.DATA_LOADER_TYPE;
-        }
-        return DataIngesterType.valueOf(_conf.get(DATA_LOADER_TYPE));
     }
 
     public TransformType getTransformType() throws ConfigurationException {

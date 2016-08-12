@@ -68,11 +68,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.apis</groupId>
-            <artifactId>google-api-services-monitoring</artifactId>
-            <version>v3-rev6-1.22.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.lucarosellini.rJava</groupId>
             <artifactId>JRI</artifactId>
             <version>0.9-7</version>
