@@ -1,0 +1,18 @@
+synthetic_data: |
+  --normal 8,18,1.5,40000 
+  --normal 18,9,2,-1.2,2.5,2,60000
+  --normal 15,16,1,1000
+  --normal 10,7,1.1,1100
+macrobase:
+  macrobase.analysis.transformType: TREE_KDE
+  macrobase.analysis.kde.bandwidthAlgorithm: OVERSMOOTHED
+  macrobase.analysis.kde.bandwidthMultiplier: 4
+  macrobase.analysis.treeKde.accuracy: 0.1
+  macrobase.analysis.treeKde.leafCapacity: 2
+  macrobase.loader.attributes: [XX, YY]
+  macrobase.loader.csv.file: target/data/tree-kde.csv
+  macrobase.loader.loaderType: CSV_LOADER
+  macrobase.loader.metrics: [XX, YY]
+  macrobase.query.name: tree-kde
+post_run:
+  - plot_estimator: "--savefig --xlabel XX --ylabel YY --restrict-to outliers --x-limits 0 25 --y-limits 0 25"

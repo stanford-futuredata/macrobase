@@ -1,0 +1,12 @@
+macrobase:
+  macrobase.loader.db.baseQuery: SELECT * FROM fed_disbursements LIMIT 1000000;
+  macrobase.loader.metrics: [dis_amo]
+  macrobase.loader.attributes:
+    - "can_id"
+    - "com_id"
+    - "rec_nam"
+    - "rec_zip"
+    - "com_nam"
+  macrobase.loader.auxiliaryAttributes: []
+  kernelBandwidth: NORMAL_SCALE
+  macrobase.loader.loaderType: SQL_LOADER

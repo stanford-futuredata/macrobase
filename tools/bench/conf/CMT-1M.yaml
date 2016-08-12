@@ -1,0 +1,20 @@
+macrobase:
+  macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id AND userid IS NOT NULL LIMIT 1000000;
+  macrobase.loader.metrics:
+    - data_count_minutes
+#    - data_count_accel_samples
+#    - data_count_netloc_samples
+#    - data_count_gps_samples
+#    - distance_mapmatched_km
+#    - distance_gps_km
+#    - battery_drain_rate_per_hour
+  macrobase.loader.attributes: [userid]
+  macrobase.loader.auxiliaryAttributes: []
+  macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE
+  macrobase.analysis.kde.bandwidthMultiplier: 4
+  macrobase.analysis.transformType: TREE_KDE
+  macrobase.analysis.treeKde.accuracy: 0.1
+  macrobase.analysis.treeKde.leafCapacity: 2
+  macrobase.loader.loaderType: POSTGRES_LOADER
+post_run:
+  - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --ymin 0.1 --x-limits 50 150"

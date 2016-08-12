@@ -26,22 +26,21 @@ must be categorical.
   </td>
 </tr>
 <tr>
-  <td><code>macrobase.loader.targetHighMetrics</code></td>
+  <td><code>macrobase.loader.metrics</code></td>
   <td>(none)</td>
   <td>
-  List of metrics to detect outliers from (along with <code>targetLowMetrics</code>. These
-metrics have <i>high</i> values, and can be easily separated as is. Must be a floating
-point number.
+  List of metrics to detect outliers from. Must be a numeric data type.
   </td>
 </tr>
 <tr>
-  <td><code>macrobase.loader.targetLowMetrics</code></td>
+  <td><code>macrobase.analysis.metrics.lowTransform</code></td>
   <td>(none)</td>
   <td>
-  List of metrics to detect outliers.
-By specifying a metric as <i>low</i>, Macrobase searches for low values by taking the
+  List of metrics (appearing in <code>macrobase.loader.metrics</code>) that MacroBase should
+   treat specially by taking the
 reciprocal of the value for each point (i.e. 1/value).
-Must be a real number.
+ This allows MacroBase to search more effectively over fields that
+ have a lower bound (e.g., 0).
   </td>
 </tr>
 <tr>

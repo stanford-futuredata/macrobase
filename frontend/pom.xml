@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>macrobase</groupId>
+  <artifactId>macrobase-frontend</artifactId>
+  <packaging>jar</packaging>
+  <version>0.1-SNAPSHOT</version>
+  <name>macrobase-frontend</name>
+  <url>http://maven.apache.org</url>
+    <parent>
+        <groupId>macrobase</groupId>
+        <artifactId>macrobase</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+    <dependency>
+        <groupId>macrobase</groupId>
+        <artifactId>macrobase-core</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </dependency>
+    </dependencies>
+
+</project>

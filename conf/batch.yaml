@@ -1,25 +1,19 @@
-macrobase.query.name: testTasks
+macrobase.query.name: batchQuery
 macrobase.pipeline.class: macrobase.analysis.pipeline.BasicBatchedPipeline
 
-macrobase.loader.attributes: [userid]
-macrobase.loader.targetLowMetrics: [data_count_minutes]
-macrobase.loader.targetHighMetrics: []
+macrobase.loader.attributes: [device_id, firmware_version]
+macrobase.loader.metrics: [power_drain]
+macrobase.analysis.metrics.lowTransform: []
 
-macrobase.analysis.transformType: MCD
+macrobase.analysis.transformType: MAD_OR_MCD
 
-macrobase.loader.db.baseQuery: SELECT * FROM mapmatch_history H, sf_datasets D WHERE H.dataset_id = D.id LIMIT 100000;
+macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
 
 macrobase.analysis.minSupport: 0.001
 macrobase.analysis.minOIRatio: 3.0
 
-macrobase.analysis.useZScore: false
-macrobase.analysis.zscore.threshold: 3.0
-
 macrobase.analysis.usePercentile: true
 macrobase.analysis.targetPercentile: 0.99
-
-macrobase.analysis.mcd.alpha: 0.5
-macrobase.analysis.mcd.stoppingDelta: 0.001
 
 macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
 macrobase.loader.db.cacheDirectory: sql_cache
@@ -28,9 +22,4 @@ logging:
   level: INFO
 
   loggers:
-    "macrobase": TRACE
-
-macrobase.analysis.contextual.discreteAttributes: []
-macrobase.analysis.contextual.doubleAttributes: []
-macrobase.analysis.contextual.denseContextTau: 0.3
-macrobase.analysis.contextual.numIntervals: 10
+    "macrobase": INFO

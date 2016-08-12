@@ -1,0 +1,14 @@
+macrobase:
+  macrobase.loader.db.baseQuery: SELECT * FROM campaign_expenditures LIMIT 1000000;
+  macrobase.loader.metrics:
+    - contb_receipt_amt
+  macrobase.loader.attributes:
+    - cand_nm
+  macrobase.loader.auxiliaryAttributes: []
+  macrobase.analysis.kde.bandwidthAlgorithm: NORMAL_SCALE
+  macrobase.analysis.binnedKde.numBins: 1000000
+  macrobase.loader.loaderType: POSTGRES_LOADER
+post_run:
+  - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --x-limits -1000 1000 --ymin 0.1"
+  - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --x-limits -10000 10000 --ymin 0.1"
+  - plot_estimator: "--savefig --yscale log --xlabel contb_receipt_amt --ylabel count --ymin 0.1"
