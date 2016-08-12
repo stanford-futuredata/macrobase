@@ -3,4 +3,7 @@ jdk: oraclejdk8
 notifications:
   slack: stanford-futuredata:qmO6Keu8ifOyXHsmSQ97CeLH
 after_success:
-  - mvn clean cobertura:cobertura coveralls:report
+  - mvn cobertura:cobertura
+  - mkdir -p target/site; cp -r core/target/site/* target/site
+  - mvn coveralls:report
+
