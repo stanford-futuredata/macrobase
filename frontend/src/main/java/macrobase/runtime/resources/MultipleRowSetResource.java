@@ -59,7 +59,7 @@ public class MultipleRowSetResource extends BaseResource {
 
             response.rowSets = lr;
         } catch (Exception e) {
-            log.error("An error occurred while processing a request: {}", e);
+            log.error("An error occurred while processing a request:", e);
             response.errorMessage = ExceptionUtils.getStackTrace(e);
         }
 

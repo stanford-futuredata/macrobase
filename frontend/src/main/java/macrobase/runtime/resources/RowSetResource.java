@@ -57,7 +57,7 @@ public class RowSetResource extends BaseResource {
                                                   request.limit,
                                                   request.offset);
         } catch (Exception e) {
-            log.error("An error occurred while processing a request: {}", e);
+            log.error("An error occurred while processing a request:", e);
             response.errorMessage = ExceptionUtils.getStackTrace(e);
         }
 
