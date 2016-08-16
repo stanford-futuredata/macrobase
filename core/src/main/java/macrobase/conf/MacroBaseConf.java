@@ -19,7 +19,6 @@ public class MacroBaseConf extends Configuration {
     public static final String QUERY_NAME = "macrobase.query.name";
     public static final String PIPELINE_NAME = "macrobase.pipeline.class";
 
-    public static final String ZSCORE = "macrobase.analysis.zscore.threshold";
     public static final String TARGET_PERCENTILE = "macrobase.analysis.targetPercentile";
     public static final String MIN_SUPPORT = "macrobase.analysis.minSupport";
     public static final String MIN_OI_RATIO = "macrobase.analysis.minOIRatio";
@@ -27,7 +26,6 @@ public class MacroBaseConf extends Configuration {
 
     public static final String RANDOM_SEED = "macrobase.analysis.randomSeed";
     public static final String USE_PERCENTILE = "macrobase.analysis.usePercentile";
-    public static final String USE_ZSCORE = "macrobase.analysis.useZScore";
     public static final String TRANSFORM_TYPE = "macrobase.analysis.transformType";
 
     public static final String WARMUP_COUNT = "macrobase.analysis.streaming.warmupCount";
