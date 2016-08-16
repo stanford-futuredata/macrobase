@@ -44,12 +44,13 @@ public class MAD extends BatchTrainScore {
         for (int i = 0; i < len; i++) {
             metrics[i] = data.get(i).metrics().getEntry(0);
         }
-	Arrays.sort(metrics);
+
+        Arrays.sort(metrics);
 
         if (len % 2 == 0) {
             median = (metrics[len / 2 - 1] + metrics[len / 2]) / 2;
         } else {
-	    median = metrics[(int) Math.ceil(len / 2)];
+            median = metrics[(int) Math.ceil(len / 2)];
         }
         context.stop();
 
