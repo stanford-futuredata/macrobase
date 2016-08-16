@@ -146,8 +146,8 @@
                         </div>
 
                         <div class="panel-body">
-                            <div class="panel">
-                                <div class="panel-body">
+                            <div class="panel" style="margin-bottom: 0px">
+                                <div class="panel-body" style="margin-bottom: 0px">
                                     <div class="table-responsive">
                                         <table class="table">
                                             <tr>
@@ -177,8 +177,9 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div id="overview_plot_panel" class="panel-body">
+                        <div id="overview_plot_panel" style="padding-left:15px; padding-top: 0px; padding-bottom: 10px;">
                                 Overview Plot:<span ng-repeat="h in getPlotColumns()">
 																<button ng-model="button" ng-click="preparePlotData(h)"
                                                                         ng-disabled="plotDataLoading">{{h}}
@@ -187,20 +188,11 @@
 
                                 <div id="plotArea" ng-hide="hidePlot"></div>
                             </div>
-                        </div>
-                        <div>
+                        <div style="padding-left: 15px;">
                             Sort order:
                             <button ng-click="sortAnalysis('support')">support</button>
                             <button ng-click="sortAnalysis('ratioToInliers')">ratio</button>
                             <button ng-click="sortAnalysis('itemSize')">number of attributes</button>
-                        </div>
-                        <div>
-                            Plot all:
-										<span ng-repeat="pc in getPlotColumns()">
-												<button ng-model="button" ng-click="prepareAllItemsetPlotData(pc)"
-                                                        ng-disabled="plotDataLoading">{{pc}}
-                                                </button>
-										</span>
                         </div>
                         <br>
 
@@ -230,15 +222,15 @@
                                         <td>{{item.value}}</td>
                                     </tr>
                                 </table>
-                                <button ng-model="button" ng-click="exploreItems(i.items)">Explore</button>
-                                <br>
-                                Plot:<span ng-repeat="h in getPlotColumns()">
-                              <button ng-model="button" ng-click="prepareItemsetPlotData(h, $parent.$index)"
-                                      ng-disabled="plotDataLoading">{{h}}
-                              </button>
-                            </span>
-
-                                <div id="plotArea_{{$index}}" ng-hide="shouldHideItemsetPlot($index)" width=500></div>
+                                <div>
+                                    Plot: <div id="plotArea_{{$index}}" ng-hide="shouldHideItemsetPlot($index)"></div>
+										<span ng-repeat="h in getPlotColumns()">
+												<button ng-model="button" ng-click="prepareItemsetPlotData(h, $parent.$index)" ng-disabled="plotDataLoading">{{h}}</button>
+										</span>
+                                </div>
+                            </div>
+                            <div style="padding: 15px; padding-top:0px;">
+                                <a href="#" ng-click="exploreItems(i.items)">Explore</a>
                             </div>
                         </div>
                     </div>
