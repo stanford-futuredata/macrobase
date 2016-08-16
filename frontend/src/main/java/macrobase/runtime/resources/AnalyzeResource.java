@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +52,12 @@ public class AnalyzeResource extends BaseResource {
             conf.set(MacroBaseConf.METRICS, allMetrics);
             conf.set(MacroBaseConf.LOW_METRIC_TRANSFORM, request.lowMetrics);
             conf.set(MacroBaseConf.USE_PERCENTILE, true);
+
+            // temp hack to enable CSV loading
+            if(request.baseQuery.contains("csv://")) {
+                conf.set(MacroBaseConf.CSV_INPUT_FILE, request.baseQuery.replace("csv://", ""));
+                conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER);
+            }
 
             List<AnalysisResult> results = new BasicBatchedPipeline().initialize(conf).run();
 

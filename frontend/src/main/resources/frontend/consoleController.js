@@ -929,8 +929,6 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
             colVals.push(_items);
         }
 
-
-
         $http.post("api/rows/multiple",
                 {
                     pgUrl: configService.getPostgresUrl(),
