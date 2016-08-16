@@ -50,6 +50,25 @@ myApp.service('configService', function($localStorage) {
     function hasAnalysis() { return hasAnalysisForConfig }
     function analysisReceived() { hasAnalysisForConfig = true; }
 
+    function handleError(str) {
+        $localStorage.errorStr = str;
+        if (str) {
+            console.log(str);
+        }
+    }
+
+    function hasError() {
+        if($localStorage.errorStr) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function getError() {
+        return $localStorage.errorStr;
+    }
+
   function reset()
    {
                 hasAnalysisForConfig = false
@@ -172,6 +191,9 @@ function unmarkForBasicQuery() {
     getPostgresUrl: getPostgresUrl,
     reset: reset,
     resetSchema: resetSchema,
+    handleError: handleError,
+    hasError: hasError,
+    getError: getError,
     hasAnalysis: hasAnalysis,
     clearSchema: clearSchema,
     clearAnalysis: clearAnalysis,
@@ -208,17 +230,19 @@ myApp.controller('connectController', ['$scope', '$http', '$window', 'configServ
     	        baseQuery: configService.getBaseQuery() })
 	    .then(function(response) {
 
+        configService.handleError(response.data.errorMessage);
+
 	    if(!init)
 	        configService.clearSchema();
 
-        response.data.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
-	    $scope.schemaCols = response.data;
+        response.data.schema.columns.sort(function (c1, c2) { return c1.name.localeCompare(c2.name); })
+	    $scope.schemaCols = response.data.schema;
 	    $scope.pg_url = $scope.postgresstr;
         $scope.spice = $scope.postgresstr;
 	    });
     };
 
-    $scope.sampleRows = function() { 
+    $scope.sampleRows = function() {
         explorerService.setItems(null)
 	configService.markForBasicQuery()
         $window.open("explore.html", "_blank")
@@ -274,6 +298,11 @@ myApp.controller('selectorController', ['$scope', 'configService', function($sco
     }
 }]);
 
+myApp.controller('errorController', ['$scope', 'configService', function($scope, configService) {
+    $scope.errorStr = configService.getError();
+    $scope.hasError = function() { return configService.hasError(); }
+    }]);
+
 
 myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configService', 'explorerService', function($scope, $http, $window, configService, explorerService) {
 
@@ -304,7 +333,9 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
 	        configService.analysisReceived()
 	        $scope.analyzeStr = "Analyze"
 
-	    var result = response.data[0];
+        configService.handleError(response.data.errorMessage);
+
+	    var result = response.data.results[0];
 
             $scope.analysisResult = result;
 
@@ -415,7 +446,7 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
         showSeries = true;
 
         for(var i = 0 ; i < $scope.plotPoints.length; i++){
-            if(i > $scope.maxShownSeries){ 
+            if(i > $scope.maxShownSeries){
                 showSeries = "legendonly";
             }
             data.push({x:$scope.plotPoints[i][0],
@@ -522,7 +553,8 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
             offset: 0
                 }
                 ).then(function(response) {
-                    $scope.prepareItemsetPlotDataPostBaseQuery(response.data, fname, itemsetIdx)
+                    configService.handleError(response.data.errorMessage);
+                    $scope.prepareItemsetPlotDataPostBaseQuery(response.data.rowSets, fname, itemsetIdx)
                 } , function(error){
                     $scope.plotDataLoading = false
                     console.log(error)
@@ -688,7 +720,8 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
             limit: $scope.plotCount,
             offset: 0
                 }).then(function(response) {
-                    $scope.preparePlotDataPostBaseQuery(response.data, fname);
+                    configService.handleError(response.data.errorMessage);
+                    $scope.preparePlotDataPostBaseQuery(response.data.rowSets, fname);
                 } , function(error){
                     $scope.plotDataLoading = false;
                     console.log(error);
@@ -704,13 +737,13 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
     $scope.exploreRows = []
 
     $scope.itemset = angular.fromJson(explorerService.getItems())
-	
+
     //plotting related vars
 	$scope.plotPoints = [];
 	$scope.plotField = null;
 	$scope.plotCount = 100000;
 	$scope.plotDataLoading = false;
-	
+
 	$scope.plotDiv = document.getElementById('plotArea');
 
     //update plots given data in plotPoints
@@ -737,8 +770,8 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
             console.log(msg);
         });
     }
-	
-		
+
+
 
     function updateVisibleData () {
 
@@ -767,7 +800,7 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
         }
     }
 
-    $scope.getHiddenColumns = function() { 
+    $scope.getHiddenColumns = function() {
         return explorerService.getHiddenColumns() }
 
     $scope.showColumn = function(c) {
@@ -805,7 +838,7 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 	if(_items == null) {
 	    _items = []
 	}
-	 
+
 
 	$http.post("api/rows",
 	    {
@@ -819,7 +852,8 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
     )
 	    .then(function(response) {
 	        $scope.headers = explorerService.getItems()
-	        $scope.exploreRows = $scope.exploreRows.concat(response.data.rows)
+            configService.handleError(response.data.errorMessage);
+	        $scope.exploreRows = $scope.exploreRows.concat(response.data.rowSet.rows)
 	        $scope.visibleRows = angular.copy($scope.exploreRows)
 	        rowNo += 10
 	        updateVisibleData()
@@ -898,7 +932,7 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 
 
         $http.post("api/rows/multiple",
-                {  
+                {
                     pgUrl: configService.getPostgresUrl(),
                     baseQuery: configService.getBaseQuery(),
                     columnValues: colVals,
@@ -907,8 +941,10 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
                 })
             .then(function(response) {
                 plotRows = []
-                for(var i = 0; i < response.data.length; i++){
-                    plotRows.push(response.data[i].rows);
+                    configService.handleError(response.data.errorMessage);
+
+                for(var i = 0; i < response.data.rowSets.length; i++){
+                    plotRows.push(response.data.rowSets[i].rows);
                 }
             $scope.generatePlotData(fname, plotRows);
             }, function(error){

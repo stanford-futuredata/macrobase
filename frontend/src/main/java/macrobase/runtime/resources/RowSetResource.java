@@ -3,6 +3,7 @@ package macrobase.runtime.resources;
 import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.result.RowSet;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,21 +32,35 @@ public class RowSetResource extends BaseResource {
         }
     }
 
+    public static class RowSetResponse {
+        public RowSet rowSet;
+        public String errorMessage;
+    }
+
     public RowSetResource(MacroBaseConf conf) {
         super(conf);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public RowSet getRows(RowSetRequest request) throws Exception {
-        conf.set(MacroBaseConf.DB_URL, request.pgUrl);
+    public RowSetResponse getRows(RowSetRequest request) {
+        RowSetResponse response = new RowSetResponse();
 
-        HashMap<String, String> preds = new HashMap<>();
-        request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));
+        try {
+            conf.set(MacroBaseConf.DB_URL, request.pgUrl);
 
-        return getLoader().getRows(request.baseQuery,
-                                   preds,
-                                   request.limit,
-                                   request.offset);
+            HashMap<String, String> preds = new HashMap<>();
+            request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));
+
+            response.rowSet = getLoader().getRows(request.baseQuery,
+                                                  preds,
+                                                  request.limit,
+                                                  request.offset);
+        } catch (Exception e) {
+            log.error("An error occurred while processing a request: {}", e);
+            response.errorMessage = ExceptionUtils.getStackTrace(e);
+        }
+
+        return response;
     }
 }
