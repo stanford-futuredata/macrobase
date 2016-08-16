@@ -4,6 +4,7 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.SQLIngester;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,26 +29,40 @@ public class MultipleRowSetResource extends BaseResource {
         public int offset;
     }
 
+    public static class MultipleRowSetResponse {
+        public List<RowSet> rowSets;
+        public String errorMessage;
+    }
+
     public MultipleRowSetResource(MacroBaseConf conf) {
         super(conf);
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public List<RowSet> getRows(MultipleRowSetRequest request) throws Exception {
-        conf.set(MacroBaseConf.DB_URL, request.pgUrl);
-        SQLIngester loader = getLoader();
-        List<RowSet> lr = new ArrayList<RowSet>();
-        for(List<RowSetResource.RowSetRequest.RowRequestPair> columnValue : request.columnValues){
-            HashMap<String, String> preds = new HashMap<>();
-            columnValue.stream().forEach(a -> preds.put(a.column, a.value));
+    public MultipleRowSetResponse getRows(MultipleRowSetRequest request) {
+        MultipleRowSetResponse response = new MultipleRowSetResponse();
 
-            lr.add(loader.getRows(request.baseQuery,
-                        preds,
-                        request.limit,
-                        request.offset));
+        try {
+            conf.set(MacroBaseConf.DB_URL, request.pgUrl);
+            SQLIngester loader = getLoader();
+            List<RowSet> lr = new ArrayList<RowSet>();
+            for (List<RowSetResource.RowSetRequest.RowRequestPair> columnValue : request.columnValues) {
+                HashMap<String, String> preds = new HashMap<>();
+                columnValue.stream().forEach(a -> preds.put(a.column, a.value));
+
+                lr.add(loader.getRows(request.baseQuery,
+                                      preds,
+                                      request.limit,
+                                      request.offset));
+            }
+
+            response.rowSets = lr;
+        } catch (Exception e) {
+            log.error("An error occurred while processing a request: {}", e);
+            response.errorMessage = ExceptionUtils.getStackTrace(e);
         }
 
-        return lr;
+        return response;
     }
 }

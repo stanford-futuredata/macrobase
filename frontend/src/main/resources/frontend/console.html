@@ -16,25 +16,37 @@
 </style>
 
 
-<body>
+<div>
 
+<div class="container-fluid">
 
 <div class="row">
-    <div class="col-md-12" style="padding: 20px; padding-left:
-  40px; padding-bottom: 0px;"><img src="macrobase.png" width=200/></div>
+    <div class="col-md-12" style="margin-top: 10px"><img src="macrobase.png" width=200/></div>
 
     <div class="col-md-12">
         <hr style="border-bottom: 10px solid black;"/>
     </div>
 </div>
-</div>
 
 <div ng-app="consoleApp"
      data-ng-init="postgresstr='localhost'; pg_url='localhost';">
 
+    <div ng-controller="errorController" class="row" ng-show="hasError()">
+        <div class="col-md-12">
+            <div class="alert alert-danger" style="word-wrap: break-word;">
+                <h4><strong>An error occurred while processing your request:</strong></h4>
+            {{errorStr}}
+                <br/>
+                <div style="margin-top: 1em">
+                <strong>Need help?</strong> Feel free to email <em>macrobase@cs.stanford.edu</em> (and please include the above message)
+                    </div>
+        </div>
+        </div>
+            </div>
+
 
     <div class="row">
-        <div class="col-md-6" style="padding: 20px;">
+        <div class="col-md-6">
 
             <div ng-controller="connectController" ng-init="get_schema(true)">
                 <div class="panel panel-default">
@@ -43,7 +55,7 @@
                         <table>
                             <tr>
                                 <td nowrap style="width: 100px;">Database URL:</td>
-                                <td style="padding: 2px; width: 100%"><input ng-model="postgresstr" style="width:100%">
+                                <td style="margin: 2px; width: 100%"><input ng-model="postgresstr" style="width:100%">
                                 </td>
                                 <td>
                                     <button ng-click="updateDB()">submit</button>
@@ -53,7 +65,7 @@
                         <table>
                             <tr>
                                 <td nowrap style="width: 100px;">Base query:</td>
-                                <td style="padding: 2px; width:100%"><input ng-model="baseQuery" style="width:100%">
+                                <td style="margin: 2px; width:100%"><input ng-model="baseQuery" style="width:100%">
                                 </td>
                                 <td>
                                     <button ng-click="updateDB()">submit</button>
@@ -117,7 +129,7 @@
             </div>
         </div>
 
-        <div ng-controller="analyzeController" class="col-md-6" style="padding: 20px;"
+        <div ng-controller="analyzeController" class="col-md-6"
              data-ng-init="analyzeStr='Analyze'">
             <button ng-click="triggerAnalyze()" type="button" class="btn btn-default btn-lg">
                 <span class="glyphicon glyphicon-flash" aria-hidden="true"></span> {{analyzeStr}}
@@ -222,6 +234,7 @@
         </div>
     </div>
 
+</div>
 
     <script src="consoleController.js"></script>
 

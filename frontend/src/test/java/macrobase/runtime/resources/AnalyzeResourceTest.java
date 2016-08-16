@@ -37,7 +37,7 @@ public class AnalyzeResourceTest {
         r.pgUrl = "should be unused";
         r.baseQuery = "also should be unused";
 
-        List<AnalysisResult> arl = resource.getAnalysis(r);
+        List<AnalysisResult> arl = resource.getAnalysis(r).results;
 
         assertTrue(arl.size() == 1);
 

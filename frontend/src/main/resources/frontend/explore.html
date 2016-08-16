@@ -11,16 +11,29 @@
 
 
 <div class="alert alert-warning">
-
-
-    <h1>Welcome to MacroBase Alpha</h1>
+    <h1>Welcome to MacroBase</h1>
 </div>
 </div>
 
 <div ng-app="consoleApp">
 
+    <div class="container-fluid">
+
+    <div ng-controller="errorController" class="row" ng-show="hasError()">
+        <div class="col-md-12">
+            <div class="alert alert-danger" style="word-wrap: break-word;">
+                <h4><strong>An error occurred while processing your request:</strong></h4>
+                {{errorStr}}
+                <br/>
+                <div style="margin-top: 1em">
+                    <strong>Need help?</strong> Feel free to email <em>macrobase@cs.stanford.edu</em> (and please include the above message)
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
-        <div class="col-md-12" style="padding: 20px;">
+        <div class="col-md-12">
 
             <div ng-controller="exploreController" ng-init="getRows()">
 
@@ -90,6 +103,7 @@
             </div>
         </div>
     </div>
+        </div>
 </div>
 
 
