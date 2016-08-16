@@ -81,7 +81,6 @@ public class AmortizedMaintenanceCounterTest {
             assertEquals(trueCnt.get(cnt.getKey()), cnt.getValue(), N*EPSILON);
         }
 
-        assertEquals(0, ss.getCount(ITEMS + 1), 1e-10);
         int key = cnts.keySet().iterator().next();
         assertEquals(cnts.get(key), ss.getCount(key), 1e-10);
     }
