@@ -953,4 +953,3 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
             });
     }
 }]);
-
