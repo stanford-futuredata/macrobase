@@ -2,7 +2,7 @@ package macrobase.analysis.classify;
 
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.analysis.result.OutlierClassificationResult;
-import macrobase.analysis.sample.ExponentiallyBiasedAChao;
+import macrobase.analysis.sample.FlexibleDampedReservoir;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
     private final double percentile;
-    private ExponentiallyBiasedAChao<DatumWithNorm> reservoir;
+    private FlexibleDampedReservoir<DatumWithNorm> reservoir;
 
     private double currentThreshold = 0;
 
@@ -58,7 +58,7 @@ public class EWAppxPercentileOutlierClassifier extends OutlierClassifier {
                                              double decayPeriod,
                                              double decayRate,
                                              double percentile) {
-        reservoir = new ExponentiallyBiasedAChao<>(sampleSize, decayRate, conf.getRandom());
+        reservoir = new FlexibleDampedReservoir<>(sampleSize, decayRate, conf.getRandom());
 
         this.percentileUpdater = new Periodic(updatePeriodType,
                                               updatePeriod,
