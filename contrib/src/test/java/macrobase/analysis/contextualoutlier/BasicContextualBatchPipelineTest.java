@@ -1,6 +1,7 @@
 package macrobase.analysis.contextualoutlier;
 
 import com.google.common.collect.Lists;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import junit.framework.TestCase;
 import macrobase.analysis.contextualoutlier.conf.ContextualConf;
 import macrobase.analysis.result.AnalysisResult;
@@ -50,8 +51,7 @@ public class BasicContextualBatchPipelineTest {
 
 
     }
-
-    @Test
+    
     public void testContextualAPI() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TARGET_PERCENTILE, 0.99) // analysis
