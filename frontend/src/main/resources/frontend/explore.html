@@ -19,91 +19,95 @@
 
     <div class="container-fluid">
 
-    <div ng-controller="errorController" class="row" ng-show="hasError()">
-        <div class="col-md-12">
-            <div class="alert alert-danger" style="word-wrap: break-word;">
-                <h4><strong>An error occurred while processing your request:</strong></h4>
-                {{errorStr}}
-                <br/>
-                <div style="margin-top: 1em">
-                    <strong>Need help?</strong> Feel free to email <em>macrobase@cs.stanford.edu</em> (and please include the above message)
+        <div ng-controller="errorController" class="row" ng-show="hasError()">
+            <div class="col-md-12">
+                <div class="alert alert-danger" style="word-wrap: break-word;">
+                    <h4><strong>An error occurred while processing your request:</strong></h4>
+                    {{errorStr}}
+                    <br/>
+
+                    <div style="margin-top: 1em">
+                        <strong>Need help?</strong> Feel free to email <em>macrobase@cs.stanford.edu</em> (and please
+                        include the above message)
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-12">
 
-            <div ng-controller="exploreController" ng-init="getRows()">
+                <div ng-controller="exploreController" ng-init="getRows()">
 
 
-                <div class="panel panel-default" ng-show="hasItemsets()">
+                    <div class="panel panel-default" ng-show="hasItemsets()">
 
-                    <div class="panel-heading">Subgroup Under Consideration</div>
-                    <div class="panel-body">
+                        <div class="panel-heading">Subgroup Under Consideration</div>
+                        <div class="panel-body">
 
-                        <div class="table-responsive">
-                            <table class="table" style="margin-top: 10px">
-                                <tr>
-                                    <th style="width:50%">Column</th>
-                                    <th style="width:50%">Value</th>
-                                </tr>
-                                <tr ng-repeat="item in itemset">
-                                    <td>{{item.column}}</td>
-                                    <td>{{item.value}}</td>
-                                </tr>
-                            </table>
+                            <div class="table-responsive">
+                                <table class="table" style="margin-top: 10px">
+                                    <tr>
+                                        <th style="width:50%">Column</th>
+                                        <th style="width:50%">Value</th>
+                                    </tr>
+                                    <tr ng-repeat="item in itemset">
+                                        <td>{{item.column}}</td>
+                                        <td>{{item.value}}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
                         </div>
-
                     </div>
-                </div>
 
-				<div class="panel panel-default">
+                    <div class="panel panel-default">
 
-						<div class="panel  panel-default">
-								<div class="panel-heading">Plot</div>
-						</div>
-						<div class="panel-body">
-								<div id="plotArea" style="width:600px;height:250px;"></div>
+                        <div class="panel  panel-default">
+                            <div class="panel-heading">Plot</div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="plotArea" style="width:600px;height:250px;"></div>
 								<span ng-repeat="h in visibleRows[0].columnValues">
-										<button ng-model="button" ng-click="preparePlotData(h.column)" ng-disabled="plotDataLoading">{{h.column}}</button>
+										<button ng-model="button" ng-click="preparePlotData(h.column)"
+                                                ng-disabled="plotDataLoading">{{h.column}}
+                                        </button>
 										<!-- <span ng-click="preparePlotData(h.column)">{{h.column}}{{$last ? '' : ', '}}</span> -->
 								</span>
-						</div>
-				</div>
-
-                <div class="panel panel-default">
-
-                    <div class="panel  panel-default">
-                        <div class="panel-heading">Hidden Columns (<span ng-click="hideAllColumns()">mark all</span>)
-                            (<span ng-click="clearHiddenColumns()">clear</span>)
                         </div>
-                        <div class="panel-body"><span ng-repeat="c in getHiddenColumns()"><span
-                                ng-click="showColumn(c)">{{c}}{{$last ? '' : ', '}}</span></span></div>
                     </div>
-                    <div class="panel-heading">Matching Rows</div>
-                    <div class="panel-body">
-                        <div class="table-responsive">
 
-                            <table class="table">
-                                <tr>
-                                    <th ng-repeat="h in visibleRows[0].columnValues"><span
-                                            ng-click="hideColumn(h.column)">{{h.column}}</span>
-                                    </th>
-                                </tr>
-                                <tr ng-repeat="r in visibleRows">
-                                    <td ng-repeat="p in r.columnValues">{{p.value}}</td>
-                                </tr>
-                            </table>
-                            <a id="morerows" href="#morerows" ng-click="getRows()">more rows</a>
+                    <div class="panel panel-default">
+
+                        <div class="panel  panel-default">
+                            <div class="panel-heading">Hidden Columns (<span ng-click="hideAllColumns()">mark all</span>)
+                                (<span ng-click="clearHiddenColumns()">clear</span>)
+                            </div>
+                            <div class="panel-body"><span ng-repeat="c in getHiddenColumns()"><span
+                                    ng-click="showColumn(c)">{{c}}{{$last ? '' : ', '}}</span></span></div>
+                        </div>
+                        <div class="panel-heading">Matching Rows</div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+
+                                <table class="table">
+                                    <tr>
+                                        <th ng-repeat="h in visibleRows[0].columnValues"><span
+                                                ng-click="hideColumn(h.column)">{{h.column}}</span>
+                                        </th>
+                                    </tr>
+                                    <tr ng-repeat="r in visibleRows">
+                                        <td ng-repeat="p in r.columnValues">{{p.value}}</td>
+                                    </tr>
+                                </table>
+                                <a id="morerows" href="#morerows" ng-click="getRows()">more rows</a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-        </div>
 </div>
 
 
