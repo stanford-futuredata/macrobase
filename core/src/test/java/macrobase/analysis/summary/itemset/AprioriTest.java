@@ -15,9 +15,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by pbailis on 12/15/15.
- */
 public class AprioriTest {
     private Set<Integer> intIfy(String txnStr) {
         return Arrays.stream(txnStr.split(", ")).map(s -> (int) s.charAt(0)).collect(Collectors.toSet());
