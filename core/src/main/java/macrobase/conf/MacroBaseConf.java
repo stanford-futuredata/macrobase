@@ -57,7 +57,7 @@ public class MacroBaseConf extends Configuration {
     public static final String METRICS = "macrobase.loader.metrics";
     public static final String LOW_METRIC_TRANSFORM = "macrobase.analysis.metrics.lowTransform";
 
-    public static final String JDBC_PROPERTIES = "macrobase.ingest.jdbc.properties";
+    public static final String JDBC_PROPERTIES = "macrobase.loader.jdbc.properties";
 
     public static final String BASE_QUERY = "macrobase.loader.db.baseQuery";
     public static final String DB_USER = "macrobase.loader.db.user";
