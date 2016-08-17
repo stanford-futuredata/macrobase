@@ -2,6 +2,7 @@ package macrobase.runtime.resources;
 
 import macrobase.MacroBase;
 import macrobase.analysis.pipeline.BasicBatchedPipeline;
+import macrobase.analysis.pipeline.Pipeline;
 import macrobase.conf.MacroBaseConf;
 import macrobase.analysis.result.AnalysisResult;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -59,7 +60,20 @@ public class AnalyzeResource extends BaseResource {
                 conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER);
             }
 
-            List<AnalysisResult> results = new BasicBatchedPipeline().initialize(conf).run();
+            List<AnalysisResult> results;
+            if(!conf.isSet(MacroBaseConf.PIPELINE_NAME)) {
+                results = new BasicBatchedPipeline().initialize(conf).run();
+            } else {
+                // hack, copy from MacroBasePipelineCommand for now...
+                Class c = Class.forName(conf.getString(MacroBaseConf.PIPELINE_NAME));
+                Object ao = c.newInstance();
+
+                if (!(ao instanceof Pipeline)) {
+                    log.error("{} is not an instance of Pipeline! Exiting...");
+                }
+
+                results = ((Pipeline) ao).initialize(conf).run();
+            }
 
             for (AnalysisResult result : results) {
                 if (result.getItemSets().size() > 1000) {
