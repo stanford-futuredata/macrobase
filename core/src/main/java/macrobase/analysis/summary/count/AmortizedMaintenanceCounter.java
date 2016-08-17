@@ -36,7 +36,7 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
     private static final Logger log = LoggerFactory.getLogger(AmortizedMaintenanceCounter.class);
 
     private double decayFactor = 1;
-    private static final double DECAY_RESET_THRESHOLD = Double.MAX_VALUE*.9;
+    private static final double DECAY_RESET_THRESHOLD = Double.MAX_VALUE*.5;
 
     private HashMap<Integer, Double> counts = new HashMap<>();
     private double totalCount = 0;
@@ -51,6 +51,10 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
     @Override
     public void multiplyAllCounts(Double by) {
         decayFactor /= by;
+
+        if(decayFactor > DECAY_RESET_THRESHOLD) {
+            resetDecayFactor();
+        }
 
         if (counts.size() > maxStableSize) {
             List<Map.Entry<Integer, Double>> a = Lists.newArrayList(counts.entrySet());
@@ -89,6 +93,8 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
             counts.put(entry.getKey(), newValue);
         }
 
+        totalCount /= decayFactor;
+
         decayFactor = 1;
     }
 
@@ -121,7 +127,7 @@ public class AmortizedMaintenanceCounter extends ApproximateCount {
     public double getCount(int item) {
         Double ret = counts.get(item);
         if (ret == null) {
-            return 0;
+            return prevEpochMaxEvicted/decayFactor;
         }
 
         return ret/decayFactor;

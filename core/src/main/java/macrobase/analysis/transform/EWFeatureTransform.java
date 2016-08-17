@@ -1,7 +1,7 @@
 package macrobase.analysis.transform;
 
 import macrobase.analysis.pipeline.stream.MBStream;
-import macrobase.analysis.sample.ExponentiallyBiasedAChao;
+import macrobase.analysis.sample.FlexibleDampedReservoir;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class EWFeatureTransform extends FeatureTransform {
-    private final ExponentiallyBiasedAChao<Datum> reservoir;
+    private final FlexibleDampedReservoir<Datum> reservoir;
     private final BatchTrainScore scorer;
     private final List<Datum> warmupInput = new ArrayList<>();
     private final int warmupCount;
@@ -45,7 +45,7 @@ public class EWFeatureTransform extends FeatureTransform {
                               double trainingPeriod) throws ConfigurationException {
         scorer = conf.constructTransform();
 
-        reservoir = new ExponentiallyBiasedAChao<>(sampleSize, decayRate, conf.getRandom());
+        reservoir = new FlexibleDampedReservoir<>(sampleSize, decayRate, conf.getRandom());
 
         decayer = new Periodic(decayPeriodType,
                                decayPeriod,

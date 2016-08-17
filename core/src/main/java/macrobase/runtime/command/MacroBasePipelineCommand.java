@@ -34,13 +34,6 @@ public class MacroBasePipelineCommand extends ConfiguredCommand<MacroBaseConf> {
 
         List<AnalysisResult> results = ((Pipeline) ao).initialize(configuration).run();
 
-        for (AnalysisResult result : results) {
-            if (result.getItemSets().size() > 1000) {
-                log.warn("Very large result set! {}; truncating to 1000", result.getItemSets().size());
-                result.setItemSets(result.getItemSets().subList(0, 1000));
-            }
-        }
-
         MacroBase.reporter.report();
 
         log.info("Result: {}", results);
