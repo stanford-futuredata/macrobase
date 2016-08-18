@@ -1,0 +1,19 @@
+macrobase.loader.db.database: oceandb
+macrobase.loader.db.user: pguser
+macrobase.loader.loaderType: BIGDAWG_LOADER
+
+server:
+    rootPath: /api/*
+
+logging:
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+    "macrobase": TRACE
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 1
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.9
