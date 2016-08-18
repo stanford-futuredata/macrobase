@@ -1,7 +1,6 @@
 package macrobase.analysis.summary.itemset;
 
 import com.codahale.metrics.Timer;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import macrobase.MacroBase;
@@ -11,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -203,7 +201,7 @@ public class FPGrowth {
             for (Datum d : datums) {
                 List<Integer> filtered = new ArrayList<>();
 
-                for(Integer attr : d.getAttributes()) {
+                for(Integer attr : d.attributes()) {
                     if(frequentItemCounts.containsKey(attr)) {
                         filtered.add(attr);
                     }
@@ -483,23 +481,28 @@ public class FPGrowth {
     // ugh, this is a really ugly function sig, but it's efficient
     public List<ItemsetWithCount> getCounts(
             List<Datum> transactions,
-            Map<Integer, Double> supportedInlierCountsToCheck,
+            Map<Integer, Double> initialCounts,
+            Set<Integer> targetItems,
             List<ItemsetWithCount> toCount) {
         FPTree countTree = new FPTree();
 
-        countTree.setFrequentCounts(supportedInlierCountsToCheck);
-        Stopwatch sw = Stopwatch.createStarted();
+        Map<Integer, Double> frequentCounts = new HashMap<>();
+
+        for (Integer i : targetItems) {
+            Double initialCount = initialCounts.get(i);
+            if (initialCount == null) {
+                initialCount = 0.;
+            }
+            frequentCounts.put(i, initialCount);
+        }
+
+        countTree.setFrequentCounts(frequentCounts);
         countTree.insertDatum(transactions);
-        log.info("tree insertion took {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
 
-
-        sw.reset();
-        sw.start();
         List<ItemsetWithCount> ret = new ArrayList<>();
         for (ItemsetWithCount c : toCount) {
             ret.add(new ItemsetWithCount(c.getItems(), countTree.getSupport(c.getItems())));
         }
-        log.info("tree probing took {}ms", sw.elapsed(TimeUnit.MILLISECONDS));
 
         return ret;
     }

@@ -4,7 +4,6 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 import com.google.common.collect.Sets;
 import macrobase.MacroBase;
-import macrobase.analysis.contextualoutlier.Interval;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
@@ -43,27 +42,23 @@ public class FPGrowthEmerging {
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
 
-        for (Map.Entry<Integer, Double> outlierCount : outlierCounts.entrySet()) {
-            if (outlierCount.getValue() < supportCountRequired) {
+        for (Map.Entry<Integer, Double> attrOutlierCountEntry : outlierCounts.entrySet()) {
+            if (attrOutlierCountEntry.getValue() < supportCountRequired) {
                 continue;
             }
 
-            Double inlierCount = inlierCounts.get(outlierCount.getKey());
+            Double attrInlierCount = inlierCounts.get(attrOutlierCountEntry.getKey());
 
-            double ratio;
-
-            if (inlierCount != null) {
-                ratio = (outlierCount.getValue() / outliers.size()) /
-                        (inlierCount / inliers.size());
-            } else {
-                ratio = Double.POSITIVE_INFINITY;
-            }
+            double ratio = RiskRatio.compute(attrInlierCount,
+                                             attrOutlierCountEntry.getValue(),
+                                             inliers.size(),
+                                             outliers.size());
 
             if (ratio > minRatio) {
-                ret.add(new ItemsetResult(outlierCount.getValue() / outliers.size(),
-                                          outlierCount.getValue(),
+                ret.add(new ItemsetResult(attrOutlierCountEntry.getValue() / outliers.size(),
+                                          attrOutlierCountEntry.getValue(),
                                           ratio,
-                                          encoder.getColsFromAttr(outlierCount.getKey())));
+                                          encoder.getColsFromAttr(attrOutlierCountEntry.getKey())));
             }
         }
 
@@ -76,7 +71,7 @@ public class FPGrowthEmerging {
                                                                  double minRatio,
                                                                  // would prefer not to pass this in, but easier for now...
                                                                  DatumEncoder encoder) {
-        if (!combinationsEnabled || inliers.get(0).getAttributes().size() == 1) {
+        if (!combinationsEnabled || inliers.get(0).attributes().size() == 1) {
             return getSingletonItemsets(inliers, outliers, minSupport, minRatio, encoder);
         }
 
@@ -86,7 +81,6 @@ public class FPGrowthEmerging {
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
 
-
         Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
 
         int supportCountRequired = (int) (outliers.size() * minSupport);
@@ -94,17 +88,16 @@ public class FPGrowthEmerging {
         for (Datum d : outliers) {
             Set<Integer> txn = null;
 
-            for (int i : d.getAttributes()) {
+            for (int i : d.attributes()) {
                 double outlierCount = outlierCounts.get(i);
                 if (outlierCount >= supportCountRequired) {
                     Number inlierCount = inlierCounts.get(i);
 
-                    double outlierInlierRatio;
-                    if (inlierCount == null || inlierCount.doubleValue() == 0) {
-                        outlierInlierRatio = Double.POSITIVE_INFINITY;
-                    } else {
-                        outlierInlierRatio = (outlierCount / outliers.size()) / (inlierCount.doubleValue() / inliers.size());
-                    }
+                    double outlierInlierRatio = RiskRatio.compute(inlierCount,
+                                                                  outlierCount,
+                                                                  inliers.size(),
+                                                                  outliers.size());
+
                     if (outlierInlierRatio > minRatio) {
                         if (txn == null) {
                             txn = new HashSet<>();
@@ -137,8 +130,7 @@ public class FPGrowthEmerging {
                 -Double.compare(x.getCount(), y.getCount()) :
                 -Double.compare(x.getItems().size(), y.getItems().size()));
 
-        HashMap<Integer, Double> supportedInlierCountsToCheck = new HashMap<>();
-        final double minInlierSupport = ((double) inliers.size() / minRatio);
+        Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
         List<ItemsetResult> ret = new ArrayList<>();
 
@@ -155,47 +147,21 @@ public class FPGrowthEmerging {
             prevCount = i.getCount();
             prevSet = i.getItems();
 
-
             if (i.getItems().size() == 1) {
-                double ratio = 0;
                 Number inlierCount = inlierCounts.get(i.getItems().iterator().next());
 
-                if (inlierCount != null && inlierCount.doubleValue() > 0) {
-                    ratio = (i.getCount() / outliers.size()) / ((double) inlierCount / inliers.size());
-                } else {
-                    ratio = Double.POSITIVE_INFINITY;
-                }
+                double ratio = RiskRatio.compute(inlierCount.doubleValue(),
+                                                 i.getCount(),
+                                                 inliers.size(),
+                                                 outliers.size());
 
                 ret.add(new ItemsetResult(i.getCount() / (double) outliers.size(),
                                           i.getCount(),
                                           ratio,
                                           encoder.getColsFromAttrSet(i.getItems())));
             } else {
-
-                boolean allSupported = true;
-                HashMap<Integer, Double> itemsetItemInlierCounts = new HashMap<>(i.getItems().size());
-                for(Integer item : i.getItems()) {
-                    Double inlierCount = inlierCounts.get(item);
-                    // we could also consider automatically pruning the inlier items with
-                    // insufficient ratio, but then we wouldn't be able to compute
-                    // the exact ratio
-                    if(inlierCount == null) {
-                        allSupported = false;
-                        break;
-                    } else {
-                        itemsetItemInlierCounts.put(item, inlierCount);
-                    }
-                }
-
-                if(!allSupported) {
-                    ret.add(new ItemsetResult(i.getCount() / (double) outliers.size(),
-                                              i.getCount(),
-                                              Double.POSITIVE_INFINITY,
-                                              encoder.getColsFromAttrSet(i.getItems())));
-                } else {
-                    supportedInlierCountsToCheck.putAll(itemsetItemInlierCounts);
-                    ratioSetsToCheck.add(i);
-                }
+                ratioItemsToCheck.addAll(i.getItems());
+                ratioSetsToCheck.add(i);
             }
         }
 
@@ -206,7 +172,8 @@ public class FPGrowthEmerging {
         //          inliers.size(), newSize, outliers.size());
         //inliers = inliers.subList(0, newSize);
         List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inliers,
-                                                                           supportedInlierCountsToCheck,
+                                                                           inlierCounts,
+                                                                           ratioItemsToCheck,
                                                                            ratioSetsToCheck);
 
         assert (matchingInlierCounts.size() == ratioSetsToCheck.size());
@@ -214,12 +181,10 @@ public class FPGrowthEmerging {
             ItemsetWithCount ic = matchingInlierCounts.get(i);
             ItemsetWithCount oc = ratioSetsToCheck.get(i);
 
-            double ratio;
-            if (ic.getCount() > 0) {
-                ratio = (oc.getCount() / outliers.size()) / (ic.getCount() / inliers.size());
-            } else {
-                ratio = Double.POSITIVE_INFINITY;
-            }
+            double ratio = RiskRatio.compute(ic.getCount(),
+                                             oc.getCount(),
+                                             inliers.size(),
+                                             outliers.size());
 
             if (ratio >= minRatio) {
                 ret.add(new ItemsetResult(oc.getCount() / (double) outliers.size(),
