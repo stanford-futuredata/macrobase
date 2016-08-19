@@ -30,8 +30,9 @@ public class BatchSummarizer extends Summarizer {
         minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
         minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
         encoder = conf.getEncoder();
+        log.debug("conf: {}", conf);
         log.debug("encoder: {}", encoder);
-        log.debug("0, 1, 2: {}", encoder.getAttributeName(0), encoder.getAttributeName(1), encoder.getAttributeName(2));
+        log.debug("0, 1, 2: {}, {}, {}", encoder.getAttributeName(0), encoder.getAttributeName(1), encoder.getAttributeName(2));
     }
 
     @Override
