@@ -9,12 +9,15 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class BatchSummarizer extends Summarizer {
+    private static final Logger log = LoggerFactory.getLogger(BatchSummarizer.class);
     private FPGrowthEmerging fpg;
     protected final Double minSupport;
     protected final Double minOIRatio;
@@ -27,6 +30,7 @@ public class BatchSummarizer extends Summarizer {
         minOIRatio = conf.getDouble(MacroBaseConf.MIN_OI_RATIO, MacroBaseDefaults.MIN_OI_RATIO);
         minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
         encoder = conf.getEncoder();
+        log.debug("encoder: {}", encoder);
     }
 
     @Override
