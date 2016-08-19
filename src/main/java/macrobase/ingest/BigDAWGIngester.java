@@ -161,13 +161,13 @@ public class BigDAWGIngester extends DataIngester {
         }
 
         for (String metric : highMetrics) {
-            if (record.get(metric).equals("null")) {
-                metricVec.setEntry(vecPos, Double.NEGATIVE_INFINITY);
-                log.debug("found null!");
-                log.debug("record: {}", record);
-            } else {
-                metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
-            }
+            //if (record.get(metric).equals("null")) {
+            //    metricVec.setEntry(vecPos, Double.NEGATIVE_INFINITY);
+            //    log.debug("found null!");
+            //    log.debug("record: {}", record);
+            //} else {
+            metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
+            //}
             vecPos += 1;
         }
 
