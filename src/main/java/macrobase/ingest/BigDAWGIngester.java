@@ -161,7 +161,11 @@ public class BigDAWGIngester extends DataIngester {
         }
 
         for (String metric : highMetrics) {
-            metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
+            if (record.get(metric).equals("null")) {
+                metricVec.setEntry(vecPos, Double.NEGATIVE_INFINITY);
+            } else {
+                metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
+            }
             vecPos += 1;
         }
 
@@ -230,6 +234,7 @@ public class BigDAWGIngester extends DataIngester {
                 dataStream.add(curRow);
                 numRows++;
             } catch (NumberFormatException e) {
+                log.debug("error: {}", e);
                 badRows++;
             }
         }
