@@ -224,7 +224,7 @@ public class BigDAWGIngester extends DataIngester {
 
         for (String attr : attributes) {
             int pos = csvParser.getHeaderMap().get(attr);
-            conf.getEncoder().recordAttributeName(pos, attr);
+            conf.getEncoder().recordAttributeName(pos + 1, attr);
         }
         // Load all records into memory to filter out rows with missing data
         Iterator<CSVRecord> rawIterator = csvParser.iterator();
