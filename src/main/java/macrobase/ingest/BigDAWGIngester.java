@@ -230,6 +230,7 @@ public class BigDAWGIngester extends DataIngester {
                 dataStream.add(curRow);
                 numRows++;
             } catch (NumberFormatException e) {
+                log.debug("error: {}", e);
                 badRows++;
             }
         }
