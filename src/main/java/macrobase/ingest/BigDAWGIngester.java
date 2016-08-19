@@ -164,6 +164,7 @@ public class BigDAWGIngester extends DataIngester {
             if (record.get(metric).equals("null")) {
                 metricVec.setEntry(vecPos, Double.NEGATIVE_INFINITY);
                 log.debug("found null!");
+                log.debug("record: {}", record);
             } else {
                 metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
             }
