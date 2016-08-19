@@ -162,7 +162,7 @@ public class BigDAWGIngester extends DataIngester {
 
         for (String metric : highMetrics) {
             if (record.get(metric).equals("null")) {
-                metricVec.setEntry(vecPos, Double.parseDouble(""));
+                metricVec.setEntry(vecPos, Double.NEGATIVE_INFINITY);
             } else {
                 log.debug("string: '{}'", record.get(metric));
                 metricVec.setEntry(vecPos, Double.parseDouble(record.get(metric)));
