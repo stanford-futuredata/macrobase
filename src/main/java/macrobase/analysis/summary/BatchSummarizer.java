@@ -31,6 +31,7 @@ public class BatchSummarizer extends Summarizer {
         minSupport = conf.getDouble(MacroBaseConf.MIN_SUPPORT, MacroBaseDefaults.MIN_SUPPORT);
         encoder = conf.getEncoder();
         log.debug("encoder: {}", encoder);
+        log.debug("0, 1, 2: {}", encoder.getAttributeName(0), encoder.getAttributeName(1), encoder.getAttributeName(2));
     }
 
     @Override
