@@ -53,7 +53,6 @@ public class BasicBatchedPipeline extends BasePipeline {
         Summarizer bs = new BatchSummarizer(conf);
         bs.consume(oc.getStream().drain());
         Summary result = bs.summarize().getStream().drain().get(0);
-        log.debug("itemsets: {}", result.getItemsets());
 
         final long totalMs = sw.elapsed(TimeUnit.MILLISECONDS) - loadMs;
         final long summarizeMs = result.getCreationTimeMs();

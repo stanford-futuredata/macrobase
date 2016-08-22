@@ -68,7 +68,6 @@ public class BigDAWGIngester extends DataIngester {
         InputStream responseStream = response.getEntity().getContent();
         Reader streamReader = new InputStreamReader(responseStream);
         CSVParser csvParser = new CSVParser(streamReader, CSVFormat.TDF.withHeader());
-        log.debug("headerMap: {}", csvParser.getHeaderMap());
 
         return csvParser;
     }
