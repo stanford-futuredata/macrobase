@@ -12,7 +12,7 @@ logging:
   loggers:
     "macrobase": TRACE
 
-macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minSupport: 0.1
 macrobase.analysis.minOIRatio: 1
 
 macrobase.analysis.usePercentile: true
