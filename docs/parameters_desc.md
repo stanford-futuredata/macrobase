@@ -135,15 +135,6 @@ Points with scores in the <code>targetPercentile</code> or greater will be marke
   </td>
 </tr>
 <tr>
-  <td><code>macrobase.analysis.zScore</code> and <code>macrobase.analysis.useZScore</code></td>
-  <td><code>3.0</code> and <code>false</code></td>
-  <td>
-  If <code>true</code>, determine outliers according to the detector's
-Z-Score equivalent. Points with scores greater than <code>macrobase.analysis.zScore</code>
-will be marked as outliers.
-  </td>
-</tr>
-<tr>
   <td><code>macrobase.analysis.randomSeed</code></td>
   <td><code>null</code></td>
   <td>
