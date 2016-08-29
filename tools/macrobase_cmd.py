@@ -9,7 +9,7 @@ def run_macrobase(cmd='pipeline', conf='conf/batch.conf', profiler=None,
   if profiler == 'yourkit':
     extra_args += ' -agentpath:/Applications/YourKit-Java-Profiler-2016.02.app/Contents/Resources/bin/mac/libyjpagent.jnilib'  # noqa
   macrobase_cmd = '''java {extra_args} -Xms128m -Xmx16G \\
-      -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
+      -cp "core/target/classes:frontend/target/classes:frontend/src/main/resources/:contrib/target/classes:assembly/target/*:$CLASSPATH" \\
       macrobase.MacroBase {cmd} {conf_file}'''.format(
       cmd=cmd, conf_file=conf, extra_args=extra_args)
   print 'running the following command:'

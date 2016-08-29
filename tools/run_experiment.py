@@ -3,7 +3,7 @@ A script that runs yaml files as standalone experiments from
 bench/experiment directory.
 
 The default behavior is good enough to run the experiments, e.g.
- python script/run_experiment.py bench/experiments/3gaussians-ok.yaml
+ python tools/run_experiment.py tools/bench/experiments/3gaussians-ok.yaml
 
 Experiment will run macrobase with a specified configuration, and
 plot desire plots after the run is finished.
