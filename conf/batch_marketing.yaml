@@ -42,7 +42,7 @@ macrobase.analysis.contextual.pruning.density: true
 macrobase.analysis.contextual.pruning.triviality: True
 macrobase.analysis.contextual.pruning.subsumption: True
 
-macrobase.analysis.contextual.algorithm: 2
+macrobase.analysis.contextual.algorithm: 3
 macrobase.analysis.contextual.datadriven.clusteringAlgorithm: KMEANS
 macrobase.analysis.contextual.datadriven.threshold: 0.9000
 macrobase.analysis.contextual.datadriven.dbscan.epsilon: 5.0000

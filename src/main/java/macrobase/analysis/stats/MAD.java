@@ -75,7 +75,7 @@ public class MAD extends BatchTrainScore {
             zeroMADs.inc();
             int lowerTrimmedMeanIndex = (int) (residuals.length * trimmedMeanFallback);
             int upperTrimmedMeanIndex = (int) (residuals.length * (1 - trimmedMeanFallback));
-            log.trace("MAD was zero; using trimmed means of residuals ({})", trimmedMeanFallback);
+            //log.trace("MAD was zero; using trimmed means of residuals ({})", trimmedMeanFallback);
             double sum = 0;
             for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
                 sum += residuals[i];
@@ -84,9 +84,10 @@ public class MAD extends BatchTrainScore {
             assert (MAD != 0);
         }
 
+       
         context.stop();
 
-        log.trace("trained! median is {}, MAD is {}", median, MAD);
+        //log.trace("trained! median is {}, MAD is {}", median, MAD);
     }
 
     @Override
@@ -100,5 +101,12 @@ public class MAD extends BatchTrainScore {
         double ret = zscore / MAD_TO_ZSCORE_COEFFICIENT;
         log.trace("setting zscore of {} threshold to {}", zscore, ret);
         return ret;
+    }
+    
+    public double getMedian() {
+        return median;
+    }
+    public double getMAD() {
+        return MAD;
     }
 }

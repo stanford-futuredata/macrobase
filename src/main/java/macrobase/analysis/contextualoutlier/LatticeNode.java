@@ -29,8 +29,12 @@ public class LatticeNode {
     public void addDenseContext(Context c) {
         denseContexts.add(c);
     }
+    
+    public void removeTrivialContext(Context c){
+        denseContexts.remove(c);
+    }
 
-    public LatticeNode join(LatticeNode other, List<Datum> data, double tau) {
+    public LatticeNode join(LatticeNode other, List<Datum> data, double tau, ContextIndexTree cit) {
         List<Integer> newDimensions = joinedDimensions(other);
         if (newDimensions == null)
             return null;
@@ -38,7 +42,7 @@ public class LatticeNode {
         LatticeNode result = new LatticeNode(newDimensions);
         for (Context u1 : getDenseContexts()) {
             for (Context u2 : other.getDenseContexts()) {
-                Context newUnit = u1.join(u2, data, tau);
+                Context newUnit = u1.join(u2, data, tau, cit);
                 if (newUnit != null)
                     result.addDenseContext(newUnit);
             }

@@ -501,4 +501,38 @@ public class FPGrowth {
 
         return ret;
     }
+    
+    
+    // ugh, this is a really ugly function sig, but it's efficient
+    public List<ItemsetWithCount> getCounts(
+            List<Set<Integer>> transactions,
+            Set<Integer> targetItems,
+            List<ItemsetWithCount> toCount) {
+        FPTree countTree = new FPTree();
+
+        Map<Integer, Double> frequentCounts = new HashMap<>();
+
+        for (Integer i : targetItems) {
+           for (Set<Integer> tnx: transactions) {
+               if (tnx.contains(i)) {
+                   if (frequentCounts.containsKey(i)) {
+                       frequentCounts.put(i, frequentCounts.get(i) + 1);
+                   } else {
+                       frequentCounts.put(i, 1.0);
+                   }
+               }
+           }
+        }
+
+        countTree.setFrequentCounts(frequentCounts);
+        
+        countTree.insertTransactions(transactions);
+
+        List<ItemsetWithCount> ret = new ArrayList<>();
+        for (ItemsetWithCount c : toCount) {
+            ret.add(new ItemsetWithCount(c.getItems(), countTree.getSupport(c.getItems())));
+        }
+
+        return ret;
+    }
 }

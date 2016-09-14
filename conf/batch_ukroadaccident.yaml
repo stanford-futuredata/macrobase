@@ -1,0 +1,49 @@
+macrobase.query.name: uk_road_accidents10000
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicContextualBatchedPipeline
+macrobase.loader.attributes: [accident_index, location_easting_osgr, location_northing_osgr, longitude, latitude, police_force, accident_severity, number_of_vehicles, number_of_casualties, date, day_of_week, time, local_authority_district, local_authority_highway, n_1st_road_class, n_1st_road_number, road_type, speed_limit, junction_detail, junction_control, n_2nd_road_class, n_2nd_road_number, pedestrian_crossinghuman_control, pedestrian_crossingphysical_facilities, light_conditions, weather_conditions, road_surface_conditions, special_conditions_at_site, carriageway_hazards, urban_or_rural_area, did_police_officer_attend_scene_of_accident, lsoa_of_accident_location]
+macrobase.loader.targetLowMetrics: []
+macrobase.loader.targetHighMetrics: [speed_limit]
+
+macrobase.analysis.transformType: MAD
+
+macrobase.loader.db.user: xuchu
+macrobase.loader.db.baseQuery: SELECT * FROM uk_road_accidents ORDER BY id LIMIT 10000;
+
+macrobase.analysis.minSupport: 0.5000
+macrobase.analysis.minOIRatio: 3.0000
+
+macrobase.analysis.useZScore: false
+macrobase.analysis.zscore.threshold: 5.0000
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.9900
+
+macrobase.analysis.mcd.alpha: 0.5000
+macrobase.analysis.mcd.stoppingDelta: 0.0010
+
+macrobase.loader.loaderType: POSTGRES_LOADER
+macrobase.loader.db.cacheDirectory: sql_cache
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE
+    
+    
+macrobase.analysis.contextual.discreteAttributes: [accident_index, location_easting_osgr, location_northing_osgr, longitude, latitude, police_force, accident_severity, number_of_vehicles, number_of_casualties, date, day_of_week, time, local_authority_district, local_authority_highway, n_1st_road_class, n_1st_road_number, road_type, speed_limit, junction_detail, junction_control, n_2nd_road_class, n_2nd_road_number, pedestrian_crossinghuman_control, pedestrian_crossingphysical_facilities, light_conditions, weather_conditions, road_surface_conditions, special_conditions_at_site, carriageway_hazards, urban_or_rural_area, did_police_officer_attend_scene_of_accident, lsoa_of_accident_location]
+macrobase.analysis.contextual.doubleAttributes: []
+macrobase.analysis.contextual.denseContextTau: 0.0100
+macrobase.analysis.contextual.numIntervals: 10
+macrobase.analysis.contextual.outputFile: temp.txt
+macrobase.analysis.classify.outlierStaticThreshold: 3.0000
+macrobase.analysis.contextual.maxPredicates: 100000
+
+macrobase.analysis.contextual.pruning.triviality: True
+macrobase.analysis.contextual.pruning.subsumption: True
+
+macrobase.analysis.contextual.algorithm: 3
+macrobase.analysis.contextual.datadriven.clusteringAlgorithm: KMEANS
+macrobase.analysis.contextual.datadriven.threshold: 0.9000
+macrobase.analysis.contextual.datadriven.dbscan.epsilon: 5.0000
+macrobase.analysis.contextual.datadriven.kmeans.k: 3

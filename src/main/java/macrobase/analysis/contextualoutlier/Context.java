@@ -5,16 +5,26 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.stats.BatchTrainScore;
+import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
+import macrobase.util.BitSetUtil;
+import macrobase.util.HypothesisTesting;
 
 public class Context {
     private static final Logger log = LoggerFactory.getLogger(Context.class);
+    
+    private List<Datum> data; //the full database
     /**
      * A list of ordered contextual dimensions this node represents
      * and intervals for each dimension
@@ -27,23 +37,67 @@ public class Context {
     //the outlier detector used for detection in this context
     private BatchTrainScore detector;
     //the following is for context pruning
-    private HashSet<Datum> sample = new HashSet<Datum>();
-    private HashSet<Datum> globalSample = new HashSet<Datum>();
-    private boolean densityPruning;
-    private boolean dependencyPruning;
-    private double alpha;
+  
+    private MacroBaseConf conf;
+    
     //The outliers found in this context
-    private BitSet outlierBitSet;
+    private BitSet outlierBitSet = null;
+    private BitSet ancestorOutlierBitSet = null;
+    private int numberOfOutliersNotContainedInAncestor = 0;
 
+    //The actual data in this context
+    private BitSet bitSet;
+    
+    public BitSet getBitSet() {
+        return bitSet;
+    }
+
+    /**
+     * This is called by one-dimensional context
+     * @param bitSet
+     */
+    public void setBitSet(BitSet bitSet) {
+        this.bitSet = bitSet;
+        setSize(bitSet.cardinality()); 
+    }
+    
+    /**
+     * This is called by global context, and more than 1-dimensional context
+     * @param data
+     */
+    public void setBitSet(List<Datum> data) {
+        //global context
+        if (parents.size() == 0) {
+            BitSet bs = new BitSet(data.size());
+            bs.set(0, data.size());
+            setBitSet(bs);
+        }
+        
+        //context whose parents are known
+        if (parents.size() >= 2) {
+            Context p1 = parents.get(0);
+            Context p2 = parents.get(1);
+            //both paraents must have already been set
+            BitSet b1 = p1.getBitSet();
+            BitSet b2 = p2.getBitSet();
+            BitSet bs = null;
+            bs = (BitSet) b1.clone();
+            bs.and(b2);
+            setBitSet(bs);
+        }
+    }
+
+    public void freeBitSet() {
+        bitSet = null;
+    }
+    
     /**
      * Global context
      */
-    public Context(HashSet<Datum> sample, boolean densityPruning, boolean dependencyPruning, double alpha) {
-        this.sample = sample;
-        this.globalSample = sample;
-        this.densityPruning = densityPruning;
-        this.dependencyPruning = dependencyPruning;
-        this.alpha = alpha;
+    public Context(List<Datum> data, MacroBaseConf conf) {
+        this.data = data;
+        this.conf = conf;
+        setBitSet(data);
     }
 
     /**
@@ -54,60 +108,36 @@ public class Context {
      * @param parent
      */
     public Context(int dimension, Interval interval, Context parent) {
+        this.data = parent.data;
         dimensions.add(dimension);
         intervals.add(interval);
         parents.add(parent);
-        for (Datum d : parent.sample) {
-            if (containDatum(d)) {
-                sample.add(d);
-            }
-        }
+        
         oneDimensionalAncestors.add(this);
-        this.globalSample = parent.globalSample;
-        this.densityPruning = parent.densityPruning;
-        this.dependencyPruning = parent.dependencyPruning;
-        this.alpha = parent.alpha;
+        
+        this.conf = parent.conf;
+        
+        setAncestorOutlierBitSet();
     }
 
-    public Context(List<Integer> dimensions, List<Interval> intervals, Context parent1, Context parent2) {
+    public Context(List<Integer> dimensions, List<Interval> intervals, List<Context> parentContexts) {
+        //parentContexts.size() >= 2
+        Context parent1 = parentContexts.get(0);
+        Context parent2 = parentContexts.get(1);
+        
+        this.data = parent1.data;
         this.dimensions = dimensions;
         this.intervals = intervals;
-        parents.add(parent1);
-        parents.add(parent2);
-        sample.addAll(parent1.sample);
-        sample.retainAll(parent2.sample);
+        
+        parents.addAll(parentContexts);
+        
         oneDimensionalAncestors.addAll(parent1.oneDimensionalAncestors);
         oneDimensionalAncestors.addAll(parent2.oneDimensionalAncestors);
-        this.globalSample = parent1.globalSample;
-        this.densityPruning = parent1.densityPruning;
-        this.dependencyPruning = parent1.dependencyPruning;
-        this.alpha = parent1.alpha;
-    }
-
-    public BitSet getContextualBitSet(List<Datum> data, Map<Context, BitSet> context2BitSet) {
-        //global context
-        if (parents.size() == 0) {
-            BitSet bs = new BitSet(data.size());
-            bs.set(0, data.size());
-            return bs;
-        }
-        BitSet bs = null;
-        //one dimensional context
-        if (parents.size() == 1 && context2BitSet.containsKey(this)) {
-            bs = context2BitSet.get(this);
-        }
-        //context whose parents are known
-        if (parents.size() == 2) {
-            Context p1 = parents.get(0);
-            Context p2 = parents.get(1);
-            if (context2BitSet.containsKey(p1) && context2BitSet.containsKey(p2)) {
-                BitSet b1 = context2BitSet.get(p1);
-                BitSet b2 = context2BitSet.get(p2);
-                bs = (BitSet) b1.clone();
-                bs.and(b2);
-            }
-        }
-        return bs;
+        this.conf = parent1.conf;
+        
+        setAncestorOutlierBitSet();
+        
+           
     }
 
     /**
@@ -144,7 +174,7 @@ public class Context {
      * @param other
      * @return
      */
-    public Context join(Context other, List<Datum> data, double tau) {
+    public Context join(Context other, List<Datum> data, double tau, ContextIndexTree cit) {
         //create new dimensions and intervals
         List<Integer> newDimensions = new ArrayList<Integer>();
         List<Interval> newIntervals = new ArrayList<Interval>();
@@ -171,80 +201,67 @@ public class Context {
                 newIntervals.add(interval2);
             }
         }
+        
+        List<Context> parentContexts = new ArrayList<Context>();
+        if (checkJoinConditions(newIntervals, cit, parentContexts) == false) {
+            return null;
+        }
+        
         //create new context
-        Context newUnit = new Context(newDimensions, newIntervals, this, other);
-        //check if this new context can be pruned
-        if (densityPruning(newUnit, tau)) {
+        Context newUnit = new Context(newDimensions, newIntervals, parentContexts);
+        
+        //get the actual data, and check if it can be pruned
+        if (newUnit.getBitSet() == null) {
+            newUnit.setBitSet(data);
+        }
+        //check the actual density
+        double realDensity = (double) newUnit.getBitSet().cardinality() / data.size();
+        if (realDensity < tau) {
+            ContextStats.numDensityPruningsUsingAll++;
             return null;
         }
-        if (dependencyPruning(newUnit)) {
+        
+        //dependency pruning
+        boolean trivialityPrunedUsingAll = trivialityPruningUsingAllData(newUnit);        
+        if (trivialityPrunedUsingAll) {
+            ContextStats.numTrivialityPruning++;
             return null;
         }
+        
+        setDataDrivenPrunedFromParents(newUnit);
+       
         return newUnit;
     }
 
-    /**
-     * Estimating the size of a context
-     * The Null Hypothesis is that density(c) >= minDensity
-     *
-     * @param c
-     * @param minDensity
-     * @return true if the estimation > minSize
-     */
-    private boolean densityPruning(Context c, double minDensity) {
-        if (densityPruning == false)
-            return false;
-        int sampleSize = globalSample.size();
-        int sampleHit = c.getSample().size();
-        double estimatedDensity = (double) sampleHit / sampleSize;
-        double sampleSD = Math.sqrt(minDensity * (1 - minDensity) / sampleSize);
-        double zScore = (estimatedDensity - minDensity) / sampleSD;
-        NormalDistribution unitNormal = new NormalDistribution(0d, 1d);
-        double pValue = unitNormal.cumulativeProbability(zScore);
-        if (pValue <= alpha) {
-            return true;
-        } else {
-            //fail to reject
-            return false;
-        }
-    }
-
-    /**
-     * For two parents p1, and p2, if p1=>p2, or p2=>p1, then c should not be generated
-     * using a sample of p1, and a sample of p2
-     * This is not mean testing, a point
-     *
-     * @param c
-     * @return
-     */
-    private boolean dependencyPruning(Context c) {
-        if (dependencyPruning == false)
-            return false;
-        Context p1 = c.getParents().get(0);
-        Context p2 = c.getParents().get(1);
-        boolean sample_p1_p2 = true;
-        for (Datum d : p1.getSample()) {
-            if (!p2.containDatum(d)) {
-                sample_p1_p2 = false;
-                break;
+    private boolean checkJoinConditions(List<Interval> intervals, ContextIndexTree cit, List<Context> parentContexts) {
+        for (int i = 0; i < intervals.size(); i++) {
+            //skip 
+            List<Interval> skippedIntervals = new ArrayList<Interval>(intervals);
+            skippedIntervals.remove(i);
+            Context parentContext = cit.getContext(skippedIntervals);
+            if (parentContext == null) {
+                return false;
             }
+            parentContexts.add(parentContext);
         }
-        boolean sample_p2_p1 = true;
-        for (Datum d : p2.getSample()) {
-            if (!p1.containDatum(d)) {
-                sample_p2_p1 = false;
-                break;
-            }
-        }
-        if (sample_p1_p2) {
-            return true;
-        } else if (sample_p2_p1) {
-            return true;
-        } else {
-            return false;
-        }
+        return true;
     }
-
+  
+    
+    private boolean trivialityPruningUsingAllData(Context c) {
+        boolean trivialityPruning = (conf != null )?conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_TRIVIALITY, MacroBaseDefaults.CONTEXTUAL_PRUNING_TRIVIALITY):false;
+        if (trivialityPruning == false)
+            return false;
+        for (Context p: c.getParents()) {
+            BitSet b = p.getBitSet();
+            double covered = BitSetUtil.subSetCoverage(b, c.getBitSet());
+            if (covered >= 1.0) {
+                return true;
+            } 
+        }
+        return false;
+    }
+    
     public String print(DatumEncoder encoder) {
         if (dimensions.size() == 0) {
             return "Global Context: ";
@@ -276,16 +293,21 @@ public class Context {
         this.size = size;
     }
 
-    public HashSet<Datum> getSample() {
-        return sample;
-    }
-
+    
     public List<Interval> getIntervals() {
         return intervals;
     }
 
+    public List<Integer> getDimensions() {
+        return dimensions;
+    }
+    
     public List<Context> getParents() {
         return parents;
+    }
+    
+    public HashSet<Context> getOneDimensionalAncestors() {
+        return oneDimensionalAncestors;
     }
 
     public BatchTrainScore getDetector() {
@@ -303,4 +325,83 @@ public class Context {
     public void setOutlierBitSet(BitSet outlierBitSet) {
         this.outlierBitSet = outlierBitSet;
     }
+    
+    public BitSet getAncestorOutlierBitSet() {
+        return ancestorOutlierBitSet;
+    }
+
+    public void setAncestorOutlierBitSet() {
+        ancestorOutlierBitSet = new BitSet(data.size());
+        for (Context p: getParents()) {
+            BitSet pOutlierBS = p.getOutlierBitSet();
+            if (pOutlierBS != null) {
+                ancestorOutlierBitSet.or(pOutlierBS);
+            }
+        }
+    }
+    
+    public int getNumberOfOutliersNotContainedInAncestor() {
+        return numberOfOutliersNotContainedInAncestor;
+    }
+
+    public void setNumberOfOutliersNotContainedInAncestor(int numberOfOutliersNotContainedInAncestor) {
+        this.numberOfOutliersNotContainedInAncestor = numberOfOutliersNotContainedInAncestor;
+    }
+    
+    private double median;
+    private double MAD;
+    public double getMedian() {
+        return median;
+    }
+
+    public void setMedian(double median) {
+        this.median = median;
+    }
+
+    public double getMAD() {
+        return MAD;
+    }
+
+    public void setMAD(double mAD) {
+        MAD = mAD;
+    }
+
+    private boolean[] dataDrivenPruned;
+    public void setDataDrivenPruned(boolean[] dataDrivenPruned) {
+        this.dataDrivenPruned = dataDrivenPruned;
+    }
+    public void setDataDrivenPruned(int c) {
+        dataDrivenPruned[c] = true;
+    }
+    public boolean[] getDataDrivenPruned() {
+        return dataDrivenPruned;
+    }
+    public boolean getDataDrivenPruned(int c) {
+        return dataDrivenPruned[c];
+    }
+    
+    private void setDataDrivenPrunedFromParents(Context c) {
+        if (c.getParents().get(0).dataDrivenPruned != null) {
+            c.dataDrivenPruned = new boolean[c.getParents().get(0).dataDrivenPruned.length];
+            for (int i = 0; i < c.dataDrivenPruned.length; i++) 
+                c.dataDrivenPruned[i] = false;
+            for (Context p: c.getParents()) {
+                for (int i = 0; i < c.dataDrivenPruned.length; i++)  {
+                    if (p.dataDrivenPruned[i] == true) {
+                        c.dataDrivenPruned[i] = true;
+                    }
+                }
+            }
+        } 
+    }
+    
+    //this context can be pruned if all clusters say it can be pruned
+    public boolean getDataDrivenPrunedAll() {
+        for (boolean d: dataDrivenPruned) {
+            if (d == false)
+                return false;
+        }
+        return true;
+    }
+    
 }

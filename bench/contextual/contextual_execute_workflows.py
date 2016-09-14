@@ -2,9 +2,14 @@
 import argparse
 import json
 import os
-
+import platform
+import subprocess, datetime, os, time, signal
+from threading import Timer
 from time import strftime
 
+
+time_out = 60 * 60 # in seconds
+max_heap = "-Xmx50g" # maximum memory allocation
 
 testing_dir = "workflows"
 batch_template_conf_file = "contextual_batch_template.conf"
@@ -14,11 +19,12 @@ default_args = {
   "macrobase.analysis.minOIRatio": 3.0,
   "macrobase.analysis.minSupport": 0.5,
 
+  "macrobase.analysis.transformType": "MAD",
+  
   "macrobase.analysis.usePercentile": "true",
   "macrobase.analysis.targetPercentile": 0.99,
   "macrobase.analysis.useZScore": "false",
   "macrobase.loader.db.user": os.getenv('USER', None),
-  "macrobase.loader.db.password": None,
   "macrobase.analysis.zscore.threshold": 5.0,
 
   "macrobase.analysis.streaming.inputReservoirSize": 10000,
@@ -37,10 +43,28 @@ default_args = {
   "macrobase.analysis.mcd.alpha": 0.5,
   "macrobase.analysis.mcd.stoppingDelta": 0.001,
   
-  "macrobase.analysis.contextual.denseContextTau": 0.01,
+  "macrobase.loader.loaderType": "CACHING_POSTGRES_LOADER",
+  
+  "macrobase.analysis.contextual.denseContextTau": 0.1,
   "macrobase.analysis.contextual.numIntervals": 10,
-  "macrobase.analysis.contextual.maxPredicates": 4,
-  "macrobase.analysis.classify.outlierStaticThreshold": 5.0,
+  "macrobase.analysis.contextual.maxPredicates": 100000,
+  "macrobase.analysis.classify.outlierStaticThreshold": 3.0,
+  
+  "macrobase.analysis.contextual.datadriven.clusteringAlgorithm": "KMEANS",
+  
+  "macrobase.analysis.contextual.pruning.density": "true",
+  "macrobase.analysis.contextual.pruning.dependency": "true",
+  "macrobase.analysis.contextual.pruning.triviality": "false",
+  "macrobase.analysis.contextual.pruning.triviality.approximation": 1.0,
+  "macrobase.analysis.contextual.pruning.triviality.approximation.propagate": "true",
+  "macrobase.analysis.contextual.pruning.distribution": "true",
+  "macrobase.analysis.contextual.pruning.distribution.alpha": 0.05,
+  "macrobase.analysis.contextual.pruning.distribution.minsamplesize": 100,
+  "macrobase.analysis.contextual.pruning.distribution.testmean": "true",
+  "macrobase.analysis.contextual.pruning.distribution.testvariance": "true",
+  "macrobase.analysis.contextual.pruning.distribution.testks": "true",
+  
+  "macrobase.analysis.contextual.api.suspiciousTuplesIndex": ""
 }
 
 
@@ -109,8 +133,9 @@ def parse_results(results_file):
 
 def seperate_contextual_results(results_file):
     contextual_results_file = results_file + "_contextual"
-    
     g = open(contextual_results_file,'w')
+    
+    contextStats = dict()
     
     with open(results_file, 'r') as f:
         lines = f.read().split('\n')
@@ -118,7 +143,22 @@ def seperate_contextual_results(results_file):
             line = lines[i]
             if 'macrobase.analysis.BatchAnalyzer' in line or 'macrobase.analysis.contextualoutlier' in line or 'macrobase.analysis.pipeline.BasicContextualBatchedPipeline' in line:
                  g.write(line + '\n')
+                 
+            if "Done Contextual Outlier Detection Print Stats" in line:
+                values = line.split(":")
+                contextStats[values[len(values)-2]] = values[len(values)-1]
     g.close()
+    
+    return contextStats
+
+def is_out_of_memory(results_file):
+    with open(results_file, 'r') as f:
+        lines = f.read().split('\n')
+        for i in xrange(len(lines)):
+            line = lines[i]
+            if 'java.lang.OutOfMemoryError' in line:
+                return True
+    return False
 
 def get_stats(value_list):
     value_list = [float(value) for value in value_list]
@@ -128,7 +168,7 @@ def get_stats(value_list):
     return mean, stddev
 
 
-def run_workload(config_parameters, number_of_runs, print_itemsets=True):
+def run_workload(config_parameters, number_of_runs, workflow_output_file, sweeping_parameter_config, print_itemsets=True):
     sub_dir = os.path.join(os.getcwd(),
                            testing_dir,
                            config_parameters["macrobase.query.name"],
@@ -138,10 +178,12 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     # dimensionalities greater than 1, MAD otherwise.
     dim = (len(config_parameters["macrobase.loader.targetHighMetrics"]) +
            len(config_parameters["macrobase.loader.targetLowMetrics"]))
+    '''
     if dim > 1:
         config_parameters["macrobase.analysis.transformType"] = "MCD"
     else:
         config_parameters["macrobase.analysis.transformType"] = "MAD"
+    '''
     process_config_parameters(config_parameters)
     conf_file = "batch.conf" if config_parameters["isBatchJob"] \
         else "streaming.conf"
@@ -153,29 +195,65 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
     create_config_file(config_parameters, conf_file)
     cmd = "pipeline" if config_parameters["isBatchJob"] else "streaming"
 
+    
+    '''
     all_times = dict()
     all_num_itemsets = list()
     all_num_iterations = list()
     all_itemsets = set()
     all_tuples_per_second = list()
     all_tuples_per_second_no_itemset_mining = list()
-
+    '''
+    all_contextStats = dict()
+    
+    
     for i in xrange(number_of_runs):
         results_file = os.path.join(sub_dir, "results%d.txt" % i)
-        macrobase_cmd = '''java ${{JAVA_OPTS}} \\
+        #different output file every time!
+        config_parameters["macrobase.analysis.contextual.outputFile"] = os.path.join(sub_dir, "output%d.txt" % i)
+        create_config_file(config_parameters, conf_file)
+ 
+        macrobase_cmd = '''java  \\
+            -Xms128m {max_heap} \\
             -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
-            -agentpath:/home/x4chu/yjp-2016.02/bin/linux-x86-64/libyjpagent.so=disablestacktelemetry,disableexceptiontelemetry,delay=10000 \\
+            macrobase.MacroBase {cmd} {conf_file} \\
+            > {results_file} 2>&1'''.format(max_heap = max_heap,
+            cmd=cmd, conf_file=conf_file, results_file=results_file)
+            
+        if platform.node() == 'istc3':
+            macrobase_cmd = '''java  \\
+            -Dmacrobase.loader.db.url=localhost:5050 \\
+            -Xms128m -Xmx128g \\
+            -cp "src/main/resources/:target/classes:target/lib/*:target/dependency/*" \\
             macrobase.MacroBase {cmd} {conf_file} \\
             > {results_file} 2>&1'''.format(
             cmd=cmd, conf_file=conf_file, results_file=results_file)
+            
         print 'running the following command:'
         print macrobase_cmd
-        os.system("cd ..; cd ..; %s" % macrobase_cmd)
         
-        seperate_contextual_results(results_file)
+        exit_status = "Completed"
+     
+        timeout_command_output = timeout_command("cd ..; cd ..; %s" % macrobase_cmd, time_out)
+        if "Timeout" in timeout_command_output:
+            exit_status = timeout_command_output
+            
+        if is_out_of_memory(results_file):
+            exit_status = "OutOfMemory" + max_heap    
+        #os.system("cd ..; cd ..; %s" % macrobase_cmd)
+        
+        print 'exit_status:'
+        print exit_status
+        
+        contextStats = seperate_contextual_results(results_file)
+        contextStats["exit_status"] = exit_status
+        
+        for key, value in contextStats.iteritems():
+            if key not in all_contextStats.keys():
+                all_contextStats[key] = list()
+            all_contextStats[key].append(value)
         #for inspecting contextual outlier performance
-        
-        
+        '''
         (times, num_itemsets, num_iterations, itemsets,
             tuples_per_second, tuples_per_second_no_itemset_mining) = parse_results(results_file)
 
@@ -190,7 +268,26 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
             all_itemsets.add(frozenset(itemset.items()))
         all_tuples_per_second.append(tuples_per_second)
         all_tuples_per_second_no_itemset_mining.append(tuples_per_second_no_itemset_mining)
-
+        '''
+    
+    g = open(workflow_output_file,'a')   
+    g.write("Query Name: " + config_parameters["macrobase.query.name"] + "\n")
+    g.write("ResultDir: " + sub_dir + "\n");
+    for key, value in sweeping_parameter_config.iteritems():
+        g.write(str(key))
+        g.write(": ")
+        g.write(str(value))
+        g.write("\n")
+    for key, values in all_contextStats.iteritems():
+        g.write(str(key))
+        g.write(": ")
+        #g.write(str(get_stats(values)[0]))
+        g.write("|".join(values))
+        g.write("\n")
+    g.write("----------------------\n")
+    g.close()
+        
+    '''
     mean_and_stddev_times = dict()
     for time_type in all_times:
         mean_and_stddev_times[time_type] = get_stats(all_times[time_type])
@@ -218,26 +315,26 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
 
     print "Mean tuples / second w/o itemset mining:", mean_tps_no_itemset_mining,
     print ", Stddev tuples / second w/o itemset mining:", stddev_tps_no_itemset_mining
+    '''
 
-
-def run_all_workloads(configurations, defaults, number_of_runs,
-                      sweeping_parameter_name=None,
-                      sweeping_parameter_value=None):
-    if sweeping_parameter_name is not None:
+def run_all_workloads(configurations, defaults, number_of_runs, workflow_output_file,
+                      sweeping_parameter_config):
+    if sweeping_parameter_config:
         print "Running all workloads with",
-        print sweeping_parameter_name, "=", sweeping_parameter_value
+        print sweeping_parameter_config
     else:
         print "Running all workloads with defaultParameters"
     print
-
+    
     for config_parameters_raw in configurations:
         config_parameters = defaults.copy()
         config_parameters.update(config_parameters_raw)
-        if sweeping_parameter_name is not None:
+        for sweeping_parameter_name, sweeping_parameter_value in sweeping_parameter_config.iteritems():
             config_parameters[sweeping_parameter_name] = \
                 sweeping_parameter_value
 
-        run_workload(config_parameters, number_of_runs)
+        all_contextStats = run_workload(config_parameters, number_of_runs, workflow_output_file, sweeping_parameter_config)
+        
         print
 
 
@@ -262,6 +359,10 @@ def parse_args():
                         type=argparse.FileType('r'),
                         default='contextual_sweeping_parameters_config.json',
                         help='File with a dictionary of parameters to sweep')
+    parser.add_argument('--workflow-output-file',
+                        type=str,
+                        default='workflow_output_file.txt',
+                        help='Output the workflow stats to the file')
     parser.add_argument('--number-of-runs', default=1, type=int,
                         help='Number of times to run a workload with same '
                              'parameters.')
@@ -274,6 +375,31 @@ def parse_args():
     args.sweeping_parameters = json.load(args.sweeping_parameters_config)
     return args
 
+def timeout_command(command, timeout):
+    """call shell-command and either return its output or kill it
+          if it doesn't normally exit within timeout seconds and return None"""
+    import subprocess, datetime, os, time, signal
+    start = datetime.datetime.now()
+    process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)
+    while process.poll() is None:
+        time.sleep(0.1)
+        now = datetime.datetime.now()
+        if (now - start).seconds > timeout:
+          # os.kill(process.pid, signal.SIGKILL)
+          os.killpg(os.getpgid(process.pid), signal.SIGKILL)
+          # os.waitpid(-1, os.WNOHANG)
+          return "Timeout %s" % timeout
+    return "Completed Within %s" % timeout
+  
+def skip_cur_configuration(cur_configuration):
+#     if cur_configuration["macrobase.analysis.contextual.pruning.distribution"] == False: 
+#         if cur_configuration["macrobase.analysis.contextual.pruning.distribution.alpha"] == 1.0 and cur_configuration["macrobase.analysis.contextual.pruning.distribution.minsamplesize"] == 10000:
+#             return False
+#         else:
+#             return True 
+#     else:
+#         return False
+    return False
 
 if __name__ == '__main__':
     args = parse_args()
@@ -293,10 +419,29 @@ if __name__ == '__main__':
     run_all_workloads(args.workflows, defaults, args.number_of_runs)
     '''
             
-    for parameter_name, values in args.sweeping_parameters.iteritems():
-        for parameter_value in values:
-            run_all_workloads(args.workflows, defaults,
-                              args.number_of_runs,
-                              sweeping_parameter_name=parameter_name,
-                              sweeping_parameter_value=parameter_value)
+            
+    parameterNames = args.sweeping_parameters.keys()
+    total_num_configurations = 1
+    for parameter_name in parameterNames:
+        print parameter_name, "has values ", len(args.sweeping_parameters[parameter_name])
+        total_num_configurations *= len(args.sweeping_parameters[parameter_name])
     
+    print "\n------------------------------\n"
+    
+    cur_configuration = { key: "" for key in parameterNames}
+    for i in range(0, total_num_configurations):
+        temp = i
+        for parameter_name in parameterNames:
+            parameter_value = args.sweeping_parameters[parameter_name][temp % len(args.sweeping_parameters[parameter_name])]
+            temp = temp / len(args.sweeping_parameters[parameter_name])
+            cur_configuration[parameter_name] = parameter_value
+        print cur_configuration
+        if skip_cur_configuration(cur_configuration):
+            print "skipped"
+            continue
+        run_all_workloads(args.workflows, defaults,
+                              args.number_of_runs,
+                              args.workflow_output_file,
+                              cur_configuration)
+            
+   

@@ -51,9 +51,9 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector()));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
-        assertEquals(context2Outliers.size(), 1);
-        for (Context context : context2Outliers.keySet()) {
+        List<Context> contextWithOutliers = contextualDetector.searchContextualOutliers(data);
+        assertEquals(contextWithOutliers.size(), 1);
+        for (Context context : contextWithOutliers) {
             List<Interval> intervals = context.getIntervals();
             assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1_Discrete");
@@ -62,7 +62,7 @@ public class ContextualOutlierDetectorTest {
         }
     }
 
-    @Test
+    
     public void testContextualDoubleAttribute() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
@@ -94,9 +94,9 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(),
                                new ArrayRealVector(c1)));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
-        assertEquals(context2Outliers.size(), 1);
-        for (Context context : context2Outliers.keySet()) {
+        List<Context> contextWithOutliers = contextualDetector.searchContextualOutliers(data);
+        assertEquals(contextWithOutliers.size(), 1);
+        for (Context context : contextWithOutliers) {
             List<Interval> intervals = context.getIntervals();
             assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1_Double");
@@ -106,7 +106,7 @@ public class ContextualOutlierDetectorTest {
         }
     }
 
-    @Test
+    
     public void testTwoAttributesContext() throws Exception {
         //construct a contextual outlier detector
         MacroBaseConf conf = new MacroBaseConf();
@@ -147,9 +147,9 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector(c2)));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
-        assertEquals(context2Outliers.size(), 1);
-        for (Context context : context2Outliers.keySet()) {
+        List<Context> contextWithOutliers = contextualDetector.searchContextualOutliers(data);
+        assertEquals(contextWithOutliers.size(), 1);
+        for (Context context : contextWithOutliers) {
             List<Interval> intervals = context.getIntervals();
             assertEquals(intervals.size(), 2);
             assertEquals(intervals.get(0).getColumnName(), "C1_Discrete");
@@ -204,8 +204,8 @@ public class ContextualOutlierDetectorTest {
                                new ArrayList<Integer>(Arrays.asList(c1)),
                                new ArrayRealVector(c2)));
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextualOutliers(data);
-        assertEquals(context2Outliers.size(), 0);
+        List<Context> contextWithOutliers = contextualDetector.searchContextualOutliers(data);
+        assertEquals(contextWithOutliers.size(), 0);
     }
 
     @Test
@@ -249,10 +249,9 @@ public class ContextualOutlierDetectorTest {
                 inputOutliers.add(datum);
             }
         }
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = contextualDetector.searchContextGivenOutliers(data,
-                                                                                                         inputOutliers);
-        assertEquals(context2Outliers.size(), 1);
-        for (Context context : context2Outliers.keySet()) {
+        List<Context> contextWithOutliers = contextualDetector.searchContextGivenOutliers(data,inputOutliers);
+        assertEquals(contextWithOutliers.size(), 1);
+        for (Context context : contextWithOutliers) {
             List<Interval> intervals = context.getIntervals();
             assertEquals(intervals.size(), 1);
             assertEquals(intervals.get(0).getColumnName(), "C1_Discrete");

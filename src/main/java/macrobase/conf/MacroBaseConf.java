@@ -84,8 +84,8 @@ public class MacroBaseConf extends Configuration {
     public static final String CSV_INPUT_FILE = "macrobase.loader.csv.file";
     public static final String CSV_COMPRESSION = "macrobase.loader.csv.compression";
     
-    public static final String CONTEXTUAL_API = "macrobase.analysis.contextual.api";
-    public static final String CONTEXTUAL_API_OUTLIER_PREDICATES = "macrobase.analysis.contextual.api.outlierPredicates";
+    public static final String CONTEXTUAL_API_SUSPICIOUS_TUPLES_INDEX = "macrobase.analysis.contextual.api.suspiciousTuplesIndex";
+    
     public static final String CONTEXTUAL_DISCRETE_ATTRIBUTES = "macrobase.analysis.contextual.discreteAttributes";
     public static final String CONTEXTUAL_DOUBLE_ATTRIBUTES = "macrobase.analysis.contextual.doubleAttributes";
     public static final String CONTEXTUAL_DENSECONTEXTTAU = "macrobase.analysis.contextual.denseContextTau";
@@ -93,9 +93,30 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_MAX_PREDICATES = "macrobase.analysis.contextual.maxPredicates";
     public static final String CONTEXTUAL_OUTPUT_FILE = "macrobase.analysis.contextual.outputFile";
     public static final String CONTEXTUAL_PRUNING_DENSITY = "macrobase.analysis.contextual.pruning.density";
-    public static final String CONTEXTUAL_PRUNING_DEPENDENCY = "macrobase.analysis.contextual.pruning.dependency";
-    public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = "macrobase.analysis.contextual.pruning.distributionForTraining";
-    public static final String CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = "macrobase.analysis.contextual.pruning.distributionForScoring";
+    
+    public static final String CONTEXTUAL_PRUNING_TRIVIALITY = "macrobase.analysis.contextual.pruning.triviality";
+    public static final String CONTEXTUAL_PRUNING_SUBSUMPTION = "macrobase.analysis.contextual.pruning.subsumption";
+    
+    public static final String CONTEXTUAL_ALGORITHM = "macrobase.analysis.contextual.algorithm";
+    
+    public enum CONTEXTUAL_DATADRIVEN_CLUSTERING_ALGORITHM {
+        EQUI_WIDTH,
+        KMEANS,
+        KDE,
+        DBSCAN
+    }
+    public CONTEXTUAL_DATADRIVEN_CLUSTERING_ALGORITHM getContextualDataDrivenClusteringAlgorithm() throws ConfigurationException {
+        if (!_conf.containsKey(CONTEXTUAL_DATADRIVEN_CLUSTERINGALGORITHM)) {
+            return MacroBaseDefaults.CONTEXTUAL_DATADRIVEN_CLUSTERINGALGORITHM;
+        }
+        return CONTEXTUAL_DATADRIVEN_CLUSTERING_ALGORITHM.valueOf(_conf.get(CONTEXTUAL_DATADRIVEN_CLUSTERINGALGORITHM));
+    }
+    public static final String CONTEXTUAL_DATADRIVEN_CLUSTERINGALGORITHM = "macrobase.analysis.contextual.datadriven.clusteringAlgorithm";
+    public static final String CONTEXTUAL_DATADRIVEN_THRESHOLD = "macrobase.analysis.contextual.datadriven.threshold";
+    public static final String CONTEXTUAL_DATADRIVEN_DBSCAN_EPSILON = "macrobase.analysis.contextual.datadriven.dbscan.epsilon";
+    public static final String CONTEXTUAL_DATADRIVEN_KMEANS_K = "macrobase.analysis.contextual.datadriven.kmeans.k";
+
+    
     public static final String OUTLIER_STATIC_THRESHOLD = "macrobase.analysis.classify.outlierStaticThreshold";
     public static final String TARGET_GROUP = "macrobase.analysis.classify.targetGroup";
 
@@ -154,10 +175,6 @@ public class MacroBaseConf extends Configuration {
         SVI_DPGMM,
     }
 
-    public enum ContextualAPI {
-        findAllContextualOutliers,
-        findContextsGivenOutlierPredicate,
-    }
     
     public Random getRandom() {
         Long seed = getLong(RANDOM_SEED, null);
@@ -182,14 +199,14 @@ public class MacroBaseConf extends Configuration {
                     return ret;
                 }
             case MAD:
-                log.info("Using MAD transform.");
+                //log.info("Using MAD transform.");
                 return new MAD(this);
             case MCD:
                 log.info("Using MCD transform.");
                 MinCovDet ret = new MinCovDet(this);
                 return ret;
             case ZSCORE:
-                log.info("Using ZScore transform.");
+                //log.info("Using ZScore transform.");
                 return new ZScore(this);
             case KDE:
                 log.info("Using KDE transform.");
@@ -355,12 +372,7 @@ public class MacroBaseConf extends Configuration {
         return TransformType.valueOf(_conf.get(TRANSFORM_TYPE));
     }
     
-    public ContextualAPI getContextualAPI() throws ConfigurationException {
-        if(!_conf.containsKey(CONTEXTUAL_API)) {
-            return MacroBaseDefaults.CONTEXTUAL_API;
-        }
-        return ContextualAPI.valueOf(_conf.get(CONTEXTUAL_API));
-    }
+  
 
     public KDE.BandwidthAlgorithm getKDEBandwidth() {
         if (!_conf.containsKey(KDE_BANDWIDTH_ALGORITHM)) {

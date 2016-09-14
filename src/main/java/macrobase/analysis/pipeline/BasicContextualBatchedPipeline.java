@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import macrobase.analysis.result.OutlierClassificationResult;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,15 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import macrobase.analysis.contextualoutlier.Context;
+import macrobase.analysis.contextualoutlier.ContextStats;
 import macrobase.analysis.contextualoutlier.ContextualOutlierDetector;
 import macrobase.analysis.result.AnalysisResult;
 import macrobase.analysis.result.ContextualAnalysisResult;
-import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Summary;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
-import macrobase.conf.MacroBaseConf.ContextualAPI;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DataIngester;
 
@@ -45,43 +45,228 @@ public class BasicContextualBatchedPipeline extends BasePipeline {
     @Override
     public List<AnalysisResult> run() throws Exception {
         List<AnalysisResult> allARs = new ArrayList<AnalysisResult>();
-        long time1 = System.currentTimeMillis();
+
         //load the data
         DataIngester ingester = conf.constructIngester();
         List<Datum> data = ingester.getStream().drain();
-        ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
-        Map<Context, List<OutlierClassificationResult>> context2Outliers = null;
-        long time2 = System.currentTimeMillis();
         
-        //invoke different contextual outlier detection APIs
-        if (contextualAPI == ContextualAPI.findAllContextualOutliers) {
-            context2Outliers = contextualDetector.searchContextualOutliers(data);
-        } else if (contextualAPI == ContextualAPI.findContextsGivenOutlierPredicate) {
-            context2Outliers = contextualDetector.searchContextGivenOutliers(data);
+        int contextualAlgorithm = conf.getInt(MacroBaseConf.CONTEXTUAL_ALGORITHM, MacroBaseDefaults.CONTEXTUAL_ALGORITHM);
+        
+        List<Context> dataDrivenOutliers;
+        List<Context> schemaDrivenOutliers;
+        long dataDrivenDetectionTime = 0;
+        long schemaDrivenDetectionTime = 0;
+        if (contextualAlgorithm == 0) {
+            //debug data driven
+            ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
+            contextualDetector.searchContextualOutliers(data);
+            contextualDetector.searchContextualOutliersDataDrivenDebug(data, "temp_debug.txt");
+        } else if (contextualAlgorithm == 1) {
+            //schema driven
+            long time1 = System.currentTimeMillis();
+            schemaDrivenOutliers = schemaDriven(data);
+            long time2 = System.currentTimeMillis();
+            schemaDrivenDetectionTime += (time2 - time1);
+            
+            topKDiversity(data, schemaDrivenOutliers, 20);
+        } else if (contextualAlgorithm == 2) {
+            //data driven
+            long time1 = System.currentTimeMillis();
+            dataDrivenOutliers = dataDriven(data);
+            long time2 = System.currentTimeMillis();
+            dataDrivenDetectionTime += (time2 - time1);
+        } else if (contextualAlgorithm == 3){
+            //run both, and compute precision and recall
+            long time1 = System.currentTimeMillis();
+            schemaDrivenOutliers = schemaDriven(data);
+            long time2 = System.currentTimeMillis();
+            schemaDrivenDetectionTime += (time2 - time1);
+
+            long time3 = System.currentTimeMillis();
+            dataDrivenOutliers = dataDriven(data);
+            long time4 = System.currentTimeMillis();
+            dataDrivenDetectionTime += (time4 - time3);
+            
+            int count = 0;
+            for (int i = 0; i < dataDrivenOutliers.size(); i++) {
+                Context c1 = dataDrivenOutliers.get(i);
+                boolean covered = false;
+                for (int j = 0; j < schemaDrivenOutliers.size(); j++) {
+                    Context c2 = schemaDrivenOutliers.get(j);
+                    if (c1.toString().equals(c2.toString())) {
+                        covered = true;
+                        break;
+                    }
+                }
+                if (covered) {
+                    count++;
+                    System.out.println("Correct: " + c1.print(conf.getEncoder()));
+                } else {
+                    System.out.println("Wrong: " + c1.print(conf.getEncoder()));
+                }
+            }
+            System.err.println("Data Driven and Schema Driven Overlap: " + count);
+            System.err.println("Data Driven context total: " + dataDrivenOutliers.size());
+            System.err.println("Schema Driven context total: " + schemaDrivenOutliers.size());
+            double precision = (double)count / dataDrivenOutliers.size();
+            double recall = (double) count / schemaDrivenOutliers.size();
+            System.err.println("Data Driven Precision w.r.t. schema driven: " + precision);
+            System.err.println("Data Driven Recall w.r.t. schema driven: " + recall);
         }
-        long time3 = System.currentTimeMillis();
-        long loadMs = time2 - time1;
-        long executeMs = time3 - time2;
         
-        analyzeContextualOutliers(data, context2Outliers);
+     
+        log.info("Done Contextual Outlier Detection Schema-driven time: {}", schemaDrivenDetectionTime);
+        log.info("Done Contextual Outlier Detection Data-driven time: {}", dataDrivenDetectionTime);
+
         
-        //summarize every contextual outliers found
-        /*
-        for (Context context : context2Outliers.keySet()) {
-            log.info("Context: " + context.print(conf.getEncoder()));
-            BatchSummarizer summarizer = new BatchSummarizer(conf);
-            summarizer.consume(context2Outliers.get(context));
-            Summary result = summarizer.getStream().drain().get(0);
-            long summarizeMs = result.getCreationTimeMs();
-            ContextualAnalysisResult ar = new ContextualAnalysisResult(context, result.getNumOutliers(),
-                                                                       result.getNumInliers(),
-                                                                       loadMs,
-                                                                       executeMs,
-                                                                       summarizeMs,
-                                                                       result.getItemsets());
-            allARs.add(ar);
-        }*/
+        log.info("Done Contextual Outlier Detection Print Stats: timeBuildLattice: {}", ContextStats.timeBuildLattice);
+        log.info("Done Contextual Outlier Detection Print Stats: timeDetectContextualOutliers: {}", ContextStats.timeDetectContextualOutliers);
+        
+        
+        log.info("Done Contextual Outlier Detection Print Stats: numDensityPruningsUsingAll: {}", ContextStats.numDensityPruningsUsingAll);
+        log.info("Done Contextual Outlier Detection Print Stats: numTrivialityPruning: {}", ContextStats.numTrivialityPruning);
+        log.info("Done Contextual Outlier Detection Print Stats: numSubsumptionPruning: {}", ContextStats.numSubsumptionPruning);
+       
+        log.info("Done Contextual Outlier Detection Print Stats: numDataDrivenContextsPruning: {}", ContextStats.numDataDrivenContextsPruning);
+
+        
+        log.info("Done Contextual Outlier Detection Print Stats: numContextsGenerated: {}", ContextStats.numContextsGenerated);
+        log.info("Done Contextual Outlier Detection Print Stats: numContextsGeneratedWithOutliers: {}", ContextStats.numContextsGeneratedWithOutliers);
+        log.info("Done Contextual Outlier Detection Print Stats: numContextsGeneratedWithOutOutliers: {}", ContextStats.numContextsGeneratedWithOutOutliers);
+        log.info("Done Contextual Outlier Detection Print Stats: numContextsGeneratedWithMaximalOutliers: {}", ContextStats.numContextsGeneratedWithMaximalOutliers);
         return allARs;
+    }
+    
+    public List<Context> topKDiversity(List<Datum> data, List<Context> contexts, int k) {
+        List<Context> topkResult = new ArrayList<Context>();
+        BitSet overallCoverageBS = new BitSet(data.size());
+       
+        if (contexts.size() <= k) 
+            return contexts;
+        
+        while (topkResult.size() < k) {
+            Context bestSelection = null;
+            int bestCoverage = 0;
+            int bestSize = 0;
+            int bestNumPredicates = 0;
+            for (Context context: contexts) {
+                if (topkResult.contains(context)) {
+                    continue;
+                }
+                BitSet curCoverageBS = (BitSet)context.getOutlierBitSet().clone();
+                curCoverageBS.andNot(overallCoverageBS);
+                int curCoverage = curCoverageBS.cardinality();
+                int curSize = context.getBitSet().cardinality();
+                int curNumPredicates = context.getDimensions().size();
+                
+                if (curCoverage > bestCoverage || 
+                        (curCoverage == bestCoverage && curCoverage > 0 && curSize > bestSize) ||
+                        (curCoverage == bestCoverage && curCoverage > 0 && curSize == bestSize && curNumPredicates < bestNumPredicates)) {
+                    bestSelection = context;
+                    bestCoverage = curCoverage;
+                    bestSize = curSize;
+                    bestNumPredicates = curNumPredicates;
+                }
+            }
+            if (bestSelection == null)
+                break;
+            overallCoverageBS.or(bestSelection.getOutlierBitSet());
+            topkResult.add(bestSelection);
+            log.debug("Topk selected context: {}, with outliers {}, increase outliers coverage by {}, overall coverage {}", bestSelection.print(conf.getEncoder()), bestSelection.getOutlierBitSet().cardinality(), bestCoverage, overallCoverageBS.cardinality());
+
+        }
+        
+        BitSet totalBS = new BitSet(data.size());
+        for (Context context: contexts) {
+            totalBS.or(context.getOutlierBitSet());
+        }
+        log.debug("With all outliers in all contexts {}", totalBS.cardinality());
+        return topkResult;
+    }
+    
+    
+    private List<Context> schemaDriven(List<Datum> data) throws Exception {
+        ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
+        //invoke different contextual outlier detection APIs
+        List<Context> contextWithOutliers = null;
+        contextWithOutliers = contextualDetector.searchContextualOutliers(data);
+        log.debug("Schema-driven contexts with outliers: {}", contextWithOutliers.size());
+
+        
+        contextWithOutliers.sort(new Comparator<Context>(){
+
+            @Override
+            public int compare(Context o1, Context o2) {
+                if (o1.getNumberOfOutliersNotContainedInAncestor() > o2.getNumberOfOutliersNotContainedInAncestor()) 
+                    return 1;
+                else if (o1.getNumberOfOutliersNotContainedInAncestor() < o2.getNumberOfOutliersNotContainedInAncestor()) 
+                    return -1;
+                else 
+                    return 0;
+            }
+            
+        });
+        
+        int numContextsWithSmallOutlierPercentage = 0;
+        int contextCount = 0;
+        for (Context context: contextWithOutliers) {
+            contextCount++;
+            //log.debug("\t {}, Context: {}, Median {}, MAD {}, NumberOutliersNotContainedInAncestor {}",  contextCount, context.print(conf.getEncoder()), context.getMedian(), context.getMAD(), context.getNumberOfOutliersNotContainedInAncestor());
+            double outlierPercentage = (double)context.getOutlierBitSet().cardinality() / context.getBitSet().cardinality();
+            if (outlierPercentage > (1 - conf.getDouble(MacroBaseConf.CONTEXTUAL_DATADRIVEN_THRESHOLD, MacroBaseDefaults.CONTEXTUAL_DATADRIVEN_THRESHOLD))) {
+                
+            } else {
+                numContextsWithSmallOutlierPercentage++;
+            }
+        }
+
+        //log.debug("Schema-driven contexts with outliers whose percentage less than a threshold {}:  {}",1 - conf.getDouble(MacroBaseConf.CONTEXTUAL_DATADRIVEN_THRESHOLD, MacroBaseDefaults.CONTEXTUAL_DATADRIVEN_THRESHOLD) , numContextsWithSmallOutlierPercentage);
+        log.debug("Schema-driven contexts with outliers {}: ", contextCount);
+
+        return contextWithOutliers;
+    }
+    
+    private List<Context> dataDriven(List<Datum> data) throws Exception {
+        ContextualOutlierDetector contextualDetector = new ContextualOutlierDetector(conf);
+        //invoke different contextual outlier detection APIs
+        
+        List<Context> contextWithOutliers = null;
+        
+        //contextWithOutliers = contextualDetector.searchContextualOutliersDataDriven(data);
+        contextWithOutliers = contextualDetector.searchContextualOutliersDataDriven_NewApproach(data);
+        
+        contextWithOutliers.sort(new Comparator<Context>(){
+
+            @Override
+            public int compare(Context o1, Context o2) {
+                if (o1.getNumberOfOutliersNotContainedInAncestor() > o2.getNumberOfOutliersNotContainedInAncestor()) 
+                    return 1;
+                else if (o1.getNumberOfOutliersNotContainedInAncestor() < o2.getNumberOfOutliersNotContainedInAncestor()) 
+                    return -1;
+                else 
+                    return 0;
+            }
+            
+        });
+        
+        int numContextsWithSmallOutlierPercentage = 0;
+        int contextCount = 0;
+        for (Context context: contextWithOutliers) {
+            contextCount++;
+            //log.debug("\t {}, Context: {}, Median {}, MAD {}, NumberOutliersNotContainedInAncestor {}",  contextCount, context.print(conf.getEncoder()), context.getMedian(), context.getMAD(), context.getNumberOfOutliersNotContainedInAncestor());
+            double outlierPercentage = (double)context.getOutlierBitSet().cardinality() / context.getBitSet().cardinality();
+            if (outlierPercentage > (1 - conf.getDouble(MacroBaseConf.CONTEXTUAL_DATADRIVEN_THRESHOLD, MacroBaseDefaults.CONTEXTUAL_DATADRIVEN_THRESHOLD))) {
+                
+            } else {
+                numContextsWithSmallOutlierPercentage++;
+            }
+        }
+        log.debug("Data-driven contexts with outliers {}: ", contextCount);
+
+        //log.debug("Data-driven contexts with outliers whose percentage less than a threshold {}:  {}",1 - conf.getDouble(MacroBaseConf.CONTEXTUAL_DATADRIVEN_THRESHOLD, MacroBaseDefaults.CONTEXTUAL_DATADRIVEN_THRESHOLD) , numContextsWithSmallOutlierPercentage);
+
+        
+        return contextWithOutliers;
     }
     
     public void analyzeContextualOutliers(List<Datum> data, Map<Context, List<OutlierClassificationResult>> context2Outliers) throws Exception {
@@ -93,7 +278,7 @@ public class BasicContextualBatchedPipeline extends BasePipeline {
         rankedContexts = rankContextsBasedOnOutlierInlierRatio(context2Outliers);
         writeContextualOutliersToFile(rankedContexts, conf.getString(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,MacroBaseDefaults.CONTEXTUAL_OUTPUT_FILE)+"_rankedBasedOnOutlierInlierRatio");
 
-        writeContextMetricsToFile(rankedContexts, conf.getString(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,MacroBaseDefaults.CONTEXTUAL_OUTPUT_FILE));
+        //writeContextMetricsToFile(rankedContexts, conf.getString(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,MacroBaseDefaults.CONTEXTUAL_OUTPUT_FILE));
        
         
         

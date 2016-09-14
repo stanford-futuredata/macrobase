@@ -2,6 +2,7 @@ package macrobase.conf;
 
 import com.google.common.collect.ImmutableMap;
 import macrobase.analysis.stats.KDE;
+import macrobase.conf.MacroBaseConf.CONTEXTUAL_DATADRIVEN_CLUSTERING_ALGORITHM;
 import macrobase.conf.MacroBaseConf.DataIngesterType;
 import macrobase.ingest.CSVIngester;
 
@@ -72,18 +73,29 @@ public class MacroBaseDefaults {
     public static final String DB_URL = "localhost";
     
     //contextual outlier detection defaults
-    public static final MacroBaseConf.ContextualAPI CONTEXTUAL_API = MacroBaseConf.ContextualAPI.findAllContextualOutliers;
-    public static final String CONTEXTUAL_API_OUTLIER_PREDICATES  = "";
+    
+    public static final String CONTEXTUAL_API_SUSPICIOUS_TUPLES_INDEX  = "";
+
     public static final Double CONTEXTUAL_DENSECONTEXTTAU = 0.5;
     public static final Integer CONTEXTUAL_NUMINTERVALS = 10;
+    
     public static final List<String> CONTEXTUAL_DISCRETE_ATTRIBUTES = new ArrayList<String>();
     public static final List<String> CONTEXTUAL_DOUBLE_ATTRIBUTES = new ArrayList<String>();
+    
     public static final Integer CONTEXTUAL_MAX_PREDICATES = Integer.MAX_VALUE;
     public static final String CONTEXTUAL_OUTPUT_FILE = null;
-    public static final Boolean CONTEXTUAL_PRUNING_DENSITY = true;
-    public static final Boolean CONTEXTUAL_PRUNING_DEPENDENCY = true;
-    public static final Boolean CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_TRAINING = true;
-    public static final Boolean CONTEXTUAL_PRUNING_DISTRIBUTION_FOR_SCORING = true;
+    
+    public static final Boolean CONTEXTUAL_PRUNING_TRIVIALITY = true;
+    public static final Boolean CONTEXTUAL_PRUNING_SUBSUMPTION = true;
+    
+    public static final Integer CONTEXTUAL_ALGORITHM = 1;
+    
+    
+    public static final MacroBaseConf.CONTEXTUAL_DATADRIVEN_CLUSTERING_ALGORITHM CONTEXTUAL_DATADRIVEN_CLUSTERINGALGORITHM = MacroBaseConf.CONTEXTUAL_DATADRIVEN_CLUSTERING_ALGORITHM.EQUI_WIDTH;
+    public static final Double CONTEXTUAL_DATADRIVEN_THRESHOLD = 0.9;
+    public static final Double CONTEXTUAL_DATADRIVEN_DBSCAN_EPSILON = 1.0;
+    public static final Integer CONTEXTUAL_DATADRIVEN_KMEANS_K = 10;
+    
     public static final Double OUTLIER_STATIC_THRESHOLD = 3.0;
     
     public static final Integer NUM_MIXTURES = 2;

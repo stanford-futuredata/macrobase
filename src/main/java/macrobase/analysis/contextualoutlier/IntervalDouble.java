@@ -12,6 +12,12 @@ public class IntervalDouble extends Interval {
         this.min = min;
         this.max = max;
     }
+    
+    public IntervalDouble(double min, double max) {
+        super(-1,"Dummy");
+        this.min = min;
+        this.max = max;
+    }
 
     public double getMin() {
         return min;

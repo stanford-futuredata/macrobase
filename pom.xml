@@ -14,6 +14,7 @@
     <dropwizard.version>0.9.1</dropwizard.version>
     <protostuff.version>1.0.9</protostuff.version>
   </properties>
+
 <build>
   <plugins>
     <plugin>
@@ -191,5 +192,6 @@
       <artifactId>JRI</artifactId>
       <version>0.9-7</version>
     </dependency>
+   
   </dependencies>
 </project>

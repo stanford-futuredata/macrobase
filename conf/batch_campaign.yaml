@@ -1,13 +1,13 @@
-macrobase.query.name: marketing
+macrobase.query.name: campaign_expenditures100000
 macrobase.pipeline.class: macrobase.analysis.pipeline.BasicContextualBatchedPipeline
-macrobase.loader.attributes: [sex, marital_status, age, education, occupation, time_live_in_sf_area, dual_income_if_married, persons_in_household, persons_in_household_under_18, householder_status, home_type, ethnic, language]
+macrobase.loader.attributes: [cmte_id, cand_id, cand_nm, contbr_nm, contbr_city, contbr_st, contbr_zip, contbr_employer, contbr_occupation, contb_receipt_amt, contb_receipt_dt, receipt_desc, memo_cd, memo_text, form_tp, file_num, tran_id, election_tp, attr0]
 macrobase.loader.targetLowMetrics: []
-macrobase.loader.targetHighMetrics: [income]
+macrobase.loader.targetHighMetrics: [contb_receipt_amt]
 
 macrobase.analysis.transformType: MAD
 
 macrobase.loader.db.user: x4chu
-macrobase.loader.db.baseQuery: SELECT * FROM marketing LIMIT 10000;
+macrobase.loader.db.baseQuery: SELECT * FROM campaign_expenditures ORDER BY id LIMIT 10000;
 
 macrobase.analysis.minSupport: 0.5000
 macrobase.analysis.minOIRatio: 3.0000
@@ -31,8 +31,8 @@ logging:
     "macrobase": TRACE
     
     
-macrobase.analysis.contextual.discreteAttributes: [income, sex, marital_status, age, education, occupation, time_live_in_sf_area, dual_income_if_married, persons_in_household, persons_in_household_under_18, householder_status, home_type, ethnic, language]
-macrobase.analysis.contextual.doubleAttributes: [income]
+macrobase.analysis.contextual.discreteAttributes: [cmte_id, cand_id, cand_nm, contbr_nm, contbr_city, contbr_st, contbr_zip, contbr_employer, contbr_occupation, contb_receipt_amt, contb_receipt_dt, receipt_desc, memo_cd, memo_text, form_tp, file_num, tran_id, election_tp, attr0]
+macrobase.analysis.contextual.doubleAttributes: []
 macrobase.analysis.contextual.denseContextTau: 0.0100
 macrobase.analysis.contextual.numIntervals: 10
 macrobase.analysis.contextual.outputFile: temp.txt
@@ -42,7 +42,7 @@ macrobase.analysis.contextual.pruning.density: true
 macrobase.analysis.contextual.pruning.triviality: True
 macrobase.analysis.contextual.pruning.subsumption: True
 
-macrobase.analysis.contextual.algorithm: 2
+macrobase.analysis.contextual.algorithm: 3
 macrobase.analysis.contextual.datadriven.clusteringAlgorithm: KMEANS
 macrobase.analysis.contextual.datadriven.threshold: 0.9000
 macrobase.analysis.contextual.datadriven.dbscan.epsilon: 5.0000
