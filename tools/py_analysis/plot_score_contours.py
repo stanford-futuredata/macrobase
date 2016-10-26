@@ -13,8 +13,8 @@ from common import set_ax_limits
 from algebra import get_ellipse_from_covariance
 from common import add_plot_limit_args
 from common import set_plot_limits
-from common import set_ax_limits
 from matplotlib import patches
+from helpers import makedirs_p
 from plot_distribution import _plot_hist2d
 
 SAVEFIG_INFER_VALUE = 'INFER_SAVEFIG_FILENAME'
@@ -147,6 +147,7 @@ def plot_score_contours(args):
     else:
       filename = args.savefig
     print 'saving figure to - ', filename
+    makedirs_p(os.path.dirname(filename))
     plt.savefig(filename, dpi=320)
   else:
     plt.show()

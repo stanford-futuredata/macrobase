@@ -42,7 +42,7 @@ SAVEFIG_INFER_VALUE = 'INFER_SAVEFIG_FILENAME'
 
 def parse_args():
   parser = argparse.ArgumentParser("""Example usage:
-    python script/run_experiment.py bench/conf/treekde-test.yaml
+    python tools/run_experiment.py tools/bench/experiments/3gaussians-ok.yaml
   """)
   parser.add_argument('experiment_yaml', type=argparse.FileType('r'))
   parser.add_argument('--remove-cached-data', action='store_true')
@@ -114,7 +114,7 @@ if __name__ == '__main__':
           experiment['synthetic_data'].split() +
           ['--outfile', data_file])
       print 'generating distribution with args:'
-      print('python script/generate_multimodal_distribution.py ' +
+      print('python tools/generate_multimodal_distribution.py ' +
             ' '.join(raw_args))
       generate_args = generator_parse_args(raw_args)
       generate_distribution(generate_args)
@@ -128,7 +128,7 @@ if __name__ == '__main__':
                          '--x-limits', '1', '25'])
       elif dimensions == '1D':
         raw_args.extend(['--histogram', 'XX'])
-      print ('python script/py_analysis/plot_distribution.py ' +
+      print ('python tools/py_analysis/plot_distribution.py ' +
              ' '.join(raw_args))
 
       plot_args = plot_dist_parse_args(raw_args)
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                                     config[SCORE_DUMP_FILE_CONFIG_PARAM]),
         '--title', construct_title(config, args, raw_args)]
       print 'running following plot command:'
-      print ('python script/py_analysis/plot_estimator.py ' +
+      print ('python tools/py_analysis/plot_estimator.py ' +
              ' '.join(script_args))
       estimator_args = plot_est_parse_args(script_args)
       try:
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         '--scored-grid', os.path.join('target', 'scores',
                                       config[DUMP_SCORE_GRID])]
       print 'running following plot command:'
-      print ('python script/py_analysis/plot_score_contours.py ' +
+      print ('python tools/py_analysis/plot_score_contours.py ' +
              ' '.join(script_args))
       contour_args = plot_contour_parse_args(script_args)
       try:
