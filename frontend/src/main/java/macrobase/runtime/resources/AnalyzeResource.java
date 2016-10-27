@@ -39,10 +39,6 @@ public class AnalyzeResource extends BaseResource {
         super(conf);
     }
 
-    private static Pipeline defaultPipeline() {
-        return new BasicBatchedPipeline();
-    }
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public AnalysisResponse getAnalysis(AnalysisRequest request) {
@@ -66,19 +62,15 @@ public class AnalyzeResource extends BaseResource {
                 conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER);
             }
 
-            Pipeline pipeline = defaultPipeline();
+            Class c = Class.forName(conf.getString(MacroBaseConf.PIPELINE_NAME, BasicBatchedPipeline.class.getName()));
+            Object ao = c.newInstance();
 
-            if (conf.isSet(MacroBaseConf.PIPELINE_NAME)) {
-                Class c = Class.forName(conf.getString(MacroBaseConf.PIPELINE_NAME));
-                Object ao = c.newInstance();
-
-                if (!(ao instanceof Pipeline)) {
-                    log.error("{} is not an instance of Pipeline! Exiting...", ao);
-                    response.errorMessage = "Found a not existing Pipeline name!";
-                    return response;
-                }
-                pipeline = (Pipeline) ao;
+            if (!(ao instanceof Pipeline)) {
+                log.error("{} is not an instance of Pipeline! Exiting...", ao);
+                response.errorMessage = "Requested pipeline of type "+c.getName()+ " is not a Pipeline";
+                return response;
             }
+            Pipeline pipeline = (Pipeline) ao;
 
             List<AnalysisResult> results = pipeline.initialize(conf).run();
 
