@@ -15,7 +15,11 @@
     }
 </style>
 
+<head>
+    <title>MacroBase Console</title>
+</head>
 
+<body>
 <div>
 
     <div class="container-fluid">
@@ -35,7 +39,7 @@
                 <div class="col-md-12">
                     <div class="alert alert-danger" style="word-wrap: break-word;">
                         <h4><strong>An error occurred while processing your request:</strong></h4>
-                        {{errorStr}}
+                        {{getError()}}
                         <br/>
 
                         <div style="margin-top: 1em">

@@ -7,6 +7,10 @@
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
 
+<head>
+    <title>MacroBase: Explore</title>
+</head>
+
 <body>
 
 
@@ -23,7 +27,7 @@
             <div class="col-md-12">
                 <div class="alert alert-danger" style="word-wrap: break-word;">
                     <h4><strong>An error occurred while processing your request:</strong></h4>
-                    {{errorStr}}
+                    {{getError()}}
                     <br/>
 
                     <div style="margin-top: 1em">
@@ -64,10 +68,10 @@
                     <div class="panel panel-default">
 
                         <div class="panel  panel-default">
-                            <div class="panel-heading">Plot</div>
+                            <div class="panel-heading" style="margin-bottom: 0px">Plot Individual Columns</div>
                         </div>
                         <div class="panel-body">
-                            <div id="plotArea" style="width:600px;height:250px;"></div>
+                            <div id="plotArea" ng-show="plotPoints.length" style="width:600px;height:250px;"></div>
 								<span ng-repeat="h in visibleRows[0].columnValues">
 										<button ng-model="button" ng-click="preparePlotData(h.column)"
                                                 ng-disabled="plotDataLoading">{{h.column}}
@@ -83,7 +87,7 @@
                             <div class="panel-heading">Hidden Columns (<span ng-click="hideAllColumns()">mark all</span>)
                                 (<span ng-click="clearHiddenColumns()">clear</span>)
                             </div>
-                            <div class="panel-body"><span ng-repeat="c in getHiddenColumns()"><span
+                            <div style="padding: 15px"><span ng-repeat="c in getHiddenColumns()"><span
                                     ng-click="showColumn(c)">{{c}}{{$last ? '' : ', '}}</span></span></div>
                         </div>
                         <div class="panel-heading">Matching Rows</div>
@@ -102,6 +106,27 @@
                                 </table>
                                 <a id="morerows" href="#morerows" ng-click="getRows()">more rows</a>
                             </div>
+                        </div>
+
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel  panel-default" style="margin-bottom: 0px">
+                            <div class="panel-heading">Generate SQL Query</div>
+                        </div>
+                        <div class="panel-body">
+                            <a id="gensql" href="#gensql" ng-show="!sqlString" ng-click="getSQL()">click to generate</a> <div ng-show="sqlString" class="ng-hide">{{sqlString}}</div>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default">
+
+                        <div class="panel  panel-default" style="margin-bottom: 0px">
+                            <div class="panel-heading">Fetch as CSV</div>
+                        </div>
+                        <div class="panel-body">
+                            <a id="gencsv" href="#gencsv" ng-show="!csvString" ng-click="getCSV()">click to fetch</a> <pre class="pre-scrollable" ng-show="csvString" class="ng-hide">{{csvString}}</pre>
+                            <div ng-show="csvString"><a id="downloadCSV" href="#downloadCSV" ng-click="saveCSV()">download</a></div>
                         </div>
                     </div>
                 </div>
