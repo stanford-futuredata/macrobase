@@ -8,6 +8,7 @@ import io.dropwizard.setup.Environment;
 import macrobase.conf.MacroBaseConf;
 import macrobase.runtime.command.MacroBasePipelineCommand;
 import macrobase.runtime.resources.AnalyzeResource;
+import macrobase.runtime.resources.FormattedRowSetResource;
 import macrobase.runtime.resources.RowSetResource;
 import macrobase.runtime.resources.MultipleRowSetResource;
 import macrobase.runtime.resources.SchemaResource;
@@ -35,9 +36,10 @@ public class MacroBaseServer extends Application<MacroBaseConf> {
     public void run(MacroBaseConf configuration,
                     Environment environment) throws Exception {
         configuration.loadSystemProperties();
+        environment.jersey().register(new AnalyzeResource(configuration));
         environment.jersey().register(new SchemaResource(configuration));
         environment.jersey().register(new RowSetResource(configuration));
-        environment.jersey().register(new AnalyzeResource(configuration));
+        environment.jersey().register(new FormattedRowSetResource(configuration));
         environment.jersey().register(new MultipleRowSetResource(configuration));
 
         environment.healthChecks().register("basic", new HealthCheck() {

@@ -110,13 +110,10 @@ public abstract class SQLIngester extends DataIngester {
         return new Schema(columns);
     }
 
-    public RowSet getRows(String baseQuery,
-                          Map<String, String> preds,
-                          int limit,
-                          int offset) throws SQLException {
-        initializeConnection();
-        // TODO handle time column here
-        Statement stmt = connection.createStatement();
+    public String getRowsSql(String baseQuery,
+                             Map<String, String> preds,
+                             int limit,
+                             int offset) {
         String sql = removeSqlJunk(removeLimit(baseQuery));
 
         if (preds.size() > 0) {
@@ -134,7 +131,18 @@ public abstract class SQLIngester extends DataIngester {
 
         sql += String.format(" LIMIT %d OFFSET %d", limit, offset);
 
-        ResultSet rs = stmt.executeQuery(sql);
+        return sql;
+    }
+
+    public RowSet getRows(String baseQuery,
+                          Map<String, String> preds,
+                          int limit,
+                          int offset) throws SQLException {
+        initializeConnection();
+        // TODO handle time column here
+        Statement stmt = connection.createStatement();
+
+        ResultSet rs = stmt.executeQuery(getRowsSql(baseQuery, preds, limit, offset));
 
         List<RowSet.Row> rows = Lists.newArrayList();
         while (rs.next()) {
