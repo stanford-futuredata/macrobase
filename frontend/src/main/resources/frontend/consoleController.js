@@ -880,6 +880,28 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
         });
     }
 
+    $scope.getCSVOutliers = function() {
+        var _items = angular.fromJson(explorerService.getItems())
+        if(_items == null) {
+            _items = []
+        }
+
+        $http.post("api/analyze/target",
+            {
+                    pgUrl: configService.getPostgresUrl(),
+                    baseQuery: configService.getBaseQuery(),
+                    columnValues: _items,
+                    attributes: configService.getAttributes(DEFAULT_CONFIG),
+                    highMetrics: configService.getHighMetrics(DEFAULT_CONFIG),
+                    lowMetrics: configService.getLowMetrics(DEFAULT_CONFIG)
+            }
+        )
+        .then(function(response) {
+            configService.handleError(response.data.errorMessage);
+            $scope.csvString = response.data.response;
+        });
+    }
+
     $scope.saveCSV = function() {
         var filename="records.csv";
         var mimeType = 'text/plain';

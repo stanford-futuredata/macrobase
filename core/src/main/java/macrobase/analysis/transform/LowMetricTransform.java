@@ -22,7 +22,9 @@ public class LowMetricTransform extends FeatureTransform {
         List<String> metrics = conf.getStringList(MacroBaseConf.METRICS);
 
         for(String name : transformNames) {
-            toTransform.add(metrics.indexOf(name));
+            int idx = metrics.indexOf(name);
+            if(idx >= 0)
+                toTransform.add(idx);
         }
     }
 

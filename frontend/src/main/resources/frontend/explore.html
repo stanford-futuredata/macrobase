@@ -122,10 +122,12 @@
                     <div class="panel panel-default">
 
                         <div class="panel  panel-default" style="margin-bottom: 0px">
-                            <div class="panel-heading">Fetch as CSV</div>
+                            <div class="panel-heading">Fetch rows as CSV</div>
                         </div>
                         <div class="panel-body">
-                            <a id="gencsv" href="#gencsv" ng-show="!csvString" ng-click="getCSV()">click to fetch</a> <pre class="pre-scrollable" ng-show="csvString" class="ng-hide">{{csvString}}</pre>
+                            <a id="gencsv" href="#gencsv" ng-show="!csvString" ng-click="getCSV()">click to fetch all rows</a><br />
+                            <a id="gencsv" href="#gencsv" ng-show="!csvString" ng-click="getCSVOutliers()">click to fetch outlying rows</a>
+                            <pre class="pre-scrollable" ng-show="csvString" class="ng-hide">{{csvString}}</pre>
                             <div ng-show="csvString"><a id="downloadCSV" href="#downloadCSV" ng-click="saveCSV()">download</a></div>
                         </div>
                     </div>
