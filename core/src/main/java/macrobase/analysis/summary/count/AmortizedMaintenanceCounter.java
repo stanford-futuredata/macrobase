@@ -32,7 +32,7 @@ import java.util.Map;
      4.) discard lower items, updating min if necessary
 
  */
-public class AmortizedMaintenanceCounter extends ApproximateCount {
+public class AmortizedMaintenanceCounter implements ApproximateCount {
     private static final Logger log = LoggerFactory.getLogger(AmortizedMaintenanceCounter.class);
 
     private double decayFactor = 1;

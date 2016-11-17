@@ -7,7 +7,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SpaceSavingList extends ApproximateCount {
+public class SpaceSavingList implements ApproximateCount {
     private static final Logger log = LoggerFactory.getLogger(SpaceSavingList.class);
 
     Map<Integer, CounterToken> digest = new HashMap<>();

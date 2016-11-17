@@ -2,16 +2,16 @@ package macrobase.analysis.stats.kernel;
 
 import org.apache.commons.math3.linear.RealVector;
 
-public abstract class Kernel {
-    public abstract double density(RealVector u);
+public interface Kernel {
+    double density(RealVector u);
 
-    public abstract double norm();
+    double norm();
 
-    public abstract double norm1D();
+    double norm1D();
 
-    public abstract double secondMoment();
+    double secondMoment();
 
-    public abstract double secondMoment1D();
+    double secondMoment1D();
 
-    public abstract double effectiveSupportWidth1D();
+    double effectiveSupportWidth1D();
 }

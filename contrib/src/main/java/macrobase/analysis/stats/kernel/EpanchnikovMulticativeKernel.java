@@ -2,7 +2,7 @@ package macrobase.analysis.stats.kernel;
 
 import org.apache.commons.math3.linear.RealVector;
 
-public class EpanchnikovMulticativeKernel extends Kernel {
+public class EpanchnikovMulticativeKernel implements Kernel {
     private int dimensions;
     private double norm;
     private double secondMoment;
