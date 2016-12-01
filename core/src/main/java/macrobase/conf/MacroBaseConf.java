@@ -132,6 +132,7 @@ public class MacroBaseConf extends Configuration {
         MAD_OR_MCD,
         MAD,
         MCD,
+        RCOV,
         ZSCORE,
         MOVING_AVERAGE
     }
@@ -193,6 +194,9 @@ public class MacroBaseConf extends Configuration {
                 log.info("Using MCD transform.");
                 MinCovDet ret = new MinCovDet(this);
                 return ret;
+            case RCOV:
+                log.info("Using RCOV transform.");
+                return new RobustEmpiricalCovariance(this);
             case ZSCORE:
                 log.info("Using ZScore transform.");
                 return new ZScore(this);

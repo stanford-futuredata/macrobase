@@ -9,6 +9,7 @@ import java.util.List;
 public class Covariance {
     public static RealMatrix getCovariance(List<Datum> data) {
         int rank = data.get(0).metrics().getDimension();
+
         RealMatrix ret = new Array2DRowRealMatrix(data.size(), rank);
         int index = 0;
         for (Datum d : data) {
