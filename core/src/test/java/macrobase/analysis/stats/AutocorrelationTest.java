@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ACFTest {
+public class AutocorrelationTest {
 
     @Test
     public void testACF() throws Exception {
@@ -32,7 +32,7 @@ public class ACFTest {
             data.add(d);
         }
 
-        ACF acf = new ACF(10, 0);
+        Autocorrelation acf = new Autocorrelation(10, 0);
         acf.evaluate(data);
         double[] expected_return = {0, -0.999, 0.998, -0.997, 0.996, -0.995, 0.994, -0.993, 0.992, -0.991};
         assertArrayEquals(expected_return, acf.correlations, 1e-5);
@@ -41,14 +41,14 @@ public class ACFTest {
     @Test
     public void testFindPeak() throws Exception {
         double[] test_correlations = {0, 0.9, 0.6, 0.7, 0.8, 0.5, 0, 0.1, 0.2, -0.5, -0.1, 0, -0.5, 0.8, 0, 0.8, 0.7, 0.6, 0.5, 0.4, 0.5};
-        ACF acf = new ACF(test_correlations.length, 0);
+        Autocorrelation acf = new Autocorrelation(test_correlations.length, 0);
         acf.correlations = new double[test_correlations.length];
         for (int i = 0; i < test_correlations.length; i ++) { acf.correlations[i] = test_correlations[i]; }
-        acf.findPeaks();
+        List<Integer> peaks = acf.findPeaks();
         int[] expected_peaks = {4, 13, 15};
-        assertEquals(expected_peaks.length, acf.peaks.size());
-        for (int i = 0; i < acf.peaks.size(); i ++) {
-            assertTrue(expected_peaks[i] == acf.peaks.get(i));
+        assertEquals(expected_peaks.length, peaks.size());
+        for (int i = 0; i < peaks.size(); i ++) {
+            assertTrue(expected_peaks[i] == peaks.get(i));
         }
     }
 

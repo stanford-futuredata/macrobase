@@ -15,28 +15,30 @@ import java.util.List;
  *    S(f) = F_R(f)F_R*(f)
  *    R(t) = IFFT(S(f))
  * */
-public class ACF {
-    public static double ACF_THRESH = 0.2;  // Minimum correlation threshold
-    public int maxLag;                      // Maximum length of autocorrelation to calculate
-    public List<Integer> peaks;             // Indices of autocorrelation peaks
+public class Autocorrelation {
     public double[] correlations;           // Autocorrelation
     public double maxACF = 0;               // Max autocorrelation peak
 
     private FastFourierTransformer fftTran = new FastFourierTransformer(DftNormalization.STANDARD);
+    private double ACF_THRESH = 0.2;  // Minimum correlation threshold
     private int metricIdx = 1;
+    private int maxLag;                      // Maximum length of autocorrelation to calculate
 
-    public ACF(int maxLag, int metricIdx) {
+
+    public Autocorrelation(int maxLag, int metricIdx) {
         this.maxLag = maxLag;
         this.metricIdx = metricIdx;
     }
 
+    public void setMaxLag(int lag) { maxLag = lag; }
+
+    public void setCorrelationThreshold(double thresh) { ACF_THRESH = thresh; }
+
     private double mean(double[] metrics) {
         int n = metrics.length;
         double m = 0;
-        for (int i = 0; i < n; i ++) {
-            m += metrics[i] / n;
-        }
-        return m;
+        for (int i = 0; i < n; i ++) { m += metrics[i]; }
+        return m / n;
     }
 
     private double[] stripDatum(List<Datum> datum) {
@@ -78,8 +80,8 @@ public class ACF {
     }
 
     /* Find autocorrelation peaks */
-    public void findPeaks() {
-        peaks = new ArrayList<>();
+    public List<Integer> findPeaks() {
+        List<Integer> peaks = new ArrayList<>();
         int max = 1;
         maxACF = 0;
         if (correlations.length > 1) {
@@ -99,5 +101,6 @@ public class ACF {
                 }
             }
         }
+        return peaks;
     }
 }

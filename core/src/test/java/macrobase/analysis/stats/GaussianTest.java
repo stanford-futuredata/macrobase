@@ -43,7 +43,7 @@ public class GaussianTest {
         for (int i = 0; i < k; i++) {
             assertArrayEquals(
                     mvNormal.getCovariances().getRow(i),
-                    fitted.getCovariance().getRow(i), 0.01);
+                    fitted.getCovariance().getRow(i), 0.05);
         }
     }
 
