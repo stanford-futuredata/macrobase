@@ -48,8 +48,8 @@ public class Datum {
         this.metrics = metrics;
     }
     
-    public int getTime(Integer timeColumn) {
-        return (int) metrics.getEntry(timeColumn);
+    public long getTime(Integer timeColumn) {
+        return (long) metrics.getEntry(timeColumn);
     }
 
     public List<Integer> attributes() {

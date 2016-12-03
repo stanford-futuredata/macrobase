@@ -32,7 +32,7 @@ public class MacroBaseDefaults {
     
     // timeseries defaults
     public static final Integer TUPLE_WINDOW = 100;
-    public static final Integer WINDOW_SIZE = 86400000; // in milliseconds
+    public static final Integer TIME_WINDOW = 86400000; // in milliseconds
 
     // MCD defaults
     public static final Double MCD_ALPHA = 0.5;
