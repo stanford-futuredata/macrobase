@@ -111,6 +111,8 @@ public class MacroBaseConfTest {
         assertArrayEquals(stringList.toArray(), conf.getStringList("this.is.a.stringList").toArray());
         assertArrayEquals(stringList.toArray(), conf.getStringList("this.is.a.stringList.without.spaces").toArray());
         assertArrayEquals(stringList.toArray(), conf.getStringList("this.is.a.stringList.with.mixed.spaces").toArray());
+
+        assertEquals(conf.getMap("namespace.b").get("inner"), "3");
     }
 
     @Test
