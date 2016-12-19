@@ -5,7 +5,7 @@ macrobase.loader.attributes: [device_id, firmware_version]
 macrobase.loader.metrics: [power_drain]
 macrobase.analysis.metrics.lowTransform: []
 
-macrobase.analysis.transformType: TKDE
+macrobase.analysis.transformType: MAD_OR_MCD
 
 macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
 
