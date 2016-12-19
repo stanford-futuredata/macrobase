@@ -17,21 +17,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
 
-public class TreeKDETest {
+public class OldTreeKDETest {
 
     @Test
     public void bimodalPipeline1DTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(TreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
-                .set(TreeKDE.KDE_BANDWIDTH_ALGORITHM, "OVERSMOOTHED")
+                .set(OldTreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
+                .set(OldTreeKDE.KDE_BANDWIDTH_ALGORITHM, "OVERSMOOTHED")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/verySimple.csv")
                 .set(MacroBaseConf.METRICS, "x")
                 .set(MacroBaseConf.ATTRIBUTES, "")
-                .set(TreeKDE.KDTREE_LEAF_CAPACITY, 2);
+                .set(OldTreeKDE.KDTREE_LEAF_CAPACITY, 2);
 
         List<Datum> data = Drainer.drainIngest(conf);
-        TreeKDE kde = new TreeKDE(conf);
+        OldTreeKDE kde = new OldTreeKDE(conf);
 
         assertEquals(15, data.size());
         kde.train(data);
@@ -46,9 +46,9 @@ public class TreeKDETest {
         double accuracy = 0.001;
         MacroBaseConf conf = new MacroBaseConf()
                 .set(MacroBaseConf.TRANSFORM_TYPE, "TREE_KDE")
-                .set(TreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
-                .set(TreeKDE.KDE_BANDWIDTH_ALGORITHM, "NORMAL_SCALE")
-                .set(TreeKDE.TREE_KDE_ACCURACY, String.format("%f", accuracy))
+                .set(OldTreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
+                .set(OldTreeKDE.KDE_BANDWIDTH_ALGORITHM, "NORMAL_SCALE")
+                .set(OldTreeKDE.TREE_KDE_ACCURACY, String.format("%f", accuracy))
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
@@ -58,7 +58,7 @@ public class TreeKDETest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(100000, data.size());
 
-        TreeKDE treekde = new TreeKDE(conf);
+        OldTreeKDE treekde = new OldTreeKDE(conf);
         treekde.setApproximateLeaves(false);
         treekde.train(data);
 
@@ -82,8 +82,8 @@ public class TreeKDETest {
     @Test
     public void standardNormal2DTest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(TreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
-                .set(TreeKDE.KDE_BANDWIDTH_ALGORITHM, "NORMAL_SCALE")
+                .set(OldTreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
+                .set(OldTreeKDE.KDE_BANDWIDTH_ALGORITHM, "NORMAL_SCALE")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.GZIP)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/2d_standard_normal_100k.csv.gz")
@@ -92,7 +92,7 @@ public class TreeKDETest {
 
         List<Datum> data = Drainer.drainIngest(conf);
 
-        TreeKDE kde = new TreeKDE(conf);
+        OldTreeKDE kde = new OldTreeKDE(conf);
         kde.setApproximateLeaves(false);
 
         assertEquals(100000, data.size());
@@ -134,9 +134,9 @@ public class TreeKDETest {
     @Test
     public void simpleCompareWithKDETest() throws Exception {
         MacroBaseConf conf = new MacroBaseConf()
-                .set(TreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
-                .set(TreeKDE.KDE_BANDWIDTH_ALGORITHM, "NORMAL_SCALE")
-                .set(TreeKDE.TREE_KDE_ACCURACY, "1e-6")
+                .set(OldTreeKDE.KDE_KERNEL_TYPE, "EPANECHNIKOV_MULTIPLICATIVE")
+                .set(OldTreeKDE.KDE_BANDWIDTH_ALGORITHM, "NORMAL_SCALE")
+                .set(OldTreeKDE.TREE_KDE_ACCURACY, "1e-6")
                 .set(MacroBaseConf.DATA_LOADER_TYPE, "CSV_LOADER")
                 .set(MacroBaseConf.CSV_COMPRESSION, CSVIngester.Compression.UNCOMPRESSED)
                 .set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/20points.csv")
@@ -146,7 +146,7 @@ public class TreeKDETest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(20, data.size());
 
-        TreeKDE treekde = new TreeKDE(conf);
+        OldTreeKDE treekde = new OldTreeKDE(conf);
         treekde.setApproximateLeaves(false);
         treekde.train(data);
 

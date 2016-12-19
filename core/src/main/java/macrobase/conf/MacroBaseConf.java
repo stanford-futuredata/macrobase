@@ -134,7 +134,8 @@ public class MacroBaseConf extends Configuration {
         MCD,
         RCOV,
         ZSCORE,
-        MOVING_AVERAGE
+        MOVING_AVERAGE,
+        TKDE
     }
 
     public Random getRandom() {
@@ -283,6 +284,18 @@ public class MacroBaseConf extends Configuration {
             properties.put(keyValue[0], keyValue[1]);
         }
         return properties;
+    }
+
+    public String getSubConfString(String key) {
+        if (!_conf.containsKey(key)) {
+            return "";
+        }
+        Map<String, String> map = getMap(key);
+        return map.entrySet()
+                .stream()
+                .sorted((a, b) -> a.getKey().compareTo(b.getKey()))
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .collect(Collectors.joining("\n"));
     }
 
     public List<Double> getDoubleList(String key) throws ConfigurationException {

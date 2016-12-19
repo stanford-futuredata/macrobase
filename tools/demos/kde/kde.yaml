@@ -1,0 +1,40 @@
+macrobase.query.name: sensor_kde
+macrobase.pipeline.class: macrobase.analysis.pipeline.ExtendedBatchPipeline
+
+macrobase.analysis.transformType: TKDE
+
+macrobase.loader.attributes: [device_id, firmware_version]
+macrobase.loader.metrics: [power_drain]
+macrobase.analysis.metrics.lowTransform: []
+
+macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
+macrobase.loader.db.cacheDirectory: sql_cache
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+logging:
+  level: DEBUG
+
+tkdeConf:
+  percentile: 0.01
+
+  qSampleSize: 20000
+  qCutoffMultiplier: 1.5
+  qTolMultiplier: 0.01
+
+  kernel: gaussian
+  bwMultiplier: 1.0
+  ignoreSelfScoring: true
+
+  calculateCutoffs: true
+
+  leafSize: 20
+  splitByWidth: true
+
+  useGrid: true
+
