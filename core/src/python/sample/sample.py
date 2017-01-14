@@ -11,6 +11,7 @@ from macrobase.feature import LambdaTransform
 p = Pipeline()
 data = pd.DataFrame([1,2,4,3,123,124,12,5109120398,12923012,123,123])
 
-result = p.add(LambdaTransform(lambda x: x+2)).then(BatchMAD()).process(data)
+result = p.add(LambdaTransform(lambda x: x+2, output=['transform'])) \
+          .then(BatchMAD(target=['transform'])).process(data)
 print result
 
