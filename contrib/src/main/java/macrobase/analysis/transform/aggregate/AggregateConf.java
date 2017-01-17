@@ -13,7 +13,8 @@ public class AggregateConf {
     public enum AggregateType {
         COUNT,
         SUM,
-        MAX
+        MAX,
+        AVG
     }
 
     public static AggregateType getAggregateType(MacroBaseConf conf) throws ConfigurationException {
@@ -30,6 +31,9 @@ public class AggregateConf {
             case MAX:
                 log.info("Using MAX aggregation.");
                 return new BatchWindowMax(conf);
+            case AVG:
+                log.info("Using AVG aggregation.");
+                return new BatchWindowAvg(conf);
             default:
                 throw new RuntimeException("Unhandled batch aggreation type!" + aggregateType);
         }

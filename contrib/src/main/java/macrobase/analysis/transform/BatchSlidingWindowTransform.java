@@ -13,12 +13,12 @@ import java.util.List;
 public class BatchSlidingWindowTransform extends SlidingWindowTransform {
     private BatchWindowAggregate windowAggregate;
 
-    public BatchSlidingWindowTransform(MacroBaseConf conf, int slideSize) throws ConfigurationException {
+    public BatchSlidingWindowTransform(MacroBaseConf conf, long slideSize) throws ConfigurationException {
         AggregateConf.AggregateType aggregateType = AggregateConf.getAggregateType(conf);
         this.windowAggregate = AggregateConf.constructBatchAggregate(conf, aggregateType);
         this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
         this.slideSize = slideSize;
-        this.windowSize = conf.getInt(MacroBaseConf.WINDOW_SIZE, MacroBaseDefaults.WINDOW_SIZE);
+        this.windowSize = conf.getInt(MacroBaseConf.TIME_WINDOW, MacroBaseDefaults.TIME_WINDOW);
     }
 
     private void slideWindow() {

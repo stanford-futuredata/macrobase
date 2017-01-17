@@ -29,7 +29,7 @@ public class BatchSlidingWindowTransformTest {
 
     @Test
     public void testBasicMaxAggregate() throws Exception {
-        conf.set(MacroBaseConf.WINDOW_SIZE, 10);
+        conf.set(MacroBaseConf.TIME_WINDOW, 10);
         SlidingWindowTransform sw = new BatchSlidingWindowTransform(conf, 5);
         sw.initialize();
         sw.consume(data.subList(0, 20));
@@ -80,12 +80,12 @@ public class BatchSlidingWindowTransformTest {
     @Test
     public void testStreaming() throws Exception {
         // window = 35, slide = 25, MAX
-        conf.set(MacroBaseConf.WINDOW_SIZE, 35);
+        conf.set(MacroBaseConf.TIME_WINDOW, 35);
         // Test two different breakdowns of streams should get the same result
         testContinuousStreams(40, 85);
         testContinuousStreams(13, 57);
         // Test data streams that have gaps in between
-        conf.set(MacroBaseConf.WINDOW_SIZE, 30);
+        conf.set(MacroBaseConf.TIME_WINDOW, 30);
         testDiscontinuousStreams();
     }
 

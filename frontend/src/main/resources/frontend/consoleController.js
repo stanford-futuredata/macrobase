@@ -50,15 +50,17 @@ myApp.service('configService', function($localStorage) {
     function hasAnalysis() { return hasAnalysisForConfig }
     function analysisReceived() { hasAnalysisForConfig = true; }
 
+    var errorStr = "";
+
     function handleError(str) {
-        $localStorage.errorStr = str;
+        errorStr = str;
         if (str) {
             console.log(str);
         }
     }
 
     function hasError() {
-        if($localStorage.errorStr) {
+        if(errorStr && errorStr.length > 0) {
             return true;
         }
 
@@ -66,24 +68,24 @@ myApp.service('configService', function($localStorage) {
     }
 
     function getError() {
-        return $localStorage.errorStr;
+        return errorStr;
     }
 
   function reset()
    {
-                hasAnalysisForConfig = false
-            $localStorage.$reset(defaults)
+        hasAnalysisForConfig = false
+        $localStorage.$reset(defaults)
    }
 
 
    function resetSchema() {
        reset();
-     }
+   }
 
-        function clearSchema() {
-         hasAnalysisForConfig = false
-          $localStorage.selectedTargets = {}
-          }
+   function clearSchema() {
+       hasAnalysisForConfig = false
+       $localStorage.selectedTargets = {}
+   }
 
 function markForBasicQuery() {
     $localStorage.markForBasicQuery = true
@@ -104,7 +106,7 @@ function unmarkForBasicQuery() {
 
   function setBaseQuery(q) { $localStorage.baseQuery = q }
 
-    function getBaseQuery() { return $localStorage.baseQuery }
+  function getBaseQuery() { return $localStorage.baseQuery }
 
 
   function addConfigIfNeeded(name, listname) {
@@ -300,6 +302,11 @@ myApp.controller('selectorController', ['$scope', 'configService', function($sco
 
 myApp.controller('errorController', ['$scope', 'configService', function($scope, configService) {
     $scope.errorStr = configService.getError();
+
+    $scope.getError = function () {
+        return configService.getError();
+    }
+
     $scope.hasError = function() { return configService.hasError(); }
     }]);
 
@@ -776,8 +783,7 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
     function updateVisibleData () {
 
         $scope.hasItemsets = function() {
-            console.log(explorerService.getItems())
-                return (explorerService.getItems() != "null")
+            return (explorerService.getItems() != "null")
         }
 
         $scope.visibleRows = angular.copy($scope.exploreRows);
@@ -830,6 +836,60 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 
     var rowNo = 0
 
+    $scope.getSQL = function() {
+    	var _items = angular.fromJson(explorerService.getItems())
+    	if(_items == null) {
+    	    _items = []
+    	}
+
+        $http.post("api/rows/fmt",
+            {
+                    pgUrl: configService.getPostgresUrl(),
+                    baseQuery: configService.getBaseQuery(),
+                    columnValues: _items,
+                    limit: 100000000,
+                    offset: 0,
+                    returnType: "SQL"
+            }
+        )
+        .then(function(response) {
+            configService.handleError(response.data.errorMessage);
+            $scope.sqlString = response.data.response;
+        });
+    }
+
+    $scope.getCSV = function() {
+    	var _items = angular.fromJson(explorerService.getItems())
+    	if(_items == null) {
+    	    _items = []
+    	}
+
+        $http.post("api/rows/fmt",
+            {
+                    pgUrl: configService.getPostgresUrl(),
+                    baseQuery: configService.getBaseQuery(),
+                    columnValues: _items,
+                    limit: 100000000,
+                    offset: 0,
+                    returnType: "CSV"
+            }
+        )
+        .then(function(response) {
+            configService.handleError(response.data.errorMessage);
+            $scope.csvString = response.data.response;
+        });
+    }
+
+    $scope.saveCSV = function() {
+        var filename="records.csv";
+        var mimeType = 'text/plain';
+
+        var link = document.createElement('a');
+        link.setAttribute('download', filename);
+        link.setAttribute('href', 'data:' + mimeType  +  ';charset=utf-8,' + encodeURIComponent($scope.csvString));
+        link.click();
+     }
+
     $scope.getRows = function() {
 
 	configService.unmarkForBasicQuery()
@@ -838,7 +898,6 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 	if(_items == null) {
 	    _items = []
 	}
-
 
 	$http.post("api/rows",
 	    {
@@ -853,10 +912,12 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
 	    .then(function(response) {
 	        $scope.headers = explorerService.getItems()
             configService.handleError(response.data.errorMessage);
-	        $scope.exploreRows = $scope.exploreRows.concat(response.data.rowSet.rows)
-	        $scope.visibleRows = angular.copy($scope.exploreRows)
-	        rowNo += 10
-	        updateVisibleData()
+            if(response.data.rowSet) {
+                $scope.exploreRows = $scope.exploreRows.concat(response.data.rowSet.rows)
+                $scope.visibleRows = angular.copy($scope.exploreRows)
+                rowNo += 10
+                updateVisibleData()
+            }
 	    });
     }
 
@@ -951,3 +1012,4 @@ myApp.controller('exploreController', ['$scope', '$http', 'configService', 'expl
             });
     }
 }]);
+

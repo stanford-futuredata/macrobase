@@ -48,6 +48,7 @@ public class RowSetResource extends BaseResource {
 
         try {
             conf.set(MacroBaseConf.DB_URL, request.pgUrl);
+            conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
 
             HashMap<String, String> preds = new HashMap<>();
             request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));

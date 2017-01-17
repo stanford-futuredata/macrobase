@@ -2,15 +2,18 @@ package macrobase.runtime.resources;
 
 import macrobase.MacroBase;
 import macrobase.analysis.pipeline.BasicBatchedPipeline;
-import macrobase.conf.MacroBaseConf;
+import macrobase.analysis.pipeline.Pipeline;
 import macrobase.analysis.result.AnalysisResult;
+import macrobase.conf.MacroBaseConf;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,12 +57,22 @@ public class AnalyzeResource extends BaseResource {
             conf.set(MacroBaseConf.USE_PERCENTILE, true);
 
             // temp hack to enable CSV loading
-            if(request.baseQuery.contains("csv://")) {
+            if (request.baseQuery.contains("csv://")) {
                 conf.set(MacroBaseConf.CSV_INPUT_FILE, request.baseQuery.replace("csv://", ""));
                 conf.set(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseConf.DataIngesterType.CSV_LOADER);
             }
 
-            List<AnalysisResult> results = new BasicBatchedPipeline().initialize(conf).run();
+            Class c = Class.forName(conf.getString(MacroBaseConf.PIPELINE_NAME, BasicBatchedPipeline.class.getName()));
+            Object ao = c.newInstance();
+
+            if (!(ao instanceof Pipeline)) {
+                log.error("{} is not an instance of Pipeline! Exiting...", ao);
+                response.errorMessage = "Requested pipeline of type "+c.getName()+ " is not a Pipeline";
+                return response;
+            }
+            Pipeline pipeline = (Pipeline) ao;
+
+            List<AnalysisResult> results = pipeline.initialize(conf).run();
 
             for (AnalysisResult result : results) {
                 if (result.getItemSets().size() > 1000) {

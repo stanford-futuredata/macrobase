@@ -1,0 +1,20 @@
+macrobase.query.name: batchQuery
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicBatchedPipeline
+
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.csv.file: target/mv_gaussian_noise.csv
+macrobase.loader.attributes: [class]
+macrobase.loader.metrics: [m1,m2]
+
+macrobase.analysis.transformType: MAD_OR_MCD
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": INFO

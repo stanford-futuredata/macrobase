@@ -8,14 +8,14 @@ import java.util.List;
 
 public abstract class SlidingWindowTransform extends FeatureTransform {
     protected int windowSize;
-    protected int slideSize;
+    protected long slideSize;
     protected int timeColumn;
-    protected int windowStart = -1;
+    protected long windowStart = -1;
 
     protected MBStream<Datum> output = new MBStream<>();
     protected List<Datum> currWindow = new ArrayList<>();
 
-    protected boolean datumInRange(Datum d, int start, int size) {
+    protected boolean datumInRange(Datum d, long start, int size) {
         return d.getTime(timeColumn) - start < size;
     }
 }

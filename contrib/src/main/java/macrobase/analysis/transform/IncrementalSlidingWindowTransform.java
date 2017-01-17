@@ -15,12 +15,12 @@ public class IncrementalSlidingWindowTransform extends SlidingWindowTransform {
     private List<Datum> newSlide = new ArrayList<>();
     private IncrementalWindowAggregate windowAggregate;
 
-    public IncrementalSlidingWindowTransform(MacroBaseConf conf, int slideSize) throws ConfigurationException {
+    public IncrementalSlidingWindowTransform(MacroBaseConf conf, long slideSize) throws ConfigurationException {
         AggregateConf.AggregateType aggregateType = AggregateConf.getAggregateType(conf);
         this.windowAggregate = AggregateConf.constructIncrementalAggregate(conf, aggregateType);
         this.timeColumn = conf.getInt(MacroBaseConf.TIME_COLUMN, MacroBaseDefaults.TIME_COLUMN);
         this.slideSize = slideSize;
-        this.windowSize = conf.getInt(MacroBaseConf.WINDOW_SIZE, MacroBaseDefaults.WINDOW_SIZE);
+        this.windowSize = conf.getInt(MacroBaseConf.TIME_WINDOW, MacroBaseDefaults.TIME_WINDOW);
     }
 
     private List<Datum> slideWindow() {

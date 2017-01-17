@@ -19,9 +19,9 @@ public class MovingAverage extends TimeSeriesScore {
 
     private static class DatumWithInfo {
         private Datum datum;
-        private int weight;
+        private long weight;
 
-        public DatumWithInfo(Datum datum, int weight) {
+        public DatumWithInfo(Datum datum, long weight) {
             this.datum = datum;
             this.weight = weight;
         }
@@ -30,7 +30,7 @@ public class MovingAverage extends TimeSeriesScore {
             return datum;
         }
 
-        public int getWeight() {
+        public long getWeight() {
             return weight;
         }
     }
@@ -46,7 +46,7 @@ public class MovingAverage extends TimeSeriesScore {
             // until we have the second one to actually process it.
             window.add(new DatumWithInfo(newDatum, 0));
         } else {
-            int weight = newDatum.getTime(timeColumn) - getLatestDatum().getTime(timeColumn);
+            long weight = newDatum.getTime(timeColumn) - getLatestDatum().getTime(timeColumn);
             if (window.size() == 1) {
                 windowSum = new ArrayRealVector(newDatum.metrics()
                         .getDimension());
@@ -60,7 +60,7 @@ public class MovingAverage extends TimeSeriesScore {
         }
     }
 
-    private void addDatumWithWeight(Datum d, int weight) {
+    private void addDatumWithWeight(Datum d, long weight) {
         windowSum = windowSum.add(d.metrics().mapMultiply(weight));
         weightTotal += weight;
         window.add(new DatumWithInfo(d, weight));
@@ -73,7 +73,7 @@ public class MovingAverage extends TimeSeriesScore {
     @Override
     public void removeLastFromWindow() {
         DatumWithInfo head = window.remove();
-        int oldWeight = head.getWeight();
+        long oldWeight = head.getWeight();
         weightTotal -= oldWeight;
         windowSum = windowSum.subtract(head.getDatum().metrics()
                 .mapMultiply(oldWeight));

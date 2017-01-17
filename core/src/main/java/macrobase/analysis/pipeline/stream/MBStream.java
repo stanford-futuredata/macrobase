@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class MBStream<T> {
-    private List<T> output;
+    protected List<T> output;
 
     public void add(T record) { output.add(record); }
 
