@@ -1,0 +1,19 @@
+*****************************
+Done Inverse Contextual Outlier Detection Print Stats: numSuspiciousTuples 1
+Done Inverse Contextual Outlier Detection Print Stats: smallestTime 390
+Done Inverse Contextual Outlier Detection Print Stats: largestTime 11497
+Done Inverse Contextual Outlier Detection Print Stats: averageTime 2114.226
+Done Inverse Contextual Outlier Detection Print Stats: timeBuildLattice 0.023
+Done InverseContextual Outlier Detection Print Stats: timeDetectContextualOutliers 0.601
+Done InverseContextual Outlier Detection Print Stats: timeMADNoOutliersContainedOutliersPruned 0.0
+Done InverseContextual Outlier Detection Print Stats: numDensityPruning 0.0
+Done InverseContextual Outlier Detection Print Stats: numTrivialityPruning 0.0
+Done InverseContextual Outlier Detection Print Stats: numContextContainedInOutliersPruning 0.0
+Done InverseContextual Outlier Detection Print Stats: numMadNoOutliers 0.0
+Done InverseContextual Outlier Detection Print Stats: numMadContainedOutliers 0.0
+Done InverseContextual Outlier Detection Print Stats: numContextsGenerated 0.001
+Done InverseContextual Outlier Detection Print Stats: numContextsGeneratedWithOutliers 0.001
+Done InverseContextual Outlier Detection Print Stats: numContextsGeneratedWithOutOutliers 0.0
+Done InverseContextual Outlier Detection Print Stats: numContextsGeneratedWithMaximalOutliers 0.001
+Done InverseContextual Outlier Detection Print Stats: numInversePruningNoInputOutliers 0.0
+Done InverseContextual Outlier Detection Print Stats: numInversePruningInputOutliersContained 0.0

@@ -1,13 +1,13 @@
 [
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents ORDER BY id LIMIT 100000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM uk_road_accidents ORDER BY id LIMIT 1000000;",
     "isBatchJob": true,
-    "macrobase.loader.attributes": ["accident_index","location_easting_osgr","location_northing_osgr","longitude","latitude","police_force","accident_severity","number_of_vehicles","number_of_casualties","date","day_of_week","time","local_authority_district","local_authority_highway","n_1st_road_class","n_1st_road_number","road_type","speed_limit","junction_detail","junction_control","n_2nd_road_class","n_2nd_road_number","pedestrian_crossinghuman_control","pedestrian_crossingphysical_facilities","light_conditions","weather_conditions","road_surface_conditions","special_conditions_at_site","carriageway_hazards","urban_or_rural_area","did_police_officer_attend_scene_of_accident","lsoa_of_accident_location"],
-    "macrobase.query.name": "uk_road_accidents100000",
-    "macrobase.loader.targetHighMetrics": ["speed_limit"],
+    "macrobase.loader.attributes": [],
+    "macrobase.query.name": "uk_road_accidents1000000",
+    "macrobase.loader.targetHighMetrics": ["accident_severity","number_of_vehicles","number_of_casualties","speed_limit"],
     
-    "macrobase.analysis.contextual.discreteAttributes":["accident_index","location_easting_osgr","location_northing_osgr","longitude","latitude","police_force","accident_severity","number_of_vehicles","number_of_casualties","date","day_of_week","time","local_authority_district","local_authority_highway","n_1st_road_class","n_1st_road_number","road_type","speed_limit","junction_detail","junction_control","n_2nd_road_class","n_2nd_road_number","pedestrian_crossinghuman_control","pedestrian_crossingphysical_facilities","light_conditions","weather_conditions","road_surface_conditions","special_conditions_at_site","carriageway_hazards","urban_or_rural_area","did_police_officer_attend_scene_of_accident","lsoa_of_accident_location"],
-    "macrobase.analysis.contextual.doubleAttributes": []
+    "macrobase.analysis.contextual.discreteAttributes":["road_type","junction_detail","junction_control","light_conditions","weather_conditions","road_surface_conditions","carriageway_hazards","urban_or_rural_area","did_police_officer_attend_scene_of_accident"],
+    "macrobase.analysis.contextual.doubleAttributes": ["accident_severity","number_of_vehicles","number_of_casualties","speed_limit"]
   }
 ]

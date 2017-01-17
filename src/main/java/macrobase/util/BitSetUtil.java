@@ -59,4 +59,20 @@ public class BitSetUtil {
         return covered;
     }
     
+    
+    public static BitSet andOperation(BitSet bs1, BitSet bs2) {
+        BitSet result =  (BitSet)bs1.clone();
+        result.and(bs2);
+        return result;
+    }
+    public static boolean hasCommonElements(BitSet bs1, BitSet bs2) {
+        for (int i = bs1.nextSetBit(0); i >= 0; i = bs1.nextSetBit(i + 1)) {
+            if (i == Integer.MAX_VALUE) {
+                break; // or (i+1) would overflow
+            }
+            if (bs2.get(i) == true)
+                return true;
+        }
+        return false;
+    }
 }

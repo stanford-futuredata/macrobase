@@ -72,6 +72,7 @@ public class MacroBaseConf extends Configuration {
     public static final String ATTRIBUTES = "macrobase.loader.attributes";
     public static final String LOW_METRICS = "macrobase.loader.targetLowMetrics";
     public static final String HIGH_METRICS = "macrobase.loader.targetHighMetrics";
+    public static final String CATEGORICAL_METRICS = "macrobase.loader.targetCategoricalMetrics";
     public static final String AUXILIARY_ATTRIBUTES = "macrobase.loader.auxiliaryAttributes";
 
     public static final String BASE_QUERY = "macrobase.loader.db.baseQuery";
@@ -93,9 +94,13 @@ public class MacroBaseConf extends Configuration {
     public static final String CONTEXTUAL_MAX_PREDICATES = "macrobase.analysis.contextual.maxPredicates";
     public static final String CONTEXTUAL_OUTPUT_FILE = "macrobase.analysis.contextual.outputFile";
     public static final String CONTEXTUAL_PRUNING_DENSITY = "macrobase.analysis.contextual.pruning.density";
-    
     public static final String CONTEXTUAL_PRUNING_TRIVIALITY = "macrobase.analysis.contextual.pruning.triviality";
-    public static final String CONTEXTUAL_PRUNING_SUBSUMPTION = "macrobase.analysis.contextual.pruning.subsumption";
+    public static final String CONTEXTUAL_PRUNING_ContextContainedInOutliers = "macrobase.analysis.contextual.pruning.contextContainedInOutliers";
+
+    public static final String CONTEXTUAL_PRUNING_MAD_NOOUTLIERS = "macrobase.analysis.contextual.pruning.mad.noOutliers";
+    public static final String CONTEXTUAL_PRUNING_MAD_CONTAINEDOUTLIERS = "macrobase.analysis.contextual.pruning.mad.containedOutliers";
+    public static final String CONTEXTUAL_NUM_TUPLES = "macrobase.analysis.contextual.numTuples";
+
     
     public static final String CONTEXTUAL_ALGORITHM = "macrobase.analysis.contextual.algorithm";
     

@@ -3,10 +3,10 @@
   
   {
     "macrobase.loader.targetLowMetrics": [],
-    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements ORDER BY id LIMIT 100000;",
+    "macrobase.loader.db.baseQuery": "SELECT * FROM fed_disbursements WHERE dis_amo > 0 ORDER BY id LIMIT 1000000;",
     "isBatchJob": true,
     "macrobase.loader.attributes": ["com_id","com_nam","can_id","can_nam","ele_yea","can_off","can_off_sta","can_off_dis","lin_num","lin_ima","rec_com_id","rec_nam","rec_str1","rec_str2","rec_cit","rec_sta","rec_zip","dis_dat","dis_amo","dis_pur_des","mem_cod","mem_tex","cat_cod","cat_des","tra_id","bac_ref_id"],
-    "macrobase.query.name": "fed_disbursements100000",
+    "macrobase.query.name": "fed_disbursements1000000",
     "macrobase.loader.targetHighMetrics": ["dis_amo"],
     
     "macrobase.analysis.contextual.discreteAttributes":["com_id","com_nam","can_id","can_nam","ele_yea","can_off","can_off_sta","can_off_dis","lin_num","lin_ima","rec_com_id","rec_nam","rec_str1","rec_str2","rec_cit","rec_sta","rec_zip","dis_dat","dis_amo","dis_pur_des","mem_cod","mem_tex","cat_cod","cat_des","tra_id","bac_ref_id"],

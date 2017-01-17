@@ -5,8 +5,9 @@
     "isBatchJob": true,
     "macrobase.loader.attributes": ["sex", "marital_status", "age", "education", "occupation", "time_live_in_sf_area", "dual_income_if_married", "persons_in_household", "persons_in_household_under_18", "householder_status", "home_type", "ethnic", "language"],
 
-    "macrobase.query.name": "marketing",
+    "macrobase.query.name": "marketing100000",
     "macrobase.loader.targetHighMetrics": ["income"],
+    
 
     "macrobase.analysis.contextual.discreteAttributes": ["income", "sex", "marital_status", "age", "education", "occupation", "time_live_in_sf_area", "dual_income_if_married", "persons_in_household", "persons_in_household_under_18", "householder_status", "home_type", "ethnic", "language"],
 "macrobase.analysis.contextual.doubleAttributes": ["income"]

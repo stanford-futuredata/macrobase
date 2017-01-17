@@ -8,8 +8,8 @@ from threading import Timer
 from time import strftime
 
 
-time_out = 60 * 60 # in seconds
-max_heap = "-Xmx50g" # maximum memory allocation
+time_out = 12 * 60 * 60 # in seconds
+max_heap = "-Xmx250g" # maximum memory allocation
 
 testing_dir = "workflows"
 batch_template_conf_file = "contextual_batch_template.conf"
@@ -20,6 +20,7 @@ default_args = {
   "macrobase.analysis.minSupport": 0.5,
 
   "macrobase.analysis.transformType": "MAD",
+  "macrobase.loader.targetCategoricalMetrics": "",
   
   "macrobase.analysis.usePercentile": "true",
   "macrobase.analysis.targetPercentile": 0.99,
@@ -47,22 +48,14 @@ default_args = {
   
   "macrobase.analysis.contextual.denseContextTau": 0.1,
   "macrobase.analysis.contextual.numIntervals": 10,
-  "macrobase.analysis.contextual.maxPredicates": 100000,
-  "macrobase.analysis.classify.outlierStaticThreshold": 3.0,
-  
-  "macrobase.analysis.contextual.datadriven.clusteringAlgorithm": "KMEANS",
+  "macrobase.analysis.contextual.maxPredicates": 10000,
+  "macrobase.analysis.classify.outlierStaticThreshold": 5.0,
   
   "macrobase.analysis.contextual.pruning.density": "true",
-  "macrobase.analysis.contextual.pruning.dependency": "true",
-  "macrobase.analysis.contextual.pruning.triviality": "false",
-  "macrobase.analysis.contextual.pruning.triviality.approximation": 1.0,
-  "macrobase.analysis.contextual.pruning.triviality.approximation.propagate": "true",
-  "macrobase.analysis.contextual.pruning.distribution": "true",
-  "macrobase.analysis.contextual.pruning.distribution.alpha": 0.05,
-  "macrobase.analysis.contextual.pruning.distribution.minsamplesize": 100,
-  "macrobase.analysis.contextual.pruning.distribution.testmean": "true",
-  "macrobase.analysis.contextual.pruning.distribution.testvariance": "true",
-  "macrobase.analysis.contextual.pruning.distribution.testks": "true",
+  "macrobase.analysis.contextual.pruning.triviality": "true",
+  "macrobase.analysis.contextual.pruning.contextContainedInOutliers": "true",
+  "macrobase.analysis.contextual.pruning.mad.noOutliers": "true",
+  "macrobase.analysis.contextual.pruning.mad.containedOutliers": "true",
   
   "macrobase.analysis.contextual.api.suspiciousTuplesIndex": ""
 }

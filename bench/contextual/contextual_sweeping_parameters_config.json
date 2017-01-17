@@ -3,11 +3,11 @@
   "macrobase.loader.loaderType": ["POSTGRES_LOADER"],
   "macrobase.analysis.contextual.denseContextTau": [0.01],
   "macrobase.analysis.contextual.pruning.triviality": [true],
-  "macrobase.analysis.contextual.pruning.subsumption": [true],
+  "macrobase.analysis.contextual.pruning.contextContainedInOutliers": [true],
+  "macrobase.analysis.contextual.pruning.mad.noOutliers": [true],
+  "macrobase.analysis.contextual.pruning.mad.containedOutliers": [true],
   "macrobase.analysis.contextual.algorithm": [1],
-  "macrobase.analysis.contextual.datadriven.clusteringAlgorithm": ["KMEANS"],
-  "macrobase.analysis.contextual.datadriven.threshold": [0.9],
-  "macrobase.analysis.contextual.datadriven.dbscan.epsilon": [5],
-  "macrobase.analysis.contextual.datadriven.kmeans.k": [3],
-  "macrobase.analysis.contextual.api.suspiciousTuplesIndex": ["", "0"]
+  "macrobase.analysis.contextual.api.suspiciousTuplesIndex": [""],
+  "macrobase.analysis.contextual.numTuples": [1000000],
+  "macrobase.analysis.classify.outlierStaticThreshold": [3,5,7,9,11]
 }

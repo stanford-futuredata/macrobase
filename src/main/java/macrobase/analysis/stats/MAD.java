@@ -31,6 +31,8 @@ public class MAD extends BatchTrainScore {
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
     
+    private boolean isZeroMAD = false;
+    
     public MAD(MacroBaseConf conf) {
         super(conf);
     }
@@ -72,7 +74,10 @@ public class MAD extends BatchTrainScore {
         }
 
         if (MAD == 0) {
+            isZeroMAD = true;
+            
             zeroMADs.inc();
+            /*
             int lowerTrimmedMeanIndex = (int) (residuals.length * trimmedMeanFallback);
             int upperTrimmedMeanIndex = (int) (residuals.length * (1 - trimmedMeanFallback));
             //log.trace("MAD was zero; using trimmed means of residuals ({})", trimmedMeanFallback);
@@ -82,6 +87,8 @@ public class MAD extends BatchTrainScore {
             }
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
             assert (MAD != 0);
+            */
+            MAD = Double.MIN_VALUE;
         }
 
        
@@ -108,5 +115,8 @@ public class MAD extends BatchTrainScore {
     }
     public double getMAD() {
         return MAD;
+    }
+    public boolean isZeroMAD() {
+        return isZeroMAD;
     }
 }

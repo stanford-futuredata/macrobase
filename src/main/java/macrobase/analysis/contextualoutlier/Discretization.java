@@ -80,7 +80,7 @@ public class Discretization {
     public List<Interval> kMeans(int numClusters) {
         List<Interval> result = new ArrayList<Interval>();
 
-        KMeansPlusPlusClusterer<DoublePoint> kMeans = new KMeansPlusPlusClusterer<DoublePoint>(numClusters,1000);
+        KMeansPlusPlusClusterer<DoublePoint> kMeans = new KMeansPlusPlusClusterer<DoublePoint>(numClusters,10000);
         List<DoublePoint> points = new ArrayList<DoublePoint>();
         for (double value: values) {
             double[] point = new double[1];
@@ -620,10 +620,10 @@ public class Discretization {
     
 
     public static void main(String[] args) {
-        double[] valuesTest = new double[]{1,1,2,2,3,3,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100};
+        double[] valuesTest = new double[]{41, 45, 40, 38, 38, 30, 25, 23, 24, 24};
         Discretization dTest = new Discretization(valuesTest);
         //dTest.dbScan(1.0, 2);
-        dTest.kMeans(5);
+        dTest.kMeans(3);
     }
 
 }

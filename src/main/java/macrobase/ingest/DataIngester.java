@@ -16,6 +16,7 @@ public abstract class DataIngester implements MBProducer<Datum> {
     protected final List<String> contextualDoubleAttributes;
     protected final List<String> highMetrics;
     protected final List<String> lowMetrics;
+    protected final List<String> categoricalMetrics;
     protected final MacroBaseConf conf;
     protected final Integer timeColumn;
 
@@ -26,6 +27,7 @@ public abstract class DataIngester implements MBProducer<Datum> {
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         lowMetrics = conf.getStringList(MacroBaseConf.LOW_METRICS);
         highMetrics = conf.getStringList(MacroBaseConf.HIGH_METRICS);
+        categoricalMetrics = conf.getStringList(MacroBaseConf.CATEGORICAL_METRICS, MacroBaseDefaults.CATEGORICAL_METRICS);
         auxiliaryAttributes = conf.getStringList(MacroBaseConf.AUXILIARY_ATTRIBUTES, new ArrayList<>());
         contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES, MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
         contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES, MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);

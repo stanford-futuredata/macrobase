@@ -1,0 +1,16 @@
+[
+	
+  
+  {
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM campaign_expenditures ORDER BY id LIMIT 1000000;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": ["cmte_id","cand_id","cand_nm","contbr_nm","contbr_city","contbr_st","contbr_zip","contbr_employer","contbr_occupation","contb_receipt_amt","contb_receipt_dt","receipt_desc","memo_cd","memo_text","form_tp","file_num","tran_id","election_tp","attr0"],
+    
+    "macrobase.query.name": "campaign_expenditures1000000",
+    "macrobase.loader.targetHighMetrics": ["contb_receipt_amt"],
+    
+    "macrobase.analysis.contextual.discreteAttributes":["cmte_id","cand_id","cand_nm","contbr_nm","contbr_city","contbr_st","contbr_zip","contbr_employer","contbr_occupation","contb_receipt_amt","contb_receipt_dt","receipt_desc","memo_cd","memo_text","form_tp","file_num","tran_id","election_tp","attr0"],
+    "macrobase.analysis.contextual.doubleAttributes": []
+  }
+]

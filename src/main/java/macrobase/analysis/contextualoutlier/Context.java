@@ -45,6 +45,21 @@ public class Context {
     private BitSet ancestorOutlierBitSet = null;
     private int numberOfOutliersNotContainedInAncestor = 0;
 
+    //the inliner range
+    private MetricRange inlinerMR = null;
+    private MetricRange ancestorInlinerMR = null; 
+    
+    //The bitset corresponding to the what tuples in the inputOutliers does this context contain
+    private BitSet inverseBitSet = null;
+    
+    public BitSet getInverseBitSet() {
+        return inverseBitSet;
+    }
+    
+    public void setInverseBitSet(BitSet inverseBitSet) {
+        this.inverseBitSet = inverseBitSet;
+    }
+    
     //The actual data in this context
     private BitSet bitSet;
     
@@ -118,6 +133,7 @@ public class Context {
         this.conf = parent.conf;
         
         setAncestorOutlierBitSet();
+        setAncestorInlinerMR();
     }
 
     public Context(List<Integer> dimensions, List<Interval> intervals, List<Context> parentContexts) {
@@ -136,7 +152,7 @@ public class Context {
         this.conf = parent1.conf;
         
         setAncestorOutlierBitSet();
-        
+        setAncestorInlinerMR();
            
     }
 
@@ -210,29 +226,54 @@ public class Context {
         //create new context
         Context newUnit = new Context(newDimensions, newIntervals, parentContexts);
         
+        
+        //get the inverseBitSet, and prune the context if there is no input outlier tuple left
+        if (parentContexts.get(0).getInverseBitSet() != null) {
+            BitSet newInverseBitSet = (BitSet) parentContexts.get(0).getInverseBitSet().clone();
+            newInverseBitSet.and(parentContexts.get(1).getInverseBitSet());
+            newUnit.setInverseBitSet(newInverseBitSet);
+            if (newUnit.getInverseBitSet().cardinality() == 0) {
+                ContextStats.numInversePruningNoInputOutliers++;
+                return null;
+            }       
+        }
+        
+        
         //get the actual data, and check if it can be pruned
         if (newUnit.getBitSet() == null) {
             newUnit.setBitSet(data);
         }
+        
         //check the actual density
         double realDensity = (double) newUnit.getBitSet().cardinality() / data.size();
         if (realDensity < tau) {
-            ContextStats.numDensityPruningsUsingAll++;
+            ContextStats.numDensityPruning++;
             return null;
         }
         
-        //dependency pruning
-        boolean trivialityPrunedUsingAll = trivialityPruningUsingAllData(newUnit);        
-        if (trivialityPrunedUsingAll) {
+        //triviality pruning
+        if (trivialityPruning(newUnit)) {
             ContextStats.numTrivialityPruning++;
             return null;
         }
         
-        setDataDrivenPrunedFromParents(newUnit);
-       
+        //check outliers
+        if (contextContainedInOutliers(newUnit)) {
+            ContextStats.numContextContainedInOutliersPruning++;
+            return null;
+        }
+               
         return newUnit;
     }
 
+    /**
+     * Check if all of the parents are present. If not, then this is not a valid context;
+     * otherwise, parentContexts store all the parents
+     * @param intervals
+     * @param cit
+     * @param parentContexts
+     * @return
+     */
     private boolean checkJoinConditions(List<Interval> intervals, ContextIndexTree cit, List<Context> parentContexts) {
         for (int i = 0; i < intervals.size(); i++) {
             //skip 
@@ -246,20 +287,39 @@ public class Context {
         }
         return true;
     }
-  
     
-    private boolean trivialityPruningUsingAllData(Context c) {
+    private boolean trivialityPruning(Context c) {
         boolean trivialityPruning = (conf != null )?conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_TRIVIALITY, MacroBaseDefaults.CONTEXTUAL_PRUNING_TRIVIALITY):false;
         if (trivialityPruning == false)
             return false;
         for (Context p: c.getParents()) {
             BitSet b = p.getBitSet();
-            double covered = BitSetUtil.subSetCoverage(b, c.getBitSet());
-            if (covered >= 1.0) {
-                return true;
-            } 
+            if (b.cardinality() == c.getBitSet().cardinality()) 
+                return true; 
         }
         return false;
+    }
+    
+    private boolean contextContainedInOutliers(Context c) {
+        boolean contextContainedInOutliersPruning = (conf != null )?conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_ContextContainedInOutliers, MacroBaseDefaults.CONTEXTUAL_PRUNING_ContextContainedInOutliers):false;
+        if (contextContainedInOutliersPruning == false)
+            return false;
+        /*
+        if (c.getBitSet().cardinality() > 0 &&
+                BitSetUtil.subSetCoverage(c.getBitSet(), c.getAncestorOutlierBitSet()) == 1.0) {
+            return true;
+        }*/
+        if (c.getBitSet().cardinality() > 0) {
+            BitSet cBitSet = c.getBitSet();
+            for (int i = cBitSet.nextSetBit(0); i >= 0 ; i = cBitSet.nextSetBit( i + 1)) {
+                if (i == Integer.MAX_VALUE) {
+                    break;
+                }
+                if (c.getAncestorOutlierBitSet().get(i) == false) 
+                    return false;
+            }
+        }
+        return true;
     }
     
     public String print(DatumEncoder encoder) {
@@ -326,6 +386,38 @@ public class Context {
         this.outlierBitSet = outlierBitSet;
     }
     
+    public MetricRange getInlinerMR() {
+        return inlinerMR;
+    }
+    
+    public void setInlinerMR() {
+        if (isMADSet == false) {
+            log.debug("ERROR, should alway set MAD before setting inlinerMR");
+        }
+        double threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
+        double left = median - threshold * MAD;
+        double right = median + threshold * MAD;
+        inlinerMR = new MetricRange(left, right);
+    }
+    
+    public MetricRange getAncestorInlinerMR() {
+        return ancestorInlinerMR;
+    }
+    
+    public void setAncestorInlinerMR() {
+        ancestorInlinerMR = new MetricRange(data.get(0).getMetrics().getEntry(0),data.get(data.size() - 1).getMetrics().getEntry(0));
+        for (Context p: getParents()) {
+            MetricRange pInlinerMR = p.getInlinerMR();
+            MetricRange pAncestorInlinerMR = p.getAncestorInlinerMR();
+            if (pInlinerMR != null) {
+                ancestorInlinerMR.intersect(pInlinerMR);
+            }
+            if (pAncestorInlinerMR != null) {
+                ancestorInlinerMR.intersect(pAncestorInlinerMR);
+            }
+        }
+    }
+    
     public BitSet getAncestorOutlierBitSet() {
         return ancestorOutlierBitSet;
     }
@@ -334,9 +426,13 @@ public class Context {
         ancestorOutlierBitSet = new BitSet(data.size());
         for (Context p: getParents()) {
             BitSet pOutlierBS = p.getOutlierBitSet();
+            BitSet pAncestorOutlierBS = p.getAncestorOutlierBitSet();
             if (pOutlierBS != null) {
                 ancestorOutlierBitSet.or(pOutlierBS);
             }
+            if (pAncestorOutlierBS != null) {
+                ancestorOutlierBitSet.or(pAncestorOutlierBS);
+            } 
         }
     }
     
@@ -350,6 +446,8 @@ public class Context {
     
     private double median;
     private double MAD;
+    private boolean isMADSet = false;
+    private boolean isZeroMAD;
     public double getMedian() {
         return median;
     }
@@ -363,45 +461,19 @@ public class Context {
     }
 
     public void setMAD(double mAD) {
+        isMADSet = true;
         MAD = mAD;
     }
-
-    private boolean[] dataDrivenPruned;
-    public void setDataDrivenPruned(boolean[] dataDrivenPruned) {
-        this.dataDrivenPruned = dataDrivenPruned;
-    }
-    public void setDataDrivenPruned(int c) {
-        dataDrivenPruned[c] = true;
-    }
-    public boolean[] getDataDrivenPruned() {
-        return dataDrivenPruned;
-    }
-    public boolean getDataDrivenPruned(int c) {
-        return dataDrivenPruned[c];
+    
+    public boolean isMADSet() {
+        return isMADSet;
     }
     
-    private void setDataDrivenPrunedFromParents(Context c) {
-        if (c.getParents().get(0).dataDrivenPruned != null) {
-            c.dataDrivenPruned = new boolean[c.getParents().get(0).dataDrivenPruned.length];
-            for (int i = 0; i < c.dataDrivenPruned.length; i++) 
-                c.dataDrivenPruned[i] = false;
-            for (Context p: c.getParents()) {
-                for (int i = 0; i < c.dataDrivenPruned.length; i++)  {
-                    if (p.dataDrivenPruned[i] == true) {
-                        c.dataDrivenPruned[i] = true;
-                    }
-                }
-            }
-        } 
+    public boolean isZeroMAD() {
+        return isZeroMAD;
     }
     
-    //this context can be pruned if all clusters say it can be pruned
-    public boolean getDataDrivenPrunedAll() {
-        for (boolean d: dataDrivenPruned) {
-            if (d == false)
-                return false;
-        }
-        return true;
+    public void setIsZeroMAD(boolean isZeroMAD) {
+        this.isZeroMAD = isZeroMAD;
     }
-    
 }

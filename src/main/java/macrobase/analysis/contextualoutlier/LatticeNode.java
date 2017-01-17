@@ -30,7 +30,7 @@ public class LatticeNode {
         denseContexts.add(c);
     }
     
-    public void removeTrivialContext(Context c){
+    public void removeContext(Context c){
         denseContexts.remove(c);
     }
 

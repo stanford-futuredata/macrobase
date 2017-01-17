@@ -73,6 +73,8 @@ public class MacroBaseDefaults {
     public static final String DB_URL = "localhost";
     
     //contextual outlier detection defaults
+    public static final List<String> CATEGORICAL_METRICS = new ArrayList<String>();
+
     
     public static final String CONTEXTUAL_API_SUSPICIOUS_TUPLES_INDEX  = "";
 
@@ -86,8 +88,11 @@ public class MacroBaseDefaults {
     public static final String CONTEXTUAL_OUTPUT_FILE = null;
     
     public static final Boolean CONTEXTUAL_PRUNING_TRIVIALITY = true;
-    public static final Boolean CONTEXTUAL_PRUNING_SUBSUMPTION = true;
-    
+    public static final Boolean CONTEXTUAL_PRUNING_ContextContainedInOutliers = true;
+    public static final Boolean CONTEXTUAL_PRUNING_MAD_NOOUTLIERS = true;
+    public static final Boolean CONTEXTUAL_PRUNING_MAD_CONTAINEDOUTLIERS = true;
+    public static final Integer CONTEXTUAL_NUM_TUPLES = Integer.MAX_VALUE;
+
     public static final Integer CONTEXTUAL_ALGORITHM = 1;
     
     

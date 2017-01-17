@@ -6,8 +6,8 @@ macrobase.loader.targetHighMetrics: [dis_amo]
 
 macrobase.analysis.transformType: MAD
 
-macrobase.loader.db.user: x4chu
-macrobase.loader.db.baseQuery: SELECT * FROM fed_disbursements WHERE dis_amo > 0 ORDER BY id  LIMIT 10000;
+macrobase.loader.db.user: xuchu
+macrobase.loader.db.baseQuery: SELECT * FROM fed_disbursements ORDER BY id LIMIT 100000;
 
 macrobase.analysis.minSupport: 0.5000
 macrobase.analysis.minOIRatio: 3.0000
@@ -38,13 +38,11 @@ macrobase.analysis.contextual.numIntervals: 10
 macrobase.analysis.contextual.outputFile: temp.txt
 macrobase.analysis.classify.outlierStaticThreshold: 3.0000
 macrobase.analysis.contextual.maxPredicates: 100000
-macrobase.analysis.contextual.pruning.density: true
+
+macrobase.analysis.contextual.pruning.contextContainedInOutliers: True
 macrobase.analysis.contextual.pruning.triviality: True
-macrobase.analysis.contextual.pruning.subsumption: True
+macrobase.analysis.contextual.pruning.mad.noOutliers: True
+macrobase.analysis.contextual.pruning.mad.containedOutliers: True
 
-
-macrobase.analysis.contextual.algorithm: 3
-macrobase.analysis.contextual.datadriven.clusteringAlgorithm: KMEANS
-macrobase.analysis.contextual.datadriven.threshold: 0.9000
-macrobase.analysis.contextual.datadriven.dbscan.epsilon: 5.0000
-macrobase.analysis.contextual.datadriven.kmeans.k: 3
+macrobase.analysis.contextual.algorithm: 1
+macrobase.analysis.contextual.api.suspiciousTuplesIndex: 

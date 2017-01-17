@@ -4,6 +4,7 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import subprocess, datetime, os, time, signal
+import datetime
 from threading import Timer
 
 groud_truth = ["ALL", "OUTLIER_CONTEXT_RATIO_AT_LEAST_0.01", "OUTLIER_CONTEXT_RATIO_AT_LEAST_0.005"]
@@ -14,39 +15,49 @@ keysList = ["Query Name",
                 "macrobase.analysis.transformType",
                 "macrobase.loader.loaderType",
                 "macrobase.analysis.contextual.denseContextTau",
+                "macrobase.analysis.classify.outlierStaticThreshold",
+                "macrobase.analysis.contextual.numTuples",
                 #"macrobase.analysis.contextual.pruning.density", 
-                "macrobase.analysis.contextual.pruning.dependency",
+                #"macrobase.analysis.contextual.pruning.dependency",
                 "macrobase.analysis.contextual.pruning.triviality",
-                "macrobase.analysis.contextual.pruning.triviality.approximation",
-                "macrobase.analysis.contextual.pruning.triviality.approximation.propagate",
-                "macrobase.analysis.contextual.pruning.distribution",
-                "macrobase.analysis.contextual.pruning.distribution.alpha",
-                "macrobase.analysis.contextual.pruning.distribution.minsamplesize",
-                "macrobase.analysis.contextual.pruning.distribution.testmean",
-                "macrobase.analysis.contextual.pruning.distribution.testvariance",
-                "macrobase.analysis.contextual.pruning.distribution.testks",
-                "loadMs",
-                "executeMs",
+                "macrobase.analysis.contextual.pruning.contextContainedInOutliers",
+                "macrobase.analysis.contextual.pruning.mad.noOutliers",
+                "macrobase.analysis.contextual.pruning.mad.containedOutliers",
+                #"macrobase.analysis.contextual.pruning.triviality.approximation",
+                #"macrobase.analysis.contextual.pruning.triviality.approximation.propagate",
+                #"macrobase.analysis.contextual.pruning.distribution",
+                #"macrobase.analysis.contextual.pruning.distribution.alpha",
+                #"macrobase.analysis.contextual.pruning.distribution.minsamplesize",
+                #"macrobase.analysis.contextual.pruning.distribution.testmean",
+                #"macrobase.analysis.contextual.pruning.distribution.testvariance",
+                #"macrobase.analysis.contextual.pruning.distribution.testks",
+                #"loadMs",
+                #"executeMs",
+                "timeTotal",
                 "timeBuildLattice",
-                "timeBuildLatticeByLevel",
-                "timeDependencyPruning",
-                "timeTrivialityPruning",
-                "timeDistributionPruning",
+                #"timeBuildLatticeByLevel",
+                #"timeDependencyPruning",
+                #"timeTrivialityPruning",
+                #"timeDistributionPruning",
                 "timeDetectContextualOutliers",
-                "analyzeMs",
-                "summarizeMs",
-                #"numDensityPruningsUsingSample",
-                "numDensityPruningsUsingAll",
-                "numDependencyPruningsUsingAll",
-                "numApproximateDependencyPruningsUsingAll",
-                #"numDependencyPruningsUsingSample",
-                #"numDependencyPruningsUsingSampleFP",
-                #"numDependencyPruningsUsingSampleFN",
+                "timeMADNoOutliersContainedOutliersPruned",
+                #"analyzeMs",
+                #"summarizeMs",
+                #"numDensityPruningsUsingAll",
+                #"numDependencyPruningsUsingAll",
+                #"numApproximateDependencyPruningsUsingAll",
+                "numDensityPruning",
                 "numTrivialityPruning",
+                "numContextContainedInOutliersPruning",
+                
                 "numContextsGenerated",
-                "numDistributionPrunings",
-                "numContextsGeneratedWithOutliers",
-                "numContextsGeneratedWithOutOutliers",
+                "numMadNoOutliers",
+                "numMadContainedOutliers",
+                "numContextsGeneratedWithMaximalOutliers",
+
+                #"numDistributionPrunings",
+                #"numContextsGeneratedWithOutliers",
+                #"numContextsGeneratedWithOutOutliers",
                 "precision",
                 "recall",
                 "precisionRelaxed",
@@ -924,9 +935,257 @@ def experiments_distribution(transform_type,density_tau):
                                                    "_" + pruning_distribution_test_variance + 
                                                    "_" + pruning_distribution_test_ks + 
                                                    "_distribution_confidencelevel.pdf")
-        
 
+def inverse_contextual_exp(directory, whichy):
+    
+    datasets = ["marketing", "uk_road_accidents", "fed_disbursements", "campaign_expenditures", "cmt"]
+    legends = ["Marketing", "Accidents", "Disburse", "Campaign", "CMT"]
+    linestyles = ['', '-', '--', '-.', ':']
+    dataset2y_values = dict()
+    
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.tsv'):
+                fileName = os.path.join(root, file)
+                if "output0.txt_inverse_varying_num_suspicious_tuples.tsv" in fileName:
+                    print fileName
+                    
+                    x_values = list()
+                    y_values = list()
+                    legend= None
+                        
+                    with open(fileName) as f:
+                        contentLines = f.readlines()
+                        for i in range(1, len(contentLines)):
+                            splits = contentLines[i].split("\t")
+                            x_values.append(int(splits[0]))
+                            if whichy == 1:
+                                y_values.append(float(splits[1]) / 1000)
+                            elif whichy == 2:
+                                y_values.append(float(splits[4]))
+                            elif whichy == 3:
+                                y_values.append(float(splits[6]))
+                            elif whichy == 4:
+                                y_values.append(float(splits[4])/( float(splits[6]) + 1))
+                    for dataset in datasets:
+                        if dataset in fileName:
+                            dataset2y_values[dataset] = y_values
+                                
+                                
+    for i in range(0,len(datasets)):
+         plt.plot(x_values,dataset2y_values[datasets[i]],linestyles[i],label=legends[i],linewidth=4.0)               
+                    
+    
+    y_label = None;
+    if whichy == 1:
+        y_label = "Time"
+    elif whichy == 2:
+        y_label = "Number of Contexts"
+    elif whichy == 3:
+        y_label = "Number of Contexts with Maximal Contextual Outliers"
+    elif whichy == 4:
+        y_label = "Yield"
+
+    legend = plt.legend(loc='upper left', shadow=True,fontsize=18)
+            
+    plt.xlabel('Number of Suspicious Tuples', fontsize=20)
+    plt.ylabel(y_label,fontsize=20)    
+    
+    plt.rc('xtick', labelsize=20)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=20)  # fontsize of the tick labels
+
+    #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    picPath = None;
+    if whichy == 1:
+       picPath = directory + "inverse_time_varying_number_suspicious_tuples_.pdf"
+    elif whichy == 2:
+       picPath = directory + "inverse_number_contexts_varying_number_suspicious_tuples_.pdf"
+    elif whichy == 3:
+       picPath = directory + "inverse_number_contexts_with_maximal_outliers_varying_number_suspicious_tuples_.pdf"
+    elif whichy == 4:
+       picPath = directory + "inverse_yield_varying_number_suspicious_tuples_.pdf"
+    plt.savefig(picPath , bbox_inches='tight')
+    plt.legend()
+    plt.close()
+    
+def inverse_contextual_exp_per_trial(directory, whichx):
+    
+    datasets = ["marketing", "uk_road_accidents", "fed_disbursements", "campaign_expenditures", "cmt"]
+    #datasets = ["fed_disbursements"]
+   
+    legends = ["Marketing", "Accidents", "Disburse", "Campaign", "CMT"]
+    linestyles = ['', '-', '--', '-.', ':']
+    dataset2x_values = dict()
+    dataset2y_values = dict()
+    
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.tsv'):
+                fileName = os.path.join(root, file)
+                if "output0.txt_inverse_experiment_1_outliers_trials.tsv" in fileName:
+                    print fileName
+                    
+                    x_values = list()
+                    y_values = list()
+                    legend= None
+                        
+                    with open(fileName) as f:
+                        contentLines = f.readlines()
+                        for i in range(1, len(contentLines)):
+                            splits = contentLines[i].split("\t")
+                            y_values.append( float(splits[1]) / 1000)
+                            if whichx == 1:
+                                x_values.append(float(splits[4]))
+                            elif whichx == 2:
+                                x_values.append(float(splits[6]))
+                            elif whichx == 3:
+                                x_values.append(float(splits[4])/( float(splits[6]) + 1))
+                    for dataset in datasets:
+                        if dataset in fileName:
+                            dataset2x_values[dataset] = x_values[0:200]
+                            dataset2y_values[dataset] = y_values[0:200]
+                                
+    colors = ['r','b','g','c','m']                           
+    markers = ['+','s','x','D','o']
+    for i in range(0,len(datasets)):
+        plt.scatter(dataset2x_values[datasets[i]], dataset2y_values[datasets[i]],label=legends[i], c = colors[i],marker=markers[i])               
+
+    
+    x_label = None;
+    if whichx == 1:
+        x_label = "Number of Contexts"
+    elif whichx == 2:
+        x_label = "Number of Contexts with Maximal Contextual Outliers"
+    elif whichx == 3:
+        x_label = "Yield"
+
+    legend = plt.legend(loc='upper left', shadow=True,fontsize=18)
+            
+    plt.xlabel(x_label, fontsize=20)
+    plt.ylabel("Runtime (s)",fontsize=20)    
+    
+    plt.rc('xtick', labelsize=20)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=20)  # fontsize of the tick labels
+
+    #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    picPath = None;
+    if whichx == 1:
+       picPath = directory + "inverse_time_vs_number_contexts_varying_trials.pdf"
+    elif whichx == 2:
+       picPath = directory + "inverse_time_vs_number_contexts_with_maximal_outliers_varying_trials.pdf"
+    elif whichx == 3:
+       picPath = directory + "inverse_time_vs_yield_varying_trials.pdf"
+    plt.savefig(picPath , bbox_inches='tight')
+    plt.legend()
+    plt.close()                    
+                    
+def experiments_settings(transform_type,density_tau):
+    query_name_list = ["cmt100000", "marketing", "uk_road_accident", "fed_disbursements100000", "campaign_expenditures100000"]
+
+    current_time = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    
+    for i in range(0,len(query_name_list)):
+        output_file = None
+        if i == 0:
+            output_file = "contextual_workflow_output_istc3.txt"
+        else:
+            output_file = "contextual_workflow_output_husky0" + str(i) + ".txt"
+            
+        if os.path.isfile(output_file) == False:
+            continue
+        
+        records = assemble_all_records(output_file)
+        
+        query_name = query_name_list[i]
+        write_out_all_records(current_time + "_" + str(i) + "_" + query_name + "_" + transform_type + ".csv", records)
+
+
+
+def varying_theta(directory, whichy):
+    
+    datasets = ["marketing", "uk_road_accident", "fed_disbursements", "campaign_expenditures", "cmt"]
+    legends = ["Marketing", "Accidents", "Disburse", "Campaign", "CMT"]
+    linestyles = ['', '-', '--', '-.', ':']
+    dataset2y_values = dict()
+    
+    x_values= None
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.csv'):
+                fileName = os.path.join(root, file)
+                if ".csv" in fileName and "vary_theta" in fileName:
+                    print fileName
+                    
+                    x_values = list()
+                    y_values = list()
+                    legend= None
+                        
+                    with open(fileName) as f:
+                        contentLines = f.readlines()
+                        for i in range(1, len(contentLines)):
+                            splits = contentLines[i].split(",")
+                            x_values.append(int(splits[6]))
+                            if whichy == 1:
+                                y_values.append(float(splits[12]) / 1000)  ##running time
+                            elif whichy == 2:
+                                y_values.append(float(splits[19])) ## number of generated contexts
+                            elif whichy == 3:
+                                y_values.append(float(splits[22])) ## number of contexts with maximal outliers
+                           
+                    for dataset in datasets:
+                        if dataset in fileName:
+                            dataset2y_values[dataset] = y_values
+                                
+    colors = ['r','b','g','c','m']   
+    markers = ['+','s','x','D','o']                           
+    for i in range(0,len(datasets)):
+         plt.plot(x_values,dataset2y_values[datasets[i]],linestyles[i],label=legends[i],linewidth=4.0,c=colors[i])               
+                    
+    
+    y_label = None;
+    if whichy == 1:
+        y_label = "Runntime (s)"
+    elif whichy == 2:
+        y_label = "Number of Contexts"
+    elif whichy == 3:
+        y_label = "Result Size"
+    
+
+    legend = plt.legend(loc='upper right', shadow=True,fontsize=18)
+            
+    plt.xlabel('Hampel X84 threshold', fontsize=20)
+    plt.ylabel(y_label,fontsize=20)    
+    
+    plt.rc('xtick', labelsize=20)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=20)  # fontsize of the tick labels
+
+    #plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    picPath = None;
+    if whichy == 1:
+       picPath = directory + "varying_theta_time.pdf"
+    elif whichy == 2:
+       picPath = directory + "varying_theta_number_of_contexts.pdf"
+    elif whichy == 3:
+       picPath = directory + "varying_theta_number_of_maximal_contexts.pdf"
+   
+    plt.savefig(picPath , bbox_inches='tight')
+    plt.legend()
+    plt.close()       
+        
+        
+        
         
 if __name__ == '__main__':
-    experiments_distribution("MAD","0.01")
+    #inverse_contextual_exp("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",1);
+    #inverse_contextual_exp("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",2);
+    #inverse_contextual_exp("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",3);
+    #inverse_contextual_exp("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",4);
+    inverse_contextual_exp_per_trial("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",1)
+    inverse_contextual_exp_per_trial("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",2)
+    inverse_contextual_exp_per_trial("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",3)
+    varying_theta("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",1)
+    varying_theta("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",2)
+    varying_theta("/Users/xuchu/Documents/Github/macrobase/bench/contextual/SIGMOD_Exp/",3)
+
+    #experiments_settings("MAD","0.01")
     

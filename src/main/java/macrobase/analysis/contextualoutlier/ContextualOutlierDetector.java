@@ -1,7 +1,6 @@
 package macrobase.analysis.contextualoutlier;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,22 +9,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.io.*;
 
-import org.apache.commons.math3.stat.inference.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
 import macrobase.analysis.classify.OutlierClassifier;
 import macrobase.analysis.classify.StaticThresholdClassifier;
 import macrobase.analysis.result.OutlierClassificationResult;
 import macrobase.analysis.stats.BatchTrainScore;
 import macrobase.analysis.stats.MAD;
-import macrobase.analysis.summary.itemset.FPGrowth;
-import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.analysis.transform.BatchScoreFeatureTransform;
 import macrobase.analysis.transform.FeatureTransform;
 import macrobase.conf.ConfigurationException;
@@ -35,8 +28,6 @@ import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.DatumEncoder;
 import macrobase.util.BitSetUtil;
-import macrobase.util.HypothesisTesting;
-import macrobase.util.MemoryUtil;
 
 public class ContextualOutlierDetector {
     private static final Logger log = LoggerFactory.getLogger(ContextualOutlierDetector.class);
@@ -55,6 +46,8 @@ public class ContextualOutlierDetector {
     //The following are context pruning options
     //This is the outliers detected for every dense context
     private List<Context> contextWithOutliers = new ArrayList<Context>();
+    
+    private List<LatticeNode> oneDimensionalLatticeNodes = null;
 
     public ContextualOutlierDetector(MacroBaseConf conf) throws IOException {
         this.conf = conf;
@@ -77,6 +70,29 @@ public class ContextualOutlierDetector {
         
     }
     
+    public ContextualOutlierDetector(MacroBaseConf conf, List<LatticeNode> oneDimensionalLatticeNodes) throws IOException {
+        this.conf = conf;
+        this.contextualDiscreteAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DISCRETE_ATTRIBUTES,
+                                                               MacroBaseDefaults.CONTEXTUAL_DISCRETE_ATTRIBUTES);
+        this.contextualDoubleAttributes = conf.getStringList(MacroBaseConf.CONTEXTUAL_DOUBLE_ATTRIBUTES,
+                                                             MacroBaseDefaults.CONTEXTUAL_DOUBLE_ATTRIBUTES);
+        this.denseContextTau = conf.getDouble(MacroBaseConf.CONTEXTUAL_DENSECONTEXTTAU,
+                                              MacroBaseDefaults.CONTEXTUAL_DENSECONTEXTTAU);
+        this.numIntervals = conf.getInt(MacroBaseConf.CONTEXTUAL_NUMINTERVALS,
+                                        MacroBaseDefaults.CONTEXTUAL_NUMINTERVALS);
+        this.maxPredicates = conf.getInt(MacroBaseConf.CONTEXTUAL_MAX_PREDICATES,
+                                         MacroBaseDefaults.CONTEXTUAL_MAX_PREDICATES);
+        this.totalContextualDimensions = contextualDiscreteAttributes.size() + contextualDoubleAttributes.size();
+        this.encoder = conf.getEncoder();
+        this.contextualOutputFile = conf.getString(MacroBaseConf.CONTEXTUAL_OUTPUT_FILE,
+                                                     MacroBaseDefaults.CONTEXTUAL_OUTPUT_FILE);   
+        
+        this.oneDimensionalLatticeNodes = oneDimensionalLatticeNodes;
+        log.debug("There are {} contextualDiscreteAttributes, and {} contextualDoubleAttributes",
+                  contextualDiscreteAttributes.size(), contextualDoubleAttributes.size());
+        
+    }
+    
     
     public void writeAllContextualOutliers() throws IOException {
         if (contextualOutputFile == null)
@@ -91,7 +107,6 @@ public class ContextualOutlierDetector {
             contextualOut.println("\t " + context.getOutlierBitSet().toString());
         }
         contextualOut.close();
-        
         
         //analyze the contexts that have outliers found, number of dimensions
         PrintWriter contextualOutAnalysis = new PrintWriter(new FileWriter(contextualOutputFile + "_analysis.txt",true));
@@ -110,7 +125,6 @@ public class ContextualOutlierDetector {
             contextualOutAnalysis.println("Total number of contexts that have " + i + " dimensions: " + numDim2Count.get(i));
         }
         
-        
         Map<Context, Integer> oneDimContexts2Count = new HashMap<Context, Integer>();
         for (Context context: contextWithOutliers) {
             for (Context oneDimContext : context.getOneDimensionalAncestors() ){
@@ -124,193 +138,7 @@ public class ContextualOutlierDetector {
         for (Context oneDimContext: oneDimContexts2Count.keySet()) {
             contextualOutAnalysis.println("One Dimensional context " + oneDimContext.print(encoder) + " particiates in contexts with outliers: " + oneDimContexts2Count.get(oneDimContext));
         }
-        
         contextualOutAnalysis.close();
-           
-    }
-
-    public void searchContextualOutliersDataDrivenDebug(List<Datum> data, String debug_file) throws IOException, ConfigurationException {
-        
-        PrintWriter debugOutput = new PrintWriter(new FileWriter(debug_file));
-        List<Interval> intervals = new Discretization(data).clusterOneDimensionalValues(conf);
-
-        Map<Interval, List<Datum>> interval2Data = new HashMap<Interval, List<Datum>>();
-        for (Interval interval: intervals) {
-            interval2Data.put(interval, new ArrayList<Datum>());
-        }
-        for (Interval interval: intervals) {
-            for (Datum d: data) {
-                if (interval.contains(d.getMetrics().getEntry(0))) {
-                    interval2Data.get(interval).add(d);
-                }
-            }
-        }
-        
-       
-        int numCaptured = 0;
-        int numMissed = 0;
-        for (Context context: contextWithOutliers) {
-            //step1: get interval 2 count
-            Map<Interval, Integer> interval2Count = new HashMap<Interval, Integer>();
-            for (Interval interval: intervals) {
-                interval2Count.put(interval, 0);
-            }
-            
-            BitSet bs = context.getBitSet();
-            List<Integer> indexes = BitSetUtil.bitSet2Indexes(bs);
-            for (Interval interval: intervals) {
-                for (Integer index: indexes) {
-                    if (interval.contains(data.get(index).getMetrics().getEntry(0))) {
-                        interval2Count.put(interval, interval2Count.get(interval) + 1);
-                    }
-                }
-            }
-            
-            boolean captured = false;
-            for (Interval interval: intervals) {
-                double contextInIntervalRatio = (double)interval2Count.get(interval) / context.getBitSet().cardinality();
-                if (contextInIntervalRatio >= conf.getDouble(MacroBaseConf.CONTEXTUAL_DATADRIVEN_THRESHOLD, MacroBaseDefaults.CONTEXTUAL_DATADRIVEN_THRESHOLD)) {
-                    captured = true;
-                    break;
-                }
-            }
-            if (captured) {
-                numCaptured++;
-            } else {
-                numMissed++;
-            }
-            
-            debugOutput.println("**************");
-            debugOutput.println("Context: " + context.print(encoder) + " number of tuples: " + 
-            context.getBitSet().cardinality() + " number of outliers: " +
-                    context.getOutlierBitSet().cardinality()
-                    + "\t Captured ? " + captured
-                    //+ "\t Failed at count? " + failedAtCount
-                    );
-            
-           
-            for (Interval interval: intervals) {
-                debugOutput.println(interval.toString() + "\t" + interval2Count.get(interval));
-            }
-            
-            debugOutput.println("**************");
-            
-           
-        }
-        System.err.println("Data Driven Debug: Number of contexts with outliers: " + contextWithOutliers.size());
-        System.err.println("Data Driven Debug: Number of captured: " + numCaptured);
-        System.err.println("Data Driven Debug: Number of missed: " + numMissed);
-
-        debugOutput.close();
-        
-    }
-    
-    public List<Context> searchContextualOutliersDataDriven_NewApproach(List<Datum> data) throws Exception {
-        log.debug("Data Driven Approach, clustering the metric attributes:");
-        
-        
-        globalContext = new Context(data, conf);
-        contextualOutlierDetection(data, globalContext);
-        
-        
-        List<BitSet> clustersBS = new ArrayList<BitSet>();
-        //1. every tuple is in its own cluster
-        //2. tuples with the same metric attribute are in the same cluster
-        //3. tuples with similar metric attribute are in the same cluster
-        
-        for (int i = 0; i < data.size(); i++) {
-            BitSet clusterBS = new BitSet(data.size());
-            clusterBS.set(i);
-            clustersBS.add(clusterBS);    
-        }
-        /*
-        BitSet clusterBSTemp = new BitSet(data.size());
-        clusterBSTemp.set(1);
-        clustersBS.add(clusterBSTemp);   
-        */
-        List<LatticeNode> preLatticeNodes = new ArrayList<LatticeNode>();
-        List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
-        for (int level = 1; level <= totalContextualDimensions; level++) {
-            if (level > maxPredicates)
-                break;
-            log.debug("Lattice level {}", level);
-            long timeBuildLatticeBefore = System.currentTimeMillis();
-            if (level == 1) {
-                curLatticeNodes = buildOneDimensionalLatticeNodes(data);
-                int numberOfPredicates = 0;
-                for (LatticeNode node : curLatticeNodes) {
-                    for (Context context : node.getDenseContexts()) {
-                        numberOfPredicates++;
-                        boolean[] dataDrivenPruned = new boolean[clustersBS.size()];
-                        for (int i = 0; i < clustersBS.size(); i++)
-                            dataDrivenPruned[i] = false;
-                        context.setDataDrivenPruned(dataDrivenPruned);
-                    }
-                }
-                log.debug("Number of predicates {}", numberOfPredicates);
-            } else {
-                curLatticeNodes = levelUpLattice(preLatticeNodes, data);
-            }
-            long timeBuildLatticeAfter = System.currentTimeMillis();
-            ContextStats.timeBuildLattice += (timeBuildLatticeAfter - timeBuildLatticeBefore);
-            if (curLatticeNodes.size() == 0) {
-                break;
-            }
-            //run contextual outlier detection
-            for (LatticeNode node : curLatticeNodes) {
-                HashSet<Context> toBeRemoved = new HashSet<Context>();
-                for (Context context : node.getDenseContexts()) {
-                    if (context.getDataDrivenPrunedAll()) {
-                        toBeRemoved.add(context);
-                        ContextStats.numDataDrivenContextsPruning++;
-                        continue;
-                    }
-                    for (int c = 0; c < clustersBS.size(); c++) {
-                        if (context.getDataDrivenPruned(c) == false) {
-                            //if this context does not contain any tuples from a cluster, the prune
-                            BitSet clusterBS = clustersBS.get(c);
-                            if (BitSetUtil.subSetCoverage(context.getBitSet(), clusterBS) == 0) {
-                                context.setDataDrivenPruned(c);
-                            }
-                        }                       
-                    }
-                    if (context.getDataDrivenPrunedAll()) {
-                        toBeRemoved.add(context);
-                        ContextStats.numDataDrivenContextsPruning++;
-                        continue;
-                    }
-                    List<Datum> outliers = contextualOutlierDetection(data, context);
-                    BitSet outlierBS = context.getOutlierBitSet();
-                    //if the outliers contain tuples from a cluster, then the context can be pruned w.r.t. that cluster
-                    if (outliers != null && outliers.size() > 0 )  {
-                        contextWithOutliers.add(context);
-                        for (int c = 0; c < clustersBS.size(); c++) {
-                            if (context.getDataDrivenPruned(c) == false) {
-                                BitSet clusterBS = clustersBS.get(c);
-                                for (int i = clusterBS.nextSetBit(0); i >= 0; i = clusterBS.nextSetBit(i + 1)) {
-                                    if (i == Integer.MAX_VALUE) {
-                                        break; // or (i+1) would overflow
-                                    }
-                                    if (outlierBS.get(i)) {
-                                        context.setDataDrivenPruned(c);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (context.getDataDrivenPrunedAll()) {
-                        ContextStats.numDataDrivenContextsPruning++;
-                        toBeRemoved.add(context);
-                        continue;
-                    }
-                    
-                }
-                node.getDenseContexts().removeAll(toBeRemoved);
-            }
-            preLatticeNodes = curLatticeNodes;
-        }
-        return contextWithOutliers;
     }
     
     /**
@@ -320,31 +148,81 @@ public class ContextualOutlierDetector {
      * @throws Exception
      */
     public List<Context> searchContextualOutliers(List<Datum> data) throws Exception {
-        List<Datum> inputOutliers = new ArrayList<Datum>();
-        
-        String suspiciousTupleIndexes = conf.getString(MacroBaseConf.CONTEXTUAL_API_SUSPICIOUS_TUPLES_INDEX,
-                                                               MacroBaseDefaults.CONTEXTUAL_API_SUSPICIOUS_TUPLES_INDEX);
-        if (suspiciousTupleIndexes.equals(MacroBaseDefaults.CONTEXTUAL_API_SUSPICIOUS_TUPLES_INDEX)) {
-            //default, all contextual outliers
-            return searchContextGivenOutliers(data, inputOutliers);
-        } else {
-            String[] indexes = suspiciousTupleIndexes.split(",");
-            for (String index: indexes) {
-                inputOutliers.add(data.get(Integer.valueOf(index)));
-            }
-            return searchContextGivenOutliers(data, inputOutliers);
-        }
-             
+        return searchContextGivenOutliers(data, new ArrayList<Datum>());
     }
 
-    public List<Context> searchContextGivenOutliers(List<Datum> data, List<Datum> inputOutliers) throws Exception {
-        //result contexts that have the input outliers
+    /**
+     * Return true if foundOutliers contains at least one inputOutliers
+     * @param foundOutliers
+     * @param inputOutliers
+     * @return
+     */
+    private boolean containAtLeastOneInputOutliers(List<Datum> foundOutliers, List<Datum> inputOutliers) {
+        if (inputOutliers.size() == 0)
+            return true;
         
+        for (Datum d : inputOutliers) {
+            if (foundOutliers.contains(d))
+                return true;
+        }
+        return false;
+    }
+    
+    /**
+     * This context can be pruned if for all the tuples in inputOutlierIndexes that it does contain, they have been declared as outliers
+     * @param context
+     * @param inputOutlierIndexes
+     * @return
+     */
+    private boolean contextPruningInverse(Context context, List<Integer> inputOutlierIndexes) {
+        List<Integer> containedInputOutlierIndexes = new ArrayList<Integer>();
+        
+        List<Integer> is = BitSetUtil.bitSet2Indexes(context.getInverseBitSet());
+        for (Integer i: is) {
+            containedInputOutlierIndexes.add(inputOutlierIndexes.get(i));
+        }
+        
+        for (Integer index: containedInputOutlierIndexes) {
+            boolean isOutlierInSuperContexts = false;
+            if (context.getAncestorOutlierBitSet().get(index)) 
+                isOutlierInSuperContexts = true;
+            if (context.getOutlierBitSet() != null && context.getOutlierBitSet().get(index)) 
+                isOutlierInSuperContexts = true;
+            if (isOutlierInSuperContexts == false) {
+                return false;
+            }
+        }
+        ContextStats.numInversePruningInputOutliersContained++;
+        return true;
+    }
+    
+    public List<Context> searchContextGivenOutliers(List<Datum> data, List<Datum> inputOutliers) throws Exception {
+        List<Integer> inputOutlierIndexes = new ArrayList<Integer>();
+        if (inputOutliers.size() > 0) {
+            for (Datum d: inputOutliers) {
+                int inputOutlierIndex = data.indexOf(d);
+                inputOutlierIndexes.add(inputOutlierIndex);
+            }
+            
+        }
+        
+        //result contexts that have the input outliers
         globalContext = new Context(data, conf);
-        List<Datum> globalOutliers = contextualOutlierDetection(data, globalContext);
-        if (globalOutliers != null && globalOutliers.size() > 0 && globalOutliers.containsAll(inputOutliers)) {
+        if (inputOutliers.size() > 0) {
+            BitSet inverseBitSet = new BitSet(inputOutliers.size());
+            inverseBitSet.set(0, inputOutliers.size());
+            globalContext.setInverseBitSet(inverseBitSet);
+        }
+        List<Datum> globalOutliers = contextualOutlierDetection(data, globalContext, inputOutlierIndexes);
+        if (globalOutliers != null && globalOutliers.size() > 0 && containAtLeastOneInputOutliers(globalOutliers, inputOutliers)) {
             contextWithOutliers.add(globalContext);
         }
+        //The inverse problem can terminate, since global context contains all inputOutliers
+        if (inputOutliers.size() > 0 && globalOutliers != null && globalOutliers.size() > 0 && globalOutliers.containsAll(inputOutliers)) {
+            return contextWithOutliers;
+        }
+        
+       
         
         List<LatticeNode> preLatticeNodes = new ArrayList<LatticeNode>();
         List<LatticeNode> curLatticeNodes = new ArrayList<LatticeNode>();
@@ -355,13 +233,11 @@ public class ContextualOutlierDetector {
             long timeBuildLatticeBefore = System.currentTimeMillis();
             if (level == 1) {
                 curLatticeNodes = (inputOutliers.size() > 0 ) ? 
-                        buildOneDimensionalLatticeNodesGivenOutliers(data, inputOutliers):
+                        buildOneDimensionalLatticeNodesGivenOutliers(data, inputOutliers, inputOutlierIndexes):
                             buildOneDimensionalLatticeNodes(data);
                 int numberOfPredicates = 0;
                 for (LatticeNode node : curLatticeNodes) {
-                    for (Context context : node.getDenseContexts()) {
-                        numberOfPredicates++;
-                    }
+                    numberOfPredicates += node.getDenseContexts().size();  
                 }
                 log.debug("Number of predicates {}", numberOfPredicates);
             } else {
@@ -376,13 +252,13 @@ public class ContextualOutlierDetector {
             for (LatticeNode node : curLatticeNodes) {
                 HashSet<Context> toBeRemoved = new HashSet<Context>();
                 for (Context context : node.getDenseContexts()) {
-                    List<Datum> outliers = contextualOutlierDetection(data, context);
-                    if (outliers != null && outliers.size() > 0 && outliers.containsAll(inputOutliers)) {
+                    List<Datum> maximalOutliers = contextualOutlierDetection(data, context, inputOutlierIndexes);
+                    if (maximalOutliers != null && maximalOutliers.size() > 0 && containAtLeastOneInputOutliers(maximalOutliers, inputOutliers)) {
                         contextWithOutliers.add(context);
-                        if (inputOutliers.size() > 0) {
-                            //this is the second interface, given outliers
-                            toBeRemoved.add(context);
-                        }
+                    }
+                    if (inputOutliers.size() > 0 && contextPruningInverse(context, inputOutlierIndexes)) {
+                        //this is the second interface, given outliers
+                        toBeRemoved.add(context);
                     }
                 }
                 node.getDenseContexts().removeAll(toBeRemoved);
@@ -393,8 +269,6 @@ public class ContextualOutlierDetector {
         return contextWithOutliers;
     }
 
-    
-    
     private ContextIndexTree cit;
     /**
      * Walking up the lattice, construct the lattice node, when include those lattice nodes that contain at least one dense context
@@ -416,10 +290,75 @@ public class ContextualOutlierDetector {
       
         List<LatticeNode> latticeNodeByDimensions = new ArrayList<LatticeNode>(latticeNodes);
         Collections.sort(latticeNodeByDimensions, new LatticeNode.DimensionComparator());
-      
-        //find out dense candidate subspaces
         List<LatticeNode> result = new ArrayList<LatticeNode>();
-   
+        
+        LatticeNodeIndexTree lit = new LatticeNodeIndexTree();
+        for (LatticeNode ln: latticeNodeByDimensions) {
+            lit.addLatticeNode(ln);
+        }
+        
+        /*
+        for (int i = 0; i < latticeNodeByDimensions.size(); i++) {
+            
+            List<LatticeNode> test1 = new ArrayList<LatticeNode>();
+            LatticeNode s1 = latticeNodeByDimensions.get(i);
+            
+            List<Integer> s1Dimensions = new ArrayList<Integer>(s1.getDimensions());
+            int k = s1Dimensions.get(s1Dimensions.size() - 1) + 1;
+            for ( ; k < totalContextualDimensions; k++) {
+                s1Dimensions.remove(s1Dimensions.size() - 1);
+                s1Dimensions.add(k);
+                LatticeNode s2 = lit.getLatticeNode(s1Dimensions);
+                if (s2 != null) {
+                    LatticeNode joined = s1.join(s2, data, denseContextTau, cit);
+                    if (joined != null) {
+                        test1.add(s2);
+                    }
+                }
+                
+            }
+            
+            
+            List<LatticeNode> test2 = new ArrayList<LatticeNode>();
+            for (int j = i + 1; j < latticeNodeByDimensions.size(); j++) {
+                LatticeNode s2 = latticeNodeByDimensions.get(j);
+                LatticeNode joined = s1.join(s2, data, denseContextTau, cit);
+                if (joined != null) {
+                   test2.add(s2);
+                }
+            }
+            
+            if (!test1.containsAll(test2) || !test2.containsAll(test1)) {
+                System.err.println("ERROR");
+            }
+        }
+        */
+        
+        
+        for (int i = 0; i < latticeNodeByDimensions.size(); i++) {
+            
+            LatticeNode s1 = latticeNodeByDimensions.get(i);
+            List<Integer> s1Dimensions = new ArrayList<Integer>(s1.getDimensions());
+            int k = s1Dimensions.get(s1Dimensions.size() - 1) + 1;
+            for ( ; k < totalContextualDimensions; k++) {
+                s1Dimensions.remove(s1Dimensions.size() - 1);
+                s1Dimensions.add(k);
+                LatticeNode s2 = lit.getLatticeNode(s1Dimensions);
+                if (s2 != null) {
+                    LatticeNode joined = s1.join(s2, data, denseContextTau, cit);
+                    if (joined != null) {
+                        if (joined.getDenseContexts().size() != 0) {
+                            result.add(joined);
+                        }
+                    }
+                }
+                
+            }
+        }
+        
+        
+        //find out dense candidate subspaces
+        /*
         for (int i = 0; i < latticeNodeByDimensions.size(); i++) {
             for (int j = i + 1; j < latticeNodeByDimensions.size(); j++) {
                 LatticeNode s1 = latticeNodeByDimensions.get(i);
@@ -433,10 +372,10 @@ public class ContextualOutlierDetector {
                 }
             }
         }
+        */
         return result;
     }
 
-        
     /**
      * Run outlier detection algorithm on contextual data
      * The algorithm has to static threhold classifier
@@ -446,33 +385,38 @@ public class ContextualOutlierDetector {
      * @return
      * @throws Exception
      */
-    public List<Datum> contextualOutlierDetection(List<Datum> data, Context context) throws Exception {
-        
+    public List<Datum> contextualOutlierDetection(List<Datum> data, Context context, List<Integer> inputOutlierIndexes) throws Exception {
         //visit the context
         ContextStats.numContextsGenerated++;
         
-        long timeDetectContextualOutliersBefore = System.currentTimeMillis();
-        
-        //This has to be done regardless of using distribution pruning or not
-        List<Datum> contextualData = new ArrayList<Datum>();
+        //This should be counted as part of lattice building
+        long timeTemp1 = System.currentTimeMillis();
         BitSet bs = context.getBitSet();
         List<Integer> indexes = BitSetUtil.bitSet2Indexes(bs);
-        for (int i = 0; i < indexes.size(); i++) {
-            Datum curDatum = data.get(indexes.get(i));
-            contextualData.add(curDatum);
-        }
+        long timeTemp2 = System.currentTimeMillis();
+        ContextStats.timeBuildLattice += (timeTemp2 - timeTemp1);
         
-        if (conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_SUBSUMPTION, MacroBaseDefaults.CONTEXTUAL_PRUNING_SUBSUMPTION)
-                && conf.getTransformType() == TransformType.MAD
-               ) {
-            boolean MADSpecificPruned = MADSpecificPruning(context, contextualData);
-            if (MADSpecificPruned) {
-                ContextStats.numSubsumptionPruning++;
+        long timeDetectContextualOutliersBefore = System.currentTimeMillis();
+
+        if (conf.getTransformType() == TransformType.MAD &&
+                (conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_MAD_NOOUTLIERS, MacroBaseDefaults.CONTEXTUAL_PRUNING_MAD_NOOUTLIERS)||
+                        conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_MAD_CONTAINEDOUTLIERS, MacroBaseDefaults.CONTEXTUAL_PRUNING_MAD_CONTAINEDOUTLIERS))) {
+            long time1 = System.currentTimeMillis();
+            boolean MADNoOutliersContainedOutliersPruned = MADNoOutliersContainedOutliersPruningTight(context, data, indexes, inputOutlierIndexes);
+            long time2 = System.currentTimeMillis();
+            ContextStats.timeMADNoOutliersContainedOutliersPruned += (time2 - time1);
+            if (MADNoOutliersContainedOutliersPruned) {
+                long timeDetectContextualOutliersAfter = System.currentTimeMillis();
+                ContextStats.timeDetectContextualOutliers += (timeDetectContextualOutliersAfter - timeDetectContextualOutliersBefore);
                 return null;
             }
         }
         
-        
+        List<Datum> contextualData = new ArrayList<Datum>();
+        for (int i = 0; i < indexes.size(); i++) {
+            Datum curDatum = data.get(indexes.get(i));
+            contextualData.add(curDatum);
+        }
         //prepare to do outlier detection in this context
         context.setDetector(constructDetector());
        
@@ -491,150 +435,347 @@ public class ContextualOutlierDetector {
         }
         context.setMedian(((MAD)((BatchScoreFeatureTransform)featureTransform).getBatchTrainScore()).getMedian());
         context.setMAD(((MAD)((BatchScoreFeatureTransform)featureTransform).getBatchTrainScore()).getMAD());
+        context.setIsZeroMAD(((MAD)((BatchScoreFeatureTransform)featureTransform).getBatchTrainScore()).isZeroMAD());
+        context.setInlinerMR();
         
         //is there outliers in this context
         //construct outliers from outlierIndexes
-        List<Datum> outliers = new ArrayList<Datum>();
+        List<Datum> maximalOutliers = new ArrayList<Datum>();
         if (outlierIndexes.size() > 0) {
             ContextStats.numContextsGeneratedWithOutliers++;
             BitSet outlierBitSet = BitSetUtil.indexes2BitSet(outlierIndexes, data.size());
             context.setOutlierBitSet(outlierBitSet);
-            int numberNewOutliers = numberOutliersNotContainedInAncestor(context);
-            //boolean contained = contextualOutliersContained(context, 1);
-            if (numberNewOutliers > 0* outlierBitSet.cardinality()) {
-                context.setNumberOfOutliersNotContainedInAncestor(numberNewOutliers);
+            BitSet maximalOutlierBS = numberOutliersNotContainedInAncestor(context);
+            if (maximalOutlierBS.cardinality() > 0) {
+                context.setNumberOfOutliersNotContainedInAncestor(maximalOutlierBS.cardinality());
                 //outliers not contained in parent context outliers
-                for (int i = 0; i < outlierIndexes.size(); i++) {
-                    outliers.add(data.get(i));
+                List<Integer> newOutlierIndexes = BitSetUtil.bitSet2Indexes(maximalOutlierBS);
+                for (int i = 0; i < newOutlierIndexes.size(); i++) {
+                    maximalOutliers.add(data.get(newOutlierIndexes.get(i)));
                 }
                 ContextStats.numContextsGeneratedWithMaximalOutliers++;  
             } 
+            
         } else {
             ContextStats.numContextsGeneratedWithOutOutliers++;
         }
         
         long timeDetectContextualOutliersAfter = System.currentTimeMillis();
         ContextStats.timeDetectContextualOutliers += (timeDetectContextualOutliersAfter - timeDetectContextualOutliersBefore);
-        return outliers;
+        return maximalOutliers;
     }
     
-   
-    private boolean MADSpecificPruning(Context context, List<Datum> contextualData) {
-        double[] metrics = new double[contextualData.size()];
-        for (int i = 0; i < metrics.length; i++) {
-            metrics[i] = contextualData.get(i).getMetrics().getEntry(0);
+    private boolean MADNoOutliersContainedOutliersPruningTight(Context context, List<Datum> data, List<Integer> indexes, List<Integer> inputOutlierIndexes) {
+        double median = -1;
+        double MADLowerBound = -1;
+        if (indexes.size() % 2 == 1) {
+            int medianIndex = (indexes.size() - 1 )/ 2;
+            median = data.get(indexes.get(medianIndex)).getMetrics().getEntry(0);
+            
+            int step = (indexes.size() - 1) / 4;
+            int leftMADIndex = medianIndex - step;
+            int rightMADIndex = medianIndex + step;
+            double leftMADLowerBound = data.get(indexes.get(leftMADIndex)).getMetrics().getEntry(0);
+            double rightMADLowerBound = data.get(indexes.get(rightMADIndex)).getMetrics().getEntry(0);
+            MADLowerBound = Math.min(median - leftMADLowerBound, rightMADLowerBound - median);
+            
+        } else {
+            
+            median = data.get(indexes.get(indexes.size()/ 2)).getMetrics().getEntry(0)
+                    + data.get(indexes.get(indexes.size()/ 2 - 1)).getMetrics().getEntry(0);
+            median /= 2;
+            
+            int step = (indexes.size() / 2 - 1 ) / 2;;
+            int leftMADIndex = indexes.size()/ 2 - 1 - step;
+            int rightMADIndex = indexes.size()/ 2 + step;
+            double leftMADLowerBound = data.get(indexes.get(leftMADIndex)).getMetrics().getEntry(0);
+            double rightMADLowerBound = data.get(indexes.get(rightMADIndex)).getMetrics().getEntry(0);
+            MADLowerBound = Math.min(median - leftMADLowerBound, rightMADLowerBound - median);
+            
+        }
+        double threshold = conf.getDouble(MacroBaseConf.OUTLIER_STATIC_THRESHOLD, MacroBaseDefaults.OUTLIER_STATIC_THRESHOLD);
+        
+        double minValue = data.get(indexes.get(0)).getMetrics().getEntry(0);
+        double maxValue = data.get(indexes.get(indexes.size() - 1)).getMetrics().getEntry(0);
+      
+        //simply need to check if the inputOutliers can be outliers
+        if (inputOutlierIndexes.size() > 0 && conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_MAD_NOOUTLIERS, MacroBaseDefaults.CONTEXTUAL_PRUNING_MAD_NOOUTLIERS)) {
+            double requiredMADLowerBound = -Double.MIN_VALUE;
+            for (int i = 0; i < inputOutlierIndexes.size(); i++) {
+                if (context.getInverseBitSet().get(i)) {
+                    if (context.getAncestorOutlierBitSet() != null && context.getAncestorOutlierBitSet().get(inputOutlierIndexes.get(i)) )
+                        continue;
+                    double value = data.get(inputOutlierIndexes.get(i)).getMetrics().getEntry(0);
+                    double requiredMADLowerBoundFoCurValue = Math.abs((value - median)) / threshold;
+                    if (requiredMADLowerBoundFoCurValue > requiredMADLowerBound) {
+                        requiredMADLowerBound = requiredMADLowerBoundFoCurValue;
+                    }
+                }   
+            }
+            if (MADLowerBound >= requiredMADLowerBound) {
+                ContextStats.numMadNoOutliers++;
+                return true;
+            } else {
+                //check if MAD >= requiredMADLowerBound
+                if (MADLowerBoundVerification(context, data, indexes, requiredMADLowerBound)) {
+                    ContextStats.numMadNoOutliers++;
+                    return true;
+                }
+            }
+            return false;
+        } 
+        
+        if (conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_MAD_NOOUTLIERS, MacroBaseDefaults.CONTEXTUAL_PRUNING_MAD_NOOUTLIERS)) {
+            if (minValue == median && maxValue == median) {
+                ContextStats.numMadNoOutliers++; 
+                return true;
+            }
+            
+            double requiredMADLowerBoundForMinValue = (median - minValue) / threshold;
+            double requiredMADLowerBoundForMaxValue = (maxValue - median) / threshold;
+            double requiredMADLowerBound = Math.max(requiredMADLowerBoundForMinValue, requiredMADLowerBoundForMaxValue);
+            
+            if (MADLowerBound >= requiredMADLowerBound) {
+                ContextStats.numMadNoOutliers++;
+                return true;
+            } else {
+                //check if MAD >= requiredMADLowerBound
+                if (MADLowerBoundVerification(context, data, indexes, requiredMADLowerBound)) {
+                    ContextStats.numMadNoOutliers++;
+                    return true;
+                }
+            }
+            
         }
         
-        for (Context parent: context.getParents()) {
-            //does context have the same median and MAD as the parent
-            double parentMedian = parent.getMedian();
-            double parentMAD = parent.getMAD();
+        if (context == globalContext)
+            return false;
+        
+        if (conf.getBoolean(MacroBaseConf.CONTEXTUAL_PRUNING_MAD_CONTAINEDOUTLIERS, MacroBaseDefaults.CONTEXTUAL_PRUNING_MAD_CONTAINEDOUTLIERS)) {
+            MetricRange ancestorInlinerMR = context.getAncestorInlinerMR();
+            //at least one tuple is in the ancestorInlinerMR; otherwise, this context and its ancestors would have been pruned
+            //find the smallest value that is in the range, and the largest value that is in the range
+            double smallestValueInAncestorInlinerMR = 0;
+            double largestValueInAncestorInlinerMR = 0;
             
-            int negMedian = 0;
-            int posMedian = 0;
-            int exactMedian = 0;
-            for (double metric: metrics) {
-                if (metric < parentMedian) {
-                    negMedian++;
-                } else if (metric > parentMedian) {
-                    posMedian++;
-                } else {
-                    exactMedian++;
+            //use binary search to find smallestValueInAncestorInlinerMR 
+            //find the number of elements < leftBound
+            double leftBound = ancestorInlinerMR.getLeft();
+            int leftIndex = 0;
+            int rightIndex = indexes.size() - 1;
+            while (rightIndex >= leftIndex) {
+                int middleIndex = (leftIndex + rightIndex) / 2;
+                double middleValue = data.get(indexes.get(middleIndex)).getMetrics().getEntry(0);
+                if (middleValue < leftBound) {
+                    leftIndex = middleIndex + 1;
+                } else if (middleValue >= leftBound) {
+                    rightIndex = middleIndex - 1;
                 }
             }
-            boolean sameMedian = MADPruningSpecificHelper(negMedian, posMedian, exactMedian); 
-            if (!sameMedian) 
-                continue;
+            if (leftIndex >= 0 && leftIndex < indexes.size()) {
+                smallestValueInAncestorInlinerMR = data.get(indexes.get(leftIndex)).getMetrics().getEntry(0);
+            } else {
+                log.debug("Error: ancestorInlinerMR should contain at least one tuple at this point");
+            }
             
-            
-            int negMAD = 0;
-            int posMAD = 0;
-            int exactMAD = 0;
-            for (double metric: metrics) {
-                double value = Math.abs(metric - parentMedian);
-                if (value < parentMAD) {
-                    negMAD++;
-                } else if (value > parentMAD) {
-                    posMAD++;
-                } else {
-                    exactMAD++;
+            //use binary search to find largestValueInAncestorInlinerMR
+            //find number of elements > rightBound
+            double rightBound = ancestorInlinerMR.getRight();
+            leftIndex = 0;
+            rightIndex = indexes.size() - 1;
+            while (rightIndex >= leftIndex) {
+                int middleIndex = (leftIndex + rightIndex) / 2;
+                double middleValue = data.get(indexes.get(middleIndex)).getMetrics().getEntry(0);
+                if (middleValue <= rightBound) {
+                    leftIndex = middleIndex + 1;
+                } else if (middleValue > rightBound) {
+                    rightIndex = middleIndex - 1;
                 }
             }
-            boolean sameMAD = MADPruningSpecificHelper(negMAD, posMAD ,exactMAD);
-            if (!sameMAD)
-                continue;
+            if (rightIndex >= 0 && rightIndex < indexes.size()) {
+                largestValueInAncestorInlinerMR = data.get(indexes.get(rightIndex)).getMetrics().getEntry(0);
+            } else {
+                log.debug("Error: ancestorInlinerMR should contain at least one tuple at this point");
+            }
             
-            //System.err.println("MAD Specific Pruning, parent median: " + parentMedian + " parent mad: " + parentMAD);
-            //we have a parent with same median and MAD
-            context.setMedian(parentMedian);
-            context.setMAD(parentMAD);
-            if (parent.getOutlierBitSet() != null) {
-                BitSet outlierBitSet = (BitSet)parent.getOutlierBitSet().clone();
-                outlierBitSet.and(context.getBitSet());
-                context.setOutlierBitSet(outlierBitSet);
-            }
-                
-            return true;
-        }
-        return false;
-    }
-    
-    private boolean MADPruningSpecificHelper(int negMedian, int posMedian, int exactMedian)  {
-        if (posMedian == negMedian) {
-            return true;
-        } else if (posMedian > negMedian) {
-            if (negMedian + exactMedian > posMedian) {
+            double requiredMADLowerBoundForSmallestValueInAncestorInlinerMR = Math.abs(smallestValueInAncestorInlinerMR - median) / threshold;
+            double requiredMADLowerBoundForLargestValueInAncestorInlinerMR = Math.abs(largestValueInAncestorInlinerMR - median) / threshold;
+            
+            double requiredMADLowerBound = Math.max(requiredMADLowerBoundForSmallestValueInAncestorInlinerMR, requiredMADLowerBoundForLargestValueInAncestorInlinerMR);
+            if (MADLowerBound >= requiredMADLowerBound) {
+                ContextStats.numMadContainedOutliers++;
                 return true;
             } else {
-                //approximate
-            }
-        } else {
-            if (posMedian + exactMedian > negMedian) {
-                return true;
-            } else {
-                //approximate
+                //check if MAD >= requiredMADLowerBound
+                if (MADLowerBoundVerification(context, data, indexes, requiredMADLowerBound)) {
+                    ContextStats.numMadContainedOutliers++;
+                    return true;
+                }
             }
         }
+       
+        
         return false;
     }
     
     /**
-     * Return the parent context whose outliers contain the outliers in context
+     * Check if the MAD of the indexes has the requiredMADLowerBound
      * @param context
-     * @param threshold
+     * @param data
+     * @param indexes
+     * @param requiredMADLowerBound
      * @return
      */
-    private boolean contextualOutliersContained(Context context, double threshold) {
-        BitSet outlierBitSet = context.getOutlierBitSet();
-        BitSet ancestorOutlierBitSet = context.getAncestorOutlierBitSet();
-        
-        if (ancestorOutlierBitSet == null) {
-            //global context
-            return false;
-        }
-       
-        double coverage = BitSetUtil.subSetCoverage(outlierBitSet, ancestorOutlierBitSet);
-        if (coverage >= threshold) {
-            return true;
+    private boolean MADLowerBoundVerification(Context context, List<Datum> data, List<Integer> indexes, double requiredMADLowerBound) {
+        //count the number of values < requiredMADLowerBound
+        int numValuesLessThanRequiredMADLowerBound = 0;
+        if (indexes.size() % 2 == 1) {
+            int medianIndex = (indexes.size() - 1 )/ 2;
+            double median = data.get(indexes.get(medianIndex)).getMetrics().getEntry(0);
+            //search the right half 
+            int leftIndex = medianIndex;
+            int rightIndex = indexes.size() - 1;
+            while (rightIndex >= leftIndex) {
+                int middleIndex = (leftIndex + rightIndex) / 2;
+                double middleValue = data.get(indexes.get(middleIndex)).getMetrics().getEntry(0) - median;
+                if (middleValue < requiredMADLowerBound) {
+                    leftIndex = middleIndex + 1;
+                } else if (middleValue >= requiredMADLowerBound) {
+                    rightIndex = middleIndex - 1;
+                }
+            }
+            numValuesLessThanRequiredMADLowerBound += (leftIndex - medianIndex);
+            
+            //search the left half
+            leftIndex = medianIndex - 1;
+            rightIndex = 0;
+            while (leftIndex >= rightIndex) {
+                int middleIndex = (leftIndex + rightIndex) / 2;
+                double middleValue = median - data.get(indexes.get(middleIndex)).getMetrics().getEntry(0);
+                if (middleValue < requiredMADLowerBound) {
+                    leftIndex = middleIndex - 1;
+                } else if (middleValue >= requiredMADLowerBound) {
+                    rightIndex = middleIndex + 1;
+                }
+            }
+            numValuesLessThanRequiredMADLowerBound += ((medianIndex - 1) - leftIndex) ;
+            /*
+            int test = 0;
+            for (int i = 0; i < indexes.size(); i++) {
+                double value = data.get(indexes.get(i)).getMetrics().getEntry(0);
+                if (Math.abs(value - median) < requiredMADLowerBound) {
+                    test++;
+                }
+            }
+            if (test != numValuesLessThanRequiredMADLowerBound) {
+                System.err.println("ERROR");
+            }
+            */
+            if (numValuesLessThanRequiredMADLowerBound <= indexes.size() / 2) {
+                return true;
+            } else {
+                return false;
+            }
+            
         } else {
-            return false;
+            double median = data.get(indexes.get(indexes.size()/ 2)).getMetrics().getEntry(0)
+                    + data.get(indexes.get(indexes.size()/ 2 - 1)).getMetrics().getEntry(0);
+            median /= 2;
+            //search the right half
+            int leftIndex = indexes.size()/ 2;
+            int rightIndex = indexes.size() - 1;
+            while (rightIndex >= leftIndex) {
+                int middleIndex = (leftIndex + rightIndex) / 2;
+                double middleValue = data.get(indexes.get(middleIndex)).getMetrics().getEntry(0) - median;
+                if (middleValue < requiredMADLowerBound) {
+                    leftIndex = middleIndex + 1;
+                } else if (middleValue >= requiredMADLowerBound) {
+                    rightIndex = middleIndex - 1;
+                }
+            }
+            numValuesLessThanRequiredMADLowerBound += (leftIndex - indexes.size()/ 2);
+            int finalLeftIndexRightHalf = leftIndex;
+            //search the left half
+            leftIndex = indexes.size()/ 2 - 1;
+            rightIndex = 0;
+            while (leftIndex >= rightIndex) {
+                int middleIndex = (leftIndex + rightIndex) / 2;
+                double middleValue = median - data.get(indexes.get(middleIndex)).getMetrics().getEntry(0);
+                if (middleValue < requiredMADLowerBound) {
+                    leftIndex = middleIndex - 1;
+                } else if (middleValue >= requiredMADLowerBound) {
+                    rightIndex = middleIndex + 1;
+                }
+            }
+            numValuesLessThanRequiredMADLowerBound += (indexes.size()/ 2 - 1 - leftIndex) ;
+            int finalLeftIndexLeftHalf = leftIndex;
+            /*
+            int test = 0;
+            for (int i = 0; i < indexes.size(); i++) {
+                double value = data.get(indexes.get(i)).getMetrics().getEntry(0);
+                if (Math.abs(value - median) < requiredMADLowerBound) {
+                    test++;
+                }
+            }
+            if (test != numValuesLessThanRequiredMADLowerBound) {
+                System.err.println("ERROR");
+            }*/
+            if (numValuesLessThanRequiredMADLowerBound <= indexes.size() / 2 - 1) {
+                return true;
+            } else if (numValuesLessThanRequiredMADLowerBound == indexes.size() / 2){
+                double middleValue1 = Double.MIN_VALUE;
+                if (finalLeftIndexRightHalf-1 >= indexes.size()/ 2) {
+                    middleValue1 = Math.max(middleValue1, data.get(indexes.get(finalLeftIndexRightHalf-1)).getMetrics().getEntry(0) - median);
+                }
+                if (finalLeftIndexLeftHalf+1 <= indexes.size()/ 2 - 1) {
+                    middleValue1 = Math.max(middleValue1, median - data.get(indexes.get(finalLeftIndexLeftHalf+1)).getMetrics().getEntry(0));
+
+                }
+                double middleValue2 = Double.MAX_VALUE;
+                if (finalLeftIndexRightHalf <= indexes.size() - 1) {
+                    middleValue2 = Math.min(middleValue2, data.get(indexes.get(finalLeftIndexRightHalf)).getMetrics().getEntry(0) - median);
+                }
+                if (finalLeftIndexLeftHalf >= 0) {
+                    middleValue2 = Math.min(middleValue2,  median - data.get(indexes.get(finalLeftIndexLeftHalf)).getMetrics().getEntry(0));
+                }
+                double mad = (middleValue1 + middleValue2) /2;
+                /*
+                double[] tempValues = new double[indexes.size()];
+                for (int i = 0; i < indexes.size(); i++) {
+                    double value = data.get(indexes.get(i)).getMetrics().getEntry(0);
+                    tempValues[i] = Math.abs(value - median);
+                }
+                Arrays.sort(tempValues);
+                double mad = (tempValues[indexes.size() / 2 - 1] + tempValues[indexes.size() / 2])/2;
+                if (mad != (middleValue1 + middleValue2) /2) {
+                    System.err.println("ERROR");
+                }*/
+                if (mad >= requiredMADLowerBound) {
+                    return true;
+                } else {
+                    return false;
+                } 
+            } else  {
+                return false;
+            }   
         }
-       
     }
     
-    private int numberOutliersNotContainedInAncestor(Context context) {
+    
+    
+    private BitSet numberOutliersNotContainedInAncestor(Context context) {
         BitSet outlierBitSet = context.getOutlierBitSet();
         BitSet ancestorOutlierBitSet = context.getAncestorOutlierBitSet();
         
         if (ancestorOutlierBitSet == null) {
-            return outlierBitSet.cardinality();
+            return outlierBitSet;
         }
         if (outlierBitSet.cardinality() == 0) {
-            return 0;
+            return outlierBitSet;
          }
          BitSet bsClone = (BitSet)outlierBitSet.clone();
          bsClone.andNot(ancestorOutlierBitSet);
-         return bsClone.cardinality();
+         return bsClone;
     }
     
 
@@ -656,7 +797,10 @@ public class ContextualOutlierDetector {
      * @return
      * @throws ConfigurationException 
      */
-    private List<LatticeNode> buildOneDimensionalLatticeNodes(List<Datum> data) throws ConfigurationException {
+    public List<LatticeNode> buildOneDimensionalLatticeNodes(List<Datum> data) throws ConfigurationException {
+        if (globalContext == null) {
+            globalContext = new Context(data, conf);
+        }
         //create subspaces
         List<LatticeNode> latticeNodes = new ArrayList<LatticeNode>();
         for (int dimension = 0; dimension < totalContextualDimensions; dimension++) {
@@ -671,13 +815,82 @@ public class ContextualOutlierDetector {
         return latticeNodes;
     }
 
-    private List<LatticeNode> buildOneDimensionalLatticeNodesGivenOutliers(List<Datum> data, List<Datum> inputOutliers) throws ConfigurationException {
+    private List<LatticeNode> buildOneDimensionalLatticeNodesGivenOutliers(List<Datum> data, List<Datum> inputOutliers, List<Integer> inputOutlierIndexes) throws ConfigurationException {
+        
+        if (this.oneDimensionalLatticeNodes != null) {
+            List<LatticeNode> latticeNodes = new ArrayList<LatticeNode>();
+            
+            //use previously computed one-dimensional lattice node
+            for (LatticeNode oldLatticeNode: oneDimensionalLatticeNodes) {
+                LatticeNode ss = new LatticeNode(oldLatticeNode.getDimensions().get(0));
+                for (Context denseContext: oldLatticeNode.getDenseContexts()) {
+                    
+                    Context newDenseContext = new Context(denseContext.getDimensions().get(0), denseContext.getIntervals().get(0), globalContext);
+                    newDenseContext.setBitSet(denseContext.getBitSet());
+                    boolean containInputOutliers = false;
+                    for (int i = 0; i < inputOutliers.size(); i++) {
+                        if (newDenseContext.getBitSet().get(inputOutlierIndexes.get(i))) {
+                            containInputOutliers = true;
+                            break;
+                        }
+                    }
+                    if (containInputOutliers == true) {
+                        ss.addDenseContext(newDenseContext);
+                        BitSet inverseBitSet = new BitSet(inputOutliers.size());
+                        for (int i = 0; i < inputOutliers.size(); i++) {
+                            if (newDenseContext.getBitSet().get(inputOutlierIndexes.get(i))) {
+                                inverseBitSet.set(i);
+                            }
+                        }
+                        newDenseContext.setInverseBitSet(inverseBitSet);
+                    }
+                }
+                latticeNodes.add(ss);
+            }
+            
+            return latticeNodes;
+        }
+        
         //create subspaces
         List<LatticeNode> latticeNodes = new ArrayList<LatticeNode>();
+        int discreteDimensions = contextualDiscreteAttributes.size();
         for (int dimension = 0; dimension < totalContextualDimensions; dimension++) {
             LatticeNode ss = new LatticeNode(dimension);
-            List<Context> denseContexts = initOneDimensionalDenseContextsAndContext2DataGivenOutliers(data, dimension,
-                                                                                                      inputOutliers);
+            
+            List<Context> denseContexts = null;
+            if (dimension < discreteDimensions) {
+                //discrete attribute
+                denseContexts = initOneDimensionalDenseContextsAndContext2DataGivenOutliers(data, dimension, inputOutliers, inputOutlierIndexes);
+            } else {
+                denseContexts = initOneDimensionalDenseContextsAndContext2Data(data, dimension, denseContextTau); 
+                //remove those denseContexts that does not contain at least one inputOutliers
+                List<Context> toBeRemoved = new ArrayList<Context>();
+                for (Context context: denseContexts) {
+                    boolean containInputOutliers = false;
+                    for (int i = 0; i < inputOutliers.size(); i++) {
+                        if (context.getBitSet().get(inputOutlierIndexes.get(i))) {
+                            containInputOutliers = true;
+                            break;
+                        }
+                    }
+                    if (containInputOutliers == false) {
+                        toBeRemoved.add(context);
+                    }
+                }
+                denseContexts.removeAll(toBeRemoved);
+            }
+                
+            //set the inverseBitSet
+            for (Context context: denseContexts) {
+                BitSet inverseBitSet = new BitSet(inputOutliers.size());
+                for (int i = 0; i < inputOutliers.size(); i++) {
+                    if (context.getBitSet().get(inputOutlierIndexes.get(i))) {
+                        inverseBitSet.set(i);
+                    }
+                }
+                context.setInverseBitSet(inverseBitSet);
+            }
+            
             for (Context denseContext : denseContexts) {
                 ss.addDenseContext(denseContext);
                 if (isEncoderSetup())
@@ -785,10 +998,14 @@ public class ContextualOutlierDetector {
                 log.debug("\t only one value in this attribute value is: {}", values[0]);
                 return result;
             }
-                
+            List<Integer> randomSampleIndexes = fixedSampleIndexes(data.size(), 1000);
+            double[] sampleValues = new double[randomSampleIndexes.size()];
+            for (int i = 0; i < randomSampleIndexes.size(); i++)
+                sampleValues[i] = values[randomSampleIndexes.get(i)];
+            
           
             HashSet<Interval> allIntervals = new HashSet<Interval>();
-            List<Interval> tempIntervals = new Discretization(values).kMeans(20);
+            List<Interval> tempIntervals = new Discretization(sampleValues).kMeans(numIntervals);
             for (Interval tempInterval: tempIntervals) {
                 Interval interval = new IntervalDouble(dimension, contextualDoubleAttributes.get(
                             dimension - discreteDimensions), ((IntervalDouble)tempInterval).getMin(), ((IntervalDouble)tempInterval).getMax());
@@ -834,9 +1051,9 @@ public class ContextualOutlierDetector {
         return result;
     }
 
-    private List<Context> initOneDimensionalDenseContextsAndContext2DataGivenOutliers(List<Datum> data, int dimension, List<Datum> inputOutliers) throws ConfigurationException {
-        List<Context> contextsContainingOutliers = initOneDimensionalDenseContextsAndContext2Data(inputOutliers,
-                                                                                                  dimension, 1.0);
+    private List<Context> initOneDimensionalDenseContextsAndContext2DataGivenOutliers(List<Datum> data, int dimension, List<Datum> inputOutliers, List<Integer> inputOutlierIndexes) throws ConfigurationException {
+        //consider a context as long as it contains at least one outlier.
+        List<Context> contextsContainingOutliers = initOneDimensionalDenseContextsAndContext2Data(inputOutliers, dimension, 1.0 / (inputOutliers.size() + 1));
         List<Context> result = new ArrayList<Context>();
         //re-initialize context2Bitset
         for (Context context : contextsContainingOutliers) {
@@ -857,6 +1074,35 @@ public class ContextualOutlierDetector {
         return result;
     }
 
+    private List<Integer> randomSampleIndexes(int size, int numSample) {
+        List<Integer> sampleDataIndexes = new ArrayList<Integer>();
+        Random rnd = new Random();
+        for (int i = 0; i < size; i++) {
+            if (sampleDataIndexes.size() < numSample) {
+                sampleDataIndexes.add(i);
+            } else {
+                int j = rnd.nextInt(i); //j in [0,i)
+                if (j < sampleDataIndexes.size()) {
+                    sampleDataIndexes.set(j, i);
+                }
+            }
+        }
+        return sampleDataIndexes;
+    }
 
-
+    private List<Integer> fixedSampleIndexes(int size, int numSample) {
+        List<Integer> sampleDataIndexes = new ArrayList<Integer>();
+        if (numSample >= size) {
+            for (int i = 0; i < size; i++) {
+                sampleDataIndexes.add(i);
+            }
+        } else {
+            int step = size / numSample;
+            for (int i = 0; i < size; i = i + step) {
+                sampleDataIndexes.add(i);
+            }
+        }
+        
+        return sampleDataIndexes;
+    }
 }

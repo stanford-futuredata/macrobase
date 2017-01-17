@@ -1,0 +1,16 @@
+[
+{
+    "macrobase.loader.targetLowMetrics": [],
+    "macrobase.loader.db.baseQuery": "SELECT * FROM cmtlogfrequency;",
+    "isBatchJob": true,
+    "macrobase.loader.attributes": ["system_version","system_name","system_build_number","bundle_id","app_version","build","library_version","model","carrier","server_base_url","aws_token","language","locale"],
+
+    "macrobase.query.name": "cmtlogfrequency",
+    "macrobase.loader.targetHighMetrics": ["logid_0"],
+    "macrobase.loader.targetCategoricalMetrics": [],
+
+    "macrobase.analysis.contextual.discreteAttributes": ["system_version","system_name","system_build_number","bundle_id","app_version","build","library_version","model","carrier","server_base_url","aws_token","language","locale"],
+	"macrobase.analysis.contextual.doubleAttributes": []
+
+  }
+]

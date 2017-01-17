@@ -13,9 +13,8 @@ public class Datum implements HasMetrics {
     private final Long id;
     private List<Integer> attributes;
     private RealVector metrics;
+    private List<Integer> categoricalMetrics;
     private RealVector auxiliaries;
-
-
 
     private List<Integer> contextualDiscreteAttributes;
     private RealVector contextualDoubleAttributes;
@@ -35,6 +34,7 @@ public class Datum implements HasMetrics {
         this.id = idGen.incrementAndGet();
         this.parentDatumID = oldDatum.getID();
         this.metrics = metrics;
+        this.categoricalMetrics = oldDatum.categoricalMetrics;
         this.attributes = oldDatum.getAttributes();
         this.contextualDiscreteAttributes = oldDatum.getContextualDiscreteAttributes();
         this.contextualDoubleAttributes = oldDatum.getContextualDoubleAttributes();
@@ -58,6 +58,15 @@ public class Datum implements HasMetrics {
         this.contextualDiscreteAttributes = contextualDiscreteAttributes;
         this.contextualDoubleAttributes = contextualDoubleAttributes;
     }
+    
+    public Datum(List<Integer> attributes, RealVector metrics, List<Integer> categoricalMetrics, List<Integer> contextualDiscreteAttributes, RealVector contextualDoubleAttributes) {
+        this();
+        this.attributes = attributes;
+        this.metrics = metrics;
+        this.categoricalMetrics = categoricalMetrics;
+        this.contextualDiscreteAttributes = contextualDiscreteAttributes;
+        this.contextualDoubleAttributes = contextualDoubleAttributes;
+    }
 
     public int getTime(Integer timeColumn) {
         return (int) metrics.getEntry(timeColumn);
@@ -70,6 +79,10 @@ public class Datum implements HasMetrics {
     @Override
     public RealVector getMetrics() {
         return metrics;
+    }
+    
+    public List<Integer> getCategoricalMetrics() {
+        return categoricalMetrics;
     }
 
     public RealVector getAuxiliaries() {

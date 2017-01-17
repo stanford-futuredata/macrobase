@@ -174,8 +174,8 @@ public abstract class SQLIngester extends DataIngester {
 
         if (resultSet == null) {
             String targetColumns = StreamSupport.stream(
-                    Iterables.concat(attributes, lowMetrics, highMetrics, contextualDiscreteAttributes,
-                            contextualDoubleAttributes, auxiliaryAttributes).spliterator(), false)
+                    Iterables.concat(attributes, lowMetrics, highMetrics, categoricalMetrics,
+                            contextualDiscreteAttributes, contextualDoubleAttributes, auxiliaryAttributes).spliterator(), false)
                     .collect(Collectors.joining(", "));
             if (timeColumn != null) {
                 targetColumns += ", " + timeColumn;
@@ -210,15 +210,16 @@ public abstract class SQLIngester extends DataIngester {
         resultSet.next();
         List<Integer> attrList = getAttrs(resultSet, conf.getEncoder(), 1);
         RealVector metricVec = getMetrics(resultSet, attrList.size() + 1);
+        List<Integer> categoricalMetricList = getCategoricalMetrics(resultSet, conf.getEncoder(), attrList.size() + metricVec.getDimension() + 1);
+        
+        List<Integer> contextualDiscreteAttrValues = getContextualDiscreteAttrs(resultSet, conf.getEncoder(), attrList.size() + metricVec.getDimension() + categoricalMetricList.size() + 1);
+        RealVector contextualDoubleAttrValues = getContextualDoubleAttrs(resultSet, attrList.size() + metricVec.getDimension() + categoricalMetricList.size() + contextualDiscreteAttrValues.size() + 1);
 
-        List<Integer> contextualDiscreteAttrValues = getContextualDiscreteAttrs(resultSet, conf.getEncoder(), attrList.size() + metricVec.getDimension() + 1);
-        RealVector contextualDoubleAttrValues = getContextualDoubleAttrs(resultSet, attrList.size() + metricVec.getDimension() + contextualDiscreteAttrValues.size() + 1);
-
-        Datum datum = new Datum(attrList, metricVec, contextualDiscreteAttrValues, contextualDoubleAttrValues);
+        Datum datum = new Datum(attrList, metricVec, categoricalMetricList, contextualDiscreteAttrValues, contextualDoubleAttrValues);
 
         // Set auxilaries on the datum if user specified
         if (auxiliaryAttributes.size() > 0) {
-            RealVector auxilaries = getAuxiliaries(resultSet, attrList.size() + metricVec.getDimension() + contextualDiscreteAttrValues.size() + contextualDoubleAttrValues.getDimension() + 1);
+            RealVector auxilaries = getAuxiliaries(resultSet, attrList.size() + metricVec.getDimension() + categoricalMetricList.size() + contextualDiscreteAttrValues.size() + contextualDoubleAttrValues.getDimension() + 1);
             datum.setAuxiliaries(auxilaries);
         }
         return datum;
@@ -249,6 +250,15 @@ public abstract class SQLIngester extends DataIngester {
             metricVec.setEntry(vecPos, val);
         }
         return metricVec;
+    }
+    
+    private List<Integer> getCategoricalMetrics(ResultSet rs, DatumEncoder encoder, int rsStartIndex)
+            throws SQLException {
+        List<Integer> categoricalMetricList = new ArrayList<>(categoricalMetrics.size());
+        for (int i = rsStartIndex; i < categoricalMetrics.size() + rsStartIndex; ++i) {
+            categoricalMetricList.add(encoder.getIntegerEncoding(i, rs.getString(i)));
+        }
+        return categoricalMetricList;
     }
 
     private RealVector getAuxiliaries(ResultSet rs,

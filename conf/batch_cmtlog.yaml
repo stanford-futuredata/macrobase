@@ -1,0 +1,33 @@
+macrobase.query.name: cmtlogfrequency
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicMultipleMetricsBatchedPipeline
+macrobase.loader.attributes: [system_version, system_name, system_build_number, bundle_id, app_version, build, library_version, model, carrier, server_base_url, aws_token, language, locale]
+macrobase.loader.targetLowMetrics: []
+macrobase.loader.targetHighMetrics: [logid_0, logid_1, logid_2, logid_3, logid_4, logid_5, logid_6, logid_7, logid_8, logid_9, logid_10, logid_11, logid_12, logid_13, logid_14, logid_15, logid_16, logid_17, logid_18, logid_19, logid_20, logid_21, logid_22, logid_23, logid_24, logid_25, logid_26, logid_27, logid_28, logid_29, logid_30, logid_31, logid_32, logid_33, logid_34, logid_35, logid_36, logid_37, logid_38, logid_39, logid_40, logid_41, logid_42, logid_43, logid_44, logid_45, logid_46, logid_47, logid_48, logid_49, logid_50, logid_51, logid_52, logid_53, logid_54, logid_55, logid_56, logid_57, logid_58, logid_59, logid_60, logid_61, logid_62, logid_63, logid_64, logid_65, logid_66, logid_67, logid_68, logid_69, logid_70, logid_71, logid_72, logid_73, logid_74, logid_75, logid_76, logid_77, logid_78, logid_79, logid_80, logid_81, logid_82, logid_83, logid_84, logid_85, logid_86, logid_87, logid_88, logid_89, logid_90, logid_91, logid_92, logid_93, logid_94, logid_95, logid_96, logid_97, logid_98, logid_99, logid_100, logid_101, logid_102, logid_103, logid_104, logid_105, logid_106, logid_107, logid_108, logid_109, logid_110, logid_111, logid_112, logid_113, logid_114, logid_115, logid_116, logid_117, logid_118, logid_119, logid_120, logid_121, logid_122, logid_123, logid_124, logid_125, logid_126, logid_127, logid_128, logid_129, logid_130, logid_131, logid_132, logid_133, logid_134, logid_135, logid_136, logid_137, logid_138, logid_139, logid_140, logid_141, logid_142, logid_143, logid_144, logid_145, logid_146, logid_147, logid_148, logid_149, logid_150, logid_151, logid_152, logid_153, logid_154, logid_155, logid_156, logid_157, logid_158, logid_159, logid_160, logid_161, logid_162, logid_163, logid_164, logid_165, logid_166, logid_167, logid_168, logid_169, logid_170, logid_171, logid_172, logid_173, logid_174, logid_175, logid_176, logid_177, logid_178, logid_179, logid_180, logid_181, logid_182, logid_183, logid_184, logid_185, logid_186, logid_187, logid_188, logid_189, logid_190, logid_191, logid_192, logid_193, logid_194, logid_195, logid_196, logid_197, logid_198, logid_199, logid_200, logid_201, logid_202, logid_203, logid_204, logid_205, logid_206, logid_207, logid_208, logid_209, logid_210, logid_211, logid_212, logid_213, logid_214, logid_215, logid_216, logid_217, logid_218, logid_219, logid_220, logid_221, logid_222, logid_223, logid_224, logid_225, logid_226, logid_227, logid_228, logid_229, logid_230, logid_231, logid_232, logid_233, logid_234, logid_235, logid_236, logid_237, logid_238, logid_239, logid_240, logid_241, logid_242, logid_243, logid_244, logid_245, logid_246, logid_247, logid_248, logid_249, logid_250, logid_251, logid_252, logid_253, logid_254, logid_255, logid_256, logid_257, logid_258, logid_259, logid_260, logid_261, logid_262, logid_263, logid_264, logid_265, logid_266, logid_267, logid_268, logid_269, logid_270, logid_271, logid_272, logid_273, logid_274, logid_275, logid_276, logid_277, logid_278, logid_279, logid_280, logid_281, logid_282, logid_283, logid_284, logid_285, logid_286, logid_287, logid_288, logid_289, logid_290, logid_291, logid_292, logid_293, logid_294, logid_295, logid_296, logid_297, logid_298, logid_299, logid_300, logid_301, logid_302, logid_303, logid_304, logid_305, logid_306, logid_307, logid_308, logid_309, logid_310, logid_311, logid_312, logid_313, logid_314, logid_315, logid_316, logid_317, logid_318, logid_319, logid_320, logid_321, logid_322, logid_323, logid_324, logid_325, logid_326, logid_327, logid_328, logid_329, logid_330, logid_331, logid_332, logid_333, logid_334, logid_335, logid_336, logid_337, logid_338, logid_339, logid_340, logid_341, logid_342, logid_343, logid_344, logid_345, logid_346, logid_347, logid_348, logid_349, logid_350, logid_351, logid_352, logid_353, logid_354, logid_355, logid_356, logid_357, logid_358, logid_359, logid_360, logid_361, logid_362, logid_363, logid_364, logid_365, logid_366, logid_367, logid_368, logid_369, logid_370, logid_371, logid_372, logid_373, logid_374, logid_375, logid_376, logid_377, logid_378, logid_379, logid_380, logid_381, logid_382, logid_383, logid_384, logid_385, logid_386, logid_387, logid_388, logid_389, logid_390, logid_391, logid_392, logid_393, logid_394, logid_395, logid_396, logid_397, logid_398, logid_399, logid_400, logid_401, logid_402, logid_403, logid_404, logid_405, logid_406, logid_407, logid_408, logid_409, logid_410, logid_411, logid_412, logid_413, logid_414, logid_415, logid_416, logid_417, logid_418, logid_419, logid_420, logid_421, logid_422, logid_423, logid_424, logid_425, logid_426, logid_427, logid_428, logid_429, logid_430, logid_431, logid_432, logid_433, logid_434, logid_435, logid_436, logid_437, logid_438, logid_439, logid_440, logid_441, logid_442, logid_443, logid_444, logid_445, logid_446, logid_447, logid_448]
+macrobase.loader.targetCategoricalMetrics: []
+
+
+macrobase.analysis.transformType: MAD
+
+macrobase.loader.db.user: xuchu
+macrobase.loader.db.baseQuery: SELECT * FROM cmtlogfrequency;
+
+macrobase.analysis.minSupport: 0.5000
+macrobase.analysis.minOIRatio: 3.0000
+
+macrobase.analysis.useZScore: true
+macrobase.analysis.zscore.threshold: 5.0000
+
+macrobase.analysis.usePercentile: false
+macrobase.analysis.targetPercentile: 0.9900
+
+macrobase.analysis.mcd.alpha: 0.5000
+macrobase.analysis.mcd.stoppingDelta: 0.0010
+
+macrobase.loader.loaderType: POSTGRES_LOADER
+macrobase.loader.db.cacheDirectory: sql_cache
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": TRACE
