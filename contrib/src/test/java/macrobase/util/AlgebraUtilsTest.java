@@ -13,7 +13,7 @@ public class AlgebraUtilsTest {
     /**
      * test that v^T M v == vec(M) vec(v v^T)
      */
-    public void testVectorization() {
+    public void testFlattenSquareMatrixByColumns() {
         double[][] matrixContents = {
                 {1, 2, 3},
                 {4, 5, 6},
@@ -27,9 +27,42 @@ public class AlgebraUtilsTest {
         };
 
         RealMatrix matrix = new BlockRealMatrix(matrixContents);
-        RealVector vectorizedMatrix = AlgebraUtils.vectorize(matrix);
+        RealVector vectorizedMatrix = AlgebraUtils.flattenMatrixByColumns(matrix);
         RealVector vector = new ArrayRealVector(vectorContents);
         assertEquals(vectorizedMatrix, new ArrayRealVector(flattenedMatrixContents));
-        assertEquals(vector.dotProduct(matrix.operate(vector)), vectorizedMatrix.dotProduct(AlgebraUtils.vectorize(vector.outerProduct(vector))));
+        assertEquals(vector.dotProduct(matrix.operate(vector)), vectorizedMatrix.dotProduct(AlgebraUtils.flattenMatrixByColumns(vector.outerProduct(vector))));
+    }
+
+    @Test
+    public void testFlattenMatrixByColumns() {
+        double[][] matrixContents = {
+                {1, 2, 3},
+                {4, 5, 6},
+        };
+        double[] flattenedMatrixContents = {
+                1, 4, 2, 5, 3, 6,
+        };
+
+        RealMatrix matrix = new BlockRealMatrix(matrixContents);
+        RealVector vectorizedMatrix = AlgebraUtils.flattenMatrixByColumns(matrix);
+        assertEquals(new ArrayRealVector(flattenedMatrixContents), vectorizedMatrix);
+    }
+
+    @Test
+    public void testFlattenAndReshapeByColumns() {
+        double[][] matrixContents = {
+                {1, 2, 3},
+                {4, 5, 6},
+        };
+        double[] flattenedMatrixContents = {
+                1, 4, 2, 5, 3, 6,
+        };
+
+        RealMatrix matrix = new BlockRealMatrix(matrixContents);
+        RealVector vectorizedMatrix = AlgebraUtils.flattenMatrixByColumns(matrix);
+        assertEquals(new ArrayRealVector(flattenedMatrixContents), vectorizedMatrix);
+        RealMatrix newMatrix = AlgebraUtils.reshapeMatrixByColumns(vectorizedMatrix, matrix.getColumnDimension(), matrix.getRowDimension());
+        assertEquals(matrix, newMatrix);
+        assertEquals(matrix, AlgebraUtils.reshapeMatrixByColumns(vectorizedMatrix, matrix));
     }
 }
