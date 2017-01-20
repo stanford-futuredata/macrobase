@@ -1,4 +1,4 @@
-# A description of the parameters in play with Macrobase
+# Macrobase Configuration Parameters
 
 This document describes the important parameters in Macrobase that
 affect its behavior.
