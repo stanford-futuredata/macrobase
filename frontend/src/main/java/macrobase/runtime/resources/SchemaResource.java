@@ -37,6 +37,12 @@ public class SchemaResource extends BaseResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public SchemaResponse getSchema(SchemaRequest request) {
         SchemaResponse response = new SchemaResponse();
+
+        if (request.baseQuery == null) {
+            response.errorMessage = "Please enter a base query";
+            return response;
+        }
+
         try {
             // temp hack to enable CSV loading
             if(request.baseQuery.contains("csv://")) {
