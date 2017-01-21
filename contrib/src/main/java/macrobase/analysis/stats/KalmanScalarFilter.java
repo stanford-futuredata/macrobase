@@ -1,13 +1,14 @@
 package macrobase.analysis.stats;
 
-import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+/**
+ * Wrapper around KalmanVectorFilter, allows passing scalars to the Kalman Filter and receive scalars instead of vectors.
+ */
 public class KalmanScalarFilter extends KalmanVectorFilter {
     private static final Logger log = LoggerFactory.getLogger(KalmanScalarFilter.class);
 
@@ -19,10 +20,6 @@ public class KalmanScalarFilter extends KalmanVectorFilter {
 
     public KalmanScalarFilter(double startLoc, double qScale) {
         super(toVector(startLoc), qScale);
-    }
-
-    public void reset(double startLoc) {
-        super.reset(toVector(startLoc));
     }
 
     public double step(double observation, int time) {

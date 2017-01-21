@@ -5,6 +5,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
 import macrobase.util.AlgebraUtils;
 import macrobase.util.Drainer;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.BlockRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -32,10 +33,10 @@ public class KalmanFlattenedMatrixFilterTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
-        KalmanVectorFilter f = new KalmanVectorFilter(2);
+        KalmanVectorFilter f = new KalmanVectorFilter(new ArrayRealVector(2), 1e-6, 1);
 
         RealMatrix shapeMatrix = new BlockRealMatrix(2, 1);
-        KalmanFlattenedMatrixFilter mf = new KalmanFlattenedMatrixFilter(shapeMatrix, 1e-6);
+        KalmanFlattenedMatrixFilter mf = new KalmanFlattenedMatrixFilter(shapeMatrix, 1e-6, 1);
 
         List<Datum> oneCluster = data.subList(201, 500);
         List<RealVector> vectorFiltered = oneCluster.stream().map(d -> f.step(d.metrics(), 1)).collect(Collectors.toList());
@@ -43,7 +44,7 @@ public class KalmanFlattenedMatrixFilterTest {
                 .map(d -> mf.step(AlgebraUtils.reshapeMatrixByColumns(d.metrics(), shapeMatrix), 1))
                 .collect(Collectors.toList());
 
-        for (int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++) {
             int ri = conf.getRandom().nextInt(300);
             assertEquals(vectorFiltered.get(ri), AlgebraUtils.flattenMatrixByColumns(matrixFiltered.get(ri)));
         }

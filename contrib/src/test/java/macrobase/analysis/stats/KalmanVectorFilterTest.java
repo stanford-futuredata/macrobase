@@ -4,6 +4,7 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
 import macrobase.util.Drainer;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ public class KalmanVectorFilterTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
-        KalmanVectorFilter f = new KalmanVectorFilter(2);
+        KalmanVectorFilter f = new KalmanVectorFilter(new ArrayRealVector(2), 1e-6, 1.);
 
         List<Datum> oneCluster = data.subList(201, 500);
         List<RealVector> filtered = oneCluster.stream().map(d -> f.step(d.metrics(), 1)).collect(Collectors.toList());

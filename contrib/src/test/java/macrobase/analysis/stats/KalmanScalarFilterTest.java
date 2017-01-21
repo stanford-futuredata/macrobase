@@ -5,6 +5,7 @@ import macrobase.datamodel.Datum;
 import macrobase.ingest.CSVIngester;
 import macrobase.util.AlgebraUtils;
 import macrobase.util.Drainer;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.BlockRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -34,7 +35,7 @@ public class KalmanScalarFilterTest {
 
         double qSacle = 1e-6;
 
-        KalmanVectorFilter vf = new KalmanVectorFilter(1, qSacle);
+        KalmanVectorFilter vf = new KalmanVectorFilter(new ArrayRealVector(1), qSacle);
         KalmanScalarFilter sf = new KalmanScalarFilter(0, qSacle);
 
         List<Datum> oneCluster = data.subList(201, 500);
