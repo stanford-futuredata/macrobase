@@ -1,4 +1,4 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.kalmanfilter;
 
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;

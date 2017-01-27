@@ -1,4 +1,4 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.kalmanfilter;
 
 import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.*;
@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Wrapper around KalmanVectorFilter, allows passing matrices to the Kalman Filter and receive matrices instead of vectors.
+ * Wrapper around KalmanVectorFilter that works on matrices instead of vectors,
+ * i.e. constructor accepts a matrix instead of a vector and step method operates on a matrix and returns a matrix.
  */
 public class KalmanFlattenedMatrixFilter extends KalmanVectorFilter {
     private static final Logger log = LoggerFactory.getLogger(KalmanFlattenedMatrixFilter.class);

@@ -1,4 +1,4 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.kalmanfilter;
 
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class KalmanScalarFilterTest {
-    private static final Logger log = LoggerFactory.getLogger(KalmanScalarFilterTest.class);
+public class KalmanFlattenedMatrixFilterTest {
+    private static final Logger log = LoggerFactory.getLogger(KalmanFlattenedMatrixFilterTest.class);
 
     @Test
     public void reduceToVectorKalmanFilterTest() throws Exception {
@@ -33,20 +33,20 @@ public class KalmanScalarFilterTest {
         List<Datum> data = Drainer.drainIngest(conf);
         assertEquals(500, data.size());
 
-        double qSacle = 1e-6;
+        KalmanVectorFilter f = new KalmanVectorFilter(new ArrayRealVector(2), 1e-6, 1);
 
-        KalmanVectorFilter vf = new KalmanVectorFilter(new ArrayRealVector(1), qSacle);
-        KalmanScalarFilter sf = new KalmanScalarFilter(0, qSacle);
+        RealMatrix shapeMatrix = new BlockRealMatrix(2, 1);
+        KalmanFlattenedMatrixFilter mf = new KalmanFlattenedMatrixFilter(shapeMatrix, 1e-6, 1);
 
         List<Datum> oneCluster = data.subList(201, 500);
-        List<RealVector> vectorFiltered = oneCluster.stream().map(d -> vf.step(d.metrics().getSubVector(0, 1), 1)).collect(Collectors.toList());
-        List<Double> scalarFiltered = oneCluster.stream()
-                .map(d -> sf.step(d.metrics().getEntry(0), 1))
+        List<RealVector> vectorFiltered = oneCluster.stream().map(d -> f.step(d.metrics(), 1)).collect(Collectors.toList());
+        List<RealMatrix> matrixFiltered = oneCluster.stream()
+                .map(d -> mf.step(AlgebraUtils.reshapeMatrixByColumns(d.metrics(), shapeMatrix), 1))
                 .collect(Collectors.toList());
 
-        for (int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++) {
             int ri = conf.getRandom().nextInt(300);
-            assertEquals(vectorFiltered.get(ri).getEntry(0), scalarFiltered.get(ri));
+            assertEquals(vectorFiltered.get(ri), AlgebraUtils.flattenMatrixByColumns(matrixFiltered.get(ri)));
         }
     }
 }

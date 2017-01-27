@@ -1,4 +1,4 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.kalmanfilter;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
@@ -7,7 +7,8 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Wrapper around KalmanVectorFilter, allows passing scalars to the Kalman Filter and receive scalars instead of vectors.
+ * Wrapper around KalmanVectorFilter that works on doubles instead of vectors,
+ * i.e. constructor accepts a double instead of a vector and step method operates on a double and returns a double.
  */
 public class KalmanScalarFilter extends KalmanVectorFilter {
     private static final Logger log = LoggerFactory.getLogger(KalmanScalarFilter.class);

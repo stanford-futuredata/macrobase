@@ -1,4 +1,4 @@
-package macrobase.analysis.stats;
+package macrobase.analysis.stats.kalmanfilter;
 
 import macrobase.util.AlgebraUtils;
 import org.apache.commons.math3.linear.*;
