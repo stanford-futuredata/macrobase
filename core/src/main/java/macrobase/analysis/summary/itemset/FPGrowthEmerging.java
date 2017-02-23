@@ -150,7 +150,7 @@ public class FPGrowthEmerging {
             if (i.getItems().size() == 1) {
                 Number inlierCount = inlierCounts.get(i.getItems().iterator().next());
 
-                double ratio = RiskRatio.compute(inlierCount.doubleValue(),
+                double ratio = RiskRatio.compute(inlierCount,
                                           i.getCount(),
                                           inliers.size(),
                                           outliers.size());
