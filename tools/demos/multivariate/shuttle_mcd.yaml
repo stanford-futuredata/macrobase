@@ -1,0 +1,20 @@
+macrobase.query.name: batchQuery
+macrobase.pipeline.class: macrobase.analysis.pipeline.BasicBatchedPipeline
+
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.csv.file: target/shuttle.csv
+macrobase.loader.attributes: [label]
+macrobase.loader.metrics: ["4","6"]
+
+macrobase.analysis.transformType: MCD
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+logging:
+  level: INFO
+
+  loggers:
+    "macrobase": INFO
