@@ -19,6 +19,7 @@
       <module>core</module>
       <module>frontend</module>
       <module>contrib</module>
+      <module>lib</module>
     </modules>
 
   <dependencies>
@@ -27,26 +28,6 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-core</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-assets</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-logging</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-db</artifactId>
-      <version>${dropwizard.version}</version>
     </dependency>
   </dependencies>
 
