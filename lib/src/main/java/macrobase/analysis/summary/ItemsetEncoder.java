@@ -20,26 +20,28 @@ public class ItemsetEncoder {
     public int decodeColumn(int i) {return columnDecoder.get(i);}
     public String decodeValue(int i) {return valueDecoder.get(i);}
 
-    public List<Set<Integer>> encodeRows(List<String[]> rows) {
-        if (rows.isEmpty()) {
+    public List<Set<Integer>> encodeColumns(List<String[]> columns) {
+        if (columns.isEmpty()) {
             return new ArrayList<>();
         }
-        String[] firstRow = rows.get(0);
-        int d = firstRow.length;
+
+        int d = columns.size();
+        int numRows = columns.get(0).length;
+
         for (int i = 0; i < d; i++) {
             encoder.put(i, new HashMap<>());
         }
 
-        ArrayList<Set<Integer>> encodedAttributes = new ArrayList<>(rows.size());
-        for (int i = 0; i < rows.size(); i++) {
+        ArrayList<Set<Integer>> encodedAttributes = new ArrayList<>(numRows);
+        for (int i = 0; i < numRows; i++) {
             encodedAttributes.add(new HashSet<>());
         }
 
         for (int colIdx = 0; colIdx < d; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
-            for (int i = 0; i < rows.size(); i++) {
-                String[] curRow = rows.get(i);
-                String colVal = curRow[colIdx];
+            String[] curCol = columns.get(colIdx);
+            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+                String colVal = curCol[rowIdx];
                 if (!curColEncoder.containsKey(colVal)) {
                     curColEncoder.put(colVal, nextKey);
                     valueDecoder.put(nextKey, colVal);
@@ -47,10 +49,11 @@ public class ItemsetEncoder {
                     nextKey++;
                 }
                 int curKey = curColEncoder.get(colVal);
-                encodedAttributes.get(i).add(curKey);
+                encodedAttributes.get(rowIdx).add(curKey);
             }
         }
 
         return encodedAttributes;
     }
+
 }
