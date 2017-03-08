@@ -105,7 +105,7 @@ def parse_results(results_file):
     return (times, num_itemsets, num_iterations, itemsets, tuples_per_second,
             tuples_per_second_no_itemset_mining)
 
-def seperate_contextual_results(results_file):
+def separate_contextual_results(results_file):
     contextual_results_file = results_file + "_contextual"
     
     g = open(contextual_results_file,'w')
@@ -169,7 +169,7 @@ def run_workload(config_parameters, number_of_runs, print_itemsets=True):
         print macrobase_cmd
         os.system("cd ..; cd ..; %s" % macrobase_cmd)
         
-        seperate_contextual_results(results_file)
+        separate_contextual_results(results_file)
         #for inspecting contextual outlier performance
         
         

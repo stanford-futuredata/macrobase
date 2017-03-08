@@ -375,7 +375,7 @@ The following are contextual outlier detection-specific parameters.
   <td><code>macrobase.analysis.contextual.api.outlierPredicates</code></td>
   <td><code>(none)</code></td>
   <td>
-  Specifiy the outlier tuples, for which we are looking for contexts where they are outliers (e.g., userid = 100 ), the attribute in the predicate has to appear in the <code>macrobase.analysis.contextual.discreteAttributes</code>
+  Specify the outlier tuples, for which we are looking for contexts where they are outliers (e.g., userid = 100 ), the attribute in the predicate has to appear in the <code>macrobase.analysis.contextual.discreteAttributes</code>
   </td>
 </tr>
 <tr>
