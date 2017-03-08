@@ -5,7 +5,7 @@ def retry_if_fails(max_retries):
   """
   A decorator that will rerun the function if it fails (throws an exception)
   until the function succeeds or max_retries retries are attempted.
-  e.g. retry_if_fails(0) decorator will not alter the behaviour of the funciton
+  e.g. retry_if_fails(0) decorator will not alter the behaviour of the function
   """
   def decorator(function):
     @functools.wraps(function)
