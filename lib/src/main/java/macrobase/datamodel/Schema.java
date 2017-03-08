@@ -26,6 +26,13 @@ public class Schema {
     public int getColumnIndex(String s) {
         return columnIndices.get(s);
     }
+    public ArrayList<Integer> getColumnIndices(List<String> columns) {
+        ArrayList<Integer> indices = new ArrayList<>(columns.size());
+        for (String colName: columns) {
+            indices.add(getColumnIndex(colName));
+        }
+        return indices;
+    }
     public String getColumnName(int i) {
         return columnNames.get(i);
     }
