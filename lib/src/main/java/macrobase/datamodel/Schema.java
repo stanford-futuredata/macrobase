@@ -32,6 +32,9 @@ public class Schema {
     public ColType getColumnType(int i) {
         return columnTypes.get(i);
     }
+    public ColType getColumnTypeByName(String s) {
+        return getColumnType(getColumnIndex(s));
+    }
 
     public Schema addColumn(ColType t, String colName) {
         int nextIdx = columnNames.size();

@@ -146,4 +146,27 @@ public class DataFrame {
         Row r = new Row(schema, rowValues);
         return r;
     }
+
+    public ArrayList<double[]> getDoubleCols(List<Integer> columns) {
+        ArrayList<double[]> cols = new ArrayList<>();
+        for (int c : columns) {
+            int typeSubIndex = indexToTypeIndex.get(c);
+            cols.add(doubleCols.get(typeSubIndex));
+        }
+        return cols;
+    }
+    public ArrayList<double[]> getDoubleColsByName(List<String> columns) {
+        return getDoubleCols(getColumnIndices(columns));
+    }
+    public ArrayList<String[]> getStringCols(List<Integer> columns) {
+        ArrayList<String[]> cols = new ArrayList<>();
+        for (int c : columns) {
+            int typeSubIndex = indexToTypeIndex.get(c);
+            cols.add(stringCols.get(typeSubIndex));
+        }
+        return cols;
+    }
+    public ArrayList<String[]> getStringColsByName(List<String> columns) {
+        return getStringCols(getColumnIndices(columns));
+    }
 }
