@@ -3,16 +3,12 @@ package macrobase.analysis.summary.itemset;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 
 public class FPGrowth {
-    private static final Logger log = LoggerFactory.getLogger(FPGrowth.class);
-
     class FPTree {
         private FPTreeNode root = new FPTreeNode(-1, null, 0);
         // used to calculate the order
@@ -23,23 +19,23 @@ public class FPGrowth {
 
         protected Map<Integer, FPTreeNode> nodeHeaders = new HashMap<>();
 
-        protected void printTreeDebug() {
-            log.debug("Frequent Item Counts:");
-            frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %f", e.getKey(), e.getValue())));
+//        protected void printTreeDebug() {
+//            log.debug("Frequent Item Counts:");
+//            frequentItemCounts.entrySet().forEach(e -> log.debug(String.format("%d: %f", e.getKey(), e.getValue())));
+//
+//            walkTree(root, 1);
+//        }
 
-            walkTree(root, 1);
-        }
-
-        private void walkTree(FPTreeNode start, int treeDepth) {
-            log.debug(String.format("%s node: %d, count: %f",
-                                    new String(new char[treeDepth]).replaceAll("\0", "\t"),
-                                    start.getItem(), start.getCount()));
-            if (start.getChildren() != null) {
-                for (FPTreeNode child : start.getChildren()) {
-                    walkTree(child, treeDepth + 1);
-                }
-            }
-        }
+//        private void walkTree(FPTreeNode start, int treeDepth) {
+//            log.debug(String.format("%s node: %d, count: %f",
+//                                    new String(new char[treeDepth]).replaceAll("\0", "\t"),
+//                                    start.getItem(), start.getCount()));
+//            if (start.getChildren() != null) {
+//                for (FPTreeNode child : start.getChildren()) {
+//                    walkTree(child, treeDepth + 1);
+//                }
+//            }
+//        }
 
         private class FPTreeNode {
             private int item;
@@ -419,7 +415,7 @@ public class FPGrowth {
                                                               boolean printTreeDebug) {
         FPTree fp = new FPTree();
         int countRequiredForSupport = supportCount.intValue();
-        log.debug("count required: {}", countRequiredForSupport);
+//        log.debug("count required: {}", countRequiredForSupport);
 
         long st = System.currentTimeMillis();
 
@@ -433,7 +429,7 @@ public class FPGrowth {
         fp.insertTransactions(transactions);
         long en = System.currentTimeMillis();
 
-        log.debug("FPTree load: {}", en - st);
+//        log.debug("FPTree load: {}", en - st);
 
         //fp.printTreeDebug();
 
@@ -441,7 +437,7 @@ public class FPGrowth {
         List<ItemsetWithCount> ret = fp.mineItemsets(countRequiredForSupport);
         en = System.currentTimeMillis();
 
-        log.debug("FPTree mine: {}", en - st);
+//        log.debug("FPTree mine: {}", en - st);
 
         return ret;
     }

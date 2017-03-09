@@ -19,8 +19,8 @@ public class DataFrame {
 
     private int numRows;
 
-    public DataFrame(Schema schema) {
-        this.schema = schema;
+    public DataFrame() {
+        this.schema = new Schema();
         this.stringCols = new ArrayList<>();
         this.doubleCols = new ArrayList<>();
         this.indexToTypeIndex = new ArrayList<>();
@@ -102,7 +102,7 @@ public class DataFrame {
 
     // Batch Operations
     public DataFrame select(List<Integer> columns) {
-        DataFrame other = new DataFrame(new Schema());
+        DataFrame other = new DataFrame();
         for (int c : columns) {
             String columnName = schema.getColumnName(c);
             ColType t = schema.getColumnType(c);
@@ -120,7 +120,7 @@ public class DataFrame {
         return select(this.schema.getColumnIndices(columns));
     }
     public DataFrame filter(boolean[] mask) {
-        DataFrame other = new DataFrame(new Schema());
+        DataFrame other = new DataFrame();
 
         int d = schema.getNumColumns();
         int numTrue = 0;
@@ -184,7 +184,8 @@ public class DataFrame {
     }
 
     // Slow Row based methods
-    public DataFrame loadRows(List<Row> rows) {
+    public DataFrame loadRows(Schema schema, List<Row> rows) {
+        this.schema = schema;
         this.numRows = rows.size();
         int d = schema.getNumColumns();
         for (int c = 0; c < d; c++) {

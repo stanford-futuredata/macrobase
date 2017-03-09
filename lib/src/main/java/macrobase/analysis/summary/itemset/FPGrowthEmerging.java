@@ -4,8 +4,6 @@ import com.google.common.collect.Sets;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import macrobase.analysis.summary.count.ExactCount;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -13,9 +11,6 @@ import java.util.*;
 public class FPGrowthEmerging {
     private final ItemsetEncoder encoder;
     private boolean combinationsEnabled = true;
-
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(FPGrowthEmerging.class);
 
     public FPGrowthEmerging(ItemsetEncoder encoder) {
         this.encoder = encoder;

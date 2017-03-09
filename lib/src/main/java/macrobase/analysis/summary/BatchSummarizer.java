@@ -1,6 +1,5 @@
 package macrobase.analysis.summary;
 
-import com.google.common.base.Stopwatch;
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.ItemsetEncoder;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -11,7 +10,6 @@ import macrobase.operator.Operator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.DoublePredicate;
 
 public class BatchSummarizer implements Operator<DataFrame, List<OutlierGroup>> {
@@ -76,18 +74,18 @@ public class BatchSummarizer implements Operator<DataFrame, List<OutlierGroup>> 
             outlierItemsets = encoder.encodeColumns(outlierDF.getStringColsByName(attributes));
         }
 
-        Stopwatch sw = Stopwatch.createStarted();
-
+        long startTime = System.currentTimeMillis();
         List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(
             inlierItemsets,
             outlierItemsets,
             minOutlierSupport,
             minIORatio);
+        long elapsed = System.currentTimeMillis() - startTime;
 
         summary = new Summary(isr,
                 inlierItemsets.size(),
                 outlierItemsets.size(),
-                sw.elapsed(TimeUnit.MILLISECONDS));
+                elapsed);
     }
 
     @Override

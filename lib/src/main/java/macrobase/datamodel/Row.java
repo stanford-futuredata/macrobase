@@ -22,9 +22,12 @@ public class Row {
         return this.vals;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getAs(int i) {
         return (T)vals.get(i);
     }
+
+    @SuppressWarnings("unchecked")
     public <T> T getAs(String colName) {
         return (T)vals.get(schema.getColumnIndex(colName));
     }

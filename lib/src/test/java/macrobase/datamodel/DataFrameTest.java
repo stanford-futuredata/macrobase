@@ -12,7 +12,7 @@ public class DataFrameTest {
 
     @Before
     public void setUp() {
-        tinyDF = new DataFrame(new Schema());
+        tinyDF = new DataFrame();
         double[] metric = {1.0, 2.0, 3.0};
         String[] attribute = {"a", "a", "b"};
         tinyDF.addDoubleColumn("metric", metric);
