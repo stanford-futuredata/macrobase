@@ -1,6 +1,6 @@
 package macrobase;
 
-import macrobase.analysis.summary.ItemsetEncoder;
+import macrobase.analysis.summary.itemset.ItemsetEncoder;
 import macrobase.analysis.summary.OutlierGroup;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Row;

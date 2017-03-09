@@ -1,6 +1,5 @@
 package macrobase.analysis.summary.itemset;
 
-import com.google.common.collect.Lists;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 
 import java.util.*;
@@ -96,7 +95,7 @@ public class Apriori {
         HashMap<Set<Integer>, Integer> pairCandidateCounts = new HashMap<>();
 
         for (Set<Integer> t : transactions) {
-            List<Integer> txList = Lists.newArrayList(t);
+            List<Integer> txList = new ArrayList<>(t);
             for (int i = 0; i < t.size(); ++i) {
                 for (int j = i + 1; j < t.size(); ++j) {
                     HashSet<Integer> pairSet = new HashSet<>();

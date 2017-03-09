@@ -1,6 +1,5 @@
 package macrobase.analysis.summary.itemset;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 
@@ -177,7 +176,7 @@ public class FPGrowth {
 
             // we have to materialize a canonical order so that items with equal counts
             // are consistently ordered when they are sorted during transaction insertion
-            List<Map.Entry<Integer, Double>> sortedItemCounts = Lists.newArrayList(frequentItemCounts.entrySet());
+            List<Map.Entry<Integer, Double>> sortedItemCounts = new ArrayList<>(frequentItemCounts.entrySet());
             sortedItemCounts.sort((i1, i2) -> frequentItemCounts.get(i1.getKey())
                     .compareTo(frequentItemCounts.get(i2.getKey())));
             for (int i = 0; i < sortedItemCounts.size(); ++i) {
@@ -213,7 +212,7 @@ public class FPGrowth {
                 }
             }
 
-            List<Integer> plist = Lists.newArrayList(pattern);
+            List<Integer> plist = new ArrayList<>(pattern);
             // traverse bottom to top
             plist.sort((i1, i2) -> frequentItemOrder.get(i1).compareTo(frequentItemOrder.get(i2)));
 

@@ -3,21 +3,13 @@ package macrobase.analysis.summary.itemset;
 import com.google.common.collect.Sets;
 import macrobase.analysis.summary.itemset.result.ItemsetWithCount;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by pbailis on 12/15/15.
- */
 public class FPGrowthTest {
-    private static final Logger log = LoggerFactory.getLogger(FPGrowthTest.class);
-
-
     private Set<Integer> intIfy(String txnStr) {
         return Arrays.stream(txnStr.split(", ")).map(s -> (int) s.charAt(0)).collect(Collectors.toSet());
     }
@@ -72,13 +64,13 @@ public class FPGrowthTest {
 
         for (Set<Integer> s : apil) {
             if (!dupdetector.add(s)) {
-                log.warn("DUPLICATE APRIORI SET {}", s);
+//                log.warn("DUPLICATE APRIORI SET {}", s);
             }
         }
 
         Set<Set<Integer>> iss = itemsets.stream().map(i -> i.getItems()).collect(Collectors.toSet());
 
-        log.debug("DIFF: {}", Sets.difference(dupdetector, iss));
+//        log.debug("DIFF: {}", Sets.difference(dupdetector, iss));
 
         assertEquals(api.size(), itemsets.size());
     }
@@ -125,7 +117,7 @@ public class FPGrowthTest {
 
         for (Set<Integer> s : apil) {
             if (!dupdetector.add(s)) {
-                log.warn("DUPLICATE FPTREE SET {}", s);
+//                log.warn("DUPLICATE FPTREE SET {}", s);
             }
         }
 
@@ -152,7 +144,7 @@ public class FPGrowthTest {
         txns.add(intIfy("a, b, e, c"));
 
         FPGrowth.FPTree fpt = new FPGrowth().constructTree(txns, 0);
-        fpt.printTreeDebug();
+//        fpt.printTreeDebug();
 
         assertEquals(2, fpt.getSupport(intIfy("a, b")));
         assertEquals(0, fpt.getSupport(intIfy("a, b, c, d")));
