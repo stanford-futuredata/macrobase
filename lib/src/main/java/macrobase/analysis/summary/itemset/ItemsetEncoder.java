@@ -1,4 +1,4 @@
-package macrobase.analysis.summary;
+package macrobase.analysis.summary.itemset;
 
 import java.util.*;
 
@@ -8,7 +8,7 @@ public class ItemsetEncoder {
 
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
-
+    private List<String> colNames;
 
     public ItemsetEncoder() {
         encoder = new HashMap<>();
@@ -16,8 +16,12 @@ public class ItemsetEncoder {
         valueDecoder = new HashMap<>();
         columnDecoder = new HashMap<>();
     }
+    public void setColumnNames(List<String> colNames) {
+        this.colNames = colNames;
+    }
 
     public int decodeColumn(int i) {return columnDecoder.get(i);}
+    public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
 
     public List<Set<Integer>> encodeColumns(List<String[]> columns) {

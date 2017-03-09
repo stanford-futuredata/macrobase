@@ -29,6 +29,8 @@ public class DataFrame {
 
     public Schema getSchema() {return this.schema;}
     public int getNumRows() {return numRows;}
+    public ArrayList<double[]> getDoubleCols() { return doubleCols; }
+    public ArrayList<String[]> getStringCols() { return stringCols; }
 
     // Fast Column-based methods
     private void addDoubleColumnInternal(double[] colValues) {

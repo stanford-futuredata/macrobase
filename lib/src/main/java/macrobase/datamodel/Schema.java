@@ -36,6 +36,15 @@ public class Schema {
     public String getColumnName(int i) {
         return columnNames.get(i);
     }
+    public List<String> getColumnNamesByType(ColType type) {
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < columnNames.size(); i ++) {
+            if (getColumnType(i).equals(type)) {
+                names.add(getColumnName(i));
+            }
+        }
+        return names;
+    }
     public ColType getColumnType(int i) {
         return columnTypes.get(i);
     }

@@ -1,5 +1,6 @@
-package macrobase.analysis.summary;
+package macrobase.analysis.summary.itemset;
 
+import macrobase.analysis.summary.itemset.ItemsetEncoder;
 import org.junit.Test;
 
 import java.util.ArrayList;
