@@ -29,7 +29,9 @@ public class ItemsetEncoder {
         int numRows = columns.get(0).length;
 
         for (int i = 0; i < d; i++) {
-            encoder.put(i, new HashMap<>());
+            if (!encoder.containsKey(i)) {
+                encoder.put(i, new HashMap<>());
+            }
         }
 
         ArrayList<Set<Integer>> encodedAttributes = new ArrayList<>(numRows);
