@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 
-public class BatchSummarizer implements Operator<DataFrame, List<OutlierGroup>> {
+public class BatchSummarizer implements Operator<DataFrame, Summary> {
     // Parameters
     public String outlierColumn = "_OUTLIER";
     public double minOutlierSupport = 0.1;
     public double minIORatio = 3;
     public boolean useAttributeCombinations = true;
     public List<String> attributes = new ArrayList<>();
-    public DoublePredicate predicate = d -> d == 0.0;
+    public DoublePredicate predicate = d -> d != 0.0;
 
     // Output
     private Summary summary = null;
@@ -70,6 +70,7 @@ public class BatchSummarizer implements Operator<DataFrame, List<OutlierGroup>> 
             inlierItemsets = encoder.encodeColumns(inlierDF.getStringCols());
             outlierItemsets = encoder.encodeColumns(outlierDF.getStringCols());
         } else {
+            encoder.setColumnNames(attributes);
             inlierItemsets = encoder.encodeColumns(inlierDF.getStringColsByName(attributes));
             outlierItemsets = encoder.encodeColumns(outlierDF.getStringColsByName(attributes));
         }
@@ -89,7 +90,7 @@ public class BatchSummarizer implements Operator<DataFrame, List<OutlierGroup>> 
     }
 
     @Override
-    public List<OutlierGroup> getResults() {
-        return null;
+    public Summary getResults() {
+        return summary;
     }
 }

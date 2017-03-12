@@ -1,7 +1,9 @@
 package macrobase;
 
+import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.itemset.ItemsetEncoder;
-import macrobase.analysis.summary.OutlierGroup;
+import macrobase.analysis.summary.Summary;
+import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Row;
 import macrobase.datamodel.Schema;
@@ -83,28 +85,15 @@ public class SupervisedEventTest {
             return df;
         }
 
-        public List<OutlierGroup> predictBatch(DataFrame batch) {
-            // TODO: support int columns that automatically filter based on 0/1
-            // TODO: support object columns so we can store itemsets in dataframe and then filter
-            DataFrame outlierDF = batch.filterDoubleByName(
-                    Explainer.outlierColumn,
-                    d -> d > 0.0
-            );
-            DataFrame inlierDF = batch.filterDoubleByName(
-                    Explainer.outlierColumn,
-                    d -> d == 0.0
-            );
+        public Summary predictBatch(DataFrame batch) {
+            BatchSummarizer summ = new BatchSummarizer();
+            summ.setUseAttributeCombinations(true);
+            summ.setAttributes(attributes);
+            summ.process(batch);
 
-            ItemsetEncoder encoder = new ItemsetEncoder();
-            List<Set<Integer>> inlierItemsets = encoder.encodeColumns(inlierDF.getStringColsByName(attributes));
-            List<Set<Integer>> outlierItemsets = encoder.encodeColumns(outlierDF.getStringColsByName(attributes));
-
-            // TODO: fill in call to summarizer
-            List<OutlierGroup> result = null;
-
-            return result;
+            return summ.getResults();
         }
-        public List<OutlierGroup> getResults(List<Map<String, Object>> events) {
+        public Summary getResults(List<Map<String, Object>> events) {
             return predictBatch(prepareBatch(events));
         }
     }
@@ -115,8 +104,19 @@ public class SupervisedEventTest {
         Explainer e = new Explainer(attributes, event -> "error".equals(event.get("sev")));
         DataFrame df = e.prepareBatch(events);
         assertEquals(1000,df.getNumRows());
-        assertEquals(100,df.filterDoubleByName(Explainer.outlierColumn, d -> d > 0.0).getNumRows());
 
-        //TODO: test that we actually get good summaries
+        Summary s = e.predictBatch(df);
+        assertEquals(100, s.getNumOutliers());
+        assertEquals(900, s.getNumInliers());
+        List<ItemsetResult> is = s.getItemsets();
+        assertEquals(5, is.size());
+        int numSingleton = 0;
+        for (ItemsetResult itemResult : is) {
+            List<String> curItems = itemResult.getItems();
+            if (curItems.size() == 1) {
+                numSingleton++;
+            }
+        }
+        assertEquals(3, numSingleton);
     }
 }

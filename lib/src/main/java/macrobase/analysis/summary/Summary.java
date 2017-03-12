@@ -10,14 +10,14 @@ import java.util.List;
  * so far.
  */
 public class Summary {
-    private final double numOutliers;
-    private final double numInliers;
+    private final long numOutliers;
+    private final long numInliers;
     private List<ItemsetResult> itemsets;
     private final long creationTimeMs;
 
     public Summary(List<ItemsetResult> resultList,
-                   double numInliers,
-                   double numOutliers,
+                   long numInliers,
+                   long numOutliers,
                    long creationTimeMs) {
         itemsets = resultList;
         this.numInliers = numInliers;
@@ -29,15 +29,24 @@ public class Summary {
         return itemsets;
     }
 
-    public double getNumOutliers() {
+    public long getNumOutliers() {
         return numOutliers;
     }
 
-    public double getNumInliers() {
+    public long getNumInliers() {
         return numInliers;
     }
 
     public long getCreationTimeMs() {
         return creationTimeMs;
+    }
+
+    @Override
+    public String toString() {
+        return "Summary{" +
+                "numOutliers=" + numOutliers +
+                ", numInliers=" + numInliers +
+                ", itemsets=" + itemsets +
+                '}';
     }
 }

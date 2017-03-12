@@ -7,7 +7,7 @@ import java.util.StringJoiner;
 
 public class ItemsetResult {
     private double support;
-    private double numRecords;
+    private long numRecords;
     private double ratioToInliers;
     private List<String> items;
 
@@ -16,7 +16,7 @@ public class ItemsetResult {
                          double ratioToInliers,
                          List<String> items) {
         this.support = support;
-        this.numRecords = numRecords;
+        this.numRecords = (long)numRecords;
         this.ratioToInliers = ratioToInliers;
         this.items = items;
     }
@@ -27,7 +27,7 @@ public class ItemsetResult {
                 .forEach(i -> joiner.add(i));
 
         return String.format("support: %f\n" +
-                             "records: %f\n" +
+                             "records: %d\n" +
                              "ratio: %f\n" +
                              "\nColumns:\n%s\n\n",
                              support,
@@ -40,7 +40,7 @@ public class ItemsetResult {
         return support;
     }
 
-    public double getNumRecords() {
+    public long getNumRecords() {
         return numRecords;
     }
 
@@ -56,7 +56,13 @@ public class ItemsetResult {
         return items;
     }
 
-    public ItemsetResult() {
-        // JACKSON
+    @Override
+    public String toString() {
+        return "ItemsetResult{" +
+                "support=" + support +
+                ", numRecords=" + numRecords +
+                ", ratioToInliers=" + ratioToInliers +
+                ", items=" + items +
+                '}';
     }
 }
