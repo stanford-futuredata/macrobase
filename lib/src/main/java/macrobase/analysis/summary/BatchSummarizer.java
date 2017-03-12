@@ -2,6 +2,7 @@ package macrobase.analysis.summary;
 
 import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.ItemsetEncoder;
+import macrobase.analysis.summary.itemset.result.EncodedItemsetResult;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Schema;
@@ -26,12 +27,10 @@ public class BatchSummarizer implements Operator<DataFrame, Summary> {
     // Encoder
     private ItemsetEncoder encoder = new ItemsetEncoder();
     private List<Set<Integer>> inlierItemsets, outlierItemsets;
-    private FPGrowthEmerging fpg;
+    private FPGrowthEmerging fpg = new FPGrowthEmerging();
 
     // Setter and constructor
-    public BatchSummarizer() {
-        fpg = new FPGrowthEmerging(encoder);
-    }
+    public BatchSummarizer() { }
     public BatchSummarizer setUseAttributeCombinations(boolean flag) {
         this.useAttributeCombinations = flag;
         fpg.setCombinationsEnabled(flag);
@@ -61,6 +60,7 @@ public class BatchSummarizer implements Operator<DataFrame, Summary> {
 
     @Override
     public void process(DataFrame df) {
+        // Filter inliers and outliers
         DataFrame outlierDF = df.filterDoubleByName(outlierColumn, predicate);
         DataFrame inlierDF = df.filterDoubleByName(outlierColumn, predicate.negate());
 
@@ -76,11 +76,14 @@ public class BatchSummarizer implements Operator<DataFrame, Summary> {
         }
 
         long startTime = System.currentTimeMillis();
-        List<ItemsetResult> isr = fpg.getEmergingItemsetsWithMinSupport(
+        List<EncodedItemsetResult> encodedItemsetResults = fpg.getEmergingItemsetsWithMinSupport(
             inlierItemsets,
             outlierItemsets,
             minOutlierSupport,
             minIORatio);
+        // Decode results
+        List<ItemsetResult> isr = new ArrayList<>();
+        encodedItemsetResults.forEach(i -> isr.add(new ItemsetResult(i, encoder)));
         long elapsed = System.currentTimeMillis() - startTime;
 
         summary = new Summary(isr,

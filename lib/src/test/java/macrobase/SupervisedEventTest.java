@@ -112,7 +112,7 @@ public class SupervisedEventTest {
         assertEquals(5, is.size());
         int numSingleton = 0;
         for (ItemsetResult itemResult : is) {
-            List<String> curItems = itemResult.getItems();
+            Map<String, String> curItems = itemResult.getItems();
             if (curItems.size() == 1) {
                 numSingleton++;
             }

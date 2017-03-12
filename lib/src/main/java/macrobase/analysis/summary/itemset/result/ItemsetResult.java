@@ -2,19 +2,25 @@ package macrobase.analysis.summary.itemset.result;
 
 import macrobase.analysis.summary.itemset.ItemsetEncoder;
 
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class ItemsetResult {
     private double support;
-    private long numRecords;
+    private double numRecords;
     private double ratioToInliers;
-    private List<String> items;
+    private Map<String, String> items = new HashMap<>();
+
+    public ItemsetResult(EncodedItemsetResult its, ItemsetEncoder encoder) {
+        this.support = its.getSupport();
+        this.numRecords = its.getNumRecords();
+        this.ratioToInliers = its.getRatioToInliers();
+        its.getItems().forEach(i -> items.put(encoder.decodeColumnName(i), encoder.decodeValue(i)));
+    }
 
     public ItemsetResult(double support,
                          double numRecords,
                          double ratioToInliers,
-                         List<String> items) {
+                         Map<String, String> items) {
         this.support = support;
         this.numRecords = (long)numRecords;
         this.ratioToInliers = ratioToInliers;
@@ -23,8 +29,7 @@ public class ItemsetResult {
 
     public String prettyPrint(ItemsetEncoder encoder) {
         StringJoiner joiner = new StringJoiner("\n");
-        items.stream()
-                .forEach(i -> joiner.add(i));
+        items.forEach((k, v) -> joiner.add(k).add(v));
 
         return String.format("support: %f\n" +
                              "records: %d\n" +
@@ -40,7 +45,7 @@ public class ItemsetResult {
         return support;
     }
 
-    public long getNumRecords() {
+    public double getNumRecords() {
         return numRecords;
     }
 
@@ -52,7 +57,7 @@ public class ItemsetResult {
         ratioToInliers = ratio;
     }
 
-    public List<String> getItems() {
+    public Map<String, String> getItems() {
         return items;
     }
 
