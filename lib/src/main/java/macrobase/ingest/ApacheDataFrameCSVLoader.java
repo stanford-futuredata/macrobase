@@ -1,5 +1,8 @@
-package macrobase.datamodel;
+package macrobase.ingest;
 
+import macrobase.datamodel.DataFrame;
+import macrobase.datamodel.Row;
+import macrobase.datamodel.Schema;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -10,20 +13,22 @@ import java.util.*;
 
 import static macrobase.datamodel.Schema.ColType;
 
-public class DataFrameCSVLoader {
+public class ApacheDataFrameCSVLoader implements DataFrameCSVLoader {
     private String fileName;
     private Map<String, ColType> columnTypes;
     private int badRecords;
 
-    public DataFrameCSVLoader(String fileName){
+    public ApacheDataFrameCSVLoader(String fileName){
         this.fileName = fileName;
         this.columnTypes = new HashMap<>();
     }
+    @Override
     public DataFrameCSVLoader setColumnTypes(Map<String, ColType> types) {
         this.columnTypes = types;
         return this;
     }
 
+    @Override
     public DataFrame load() throws Exception {
         File csvFile = new File(fileName);
         CSVParser csvParser = CSVParser.parse(
@@ -49,6 +54,7 @@ public class DataFrameCSVLoader {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
         }
 
+        long startTime = System.currentTimeMillis();
         this.badRecords = 0;
         ArrayList<Row> rows = new ArrayList<>();
         for (CSVRecord record : csvParser) {
@@ -70,7 +76,13 @@ public class DataFrameCSVLoader {
                 this.badRecords++;
             }
         }
+        long elapsed = System.currentTimeMillis() - startTime;
+//        System.out.println("Loading file took: "+elapsed);
 
-        return new DataFrame().loadRows(schema, rows);
+        startTime = System.currentTimeMillis();
+        DataFrame df = new DataFrame().loadRows(schema, rows);
+        elapsed = System.currentTimeMillis() - startTime;
+//        System.out.println("Loading rows took: "+elapsed);
+        return df;
     }
 }

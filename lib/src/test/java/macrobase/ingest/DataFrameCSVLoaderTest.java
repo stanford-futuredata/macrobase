@@ -1,5 +1,8 @@
-package macrobase.datamodel;
+package macrobase.ingest;
 
+import macrobase.datamodel.DataFrame;
+import macrobase.datamodel.Row;
+import macrobase.datamodel.Schema;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -13,7 +16,7 @@ public class DataFrameCSVLoaderTest {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put("usage", Schema.ColType.DOUBLE);
 
-        DataFrameCSVLoader loader = new DataFrameCSVLoader("src/test/resources/tiny.csv")
+        DataFrameCSVLoader loader = new ApacheDataFrameCSVLoader("src/test/resources/tiny.csv")
                 .setColumnTypes(colTypes);
         DataFrame df = loader.load();
 
@@ -21,6 +24,8 @@ public class DataFrameCSVLoaderTest {
         assertEquals(3, df.getSchema().getNumColumns());
         double[] usage = df.getDoubleColumnByName("usage");
         assertEquals(usage[0], 2.0, 1e-10);
-    }
 
+        Row row = df.getRow(1);
+        assertEquals("CAN", row.getAs("location"));
+    }
 }

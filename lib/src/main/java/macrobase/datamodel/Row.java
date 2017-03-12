@@ -1,6 +1,7 @@
 package macrobase.datamodel;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Format for import / export small batches
@@ -29,6 +30,29 @@ public class Row {
 
     @SuppressWarnings("unchecked")
     public <T> T getAs(String colName) {
-        return (T)vals.get(schema.getColumnIndex(colName));
+        if (schema == null) {
+            throw new RuntimeException("No Schema");
+        } else {
+            return (T)vals.get(schema.getColumnIndex(colName));
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Row row = (Row) o;
+        return vals != null ? vals.equals(row.vals) : row.vals == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return (vals != null ? vals.hashCode() : 0);
+    }
+
+    @Override
+    public String toString() {
+        return vals.toString();
     }
 }

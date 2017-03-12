@@ -7,16 +7,32 @@ import macrobase.datamodel.Row;
 import macrobase.datamodel.Schema;
 import org.junit.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
+import static org.junit.Assert.assertEquals;
+
 public class SupervisedEventTest {
+    private List<Map<String, Object>> events;
+
     @Before
     public void setUp() {
-
+        events = new ArrayList<>();
+        for (int i = 0; i < 900; i++) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("serverID", "s"+(i%20));
+            event.put("region", "r"+(i%7));
+            event.put("sev", "debug");
+            events.add(event);
+        }
+        for (int i = 0; i < 100; i++) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("serverID", "s"+(i%2));
+            event.put("region", "r3");
+            event.put("sev", "error");
+            events.add(event);
+        }
+        Collections.shuffle(events);
     }
 
     class Explainer {
@@ -95,6 +111,12 @@ public class SupervisedEventTest {
 
     @Test
     public void  testGetSummaries() {
+        List<String> attributes = Arrays.asList("serverID", "region");
+        Explainer e = new Explainer(attributes, event -> "error".equals(event.get("sev")));
+        DataFrame df = e.prepareBatch(events);
+        assertEquals(1000,df.getNumRows());
+        assertEquals(100,df.filterDoubleByName(Explainer.outlierColumn, d -> d > 0.0).getNumRows());
 
+        //TODO: test that we actually get good summaries
     }
 }
