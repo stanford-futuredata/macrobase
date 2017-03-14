@@ -8,7 +8,9 @@ import java.util.function.Predicate;
 import static macrobase.datamodel.Schema.ColType;
 
 /**
- * Fast methods: addColumn
+ * Column-based dataframe object.
+ * loadRows and addColumn methods mutate the dataframe and are the primary
+ * ways of initializing the data in the dataframe.
  */
 public class DataFrame {
     private Schema schema;
@@ -25,6 +27,19 @@ public class DataFrame {
         this.doubleCols = new ArrayList<>();
         this.indexToTypeIndex = new ArrayList<>();
         this.numRows = 0;
+    }
+
+    /**
+     * @return shallow copy of dataframe
+     */
+    public DataFrame copy() {
+        DataFrame other = new DataFrame();
+        other.schema = schema.copy();
+        other.stringCols = new ArrayList<>(stringCols);
+        other.doubleCols = new ArrayList<>(doubleCols);
+        other.indexToTypeIndex = new ArrayList<>(indexToTypeIndex);
+        other.numRows = numRows;
+        return other;
     }
 
     public Schema getSchema() {return this.schema;}

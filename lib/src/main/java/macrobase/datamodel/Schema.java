@@ -19,6 +19,13 @@ public class Schema {
         this.columnTypes = new ArrayList<>();
         this.columnIndices = new HashMap<>();
     }
+    public Schema copy() {
+        Schema other = new Schema();
+        other.columnNames = new ArrayList<>(columnNames);
+        other.columnTypes = new ArrayList<>(columnTypes);
+        other.columnIndices = new HashMap<>(columnIndices);
+        return other;
+    }
 
     public int getNumColumns() {
         return columnNames.size();

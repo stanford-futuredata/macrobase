@@ -6,13 +6,13 @@ import java.util.*;
 
 public class ItemsetResult {
     private double support;
-    private double numRecords;
+    private long numRecords;
     private double ratioToInliers;
     private Map<String, String> items = new HashMap<>();
 
     public ItemsetResult(EncodedItemsetResult its, ItemsetEncoder encoder) {
         this.support = its.getSupport();
-        this.numRecords = its.getNumRecords();
+        this.numRecords = (long)its.getNumRecords();
         this.ratioToInliers = its.getRatioToInliers();
         its.getItems().forEach(i -> items.put(encoder.decodeColumnName(i), encoder.decodeValue(i)));
     }
@@ -27,9 +27,9 @@ public class ItemsetResult {
         this.items = items;
     }
 
-    public String prettyPrint(ItemsetEncoder encoder) {
+    public String prettyPrint() {
         StringJoiner joiner = new StringJoiner("\n");
-        items.forEach((k, v) -> joiner.add(k).add(v));
+        items.forEach((k, v) -> joiner.add(k+"="+v));
 
         return String.format("support: %f\n" +
                              "records: %d\n" +

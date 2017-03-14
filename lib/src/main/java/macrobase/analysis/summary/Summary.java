@@ -41,6 +41,22 @@ public class Summary {
         return creationTimeMs;
     }
 
+    public String prettyPrint() {
+        StringBuilder header = new StringBuilder(String.format(
+                "Outlier Summary:\n"
+                + "numOutliers: %d\n"
+                + "numInliners: %d\n"
+                + "Itemsets: \n"
+                + "--------\n",
+                numOutliers,
+                numInliers,
+                itemsets));
+        for (ItemsetResult is : itemsets) {
+            header.append(is.prettyPrint());
+        }
+        return header.toString();
+    }
+
     @Override
     public String toString() {
         return "Summary{" +

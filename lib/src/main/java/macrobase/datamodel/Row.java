@@ -1,5 +1,6 @@
 package macrobase.datamodel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +54,17 @@ public class Row {
 
     @Override
     public String toString() {
-        return vals.toString();
+        ArrayList<String> strs = new ArrayList<>(vals.size());
+        for (Object o : vals) {
+            String s = o.toString();
+            if (o instanceof Double) {
+                if (s.length() > 7) {
+                    double v = ((Double) o).doubleValue();
+                    s = String.format("%.6g", v);
+                }
+            }
+            strs.add(s);
+        }
+        return strs.toString();
     }
 }

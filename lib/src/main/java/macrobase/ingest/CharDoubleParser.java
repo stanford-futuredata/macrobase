@@ -9,8 +9,8 @@ class CharDoubleParser {
     CharDoubleParser() {
         double curPower = 1.0;
         for (int i = 0; i < invPow10.length; i++) {
-            invPow10[i] = curPower;
-            curPower /= 10.0;
+            invPow10[i] = 1.0/curPower;
+            curPower *= 10.0;
         }
     }
 
