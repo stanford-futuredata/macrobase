@@ -99,7 +99,7 @@ public class SupervisedEventTest {
     }
 
     @Test
-    public void  testGetSummaries() {
+    public void testGetSummaries() {
         List<String> attributes = Arrays.asList("serverID", "region");
         Explainer e = new Explainer(attributes, event -> "error".equals(event.get("sev")));
         DataFrame df = e.prepareBatch(events);

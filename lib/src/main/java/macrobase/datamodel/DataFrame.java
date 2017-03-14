@@ -115,7 +115,10 @@ public class DataFrame {
         return getStringCols(this.schema.getColumnIndices(columns));
     }
 
-    // Batch Operations
+    /**
+     * @param columns column indices to project
+     * @return new dataframe with subset of columns
+     */
     public DataFrame select(List<Integer> columns) {
         DataFrame other = new DataFrame();
         for (int c : columns) {
@@ -131,9 +134,19 @@ public class DataFrame {
         }
         return other;
     }
+
+    /**
+     * @param columns column names to project
+     * @return new dataframe with subset of columns
+     */
     public DataFrame selectByName(List<String> columns) {
         return select(this.schema.getColumnIndices(columns));
     }
+
+    /**
+     * @param mask rows to select
+     * @return new dataframe with subset of rows
+     */
     public DataFrame filter(boolean[] mask) {
         DataFrame other = new DataFrame();
 
@@ -186,6 +199,12 @@ public class DataFrame {
     public DataFrame filterStringByName(String columnName, Predicate<String> filter) {
         return filterString(schema.getColumnIndex(columnName), filter);
     }
+
+    /**
+     * @param columnIdx column index to filter by
+     * @param filter predicate to test each column value
+     * @return new dataframe with subset of rows
+     */
     public DataFrame filterDouble(int columnIdx, DoublePredicate filter) {
         double[] filterColumn = getDoubleColumn(columnIdx);
         boolean[] mask = new boolean[numRows];
@@ -194,11 +213,23 @@ public class DataFrame {
         }
         return filter(mask);
     }
+
+    /**
+     * @param columnName column name to filter by
+     * @param filter predicate to test each column value
+     * @return new dataframe with subset of rows
+     */
     public DataFrame filterDoubleByName(String columnName, DoublePredicate filter) {
         return filterDouble(schema.getColumnIndex(columnName), filter);
     }
 
-    // Slow Row based methods
+    /**
+     * Overwrites existing dataframe contents with new batch of rows.
+     * Prefer loading data by column via addXColumn methods if possible.
+     * @param schema new schema, overrides existing schema
+     * @param rows list of untyped rows
+     * @return dataframe updated with new content
+     */
     public DataFrame loadRows(Schema schema, List<Row> rows) {
         this.schema = schema;
         this.numRows = rows.size();
@@ -223,6 +254,7 @@ public class DataFrame {
         }
         return this;
     }
+
     public Row getRow(int rowIdx) {
         int d = schema.getNumColumns();
         ArrayList<Object> rowValues = new ArrayList<>(d);
