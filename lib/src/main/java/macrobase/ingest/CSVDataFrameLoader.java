@@ -13,17 +13,17 @@ import java.util.*;
 
 import static macrobase.datamodel.Schema.ColType;
 
-public class ApacheDataFrameCSVLoader implements DataFrameCSVLoader {
+public class CSVDataFrameLoader implements DataFrameLoader {
     private String fileName;
     private Map<String, ColType> columnTypes;
     private int badRecords;
 
-    public ApacheDataFrameCSVLoader(String fileName){
+    public CSVDataFrameLoader(String fileName){
         this.fileName = fileName;
         this.columnTypes = new HashMap<>();
     }
     @Override
-    public DataFrameCSVLoader setColumnTypes(Map<String, ColType> types) {
+    public DataFrameLoader setColumnTypes(Map<String, ColType> types) {
         this.columnTypes = types;
         return this;
     }
@@ -54,7 +54,6 @@ public class ApacheDataFrameCSVLoader implements DataFrameCSVLoader {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
         }
 
-        long startTime = System.currentTimeMillis();
         this.badRecords = 0;
         ArrayList<Row> rows = new ArrayList<>();
         for (CSVRecord record : csvParser) {
@@ -76,13 +75,12 @@ public class ApacheDataFrameCSVLoader implements DataFrameCSVLoader {
                 this.badRecords++;
             }
         }
-        long elapsed = System.currentTimeMillis() - startTime;
-//        System.out.println("Loading file took: "+elapsed);
 
-        startTime = System.currentTimeMillis();
         DataFrame df = new DataFrame().loadRows(schema, rows);
-        elapsed = System.currentTimeMillis() - startTime;
-//        System.out.println("Loading rows took: "+elapsed);
         return df;
+    }
+
+    public int getBadRecords() {
+        return badRecords;
     }
 }

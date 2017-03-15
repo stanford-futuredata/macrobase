@@ -5,8 +5,9 @@ import macrobase.analysis.summary.BatchSummarizer;
 import macrobase.analysis.summary.Explanation;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Schema;
-import macrobase.ingest.DataFrameCSVLoader;
-import macrobase.ingest.FastDataFrameCSVLoader;
+import macrobase.ingest.CSVDataFrameLoader;
+import macrobase.ingest.DataFrameLoader;
+import macrobase.ingest.FastDataFrameLoader;
 import org.junit.Test;
 
 import java.util.*;
@@ -21,7 +22,7 @@ public class UnsupervisedCSVTest {
         schema.put("latency", Schema.ColType.DOUBLE);
         schema.put("location", Schema.ColType.STRING);
         schema.put("version", Schema.ColType.STRING);
-        DataFrameCSVLoader loader = new FastDataFrameCSVLoader(
+        DataFrameLoader loader = new CSVDataFrameLoader(
                 "src/test/resources/sample.csv"
         ).setColumnTypes(schema);
 
@@ -38,6 +39,5 @@ public class UnsupervisedCSVTest {
         Explanation results = summ.getResults();
 
         assertEquals(3, results.getItemsets().size());
-        System.out.println(results.prettyPrint());
     }
 }

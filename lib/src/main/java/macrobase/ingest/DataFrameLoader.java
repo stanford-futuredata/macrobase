@@ -5,8 +5,7 @@ import macrobase.datamodel.Schema;
 
 import java.util.Map;
 
-public interface DataFrameCSVLoader {
-    DataFrameCSVLoader setColumnTypes(Map<String, Schema.ColType> types);
-
+public interface DataFrameLoader {
+    DataFrameLoader setColumnTypes(Map<String, Schema.ColType> types);
     DataFrame load() throws Exception;
 }

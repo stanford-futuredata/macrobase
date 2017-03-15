@@ -16,7 +16,7 @@ public class DataFrameCSVLoaderTest {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put("usage", Schema.ColType.DOUBLE);
 
-        DataFrameCSVLoader loader = new ApacheDataFrameCSVLoader("src/test/resources/tiny.csv")
+        DataFrameLoader loader = new CSVDataFrameLoader("src/test/resources/tiny.csv")
                 .setColumnTypes(colTypes);
         DataFrame df = loader.load();
 
