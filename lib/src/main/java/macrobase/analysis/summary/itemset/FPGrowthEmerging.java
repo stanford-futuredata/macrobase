@@ -9,11 +9,11 @@ import java.util.*;
 
 
 public class FPGrowthEmerging {
-    private boolean combinationsEnabled = false;
+    private boolean combinationsEnabled = true;
 
     public FPGrowthEmerging() {};
-    public void enableCombination() {
-        this.combinationsEnabled = true;
+    public void disableCombination() {
+        this.combinationsEnabled = false;
     }
 
 

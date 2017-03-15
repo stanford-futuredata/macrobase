@@ -7,7 +7,6 @@ import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Schema;
 import macrobase.ingest.CSVDataFrameLoader;
 import macrobase.ingest.DataFrameLoader;
-import macrobase.ingest.FastDataFrameLoader;
 import org.junit.Test;
 
 import java.util.*;
@@ -34,7 +33,7 @@ public class UnsupervisedCSVTest {
         DataFrame df_classified = pc.getResults();
 
         BatchSummarizer summ = new BatchSummarizer()
-                .setAttributes(Arrays.asList("location", "version")).enableAttributeCombinations();
+                .setAttributes(Arrays.asList("location", "version"));
         summ.process(df_classified);
         Explanation results = summ.getResults();
 

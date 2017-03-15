@@ -19,7 +19,7 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
     public String outlierColumn = "_OUTLIER";
     public double minOutlierSupport = 0.1;
     public double minRiskRatio = 3;
-    public boolean useAttributeCombinations = false;
+    public boolean useAttributeCombinations = true;
     public List<String> attributes = new ArrayList<>();
     public DoublePredicate predicate = d -> d != 0.0;
 
@@ -32,9 +32,9 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
 
     // Setter and constructor
     public BatchSummarizer() { }
-    public BatchSummarizer enableAttributeCombinations() {
+    public BatchSummarizer disableAttributeCombinations() {
         this.useAttributeCombinations = true;
-        fpg.enableCombination();
+        fpg.disableCombination();
         return this;
     }
     public BatchSummarizer setMinSupport(double minSupport) {

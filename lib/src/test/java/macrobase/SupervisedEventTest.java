@@ -86,7 +86,6 @@ public class SupervisedEventTest {
 
         public Explanation predictBatch(DataFrame batch) throws Exception {
             BatchSummarizer summ = new BatchSummarizer();
-            summ.enableAttributeCombinations();
             summ.setAttributes(attributes);
             summ.process(batch);
 

@@ -274,6 +274,13 @@ public class DataFrame {
         Row r = new Row(schema, rowValues);
         return r;
     }
+    public List<Row> getRows() throws Exception {
+        List<Row> rows = new ArrayList<>();
+        for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+            rows.add(getRow(rowIdx));
+        }
+        return rows;
+    }
     public ArrayList<double[]> getDoubleRows(List<Integer> columns) {
         ArrayList<double[]> rows = new ArrayList<>(this.numRows);
         int d = columns.size();
