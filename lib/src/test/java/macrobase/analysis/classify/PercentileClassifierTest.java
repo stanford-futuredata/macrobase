@@ -4,7 +4,8 @@ import macrobase.datamodel.DataFrame;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class PercentileClassifierTest {
     private DataFrame df;
@@ -38,5 +39,27 @@ public class PercentileClassifierTest {
         for (double val : vals) {
             assertTrue(val < 10 || val > 990);
         }
+    }
+
+    @Test
+    public void testConfigure() throws Exception {
+        PercentileClassifier pc = new PercentileClassifier("notcolumn");
+        pc.setColumnName("val")
+                .setIncludeHigh(false)
+                .setIncludeLow(true)
+                .setOutputColumnName("_OUT")
+                .setPercentile(10);
+
+        pc.process(df);
+        DataFrame output = pc.getResults();
+        double lowCutoff = pc.getLowCutoff();
+        assertTrue(lowCutoff > 90.0 && lowCutoff < 110.0);
+        assertEquals(df.getNumRows(), output.getNumRows());
+
+        DataFrame outliers = output.filter(
+                "_OUT", (double d) -> d != 0.0
+        );
+        int numOutliers = outliers.getNumRows();
+        assertTrue(numOutliers >= 90 && numOutliers <= 110);
     }
 }
