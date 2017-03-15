@@ -19,7 +19,7 @@ public class DataFrame {
 
     private ArrayList<String[]> stringCols;
     private ArrayList<double[]> doubleCols;
-    private ArrayList<Integer> indexToTypeIndex = new ArrayList<>();
+    private ArrayList<Integer> indexToTypeIndex;
 
     private int numRows;
 
@@ -29,6 +29,37 @@ public class DataFrame {
         this.doubleCols = new ArrayList<>();
         this.indexToTypeIndex = new ArrayList<>();
         this.numRows = 0;
+    }
+
+    /**
+     * Creates a dataframe from a list of rows
+     * Slower than creating a dataframe column by column using addXColumn methods.
+     * @param schema Schema to use
+     * @param rows Data to load
+     */
+    public DataFrame(Schema schema, List<Row> rows) throws MacrobaseException {
+        this();
+        this.schema = schema;
+        this.numRows = rows.size();
+        int d = schema.getNumColumns();
+        for (int c = 0; c < d; c++) {
+            ColType t = schema.getColumnType(c);
+            if (t == ColType.STRING) {
+                String[] colValues = new String[numRows];
+                for (int i = 0; i < numRows; i++) {
+                    colValues[i] = rows.get(i).<String>getAs(c);
+                }
+                addStringColumnInternal(colValues);
+            } else if (t == ColType.DOUBLE) {
+                double[] colValues = new double[numRows];
+                for (int i = 0; i < numRows; i++) {
+                    colValues[i] = rows.get(i).<Double>getAs(c);
+                }
+                addDoubleColumnInternal(colValues);
+            } else {
+                throw new MacrobaseException("Invalid ColType");
+            }
+        }
     }
 
     /**
@@ -223,38 +254,6 @@ public class DataFrame {
      */
     public DataFrame filter(String columnName, DoublePredicate filter) throws MacrobaseException {
         return filter(schema.getColumnIndex(columnName), filter);
-    }
-
-    /**
-     * Overwrites existing dataframe contents with new batch of rows.
-     * Prefer loading data by column via addXColumn methods if possible.
-     * @param schema new schema, overrides existing schema
-     * @param rows list of untyped rows
-     * @return dataframe updated with new content
-     */
-    public DataFrame loadRows(Schema schema, List<Row> rows) throws MacrobaseException {
-        this.schema = schema;
-        this.numRows = rows.size();
-        int d = schema.getNumColumns();
-        for (int c = 0; c < d; c++) {
-            ColType t = schema.getColumnType(c);
-            if (t == ColType.STRING) {
-                String[] colValues = new String[numRows];
-                for (int i = 0; i < numRows; i++) {
-                    colValues[i] = rows.get(i).<String>getAs(c);
-                }
-                addStringColumnInternal(colValues);
-            } else if (t == ColType.DOUBLE) {
-                double[] colValues = new double[numRows];
-                for (int i = 0; i < numRows; i++) {
-                    colValues[i] = rows.get(i).<Double>getAs(c);
-                }
-                addDoubleColumnInternal(colValues);
-            } else {
-                throw new MacrobaseException("Invalid ColType");
-            }
-        }
-        return this;
     }
 
     public Row getRow(int rowIdx) throws MacrobaseException {

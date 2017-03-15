@@ -80,7 +80,7 @@ public class SupervisedEventTest {
                 rows.add(new Row(fields));
             }
 
-            DataFrame df = new DataFrame().loadRows(schema, rows);
+            DataFrame df = new DataFrame(schema, rows);
             return df;
         }
 
