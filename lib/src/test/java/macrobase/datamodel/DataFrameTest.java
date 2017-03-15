@@ -37,7 +37,7 @@ public class DataFrameTest {
         assertEquals(1, selected.getSchema().getNumColumns());
         DataFrame filtered = selected.filter(
                 "attribute",
-                (String a) -> a.equals("a")
+                (Object a) -> a.equals("a")
         );
         assertEquals(2, filtered.getNumRows());
 

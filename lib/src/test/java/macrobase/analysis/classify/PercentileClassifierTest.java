@@ -4,8 +4,6 @@ import macrobase.datamodel.DataFrame;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.function.DoublePredicate;
-
 import static org.junit.Assert.*;
 
 public class PercentileClassifierTest {

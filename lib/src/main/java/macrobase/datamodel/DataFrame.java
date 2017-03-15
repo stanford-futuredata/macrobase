@@ -149,7 +149,7 @@ public class DataFrame {
      * @param mask rows to select
      * @return new dataframe with subset of rows
      */
-    public DataFrame filter(boolean[] mask) throws MacrobaseException {
+    protected DataFrame filter(boolean[] mask) throws MacrobaseException {
         DataFrame other = new DataFrame();
 
         int d = schema.getNumColumns();
@@ -190,7 +190,7 @@ public class DataFrame {
         }
         return other;
     }
-    public DataFrame filter(int columnIdx, Predicate<String> filter) throws MacrobaseException {
+    public DataFrame filter(int columnIdx, Predicate<Object> filter) throws MacrobaseException {
         String[] filterColumn = getStringColumn(columnIdx);
         boolean[] mask = new boolean[numRows];
         for (int i = 0; i < numRows; i++) {
@@ -198,7 +198,7 @@ public class DataFrame {
         }
         return filter(mask);
     }
-    public DataFrame filter(String columnName, Predicate<String> filter) throws MacrobaseException{
+    public DataFrame filter(String columnName, Predicate<Object> filter) throws MacrobaseException{
         return filter(schema.getColumnIndex(columnName), filter);
     }
 
