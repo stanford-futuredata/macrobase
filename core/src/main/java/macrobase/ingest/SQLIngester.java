@@ -107,6 +107,7 @@ public abstract class SQLIngester extends DataIngester {
                     rs.getMetaData().getColumnTypeName(i)));
         }
 
+        connection.close();
         return new Schema(columns);
     }
 
@@ -156,6 +157,7 @@ public abstract class SQLIngester extends DataIngester {
             rows.add(new RowSet.Row(columnValues));
         }
 
+        connection.close();
         return new RowSet(rows);
     }
 
@@ -203,6 +205,7 @@ public abstract class SQLIngester extends DataIngester {
                 conf.getEncoder().recordAttributeName(i, resultSet.getMetaData().getColumnName(i));
             }
         }
+        connection.close();
     }
 
     @Override
