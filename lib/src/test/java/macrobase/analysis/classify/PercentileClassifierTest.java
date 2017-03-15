@@ -4,6 +4,8 @@ import macrobase.datamodel.DataFrame;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.function.DoublePredicate;
+
 import static org.junit.Assert.*;
 
 public class PercentileClassifierTest {
@@ -20,7 +22,7 @@ public class PercentileClassifierTest {
     }
 
     @Test
-    public void testClassify() {
+    public void testClassify() throws Exception {
         assertEquals(1000, df.getNumRows());
         PercentileClassifier pc = new PercentileClassifier("val");
         pc.process(df);
@@ -29,8 +31,8 @@ public class PercentileClassifierTest {
         assertEquals(1, df.getSchema().getNumColumns());
         assertEquals(2, output.getSchema().getNumColumns());
 
-        DataFrame outliers = output.filterDoubleByName(
-                pc.getOutputColumnName(), d -> d != 0.0
+        DataFrame outliers = output.filter(
+                pc.getOutputColumnName(), (double d) -> d != 0.0
         );
         int numOutliers = outliers.getNumRows();
         assertTrue(numOutliers >= 8 && numOutliers <= 12);

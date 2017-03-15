@@ -1,6 +1,6 @@
 package macrobase.analysis.summary;
 
-import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.itemset.result.AttributeSet;
 
 import java.util.List;
 
@@ -9,23 +9,23 @@ import java.util.List;
  * and other statistics about the underlying process, e.g. num of tuples observed
  * so far.
  */
-public class Summary {
+public class Explanation {
     private final long numOutliers;
     private final long numInliers;
-    private List<ItemsetResult> itemsets;
+    private List<AttributeSet> itemsets;
     private final long creationTimeMs;
 
-    public Summary(List<ItemsetResult> resultList,
-                   long numInliers,
-                   long numOutliers,
-                   long creationTimeMs) {
+    public Explanation(List<AttributeSet> resultList,
+                       long numInliers,
+                       long numOutliers,
+                       long creationTimeMs) {
         itemsets = resultList;
         this.numInliers = numInliers;
         this.numOutliers = numOutliers;
         this.creationTimeMs = creationTimeMs;
     }
 
-    public List<ItemsetResult> getItemsets() {
+    public List<AttributeSet> getItemsets() {
         return itemsets;
     }
 
@@ -43,7 +43,7 @@ public class Summary {
 
     public String prettyPrint() {
         StringBuilder header = new StringBuilder(String.format(
-                "Outlier Summary:\n"
+                "Outlier Explanation:\n"
                 + "numOutliers: %d\n"
                 + "numInliners: %d\n"
                 + "Itemsets: \n"
@@ -51,7 +51,7 @@ public class Summary {
                 numOutliers,
                 numInliers,
                 itemsets));
-        for (ItemsetResult is : itemsets) {
+        for (AttributeSet is : itemsets) {
             header.append(is.prettyPrint());
         }
         return header.toString();
@@ -59,7 +59,7 @@ public class Summary {
 
     @Override
     public String toString() {
-        return "Summary{" +
+        return "Explanation{" +
                 "numOutliers=" + numOutliers +
                 ", numInliers=" + numInliers +
                 ", itemsets=" + itemsets +

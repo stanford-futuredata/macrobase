@@ -1,44 +1,21 @@
 package macrobase.analysis.summary.itemset.result;
 
-import macrobase.analysis.summary.itemset.ItemsetEncoder;
-
-import java.util.*;
+import java.util.Set;
 
 public class ItemsetResult {
     private double support;
-    private long numRecords;
+    private double numRecords;
     private double ratioToInliers;
-    private Map<String, String> items = new HashMap<>();
-
-    public ItemsetResult(EncodedItemsetResult its, ItemsetEncoder encoder) {
-        this.support = its.getSupport();
-        this.numRecords = (long)its.getNumRecords();
-        this.ratioToInliers = its.getRatioToInliers();
-        its.getItems().forEach(i -> items.put(encoder.decodeColumnName(i), encoder.decodeValue(i)));
-    }
+    private Set<Integer> items;
 
     public ItemsetResult(double support,
                          double numRecords,
                          double ratioToInliers,
-                         Map<String, String> items) {
+                         Set<Integer> items) {
         this.support = support;
-        this.numRecords = (long)numRecords;
+        this.numRecords = numRecords;
         this.ratioToInliers = ratioToInliers;
         this.items = items;
-    }
-
-    public String prettyPrint() {
-        StringJoiner joiner = new StringJoiner("\n");
-        items.forEach((k, v) -> joiner.add(k+"="+v));
-
-        return String.format("support: %f\n" +
-                             "records: %d\n" +
-                             "ratio: %f\n" +
-                             "\nColumns:\n%s\n\n",
-                             support,
-                             numRecords,
-                             ratioToInliers,
-                             joiner.toString());
     }
 
     public double getSupport() {
@@ -53,21 +30,8 @@ public class ItemsetResult {
         return ratioToInliers;
     }
 
-    public void setRatioToInliers(double ratio) {
-        ratioToInliers = ratio;
-    }
-
-    public Map<String, String> getItems() {
+    public Set<Integer> getItems() {
         return items;
     }
 
-    @Override
-    public String toString() {
-        return "ItemsetResult{" +
-                "support=" + support +
-                ", numRecords=" + numRecords +
-                ", ratioToInliers=" + ratioToInliers +
-                ", items=" + items +
-                '}';
-    }
 }

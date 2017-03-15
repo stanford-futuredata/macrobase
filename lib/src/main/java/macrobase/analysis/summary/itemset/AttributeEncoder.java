@@ -2,7 +2,12 @@ package macrobase.analysis.summary.itemset;
 
 import java.util.*;
 
-public class ItemsetEncoder {
+/**
+ * Encode every combination of attribute names and values into a distinct integer.
+ * This class assumes that attributes are stored in String columns in dataframes
+ * and is mainly used for frequent itemset mining.
+ */
+public class AttributeEncoder {
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
 
@@ -10,7 +15,7 @@ public class ItemsetEncoder {
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
 
-    public ItemsetEncoder() {
+    public AttributeEncoder() {
         encoder = new HashMap<>();
         nextKey = 0;
         valueDecoder = new HashMap<>();
@@ -24,7 +29,7 @@ public class ItemsetEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
 
-    public List<Set<Integer>> encodeColumns(List<String[]> columns) {
+    public List<Set<Integer>> encodeAttributes(List<String[]> columns) {
         if (columns.isEmpty()) {
             return new ArrayList<>();
         }

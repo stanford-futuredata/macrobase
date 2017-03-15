@@ -18,4 +18,15 @@ public class ItemsetWithCount {
     public double getCount() {
         return count;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        } else if (!(o instanceof ItemsetWithCount)) {
+            return false;
+        }
+        final ItemsetWithCount other = (ItemsetWithCount) o;
+        return (Math.round(other.getCount()) == Math.round(count)) && (other.getItems().equals(items));
+    }
 }

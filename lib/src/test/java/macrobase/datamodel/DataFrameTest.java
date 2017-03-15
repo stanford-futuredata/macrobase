@@ -1,5 +1,6 @@
 package macrobase.datamodel;
 
+import macrobase.conf.MacrobaseException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,16 +32,16 @@ public class DataFrameTest {
 
 
     @Test
-    public void testBulkOperations() {
+    public void testBulkOperations() throws MacrobaseException {
         DataFrame selected = tinyDF.selectByName(Arrays.asList("attribute"));
         assertEquals(1, selected.getSchema().getNumColumns());
-        DataFrame filtered = selected.filterStringByName(
+        DataFrame filtered = selected.filter(
                 "attribute",
                 (String a) -> a.equals("a")
         );
         assertEquals(2, filtered.getNumRows());
 
-        filtered = tinyDF.filterDouble(1, (double d) -> d > 2.1);
+        filtered = tinyDF.filter(1, (double d) -> d > 2.1);
         assertEquals(1, filtered.getNumRows());
     }
 }

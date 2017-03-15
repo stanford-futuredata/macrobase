@@ -1,9 +1,8 @@
 package macrobase;
 
 import macrobase.analysis.summary.BatchSummarizer;
-import macrobase.analysis.summary.itemset.ItemsetEncoder;
-import macrobase.analysis.summary.Summary;
-import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.Explanation;
+import macrobase.analysis.summary.itemset.result.AttributeSet;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Row;
 import macrobase.datamodel.Schema;
@@ -63,7 +62,7 @@ public class SupervisedEventTest {
             return this;
         }
 
-        public DataFrame prepareBatch(List<Map<String, Object>> events) {
+        public DataFrame prepareBatch(List<Map<String, Object>> events) throws Exception {
             int n = events.size();
             Schema schema = new Schema();
             schema.addColumn(Schema.ColType.DOUBLE, Explainer.outlierColumn);
@@ -85,33 +84,33 @@ public class SupervisedEventTest {
             return df;
         }
 
-        public Summary predictBatch(DataFrame batch) {
+        public Explanation predictBatch(DataFrame batch) throws Exception {
             BatchSummarizer summ = new BatchSummarizer();
-            summ.setUseAttributeCombinations(true);
+            summ.enableAttributeCombinations();
             summ.setAttributes(attributes);
             summ.process(batch);
 
             return summ.getResults();
         }
-        public Summary getResults(List<Map<String, Object>> events) {
+        public Explanation getResults(List<Map<String, Object>> events) throws Exception {
             return predictBatch(prepareBatch(events));
         }
     }
 
     @Test
-    public void testGetSummaries() {
+    public void testGetSummaries() throws Exception {
         List<String> attributes = Arrays.asList("serverID", "region");
         Explainer e = new Explainer(attributes, event -> "error".equals(event.get("sev")));
         DataFrame df = e.prepareBatch(events);
         assertEquals(1000,df.getNumRows());
 
-        Summary s = e.predictBatch(df);
+        Explanation s = e.predictBatch(df);
         assertEquals(100, s.getNumOutliers());
         assertEquals(900, s.getNumInliers());
-        List<ItemsetResult> is = s.getItemsets();
+        List<AttributeSet> is = s.getItemsets();
         assertEquals(5, is.size());
         int numSingleton = 0;
-        for (ItemsetResult itemResult : is) {
+        for (AttributeSet itemResult : is) {
             Map<String, String> curItems = itemResult.getItems();
             if (curItems.size() == 1) {
                 numSingleton++;

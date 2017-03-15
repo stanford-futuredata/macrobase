@@ -2,17 +2,14 @@ package macrobase;
 
 import macrobase.analysis.classify.PercentileClassifier;
 import macrobase.analysis.summary.BatchSummarizer;
-import macrobase.analysis.summary.Summary;
-import macrobase.analysis.summary.itemset.result.ItemsetResult;
+import macrobase.analysis.summary.Explanation;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Schema;
 import macrobase.ingest.DataFrameCSVLoader;
 import macrobase.ingest.FastDataFrameCSVLoader;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,9 +33,9 @@ public class UnsupervisedCSVTest {
         DataFrame df_classified = pc.getResults();
 
         BatchSummarizer summ = new BatchSummarizer()
-                .setAttributes(Arrays.asList("location", "version"));
+                .setAttributes(Arrays.asList("location", "version")).enableAttributeCombinations();
         summ.process(df_classified);
-        Summary results = summ.getResults();
+        Explanation results = summ.getResults();
 
         assertEquals(3, results.getItemsets().size());
         System.out.println(results.prettyPrint());

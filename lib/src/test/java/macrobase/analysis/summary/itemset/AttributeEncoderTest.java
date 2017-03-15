@@ -1,6 +1,5 @@
 package macrobase.analysis.summary.itemset;
 
-import macrobase.analysis.summary.itemset.ItemsetEncoder;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -10,7 +9,19 @@ import java.util.Set;
 
 import static org.junit.Assert.*;
 
-public class ItemsetEncoderTest {
+public class AttributeEncoderTest {
+    private AttributeEncoder e = new AttributeEncoder();
+
+    @SuppressWarnings("unused")
+    private void printItemsets(List<Set<Integer>> results) {
+        for (Set<Integer> itemset : results) {
+            System.out.println(itemset);
+            for (int i : itemset) {
+                System.out.println(e.decodeColumn(i) + ":" + e.decodeValue(i));
+            }
+        }
+    }
+
     @Test
     public void encodeColumns() throws Exception {
         List<String[]> columns = new ArrayList<>();
@@ -22,8 +33,7 @@ public class ItemsetEncoderTest {
             columns.add(curCol);
         }
 
-        ItemsetEncoder e = new ItemsetEncoder();
-        List<Set<Integer>> results = e.encodeColumns(columns);
+        List<Set<Integer>> results = e.encodeAttributes(columns);
         assertEquals(results.size(), columns.get(0).length);
 
         Set<Integer> totalItems = new HashSet<>();
@@ -31,12 +41,6 @@ public class ItemsetEncoderTest {
             totalItems.addAll(itemset);
         }
         assertEquals(totalItems.size(), 5 + 3);
-//
-//        for (Set<Integer> itemset : results) {
-//            System.out.println(itemset);
-//            for (int i : itemset) {
-//                System.out.println(e.decodeColumn(i) + ":" + e.decodeValue(i));
-//            }
-//        }
+        // printItemsets(results);
     }
 }
