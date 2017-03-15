@@ -26,7 +26,7 @@ public class FlexibleDampedReservoir<T> extends AChao<T> {
     }
 
     public void advancePeriod(int numPeriods) {
-        runningCount *= Math.pow(1 - bias, numPeriods);
+        decayWeights(Math.pow(1 - bias, numPeriods));
     }
 
     public void insert(T ele) {
