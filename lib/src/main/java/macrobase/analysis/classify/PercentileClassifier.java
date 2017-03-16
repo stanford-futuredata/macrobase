@@ -4,6 +4,11 @@ import macrobase.datamodel.DataFrame;
 import macrobase.operator.Transformer;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
+/**
+ * Classify rows based on high / low values for a single column.
+ * Returns a new dataframe with a column representation the classification status for
+ * each row: 1.0 if outlier, 0.0 otherwise.
+ */
 public class PercentileClassifier implements Transformer {
     // Parameters
     private double percentile = 0.5;
@@ -50,6 +55,11 @@ public class PercentileClassifier implements Transformer {
     public double getPercentile() {
         return percentile;
     }
+
+    /**
+     * @param percentile Cutoff point for high or low values
+     * @return this
+     */
     public PercentileClassifier setPercentile(double percentile) {
         this.percentile = percentile;
         return this;
@@ -57,6 +67,11 @@ public class PercentileClassifier implements Transformer {
     public boolean isIncludeHigh() {
         return includeHigh;
     }
+
+    /**
+     * @param includeHigh Whether to count high points as outliers.
+     * @return this
+     */
     public PercentileClassifier setIncludeHigh(boolean includeHigh) {
         this.includeHigh = includeHigh;
         return this;
@@ -64,6 +79,11 @@ public class PercentileClassifier implements Transformer {
     public boolean isIncludeLow() {
         return includeLow;
     }
+
+    /**
+     * @param includeLow Whether to count low points as outliers
+     * @return this
+     */
     public PercentileClassifier setIncludeLow(boolean includeLow) {
         this.includeLow = includeLow;
         return this;
@@ -78,6 +98,11 @@ public class PercentileClassifier implements Transformer {
     public String getOutputColumnName() {
         return outputColumnName;
     }
+
+    /**
+     * @param outputColumnName Which column to write the classification results.
+     * @return this
+     */
     public PercentileClassifier setOutputColumnName(String outputColumnName) {
         this.outputColumnName = outputColumnName;
         return this;

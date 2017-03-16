@@ -5,7 +5,7 @@ import macrobase.analysis.summary.itemset.result.AttributeSet;
 import java.util.List;
 
 /**
- * Represents a summarization result, which contains a List of ItemsetResults
+ * Represents a summarization result, which contains a list of attribute values
  * and other statistics about the underlying process, e.g. num of tuples observed
  * so far.
  */
