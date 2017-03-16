@@ -16,7 +16,7 @@
 
     <modules>
       <module>assembly</module>
-      <module>runtime</module>
+      <module>legacy</module>
       <module>frontend</module>
       <module>contrib</module>
       <module>lib</module>
