@@ -4,7 +4,6 @@ import macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import macrobase.analysis.summary.itemset.AttributeEncoder;
 import macrobase.analysis.summary.itemset.result.AttributeSet;
 import macrobase.analysis.summary.itemset.result.ItemsetResult;
-import macrobase.conf.MacrobaseException;
 import macrobase.datamodel.DataFrame;
 import macrobase.datamodel.Schema;
 import macrobase.operator.Operator;
@@ -88,7 +87,7 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
     }
 
     @Override
-    public void process(DataFrame df) throws MacrobaseException {
+    public void process(DataFrame df) {
         // Filter inliers and outliers
         DataFrame outlierDF = df.filter(outlierColumn, predicate);
         DataFrame inlierDF = df.filter(outlierColumn, predicate.negate());

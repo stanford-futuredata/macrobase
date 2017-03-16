@@ -1,6 +1,6 @@
 package macrobase.datamodel;
 
-import macrobase.conf.MacrobaseException;
+import macrobase.util.MacrobaseInternalError;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ public class DataFrame {
      * @param schema Schema to use
      * @param rows Data to load
      */
-    public DataFrame(Schema schema, List<Row> rows) throws MacrobaseException {
+    public DataFrame(Schema schema, List<Row> rows) {
         this();
         this.schema = schema;
         this.numRows = rows.size();
@@ -57,7 +57,7 @@ public class DataFrame {
                 }
                 addDoubleColumnInternal(colValues);
             } else {
-                throw new MacrobaseException("Invalid ColType");
+                throw new MacrobaseInternalError("Invalid ColType");
             }
         }
     }
@@ -152,7 +152,7 @@ public class DataFrame {
      * @param columns column indices to project
      * @return new dataframe with subset of columns
      */
-    public DataFrame select(List<Integer> columns) throws MacrobaseException {
+    public DataFrame select(List<Integer> columns) {
         DataFrame other = new DataFrame();
         for (int c : columns) {
             String columnName = schema.getColumnName(c);
@@ -162,7 +162,7 @@ public class DataFrame {
             } else if (t == ColType.DOUBLE) {
                 other.addDoubleColumn(columnName, getDoubleColumn(c));
             } else {
-                throw new MacrobaseException("Bad Column Type");
+                throw new MacrobaseInternalError("Bad Column Type");
             }
         }
         return other;
@@ -172,7 +172,7 @@ public class DataFrame {
      * @param columns column names to project
      * @return new dataframe with subset of columns
      */
-    public DataFrame selectByName(List<String> columns) throws MacrobaseException {
+    public DataFrame selectByName(List<String> columns) {
         return select(this.schema.getColumnIndices(columns));
     }
 
@@ -180,7 +180,7 @@ public class DataFrame {
      * @param mask rows to select
      * @return new dataframe with subset of rows
      */
-    protected DataFrame filter(boolean[] mask) throws MacrobaseException {
+    protected DataFrame filter(boolean[] mask) {
         DataFrame other = new DataFrame();
 
         int d = schema.getNumColumns();
@@ -216,12 +216,12 @@ public class DataFrame {
                 }
                 other.addDoubleColumn(columnName, newColumn);
             } else {
-                throw new MacrobaseException("Bad Column Type");
+                throw new MacrobaseInternalError("Bad Column Type");
             }
         }
         return other;
     }
-    public DataFrame filter(int columnIdx, Predicate<Object> filter) throws MacrobaseException {
+    public DataFrame filter(int columnIdx, Predicate<Object> filter) {
         String[] filterColumn = getStringColumn(columnIdx);
         boolean[] mask = new boolean[numRows];
         for (int i = 0; i < numRows; i++) {
@@ -229,7 +229,7 @@ public class DataFrame {
         }
         return filter(mask);
     }
-    public DataFrame filter(String columnName, Predicate<Object> filter) throws MacrobaseException{
+    public DataFrame filter(String columnName, Predicate<Object> filter) {
         return filter(schema.getColumnIndex(columnName), filter);
     }
 
@@ -238,7 +238,7 @@ public class DataFrame {
      * @param filter predicate to test each column value
      * @return new dataframe with subset of rows
      */
-    public DataFrame filter(int columnIdx, DoublePredicate filter) throws MacrobaseException {
+    public DataFrame filter(int columnIdx, DoublePredicate filter) {
         double[] filterColumn = getDoubleColumn(columnIdx);
         boolean[] mask = new boolean[numRows];
         for (int i = 0; i < numRows; i++) {
@@ -252,11 +252,11 @@ public class DataFrame {
      * @param filter predicate to test each column value
      * @return new dataframe with subset of rows
      */
-    public DataFrame filter(String columnName, DoublePredicate filter) throws MacrobaseException {
+    public DataFrame filter(String columnName, DoublePredicate filter) {
         return filter(schema.getColumnIndex(columnName), filter);
     }
 
-    public Row getRow(int rowIdx) throws MacrobaseException {
+    public Row getRow(int rowIdx) {
         int d = schema.getNumColumns();
         ArrayList<Object> rowValues = new ArrayList<>(d);
         for (int c = 0; c < d; c++) {
@@ -267,13 +267,13 @@ public class DataFrame {
             } else if (t == ColType.DOUBLE) {
                 rowValues.add(doubleCols.get(typeSubIndex)[rowIdx]);
             } else {
-                throw new MacrobaseException("Bad ColType");
+                throw new MacrobaseInternalError("Bad ColType");
             }
         }
         Row r = new Row(schema, rowValues);
         return r;
     }
-    public List<Row> getRows() throws Exception {
+    public List<Row> getRows() {
         List<Row> rows = new ArrayList<>();
         for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
             rows.add(getRow(rowIdx));
