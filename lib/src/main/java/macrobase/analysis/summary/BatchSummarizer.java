@@ -84,6 +84,7 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
      * Whether or not to use combinations of attributes in explanation, or only
      * use simple single attribute explanations
      * @param useAttributeCombinations flag
+     * @return this
      */
     public BatchSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
         this.useAttributeCombinations = useAttributeCombinations;
