@@ -12,8 +12,9 @@ public class FPGrowthEmerging {
     private boolean combinationsEnabled = true;
 
     public FPGrowthEmerging() {};
-    public void disableCombination() {
-        this.combinationsEnabled = false;
+    public FPGrowthEmerging setCombinationsEnabled(boolean flag) {
+        this.combinationsEnabled = flag;
+        return this;
     }
 
 
@@ -42,13 +43,14 @@ public class FPGrowthEmerging {
                                              outliers.size());
 
             if (ratio > minRatio) {
-                ret.add(new ItemsetResult(attrOutlierCountEntry.getValue() / outliers.size(),
-                                          attrOutlierCountEntry.getValue(),
-                                          ratio,
-                                          new HashSet<>(item)));
+                ret.add(new ItemsetResult(
+                        attrOutlierCountEntry.getValue() / outliers.size(),
+                        attrOutlierCountEntry.getValue(),
+                        ratio,
+                        Collections.singleton(item)
+                ));
             }
         }
-
         return ret;
     }
 
@@ -102,8 +104,10 @@ public class FPGrowthEmerging {
         }
 
         FPGrowth fpg = new FPGrowth();
-        List<ItemsetWithCount> iwc = fpg.getItemsetsWithSupportCount(outlierTransactions, supportedOutlierCounts,
-                                                                     outliers.size() * minSupport);
+        List<ItemsetWithCount> iwc = fpg.getItemsetsWithSupportCount(
+                outlierTransactions,
+                supportedOutlierCounts,
+                outliers.size() * minSupport);
 
         iwc.sort((x, y) -> x.getCount() != y.getCount() ?
                 -Double.compare(x.getCount(), y.getCount()) :

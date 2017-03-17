@@ -34,4 +34,13 @@ public class ItemsetResult {
         return items;
     }
 
+    @Override
+    public String toString() {
+        return "ItemsetResult{" +
+                "support=" + support +
+                ", numRecords=" + numRecords +
+                ", ratioToInliers=" + ratioToInliers +
+                ", items=" + items +
+                '}';
+    }
 }

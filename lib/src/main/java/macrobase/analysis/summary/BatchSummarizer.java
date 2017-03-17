@@ -19,12 +19,12 @@ import java.util.function.DoublePredicate;
  */
 public class BatchSummarizer implements Operator<DataFrame, Explanation> {
     // Parameters
-    public String outlierColumn = "_OUTLIER";
-    public double minOutlierSupport = 0.1;
-    public double minRiskRatio = 3;
-    public boolean useAttributeCombinations = true;
-    public List<String> attributes = new ArrayList<>();
-    public DoublePredicate predicate = d -> d != 0.0;
+    private String outlierColumn = "_OUTLIER";
+    private double minOutlierSupport = 0.1;
+    private double minRiskRatio = 3;
+    private boolean useAttributeCombinations = true;
+    private List<String> attributes = new ArrayList<>();
+    private DoublePredicate predicate = d -> d != 0.0;
 
     // Output
     private Explanation explanation = null;
@@ -33,13 +33,7 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
     private List<Set<Integer>> inlierItemsets, outlierItemsets;
     private FPGrowthEmerging fpg = new FPGrowthEmerging();
 
-    // Setter and constructor
     public BatchSummarizer() { }
-    public BatchSummarizer disableAttributeCombinations() {
-        this.useAttributeCombinations = true;
-        fpg.disableCombination();
-        return this;
-    }
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -83,6 +77,17 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
      */
     public BatchSummarizer setOutlierColumn(String outlierColumn) {
         this.outlierColumn = outlierColumn;
+        return this;
+    }
+
+    /**
+     * Whether or not to use combinations of attributes in explanation, or only
+     * use simple single attribute explanations
+     * @param useAttributeCombinations flag
+     */
+    public BatchSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
+        this.useAttributeCombinations = useAttributeCombinations;
+        fpg.setCombinationsEnabled(useAttributeCombinations);
         return this;
     }
 
