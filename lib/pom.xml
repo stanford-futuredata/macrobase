@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.stanford.futuredata</groupId>
     <artifactId>macrobase-lib</artifactId>
-    <version>0.1</version>
+    <version>0.1-SNAPSHOT</version>
     <name>macrobase</name>
     <url>https://github.com/stanford-futuredata/macrobase</url>
     <description>
