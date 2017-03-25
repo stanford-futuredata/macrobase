@@ -1,12 +1,34 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>macrobase</groupId>
+  <groupId>edu.stanford.futuredata</groupId>
   <artifactId>macrobase</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
   <name>macrobase</name>
-  <url>http://maven.apache.org</url>
+  <url>https://github.com/stanford-futuredata/macrobase</url>
+  <description>MacroBase is an anomaly detection engine designed to prioritize human attention in large-scale datasets and data streams.</description>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Peter Bailis</name>
+      <email>pbailis@cs.stanford.edu</email>
+      <organization>Stanford</organization>
+      <organizationUrl>http://www.bailis.org</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/stanford-futuredata/macrobase.git</connection>
+    <developerConnection>scm:git:ssh://github.com/stanford-futuredata/macrobase.git</developerConnection>
+    <url>https://github.com/stanford-futuredata/macrobase</url>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -16,9 +38,10 @@
 
     <modules>
       <module>assembly</module>
-      <module>core</module>
+      <module>legacy</module>
       <module>frontend</module>
       <module>contrib</module>
+      <module>lib</module>
     </modules>
 
   <dependencies>
@@ -28,29 +51,9 @@
       <version>4.12</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-core</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-assets</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-logging</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-db</artifactId>
-      <version>${dropwizard.version}</version>
-    </dependency>
   </dependencies>
 
-<build>
+  <build>
   <plugins>
     <plugin>
       <groupId>org.apache.maven.plugins</groupId>

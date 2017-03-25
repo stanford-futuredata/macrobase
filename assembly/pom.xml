@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>macrobase</groupId>
+        <groupId>edu.stanford.futuredata</groupId>
         <artifactId>macrobase</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
@@ -12,17 +12,17 @@
 
     <dependencies>
         <dependency>
-            <groupId>macrobase</groupId>
-            <artifactId>macrobase-core</artifactId>
+            <groupId>edu.stanford.futuredata</groupId>
+            <artifactId>macrobase-legacy</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>macrobase</groupId>
+            <groupId>edu.stanford.futuredata</groupId>
             <artifactId>macrobase-frontend</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>macrobase</groupId>
+            <groupId>edu.stanford.futuredata</groupId>
             <artifactId>macrobase-contrib</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
