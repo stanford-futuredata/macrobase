@@ -2,13 +2,12 @@ package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.MovingAverage;
+import edu.stanford.futuredata.macrobase.analysis.summary.IncrementalSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class StreamingSummarizationTest {
     /**
@@ -69,6 +68,14 @@ public class StreamingSummarizationTest {
         return df;
     }
 
+    public static Set<String> generateTrueAnomalousAttribute(int k) {
+        Set<String> values = new HashSet<>(k);
+        for (int i = 0; i < k; i ++) {
+            values.add("a" + i + ":1");
+        }
+        return values;
+    }
+
     @Test
     public void testDetectSingleChange() throws Exception {
         int n = 10000;
@@ -82,24 +89,71 @@ public class StreamingSummarizationTest {
             attributes.add("a"+i);
         }
         DataFrame df = generateAnomalyDataset(n, k, C, d, p, eventIdx);
-        BatchSummarizer bs = new BatchSummarizer();
-        bs.setAttributes(attributes);
-        bs.setOutlierColumn("outlier");
-        bs.setUseAttributeCombinations(true);
-        bs.process(df);
-        Explanation e = bs.getResults();
-//        System.out.println(e);
+        Set<String> grouthTruthAttributes = generateTrueAnomalousAttribute(k);
 
-        int slideSize = 600;
-        // TODO: replace moving average with summarization
-        MovingAverage ma = new MovingAverage("outlier", 3);
+        int slideSize = 500;
+        // Test singleton summarizer
+        IncrementalSummarizer singletonSummarizer = new IncrementalSummarizer(n / slideSize);
+        singletonSummarizer.setOutlierColumn("outlier").setAttributes(attributes).setUseAttributeCombinations(false);
+        // Test summarizer with combinations
+        IncrementalSummarizer summarizer = new IncrementalSummarizer(n / slideSize);
+        summarizer.setOutlierColumn("outlier").setAttributes(attributes);
+
         double startTime = 0.0;
+
         while (startTime < n) {
             double endTime = startTime + slideSize;
             double ls = startTime;
             DataFrame curBatch = df.filter("time", (double t) -> t >= ls && t < endTime);
-            ma.process(curBatch);
-//            System.out.println(ma.getResults());
+            summarizer.process(curBatch);
+            singletonSummarizer.process(curBatch);
+            Explanation singleExplanation = singletonSummarizer.getResults();
+            Explanation explanation = summarizer.getResults();
+
+            assert (explanation.getNumInliers() + explanation.getNumOutliers() == endTime);
+            assert (singleExplanation.getNumInliers() + singleExplanation.getNumOutliers() == endTime);
+
+            if (startTime < eventIdx) { // No results before event time
+                assert (explanation.getItemsets().size() == 0);
+                assert (singleExplanation.getItemsets().size() == 0);
+            } else {
+                // Singleton:
+                //     make sure that each anomalous attribute is picked out by the summarizer
+                assert (singleExplanation.getItemsets().size() == k);
+                Set<String> values = new HashSet<>();
+                for (int i = 0; i < k; i ++) {
+                    assert (explanation.getItemsets().get(i).getItems().size() == 1);
+                    values.addAll(explanation.getItemsets().get(i).getItems().values());
+                }
+                assert (values.containsAll(grouthTruthAttributes));
+
+                // Combination:
+                //    make sure that the known anomalous attribute combination has the highest risk ratio
+                List<AttributeSet> comboAttributes = explanation.getItemsets();
+                Collections.sort(comboAttributes,
+                        (a, b)->(new Double(b.getRatioToInliers()).compareTo(new Double(a.getRatioToInliers()))));
+                assert(comboAttributes.get(0).getItems().values().containsAll(grouthTruthAttributes));
+
+                // Check whether the final result from the incremental summarizer agrees with the batch summarizer
+                if (endTime == n) {
+                    BatchSummarizer batch = new BatchSummarizer().setAttributes(attributes).setOutlierColumn("outlier");
+                    batch.process(df.filter("time", (double t) -> t >= eventIdx));
+                    Explanation batchResult = batch.getResults();
+                    for (AttributeSet expected : batchResult.getItemsets()) {
+                        if (expected.getItems().values().containsAll(grouthTruthAttributes)) { // Check match for combination
+                            assert(expected.getNumRecords() == comboAttributes.get(0).getNumRecords());
+                        } else if (expected.getItems().keySet().size() == 1) { // Check match for singletons
+                            for (int i = 0; i < k; i ++) {
+                                AttributeSet singleAttribute = singleExplanation.getItemsets().get(i);
+                                if (singleAttribute.getItems().equals(expected.getItems())) {
+                                    assert(singleAttribute.getNumRecords() == expected.getNumRecords());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             startTime = endTime;
         }
     }
