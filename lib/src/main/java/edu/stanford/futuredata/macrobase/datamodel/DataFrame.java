@@ -66,10 +66,10 @@ public class DataFrame {
     public DataFrame copy() {
         DataFrame other = new DataFrame();
         other.schema = schema.copy();
-        other.stringCols = new ArrayList<>(stringCols);
-        other.doubleCols = new ArrayList<>(doubleCols);
         other.indexToTypeIndex = new ArrayList<>(indexToTypeIndex);
         other.numRows = numRows;
+        other.stringCols = new ArrayList<>(stringCols);
+        other.doubleCols = new ArrayList<>(doubleCols);
         return other;
     }
 
@@ -77,6 +77,10 @@ public class DataFrame {
     public int getNumRows() {return numRows;}
     public ArrayList<double[]> getDoubleCols() { return doubleCols; }
     public ArrayList<String[]> getStringCols() { return stringCols; }
+
+    public String toString() {
+        return getRows().toString();
+    }
 
     // Fast Column-based methods
     private void addDoubleColumnInternal(double[] colValues) {
@@ -144,6 +148,59 @@ public class DataFrame {
     }
     public ArrayList<String[]> getStringColsByName(List<String> columns) {
         return getStringCols(this.schema.getColumnIndices(columns));
+    }
+
+    /**
+     * @param others Dataframes to combine
+     * @return new dataframe with copied rows
+     */
+    public static DataFrame unionAll(List<DataFrame> others) {
+        int k = others.size();
+        if (k == 0) {
+            return new DataFrame();
+        }
+
+        DataFrame first = others.get(0);
+        DataFrame combined = new DataFrame();
+        combined.schema = first.schema.copy();
+        combined.indexToTypeIndex = new ArrayList<>(first.indexToTypeIndex);
+        int n = 0;
+        for (int i = 0; i < k; i++) {
+            n += others.get(i).numRows;
+        }
+        combined.numRows = n;
+
+        int d = first.stringCols.size();
+        combined.stringCols = new ArrayList<>(d);
+        for (int colIdx = 0; colIdx < d; colIdx++) {
+            String[] newCol = new String[n];
+            int i = 0;
+            for (DataFrame curOther : others) {
+                String[] otherCol = curOther.getStringColumn(colIdx);
+                for (String curString : otherCol) {
+                    newCol[i] = curString;
+                    i++;
+                }
+            }
+            combined.stringCols.add(newCol);
+        }
+
+        d = first.doubleCols.size();
+        combined.doubleCols = new ArrayList<>(d);
+        for (int colIdx = 0; colIdx < d; colIdx++) {
+            double[] newCol = new double[n];
+            int i = 0;
+            for (DataFrame curOther : others) {
+                double[] otherCol = curOther.getDoubleColumn(colIdx);
+                for (double curString : otherCol) {
+                    newCol[i] = curString;
+                    i++;
+                }
+            }
+            combined.doubleCols.add(newCol);
+        }
+
+        return combined;
     }
 
     /**
