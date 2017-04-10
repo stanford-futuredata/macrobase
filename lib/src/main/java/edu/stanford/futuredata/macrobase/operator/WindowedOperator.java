@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.operator;
 
-import com.google.common.base.Joiner;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.ArrayUtils;
 
@@ -8,14 +7,17 @@ import java.util.*;
 
 /**
  * Wraps an incremental operator to work over rolling windows.
- * Inputs are batched into panes of [start, start+paneLength).
+ * Inputs are batched into panes of [start, start+slideLength).
+ * slideLength is assumed to be a divisor of the window length so that
+ * a window divides neatly into panes: if not the window length is
+ * effectively rounded up.
  * @param <O> output type of the operator
  */
 public class WindowedOperator<O>
         implements Operator<DataFrame, O> {
     private String timeColumn = "time";
     private double windowLength = 60.0;
-    private double paneLength = 10.0;
+    private double slideLength = 10.0;
 
     private double maxWindowTime;
     private IncrementalOperator<O> op;
@@ -29,7 +31,7 @@ public class WindowedOperator<O>
         this.maxWindowTime = 0.0;
         this.batchBuffer = new ArrayList<>();
 
-        int numPanes = (int)Math.ceil(windowLength / paneLength);
+        int numPanes = (int)Math.ceil(windowLength / slideLength);
         op.setWindowSize(numPanes);
         return this;
     }
@@ -57,7 +59,7 @@ public class WindowedOperator<O>
      */
     public double flushBuffer() throws Exception {
         DataFrame partialPane = DataFrame.unionAll(batchBuffer);
-        maxWindowTime += paneLength;
+        maxWindowTime += slideLength;
         op.process(partialPane);
         batchBuffer.clear();
         return maxWindowTime;
@@ -80,9 +82,9 @@ public class WindowedOperator<O>
         ArrayList<DataFrame> newPanes = new ArrayList<>(1);
 
         // Assuming in order arrival, break up incoming batch into panes
-        while (maxInputTime >= maxWindowTime + paneLength) {
+        while (maxInputTime >= maxWindowTime + slideLength) {
             // When we fill up a pane, split off the overflow from the current batch
-            double nextWindowEnd = maxWindowTime + paneLength;
+            double nextWindowEnd = maxWindowTime + slideLength;
             DataFrame earlyInput = restInput.filter(timeColumn, (double t) -> t < nextWindowEnd);
             restInput = restInput.filter(timeColumn, (double t) -> t >= nextWindowEnd);
             batchBuffer.add(earlyInput);
@@ -120,12 +122,12 @@ public class WindowedOperator<O>
         this.windowLength = windowLength;
     }
 
-    public double getPaneLength() {
-        return paneLength;
+    public double getSlideLength() {
+        return slideLength;
     }
 
-    public void setPaneLength(double paneLength) {
-        this.paneLength = paneLength;
+    public void setSlideLength(double slideLength) {
+        this.slideLength = slideLength;
     }
 
     public double getMaxWindowTime() {

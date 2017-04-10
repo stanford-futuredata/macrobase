@@ -5,8 +5,6 @@ import edu.stanford.futuredata.macrobase.analysis.summary.MovingAverageTest;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
 
-import java.util.Random;
-
 import static org.junit.Assert.*;
 
 public class WindowedOperatorTest {
@@ -16,7 +14,7 @@ public class WindowedOperatorTest {
         WindowedOperator<Double> windowedAverageOp = new WindowedOperator<>(
                 new MovingAverage("val", 0)
         );
-        windowedAverageOp.setPaneLength(10.0);
+        windowedAverageOp.setSlideLength(10.0);
         windowedAverageOp.setTimeColumn("time");
         windowedAverageOp.setWindowLength(30.0);
         windowedAverageOp.initialize();
