@@ -42,5 +42,10 @@ public class DataFrameTest {
 
         filtered = tinyDF.filter(1, (double d) -> d > 2.1);
         assertEquals(1, filtered.getNumRows());
+
+        DataFrame combined = DataFrame.unionAll(
+                Arrays.asList(tinyDF, tinyDF, tinyDF)
+        );
+        assertEquals(tinyDF.getNumRows()*3, combined.getNumRows());
     }
 }
