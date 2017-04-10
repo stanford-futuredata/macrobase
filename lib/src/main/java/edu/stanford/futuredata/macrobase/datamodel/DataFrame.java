@@ -329,12 +329,19 @@ public class DataFrame {
         return r;
     }
     public List<Row> getRows() {
+        return getRows(numRows);
+    }
+    public List<Row> getRows(int numRowsToGet) {
+        if (numRowsToGet > numRows) {
+            numRowsToGet = numRows;
+        }
         List<Row> rows = new ArrayList<>();
-        for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+        for (int rowIdx = 0; rowIdx < numRowsToGet; rowIdx++) {
             rows.add(getRow(rowIdx));
         }
         return rows;
     }
+
     public ArrayList<double[]> getDoubleRows(List<Integer> columns) {
         ArrayList<double[]> rows = new ArrayList<>(this.numRows);
         int d = columns.size();
