@@ -25,9 +25,8 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     // Default parameters for the summarizer
     protected String outlierColumn = "_OUTLIER";
     protected double minOutlierSupport = 0.1;
-    protected double minRiskRatio = 3;
-    protected boolean useAttributeCombinations = true;
     protected List<String> attributes = new ArrayList<>();
+    // Default predicate for filtering outlying rows
     protected DoublePredicate predicate = d -> d != 0.0;
 
     // Encoder and encoded attribute sets
@@ -69,16 +68,6 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     }
 
     /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public IncrementalSummarizer setMinRiskRatio(double minRiskRatio) {
-        this.minRiskRatio = minRiskRatio;
-        return this;
-    }
-
-    /**
      * By default, will check for nonzero entries in a column of doubles.
      * @param predicate function to signify whether row should be treated as outlier.
      * @return this
@@ -90,17 +79,6 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     public IncrementalSummarizer setAttributes(List<String> attributes) {
         this.attributes = attributes;
         this.encoder.setColumnNames(attributes);
-        return this;
-    }
-
-    /**
-     * Whether or not to use combinations of attributes in explanation, or only
-     * use simple single attribute explanations
-     * @param useAttributeCombinations flag
-     * @return this
-     */
-    public IncrementalSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
-        this.useAttributeCombinations = useAttributeCombinations;
         return this;
     }
 
@@ -134,7 +112,8 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         outlierPaneCounts.add(outlierItemsets.size());
     }
 
-    /**/
+    /* Helper function to calculate cumulative pane count. This way, the support from pane a to
+     * the pane b can easily be calculated by outlierCountCumSum.get(b) - outlierCountCumSum.get(a) */
     private void calcCumSum() {
         Object[] inlierCounts = inlierPaneCounts.toArray();
         Object[] outlierCounts = outlierPaneCounts.toArray();
@@ -207,7 +186,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
 
         // Update support for the window
         for (Set<Integer> itemset : outlierItemsetWindowCount.keySet()) {
-            double i = inlierItemsetWindowCount.get(itemset) + inlierItemsetPaneCount.getOrDefault(itemset, 0.0);
+            double i = inlierItemsetWindowCount.getOrDefault(itemset, 0.0) + inlierItemsetPaneCount.getOrDefault(itemset, 0.0);
             double o = outlierItemsetWindowCount.get(itemset) + outlierItemsetPaneCount.getOrDefault(itemset, 0.0);
             inlierItemsetWindowCount.put(itemset, i);
             outlierItemsetWindowCount.put(itemset, o);
@@ -248,37 +227,24 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     private void addNewFrequent() {
         double minSupport = Math.ceil(minOutlierSupport * outlierItemsets.size());
         HashMap<Integer, Double> inlierPaneSingletonCount = new ExactCount().count(inlierItemsets).getCounts();
-        if (useAttributeCombinations) { // Use attribute combinations
-            // Get new frequent itemsets in outliers
-            FPGrowth fpGrowth = new FPGrowth();
-            List<ItemsetWithCount> frequent = fpGrowth.getItemsetsWithSupportCount(outlierItemsets,
-                    minSupport);
-            List<ItemsetWithCount> newFrequent = new ArrayList<>();
-            for (ItemsetWithCount iwc : frequent) {
-                Set<Integer> itemset = iwc.getItems();
-                if (!outlierItemsetWindowCount.containsKey(itemset)) {
-                    trackItemset(itemset, iwc.getCount());
-                    newFrequent.add(iwc);
-                }
+        // Get new frequent itemsets in outliers
+        FPGrowth fpGrowth = new FPGrowth();
+        List<ItemsetWithCount> frequent = fpGrowth.getItemsetsWithSupportCount(outlierItemsets,
+                minSupport);
+        List<ItemsetWithCount> newFrequent = new ArrayList<>();
+        for (ItemsetWithCount iwc : frequent) {
+            Set<Integer> itemset = iwc.getItems();
+            if (!outlierItemsetWindowCount.containsKey(itemset)) {
+                trackItemset(itemset, iwc.getCount());
+                newFrequent.add(iwc);
             }
-            // Get support in the inlier transactions
-            List<ItemsetWithCount> inlierCount = fpGrowth.getCounts(
-                    inlierItemsets, inlierPaneSingletonCount, inlierPaneSingletonCount.keySet(), newFrequent);
-            for (ItemsetWithCount iwc : inlierCount) {
-                inlierItemsetWindowCount.put(iwc.getItems(), iwc.getCount());
-                inlierItemsetPaneCount.put(iwc.getItems(), iwc.getCount());
-            }
-        } else { // Only use singleton attribute
-            HashMap<Integer, Double> outlierPaneSingletonCount = new ExactCount().count(outlierItemsets).getCounts();
-            for (Integer item : outlierPaneSingletonCount.keySet()) {
-                Set<Integer> itemset = new HashSet<>(1);
-                itemset.add(item);
-                if (outlierPaneSingletonCount.get(item) >= minSupport && !outlierItemsetWindowCount.containsKey(itemset)) {
-                    trackItemset(itemset, outlierPaneSingletonCount.get(item));
-                    inlierItemsetWindowCount.put(itemset, inlierPaneSingletonCount.get(item));
-                    inlierItemsetPaneCount.put(itemset, inlierPaneSingletonCount.get(item));
-                }
-            }
+        }
+        // Get support in the inlier transactions
+        List<ItemsetWithCount> inlierCount = fpGrowth.getCounts(
+                inlierItemsets, inlierPaneSingletonCount, inlierPaneSingletonCount.keySet(), newFrequent);
+        for (ItemsetWithCount iwc : inlierCount) {
+            inlierItemsetWindowCount.put(iwc.getItems(), iwc.getCount());
+            inlierItemsetPaneCount.put(iwc.getItems(), iwc.getCount());
         }
     }
 
@@ -300,8 +266,13 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         outlierItemsetPaneCounts.add(outlierItemsetPaneCount);
     }
 
-    @Override
-    public Explanation getResults() {
+    /**
+     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
+     *                     Adjust this to tune the severity (e.g. strength of correlation)
+     *                     of the results returned.
+     * @return explanation
+     */
+    public Explanation getResults(double minRiskRatio) {
         long startTime = System.currentTimeMillis();
 
         calcCumSum();
@@ -330,6 +301,11 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
                 (long) outlierCountCumSum.get(currPanes),
                 elapsed);
         return explanation;
+    }
 
+    /* Use a default risk ratio of 3 if the users don't specify the minimum required risk ratio. */
+    @Override
+    public Explanation getResults() {
+        return getResults(3);
     }
 }
