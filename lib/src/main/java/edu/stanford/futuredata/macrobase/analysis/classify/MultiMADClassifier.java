@@ -13,6 +13,8 @@ import java.lang.Double;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 public class MultiMADClassifier implements Transformer {
@@ -23,6 +25,8 @@ public class MultiMADClassifier implements Transformer {
     private String outputColumnName = "_OUTLIER";
     private List<Double> medians;
     private List<Double> MADs;
+    private List<Double> upperBounds;
+    private List<Double> lowerBounds;
 
     // Calculated values
     private DataFrame output;
@@ -31,6 +35,8 @@ public class MultiMADClassifier implements Transformer {
         this.columnNames = new ArrayList<String>(Arrays.asList(columnNames));
         this.medians = new ArrayList<Double>();
         this.MADs = new ArrayList<Double>();
+        this.upperBounds = new ArrayList<Double>();
+        this.lowerBounds = new ArrayList<Double>();
     }
 
     @Override
@@ -42,17 +48,16 @@ public class MultiMADClassifier implements Transformer {
         output = input.copy();
         double[] resultColumn = new double[input.getNumRows()];
 
+        DataFrame trainingInput = input;
+        if (samplingRate != 1) {
+            trainingInput = getRandomSample(input);
+        }
+
         for (String column : columnNames) {
             long startTime = System.currentTimeMillis();
 
             double[] metrics = input.getDoubleColumnByName(column);
-            double[] trainingMetrics = Arrays.copyOf(metrics, metrics.length);
-            if (samplingRate != 1) {
-                trainingMetrics = IntStream.range(0, metrics.length)
-                    .filter(i -> i % samplingRate == 0)
-                    .mapToDouble(i -> metrics[i])
-                    .toArray();
-            }
+            double[] trainingMetrics = trainingInput.getDoubleColumnByName(column);
             
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
@@ -63,6 +68,12 @@ public class MultiMADClassifier implements Transformer {
             MADs.add(mad.getMAD());
 
             trainTime += (System.currentTimeMillis() - startTime);
+            startTime = System.currentTimeMillis();
+
+            // Bootstrap the confidence interval
+            bootstrap(trainingMetrics, mad.getMedian());
+
+            otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
             for (int i = 0; i < input.getNumRows(); i++) {
@@ -78,6 +89,47 @@ public class MultiMADClassifier implements Transformer {
         output.addDoubleColumn(outputColumnName, resultColumn);
 
         System.out.format("train: %d ms, score: %d ms, other: %d ms\n", trainTime, scoreTime, otherTime);
+    }
+
+    private DataFrame getRandomSample(DataFrame input) {
+        Integer[] arr = new Integer[input.getNumRows()];
+        for (int i = 0; i < input.getNumRows(); i++) {
+            arr[i] = i;
+        }
+        Collections.shuffle(Arrays.asList(arr));
+
+        int sampleSize = input.getNumRows() / samplingRate;
+        boolean[] mask = new boolean[input.getNumRows()];
+        for (int i = 0; i < sampleSize; i++) {
+            mask[arr[i]] = true;
+        }
+
+        return input.filter(mask);
+    }
+
+    private void bootstrap(double[] trainingMetrics, double median) {
+        int len = trainingMetrics.length;
+        double[] bootstrapped_diffs = new double[10];
+        Random rand = new Random();
+        for (int i = 0; i < 10; i++) {
+            double[] sample = new double[trainingMetrics.length];
+            for (int j = 0; j < trainingMetrics.length; j++) {
+                sample[j] = trainingMetrics[rand.nextInt(trainingMetrics.length)];
+            }
+            Arrays.sort(sample);
+            double bootstrap_median = 0;
+            if (len % 2 == 0) {
+                bootstrap_median = (sample[len / 2 - 1] + sample[len / 2]) / 2;
+            } else {
+                bootstrap_median = sample[(int) Math.ceil(len / 2)];
+            }
+            bootstrapped_diffs[i] = bootstrap_median - median;
+        }
+        Arrays.sort(bootstrapped_diffs);
+        // System.out.format("%f %f %f\n", median, bootstrapped_diffs[0], bootstrapped_diffs[8]);
+        // System.out.format("[%f %f]\n", median-bootstrapped_diffs[8], median-bootstrapped_diffs[0]);
+        upperBounds.add(median-bootstrapped_diffs[0]);
+        lowerBounds.add(median-bootstrapped_diffs[8]);
     }
 
     @Override
@@ -123,5 +175,13 @@ public class MultiMADClassifier implements Transformer {
 
     public List<Double> getMADs() {
         return MADs;
+    }
+
+    public List<Double> getUpperBounds() {
+        return upperBounds;
+    }
+
+    public List<Double> getLowerBounds() {
+        return lowerBounds;
     }
 }

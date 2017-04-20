@@ -245,7 +245,7 @@ public class DataFrame {
      * @param mask rows to select
      * @return new dataframe with subset of rows
      */
-    protected DataFrame filter(boolean[] mask) {
+    public DataFrame filter(boolean[] mask) {
         DataFrame other = new DataFrame();
 
         int d = schema.getNumColumns();
