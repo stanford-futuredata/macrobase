@@ -51,3 +51,6 @@ conf/custom/
 
 # Profiler
 .profiler/
+
+# Big test resources
+lib/src/test/resources/hepmass*
