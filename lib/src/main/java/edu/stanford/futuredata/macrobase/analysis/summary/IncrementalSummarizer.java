@@ -19,21 +19,20 @@ import java.util.function.DoublePredicate;
  * string attribute columns. Results from each batch accumulates, until batches are retired.
  */
 public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
-    //
-    public int numPanes;
-
+    // Number of panes that we keep track in the summarizer
+    private int numPanes;
     // Default parameters for the summarizer
-    protected String outlierColumn = "_OUTLIER";
-    protected double minOutlierSupport = 0.1;
-    protected List<String> attributes = new ArrayList<>();
+    private String outlierColumn = "_OUTLIER";
+    private double minOutlierSupport = 0.1;
+    private List<String> attributes = new ArrayList<>();
     // Default predicate for filtering outlying rows
-    protected DoublePredicate predicate = d -> d != 0.0;
+    private DoublePredicate predicate = d -> d != 0.0;
 
     // Encoder and encoded attribute sets
-    protected AttributeEncoder encoder = new AttributeEncoder();
-    protected List<Set<Integer>> inlierItemsets, outlierItemsets;
+    private AttributeEncoder encoder = new AttributeEncoder();
+    private List<Set<Integer>> inlierItemsets, outlierItemsets;
 
-    // Internal booking keep
+    // Internal book keeping
     private Deque<HashMap<Set<Integer>, Double>> inlierItemsetPaneCounts;
     private Deque<HashMap<Set<Integer>, Double>> outlierItemsetPaneCounts;
     private HashMap<Set<Integer>, Double> inlierItemsetPaneCount = new HashMap<>();
@@ -46,11 +45,8 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     private List<Integer> outlierCountCumSum;
     private HashMap<Set<Integer>, Integer> trackingMap = new HashMap<>();
 
-    public IncrementalSummarizer(int numPanes) { setWindowSize(numPanes); }
-
-    @Override
-    public void setWindowSize(int numPanes) {
-        this.numPanes = numPanes;
+    public IncrementalSummarizer(int numPanes) {
+        setWindowSize(numPanes);
         if (inlierItemsetPaneCounts == null) {
             inlierPaneCounts = new ArrayDeque<>(numPanes);
             outlierPaneCounts = new ArrayDeque<>(numPanes);
@@ -60,12 +56,17 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     }
 
     @Override
+    public void setWindowSize(int numPanes) {
+        this.numPanes = numPanes;
+    }
+    @Override
     public int getWindowSize() { return numPanes; }
 
     public IncrementalSummarizer setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
         return this;
     }
+    public double getMinSupport() { return minOutlierSupport; }
 
     /**
      * By default, will check for nonzero entries in a column of doubles.
@@ -76,11 +77,14 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         this.predicate = predicate;
         return this;
     }
+    public DoublePredicate getOutlierPredicate() { return predicate; }
+
     public IncrementalSummarizer setAttributes(List<String> attributes) {
         this.attributes = attributes;
         this.encoder.setColumnNames(attributes);
         return this;
     }
+    public List<String> getAttributes() { return attributes; }
 
     /**
      * Set the column which indicates outlier status. "_OUTLIER" by default.
@@ -91,8 +95,14 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         this.outlierColumn = outlierColumn;
         return this;
     }
+    public String getOutlierColumn() { return outlierColumn; }
 
-    /* Encode inlier and outlier attributes into itemsets */
+    /* Split dataframe into inliers and outliers and encode attributes into itemsets
+     *
+     * Variables afftected:
+     *   - inlierItemsets:  Encoded inlier itemsets for this pane
+     *   - outlierItemsets: Encoded outlier itemsets for this pane
+     */
     private void encodeAttributes(DataFrame df) {
         // Filter inliers and outliers
         DataFrame outlierDF = df.filter(outlierColumn, predicate);
@@ -108,15 +118,18 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
             inlierItemsets = encoder.encodeAttributes(inlierDF.getStringColsByName(attributes));
             outlierItemsets = encoder.encodeAttributes(outlierDF.getStringColsByName(attributes));
         }
-        inlierPaneCounts.add(inlierItemsets.size());
-        outlierPaneCounts.add(outlierItemsets.size());
     }
 
     /* Helper function to calculate cumulative pane count. This way, the support from pane a to
-     * the pane b can easily be calculated by outlierCountCumSum.get(b) - outlierCountCumSum.get(a) */
+     * the pane b can easily be calculated by outlierCountCumSum.get(b) - outlierCountCumSum.get(a)
+     *
+     * Variables affected:
+     *   - inlierCountCumSum:
+     *   - outlierCountCumSum:
+     */
     private void calcCumSum() {
-        Object[] inlierCounts = inlierPaneCounts.toArray();
-        Object[] outlierCounts = outlierPaneCounts.toArray();
+        int[] inlierCounts = inlierPaneCounts.stream().mapToInt(i->i).toArray();
+        int[] outlierCounts = outlierPaneCounts.stream().mapToInt(i->i).toArray();
 
         inlierCountCumSum = new ArrayList<>(inlierPaneCounts.size() + 1);
         outlierCountCumSum = new ArrayList<>(inlierPaneCounts.size() + 1);
@@ -129,9 +142,17 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     }
 
     /* This function retires the oldest pane:
-        - Remove pane from the count buffer
-        - Update the window counts
-        - Update tracking map for itemsets */
+     *   - Remove pane from the count buffer
+     *   - Update the window counts
+     *   - Update tracking map for itemsets
+     *
+     * Variables affected:
+     *   - inlierPaneCounts, outlierPaneCounts: remove expired pane from queue
+     *   - inlierItemsetWindowCount, outlierItemsetWindowCount:
+     *          remove counts from the expired pane from the window count
+     *   - trackingMap:
+     *          adjust the pane number indicating when we first started tracking an itemset
+     */
     private void expireLastPane() {
         // Remove old pane counts from buffer
         HashMap<Set<Integer>, Double> inlierCounts = inlierItemsetPaneCounts.pollFirst();
@@ -163,7 +184,13 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     }
 
     /* This function counts the occurrence of each supported itemset in the new pane,
-     *   and update corresponding itemset counts for the entire window. */
+     * and update corresponding itemset counts for the entire window.
+     *
+     * Variables affected:
+     *   - inlierItemsetPaneCount, outlierItemsetPaneCount
+     *   - inlierItemsetWindowCount, outlierItemsetWindowCount
+     *   - inlierPaneCounts, outlierPaneCounts
+     */
     private void addNewPane() {
         inlierItemsetPaneCount = new HashMap<>();
         outlierItemsetPaneCount = new HashMap<>();
@@ -191,10 +218,18 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
             inlierItemsetWindowCount.put(itemset, i);
             outlierItemsetWindowCount.put(itemset, o);
         }
+        inlierPaneCounts.add(inlierItemsets.size());
+        outlierPaneCounts.add(outlierItemsets.size());
     }
 
     /* This function checks whether all itemsets that we are currently tracking counts of
-     *  still have enough outlier support (from the pane it first got promoted till now). */
+     * still have enough outlier support (from the pane it first got promoted till now).
+     *
+     * Variables affected:
+     *   - trackingMap: remove unsupported itemset from tracking map
+     *   - outlierItemsetPaneCount, inlierItemsetPaneCount, outlierItemsetWindowCount, inlierItemsetWindowCount:
+     *          remove unsupported itemset counts
+     * */
     private void pruneUnsupported() {
         HashSet<Set<Integer>> unSupported = new HashSet<>();
 
@@ -223,8 +258,15 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     }
 
     /* This function picks up itemsets that have enough outlier support in the current pane
-     * (a.k.a. itemsets that can be promoted) and starts tracking their occurances in the window. */
+     * (a.k.a. itemsets that can be promoted) and starts tracking their occurrences in the window.
+     *
+     * Variables affected:
+     *   - trackingMap: record that we start tracking new frequent itemsets in this pane
+     *   - outlierItemsetPaneCount, inlierItemsetPaneCount, outlierItemsetWindowCount, inlierItemsetWindowCount:
+     *      add new frequent itemset counts
+     */
     private void addNewFrequent() {
+        if (minOutlierSupport * outlierItemsets.size() < 1) { return; }
         double minSupport = Math.ceil(minOutlierSupport * outlierItemsets.size());
         HashMap<Integer, Double> inlierPaneSingletonCount = new ExactCount().count(inlierItemsets).getCounts();
         // Get new frequent itemsets in outliers
@@ -255,12 +297,10 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         // 2. Add support counts for the new pane
         encodeAttributes(df);
         addNewPane();
-        if (outlierItemsets.size() * minOutlierSupport >= 1) {
-            // 3. Prune unsupported outlier itemsets
-            pruneUnsupported();
-            // 4. Compute new frequent outlier itemsets
-            addNewFrequent();
-        }
+        // 3. Prune unsupported outlier itemsets
+        pruneUnsupported();
+        // 4. Compute new frequent outlier itemsets
+        addNewFrequent();
         // Add final pane counts to buffer
         inlierItemsetPaneCounts.add(inlierItemsetPaneCount);
         outlierItemsetPaneCounts.add(outlierItemsetPaneCount);
