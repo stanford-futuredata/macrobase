@@ -29,6 +29,15 @@ public class Schema {
         return other;
     }
 
+    public String toString() {
+        int d = columnNames.size();
+        List<String> pairs = new ArrayList<>(d);
+        for (int i = 0; i < d; i++) {
+            pairs.add(columnNames.get(i)+":"+columnTypes.get(i));
+        }
+        return pairs.toString();
+    }
+
     public int getNumColumns() {
         return columnNames.size();
     }

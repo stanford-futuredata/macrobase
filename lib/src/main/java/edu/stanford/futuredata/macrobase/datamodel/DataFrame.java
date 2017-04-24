@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 
 /**
  * Column-based dataframe object.
- * loadRows and addColumn methods mutate the dataframe and are the primary
+ * addColumn methods mutate the dataframe and are the primary
  * ways of initializing the data in the dataframe.
  */
 public class DataFrame {
