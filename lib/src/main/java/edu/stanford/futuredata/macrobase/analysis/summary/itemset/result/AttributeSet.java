@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
-public class AttributeSet {
+public class AttributeSet implements Comparable<AttributeSet>{
     private double support;
     private long numRecords;
     private double ratioToInliers;
@@ -71,5 +71,12 @@ public class AttributeSet {
                 ", ratioToInliers=" + ratioToInliers +
                 ", items=" + items +
                 '}';
+    }
+
+    @Override
+    public int compareTo(AttributeSet o) {
+        double r1 = this.getRatioToInliers();
+        double r2 = o.getRatioToInliers();
+        return Double.compare(r1, r2);
     }
 }

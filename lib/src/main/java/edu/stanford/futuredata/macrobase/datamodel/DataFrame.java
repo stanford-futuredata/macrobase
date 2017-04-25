@@ -169,35 +169,35 @@ public class DataFrame {
             n += others.get(i).numRows;
         }
         combined.numRows = n;
+        int d = first.schema.getNumColumns();
 
-        int d = first.stringCols.size();
-        combined.stringCols = new ArrayList<>(d);
         for (int colIdx = 0; colIdx < d; colIdx++) {
-            String[] newCol = new String[n];
-            int i = 0;
-            for (DataFrame curOther : others) {
-                String[] otherCol = curOther.getStringColumn(colIdx);
-                for (String curString : otherCol) {
-                    newCol[i] = curString;
-                    i++;
+            Schema.ColType t = combined.schema.getColumnType(colIdx);
+            if (t == Schema.ColType.STRING) {
+                String[] newCol = new String[n];
+                int i = 0;
+                for (DataFrame curOther : others) {
+                    String[] otherCol = curOther.getStringColumn(colIdx);
+                    for (String curString : otherCol) {
+                        newCol[i] = curString;
+                        i++;
+                    }
                 }
-            }
-            combined.stringCols.add(newCol);
-        }
-
-        d = first.doubleCols.size();
-        combined.doubleCols = new ArrayList<>(d);
-        for (int colIdx = 0; colIdx < d; colIdx++) {
-            double[] newCol = new double[n];
-            int i = 0;
-            for (DataFrame curOther : others) {
-                double[] otherCol = curOther.getDoubleColumn(colIdx);
-                for (double curString : otherCol) {
-                    newCol[i] = curString;
-                    i++;
+                combined.stringCols.add(newCol);
+            } else if (t == Schema.ColType.DOUBLE) {
+                double[] newCol = new double[n];
+                int i = 0;
+                for (DataFrame curOther : others) {
+                    double[] otherCol = curOther.getDoubleColumn(colIdx);
+                    for (double curDouble : otherCol) {
+                        newCol[i] = curDouble;
+                        i++;
+                    }
                 }
+                combined.doubleCols.add(newCol);
+            } else {
+                throw new MacrobaseInternalError("Invalid Col Type");
             }
-            combined.doubleCols.add(newCol);
         }
 
         return combined;
