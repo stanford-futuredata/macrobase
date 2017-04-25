@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TreeKDE extends KDE {
+public class OldTreeKDE extends KDE {
 
-    private static final Logger log = LoggerFactory.getLogger(TreeKDE.class);
+    private static final Logger log = LoggerFactory.getLogger(OldTreeKDE.class);
     private KDTree kdtree;
     private int kdtreeLeafCapacity;
     private double scoreScaleLog;
@@ -30,7 +30,7 @@ public class TreeKDE extends KDE {
     public static final Integer KDTREE_LEAF_CAPACITY_DEFAULT = 2;
     public static final Double TREE_KDE_ACCURACY_DEFAULT = 1e-5;
 
-    public TreeKDE(MacroBaseConf conf) throws ConfigurationException {
+    public OldTreeKDE(MacroBaseConf conf) throws ConfigurationException {
         super(conf);
         kdtreeLeafCapacity = conf.getInt(KDTREE_LEAF_CAPACITY, KDTREE_LEAF_CAPACITY_DEFAULT);
         accuracy = conf.getDouble(TREE_KDE_ACCURACY, TREE_KDE_ACCURACY_DEFAULT);

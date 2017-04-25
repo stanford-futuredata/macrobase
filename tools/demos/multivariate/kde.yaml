@@ -1,0 +1,37 @@
+macrobase.query.name: mvgauss_kde
+macrobase.pipeline.class: macrobase.analysis.pipeline.ExtendedBatchPipeline
+
+macrobase.loader.loaderType: CSV_LOADER
+macrobase.loader.csv.file: target/mv_gaussian_noise.csv
+macrobase.loader.attributes: [class]
+macrobase.loader.metrics: [m1,m2]
+
+macrobase.analysis.transformType: TKDE
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
+
+logging:
+  level: DEBUG
+
+tkdeConf:
+  percentile: 0.01
+
+  qSampleSize: 20000
+  qCutoffMultiplier: 1.5
+  qTolMultiplier: 0.01
+
+  kernel: gaussian
+  bwMultiplier: 1.0
+  ignoreSelfScoring: true
+
+  calculateCutoffs: true
+
+  leafSize: 20
+  splitByWidth: true
+
+  useGrid: true
+

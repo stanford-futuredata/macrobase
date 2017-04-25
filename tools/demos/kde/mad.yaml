@@ -1,0 +1,18 @@
+macrobase.query.name: sensor_kde
+macrobase.pipeline.class: macrobase.analysis.pipeline.ExtendedBatchPipeline
+
+macrobase.analysis.transformType: MAD
+
+macrobase.loader.attributes: [device_id, firmware_version]
+macrobase.loader.metrics: [power_drain]
+macrobase.analysis.metrics.lowTransform: []
+
+macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
+macrobase.loader.loaderType: CACHING_POSTGRES_LOADER
+macrobase.loader.db.cacheDirectory: sql_cache
+
+macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minOIRatio: 3.0
+
+macrobase.analysis.usePercentile: true
+macrobase.analysis.targetPercentile: 0.99
