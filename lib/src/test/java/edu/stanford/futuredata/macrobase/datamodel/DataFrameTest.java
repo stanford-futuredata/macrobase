@@ -48,4 +48,33 @@ public class DataFrameTest {
         );
         assertEquals(tinyDF.getNumRows()*3, combined.getNumRows());
     }
+
+    @Test
+    public void testComplexDataFrame() {
+        DataFrame df = new DataFrame();
+        int n = 100;
+        int counter = 0;
+        for (int j = 0; j < 5; j++) {
+            if (j % 2 == 0) {
+                double[] newCol = new double[n];
+                for (int i = 0; i < n; i++) {
+                    newCol[i] = counter;
+                    counter++;
+                }
+                df.addDoubleColumn("d"+j,newCol);
+            } else {
+                String[] newCol = new String[n];
+                for (int i = 0; i < n; i++) {
+                    newCol[i] = String.valueOf(counter);
+                    counter++;
+                }
+                df.addStringColumn("s"+j,newCol);
+            }
+        }
+
+        DataFrame df2 = DataFrame.unionAll(Arrays.asList(df, df));
+        assertEquals(2*n, df2.getNumRows());
+        assertEquals(df2.getRow(0), df2.getRow(n));
+        assertEquals(2.0 * n, df2.getDoubleColumn(2)[0], 1e-10);
+    }
 }

@@ -41,26 +41,35 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     private HashMap<Set<Integer>, Double> outlierItemsetWindowCount = new HashMap<>();
     private Deque<Integer> inlierPaneCounts;
     private Deque<Integer> outlierPaneCounts;
+    private HashMap<Set<Integer>, Integer> trackingMap = new HashMap<>();
+
+    // Temp Intermediate Values
     private List<Integer> inlierCountCumSum;
     private List<Integer> outlierCountCumSum;
-    private HashMap<Set<Integer>, Integer> trackingMap = new HashMap<>();
 
     public IncrementalSummarizer(int numPanes) {
         setWindowSize(numPanes);
-        if (inlierItemsetPaneCounts == null) {
-            inlierPaneCounts = new ArrayDeque<>(numPanes);
-            outlierPaneCounts = new ArrayDeque<>(numPanes);
-            inlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
-            outlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
-        }
     }
+
+    public IncrementalSummarizer() {
+        setWindowSize(1);
+    }
+
 
     @Override
     public void setWindowSize(int numPanes) {
         this.numPanes = numPanes;
+        initializePanes();
     }
     @Override
     public int getWindowSize() { return numPanes; }
+    protected IncrementalSummarizer initializePanes() {
+        inlierPaneCounts = new ArrayDeque<>(numPanes);
+        outlierPaneCounts = new ArrayDeque<>(numPanes);
+        inlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
+        outlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
+        return this;
+    }
 
     public IncrementalSummarizer setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;

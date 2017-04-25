@@ -5,9 +5,12 @@ import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.IncrementalSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.operator.WindowedOperator;
 import org.junit.Test;
 
 import java.util.*;
+
+import static org.junit.Assert.assertTrue;
 
 public class StreamingSummarizationTest {
     /**
@@ -32,6 +35,14 @@ public class StreamingSummarizationTest {
         double[] time = new double[n];
         String[][] attrs = new String[d][n];
         double[] isOutlier = new double[n];
+
+        String[][] attrPrimitiveValues = new String[d][C];
+        for (int i = 0; i < C; i++) {
+            for (int j = 0; j < d; j++) {
+                attrPrimitiveValues[j][i] = String.format("a%d:%d",j,i);
+            }
+        }
+
         for (int i = 0; i < n; i++) {
             double curTime = i;
             time[i] = curTime;
@@ -39,7 +50,7 @@ public class StreamingSummarizationTest {
             int[] attrValues = new int[d];
             for (int j = 0; j < d; j++) {
                 attrValues[j] = r.nextInt(C);
-                attrs[j][i] = String.format("a%d:%d", j, attrValues[j]);
+                attrs[j][i] = attrPrimitiveValues[j][attrValues[j]];
             }
 
             // Outliers arise from random noies
@@ -80,6 +91,74 @@ public class StreamingSummarizationTest {
         return attributes;
     }
 
+    /**
+     * Test the baseline performance of a windowed, streaming, summarizer operator
+     */
+    @Test
+    public void testStreamingWindowed() throws Exception {
+        // Increase these numbers for more rigorous, slower performance testing
+        int n = 6000;
+        int k = 2;
+        int C = 4;
+        int d = 5;
+        double p = 0.01;
+        int eventIdx = 2000;
+        int eventEndIdx = 4000;
+        int windowSize = 2000;
+        int slideSize = 300;
+
+        DataFrame df = generateAnomalyDataset(n, k, C, d, p, eventIdx, eventEndIdx);
+        List<String> attributes = getAttributes(d, false);
+
+        IncrementalSummarizer outlierSummarizer = new IncrementalSummarizer();
+        outlierSummarizer.setAttributes(attributes);
+        outlierSummarizer.setOutlierColumn("outlier");
+        outlierSummarizer.setMinSupport(.3);
+        WindowedOperator<Explanation> windowedSummarizer = new WindowedOperator<>(outlierSummarizer);
+        windowedSummarizer.setWindowLength(windowSize);
+        windowedSummarizer.setTimeColumn("time");
+        windowedSummarizer.setSlideLength(slideSize);
+        windowedSummarizer.initialize();
+
+        BatchSummarizer bsumm = new BatchSummarizer();
+        bsumm.setAttributes(attributes);
+        bsumm.setOutlierColumn("outlier");
+        bsumm.setMinSupport(.3);
+
+        int miniBatchSize = slideSize;
+        double totalStreamingTime = 0.0;
+        double totalBatchTime = 0.0;
+
+        double startTime = 0.0;
+        while (startTime < n) {
+            double endTime = startTime + miniBatchSize;
+            double ls = startTime;
+            DataFrame curBatch = df.filter(
+                    "time",
+                    (double t) -> t >= ls && t < endTime
+            );
+            long timerStart = System.currentTimeMillis();
+            windowedSummarizer.process(curBatch);
+            Explanation curExplanation = windowedSummarizer.getResults();
+            long timerElapsed = System.currentTimeMillis() - timerStart;
+            totalStreamingTime += timerElapsed;
+
+            DataFrame curWindow = df.filter(
+                    "time",
+                    (double t) -> t >= (endTime - windowSize) && t < endTime
+            );
+            timerStart = System.currentTimeMillis();
+            bsumm.process(curWindow);
+            Explanation batchExplanation = bsumm.getResults();
+            timerElapsed = System.currentTimeMillis() - timerStart;
+            totalBatchTime += timerElapsed;
+
+            startTime = endTime;
+        }
+
+        assertTrue(totalStreamingTime < totalBatchTime);
+    }
+
     @Test
     public void testDetectSingleChange() throws Exception {
         // Prepare data set
@@ -100,16 +179,21 @@ public class StreamingSummarizationTest {
         batch.process(df.filter("time", (double t) -> t >= eventIdx && t < eventEndIdx));
         Explanation batchResult = batch.getResults();
 
+        /* Code to initialize incremental summarizer */
         IncrementalSummarizer summarizer = new IncrementalSummarizer(windowSize / slideSize);
         summarizer.setOutlierColumn("outlier").setAttributes(attributes);
+        /* End */
 
         double startTime = 0.0;
         while (startTime < n) {
             double endTime = startTime + slideSize;
             double ls = startTime;
             DataFrame curBatch = df.filter("time", (double t) -> t >= ls && t < endTime);
+
+            /* Code to process incremental summarizer on a minibatch */
             summarizer.process(curBatch);
             Explanation explanation = summarizer.getResults();
+            /* End */
 
             assert (explanation.getNumInliers() + explanation.getNumOutliers() == Math.min(windowSize, endTime));
 
