@@ -2,6 +2,8 @@ package edu.stanford.futuredata.macrobase.analysis.summary;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,7 +21,9 @@ public class Explanation {
                        long numInliers,
                        long numOutliers,
                        long creationTimeMs) {
-        itemsets = resultList;
+
+        itemsets = new ArrayList<>(resultList);
+        itemsets.sort((AttributeSet a, AttributeSet b) -> -a.compareTo(b));
         this.numInliers = numInliers;
         this.numOutliers = numOutliers;
         this.creationTimeMs = creationTimeMs;

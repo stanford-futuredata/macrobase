@@ -49,20 +49,14 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
 
     public IncrementalSummarizer(int numPanes) {
         setWindowSize(numPanes);
+        initializePanes();
     }
 
     public IncrementalSummarizer() {
         setWindowSize(1);
-    }
-
-
-    @Override
-    public void setWindowSize(int numPanes) {
-        this.numPanes = numPanes;
         initializePanes();
     }
-    @Override
-    public int getWindowSize() { return numPanes; }
+
     protected IncrementalSummarizer initializePanes() {
         inlierPaneCounts = new ArrayDeque<>(numPanes);
         outlierPaneCounts = new ArrayDeque<>(numPanes);
@@ -71,9 +65,15 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         return this;
     }
 
-    public IncrementalSummarizer setMinSupport(double minSupport) {
+    @Override
+    public void setWindowSize(int numPanes) {
+        this.numPanes = numPanes;
+    }
+    @Override
+    public int getWindowSize() { return numPanes; }
+
+    public void setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
-        return this;
     }
     public double getMinSupport() { return minOutlierSupport; }
 

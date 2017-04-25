@@ -137,5 +137,12 @@ public class WindowedOperator<O>
     public int getBufferSize() {
         return batchBuffer.size();
     }
+    public int getBufferedRows() {
+        int numRows = 0;
+        for (DataFrame df : batchBuffer) {
+            numRows += df.getNumRows();
+        }
+        return numRows;
+    }
 }
 
