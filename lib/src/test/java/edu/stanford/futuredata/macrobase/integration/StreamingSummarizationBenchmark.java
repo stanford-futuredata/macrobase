@@ -62,7 +62,9 @@ public class StreamingSummarizationBenchmark {
             );
             long timerStart = System.currentTimeMillis();
             windowedSummarizer.process(curBatch);
-            Explanation curExplanation = windowedSummarizer.getResults();
+            Explanation curExplanation = windowedSummarizer
+                    .getResults()
+                    .prune();
             long timerElapsed = System.currentTimeMillis() - timerStart;
             totalStreamingTime += timerElapsed;
 
