@@ -17,6 +17,10 @@ import java.util.function.DoublePredicate;
 /**
  * Given batches of rows with an outlier class column, explain the outliers using
  * string attribute columns. Results from each batch accumulates, until batches are retired.
+ *
+ * This class searches for new candidate explanations based on the latest pane. Viable candidates
+ * are promoted and tracked until their support drops below a certain threshold, at which point they
+ * are retired.
  */
 public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     // Number of panes that we keep track in the summarizer
