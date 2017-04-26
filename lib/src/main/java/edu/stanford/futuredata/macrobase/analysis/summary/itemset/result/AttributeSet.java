@@ -29,6 +29,21 @@ public class AttributeSet implements Comparable<AttributeSet>{
         this.items = items;
     }
 
+    public boolean contains(AttributeSet other) {
+        Map<String, String> otherItems = other.items;
+        for (Map.Entry<String, String> oEntry : otherItems.entrySet()) {
+            String colName = oEntry.getKey();
+            String colValue = oEntry.getValue();
+            boolean match = false;
+            if (items.containsKey(colName) && items.get(colName).equals(colValue)) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public String prettyPrint() {
         StringJoiner joiner = new StringJoiner("\n");
         items.forEach((k, v) -> joiner.add(k+"="+v));
