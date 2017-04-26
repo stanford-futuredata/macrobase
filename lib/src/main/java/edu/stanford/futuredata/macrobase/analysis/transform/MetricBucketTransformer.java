@@ -6,16 +6,31 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 import java.util.*;
 
+/**
+ * Transform real valued columns into categorical string columns.
+ * Transformed columns are added to a copy of the dataframe and appended with
+ * a suffix to distinguish them from the original column.
+ * Useful for using correlated metrics as explanatory values.
+ * By default transforms columns by bucketing them into low-med-high values
+ * based on percentile.
+ */
 public class MetricBucketTransformer implements Transformer {
+    // Transformed columns are added to the dataframe under a suffix.
     private String columnSuffix = "_a";
+    // Boundaries of the buckets used for classification. n boundaries -> n+1 buckets
     private double[] boundaryPercentiles = {10.0, 90.0};
-    private boolean useSimpleNames = false;
+    // The strings used to encode which bucket a value falls in can be either a simple index
+    // or an encoding of the range of the bucket.
+    private boolean simpleBucketValues = false;
 
     private List<String> metricColumns;
     private List<String> transformedColumnNames;
 
     private DataFrame transformedDF;
 
+    /**
+     * @param columns set of columns to transform
+     */
     public MetricBucketTransformer(List<String> columns) {
         this.metricColumns = columns;
         int d = columns.size();
@@ -47,7 +62,7 @@ public class MetricBucketTransformer implements Transformer {
             }
 
             String[] bucketNames = new String[k+1];
-            if (useSimpleNames) {
+            if (simpleBucketValues) {
                 for (int i = 0; i < k+1; i++) {
                     bucketNames[i] = String.format("%s:%d", colName, i);
                 }
@@ -95,12 +110,12 @@ public class MetricBucketTransformer implements Transformer {
         this.boundaryPercentiles = boundaryPercentiles;
     }
 
-    public boolean isUseSimpleNames() {
-        return useSimpleNames;
+    public boolean isSimpleBucketValues() {
+        return simpleBucketValues;
     }
 
-    public void setUseSimpleNames(boolean useSimpleNames) {
-        this.useSimpleNames = useSimpleNames;
+    public void setSimpleBucketValues(boolean simpleBucketValues) {
+        this.simpleBucketValues = simpleBucketValues;
     }
 
     public List<String> getTransformedColumnNames() {

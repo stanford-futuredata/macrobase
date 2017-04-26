@@ -59,7 +59,7 @@ public class MetricAsExplanationTest {
         c.process(df);
         DataFrame cdf = c.getResults();
 
-        List<String> metricExplanationColumns = new ArrayList<String>();
+        List<String> metricExplanationColumns = new ArrayList<>();
         for (int i = 1; i < d; i++) {
             metricExplanationColumns.add("m"+i);
         }
@@ -67,8 +67,10 @@ public class MetricAsExplanationTest {
         double[] boundaries = {5.0, 95.0};
         t.setBoundaryPercentiles(boundaries);
         t.process(cdf);
+        // tcdf now contains new columns with metrics transformed into bucketed attributes
         DataFrame tcdf = t.getResults();
 
+        // Need to retrieve the new names of the transformed columns
         List<String> bucketExplanationColumns = t.getTransformedColumnNames();
 
         BatchSummarizer bs = new BatchSummarizer();

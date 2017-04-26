@@ -29,7 +29,7 @@ public class MetricBucketTransformerTest {
         Collections.addAll(distinct, newCol);
         assertEquals(3, distinct.size());
 
-        t.setUseSimpleNames(true);
+        t.setSimpleBucketValues(true);
         t.process(df);
         tdf = t.getResults();
         assertEquals(2, tdf.getSchema().getNumColumns());
