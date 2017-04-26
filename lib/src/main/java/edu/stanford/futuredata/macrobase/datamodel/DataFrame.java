@@ -165,8 +165,8 @@ public class DataFrame {
         combined.schema = first.schema.copy();
         combined.indexToTypeIndex = new ArrayList<>(first.indexToTypeIndex);
         int n = 0;
-        for (int i = 0; i < k; i++) {
-            n += others.get(i).numRows;
+        for (DataFrame other : others) {
+            n += other.numRows;
         }
         combined.numRows = n;
         int d = first.schema.getNumColumns();
