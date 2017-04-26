@@ -6,6 +6,7 @@ import edu.stanford.futuredata.macrobase.operator.Transformer;
 import edu.stanford.futuredata.macrobase.analysis.stats.MAD;
 
 import org.apache.commons.math3.special.Erf;
+import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 import java.lang.Math;
 import java.lang.Double;
@@ -27,6 +28,9 @@ public class MultiMADClassifier implements Transformer {
     private List<Double> MADs;
     private List<Double> upperBounds;
     private List<Double> lowerBounds;
+    private long trainTime = 0;
+    private long scoreTime = 0;
+    private long otherTime = 0;
 
     // Calculated values
     private DataFrame output;
@@ -41,10 +45,6 @@ public class MultiMADClassifier implements Transformer {
 
     @Override
     public void process(DataFrame input) {
-        long trainTime = 0;
-        long scoreTime = 0;
-        long otherTime = 0;
-
         output = input.copy();
         double[] resultColumn = new double[input.getNumRows()];
 
@@ -71,7 +71,7 @@ public class MultiMADClassifier implements Transformer {
             startTime = System.currentTimeMillis();
 
             // Bootstrap the confidence interval
-            bootstrap(trainingMetrics, mad.getMedian());
+            // bootstrap(trainingMetrics, mad.getMedian());
 
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
@@ -87,8 +87,6 @@ public class MultiMADClassifier implements Transformer {
             scoreTime += (System.currentTimeMillis() - startTime);
         }
         output.addDoubleColumn(outputColumnName, resultColumn);
-
-        System.out.format("train: %d ms, score: %d ms, other: %d ms\n", trainTime, scoreTime, otherTime);
     }
 
     private DataFrame getRandomSample(DataFrame input) {
@@ -116,20 +114,14 @@ public class MultiMADClassifier implements Transformer {
             for (int j = 0; j < trainingMetrics.length; j++) {
                 sample[j] = trainingMetrics[rand.nextInt(trainingMetrics.length)];
             }
-            Arrays.sort(sample);
-            double bootstrap_median = 0;
-            if (len % 2 == 0) {
-                bootstrap_median = (sample[len / 2 - 1] + sample[len / 2]) / 2;
-            } else {
-                bootstrap_median = sample[(int) Math.ceil(len / 2)];
-            }
+            double bootstrap_median = new Percentile().evaluate(sample, 50);
             bootstrapped_diffs[i] = bootstrap_median - median;
         }
-        Arrays.sort(bootstrapped_diffs);
+        Percentile percentile = new Percentile();
         // System.out.format("%f %f %f\n", median, bootstrapped_diffs[0], bootstrapped_diffs[8]);
         // System.out.format("[%f %f]\n", median-bootstrapped_diffs[8], median-bootstrapped_diffs[0]);
-        upperBounds.add(median-bootstrapped_diffs[0]);
-        lowerBounds.add(median-bootstrapped_diffs[8]);
+        upperBounds.add(median - percentile.evaluate(bootstrapped_diffs, 10));
+        lowerBounds.add(median - percentile.evaluate(bootstrapped_diffs, 90));
     }
 
     @Override
@@ -183,5 +175,17 @@ public class MultiMADClassifier implements Transformer {
 
     public List<Double> getLowerBounds() {
         return lowerBounds;
+    }
+
+    public long getTrainTime() {
+        return trainTime;
+    }
+
+    public long getScoreTime() {
+        return scoreTime;
+    }
+
+    public long getOtherTime() {
+        return otherTime;
     }
 }
