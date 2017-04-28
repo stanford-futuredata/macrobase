@@ -8,15 +8,23 @@ import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 
 /**
- * Column-based dataframe object.
- * loadRows and addColumn methods mutate the dataframe and are the primary
- * ways of initializing the data in the dataframe.
+ * Column-based DataFrame object.
+ * DataFrames are primarily meant for data transfer across operators while
+ * preserving column names and types. Complex processing should be done by
+ * extracting columns as arrays and operating on arrays directly.
+ *
+ * The addColumn methods are the primary means of mutating a dataframe and are
+ * especially useful during dataframe construction. DataFrames can also be
+ * initialized from a schema and a set of rows.
  */
 public class DataFrame {
     private Schema schema;
 
     private ArrayList<String[]> stringCols;
     private ArrayList<double[]> doubleCols;
+    // external indices define a global ordering on columns, but internally each
+    // column is stored with other columns of its type. Thus external indices must be
+    // converted into internal type-specific indices.
     private ArrayList<Integer> indexToTypeIndex;
 
     private int numRows;
@@ -61,7 +69,9 @@ public class DataFrame {
     }
 
     /**
-     * @return shallow copy of dataframe
+     * Shallow copy of the dataframe: the schema is recreated but the arrays backing the
+     * columns are reused.
+     * @return shallow DataFrame copy
      */
     public DataFrame copy() {
         DataFrame other = new DataFrame();
