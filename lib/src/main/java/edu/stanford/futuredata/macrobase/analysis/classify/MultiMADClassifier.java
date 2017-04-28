@@ -5,6 +5,8 @@ import edu.stanford.futuredata.macrobase.operator.Transformer;
 
 import edu.stanford.futuredata.macrobase.analysis.stats.MAD;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.special.Erf;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
@@ -31,6 +33,7 @@ public class MultiMADClassifier implements Transformer {
     private long trainTime = 0;
     private long scoreTime = 0;
     private long otherTime = 0;
+    private long samplingTime = 0;
 
     // Calculated values
     private DataFrame output;
@@ -48,21 +51,29 @@ public class MultiMADClassifier implements Transformer {
         output = input.copy();
         double[] resultColumn = new double[input.getNumRows()];
 
+        long startTime = System.currentTimeMillis();
+
         DataFrame trainingInput = input;
         if (samplingRate != 1) {
             trainingInput = getRandomSample(input);
         }
 
-        for (String column : columnNames) {
-            long startTime = System.currentTimeMillis();
+        samplingTime += (System.currentTimeMillis() - startTime);
 
-            double[] metrics = input.getDoubleColumnByName(column);
-            double[] trainingMetrics = trainingInput.getDoubleColumnByName(column);
+        // double[][] metrics = new double[columnNames.size()][input.getNumRows()];
+
+        MAD mad = new MAD();
+        // for (String column : columnNames) {
+        for (int i = 0; i < columnNames.size(); i++) {
+            startTime = System.currentTimeMillis();
+
+            double[] metrics = input.getDoubleColumnByName(columnNames.get(i));
+            // metrics[i] = input.getDoubleColumnByName(columnNames.get(i));
+            double[] trainingMetrics = trainingInput.getDoubleColumnByName(columnNames.get(i));
             
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
-            MAD mad = new MAD();
             mad.train(trainingMetrics);
             medians.add(mad.getMedian());
             MADs.add(mad.getMAD());
@@ -76,32 +87,92 @@ public class MultiMADClassifier implements Transformer {
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
-            for (int i = 0; i < input.getNumRows(); i++) {
-                double curVal = metrics[i];
-                double score = mad.getZScoreEquivalent(mad.score(curVal));
-                if (score >= cutoff) {
-                    resultColumn[i] = 1.0;
-                }
+            // Parallelized stream scoring:
+            int[] outliers = IntStream.range(0, input.getNumRows()).parallel().filter(r -> mad.zscore(metrics[r]) >= cutoff).toArray();
+            for (int r : outliers) {
+                resultColumn[r] = 1.0;
             }
+
+            // Original Scoring:
+            // for (int r = 0; r < input.getNumRows(); r++) {
+            //     double curVal = metrics[r];
+            //     double score = mad.zscore(curVal);
+            //     if (score >= cutoff) {
+            //         resultColumn[r] = 1.0;
+            //     }
+            // }
 
             scoreTime += (System.currentTimeMillis() - startTime);
         }
+
+        startTime = System.currentTimeMillis();
+        
+        // Even more parallelized scoring
+        // RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
+        // resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
+        //     i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.score(m)).max().getAsDouble() >= cutoff) ? 1 : 0
+        // ).asDoubleStream().toArray();
+
+        // RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
+        // resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
+        //     i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.zscore(m)).filter(s -> s > cutoff).count() > 0) ? 1 : 0
+        // ).asDoubleStream().toArray();
+
+        scoreTime += (System.currentTimeMillis() - startTime);
+
         output.addDoubleColumn(outputColumnName, resultColumn);
     }
 
     private DataFrame getRandomSample(DataFrame input) {
-        Integer[] arr = new Integer[input.getNumRows()];
-        for (int i = 0; i < input.getNumRows(); i++) {
-            arr[i] = i;
-        }
-        Collections.shuffle(Arrays.asList(arr));
+        // Inefficient shuffling implementation:
+        // Integer[] arr = new Integer[input.getNumRows()];
+        // for (int i = 0; i < input.getNumRows(); i++) {
+        //     arr[i] = i;
+        // }
+        // Collections.shuffle(Arrays.asList(arr));
 
-        int sampleSize = input.getNumRows() / samplingRate;
+        // int sampleSize = input.getNumRows() / samplingRate;
+        // boolean[] mask = new boolean[input.getNumRows()];
+        // for (int i = 0; i < sampleSize; i++) {
+        //     mask[arr[i]] = true;
+        // }
+
+        // return input.filter(mask);
+
+        // Reservoir Sampling:
+        // int sampleSize = input.getNumRows() / samplingRate;
+        // int[] sample_indices = new int[sampleSize];
+        // for (int i = 0; i < sampleSize; i++) {
+        //     sample_indices[i] = i;
+        // }
+        // Random rand = new Random();
+        // for (int i = sampleSize; i < input.getNumRows(); i++) {
+        //     int j = rand.nextInt(i+1);
+        //     if (j < sampleSize) {
+        //         sample_indices[j] = i;
+        //     }
+        // }
+        // boolean[] mask = new boolean[input.getNumRows()];
+        // for (int i = 0; i < sampleSize; i++) {
+        //     mask[sample_indices[i]] = true;
+        // }
+        // return input.filter(mask);
+
+        // Rejection sampling:
         boolean[] mask = new boolean[input.getNumRows()];
-        for (int i = 0; i < sampleSize; i++) {
-            mask[arr[i]] = true;
+        int sampleSize = input.getNumRows() / samplingRate;
+        int numSamples = 0;
+        Random rand = new Random();
+        while (true) {
+            int sample = rand.nextInt(input.getNumRows());
+            if (mask[sample] == false) {
+                mask[sample] = true;
+                numSamples++;
+                if (numSamples == sampleSize) {
+                    break;
+                }
+            }
         }
-
         return input.filter(mask);
     }
 
@@ -187,5 +258,9 @@ public class MultiMADClassifier implements Transformer {
 
     public long getOtherTime() {
         return otherTime;
+    }
+
+    public long getSamplingTime() {
+        return samplingTime;
     }
 }

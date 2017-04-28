@@ -55,8 +55,8 @@ public class MultiMADOptimizationTest {
 
         long estimatedTime = System.currentTimeMillis() - startTime;
         System.out.format("Unoptimized time elapsed: %d ms\n", estimatedTime);
-        System.out.format("train: %d ms, score: %d ms, other: %d ms\n",
-            mad.getTrainTime(), mad.getScoreTime(), mad.getOtherTime());
+        System.out.format("train: %d ms, score: %d ms, sampling: %d ms, other: %d ms\n",
+            mad.getTrainTime(), mad.getScoreTime(), mad.getSamplingTime(), mad.getOtherTime());
 
         trueMedians = new ArrayList<Double>(mad.getMedians());
         trueMADs = new ArrayList<Double>(mad.getMADs());
@@ -79,8 +79,8 @@ public class MultiMADOptimizationTest {
 
         long estimatedTime = System.currentTimeMillis() - startTime;
         System.out.format("Sampling (2) time elapsed: %d ms\n", estimatedTime);
-        System.out.format("train: %d ms, score: %d ms, other: %d ms\n",
-            mad.getTrainTime(), mad.getScoreTime(), mad.getOtherTime());
+        System.out.format("train: %d ms, score: %d ms, sampling: %d ms, other: %d ms\n",
+            mad.getTrainTime(), mad.getScoreTime(), mad.getSamplingTime(), mad.getOtherTime());
 
         List<Double> medians = mad.getMedians();
         List<Double> MADs = mad.getMADs();
@@ -111,8 +111,8 @@ public class MultiMADOptimizationTest {
 
         estimatedTime = System.currentTimeMillis() - startTime;
         System.out.format("Sampling (10) time elapsed: %d ms\n", estimatedTime);
-        System.out.format("train: %d ms, score: %d ms, other: %d ms\n",
-            mad.getTrainTime(), mad.getScoreTime(), mad.getOtherTime());
+        System.out.format("train: %d ms, score: %d ms, sampling: %d ms, other: %d ms\n",
+            mad.getTrainTime(), mad.getScoreTime(), mad.getSamplingTime(), mad.getOtherTime());
 
         medians = mad.getMedians();
         MADs = mad.getMADs();

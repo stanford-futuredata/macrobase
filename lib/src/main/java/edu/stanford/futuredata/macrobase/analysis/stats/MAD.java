@@ -104,6 +104,10 @@ public class MAD {
         return Math.abs(point - median) / (MAD);
     }
 
+    public double zscore(double point) {
+        return Math.abs(point - median) / (MAD * MAD_TO_ZSCORE_COEFFICIENT);
+    }
+
     public double getZScoreEquivalent(double zscore) {
         return zscore / MAD_TO_ZSCORE_COEFFICIENT;
     }
