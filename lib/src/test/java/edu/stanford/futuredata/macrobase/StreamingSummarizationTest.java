@@ -1,13 +1,16 @@
 package edu.stanford.futuredata.macrobase;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.IncrementalSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.operator.WindowedOperator;
 import org.junit.Test;
 
 import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class StreamingSummarizationTest {
     /**
@@ -15,13 +18,13 @@ public class StreamingSummarizationTest {
      * and a "bug" which shows up partway through and affects a specific combination of
      * attribute values. Useful for testing streaming summarization operators.
      *
-     * @param n number of rows
-     * @param k k-way simultaneous bad attributes required for bug
-     * @param C cardinality of each attribute column
-     * @param d dimension of number of attribute columns
-     * @param p probability of a random row being an outlier
+     * @param n              number of rows
+     * @param k              k-way simultaneous bad attributes required for bug
+     * @param C              cardinality of each attribute column
+     * @param d              dimension of number of attribute columns
+     * @param p              probability of a random row being an outlier
      * @param changeStartIdx index at which the "bug" starts showing up
-     * @param changeEndIdx index at which the "bug" ends showing up
+     * @param changeEndIdx   index at which the "bug" ends showing up
      * @return Complete dataset
      */
     public static DataFrame generateAnomalyDataset(
@@ -32,6 +35,14 @@ public class StreamingSummarizationTest {
         double[] time = new double[n];
         String[][] attrs = new String[d][n];
         double[] isOutlier = new double[n];
+
+        String[][] attrPrimitiveValues = new String[d][C];
+        for (int i = 0; i < C; i++) {
+            for (int j = 0; j < d; j++) {
+                attrPrimitiveValues[j][i] = String.format("a%d:%d", j, i);
+            }
+        }
+
         for (int i = 0; i < n; i++) {
             double curTime = i;
             time[i] = curTime;
@@ -39,7 +50,7 @@ public class StreamingSummarizationTest {
             int[] attrValues = new int[d];
             for (int j = 0; j < d; j++) {
                 attrValues[j] = r.nextInt(C);
-                attrs[j][i] = String.format("a%d:%d", j, attrValues[j]);
+                attrs[j][i] = attrPrimitiveValues[j][attrValues[j]];
             }
 
             // Outliers arise from random noies
@@ -62,7 +73,7 @@ public class StreamingSummarizationTest {
         DataFrame df = new DataFrame();
         df.addDoubleColumn("time", time);
         for (int j = 0; j < d; j++) {
-            df.addStringColumn("a"+j, attrs[j]);
+            df.addStringColumn("a" + j, attrs[j]);
         }
         df.addDoubleColumn("outlier", isOutlier);
         return df;
@@ -83,138 +94,62 @@ public class StreamingSummarizationTest {
     @Test
     public void testDetectSingleChange() throws Exception {
         // Prepare data set
-        int n = 10000;
-        int k = 2;
-        int C = 4;
-        int d = 5;
-        double p = 0.01;
-        int eventIdx = 2000;
-        int eventEndIdx = 8000;
-        int windowSize = 6000;
-        int slideSize = 500;
-
-        List<String> attributes = getAttributes(d, false);
-        List<String> buggyAttributeValues = getAttributes(k, true);
-        DataFrame df = generateAnomalyDataset(n, k, C, d, p, eventIdx, eventEndIdx);
-        BatchSummarizer batch = new BatchSummarizer().setAttributes(attributes).setOutlierColumn("outlier");
-        batch.process(df.filter("time", (double t) -> t >= eventIdx && t < eventEndIdx));
-        Explanation batchResult = batch.getResults();
-
-        IncrementalSummarizer summarizer = new IncrementalSummarizer(windowSize / slideSize);
-        summarizer.setOutlierColumn("outlier").setAttributes(attributes);
-
-        double startTime = 0.0;
-        while (startTime < n) {
-            double endTime = startTime + slideSize;
-            double ls = startTime;
-            DataFrame curBatch = df.filter("time", (double t) -> t >= ls && t < endTime);
-            summarizer.process(curBatch);
-            Explanation explanation = summarizer.getResults();
-
-            assert (explanation.getNumInliers() + explanation.getNumOutliers() == Math.min(windowSize, endTime));
-
-            if (startTime < eventIdx) { // No results before event time
-                assert (explanation.getItemsets().size() == 0);
-            } else {
-                // Combination:
-                //    make sure that the known anomalous attribute combination has the highest risk ratio
-                List<AttributeSet> comboAttributes = explanation.getItemsets();
-                Collections.sort(comboAttributes,
-                        (a, b)->(new Double(b.getRatioToInliers()).compareTo(new Double(a.getRatioToInliers()))));
-                assert(comboAttributes.get(0).getItems().values().containsAll(buggyAttributeValues));
-
-                // Check whether result from the incremental summarizer in the first window agrees with
-                // results from the batch summarizer for the event
-                if (endTime == eventEndIdx) {
-                    for (AttributeSet expected : batchResult.getItemsets()) {
-                        if (expected.getItems().values().containsAll(buggyAttributeValues)) {
-                            assert(expected.getNumRecords() == comboAttributes.get(0).getNumRecords());
-                            break;
-                        }
-                    }
-                }
-            }
-            startTime = endTime;
-
-        }
-    }
-
-    @Test
-    public void testDetectEndingEvent() {
-        // Prepare data set
-        int n = 12000;
+        int n = 7000;
         int k = 2;
         int C = 5;
         int d = 5;
-        double p = 0.005;
+        double p = 0.01;
         int eventIdx = 2000;
         int eventEndIdx = 4000;
-        int windowSize = 5000;
+        int windowSize = 2000;
         int slideSize = 1000;
 
         List<String> attributes = getAttributes(d, false);
         List<String> buggyAttributeValues = getAttributes(k, true);
         DataFrame df = generateAnomalyDataset(n, k, C, d, p, eventIdx, eventEndIdx);
 
-        // Summarizer with combinations
-        IncrementalSummarizer summarizer = new IncrementalSummarizer(windowSize / slideSize);
-        summarizer.setOutlierColumn("outlier").setAttributes(attributes);
+        IncrementalSummarizer outlierSummarizer = new IncrementalSummarizer();
+        outlierSummarizer.setAttributes(attributes);
+        outlierSummarizer.setOutlierColumn("outlier");
+        outlierSummarizer.setMinSupport(.5);
+        WindowedOperator<Explanation> windowedSummarizer = new WindowedOperator<>(outlierSummarizer);
+        windowedSummarizer.setWindowLength(windowSize);
+        windowedSummarizer.setTimeColumn("time");
+        windowedSummarizer.setSlideLength(slideSize);
+        windowedSummarizer.initialize();
 
+        double miniBatchSize = slideSize;
         double startTime = 0.0;
         while (startTime < n) {
-            double endTime = startTime + slideSize;
+            double endTime = startTime + miniBatchSize;
             double ls = startTime;
             DataFrame curBatch = df.filter("time", (double t) -> t >= ls && t < endTime);
-            summarizer.process(curBatch);
-            Explanation explanation = summarizer.getResults(10);
 
-            if (startTime >= eventIdx && endTime < eventEndIdx + windowSize) {
-                // Make sure that the known anomalous attribute combination has the highest risk ratio
-                // before all event panes retire
-                Collections.sort(explanation.getItemsets(),
-                        (a, b)->(new Double(b.getRatioToInliers()).compareTo(new Double(a.getRatioToInliers()))));
-                assert(explanation.getItemsets().get(0).getItems().values().containsAll(buggyAttributeValues));
+            /* Code to process windowed summarizer on a minibatch */
+            windowedSummarizer.process(curBatch);
+            Explanation explanation = windowedSummarizer.getResults();
+            /* End */
+
+            if (endTime > windowSize) {
+                assertEquals(windowSize, explanation.getNumInliers() + explanation.getNumOutliers());
+            }
+
+            if (windowedSummarizer.getMaxWindowTime() > eventIdx
+                    && windowedSummarizer.getMaxWindowTime() - windowSize < eventEndIdx) {
+                //  make sure that the known anomalous attribute combination has the highest risk ratio
+                AttributeSet topRankedExplanation = explanation.getItemsets().get(0);
+                assertTrue(topRankedExplanation.getItems().values().containsAll(buggyAttributeValues));
             } else {
-                // Make sure that there is no explanation before the event, and after all event panes retire
-                assert(explanation.getItemsets().size() == 0);
+                // Otherwise make sure that the noisy explanations are all low-cardinality
+                if (explanation.getItemsets().size() > 0) {
+                    AttributeSet topRankedExplanation = explanation.getItemsets().get(0);
+                    assertTrue(
+                            topRankedExplanation.getNumRecords() < 20
+                    );
+                }
             }
             startTime = endTime;
-        }
-    }
 
-
-    @Test
-    public void testAttributeCombo() {
-        // Prepare data set
-        int n = 16000;
-        int k = 4;
-        int C = 4;
-        int d = 10;
-        double p = 0.005;
-        int eventIdx = 0;
-        int eventEndIdx = 16000;
-        int windowSize = 4000;
-        int slideSize = 4000;
-
-        List<String> attributes = getAttributes(d, false);
-        List<String> buggyAttributeValues = getAttributes(k, true);
-        DataFrame df = generateAnomalyDataset(n, k, C, d, p, eventIdx, eventEndIdx);
-
-        // Summarizer with combinations
-        IncrementalSummarizer summarizer = new IncrementalSummarizer(windowSize / slideSize);
-        summarizer.setOutlierColumn("outlier").setAttributes(attributes);
-
-        double startTime = 0.0;
-        while (startTime < n) {
-            double endTime = startTime + slideSize;
-            double ls = startTime;
-            DataFrame curBatch = df.filter("time", (double t) -> t >= ls && t < endTime);
-            summarizer.process(curBatch);
-            Explanation explanation = summarizer.getResults(10);
-            Collections.sort(explanation.getItemsets(),
-                    (a, b)->(new Double(b.getRatioToInliers()).compareTo(new Double(a.getRatioToInliers()))));
-            assert(explanation.getItemsets().get(0).getItems().values().containsAll(buggyAttributeValues));
-            startTime = endTime;
         }
     }
 }

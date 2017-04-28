@@ -17,6 +17,10 @@ import java.util.function.DoublePredicate;
 /**
  * Given batches of rows with an outlier class column, explain the outliers using
  * string attribute columns. Results from each batch accumulates, until batches are retired.
+ *
+ * This class searches for new candidate explanations based on the latest pane. Viable candidates
+ * are promoted and tracked until their support drops below a certain threshold, at which point they
+ * are retired.
  */
 public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     // Number of panes that we keep track in the summarizer
@@ -41,18 +45,28 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     private HashMap<Set<Integer>, Double> outlierItemsetWindowCount = new HashMap<>();
     private Deque<Integer> inlierPaneCounts;
     private Deque<Integer> outlierPaneCounts;
+    private HashMap<Set<Integer>, Integer> trackingMap = new HashMap<>();
+
+    // Temp Intermediate Values
     private List<Integer> inlierCountCumSum;
     private List<Integer> outlierCountCumSum;
-    private HashMap<Set<Integer>, Integer> trackingMap = new HashMap<>();
 
     public IncrementalSummarizer(int numPanes) {
         setWindowSize(numPanes);
-        if (inlierItemsetPaneCounts == null) {
-            inlierPaneCounts = new ArrayDeque<>(numPanes);
-            outlierPaneCounts = new ArrayDeque<>(numPanes);
-            inlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
-            outlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
-        }
+        initializePanes();
+    }
+
+    public IncrementalSummarizer() {
+        setWindowSize(1);
+        initializePanes();
+    }
+
+    protected IncrementalSummarizer initializePanes() {
+        inlierPaneCounts = new ArrayDeque<>(numPanes);
+        outlierPaneCounts = new ArrayDeque<>(numPanes);
+        inlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
+        outlierItemsetPaneCounts = new ArrayDeque<>(numPanes);
+        return this;
     }
 
     @Override
@@ -62,9 +76,8 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
     @Override
     public int getWindowSize() { return numPanes; }
 
-    public IncrementalSummarizer setMinSupport(double minSupport) {
+    public void setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
-        return this;
     }
     public double getMinSupport() { return minOutlierSupport; }
 

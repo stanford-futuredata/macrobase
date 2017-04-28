@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
-public class AttributeSet {
+public class AttributeSet implements Comparable<AttributeSet>{
     private double support;
     private long numRecords;
     private double ratioToInliers;
@@ -27,6 +27,21 @@ public class AttributeSet {
         this.numRecords = (long)numRecords;
         this.ratioToInliers = ratioToInliers;
         this.items = items;
+    }
+
+    public boolean contains(AttributeSet other) {
+        Map<String, String> otherItems = other.items;
+        for (Map.Entry<String, String> oEntry : otherItems.entrySet()) {
+            String colName = oEntry.getKey();
+            String colValue = oEntry.getValue();
+            boolean match = false;
+            if (items.containsKey(colName) && items.get(colName).equals(colValue)) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     public String prettyPrint() {
@@ -71,5 +86,12 @@ public class AttributeSet {
                 ", ratioToInliers=" + ratioToInliers +
                 ", items=" + items +
                 '}';
+    }
+
+    @Override
+    public int compareTo(AttributeSet o) {
+        double r1 = this.getRatioToInliers();
+        double r2 = o.getRatioToInliers();
+        return Double.compare(r1, r2);
     }
 }
