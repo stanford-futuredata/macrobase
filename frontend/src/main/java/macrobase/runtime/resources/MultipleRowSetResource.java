@@ -1,6 +1,9 @@
 package macrobase.runtime.resources;
 
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
+import macrobase.ingest.CSVIngester;
+import macrobase.ingest.DataIngester;
 import macrobase.ingest.result.RowSet;
 import macrobase.ingest.SQLIngester;
 
@@ -45,11 +48,19 @@ public class MultipleRowSetResource extends BaseResource {
 
         try {
             conf.set(MacroBaseConf.DB_URL, request.pgUrl);
-            SQLIngester loader = getLoader();
+
+            //Need a CSV ingester. Changing so it's not just the first thing set to. Used to be final, but changed it...
+            configuredIngester = conf.getString(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseDefaults.DATA_LOADER_TYPE.toString());
+
+            DataIngester loader = getLoader();
             List<RowSet> lr = new ArrayList<RowSet>();
             for (List<RowSetResource.RowSetRequest.RowRequestPair> columnValue : request.columnValues) {
                 HashMap<String, String> preds = new HashMap<>();
                 columnValue.stream().forEach(a -> preds.put(a.column, a.value));
+                log.debug("QUERY INFO: {}, {}, {}, {}", request.baseQuery, request.limit, request.offset, columnValue.size());
+                for (RowSetResource.RowSetRequest.RowRequestPair a: columnValue){
+                    log.debug("col {} val {}", a.column, a.value);
+                }
 
                 lr.add(loader.getRows(request.baseQuery,
                                       preds,

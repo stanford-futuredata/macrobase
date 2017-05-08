@@ -134,14 +134,16 @@ public abstract class SQLIngester extends DataIngester {
         return sql;
     }
 
+    @Override
     public RowSet getRows(String baseQuery,
                           Map<String, String> preds,
                           int limit,
                           int offset) throws SQLException {
+        log.debug("sql query {}",getRowsSql(baseQuery, preds, limit, offset) );
         initializeConnection();
         // TODO handle time column here
-        Statement stmt = connection.createStatement();
 
+        Statement stmt = connection.createStatement();
         ResultSet rs = stmt.executeQuery(getRowsSql(baseQuery, preds, limit, offset));
 
         List<RowSet.Row> rows = Lists.newArrayList();

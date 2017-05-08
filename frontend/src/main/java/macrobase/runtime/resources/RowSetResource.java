@@ -1,6 +1,7 @@
 package macrobase.runtime.resources;
 
 import macrobase.conf.MacroBaseConf;
+import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.result.RowSet;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -49,6 +50,7 @@ public class RowSetResource extends BaseResource {
         try {
             conf.set(MacroBaseConf.DB_URL, request.pgUrl);
             conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
+            configuredIngester = conf.getString(MacroBaseConf.DATA_LOADER_TYPE, MacroBaseDefaults.DATA_LOADER_TYPE.toString());
 
             HashMap<String, String> preds = new HashMap<>();
             request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));

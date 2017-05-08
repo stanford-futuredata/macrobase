@@ -1,9 +1,12 @@
 package macrobase.ingest;
 
+import com.google.common.collect.Lists;
 import macrobase.analysis.pipeline.stream.MBStream;
 import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.result.ColumnValue;
+import macrobase.ingest.result.RowSet;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +43,8 @@ public class CSVIngester extends DataIngester {
     public CSVIngester(MacroBaseConf conf) throws ConfigurationException, IOException {
         super(conf);
     }
-    
+
+    //equal to getNext() in SQL ingest
     private Datum parseRecord(CSVRecord record) throws NumberFormatException {
         int vecPos = 0;
 
@@ -78,10 +83,10 @@ public class CSVIngester extends DataIngester {
                 File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
                 csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
             }
-            schema = csvParser.getHeaderMap();
+            schema = csvParser.getHeaderMap(); //equal to resultSet.getmetadata or smt
 
             for (Map.Entry<String, Integer> se : schema.entrySet()) {
-                conf.getEncoder().recordAttributeName(se.getValue() + 1, se.getKey());
+                conf.getEncoder().recordAttributeName(se.getValue() + 1, se.getKey()); //numbering off each column for encoding
             }
 
             // Load all records into memory to filter out rows with missing data
@@ -103,5 +108,44 @@ public class CSVIngester extends DataIngester {
 
         return dataStream;
     }
-}
+
+    @Override
+    public RowSet getRows(String baseQuery,
+                          Map<String, String> preds,
+                          int limit,
+                          int offset) throws Exception{
+
+        filename = conf.getString(MacroBaseConf.CSV_INPUT_FILE);
+        Compression compression = conf.getCsvCompression();
+
+        if (compression == Compression.GZIP) {
+            InputStream fileStream = new FileInputStream(filename);
+            InputStream gzipStream = new GZIPInputStream(fileStream);
+            Reader decoder = new InputStreamReader(gzipStream);
+            csvParser = new CSVParser(decoder, CSVFormat.DEFAULT.withHeader());
+        } else {
+            File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
+            csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
+        }
+        schema = csvParser.getHeaderMap(); //equal to resultSet.getmetadata or smt
+        Iterator<CSVRecord> rawIterator = csvParser.iterator();
+
+        List<RowSet.Row> rows = Lists.newArrayList();
+        while (rawIterator.hasNext()) {
+            List<ColumnValue> columnValues = Lists.newArrayList();
+
+            CSVRecord record = rawIterator.next();
+            int vecPos = 0;
+
+            for (Map.Entry<String, Integer> se : schema.entrySet()) {
+                columnValues.add(new ColumnValue(se.getKey(),record.get(se.getValue())));
+            }
+            rows.add(new RowSet.Row(columnValues));
+        }
+
+         return new RowSet(rows);
+    }
+
+    }
+
 
