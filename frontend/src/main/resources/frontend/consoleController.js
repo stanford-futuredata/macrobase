@@ -356,7 +356,7 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
 			$scope.resetPlotDiv();
 			$scope.resetItemsetPlots();
 
-            $scope.sortAnalysis("support");
+            $scope.sortAnalysis("ratioToInliers");
 	    });
     }
     }
