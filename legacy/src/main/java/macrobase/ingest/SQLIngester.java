@@ -139,7 +139,6 @@ public abstract class SQLIngester extends DataIngester {
                           Map<String, String> preds,
                           int limit,
                           int offset) throws SQLException {
-        log.debug("sql query {}",getRowsSql(baseQuery, preds, limit, offset) );
         initializeConnection();
         // TODO handle time column here
 

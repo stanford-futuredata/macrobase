@@ -127,23 +127,33 @@ public class CSVIngester extends DataIngester {
             File csvFile = new File(conf.getString(MacroBaseConf.CSV_INPUT_FILE));
             csvParser = CSVParser.parse(csvFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withHeader());
         }
-        schema = csvParser.getHeaderMap(); //equal to resultSet.getmetadata or smt
+        schema = csvParser.getHeaderMap();
         Iterator<CSVRecord> rawIterator = csvParser.iterator();
+        int rowCount = 0;
 
         List<RowSet.Row> rows = Lists.newArrayList();
-        while (rawIterator.hasNext()) {
+        while (rawIterator.hasNext() && rowCount < limit) {
+            CSVRecord record = rawIterator.next();
             List<ColumnValue> columnValues = Lists.newArrayList();
 
-            CSVRecord record = rawIterator.next();
-            int vecPos = 0;
+            if (includeRow(record, preds)) {
+                for (Map.Entry<String, Integer> se : schema.entrySet()) {
+                    columnValues.add(new ColumnValue(se.getKey(),record.get(se.getValue())));
+                }
 
-            for (Map.Entry<String, Integer> se : schema.entrySet()) {
-                columnValues.add(new ColumnValue(se.getKey(),record.get(se.getValue())));
+                rows.add(new RowSet.Row(columnValues));
+                rowCount++;
             }
-            rows.add(new RowSet.Row(columnValues));
         }
-
          return new RowSet(rows);
+    }
+
+    private boolean includeRow(CSVRecord record, Map<String, String> preds) {
+        boolean retRow = true;
+        for (Map.Entry<String, String> pred : preds.entrySet()) {
+            retRow = (retRow && record.get(pred.getKey()).equals(pred.getValue()));
+        }
+        return retRow;
     }
 
     }

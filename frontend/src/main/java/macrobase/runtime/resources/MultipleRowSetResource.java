@@ -57,11 +57,6 @@ public class MultipleRowSetResource extends BaseResource {
             for (List<RowSetResource.RowSetRequest.RowRequestPair> columnValue : request.columnValues) {
                 HashMap<String, String> preds = new HashMap<>();
                 columnValue.stream().forEach(a -> preds.put(a.column, a.value));
-                log.debug("QUERY INFO: {}, {}, {}, {}", request.baseQuery, request.limit, request.offset, columnValue.size());
-                for (RowSetResource.RowSetRequest.RowRequestPair a: columnValue){
-                    log.debug("col {} val {}", a.column, a.value);
-                }
-
                 lr.add(loader.getRows(request.baseQuery,
                                       preds,
                                       request.limit,
