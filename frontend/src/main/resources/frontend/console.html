@@ -7,6 +7,7 @@
 
 <link rel="stylesheet" href="css/bootstrap.min.css">
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="css/mb-frontend.css">
 
 <style>
     .active-schema {
@@ -80,7 +81,7 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <p style="margin-top: 5px; margin-bottom:-5px">Connected to {{pg_url}} database!</p>
+                                <!-- <p style="margin-top: 5px; margin-bottom:-5px">Connected to {{pg_url}} database!</p> -->
 
                             </div>
                         </div>
@@ -201,40 +202,65 @@
                         <br>
 
                         <div class="panel panel-default" ng-repeat="i in itemsets">
-                            <div class="panel-body">
-                                <table>
-                                    <tr style="width:100%">
-                                        <td style="width:50%"><b>Support: </b></td>
-                                        <td style="width:50%"> {{i.support}}</td>
-                                    </tr>
-                                    <tr style="width:100%">
-                                        <td style="width:50%"><b>Ratio Out/In: </b></td>
-                                        <td style="width:50%"> {{i.ratioToInliers}}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width:50%"><b>Records: </b></td>
-                                        <td style="width:50%"> {{i.numRecords}}</td>
-                                    </tr>
-                                </table>
-                                <table class="table" style="margin-top: 10px">
-                                    <tr>
-                                        <th style="width:50%">Column</th>
-                                        <th style="width:50%">Value</th>
-                                    </tr>
-                                    <tr ng-repeat="item in i.items">
-                                        <td>{{item.column}}</td>
-                                        <td>{{item.value}}</td>
-                                    </tr>
-                                </table>
-                                <div>
-                                    Plot: <div id="plotArea_{{$index}}" ng-hide="shouldHideItemsetPlot($index)"></div>
-										<span ng-repeat="h in getPlotColumns()">
-												<button ng-model="button" ng-click="prepareItemsetPlotData(h, $parent.$index)" ng-disabled="plotDataLoading">{{h}}</button>
-										</span>
+                                <div ng-class="setSev({{i.ratioToInliers}})" id="explanation_{{$index}}">
+                                    <div class="panel-body">
+                                        <div class="col-sm-9">
+                                        <table>
+                                            <tr>
+                                            <td>  <b>Explanatory Attrs: </b> </td>
+                                            <td>
+                                                <span ng-repeat="item in i.items">
+                                                {{item.column}}
+                                                </span>
+                                            </td>
+                                            </tr>
+                                            <tr style="width:100%">
+                                                <td style="width:50%"><b>Ratio Out/In: </b></td>
+                                                <td style="width:50%">{{i.ratioToInliers}}</td>
+                                            </tr>
+                                            <tr style="width:100%">
+                                                <td style="width:50%"><b>Support: </b></td>
+                                                <td style="width:50%"> {{i.support}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="width:50%"><b>Records: </b></td>
+                                                <td style="width:50%"> {{i.numRecords}}</td>
+                                            </tr>
+                                        </table>
+                                        </div>
+
+
+                                        <div class="col-sm-2">
+                                        <!--<button onclick="myFunction()">Click Me</button> -->
+                                            <button ng-click="revealItemset($index, i.ratioToInliers)" type="button"><span
+                                                    class="glyphicon glyphicon-chevron-down"></span></button>
+                                        </div>
+
+                                        <p></p>
+
+                                        <div id="itemset_{{$index}}" class="itemsetHidden" style="padding-top:4px">
+                                            <table class="table" style="margin-top: 100px">
+                                                <tr>
+                                                    <th style="width:50%">Column</th>
+                                                    <th style="width:50%">Value</th>
+                                                </tr>
+                                                <tr ng-repeat="item in i.items">
+                                                    <td>{{item.column}}</td>
+                                                    <td>{{item.value}}</td>
+                                                </tr>
+                                            </table>
+                                            <div>
+                                                Plot: <div id="plotArea_{{$index}}" ng-hide="shouldHideItemsetPlot($index)"></div>
+                                                <span ng-repeat="h in getPlotColumns()">
+                                                        <button ng-model="button" ng-click="prepareItemsetPlotData(h, $parent.$index)" ng-disabled="plotDataLoading">{{h}}</button>
+                                                </span>
+                                            </div>
+                                            <div style="padding: 15px; padding-top:30px;">
+                                                <a ng-click="exploreItems(i.items)">Explore</a>
+                                            </div>
+                                        </div>
+
                                 </div>
-                            </div>
-                            <div style="padding: 15px; padding-top:0px;">
-                                <a ng-click="exploreItems(i.items)">Explore</a>
                             </div>
                         </div>
                     </div>

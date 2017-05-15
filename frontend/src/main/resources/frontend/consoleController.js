@@ -315,6 +315,34 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
 
     var analyzing = false
 
+    $scope.revealItemset = function(idx, riskRatio) {
+    var x = document.getElementById('itemset_'+idx);
+    var y = document.getElementById('explanation_'+idx);
+    if (x.classList.contains('itemsetHidden')) {
+        x.classList.remove('itemsetHidden');
+        y.className = "grey";
+    }
+    else {
+        x.classList.add('itemsetHidden');
+        y.className = getSev(riskRatio);
+    }
+    }
+
+    $scope.setSev = function(riskRatio){
+        return getSev(riskRatio);
+    }
+
+
+    function getSev(riskRatio) {
+        if (riskRatio > 8){
+            return 'high-risk';
+        }
+        if (riskRatio > 3){
+            return 'med-risk';
+        }
+        return 'low-risk';
+    }
+
     $scope.shouldShowAnalysis = function() {
         return configService.hasAnalysis()
     }
@@ -736,6 +764,8 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
     }
 
 }]);
+
+
 
 
 myApp.controller('exploreController', ['$scope', '$http', 'configService', 'explorerService', function($scope, $http, configService, explorerService) {

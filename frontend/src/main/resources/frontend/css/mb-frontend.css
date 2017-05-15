@@ -1,0 +1,33 @@
+.blue {
+    background-color: #ccebff;
+    border-color: #bce8f1;
+}
+
+.grey {
+    background-color: #F4F4F4;
+    border-color: #A8A7A7;
+}
+
+.itemsetHidden{
+    display:none;
+}
+
+.high-risk{
+    background-color: #FE7070;
+    border-color: #A8A7A7;
+}
+
+.med-risk{
+    background-color: #FEA7A7;
+    border-color: #A8A7A7;
+}
+
+.low-risk{
+    background-color: #FED9D9;
+    border-color: #A8A7A7;
+}
+
+.active-schema{
+    background-color: #ccebff;
+}
+
