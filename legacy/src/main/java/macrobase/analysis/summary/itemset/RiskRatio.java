@@ -11,8 +11,9 @@ public class RiskRatio {
                                         double totalInliers,
                                         double totalOutliers) {
         double totalExposedCount = exposedInlierCount + exposedOutlierCount;
-        double unexposedOutlierCount = (totalOutliers - exposedOutlierCount);
         double totalMinusExposedCount = totalInliers + totalOutliers - totalExposedCount;
+        double unexposedOutlierCount = (totalOutliers - exposedOutlierCount);
+        double unexposedInlierCount = (totalInliers - exposedInlierCount);
 
         // no exposure occurred
         if (totalExposedCount == 0) {
@@ -30,8 +31,14 @@ public class RiskRatio {
             return Double.POSITIVE_INFINITY;
         }
 
+        double z = 2.0;
+        double correction = z*Math.sqrt(
+                (exposedInlierCount / exposedOutlierCount)/totalExposedCount
+                + (unexposedInlierCount / unexposedInlierCount)/totalMinusExposedCount
+        );
+
         return (exposedOutlierCount / totalExposedCount) /
-               (unexposedOutlierCount / totalMinusExposedCount);
+               (unexposedOutlierCount / totalMinusExposedCount) - correction;
     }
 
     public static double compute(Number exposedInlierCount,
