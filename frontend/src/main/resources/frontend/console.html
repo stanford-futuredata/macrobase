@@ -202,7 +202,7 @@
                         <br>
 
                         <div class="panel panel-default" ng-repeat="i in itemsets">
-                                <div class="high-risk" id="explanation_{{$index}}">
+                                <div ng-class="setSev(i.ratioToInliers)" id="explanation_{{$index}}">
                                     <div class="panel-body">
                                         <div class="col-sm-9">
                                         <table>
@@ -218,10 +218,10 @@
                                                 <td style="width:50%"><b>Ratio Out/In: </b></td>
                                                 <td style="width:50%">{{i.ratioToInliers}}</td>
                                             </tr>
-                                            <tr style="width:100%">
+                                           <!-- <tr style="width:100%">
                                                 <td style="width:50%"><b>Support: </b></td>
                                                 <td style="width:50%"> {{i.support}}</td>
-                                            </tr>
+                                            </tr> -->
                                             <tr>
                                                 <td style="width:50%"><b>Records: </b></td>
                                                 <td style="width:50%"> {{i.numRecords}}</td>
