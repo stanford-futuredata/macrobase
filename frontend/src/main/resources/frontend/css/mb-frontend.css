@@ -50,3 +50,15 @@ element {
     background: #DCEBD9; 
     border-color: #DCEBD9;
 }
+
+.panel-gray {
+    border-color: #dcddd7;
+}
+.panel-gray > .panel-heading {
+    background-image: none;    
+    background: #dcddd7; 
+    border-color: #dcddd7;
+}
+
+
+
