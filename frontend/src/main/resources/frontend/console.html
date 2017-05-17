@@ -9,12 +9,12 @@
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
 <link rel="stylesheet" href="css/mb-frontend.css">
 
-<style>
+<!--<style>
     .active-schema {
     background-color: #97e17a !important;
     background-image: none !important;
     }
-</style>
+</style>-->
 
 <head>
     <title>MacroBase Console</title>
@@ -56,7 +56,7 @@
                 <div class="col-md-6">
 
                     <div ng-controller="connectController" ng-init="get_schema(true)">
-                        <div class="panel panel-default">
+                        <div class="panel panel-brown">
                             <div class="panel-heading">Database Configuration</div>
                             <div class="panel-body">
                                 <table>
@@ -87,7 +87,7 @@
                         </div>
                         <br>
 
-                        <div class="panel panel-default">
+                        <div class="panel panel-brown">
                             <div class="panel-heading">Schema Information and Selection
                                 <div style="float:right;">
                                     <button ng-click="clearSchema()">clear</button>
@@ -145,9 +145,9 @@
                         <span class="glyphicon glyphicon-flash" aria-hidden="true"></span> {{analyzeStr}}
                     </button>
 
-                    <div class="panel panel-info" ng-show="shouldShowAnalysis()" style="margin-top: 20px;">
+                    <div class="panel panel-brown" ng-show="shouldShowAnalysis()" style="margin-top: 20px;">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Results:</h3>
+                            <h3 class="panel-title">Results</h3>
                         </div>
 
                         <div class="panel-body">
@@ -207,10 +207,10 @@
                                         <div class="col-sm-9">
                                         <table>
                                             <tr>
-                                            <td>  <b>Explanatory Attrs: </b> </td>
+                                            <td>  <b>Attributes: </b> </td>
                                             <td>
                                                 <span ng-repeat="item in i.items">
-                                                {{item.column}}
+                                                {{item.column}}{{$last ? '' : ', '}}
                                                 </span>
                                             </td>
                                             </tr>

@@ -326,7 +326,7 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
     }
 
     $scope.setSev = function(riskRatio){
-        if (riskRatio > 20){
+        if (riskRatio > 30){
             return 'high-risk';
         }
         if (riskRatio > 10){
