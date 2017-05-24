@@ -54,3 +54,4 @@ conf/custom/
 
 # Big test resources
 lib/src/test/resources/hepmass*
+lib/src/test/resources/shuttle*
