@@ -27,7 +27,7 @@ public class DataFrame {
     // converted into internal type-specific indices.
     private ArrayList<Integer> indexToTypeIndex;
 
-    private int numRows;
+    public int numRows;
 
     public DataFrame() {
         this.schema = new Schema();

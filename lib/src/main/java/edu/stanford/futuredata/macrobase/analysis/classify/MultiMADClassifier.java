@@ -3,196 +3,148 @@ package edu.stanford.futuredata.macrobase.analysis.classify;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.Transformer;
 
-import edu.stanford.futuredata.macrobase.analysis.stats.MAD;
-
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.special.Erf;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 import java.lang.Math;
-import java.lang.Double;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Random;
 import java.util.stream.IntStream;
 
 public class MultiMADClassifier implements Transformer {
     private double percentile = 0.5;
-    private double cutoff = 2.576;
-    private int samplingRate = 1;
+    private double zscore = 2.576;
+    private boolean includeHigh = true;
+    private boolean includeLow = true;
+    private double samplingRate = 1;
     private List<String> columnNames;
-    private String outputColumnName = "_OUTLIER";
-    private List<Double> medians;
-    private List<Double> MADs;
-    private List<Double> upperBounds;
-    private List<Double> lowerBounds;
-    private long trainTime = 0;
-    private long scoreTime = 0;
-    private long otherTime = 0;
-    private long samplingTime = 0;
+    private String outputColumnSuffix = "_OUTLIER";
+    private final double trimmedMeanFallback = 0.05;
+    // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
+    private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
 
     // Calculated values
+    private double lowCutoff;
+    private double highCutoff;
     private DataFrame output;
 
     public MultiMADClassifier(String... columnNames) {
         this.columnNames = new ArrayList<String>(Arrays.asList(columnNames));
-        this.medians = new ArrayList<Double>();
-        this.MADs = new ArrayList<Double>();
-        this.upperBounds = new ArrayList<Double>();
-        this.lowerBounds = new ArrayList<Double>();
     }
 
     @Override
     public void process(DataFrame input) {
         output = input.copy();
-        double[] resultColumn = new double[input.getNumRows()];
 
-        long startTime = System.currentTimeMillis();
-
-        DataFrame trainingInput = input;
+        int sampleSize = (int)(input.getNumRows() * samplingRate);
+        int[] sampleIndices = new int[sampleSize];
         if (samplingRate != 1) {
-            trainingInput = getRandomSample(input);
+            sampleIndices = getRandomSample(input.getNumRows());
         }
 
-        samplingTime += (System.currentTimeMillis() - startTime);
+        for (String columnName : columnNames) {
+            double[] metrics = input.getDoubleColumnByName(columnName);
 
-        // double[][] metrics = new double[columnNames.size()][input.getNumRows()];
-
-        MAD mad = new MAD();
-        // for (String column : columnNames) {
-        for (int i = 0; i < columnNames.size(); i++) {
-            startTime = System.currentTimeMillis();
-
-            double[] metrics = input.getDoubleColumnByName(columnNames.get(i));
-            // metrics[i] = input.getDoubleColumnByName(columnNames.get(i));
-            double[] trainingMetrics = trainingInput.getDoubleColumnByName(columnNames.get(i));
-            
-            otherTime += (System.currentTimeMillis() - startTime);
-            startTime = System.currentTimeMillis();
-
-            mad.train(trainingMetrics);
-            medians.add(mad.getMedian());
-            MADs.add(mad.getMAD());
-
-            trainTime += (System.currentTimeMillis() - startTime);
-            startTime = System.currentTimeMillis();
-
-            // Bootstrap the confidence interval
-            // bootstrap(trainingMetrics, mad.getMedian());
-
-            otherTime += (System.currentTimeMillis() - startTime);
-            startTime = System.currentTimeMillis();
-
-            // Parallelized stream scoring:
-            int[] outliers = IntStream.range(0, input.getNumRows()).parallel().filter(r -> mad.zscore(metrics[r]) >= cutoff).toArray();
-            for (int r : outliers) {
-                resultColumn[r] = 1.0;
-            }
-
-            // Original Scoring:
-            // for (int r = 0; r < input.getNumRows(); r++) {
-            //     double curVal = metrics[r];
-            //     double score = mad.zscore(curVal);
-            //     if (score >= cutoff) {
-            //         resultColumn[r] = 1.0;
-            //     }
-            // }
-
-            scoreTime += (System.currentTimeMillis() - startTime);
-        }
-
-        startTime = System.currentTimeMillis();
-        
-        // Even more parallelized scoring
-        // RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
-        // resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
-        //     i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.score(m)).max().getAsDouble() >= cutoff) ? 1 : 0
-        // ).asDoubleStream().toArray();
-
-        // RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
-        // resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
-        //     i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.zscore(m)).filter(s -> s > cutoff).count() > 0) ? 1 : 0
-        // ).asDoubleStream().toArray();
-
-        scoreTime += (System.currentTimeMillis() - startTime);
-
-        output.addDoubleColumn(outputColumnName, resultColumn);
-    }
-
-    private DataFrame getRandomSample(DataFrame input) {
-        // Inefficient shuffling implementation:
-        // Integer[] arr = new Integer[input.getNumRows()];
-        // for (int i = 0; i < input.getNumRows(); i++) {
-        //     arr[i] = i;
-        // }
-        // Collections.shuffle(Arrays.asList(arr));
-
-        // int sampleSize = input.getNumRows() / samplingRate;
-        // boolean[] mask = new boolean[input.getNumRows()];
-        // for (int i = 0; i < sampleSize; i++) {
-        //     mask[arr[i]] = true;
-        // }
-
-        // return input.filter(mask);
-
-        // Reservoir Sampling:
-        // int sampleSize = input.getNumRows() / samplingRate;
-        // int[] sample_indices = new int[sampleSize];
-        // for (int i = 0; i < sampleSize; i++) {
-        //     sample_indices[i] = i;
-        // }
-        // Random rand = new Random();
-        // for (int i = sampleSize; i < input.getNumRows(); i++) {
-        //     int j = rand.nextInt(i+1);
-        //     if (j < sampleSize) {
-        //         sample_indices[j] = i;
-        //     }
-        // }
-        // boolean[] mask = new boolean[input.getNumRows()];
-        // for (int i = 0; i < sampleSize; i++) {
-        //     mask[sample_indices[i]] = true;
-        // }
-        // return input.filter(mask);
-
-        // Rejection sampling:
-        boolean[] mask = new boolean[input.getNumRows()];
-        int sampleSize = input.getNumRows() / samplingRate;
-        int numSamples = 0;
-        Random rand = new Random();
-        while (true) {
-            int sample = rand.nextInt(input.getNumRows());
-            if (mask[sample] == false) {
-                mask[sample] = true;
-                numSamples++;
-                if (numSamples == sampleSize) {
-                    break;
+            double[] trainingMetrics = new double[sampleSize];
+            if (samplingRate == 1) {
+                System.arraycopy(metrics, 0, trainingMetrics, 0, metrics.length);
+            } else {
+                for (int j = 0; j < sampleIndices.length; j++) {
+                    trainingMetrics[j] = metrics[sampleIndices[j]];
                 }
             }
+
+            Stats stats = train(trainingMetrics);
+            lowCutoff = stats.median - (zscore * stats.mad);
+            highCutoff = stats.median + (zscore * stats.mad);
+
+            // Scoring is done differently depending on size of metrics
+            if (metrics.length > 25000) {
+                // Parallelized stream scoring:
+                double[] results = new double[metrics.length];
+                System.arraycopy(metrics, 0, results, 0, metrics.length);
+                Arrays.parallelSetAll(results, m -> (
+                    (m > highCutoff && includeHigh) || (m < lowCutoff && includeLow)) ? 1.0 : 0.0);
+                output.addDoubleColumn(columnName + outputColumnSuffix, results);
+            } else {
+                // Non-parallel scoring:
+                double[] results = new double[metrics.length];
+                for (int r = 0; r < input.getNumRows(); r++) {
+                    boolean isOutlier = (metrics[r] > highCutoff && includeHigh) ||
+                        (metrics[r] < lowCutoff && includeLow);
+                    results[r] = isOutlier ? 1.0 : 0.0;
+                }
+                output.addDoubleColumn(columnName + outputColumnSuffix, results);
+            }
         }
-        return input.filter(mask);
     }
 
-    private void bootstrap(double[] trainingMetrics, double median) {
-        int len = trainingMetrics.length;
-        double[] bootstrapped_diffs = new double[10];
-        Random rand = new Random();
-        for (int i = 0; i < 10; i++) {
-            double[] sample = new double[trainingMetrics.length];
-            for (int j = 0; j < trainingMetrics.length; j++) {
-                sample[j] = trainingMetrics[rand.nextInt(trainingMetrics.length)];
+    private int[] getRandomSample(int numRows) {
+        int sampleSize = (int)(numRows * samplingRate);
+        int[] sampleIndices = new int[sampleSize];
+
+        // Scoring is done differently depending on size of the sample
+        if (samplingRate > 0.3) {
+            // Reservoir Sampling:
+            for (int i = 0; i < sampleSize; i++) {
+                sampleIndices[i] = i;
             }
-            double bootstrap_median = new Percentile().evaluate(sample, 50);
-            bootstrapped_diffs[i] = bootstrap_median - median;
+            Random rand = new Random();
+            for (int i = sampleSize; i < numRows; i++) {
+                int j = rand.nextInt(i+1);
+                if (j < sampleSize) {
+                    sampleIndices[j] = i;
+                }
+            }
+            boolean[] mask = new boolean[numRows];
+            for (int i = 0; i < sampleSize; i++) {
+                mask[sampleIndices[i]] = true;
+            }
+        } else {
+            // partial Fisher-Yates shuffle
+            int[] range = new int[numRows];
+            for (int i = 0; i < numRows; i++) {
+                range[i] = i;
+            }
+            Random rand = new Random();
+            for (int i = 0; i < sampleSize; i++) {
+                int j = rand.nextInt(numRows - i) + i;
+                int temp = range[j];
+                range[j] = range[i];
+                range[i] = temp;
+            }
+            System.arraycopy(range, 0, sampleIndices, 0, sampleSize);
         }
-        Percentile percentile = new Percentile();
-        // System.out.format("%f %f %f\n", median, bootstrapped_diffs[0], bootstrapped_diffs[8]);
-        // System.out.format("[%f %f]\n", median-bootstrapped_diffs[8], median-bootstrapped_diffs[0]);
-        upperBounds.add(median - percentile.evaluate(bootstrapped_diffs, 10));
-        lowerBounds.add(median - percentile.evaluate(bootstrapped_diffs, 90));
+
+        return sampleIndices;
+    }
+
+    private Stats train(double[] metrics) {
+        double median = new Percentile().evaluate(metrics, 50);
+
+        for (int i = 0; i < metrics.length; i++) {
+            metrics[i] = Math.abs(metrics[i] - median);
+        }
+
+        double MAD = new Percentile().evaluate(metrics, 50);
+
+        if (MAD == 0) {
+            Arrays.sort(metrics);
+            int lowerTrimmedMeanIndex = (int) (metrics.length * trimmedMeanFallback);
+            int upperTrimmedMeanIndex = (int) (metrics.length * (1 - trimmedMeanFallback));
+            double sum = 0;
+            for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
+                sum += metrics[i];
+            }
+            MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
+            assert (MAD != 0);
+        }
+
+        Stats stats = new Stats(median, MAD * MAD_TO_ZSCORE_COEFFICIENT);
+        return stats;
     }
 
     @Override
@@ -205,62 +157,109 @@ public class MultiMADClassifier implements Transformer {
         return percentile;
     }
 
+    public double getZscore() {
+        return zscore;
+    }
+
     public double getSamplingRate() {
         return samplingRate;
     }
 
+    public boolean isIncludeHigh() {
+        return includeHigh;
+    }
+
+    public boolean isIncludeLow() {
+        return includeLow;
+    }
+
+    public List<String> getColumnNames() {
+        return columnNames;
+    }
+
+    public String getOutputColumnSuffix() {
+        return outputColumnSuffix;
+    }
+
     /**
-     * @param percentile Cutoff point for high or low values
+     * @param percentile Approximate percent of data to classify as outlier on each end of
+     * spectrum (i.e., a percentile of 5 means that the top 5% and bottom 5% are outliers)
      * @return this
      */
     public MultiMADClassifier setPercentile(double percentile) {
         this.percentile = percentile;
-        this.cutoff = Math.sqrt(2) * Erf.erfcInv(2.0*percentile/100.0);
+        // https://en.wikipedia.org/wiki/Normal_distribution#Quantile_function
+        this.zscore = Math.sqrt(2) * Erf.erfcInv(2.0*percentile/100.0);
         return this;
     }
 
     /**
-     * @param samplingRate Rate to sample elements to calculate MAD
+     * @param zscore Z-score above/below which data is classified as outlier
      * @return this
      */
-    public MultiMADClassifier setSamplingRate(int samplingRate) {
+    public MultiMADClassifier setZscore(double zscore) {
+        this.zscore = zscore;
+        return this;
+    }
+
+    /**
+     * @param samplingRate Rate to sample elements used to calculate median and MAD, must be
+     * greater than 0 and at most 1 (i.e., use all elements without sampling)
+     * @return this
+     */
+    public MultiMADClassifier setSamplingRate(double samplingRate) {
         this.samplingRate = samplingRate;
         return this;
     }
 
-    public String getOutputColumnName() {
-        return outputColumnName;
+    /**
+     * @param includeHigh Whether to count high points as outliers.
+     * @return this
+     */
+    public MultiMADClassifier setIncludeHigh(boolean includeHigh) {
+        this.includeHigh = includeHigh;
+        return this;
+    }
+    
+    /**
+     * @param includeLow Whether to count low points as outliers
+     * @return this
+     */
+    public MultiMADClassifier setIncludeLow(boolean includeLow) {
+        this.includeLow = includeLow;
+        return this;
     }
 
-    public List<Double> getMedians() {
-        return medians;
+    public MultiMADClassifier setColumnNames(String... columnNames) {
+        this.columnNames = new ArrayList<String>(Arrays.asList(columnNames));
+        return this;
     }
 
-    public List<Double> getMADs() {
-        return MADs;
+    /**
+     * @param outputColumnSuffix The output for column "a" would be in a column named
+     * "a" + outputColumnSuffix.
+     * @return this
+     */
+    public MultiMADClassifier setOutputColumnSuffix(String outputColumnSuffix) {
+        this.outputColumnSuffix = outputColumnSuffix;
+        return this;
     }
 
-    public List<Double> getUpperBounds() {
-        return upperBounds;
-    }
+    private final class Stats {
+        private final double median;
+        private final double mad;
 
-    public List<Double> getLowerBounds() {
-        return lowerBounds;
-    }
+        public Stats(double median, double mad) {
+            this.median = median;
+            this.mad = mad;
+        }
 
-    public long getTrainTime() {
-        return trainTime;
-    }
+        public double getMedian() {
+            return median;
+        }
 
-    public long getScoreTime() {
-        return scoreTime;
-    }
-
-    public long getOtherTime() {
-        return otherTime;
-    }
-
-    public long getSamplingTime() {
-        return samplingTime;
+        public double getMAD() {
+            return mad;
+        }
     }
 }
