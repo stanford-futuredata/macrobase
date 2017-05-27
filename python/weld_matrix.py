@@ -59,5 +59,4 @@ class WeldMatrix(object):
 		return v
 
 	def nothing(self):
-		v = self.weldobj.evaluate(WeldVec(WeldVec(WeldDouble())), verbose=False)
-		return v
+		return self.matrix
