@@ -58,6 +58,8 @@ def training():
 				data[method] = [[num_rows, time]]
 
 	for method in data:
+		if method == 'train_iqr_old':
+			continue
 		num_rows = [x[0] for x in data[method]]
 		time = [x[1] for x in data[method]]
 		plt.plot(num_rows, time, 'o-', label=method)
@@ -71,10 +73,35 @@ def training():
 	plt.close()
 
 
+def benchmark():
+	data = dict()
+	with open('benchmark.csv', 'r') as f:
+		for line in f:
+			method, num_cols, time = line.strip().split(', ')
+			if method in data:
+				data[method].append([num_cols, time])
+			else:
+				data[method] = [[num_cols, time]]
+
+	for method in data:
+		num_cols = [x[0] for x in data[method]]
+		time = [x[1] for x in data[method]]
+		plt.plot(num_cols, time, 'o-', label=method)
+	plt.legend()
+	plt.title('Classification times on 1M rows')
+	plt.xlabel('Num cols')
+	plt.ylabel('Classification time (ms)')
+	# plt.xscale('log')
+	# plt.yscale('log')
+	plt.savefig('benchmark.png', format = 'png')
+	plt.close()
+
+
 def main():
-    # sampling()
-    scoring()
+    sampling()
+    # scoring()
     # training()
+    # benchmark()
 
 
 if __name__ == "__main__":

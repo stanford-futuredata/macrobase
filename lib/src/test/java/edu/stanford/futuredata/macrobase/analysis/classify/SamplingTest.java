@@ -120,8 +120,9 @@ public class SamplingTest {
             range[j] = range[i];
             range[i] = temp;
         }
-        int[] sampleIndices = new int[sampleSize];
-        System.arraycopy(range, 0, sampleIndices, 0, sampleSize);
-        return sampleIndices;
+        return range;
+        // int[] sampleIndices = new int[sampleSize];
+        // System.arraycopy(range, 0, sampleIndices, 0, sampleSize);
+        // return sampleIndices;
     }
 }

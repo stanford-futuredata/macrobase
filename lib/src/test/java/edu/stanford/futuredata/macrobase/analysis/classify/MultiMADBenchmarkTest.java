@@ -8,15 +8,25 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.charset.Charset;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class MultiMADBenchmarkTest {
     private DataFrame df;
+    private DataFrame df_classified;
+    private String[] columnNames;
+    private String[] testColumnNames;
+    private List<String> lines;
 
     // @Test
     // public void testSampleBenchmark() throws Exception {
@@ -99,7 +109,7 @@ public class MultiMADBenchmarkTest {
     @Test
     public void testHepmassBenchmark() throws Exception {
         Map<String, Schema.ColType> schema = new HashMap<>();
-        String[] columnNames = new String[27];
+        columnNames = new String[27];
         for (int i = 0; i < 27; i++) {
             columnNames[i] = "f" + String.valueOf(i);
             schema.put(columnNames[i], Schema.ColType.DOUBLE);
@@ -109,29 +119,62 @@ public class MultiMADBenchmarkTest {
         ).setColumnTypes(schema);
         df = loader.load();
 
-        DataFrame df_classified;
+        lines = new ArrayList<String>();
 
+        int[] numColumns = {1, 5, 10, 20};
+
+        for (int num : numColumns) {
+            testColumnNames = new String[num];
+            System.arraycopy(columnNames, 0, testColumnNames, 0, num);
+
+            int numTrials = 100;
+
+            System.out.println("HEPMASS");
+
+            runPercentileClassifier(numTrials);
+
+            runMultiMADClassifier(numTrials, 1.0);
+            runMultiMADClassifier(numTrials, 0.1);
+            runMultiMADClassifier(numTrials, 0.01);
+        }
+
+        Path file = Paths.get("benchmark.csv");
+        Files.write(file, lines, Charset.forName("UTF-8"));
+    }
+
+    public void runPercentileClassifier(int numTrials) {
         long startTime = System.currentTimeMillis();
 
-        for (String columnName : columnNames) {
+        for (String columnName : testColumnNames) {
             PercentileClassifier pc = new PercentileClassifier(columnName)
                     .setPercentile(5);
-            pc.process(df);
-            df_classified = pc.getResults();
+            for (int i = 0; i < numTrials; i++) {
+                pc.process(df);
+                df_classified = pc.getResults();
+            }
         }
 
         long estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.format("HEPMASS with PercentileClassifier: %d ms\n", estimatedTime);
+        System.out.format("PercentileClassifier: %d ms\n", estimatedTime);
+        lines.add("percentile_classifier, " + String.valueOf(testColumnNames.length) +
+                ", " + String.valueOf(estimatedTime));
+    }
 
-        startTime = System.currentTimeMillis();
+    public void runMultiMADClassifier(int numTrials, double samplingRate) {
+        long startTime = System.currentTimeMillis();
 
-        MultiMADClassifier mad = new MultiMADClassifier(columnNames)
+        MultiMADClassifier mad = new MultiMADClassifier(testColumnNames)
                 .setPercentile(5)
-                .setSamplingRate(0.1);
-        mad.process(df);
-        df_classified = mad.getResults();
+                .setSamplingRate(samplingRate);
+        for (int i = 0; i < numTrials; i++) {
+            mad.process(df);
+            df_classified = mad.getResults();
+        }
 
-        estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.format("HEPMASS with MultiMADClassifier: %d ms\n", estimatedTime);
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        System.out.format("MultiMADClassifier, sampling rate %f: %d ms\n",
+            samplingRate, estimatedTime);
+        lines.add("multimad_" + String.valueOf(samplingRate) + ", " +
+            String.valueOf(testColumnNames.length) + ", " + String.valueOf(estimatedTime));
     }
 }

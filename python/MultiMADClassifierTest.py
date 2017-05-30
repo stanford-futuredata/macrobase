@@ -18,7 +18,7 @@ def test():
 
 	# use synthetic data
 	num_cols = 20
-	num_rows = 100000
+	num_rows = 1000000
 	input = np.random.rand(num_cols, num_rows)
 
 	# process
@@ -54,7 +54,8 @@ def test():
 	print "Total time elapsed: {}".format(end - start)
 
 	classification2 = mad.classification
-	print "Classifications agree: {}".format(sum(classification1[1] == classification2[1]))
+	print "Classifications agree: {} out of {}".format(
+		sum(classification1[1] == classification2[1]), num_rows)
 
 if __name__ == "__main__":
 	test()

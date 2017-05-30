@@ -1,0 +1,16 @@
+percentile_classifier, 1, 5306
+multimad_1.0, 1, 4715
+multimad_0.1, 1, 1419
+multimad_0.01, 1, 535
+percentile_classifier, 5, 14982
+multimad_1.0, 5, 22136
+multimad_0.1, 5, 4224
+multimad_0.01, 5, 1721
+percentile_classifier, 10, 28850
+multimad_1.0, 10, 43049
+multimad_0.1, 10, 8363
+multimad_0.01, 10, 3697
+percentile_classifier, 20, 58855
+multimad_1.0, 20, 92149
+multimad_0.1, 20, 23521
+multimad_0.01, 20, 12658
