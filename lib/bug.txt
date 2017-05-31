@@ -1,0 +1,1 @@
+{u'hardware_model': u'SM-G950F'}

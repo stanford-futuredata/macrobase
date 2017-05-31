@@ -22,10 +22,11 @@ import static org.junit.Assert.assertTrue;
 public class MultiMADOptimizationTest {
     private DataFrame df;
     private String[] columnNames;
+    private String attributeName = "A9";
     private static List<Double> trueMedians;
     private static List<Double> trueMADs;
     private static List<Integer> trueOutliers;
-    private int numTrials = 100;
+    private int numTrials = 1;
     private double percentOutliers = 0.0001;
     private long startTime = 0;
     private long estimatedTime = 0;
@@ -33,27 +34,28 @@ public class MultiMADOptimizationTest {
 
     @Before
     public void setUp() throws Exception {
-        Map<String, Schema.ColType> schema = new HashMap<>();
-        columnNames = new String[27];
-        for (int i = 0; i < 27; i++) {
-            columnNames[i] = "f" + String.valueOf(i);
-            schema.put(columnNames[i], Schema.ColType.DOUBLE);
-        }
-        DataFrameLoader loader = new CSVDataFrameLoader(
-                "src/test/resources/hepmass100k.csv"
-        ).setColumnTypes(schema);
-        df = loader.load();
-
         // Map<String, Schema.ColType> schema = new HashMap<>();
-        // columnNames = new String[10];
-        // for (int i = 0; i < 10; i++) {
-        //     columnNames[i] = "A" + String.valueOf(i);
+        // columnNames = new String[27];
+        // for (int i = 0; i < 27; i++) {
+        //     columnNames[i] = "f" + String.valueOf(i);
         //     schema.put(columnNames[i], Schema.ColType.DOUBLE);
         // }
         // DataFrameLoader loader = new CSVDataFrameLoader(
-        //         "src/test/resources/shuttle.csv"
+        //         "src/test/resources/hepmass100k.csv"
         // ).setColumnTypes(schema);
         // df = loader.load();
+
+        Map<String, Schema.ColType> schema = new HashMap<>();
+        columnNames = new String[9];
+        for (int i = 0; i < 9; i++) {
+            columnNames[i] = "A" + String.valueOf(i);
+            schema.put(columnNames[i], Schema.ColType.DOUBLE);
+        }
+        schema.put("A9", Schema.ColType.DOUBLE);
+        DataFrameLoader loader = new CSVDataFrameLoader(
+                "src/test/resources/shuttle.csv"
+        ).setColumnTypes(schema);
+        df = loader.load();
     }
 
     @Test
@@ -63,7 +65,7 @@ public class MultiMADOptimizationTest {
 
         startTime = System.currentTimeMillis();
 
-        mad = new MultiMADClassifierDebug(columnNames)
+        mad = new MultiMADClassifierDebug(attributeName, columnNames)
                 .setPercentile(percentOutliers);
         for (int i = 0; i < numTrials; i++) {
             mad.process(df);
@@ -85,20 +87,20 @@ public class MultiMADOptimizationTest {
         // trueMADs = mad.getMADs();
     }
 
-    @Test
-    public void testSamplingOptimization() throws Exception {
-        samplingRun(2);
-        samplingRun(10);
-        samplingRun(100);
-        // samplingRun(200);
-        // samplingRun(500);
-        // samplingRun(1000);
-    }
+    // @Test
+    // public void testSamplingOptimization() throws Exception {
+    //     // samplingRun(2);
+    //     samplingRun(10);
+    //     samplingRun(100);
+    //     // samplingRun(200);
+    //     // samplingRun(500);
+    //     // samplingRun(1000);
+    // }
 
     public void samplingRun(int samplingRate) {
         startTime = System.currentTimeMillis();
 
-        mad = new MultiMADClassifierDebug(columnNames)
+        mad = new MultiMADClassifierDebug(attributeName, columnNames)
                 .setPercentile(percentOutliers)
                 .setSamplingRate(samplingRate);
         for (int i = 0; i < numTrials; i++) {

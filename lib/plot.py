@@ -37,7 +37,8 @@ def scoring():
 		num_rows = [x[0] for x in data[method]]
 		time = [x[1] for x in data[method]]
 		plt.plot(num_rows, time, 'o-', label=method)
-	plt.legend(loc=4)
+	# plt.legend(loc=4)
+	plt.legend()
 	plt.title('Scoring times')
 	plt.xlabel('Num rows')
 	plt.ylabel('Scoring time (ms)')
@@ -97,11 +98,35 @@ def benchmark():
 	plt.close()
 
 
+def anova():
+	trials = []
+	multimad = []
+	with open('multimad.csv', 'r') as f:
+		for line in f:
+			data = line.strip().split(', ')
+			multimad.append(float(data[1])/1000)
+			trials.append(float(data[0]))
+	anova = []
+	with open('anova.csv', 'r') as f:
+		for line in f:
+			anova.append(line.strip().split(', ')[-1])
+	plt.plot(trials, multimad, 's-', label='multimad')
+	plt.plot(trials, anova, 'o-', label='anova')
+	plt.legend()
+	# plt.title('Classification times on 1M rows')
+	plt.xlabel('Num trials')
+	plt.ylabel('Time')
+	plt.xscale('log')
+	plt.yscale('log')
+	plt.savefig('anova.png', format = 'png')
+	plt.close()
+
 def main():
-    sampling()
+    # sampling()
     # scoring()
     # training()
     # benchmark()
+    anova()
 
 
 if __name__ == "__main__":

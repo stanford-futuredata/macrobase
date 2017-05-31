@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.stream.IntStream;
 
@@ -26,6 +27,7 @@ public class MultiMADClassifierDebug implements Transformer {
     private double cutoff = 2.576;
     private int samplingRate = 1;
     private List<String> columnNames;
+    private String attributeName;
     private String outputColumnName = "_OUTLIER";
     private List<Double> medians;
     private List<Double> MADs;
@@ -44,8 +46,9 @@ public class MultiMADClassifierDebug implements Transformer {
     // Calculated values
     private DataFrame output;
 
-    public MultiMADClassifierDebug(String... columnNames) {
+    public MultiMADClassifierDebug(String attributeName, String... columnNames) {
         this.columnNames = new ArrayList<String>(Arrays.asList(columnNames));
+        this.attributeName = attributeName;
         this.medians = new ArrayList<Double>();
         this.MADs = new ArrayList<Double>();
         this.upperBoundsMedian = new ArrayList<Double>();
@@ -72,6 +75,7 @@ public class MultiMADClassifierDebug implements Transformer {
         // double[][] metrics = new double[columnNames.size()][input.getNumRows()];
 
         MAD mad = new MAD();
+        double[] attributes = input.getDoubleColumnByName(attributeName);
 
         // for (String column : columnNames) {
         for (int i = 0; i < columnNames.size(); i++) {
@@ -102,6 +106,8 @@ public class MultiMADClassifierDebug implements Transformer {
             mad.train(trainingMetrics);
             medians.add(mad.getMedian());
             MADs.add(mad.getMAD());
+            double lowCutoff = mad.getMedian() - (cutoff * mad.getMAD());
+            double highCutoff = mad.getMedian() + (cutoff * mad.getMAD());
 
             trainTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
@@ -112,11 +118,31 @@ public class MultiMADClassifierDebug implements Transformer {
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
-            // Parallelized stream scoring:
-            double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
-            double[] outliers = IntStream.range(0, input.getNumRows()).parallel().mapToDouble(r -> Math.abs(metrics[r] - mad.median) / adjustedMAD > cutoff ? 1.0 : 0.0).toArray();
-            // System.out.format("Column %d has %d outliers\n", i, outliers.length);
-            output.addDoubleColumn(columnNames.get(i) + outputColumnName, outliers);
+            // // Parallelized stream scoring:
+            // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
+            // double[] outliers = IntStream.range(0, input.getNumRows()).parallel().mapToDouble(r -> Math.abs(metrics[r] - mad.median) / adjustedMAD > cutoff ? 1.0 : 0.0).toArray();
+            // // System.out.format("Column %d has %d outliers\n", i, outliers.length);
+            // output.addDoubleColumn(columnNames.get(i) + outputColumnName, outliers);
+
+
+            // // Multi-threaded scoring
+            // double[] results = new double[metrics.length];
+            // System.arraycopy(metrics, 0, results, 0, metrics.length);
+            // int blockSize = (results.length + procs - 1) / procs;
+            // Thread[] threads = new Thread[procs];
+            // for (int j = 0; j < procs; j++) {
+            //     int start = j * blockSize;
+            //     int end = Math.min(results.length, (j + 1) * blockSize);
+            //     threads[j] = new Thread(new Scorer(results, start, end, lowCutoff, highCutoff));
+            //     threads[j].start();
+            // }
+            // for (int j = 0; j < procs; j++) {
+            //     try {
+            //         threads[j].join();
+            //     } catch (InterruptedException e) {
+            //         System.exit(1);
+            //     }
+            // }
 
             // // Parallel lambdas scoring:
             // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
@@ -125,17 +151,36 @@ public class MultiMADClassifierDebug implements Transformer {
             // Arrays.parallelSetAll(results, m -> Math.abs(m - mad.median) / adjustedMAD > cutoff ? 1.0 : 0.0);
             // output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
 
-            // // Original Scoring:
-            // double[] results = new double[metrics.length];
-            // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
-            // for (int r = 0; r < input.getNumRows(); r++) {
-            //     double curVal = metrics[r];
-            //     double score = Math.abs(curVal - mad.median) / adjustedMAD;
-            //     results[r] = (score > cutoff) ? 1.0 : 0.0;
-            // }
-            // output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
+            // Original Scoring:
+            int numInliers = 0;
+            int numOutliers = 0;
+            HashMap<Double, List<MutableInt>> counts = new HashMap<Double, List<MutableInt>>();
+            double[] results = new double[metrics.length];
+            for (int r = 0; r < input.getNumRows(); r++) {
+                boolean isOutlier = (metrics[r] > highCutoff) || (metrics[r] < lowCutoff);
+                results[r] = isOutlier ? 1.0 : 0.0;
+                if (isOutlier) {
+                    numOutliers++;
+                } else {
+                    numInliers++;
+                }
+                if (counts.containsKey(attributes[r])) {
+                    counts.get(attributes[r]).get(isOutlier ? 0 : 1).increment();
+                } else {
+                    counts.put(attributes[r], isOutlier ?
+                        Arrays.asList(new MutableInt(1), new MutableInt(0)) :
+                        Arrays.asList(new MutableInt(0), new MutableInt(1)));
+                }
+            }
+            System.out.format("Inliers: %d, Outliers: %d\n", numInliers, numOutliers);
+            for (Double attr : counts.keySet()) {
+                List<MutableInt> numInOut = counts.get(attr);
+                System.out.format("Attribute: %.0f, inliers: %d, outliers: %d\n", attr,
+                    numInOut.get(1).get(), numInOut.get(0).get());
+            }
+            output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
 
-            // // Multithreading scoring:
+            // // Executer service scoring:
             // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
             // List<Future<double[]>> futures = new ArrayList<>();
             // int blockSize = (metrics.length + procs - 1) / procs;
@@ -377,5 +422,14 @@ public class MultiMADClassifierDebug implements Transformer {
             }
         }
         return outlierIndices;
+    }
+
+    private class MutableInt {
+        private int value;
+        public MutableInt(int value) {
+            this.value = value;
+        }
+        public void increment() { ++value;      }
+        public int  get()       { return value; }
     }
 }

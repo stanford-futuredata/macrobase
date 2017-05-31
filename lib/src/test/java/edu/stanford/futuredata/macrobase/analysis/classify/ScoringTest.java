@@ -1,6 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import org.junit.Test;
+import java.lang.Long;
+import java.lang.Thread;
 import java.util.Random;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,7 +28,7 @@ public class ScoringTest {
     private int numIterations = 100;
 
     private static final int procs = Runtime.getRuntime().availableProcessors();
-    private final ExecutorService executorService = Executors.newFixedThreadPool(procs);
+    private ExecutorService executorService = Executors.newFixedThreadPool(procs);
 
 	@Test
     public void testScoring() throws Exception {
@@ -45,6 +47,7 @@ public class ScoringTest {
             executor(metrics);
             parallelLambda(metrics);
             serial(metrics);
+            thread(metrics);
         }
 
     	for (int rowSize : rowSizes) {
@@ -53,7 +56,7 @@ public class ScoringTest {
             // } else {
             //     numIterations = 100;
             // }
-            numIterations = 1000000000 / rowSize;
+            numIterations = 2000000000 / rowSize;
 
             metrics = new double[rowSize];
             for (int i = 0 ; i < rowSize; i++) {
@@ -95,6 +98,15 @@ public class ScoringTest {
             System.out.format("Serial, %d: %d\n", rowSize, time);
             lines.add("serial, " + String.valueOf(rowSize) +
                 ", " + String.valueOf(time));
+
+            startTime = System.currentTimeMillis();
+            for (int i = 0; i < numIterations; i++) {
+                thread(metrics);
+            }
+            time = System.currentTimeMillis() - startTime;
+            System.out.format("Threads, %d: %d\n", rowSize, time);
+            lines.add("threads, " + String.valueOf(rowSize) +
+                ", " + String.valueOf(time));
     	}
 
     	Path file = Paths.get("scoring.csv");
@@ -123,23 +135,52 @@ public class ScoringTest {
     }
 
     public void executor(double[] metrics) {
-        List<Future<double[]>> futures = new ArrayList<>();
-        int blockSize = (metrics.length + procs - 1) / procs;
+        double[] results = new double[metrics.length];
+        // System.arraycopy(metrics, 0, results, 0, metrics.length);
+        // List<Future<double[]>> futures = new ArrayList<>();
+        executorService = Executors.newFixedThreadPool(procs);
+        int blockSize = (results.length + procs - 1) / procs;
         for(int j = 0; j < procs; j++) {
             int start = j * blockSize;
-            int end = Math.min(metrics.length, (j + 1) * blockSize);
-            futures.add(executorService.submit(new Scorer(Arrays.copyOfRange(metrics, start, end), lowCutoff, highCutoff)));
+            int end = Math.min(results.length, (j + 1) * blockSize);
+            executorService.submit(new Scorer(metrics, results, start, end, lowCutoff, highCutoff));
+            // futures.add(executorService.submit(new Scorer(Arrays.copyOfRange(metrics, start, end), lowCutoff, highCutoff)));
         }
+        executorService.shutdown();
+        try {
+          executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+          System.exit(1);
+        }
+        // double[] results = new double[metrics.length];
+        // int curr = 0;
+        // for(Future<double[]> future: futures) {
+        //     try {
+        //         double[] result = future.get();
+        //         for (int j = curr; j < curr + result.length; j++) {
+        //             results[j] = result[j - curr];
+        //         }
+        //         curr += result.length;
+        //     } catch(Exception e) {
+        //         System.exit(1);
+        //     }
+        // }
+    }
+
+    public void thread(double[] metrics) {
         double[] results = new double[metrics.length];
-        int curr = 0;
-        for(Future<double[]> future: futures) {
+        int blockSize = (results.length + procs - 1) / procs;
+        Thread[] threads = new Thread[procs];
+        for (int j = 0; j < procs; j++) {
+            int start = j * blockSize;
+            int end = Math.min(results.length, (j + 1) * blockSize);
+            threads[j] = new Thread(new Scorer(metrics, results, start, end, lowCutoff, highCutoff));
+            threads[j].start();
+        }
+        for (int j = 0; j < procs; j++) {
             try {
-                double[] result = future.get();
-                for (int j = curr; j < curr + result.length; j++) {
-                    results[j] = result[j - curr];
-                }
-                curr += result.length;
-            } catch(Exception e) {
+                threads[j].join();
+            } catch (InterruptedException e) {
                 System.exit(1);
             }
         }

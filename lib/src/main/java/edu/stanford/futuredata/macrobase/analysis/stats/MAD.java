@@ -51,6 +51,8 @@ public class MAD {
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
             assert (MAD != 0);
         }
+
+        MAD *= MAD_TO_ZSCORE_COEFFICIENT;
     }
 
     // Note: metrics is modified
@@ -74,6 +76,8 @@ public class MAD {
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
             assert (MAD != 0);
         }
+
+        MAD *= MAD_TO_ZSCORE_COEFFICIENT;
     }
     
     // public void train(double[] metrics) {
@@ -122,6 +126,8 @@ public class MAD {
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
             assert (MAD != 0);
         }
+
+        MAD *= MAD_TO_ZSCORE_COEFFICIENT;
     }
 
     public void train_iqr_par(double[] metrics) {
@@ -154,6 +160,8 @@ public class MAD {
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
             assert (MAD != 0);
         }
+
+        MAD *= MAD_TO_ZSCORE_COEFFICIENT;
     }
 
     public double score(double point) {

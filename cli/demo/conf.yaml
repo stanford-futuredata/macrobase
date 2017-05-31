@@ -1,14 +1,15 @@
 pipeline: "BatchPipeline"
 
-inputFile: "demo/sample.csv"
+#inputFile: "demo/sample.csv"
 
-metric: "usage"
+inputFile: "../lib/src/test/resources/league_matches.csv"
+
+metric: "gameDuration"
 percentile: 1.0
 includeLo: true
 includeHi: true
 
 attributes:
-  - "location"
-  - "version"
-minSupport: 0.1
-minRiskRatio: 2.0
+    - "championId@100/BOTTOM/DUO_CARRY"
+minSupport: 0.002
+minRiskRatio: 1.0
