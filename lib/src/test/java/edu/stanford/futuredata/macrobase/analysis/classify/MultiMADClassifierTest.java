@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -66,7 +67,9 @@ public class MultiMADClassifierTest {
     @Test
     public void testConfigure() throws Exception {
         mad = new MultiMADClassifier("notcolumn");
+        mad = new MultiMADClassifier(Arrays.asList("notcolumn1", "notcolumn2"));
         mad.setColumnNames("a1", "a2")
+                .setColumnNames(Arrays.asList("a1", "a2"))
                 .setIncludeHigh(false)
                 .setIncludeLow(true)
                 .setOutputColumnSuffix("_OUT")

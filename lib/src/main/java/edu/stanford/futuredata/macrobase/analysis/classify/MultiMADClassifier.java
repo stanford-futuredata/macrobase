@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
+import edu.stanford.futuredata.macrobase.analysis.sample.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.Transformer;
 
@@ -26,16 +27,22 @@ public class MultiMADClassifier implements Transformer {
     private boolean includeHigh = true;
     private boolean includeLow = true;
     private double samplingRate = 1;
+    private Sampler sampler = null;
+    private boolean useReservoirSampling = false;
     private List<String> columnNames;
     private String outputColumnSuffix = "_OUTLIER";
     private boolean useParallel = false;
-    private boolean useReservoirSampling = false;
+    
     private final double trimmedMeanFallback = 0.05;
     // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
     private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
 
     // Calculated values
     private DataFrame output;
+
+    public MultiMADClassifier(List<String> columnNames) {
+        this.columnNames = columnNames;
+    }
 
     public MultiMADClassifier(String... columnNames) {
         this.columnNames = new ArrayList<String>(Arrays.asList(columnNames));
@@ -45,25 +52,14 @@ public class MultiMADClassifier implements Transformer {
     public void process(DataFrame input) {
         output = input.copy();
 
-        int sampleSize = (int)(input.getNumRows() * samplingRate);
-        int[] sampleIndices = new int[sampleSize];
         if (samplingRate != 1) {
-            sampleIndices = getRandomSample(input.getNumRows());
+            sampler.computeSampleIndices(input.getNumRows(), samplingRate);
         }
 
         for (String columnName : columnNames) {
             double[] metrics = input.getDoubleColumnByName(columnName);
 
-            double[] trainingMetrics = new double[sampleSize];
-            if (samplingRate == 1) {
-                System.arraycopy(metrics, 0, trainingMetrics, 0, metrics.length);
-            } else {
-                for (int j = 0; j < sampleIndices.length; j++) {
-                    trainingMetrics[j] = metrics[sampleIndices[j]];
-                }
-            }
-
-            Stats stats = train(trainingMetrics);
+            Stats stats = train(metrics);
             double lowCutoff = stats.median - (zscore * stats.mad);
             double highCutoff = stats.median + (zscore * stats.mad);
 
@@ -87,60 +83,37 @@ public class MultiMADClassifier implements Transformer {
         }
     }
 
-    private int[] getRandomSample(int numRows) {
-        int sampleSize = (int)(numRows * samplingRate);
-        int[] sampleIndices = new int[sampleSize];
-
-        if (useReservoirSampling) {
-            // Reservoir Sampling:
-            for (int i = 0; i < sampleSize; i++) {
-                sampleIndices[i] = i;
-            }
-            Random rand = new Random();
-            for (int i = sampleSize; i < numRows; i++) {
-                int j = rand.nextInt(i+1);
-                if (j < sampleSize) {
-                    sampleIndices[j] = i;
-                }
-            }
-            boolean[] mask = new boolean[numRows];
-            for (int i = 0; i < sampleSize; i++) {
-                mask[sampleIndices[i]] = true;
-            }
-        } else {
-            // partial Fisher-Yates shuffle
-            int[] range = new int[numRows];
-            for (int i = 0; i < numRows; i++) {
-                range[i] = i;
-            }
-            Random rand = new Random();
-            for (int i = 0; i < sampleSize; i++) {
-                int j = rand.nextInt(numRows - i) + i;
-                int temp = range[j];
-                range[j] = range[i];
-                range[i] = temp;
-            }
-            System.arraycopy(range, 0, sampleIndices, 0, sampleSize);
-        }
-
-        return sampleIndices;
-    }
-
     private Stats train(double[] metrics) {
-        double median = new Percentile().evaluate(metrics, 50);
+        Percentile percentile = new Percentile();
 
-        for (int i = 0; i < metrics.length; i++) {
-            metrics[i] = Math.abs(metrics[i] - median);
+        double[] trainingMetrics;  // used to compute the median
+        if (samplingRate == 1) {
+            trainingMetrics = metrics;
+        } else {
+            trainingMetrics = sampler.getSample(metrics);
         }
 
-        double MAD = new Percentile().evaluate(metrics, 50);
+        double median = percentile.evaluate(trainingMetrics, 50);
 
+        double[] residuals;  // used to compute the MAD
+        if (samplingRate == 1) {
+            residuals = new double[trainingMetrics.length];
+        } else {
+            residuals = trainingMetrics;
+        }
+        for (int i = 0; i < trainingMetrics.length; i++) {
+            residuals[i] = Math.abs(trainingMetrics[i] - median);
+        }
+
+        double MAD = percentile.evaluate(residuals, 50);
+
+        // If MAD is 0, we use the average of residuals
         if (MAD == 0) {
-            Arrays.sort(metrics);
-            int lowerTrimmedMeanIndex = (int) (metrics.length * trimmedMeanFallback);
-            int upperTrimmedMeanIndex = (int) (metrics.length * (1 - trimmedMeanFallback));
+            Arrays.sort(residuals);
+            int lowerTrimmedMeanIndex = (int) (residuals.length * trimmedMeanFallback);
+            int upperTrimmedMeanIndex = (int) (residuals.length * (1 - trimmedMeanFallback));
             double sum = 0;
-            for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
+            for (int i = residuals.length/2; i < upperTrimmedMeanIndex; ++i) {
                 sum += metrics[i];
             }
             MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
@@ -221,6 +194,13 @@ public class MultiMADClassifier implements Transformer {
      */
     public MultiMADClassifier setSamplingRate(double samplingRate) {
         this.samplingRate = samplingRate;
+        if (samplingRate != 1 && this.sampler == null) {
+            if (useReservoirSampling) {
+                this.sampler = new ReservoirSampler();
+            } else {
+                this.sampler = new FisherYatesSampler();
+            }
+        }
         return this;
     }
 
@@ -261,11 +241,23 @@ public class MultiMADClassifier implements Transformer {
      */
     public MultiMADClassifier setUseReservoirSampling(boolean useReservoirSampling) {
         this.useReservoirSampling = useReservoirSampling;
+        if (sampler != null) {
+            if (useReservoirSampling && !sampler.getSamplingMethod().equals("reservoir")) {
+                sampler = new ReservoirSampler();
+            } else if (!useReservoirSampling && sampler.getSamplingMethod().equals("reservoir")) {
+                sampler = new FisherYatesSampler();
+            }
+        }
         return this;
     }
 
     public MultiMADClassifier setColumnNames(String... columnNames) {
         this.columnNames = new ArrayList<String>(Arrays.asList(columnNames));
+        return this;
+    }
+
+    public MultiMADClassifier setColumnNames(List<String> columnNames) {
+        this.columnNames = columnNames;
         return this;
     }
 
@@ -279,7 +271,7 @@ public class MultiMADClassifier implements Transformer {
         return this;
     }
 
-    private final class Stats {
+    public final class Stats {
         private final double median;
         private final double mad;
 
