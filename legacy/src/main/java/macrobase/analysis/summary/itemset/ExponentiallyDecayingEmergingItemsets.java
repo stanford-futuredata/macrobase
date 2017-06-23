@@ -105,7 +105,7 @@ public class ExponentiallyDecayingEmergingItemsets {
             if (inlierCount != null &&
                 RiskRatio.compute(inlierCount, outlierCount.getValue(),
                                   inlierCountSummary.getTotalCount(),
-                                  outlierCountSummary.getTotalCount()) < minRatio) {
+                                  outlierCountSummary.getTotalCount()).getRiskRatio() < minRatio) {
                 continue;
             }
 
@@ -165,7 +165,7 @@ public class ExponentiallyDecayingEmergingItemsets {
             double ratio = RiskRatio.compute(inlierCounts.get(outlierCount.getKey()),
                                       outlierCount.getValue(),
                                       inlierCountSummary.getTotalCount(),
-                                      outlierCountSummary.getTotalCount());
+                                      outlierCountSummary.getTotalCount()).getCorrectedRiskRatio();
 
             if (ratio > minRatio) {
                 ret.add(new ItemsetResult(outlierCount.getValue() / outlierCountSummary.getTotalCount(),
@@ -224,7 +224,7 @@ public class ExponentiallyDecayingEmergingItemsets {
             double ratio = RiskRatio.compute(ic.getCount(),
                                              oc.getCount(),
                                              inlierCountSummary.getTotalCount(),
-                                             outlierCountSummary.getTotalCount());
+                                             outlierCountSummary.getTotalCount()).getCorrectedRiskRatio();
 
             if (ratio >= minRatio) {
                 ret.add(new ItemsetResult(oc.getCount() / outlierCountSummary.getTotalCount(),

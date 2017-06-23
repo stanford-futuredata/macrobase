@@ -52,7 +52,7 @@ public class FPGrowthEmerging {
             double ratio = RiskRatio.compute(attrInlierCount,
                                           attrOutlierCountEntry.getValue(),
                                           inliers.size(),
-                                          outliers.size());
+                                          outliers.size()).getCorrectedRiskRatio();
 
             if (ratio > minRatio) {
                 ret.add(new ItemsetResult(attrOutlierCountEntry.getValue() / outliers.size(),
@@ -96,7 +96,7 @@ public class FPGrowthEmerging {
                     double outlierInlierRatio = RiskRatio.compute(inlierCount,
                                                                   outlierCount,
                                                                   inliers.size(),
-                                                                  outliers.size());
+                                                                  outliers.size()).getRiskRatio();
 
                     if (outlierInlierRatio > minRatio) {
                         if (txn == null) {
@@ -153,7 +153,7 @@ public class FPGrowthEmerging {
                 double ratio = RiskRatio.compute(inlierCount,
                                           i.getCount(),
                                           inliers.size(),
-                                          outliers.size());
+                                          outliers.size()).getCorrectedRiskRatio();
 
                 ret.add(new ItemsetResult(i.getCount() / (double) outliers.size(),
                                           i.getCount(),
@@ -184,7 +184,7 @@ public class FPGrowthEmerging {
             double ratio = RiskRatio.compute(ic.getCount(),
                                              oc.getCount(),
                                              inliers.size(),
-                                             outliers.size());
+                                             outliers.size()).getCorrectedRiskRatio();
 
             if (ratio >= minRatio) {
                 ret.add(new ItemsetResult(oc.getCount() / (double) outliers.size(),
