@@ -24,7 +24,7 @@ public abstract class DataIngester implements MBProducer<Datum> {
         metrics = conf.getStringList(MacroBaseConf.METRICS);
     }
 
-    //Meant to be overwritten. Hack for CSV plot/explore fix
+    //Meant to be overridden. Hack for CSV plot/explore fix
     public RowSet getRows(String baseQuery,
                           Map<String, String> preds,
                           int limit,

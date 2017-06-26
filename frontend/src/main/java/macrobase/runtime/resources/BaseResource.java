@@ -4,15 +4,12 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.ingest.DataIngester;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 abstract public class BaseResource {
-    private static final Logger log = LoggerFactory.getLogger(BaseResource.class);
     protected final MacroBaseConf conf;
     protected String configuredIngester;
 

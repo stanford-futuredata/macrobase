@@ -316,13 +316,13 @@ myApp.controller('analyzeController', ['$scope', '$http', '$window', 'configServ
     var analyzing = false
 
     $scope.revealItemset = function(idx) {
-    var x = document.getElementById('itemset_'+idx);
-    if (x.classList.contains('itemsetHidden')) {
-        x.classList.remove('itemsetHidden');
-    }
-    else {
-        x.classList.add('itemsetHidden');
-    }
+        var x = document.getElementById('itemset_'+idx);
+        if (x.classList.contains('itemsetHidden')) {
+            x.classList.remove('itemsetHidden');
+        }
+        else {
+            x.classList.add('itemsetHidden');
+        }
     }
 
     $scope.setSev = function(riskRatio){

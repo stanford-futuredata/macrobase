@@ -105,7 +105,7 @@ public class ExponentiallyDecayingEmergingItemsets {
             if (inlierCount != null &&
                 RiskRatio.compute(inlierCount, outlierCount.getValue(),
                                   inlierCountSummary.getTotalCount(),
-                                  outlierCountSummary.getTotalCount()).getRiskRatio() < minRatio) {
+                                  outlierCountSummary.getTotalCount()).get() < minRatio) {
                 continue;
             }
 

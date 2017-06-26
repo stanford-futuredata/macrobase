@@ -96,7 +96,7 @@ public class FPGrowthEmerging {
                     double outlierInlierRatio = RiskRatio.compute(inlierCount,
                                                                   outlierCount,
                                                                   inliers.size(),
-                                                                  outliers.size()).getRiskRatio();
+                                                                  outliers.size()).get();
 
                     if (outlierInlierRatio > minRatio) {
                         if (txn == null) {

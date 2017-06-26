@@ -13,9 +13,9 @@ public class RiskRatioResult {
         this.rr = rr;
     }
 
-    public double getRiskRatio() { return rr; }
+    public double get() { return rr; }
 
-    public double getCorrection() { return correction; }
+    public double getCorrected() { return correction; }
 
     public double getCorrectedRiskRatio() { return rr - correction; }
 }

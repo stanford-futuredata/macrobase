@@ -9,13 +9,6 @@
 <link rel="stylesheet" href="css/bootstrap-theme.min.css">
 <link rel="stylesheet" href="css/mb-frontend.css">
 
-<!--<style>
-    .active-schema {
-    background-color: #97e17a !important;
-    background-image: none !important;
-    }
-</style>-->
-
 <head>
     <title>MacroBase Console</title>
 </head>
@@ -81,7 +74,6 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <!-- <p style="margin-top: 5px; margin-bottom:-5px">Connected to {{pg_url}} database!</p> -->
 
                             </div>
                         </div>
@@ -193,12 +185,12 @@
 
                                 <div id="plotArea" ng-hide="hidePlot"></div>
                             </div>
-                        <!--<div style="padding-left: 15px;">
+                        <div style="padding-left: 15px;">
                             Sort order:
                             <button ng-click="sortAnalysis('support')">support</button>
                             <button ng-click="sortAnalysis('ratioToInliers')">ratio</button>
                             <button ng-click="sortAnalysis('itemSize')">number of attributes</button>
-                        </div>-->
+                        </div>
                         <br>
 
                         <div class="panel panel-default" ng-repeat="i in itemsets">
@@ -218,10 +210,10 @@
                                                 <td style="width:50%"><b>Ratio Out/In: </b></td>
                                                 <td style="width:50%">{{i.ratioToInliers}}</td>
                                             </tr>
-                                           <!-- <tr style="width:100%">
+                                            <tr style="width:100%">
                                                 <td style="width:50%"><b>Support: </b></td>
                                                 <td style="width:50%"> {{i.support}}</td>
-                                            </tr> -->
+                                            </tr>
                                             <tr>
                                                 <td style="width:50%"><b>Records: </b></td>
                                                 <td style="width:50%"> {{i.numRecords}}</td>
