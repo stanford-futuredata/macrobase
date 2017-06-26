@@ -1,8 +1,8 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
 import edu.stanford.futuredata.macrobase.conf.Config;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -54,7 +54,7 @@ public class BatchPipeline implements Pipeline {
         df = classifier.getResults();
         System.out.println("Outlier Cutoff is: "+classifier.getHighCutoff());
 
-        BatchSummarizer summarizer = new BatchSummarizer()
+        ItemsetBatchSummarizer summarizer = new ItemsetBatchSummarizer()
                 .setOutlierColumn(classifier.getOutputColumnName())
                 .setAttributes(attributes)
                 .setMinSupport(minSupport)

@@ -1,7 +1,7 @@
 package edu.stanford.futuredata.macrobase;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
@@ -86,7 +86,7 @@ public class SupervisedEventTest {
         }
 
         public Explanation predictBatch(DataFrame batch) throws Exception {
-            BatchSummarizer summ = new BatchSummarizer();
+            ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer();
             summ.setAttributes(attributes);
             summ.process(batch);
 

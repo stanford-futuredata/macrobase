@@ -1,8 +1,8 @@
 package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
@@ -50,7 +50,7 @@ public class UnsupervisedCSVTest {
                 "location",
                 "version"
         );
-        BatchSummarizer summ = new BatchSummarizer()
+        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer()
                 .setAttributes(explanationAttributes);
         summ.process(df_classified);
         Explanation results = summ.getResults();
@@ -69,7 +69,7 @@ public class UnsupervisedCSVTest {
                 "version"
         );
         // Increase risk ratio
-        BatchSummarizer summ = new BatchSummarizer()
+        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer()
                 .setAttributes(explanationAttributes)
                 .setMinRiskRatio(5.0);
         summ.process(df_classified);
@@ -77,7 +77,7 @@ public class UnsupervisedCSVTest {
         assertEquals(1, results.getItemsets().size());
 
         // Increase support requirement
-        summ = new BatchSummarizer()
+        summ = new ItemsetBatchSummarizer()
                 .setAttributes(explanationAttributes)
                 .setMinSupport(0.55);
         summ.process(df_classified);
@@ -85,7 +85,7 @@ public class UnsupervisedCSVTest {
         assertEquals(2, results.getItemsets().size());
 
         // Restrict to only simple explanations
-        summ = new BatchSummarizer()
+        summ = new ItemsetBatchSummarizer()
                 .setAttributes(explanationAttributes)
                 .setUseAttributeCombinations(false);
         summ.process(df_classified);
@@ -93,7 +93,7 @@ public class UnsupervisedCSVTest {
         assertEquals(2, results.getItemsets().size());
 
         // Invert outlier classes
-        summ = new BatchSummarizer()
+        summ = new ItemsetBatchSummarizer()
                 .setAttributes(explanationAttributes)
                 .setOutlierPredicate(d -> d == 0.0);
         summ.process(df_classified);
@@ -115,7 +115,7 @@ public class UnsupervisedCSVTest {
                 "location",
                 "version"
         );
-        BatchSummarizer summ = new BatchSummarizer()
+        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer()
                 .setAttributes(explanationAttributes)
                 .setUseAttributeCombinations(false);
         summ.process(df_classified);

@@ -1,39 +1,25 @@
 package edu.stanford.futuredata.macrobase.analysis.summary;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.FPGrowthEmerging;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.operator.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.DoublePredicate;
 
 /**
- * Given a batch of rows with an outlier class column, explain the outliers using
- * string attribute columns. Each batch is considered as an independent unit.
+ * Created by egan on 6/26/17.
  */
-public class BatchSummarizer implements Operator<DataFrame, Explanation> {
+public abstract class BatchSummarizer implements Operator<DataFrame, Explanation> {
     // Parameters
-    private String outlierColumn = "_OUTLIER";
-    private double minOutlierSupport = 0.1;
-    private double minRiskRatio = 3;
-    private boolean useAttributeCombinations = true;
-    private List<String> attributes = new ArrayList<>();
-    private DoublePredicate predicate = d -> d != 0.0;
-
-    // Output
-    private Explanation explanation = null;
+    protected String outlierColumn = "_OUTLIER";
+    protected double minOutlierSupport = 0.1;
+    protected double minRiskRatio = 3;
+    protected List<String> attributes = new ArrayList<>();
+    protected DoublePredicate predicate = d -> d != 0.0;
     // Encoder
-    private AttributeEncoder encoder = new AttributeEncoder();
-    private List<Set<Integer>> inlierItemsets, outlierItemsets;
-    private FPGrowthEmerging fpg = new FPGrowthEmerging();
-
-    public BatchSummarizer() { }
+    protected AttributeEncoder encoder = new AttributeEncoder();
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -64,6 +50,7 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
         this.predicate = predicate;
         return this;
     }
+
     public BatchSummarizer setAttributes(List<String> attributes) {
         this.attributes = attributes;
         this.encoder.setColumnNames(attributes);
@@ -78,56 +65,5 @@ public class BatchSummarizer implements Operator<DataFrame, Explanation> {
     public BatchSummarizer setOutlierColumn(String outlierColumn) {
         this.outlierColumn = outlierColumn;
         return this;
-    }
-
-    /**
-     * Whether or not to use combinations of attributes in explanation, or only
-     * use simple single attribute explanations
-     * @param useAttributeCombinations flag
-     * @return this
-     */
-    public BatchSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
-        this.useAttributeCombinations = useAttributeCombinations;
-        fpg.setCombinationsEnabled(useAttributeCombinations);
-        return this;
-    }
-
-    @Override
-    public void process(DataFrame df) {
-        // Filter inliers and outliers
-        DataFrame outlierDF = df.filter(outlierColumn, predicate);
-        DataFrame inlierDF = df.filter(outlierColumn, predicate.negate());
-
-        // Encode inlier and outlier attribute columns
-        if (attributes.isEmpty()) {
-            encoder.setColumnNames(df.getSchema().getColumnNamesByType(Schema.ColType.STRING));
-            inlierItemsets = encoder.encodeAttributes(inlierDF.getStringCols());
-            outlierItemsets = encoder.encodeAttributes(outlierDF.getStringCols());
-        } else {
-            encoder.setColumnNames(attributes);
-            inlierItemsets = encoder.encodeAttributes(inlierDF.getStringColsByName(attributes));
-            outlierItemsets = encoder.encodeAttributes(outlierDF.getStringColsByName(attributes));
-        }
-
-        long startTime = System.currentTimeMillis();
-        List<ItemsetResult> itemsetResults = fpg.getEmergingItemsetsWithMinSupport(
-            inlierItemsets,
-            outlierItemsets,
-            minOutlierSupport,
-            minRiskRatio);
-        // Decode results
-        List<AttributeSet> attributeSets = new ArrayList<>();
-        itemsetResults.forEach(i -> attributeSets.add(new AttributeSet(i, encoder)));
-        long elapsed = System.currentTimeMillis() - startTime;
-
-        explanation = new Explanation(attributeSets,
-                inlierItemsets.size(),
-                outlierItemsets.size(),
-                elapsed);
-    }
-
-    @Override
-    public Explanation getResults() {
-        return explanation;
     }
 }
