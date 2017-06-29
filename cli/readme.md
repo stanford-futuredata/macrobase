@@ -10,6 +10,12 @@ hooked together with possible pre/post processing.
 To run a simple pipeline with a percentile classifier
 & itemset mining explanation:
 
-`
+```
+cd ../lib
+mvn install
+
+cd ../cli
+mvn package
+
 ./bin/simple.sh demo/conf.yaml
-`
+```

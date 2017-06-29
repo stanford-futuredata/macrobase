@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.FPGrowthEmerging;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
@@ -15,6 +16,8 @@ import java.util.Set;
  * string attribute columns. Each batch is considered as an independent unit.
  */
 public class ItemsetBatchSummarizer extends BatchSummarizer {
+    // Encoder
+    protected AttributeEncoder encoder = new AttributeEncoder();
     private boolean useAttributeCombinations = true;
 
     // Output

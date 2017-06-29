@@ -50,8 +50,8 @@ public class UnsupervisedCSVTest {
                 "location",
                 "version"
         );
-        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer()
-                .setAttributes(explanationAttributes);
+        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer();
+        summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
         Explanation results = summ.getResults();
         assertEquals(3, results.getItemsets().size());
@@ -69,33 +69,33 @@ public class UnsupervisedCSVTest {
                 "version"
         );
         // Increase risk ratio
-        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer()
-                .setAttributes(explanationAttributes)
-                .setMinRiskRatio(5.0);
+        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer();
+        summ.setAttributes(explanationAttributes);
+        summ.setMinRiskRatio(5.0);
         summ.process(df_classified);
         Explanation results = summ.getResults();
         assertEquals(1, results.getItemsets().size());
 
         // Increase support requirement
-        summ = new ItemsetBatchSummarizer()
-                .setAttributes(explanationAttributes)
-                .setMinSupport(0.55);
+        summ = new ItemsetBatchSummarizer();
+        summ.setAttributes(explanationAttributes);
+        summ.setMinSupport(0.55);
         summ.process(df_classified);
         results = summ.getResults();
         assertEquals(2, results.getItemsets().size());
 
         // Restrict to only simple explanations
-        summ = new ItemsetBatchSummarizer()
-                .setAttributes(explanationAttributes)
-                .setUseAttributeCombinations(false);
+        summ = new ItemsetBatchSummarizer();
+        summ.setAttributes(explanationAttributes);
+        summ.setUseAttributeCombinations(false);
         summ.process(df_classified);
         results = summ.getResults();
         assertEquals(2, results.getItemsets().size());
 
         // Invert outlier classes
-        summ = new ItemsetBatchSummarizer()
-                .setAttributes(explanationAttributes)
-                .setOutlierPredicate(d -> d == 0.0);
+        summ = new ItemsetBatchSummarizer();
+        summ.setAttributes(explanationAttributes);
+        summ.setOutlierPredicate(d -> d == 0.0);
         summ.process(df_classified);
         results = summ.getResults();
         assertEquals(1000, results.getNumOutliers());
@@ -115,9 +115,9 @@ public class UnsupervisedCSVTest {
                 "location",
                 "version"
         );
-        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer()
-                .setAttributes(explanationAttributes)
-                .setUseAttributeCombinations(false);
+        ItemsetBatchSummarizer summ = new ItemsetBatchSummarizer();
+        summ.setAttributes(explanationAttributes);
+        summ.setUseAttributeCombinations(false);
         summ.process(df_classified);
         Explanation results = summ.getResults();
         assertEquals(2, results.getItemsets().size());

@@ -67,4 +67,8 @@ public class AttributeEncoder {
         return encodedAttributes;
     }
 
+    public int getNextKey() {
+        return nextKey;
+    }
+
 }

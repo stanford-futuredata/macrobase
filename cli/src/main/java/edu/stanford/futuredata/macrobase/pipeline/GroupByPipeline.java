@@ -3,14 +3,18 @@ package edu.stanford.futuredata.macrobase.pipeline;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.groupby.GroupBySummarizer;
 import edu.stanford.futuredata.macrobase.conf.Config;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
 
-import java.util.*;
+import java.security.acl.Group;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class BatchPipeline implements Pipeline {
+public class GroupByPipeline implements Pipeline {
     private String inputFile;
 
     private String metric;
@@ -23,7 +27,7 @@ public class BatchPipeline implements Pipeline {
     private double minRiskRatio;
 
 
-    public BatchPipeline(Config conf) {
+    public GroupByPipeline(Config conf) {
         inputFile = conf.getAs("inputFile");
 
         metric = conf.getAs("metric");
@@ -54,15 +58,11 @@ public class BatchPipeline implements Pipeline {
         df = classifier.getResults();
         System.out.println("Outlier Cutoff is: "+classifier.getHighCutoff());
 
-        ItemsetBatchSummarizer summarizer = new ItemsetBatchSummarizer();
+        GroupBySummarizer summarizer = new GroupBySummarizer();
         summarizer.setOutlierColumn(classifier.getOutputColumnName());
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);
-        summarizer.setUseAttributeCombinations(true);
         summarizer.setMinRiskRatio(minRiskRatio);
         summarizer.process(df);
-        Explanation output = summarizer.getResults();
-
-        System.out.println(output.prettyPrint());
     }
 }

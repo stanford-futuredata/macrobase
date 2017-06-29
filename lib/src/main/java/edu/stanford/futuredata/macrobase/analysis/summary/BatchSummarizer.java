@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoublePredicate;
 
-/**
- * Created by egan on 6/26/17.
- */
 public abstract class BatchSummarizer implements Operator<DataFrame, Explanation> {
     // Parameters
     protected String outlierColumn = "_OUTLIER";
@@ -18,8 +15,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     protected double minRiskRatio = 3;
     protected List<String> attributes = new ArrayList<>();
     protected DoublePredicate predicate = d -> d != 0.0;
-    // Encoder
-    protected AttributeEncoder encoder = new AttributeEncoder();
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -53,7 +48,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
 
     public BatchSummarizer setAttributes(List<String> attributes) {
         this.attributes = attributes;
-        this.encoder.setColumnNames(attributes);
         return this;
     }
 

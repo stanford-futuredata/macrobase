@@ -12,6 +12,8 @@ public class PipelineMapper {
         switch (pipelineName) {
             case "BatchPipeline":
                 return new BatchPipeline(conf);
+            case "GroupByPipeline":
+                return new GroupByPipeline(conf);
             default:
                 throw new MacrobaseException("Bad Pipeline Name");
         }
