@@ -30,10 +30,14 @@ public class GroupBySummarizer extends BatchSummarizer {
 
         AttributeEncoder encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
+        long startTime = System.currentTimeMillis();
         List<Set<Integer>> encoded = encoder.encodeAttributes(input.getStringColsByName(attributes));
+        long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Encoded in: "+elapsed);
 
         System.out.println("Encoded into "+encoder.getNextKey()+" categories");
 
+        startTime = System.currentTimeMillis();
         int numSingles = encoder.getNextKey();
         int[] singleCounts = new int[numSingles];
         int[] singleOCounts = new int[numSingles];
@@ -48,8 +52,9 @@ public class GroupBySummarizer extends BatchSummarizer {
                 }
             }
         }
+        elapsed = System.currentTimeMillis() - startTime;
 
-        System.out.println("Counted Singles");
+        System.out.println("Counted Singles in: "+elapsed);
 
         int suppCount = (int) (minOutlierSupport * n);
         System.out.println("Min Support of: "+suppCount);
@@ -82,6 +87,7 @@ public class GroupBySummarizer extends BatchSummarizer {
         }
 
         // Pairs
+        startTime = System.currentTimeMillis();
         HashMap<Set<Integer>, Integer> oCounts = new HashMap<>();
         HashMap<Set<Integer>, Integer> counts = new HashMap<>();
         for (int i = 0; i < n; i++) {
@@ -117,6 +123,8 @@ public class GroupBySummarizer extends BatchSummarizer {
                 }
             }
         }
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Counted pairs in: "+elapsed);
 
         Set<Set<Integer>> psaved = new HashSet<>();
         Set<Set<Integer>> ppruned = new HashSet<>();

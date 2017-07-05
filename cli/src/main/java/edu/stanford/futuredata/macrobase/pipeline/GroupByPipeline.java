@@ -46,7 +46,10 @@ public class GroupByPipeline implements Pipeline {
         colTypes.put(metric, Schema.ColType.DOUBLE);
         CSVDataFrameLoader loader = new CSVDataFrameLoader(inputFile);
         loader.setColumnTypes(colTypes);
+        long startTime = System.currentTimeMillis();
         DataFrame df = loader.load();
+        long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Loaded Data in: "+elapsed);
         System.out.println(df.getNumRows());
         System.out.println(attributes);
 
