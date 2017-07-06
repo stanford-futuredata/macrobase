@@ -2,10 +2,8 @@ package edu.stanford.futuredata.macrobase.analysis.summary.groupby;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder2;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import javafx.util.Pair;
 
 import java.util.*;
 
