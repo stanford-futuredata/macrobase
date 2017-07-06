@@ -49,7 +49,7 @@ public class GroupBySummarizer extends BatchSummarizer {
         System.out.println("Outliers: "+numOutliers);
         baseRate = numOutliers*1.0/n;
         System.out.println("Base Rate of: "+baseRate);
-        suppCount = (int) (minOutlierSupport * n);
+        suppCount = (int) (minOutlierSupport * numOutliers);
         System.out.println("Min Support of: "+suppCount);
         System.out.println("Min RR of: "+minRiskRatio);
 
