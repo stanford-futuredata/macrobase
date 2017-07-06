@@ -12,10 +12,10 @@ To run a simple pipeline with a percentile classifier
 
 ```
 cd ../lib
-mvn install
+mvn clean; mvn install
 
 cd ../cli
-mvn package
+mvn clean; mvn package
 
 ./bin/simple.sh demo/conf.yaml
 ```
