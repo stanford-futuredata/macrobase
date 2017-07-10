@@ -54,6 +54,7 @@ public class BatchPipeline implements Pipeline {
         df = classifier.getResults();
         System.out.println("Outlier Cutoff is: "+classifier.getHighCutoff());
 
+        long startTime = System.currentTimeMillis();
         ItemsetBatchSummarizer summarizer = new ItemsetBatchSummarizer();
         summarizer.setOutlierColumn(classifier.getOutputColumnName());
         summarizer.setAttributes(attributes);
@@ -61,6 +62,8 @@ public class BatchPipeline implements Pipeline {
         summarizer.setUseAttributeCombinations(true);
         summarizer.setMinRiskRatio(minRiskRatio);
         summarizer.process(df);
+        long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Summarization took: "+elapsed);
         Explanation output = summarizer.getResults();
 
         System.out.println(output.prettyPrint());
