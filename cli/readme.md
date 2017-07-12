@@ -19,3 +19,5 @@ mvn clean; mvn package
 
 ./bin/simple.sh demo/conf.yaml
 ```
+
+Logging settings are stored in `config/logback.xml`

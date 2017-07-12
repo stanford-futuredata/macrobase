@@ -3,7 +3,7 @@ package edu.stanford.futuredata.macrobase.integration;
 import edu.stanford.futuredata.macrobase.StreamingSummarizationTest;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.IncrementalSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.WindowedOperator;
@@ -43,7 +43,7 @@ public class StreamingSummarizationBenchmark {
         windowedSummarizer.setSlideLength(slideSize);
         windowedSummarizer.initialize();
 
-        ItemsetBatchSummarizer bsumm = new ItemsetBatchSummarizer();
+        FPGrowthSummarizer bsumm = new FPGrowthSummarizer();
         bsumm.setAttributes(attributes);
         bsumm.setOutlierColumn("outlier");
         bsumm.setMinSupport(.3);

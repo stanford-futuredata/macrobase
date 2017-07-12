@@ -1,9 +1,13 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.groupby;
+package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Small sets of integers. Fast to construct and compare equality, but does not
+ * support checking for membership.
+ */
 public class IntSet {
     public int[] values;
 
@@ -44,7 +48,7 @@ public class IntSet {
     }
 
     public Set<Integer> getSet() {
-        HashSet<Integer> curSet = new HashSet<Integer>(values.length);
+        HashSet<Integer> curSet = new HashSet<>(values.length);
         for (int v : values) {
             curSet.add(v);
         }
@@ -64,5 +68,12 @@ public class IntSet {
     @Override
     public int hashCode() {
         return Arrays.hashCode(values);
+    }
+
+    @Override
+    public String toString() {
+        return "IntSet{" +
+                "values=" + Arrays.toString(values) +
+                '}';
     }
 }

@@ -2,6 +2,8 @@ pipeline: "BatchPipeline"
 
 inputFile: "demo/sample.csv"
 
+summarizer: "apriori"
+
 metric: "usage"
 percentile: 1.0
 includeLo: true
@@ -10,5 +12,5 @@ includeHi: true
 attributes:
   - "location"
   - "version"
-minSupport: 0.1
-minRiskRatio: 2.0
+minSupport: 0.2
+minRiskRatio: 10.0

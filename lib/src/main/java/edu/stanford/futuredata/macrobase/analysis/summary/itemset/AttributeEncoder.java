@@ -29,7 +29,7 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
 
-    public List<Set<Integer>> encodeAttributes(List<String[]> columns) {
+    public List<int[]> encodeAttributes(List<String[]> columns) {
         if (columns.isEmpty()) {
             return new ArrayList<>();
         }
@@ -43,9 +43,9 @@ public class AttributeEncoder {
             }
         }
 
-        ArrayList<Set<Integer>> encodedAttributes = new ArrayList<>(numRows);
+        ArrayList<int[]> encodedAttributes = new ArrayList<>(numRows);
         for (int i = 0; i < numRows; i++) {
-            encodedAttributes.add(new HashSet<>());
+            encodedAttributes.add(new int[d]);
         }
 
         for (int colIdx = 0; colIdx < d; colIdx++) {
@@ -60,11 +60,24 @@ public class AttributeEncoder {
                     nextKey++;
                 }
                 int curKey = curColEncoder.get(colVal);
-                encodedAttributes.get(rowIdx).add(curKey);
+                encodedAttributes.get(rowIdx)[colIdx] = curKey;
             }
         }
 
         return encodedAttributes;
+    }
+
+    public List<Set<Integer>> encodeAttributesAsSets(List<String[]> columns) {
+        List<int[]> arrays = encodeAttributes(columns);
+        ArrayList<Set<Integer>> sets = new ArrayList<>(arrays.size());
+        for (int[] row : arrays) {
+            HashSet<Integer> curSet = new HashSet<>(row.length);
+            for (int i : row) {
+                curSet.add(i);
+            }
+            sets.add(curSet);
+        }
+        return sets;
     }
 
     public int getNextKey() {

@@ -1,15 +1,12 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.groupby.GroupBySummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.conf.Config;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
 
-import java.security.acl.Group;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +58,7 @@ public class GroupByPipeline implements Pipeline {
         df = classifier.getResults();
         System.out.println("Outlier Cutoff is: "+classifier.getHighCutoff());
 
-        GroupBySummarizer summarizer = new GroupBySummarizer();
+        APrioriSummarizer summarizer = new APrioriSummarizer();
         summarizer.setOutlierColumn(classifier.getOutputColumnName());
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);

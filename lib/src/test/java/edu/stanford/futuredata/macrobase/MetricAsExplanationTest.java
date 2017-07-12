@@ -2,7 +2,7 @@ package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.ItemsetBatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.analysis.transform.MetricBucketTransformer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -73,7 +73,7 @@ public class MetricAsExplanationTest {
         // Need to retrieve the new names of the transformed columns
         List<String> bucketExplanationColumns = t.getTransformedColumnNames();
 
-        ItemsetBatchSummarizer bs = new ItemsetBatchSummarizer();
+        FPGrowthSummarizer bs = new FPGrowthSummarizer();
         bs.setOutlierColumn(c.getOutputColumnName());
         bs.setUseAttributeCombinations(true);
         bs.setAttributes(bucketExplanationColumns);

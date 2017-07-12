@@ -1,17 +1,24 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.groupby;
+package edu.stanford.futuredata.macrobase.analysis.summary;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder2;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-public class GroupBySummarizer extends BatchSummarizer {
-    private int n, d;
+public class APrioriSummarizer extends BatchSummarizer {
+    Logger log = LoggerFactory.getLogger("APriori");
 
-    private double baseRate;
-    private int suppCount;
+    int n, d;
+    AttributeEncoder encoder;
+
+    int numOutliers;
+    double baseRate;
+    int suppCount;
 
     int numSingles;
 
@@ -23,7 +30,9 @@ public class GroupBySummarizer extends BatchSummarizer {
     HashMap<Integer, int[]> setCounts;
     HashMap<Integer, int[]> setOCounts;
 
-    public GroupBySummarizer() {
+    long[] timings = new long[4];
+
+    public APrioriSummarizer() {
         setIdxMapping = new HashMap<>();
         setSaved = new HashMap<>();
         setNext = new HashMap<>();
@@ -39,22 +48,22 @@ public class GroupBySummarizer extends BatchSummarizer {
         // Marking Outliers
         boolean[] flag = new boolean[n];
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
-        int numOutliers = 0;
+        numOutliers = 0;
         for (int i = 0; i < n; i++) {
             flag[i] = predicate.test(outlierCol[i]);
             if (flag[i]) {
                 numOutliers++;
             }
         }
-        System.out.println("Outliers: "+numOutliers);
         baseRate = numOutliers*1.0/n;
-        System.out.println("Base Rate of: "+baseRate);
         suppCount = (int) (minOutlierSupport * numOutliers);
-        System.out.println("Min Support of: "+suppCount);
-        System.out.println("Min RR of: "+minRiskRatio);
+        log.info("Outliers: {}", numOutliers);
+        log.info("Outlier Rate of: {}", baseRate);
+        log.info("Min Support Count: {}", suppCount);
+        log.info("Min Risk Ratio: {}", minRiskRatio);
 
         // Encoding
-        AttributeEncoder2 encoder = new AttributeEncoder2();
+        encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
         List<int[]> encoded = encoder.encodeAttributes(
@@ -62,8 +71,8 @@ public class GroupBySummarizer extends BatchSummarizer {
         );
         long elapsed = System.currentTimeMillis() - startTime;
         numSingles = encoder.getNextKey();
-        System.out.println("Encoded in: "+elapsed);
-        System.out.println("Encoded into "+encoder.getNextKey()+" categories");
+        log.debug("Encoded in: {}", elapsed);
+        log.debug("Encoded Categories: {}", encoder.getNextKey());
 
         countSingles(
                 encoded,
@@ -83,27 +92,13 @@ public class GroupBySummarizer extends BatchSummarizer {
         );
 
         for (int o = 1; o <= 3; o++) {
-            HashSet<IntSet> curResults = setSaved.get(o);
-            HashMap<IntSet, Integer> idxMapping = setIdxMapping.get(o);
-            int[] oCounts = setOCounts.get(o);
-            int[] counts = setCounts.get(o);
-            for (IntSet vs : curResults) {
-                System.out.println("======");
-                for (int v : vs.getSet()) {
-                    System.out.println(encoder.decodeColumnName(v) + "=" + encoder.decodeValue(v));
-                }
-                int idx = idxMapping.get(vs);
-                int oCount = oCounts[idx];
-                int count = counts[idx];
-                System.out.println("Matched Outliers / Matched Total: "+oCount+"/"+count);
-                double lift = (oCount*1.0/count) / baseRate;
-                System.out.println("Risk Ratio (Lift) of: "+lift);
-            }
+            log.info("Order {} Explanations: {}", o, setSaved.get(o).size());
         }
+
     }
 
     private void countSet(List<int[]> encoded, boolean[] flag, int order) {
-        System.out.println("Counting Order: "+order);
+        log.debug("Processing Order {}", order);
         long startTime = System.currentTimeMillis();
         HashMap<IntSet, Integer> setMapping = new HashMap<>();
         int maxSetIdx = 0;
@@ -166,7 +161,8 @@ public class GroupBySummarizer extends BatchSummarizer {
             }
         }
         long elapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Counted order "+order+" in: "+elapsed);
+        timings[order] = elapsed;
+        log.debug("Counted order {} in: {}", order, elapsed);
 
         HashSet<IntSet> saved = new HashSet<>();
         int numPruned = 0;
@@ -187,9 +183,9 @@ public class GroupBySummarizer extends BatchSummarizer {
             }
         }
 
-        System.out.println("Saved: "+saved.size());
-        System.out.println("Pruned: "+numPruned);
-        System.out.println("Next: "+next.size());
+        log.debug("Itemsets Saved: {}", saved.size());
+        log.debug("Itemsets Pruned: {}", numPruned);
+        log.debug("Itemsets Next: {}", next.size());
 
         setIdxMapping.put(order, setMapping);
         setSaved.put(order, saved);
@@ -215,7 +211,8 @@ public class GroupBySummarizer extends BatchSummarizer {
             }
         }
         long elapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Counted Singles in: "+elapsed);
+        timings[1] = elapsed;
+        log.debug("Counted Singles in: {}", elapsed);
 
         HashSet<Integer> singleSaved = new HashSet<>();
         singleNext = new HashSet<>();
@@ -232,9 +229,9 @@ public class GroupBySummarizer extends BatchSummarizer {
                 }
             }
         }
-        System.out.println("Saved: "+singleSaved.size());
-        System.out.println("Pruned: "+numPruned);
-        System.out.println("Next: "+singleNext.size());
+        log.debug("Itemsets Saved: {}", singleSaved.size());
+        log.debug("Itemsets Pruned: {}", numPruned);
+        log.debug("Itemsets Next: {}", singleNext.size());
 
         HashMap<IntSet, Integer> curIdxMapping = new HashMap<>(numSingles);
         HashSet<IntSet> curSaved = new HashSet<>(singleSaved.size());
@@ -258,6 +255,34 @@ public class GroupBySummarizer extends BatchSummarizer {
 
     @Override
     public Explanation getResults() {
-        return null;
+        List<AttributeSet> results = new ArrayList<>();
+        for (int o = 1; o <= 3; o++) {
+            HashSet<IntSet> curResults = setSaved.get(o);
+            HashMap<IntSet, Integer> idxMapping = setIdxMapping.get(o);
+            int[] oCounts = setOCounts.get(o);
+            int[] counts = setCounts.get(o);
+            for (IntSet vs : curResults) {
+                int idx = idxMapping.get(vs);
+                int oCount = oCounts[idx];
+                int count = counts[idx];
+                double lift = (oCount*1.0/count) / baseRate;
+                double support = oCount*1.0 / numOutliers;
+                ItemsetResult iResult = new ItemsetResult(
+                        support,
+                        count,
+                        lift,
+                        vs.getSet()
+                );
+                AttributeSet aSet = new AttributeSet(iResult, encoder);
+                results.add(aSet);
+            }
+        }
+        Explanation finalExplanation = new Explanation(
+                results,
+                n - numOutliers,
+                numOutliers,
+                timings[1]+timings[2]+timings[3]
+        );
+        return finalExplanation;
     }
 }

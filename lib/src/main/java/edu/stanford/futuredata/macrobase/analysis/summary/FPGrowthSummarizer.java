@@ -15,7 +15,7 @@ import java.util.Set;
  * Given a batch of rows with an outlier class column, explain the outliers using
  * string attribute columns. Each batch is considered as an independent unit.
  */
-public class ItemsetBatchSummarizer extends BatchSummarizer {
+public class FPGrowthSummarizer extends BatchSummarizer {
     // Encoder
     protected AttributeEncoder encoder = new AttributeEncoder();
     private boolean useAttributeCombinations = true;
@@ -25,7 +25,7 @@ public class ItemsetBatchSummarizer extends BatchSummarizer {
     private List<Set<Integer>> inlierItemsets, outlierItemsets;
     private FPGrowthEmerging fpg = new FPGrowthEmerging();
 
-    public ItemsetBatchSummarizer() { }
+    public FPGrowthSummarizer() { }
 
     /**
      * Whether or not to use combinations of attributes in explanation, or only
@@ -33,7 +33,7 @@ public class ItemsetBatchSummarizer extends BatchSummarizer {
      * @param useAttributeCombinations flag
      * @return this
      */
-    public ItemsetBatchSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
+    public FPGrowthSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
         this.useAttributeCombinations = useAttributeCombinations;
         fpg.setCombinationsEnabled(useAttributeCombinations);
         return this;
@@ -48,12 +48,12 @@ public class ItemsetBatchSummarizer extends BatchSummarizer {
         // Encode inlier and outlier attribute columns
         if (attributes.isEmpty()) {
             encoder.setColumnNames(df.getSchema().getColumnNamesByType(Schema.ColType.STRING));
-            inlierItemsets = encoder.encodeAttributes(inlierDF.getStringCols());
-            outlierItemsets = encoder.encodeAttributes(outlierDF.getStringCols());
+            inlierItemsets = encoder.encodeAttributesAsSets(inlierDF.getStringCols());
+            outlierItemsets = encoder.encodeAttributesAsSets(outlierDF.getStringCols());
         } else {
             encoder.setColumnNames(attributes);
-            inlierItemsets = encoder.encodeAttributes(inlierDF.getStringColsByName(attributes));
-            outlierItemsets = encoder.encodeAttributes(outlierDF.getStringColsByName(attributes));
+            inlierItemsets = encoder.encodeAttributesAsSets(inlierDF.getStringColsByName(attributes));
+            outlierItemsets = encoder.encodeAttributesAsSets(outlierDF.getStringColsByName(attributes));
         }
 
         long startTime = System.currentTimeMillis();
