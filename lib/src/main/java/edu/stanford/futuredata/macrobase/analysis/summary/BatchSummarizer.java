@@ -8,6 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoublePredicate;
 
+/**
+ * Takes a dataframe with binary classification and searches for explanations
+ * (subgroup discovery / contrast set mining / feature selection)
+ * that capture differences between the two groups.
+ */
 public abstract class BatchSummarizer implements Operator<DataFrame, Explanation> {
     // Parameters
     protected String outlierColumn = "_OUTLIER";

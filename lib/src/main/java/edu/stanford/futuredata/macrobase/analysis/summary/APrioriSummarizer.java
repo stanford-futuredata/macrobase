@@ -10,6 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * Simple, direct itemset mining with pruning that is limited to low-order
+ * interactions.
+ */
 public class APrioriSummarizer extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APriori");
 

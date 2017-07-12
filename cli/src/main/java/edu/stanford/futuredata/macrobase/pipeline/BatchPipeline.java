@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * Simplest default pipeline: load, classify, and then explain
+ */
 public class BatchPipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger("BatchPipeline");
     private String inputFile;
