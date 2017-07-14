@@ -1,0 +1,14 @@
+pipeline: "BatchPipeline"
+
+inputFile: "demo/sample.csv"
+
+metric: "usage"
+percentile: 1.0
+includeLo: true
+includeHi: true
+
+attributes:
+  - "location"
+  - "version"
+minSupport: 0.1
+minRiskRatio: 2.0

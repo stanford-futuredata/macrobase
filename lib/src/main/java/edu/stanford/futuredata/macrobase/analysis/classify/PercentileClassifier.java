@@ -9,13 +9,11 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
  * Returns a new dataframe with a column representation the classification status for
  * each row: 1.0 if outlier, 0.0 otherwise.
  */
-public class PercentileClassifier implements Transformer {
+public class PercentileClassifier extends Classifier {
     // Parameters
     private double percentile = 0.5;
     private boolean includeHigh = true;
     private boolean includeLow = true;
-    private String columnName;
-    private String outputColumnName = "_OUTLIER";
 
     // Calculated values
     private double lowCutoff;
@@ -23,7 +21,7 @@ public class PercentileClassifier implements Transformer {
     private DataFrame output;
 
     public PercentileClassifier(String columnName) {
-        this.columnName = columnName;
+        super(columnName);
     }
 
     @Override
@@ -86,25 +84,6 @@ public class PercentileClassifier implements Transformer {
      */
     public PercentileClassifier setIncludeLow(boolean includeLow) {
         this.includeLow = includeLow;
-        return this;
-    }
-    public String getColumnName() {
-        return columnName;
-    }
-    public PercentileClassifier setColumnName(String columnName) {
-        this.columnName = columnName;
-        return this;
-    }
-    public String getOutputColumnName() {
-        return outputColumnName;
-    }
-
-    /**
-     * @param outputColumnName Which column to write the classification results.
-     * @return this
-     */
-    public PercentileClassifier setOutputColumnName(String outputColumnName) {
-        this.outputColumnName = outputColumnName;
         return this;
     }
 

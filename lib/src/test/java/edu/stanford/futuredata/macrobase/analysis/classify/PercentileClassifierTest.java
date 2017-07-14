@@ -44,11 +44,11 @@ public class PercentileClassifierTest {
     @Test
     public void testConfigure() throws Exception {
         PercentileClassifier pc = new PercentileClassifier("notcolumn");
-        pc.setColumnName("val")
-                .setIncludeHigh(false)
-                .setIncludeLow(true)
-                .setOutputColumnName("_OUT")
-                .setPercentile(10);
+        pc.setColumnName("val");
+        pc.setIncludeHigh(false);
+        pc.setIncludeLow(true);
+        pc.setOutputColumnName("_OUT");
+        pc.setPercentile(10);
 
         pc.process(df);
         DataFrame output = pc.getResults();
