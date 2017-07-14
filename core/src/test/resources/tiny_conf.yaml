@@ -1,0 +1,16 @@
+pipeline: "BasicBatchPipeline"
+
+inputURI: "csv://src/test/resources/tiny.csv"
+
+classifier: "percentile"
+metric: "usage"
+cutoff: 1.0
+includeHi: true
+includeLo: true
+
+summarizer: "apriori"
+attributes:
+  - "location"
+  - "version"
+minRiskRatio: 10.0
+minSupport: 0.2

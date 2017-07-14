@@ -20,4 +20,14 @@ public class IntSetTest {
         assertTrue(s1.toString().length() > 0);
     }
 
+    @Test
+    public void testContains() {
+        IntSet s1 = new IntSet(1,2);
+        assertTrue(s1.contains(1));
+        assertTrue(s1.contains(2));
+        IntSet s2 = new IntSet(1,2,3);
+        assertTrue(s2.contains(s1));
+        IntSet s3 = new IntSet(1,4);
+        assertFalse(s3.contains(s1));
+    }
 }

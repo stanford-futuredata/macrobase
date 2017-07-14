@@ -40,9 +40,9 @@
       <module>assembly</module>
       <module>legacy</module>
       <module>frontend</module>
-      <module>contrib</module>
+      <!-- <module>contrib</module> -->
       <module>lib</module>
-      <module>cli</module>
+      <module>core</module>
     </modules>
 
   <dependencies>

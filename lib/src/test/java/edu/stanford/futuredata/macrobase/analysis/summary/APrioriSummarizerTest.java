@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.IntSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -93,5 +94,20 @@ public class APrioriSummarizerTest {
         values.addAll(firstResult.values());
         assertTrue(values.contains("CAN"));
         assertTrue(values.contains("v3"));
+    }
+
+    public void testGenCandidates() {
+        HashSet<Integer> singleCandidates = new HashSet<>();
+        for (int i = 1; i <= 4; i++) {
+            singleCandidates.add(i);
+        }
+        HashSet<IntSet> o2Candidates = new HashSet<IntSet>();
+        o2Candidates.add(new IntSet(1, 2));
+        o2Candidates.add(new IntSet(2, 3));
+        o2Candidates.add(new IntSet(1, 3));
+        o2Candidates.add(new IntSet(3, 4));
+        HashSet<IntSet> o3Candidates = APrioriSummarizer.getOrder3Candidates(o2Candidates, singleCandidates);
+        assertEquals(1, o3Candidates.size());
+        assertEquals(new IntSet(1,2,3), o3Candidates.iterator().next());
     }
 }

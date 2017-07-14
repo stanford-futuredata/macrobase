@@ -29,10 +29,12 @@ public class APrioriSummarizer extends BatchSummarizer {
 
     int numSingles;
 
-    Set<Integer> singleNext;
+    HashSet<Integer> singleNext;
 
     HashMap<Integer, HashMap<IntSet, Integer>> setIdxMapping;
+    // sets that have high risk ratio and no longer need to be explored
     HashMap<Integer, HashSet<IntSet>> setSaved;
+    // sets that has high enough support but not high risk ratio, need to be explored
     HashMap<Integer, HashSet<IntSet>> setNext;
     HashMap<Integer, int[]> setCounts;
     HashMap<Integer, int[]> setOCounts;
@@ -115,9 +117,42 @@ public class APrioriSummarizer extends BatchSummarizer {
 
     }
 
+    public static HashSet<IntSet> getOrder3Candidates(
+            HashSet<IntSet> o2Candidates,
+            HashSet<Integer> singleCandidates
+            ) {
+        HashSet<IntSet> candidates = new HashSet<>(o2Candidates.size() * singleCandidates.size() / 2);
+        for (IntSet pCandidate : o2Candidates) {
+            for (int sCandidate : singleCandidates) {
+                if (!pCandidate.contains(sCandidate)) {
+                    IntSet nCandidate = new IntSet(pCandidate.values[0], pCandidate.values[1], sCandidate);
+                    candidates.add(nCandidate);
+                }
+            }
+        }
+
+        HashSet<IntSet> finalCandidates = new HashSet<>(candidates.size());
+        IntSet subPair;
+        for (IntSet curCandidate : candidates) {
+            subPair = new IntSet(curCandidate.values[0], curCandidate.values[1]);
+            if (o2Candidates.contains(subPair)) {
+                subPair = new IntSet(curCandidate.values[1], curCandidate.values[2]);
+                if (o2Candidates.contains(subPair)) {
+                    subPair = new IntSet(curCandidate.values[0], curCandidate.values[2]);
+                    if (o2Candidates.contains(subPair)) {
+                        finalCandidates.add(curCandidate);
+                    }
+                }
+            }
+        }
+
+        return finalCandidates;
+    }
+
     private void countSet(List<int[]> encoded, double[] countCol, double[] outlierCol, int order) {
         log.debug("Processing Order {}", order);
         long startTime = System.currentTimeMillis();
+        // Map each integer set under consideration an index so we can count using arrays
         HashMap<IntSet, Integer> setMapping = new HashMap<>();
         int maxSetIdx = 0;
         int maxSets = 0;
@@ -128,6 +163,11 @@ public class APrioriSummarizer extends BatchSummarizer {
         }
         int[] oCounts = new int[maxSets];
         int[] counts = new int[maxSets];
+        HashSet<IntSet> candidates = new HashSet<>();
+        if (order == 3) {
+            // candidate triplets are built from 3 pairs all of which are unpruned / unsaved
+            candidates = getOrder3Candidates(setNext.get(2), singleNext);
+        }
 
         boolean hasCountCol = countCol != null;
         for (int i = 0; i < numRows; i++) {
@@ -159,7 +199,10 @@ public class APrioriSummarizer extends BatchSummarizer {
                         if (pairNext.contains(pair1)) {
                             for (int p3 = p2 + 1; p3 < l; p3++) {
                                 int p3v = toExamine.get(p3);
-                                setsToAdd.add(new IntSet(p1v, p2v, p3v));
+                                IntSet curSet = new IntSet(p1v, p2v, p3v);
+                                if (candidates.contains(curSet)) {
+                                    setsToAdd.add(curSet);
+                                }
                             }
                         }
                     }
@@ -297,6 +340,7 @@ public class APrioriSummarizer extends BatchSummarizer {
                 numOutliers,
                 timings[1]+timings[2]+timings[3]
         );
+        finalExplanation.sortBySupport();
         return finalExplanation;
     }
 
