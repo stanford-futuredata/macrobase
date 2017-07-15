@@ -124,12 +124,12 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         // Encode inlier and outlier attribute columns
         if (attributes.isEmpty()) {
             encoder.setColumnNames(df.getSchema().getColumnNamesByType(Schema.ColType.STRING));
-            inlierItemsets = encoder.encodeAttributes(inlierDF.getStringCols());
-            outlierItemsets = encoder.encodeAttributes(outlierDF.getStringCols());
+            inlierItemsets = encoder.encodeAttributesAsSets(inlierDF.getStringCols());
+            outlierItemsets = encoder.encodeAttributesAsSets(outlierDF.getStringCols());
         } else {
             encoder.setColumnNames(attributes);
-            inlierItemsets = encoder.encodeAttributes(inlierDF.getStringColsByName(attributes));
-            outlierItemsets = encoder.encodeAttributes(outlierDF.getStringColsByName(attributes));
+            inlierItemsets = encoder.encodeAttributesAsSets(inlierDF.getStringColsByName(attributes));
+            outlierItemsets = encoder.encodeAttributesAsSets(outlierDF.getStringColsByName(attributes));
         }
     }
 

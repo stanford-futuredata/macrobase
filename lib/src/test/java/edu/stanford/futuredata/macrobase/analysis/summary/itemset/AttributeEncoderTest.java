@@ -33,7 +33,7 @@ public class AttributeEncoderTest {
             columns.add(curCol);
         }
 
-        List<Set<Integer>> results = e.encodeAttributes(columns);
+        List<Set<Integer>> results = e.encodeAttributesAsSets(columns);
         assertEquals(results.size(), columns.get(0).length);
 
         Set<Integer> totalItems = new HashSet<>();

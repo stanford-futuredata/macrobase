@@ -42,7 +42,7 @@
       <module>frontend</module>
       <module>contrib</module>
       <module>lib</module>
-        <module>cli</module>
+      <module>cli</module>
     </modules>
 
   <dependencies>

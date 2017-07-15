@@ -1,17 +1,27 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.conf.Config;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * Simplest default pipeline: load, classify, and then explain
+ */
 public class BatchPipeline implements Pipeline {
+    Logger log = LoggerFactory.getLogger("BatchPipeline");
     private String inputFile;
+
+    private String summarizerType;
 
     private String metric;
     private double percentile;
@@ -25,6 +35,8 @@ public class BatchPipeline implements Pipeline {
 
     public BatchPipeline(Config conf) {
         inputFile = conf.getAs("inputFile");
+
+        summarizerType = conf.getAs("summarizer");
 
         metric = conf.getAs("metric");
         percentile = conf.getAs("percentile");
@@ -42,9 +54,12 @@ public class BatchPipeline implements Pipeline {
         colTypes.put(metric, Schema.ColType.DOUBLE);
         CSVDataFrameLoader loader = new CSVDataFrameLoader(inputFile);
         loader.setColumnTypes(colTypes);
+        long startTime = System.currentTimeMillis();
         DataFrame df = loader.load();
-        System.out.println(df.getNumRows());
-        System.out.println(attributes);
+        long elapsed = System.currentTimeMillis() - startTime;
+        log.info("Loading time: {}", elapsed);
+        log.info("{} rows", df.getNumRows());
+        log.info("Attributes: {}", attributes);
 
         PercentileClassifier classifier = new PercentileClassifier(metric);
         classifier.setPercentile(percentile);
@@ -52,17 +67,42 @@ public class BatchPipeline implements Pipeline {
         classifier.setIncludeLow(includeLo);
         classifier.process(df);
         df = classifier.getResults();
-        System.out.println("Outlier Cutoff is: "+classifier.getHighCutoff());
+        log.info("Outlier cutoffs: {} {}",
+                classifier.getLowCutoff(),
+                classifier.getHighCutoff()
+        );
 
-        BatchSummarizer summarizer = new BatchSummarizer()
-                .setOutlierColumn(classifier.getOutputColumnName())
-                .setAttributes(attributes)
-                .setMinSupport(minSupport)
-                .setUseAttributeCombinations(true)
-                .setMinRiskRatio(minRiskRatio);
+        BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
+        startTime = System.currentTimeMillis();
         summarizer.process(df);
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Summarization time: {}", elapsed);
         Explanation output = summarizer.getResults();
 
         System.out.println(output.prettyPrint());
+    }
+
+    private BatchSummarizer getSummarizer(String outlierColumn) {
+        switch (summarizerType) {
+            case "fpgrowth": {
+                FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
+                summarizer.setOutlierColumn(outlierColumn);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setUseAttributeCombinations(true);
+                summarizer.setMinRiskRatio(minRiskRatio);
+                return summarizer;
+            }
+            case "apriori": {
+                APrioriSummarizer summarizer = new APrioriSummarizer();
+                summarizer.setOutlierColumn(outlierColumn);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRiskRatio(minRiskRatio);
+                return summarizer;
+            }
+            default:
+                return null;
+        }
     }
 }
