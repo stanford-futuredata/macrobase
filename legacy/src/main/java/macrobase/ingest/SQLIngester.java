@@ -50,7 +50,7 @@ public abstract class SQLIngester extends DataIngester {
 
     private final MBStream<Datum> output = new MBStream<>();
     private boolean connected = false;
-    
+
     private static final String LIMIT_REGEX = "(LIMIT\\s\\d+)";
 
     public SQLIngester(MacroBaseConf conf) throws ConfigurationException, SQLException {
@@ -75,7 +75,7 @@ public abstract class SQLIngester extends DataIngester {
     public void connect() throws ConfigurationException, SQLException {
         initializeResultSet();
 
-        while(!resultSet.isLast()) {
+        while(resultSet.next()) {
             output.add(getNext());
         }
     }
@@ -216,7 +216,6 @@ public abstract class SQLIngester extends DataIngester {
     }
 
     private Datum getNext() throws SQLException {
-        resultSet.next();
         List<Integer> attrList = getAttrs(resultSet, conf.getEncoder(), 1);
         RealVector metricVec = getMetrics(resultSet, attrList.size() + 1);
 
