@@ -5,8 +5,10 @@ import macrobase.conf.ConfigurationException;
 import macrobase.conf.MacroBaseConf;
 import macrobase.conf.MacroBaseDefaults;
 import macrobase.datamodel.Datum;
+import macrobase.ingest.result.RowSet;
 
 import java.util.List;
+import java.util.Map;
 
 public abstract class DataIngester implements MBProducer<Datum> {
     protected final List<String> attributes;
@@ -21,4 +23,13 @@ public abstract class DataIngester implements MBProducer<Datum> {
         attributes = conf.getStringList(MacroBaseConf.ATTRIBUTES);
         metrics = conf.getStringList(MacroBaseConf.METRICS);
     }
+
+    //Meant to be overridden. Hack for CSV plot/explore fix
+    public RowSet getRows(String baseQuery,
+                          Map<String, String> preds,
+                          int limit,
+                          int offset) throws Exception {
+        return new RowSet();
+    }
+
 }

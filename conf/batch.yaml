@@ -9,7 +9,7 @@ macrobase.analysis.transformType: MAD_OR_MCD
 
 macrobase.loader.db.baseQuery: SELECT * FROM sensor_data_demo;
 
-macrobase.analysis.minSupport: 0.001
+macrobase.analysis.minSupport: 0.01
 macrobase.analysis.minOIRatio: 3.0
 
 macrobase.analysis.usePercentile: true

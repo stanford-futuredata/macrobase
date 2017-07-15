@@ -1,6 +1,7 @@
 package macrobase.runtime.resources;
 
 import macrobase.conf.MacroBaseConf;
+import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.Schema;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -57,7 +58,7 @@ public class SchemaResource extends BaseResource {
             } else {
                 conf.set(MacroBaseConf.DB_URL, request.pgUrl);
                 conf.set(MacroBaseConf.BASE_QUERY, request.baseQuery);
-                response.schema = getLoader().getSchema(request.baseQuery);
+                response.schema = ((SQLIngester) getLoader()).getSchema(request.baseQuery);
             }
         } catch (Exception e) {
             log.error("An error occurred while processing a request:", e);

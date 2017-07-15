@@ -2,6 +2,7 @@ package macrobase.runtime.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import macrobase.conf.MacroBaseConf;
+import macrobase.ingest.SQLIngester;
 import macrobase.ingest.result.RowSet;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -61,7 +62,7 @@ public class FormattedRowSetResource extends BaseResource {
             request.columnValues.stream().forEach(a -> preds.put(a.column, a.value));
 
             if(request.returnType == RETURNTYPE.SQL) {
-                response.response = getLoader().getRowsSql(request.baseQuery,
+                response.response = ((SQLIngester) getLoader()).getRowsSql(request.baseQuery,
                                                            preds,
                                                            request.limit,
                                                            request.offset)+";";
