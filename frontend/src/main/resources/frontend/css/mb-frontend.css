@@ -1,0 +1,64 @@
+
+
+.itemsetHidden{
+    display:none;
+}
+
+.high-risk{
+    border-color: #D66F5E;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 5px;
+}
+
+.med-risk{
+    border-color: #E2AA85;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 5px;
+}
+
+.low-risk{
+    border-color: #ABC9AF;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 5px;
+}
+
+
+element {
+}
+.active-schema {
+    background-color: #ABC9AF !important;
+    background-image: none !important;
+}
+
+.panel-brown {
+    border-color: #DFCFB5;
+}
+.panel-brown > .panel-heading {
+    background-image: none;    
+    background: #E1E5D5; 
+    border-color: #E1E5D5;
+}
+
+.panel-green {
+    border-color: #DCEBD9;
+}
+.panel-green > .panel-heading {
+    background-image: none;    
+    background: #DCEBD9; 
+    border-color: #DCEBD9;
+}
+
+.panel-gray {
+    border-color: #dcddd7;
+}
+.panel-gray > .panel-heading {
+    background-image: none;    
+    background: #dcddd7; 
+    border-color: #dcddd7;
+}
+
+
+

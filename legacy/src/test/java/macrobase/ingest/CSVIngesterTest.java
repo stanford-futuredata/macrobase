@@ -4,13 +4,16 @@ import macrobase.conf.MacroBaseConf;
 import macrobase.datamodel.Datum;
 
 import com.google.common.collect.Lists;
+import macrobase.ingest.result.RowSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class CSVIngesterTest {
@@ -54,5 +57,28 @@ public class CSVIngesterTest {
         }
 
         assertEquals(4, count);
+    }
+
+
+    @Test
+    public void testGetRows() throws Exception {
+        MacroBaseConf conf = new MacroBaseConf();
+        conf.set(MacroBaseConf.CSV_INPUT_FILE, "src/test/resources/data/simple.csv");
+        conf.set(MacroBaseConf.ATTRIBUTES, Lists.newArrayList("A2","A5"));
+        conf.set(MacroBaseConf.METRICS, Lists.newArrayList("A1","A3","A4"));
+        conf.set(MacroBaseConf.BASE_QUERY, "csv:///src/test/resources/data/simple.csv");
+
+        CSVIngester ingester = new CSVIngester(conf);
+
+        Map<String, String> preds = new HashMap<>();
+        preds.put("A2", "1");
+
+        RowSet rs = ingester.getRows(conf.getString(MacroBaseConf.BASE_QUERY),
+                preds,
+                10,
+                0);
+
+        assertEquals(1, rs.getRows().size());
+        System.out.println(rs);
     }
 }
