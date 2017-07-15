@@ -5,7 +5,7 @@ import macrobase.datamodel.Datum;
 import java.util.List;
 
 public class TimeDatumStream extends MBStream<Datum> {
-    private int timeColumn;
+    public int timeColumn;
 
     public TimeDatumStream(int timeColumn) {
         super();
