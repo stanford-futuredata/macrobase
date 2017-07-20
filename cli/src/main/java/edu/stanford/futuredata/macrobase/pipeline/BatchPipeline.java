@@ -1,6 +1,8 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
+import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.ThresholdClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
@@ -21,12 +23,16 @@ public class BatchPipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger("BatchPipeline");
     private String inputFile;
 
+    private String classifierType;
     private String summarizerType;
 
     private String metric;
     private double percentile;
     private boolean includeHi;
     private boolean includeLo;
+    private String count;
+    private String mean;
+    private String std;
 
     private List<String> attributes;
     private double minSupport;
@@ -36,12 +42,16 @@ public class BatchPipeline implements Pipeline {
     public BatchPipeline(Config conf) {
         inputFile = conf.getAs("inputFile");
 
+        classifierType = conf.getAs("classifier");
         summarizerType = conf.getAs("summarizer");
 
         metric = conf.getAs("metric");
         percentile = conf.getAs("percentile");
         includeHi = conf.getAs("includeHi");
         includeLo = conf.getAs("includeLo");
+        count = conf.getAs("count");
+        mean = conf.getAs("mean");
+        std = conf.getAs("std");
 
         attributes = conf.getAs("attributes");
         minSupport = conf.getAs("minSupport");
@@ -50,8 +60,7 @@ public class BatchPipeline implements Pipeline {
 
     @Override
     public void run() throws Exception {
-        Map<String, Schema.ColType> colTypes = new HashMap<>();
-        colTypes.put(metric, Schema.ColType.DOUBLE);
+        Map<String, Schema.ColType> colTypes = getColTypes();
         CSVDataFrameLoader loader = new CSVDataFrameLoader(inputFile);
         loader.setColumnTypes(colTypes);
         long startTime = System.currentTimeMillis();
@@ -61,10 +70,7 @@ public class BatchPipeline implements Pipeline {
         log.info("{} rows", df.getNumRows());
         log.info("Attributes: {}", attributes);
 
-        PercentileClassifier classifier = new PercentileClassifier(metric);
-        classifier.setPercentile(percentile);
-        classifier.setIncludeHigh(includeHi);
-        classifier.setIncludeLow(includeLo);
+        ThresholdClassifier classifier = getClassifier();
         classifier.process(df);
         df = classifier.getResults();
         log.info("Outlier cutoffs: {} {}",
@@ -80,6 +86,43 @@ public class BatchPipeline implements Pipeline {
         Explanation output = summarizer.getResults();
 
         System.out.println(output.prettyPrint());
+    }
+
+    private Map<String, Schema.ColType> getColTypes() {
+        Map<String, Schema.ColType> colTypes = new HashMap<>();
+        switch (classifierType) {
+            case "percentile": {
+                colTypes.put(metric, Schema.ColType.DOUBLE);
+            }
+            case "arithmetic": {
+                colTypes.put(count, Schema.ColType.DOUBLE);
+                colTypes.put(mean, Schema.ColType.DOUBLE);
+                colTypes.put(std, Schema.ColType.DOUBLE);
+            }
+        }
+        return colTypes;
+    }
+
+    private ThresholdClassifier getClassifier() {
+        switch (classifierType) {
+            case "percentile": {
+                PercentileClassifier classifier = new PercentileClassifier(metric);
+                classifier.setPercentile(percentile);
+                classifier.setIncludeHigh(includeHi);
+                classifier.setIncludeLow(includeLo);
+                return classifier;
+            }
+            case "arithmetic": {
+                ArithmeticClassifier classifier =
+                        new ArithmeticClassifier(count, mean, std);
+                classifier.setPercentile(percentile);
+                classifier.setIncludeHigh(includeHi);
+                classifier.setIncludeLow(includeLo);
+                return classifier;
+            }
+            default:
+                return null;
+        }
     }
 
     private BatchSummarizer getSummarizer(String outlierColumn) {

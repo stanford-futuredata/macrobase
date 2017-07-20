@@ -1,7 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.operator.Transformer;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 /**
@@ -9,15 +8,11 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
  * Returns a new dataframe with a column representation the classification status for
  * each row: 1.0 if outlier, 0.0 otherwise.
  */
-public class PercentileClassifier extends Classifier {
+public class PercentileClassifier extends ThresholdClassifier {
     // Parameters
     private double percentile = 0.5;
-    private boolean includeHigh = true;
-    private boolean includeLow = true;
 
     // Calculated values
-    private double lowCutoff;
-    private double highCutoff;
     private DataFrame output;
 
     public PercentileClassifier(String columnName) {
@@ -62,35 +57,24 @@ public class PercentileClassifier extends Classifier {
         this.percentile = percentile;
         return this;
     }
-    public boolean isIncludeHigh() {
-        return includeHigh;
-    }
 
     /**
      * @param includeHigh Whether to count high points as outliers.
      * @return this
      */
+    @Override
     public PercentileClassifier setIncludeHigh(boolean includeHigh) {
         this.includeHigh = includeHigh;
         return this;
-    }
-    public boolean isIncludeLow() {
-        return includeLow;
     }
 
     /**
      * @param includeLow Whether to count low points as outliers
      * @return this
      */
+    @Override
     public PercentileClassifier setIncludeLow(boolean includeLow) {
         this.includeLow = includeLow;
         return this;
-    }
-
-    public double getLowCutoff() {
-        return lowCutoff;
-    }
-    public double getHighCutoff() {
-        return highCutoff;
     }
 }

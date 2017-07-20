@@ -127,6 +127,8 @@ public class DataFrame {
         return typeSubIndices;
     }
 
+    public boolean hasColumn(String columnName) { return schema.hasColumn(columnName); }
+
     public double[] getDoubleColumn(int columnIdx) {
         return doubleCols.get(indexToTypeIndex.get(columnIdx));
     }

@@ -38,6 +38,7 @@ public class Schema {
         return pairs.toString();
     }
 
+    public boolean hasColumn(String columnName) { return columnNames.contains(columnName); }
     public int getNumColumns() {
         return columnNames.size();
     }

@@ -2,6 +2,7 @@ pipeline: "BatchPipeline"
 
 inputFile: "demo/sample.csv"
 
+classifier: "percentile"
 summarizer: "apriori"
 
 metric: "usage"
