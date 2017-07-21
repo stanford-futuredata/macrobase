@@ -66,8 +66,8 @@ public class APrioriSummarizerTest {
         DataFrame df = loader.load();
 
         ArithmeticClassifier ac = new ArithmeticClassifier("count", "mean", "std")
-                .setPercentile(1.0)
-                .setCountColumnName("count");
+                .setPercentile(1.0);
+        ac.setCountColumnName("count");
         ac.setIncludeHigh(false);
         ac.process(df);
         DataFrame df_classified = ac.getResults();

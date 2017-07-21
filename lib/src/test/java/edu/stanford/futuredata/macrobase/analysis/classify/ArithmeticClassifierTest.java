@@ -61,7 +61,7 @@ public class ArithmeticClassifierTest {
     @Test
     public void testConfigure() throws Exception {
         ArithmeticClassifier ac = new ArithmeticClassifier("col1", "col2", "col3");
-        ac.setColumnName("mean");
+        ac.setMeanColumnName("mean");
         ac.setCountColumnName("count");
         ac.setStdColumnName("std");
         ac.setIncludeHigh(false);
