@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
+import edu.stanford.futuredata.macrobase.analysis.classify.stats.NormalDist;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 
 import java.lang.Double;
@@ -54,6 +55,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
 
         output = input.copy();
         double[] resultColumn = new double[len];
+        NormalDist dist = new NormalDist();
         for (int i = 0; i < len; i++) {
             double mean = means[i];
             double std = stds[i];
@@ -66,13 +68,15 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
                     numOutliers = count;
                 }
             } else {
-                NormalDistribution dist = new NormalDistribution(mean, std);
+//                NormalDistribution dist = new NormalDistribution(mean, std);
                 if (includeHigh) {
-                    double percentile = dist.cumulativeProbability(highCutoff);
+//                    double percentile = dist.cumulativeProbability(highCutoff);
+                    double percentile = dist.cdf(mean, std, highCutoff);
                     numOutliers += count * (1.0 - percentile);
                 }
                 if (includeLow) {
-                    double percentile = dist.cumulativeProbability(lowCutoff);
+//                    double percentile = dist.cumulativeProbability(lowCutoff);
+                    double percentile = dist.cdf(mean, std, lowCutoff);
                     numOutliers += count * percentile;
                 }
             }

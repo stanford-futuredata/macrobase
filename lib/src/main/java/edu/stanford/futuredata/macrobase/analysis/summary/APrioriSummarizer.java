@@ -17,18 +17,15 @@ import java.util.*;
 public class APrioriSummarizer extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APriori");
 
-    int n, d;
+    int numRows;
     AttributeEncoder encoder;
 
-    int numTotal;
+    int numEvents;
     int numOutliers;
     double baseRate;
     int suppCount;
 
-    boolean hasCountCol = false;
     String countColumn = "count";
-    double[] countCol;
-    double[] outlierCol;
 
     int numSingles;
 
@@ -52,23 +49,28 @@ public class APrioriSummarizer extends BatchSummarizer {
 
     @Override
     public void process(DataFrame input) throws Exception {
-        n = input.getNumRows();
-        d = attributes.size();
+        numRows = input.getNumRows();
 
         // Marking Outliers
-        outlierCol = input.getDoubleColumnByName(outlierColumn);
+        double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
+        double[] countCol = null;
         if (input.hasColumn(countColumn)) {
             countCol = input.getDoubleColumnByName(countColumn);
-            hasCountCol = true;
         }
-        numTotal = 0;
+        numEvents = 0;
+        if (countCol != null) {
+            for (int i = 0; i < numRows; i++) {
+                numEvents += countCol[i];
+            }
+        } else {
+            numEvents = numRows;
+        }
         double numOutliersExact = 0.0;
-        for (int i = 0; i < n; i++) {
-            numTotal += hasCountCol ? countCol[i] : 1;
+        for (int i = 0; i < numRows; i++) {
             numOutliersExact += outlierCol[i];
         }
         numOutliers = (int) numOutliersExact;
-        baseRate = numOutliersExact*1.0/numTotal;
+        baseRate = numOutliersExact*1.0/numEvents;
         suppCount = (int) (minOutlierSupport * numOutliers);
         log.info("Outliers: {}", numOutliers);
         log.info("Outlier Rate of: {}", baseRate);
@@ -88,16 +90,22 @@ public class APrioriSummarizer extends BatchSummarizer {
         log.debug("Encoded Categories: {}", encoder.getNextKey());
 
         countSingles(
-                encoded
+                encoded,
+                countCol,
+                outlierCol
         );
 
         countSet(
                 encoded,
+                countCol,
+                outlierCol,
                 2
         );
 
         countSet(
                 encoded,
+                countCol,
+                outlierCol,
                 3
         );
 
@@ -107,7 +115,7 @@ public class APrioriSummarizer extends BatchSummarizer {
 
     }
 
-    private void countSet(List<int[]> encoded, int order) {
+    private void countSet(List<int[]> encoded, double[] countCol, double[] outlierCol, int order) {
         log.debug("Processing Order {}", order);
         long startTime = System.currentTimeMillis();
         HashMap<IntSet, Integer> setMapping = new HashMap<>();
@@ -121,7 +129,8 @@ public class APrioriSummarizer extends BatchSummarizer {
         int[] oCounts = new int[maxSets];
         int[] counts = new int[maxSets];
 
-        for (int i = 0; i < n; i++) {
+        boolean hasCountCol = countCol != null;
+        for (int i = 0; i < numRows; i++) {
             int[] curRow = encoded.get(i);
             ArrayList<Integer> toExamine = new ArrayList<>();
             for (int v : curRow) {
@@ -202,12 +211,13 @@ public class APrioriSummarizer extends BatchSummarizer {
         setOCounts.put(order, oCounts);
     }
 
-    private void countSingles(List<int[]> encoded) {
+    private void countSingles(List<int[]> encoded, double[] countCol, double[] outlierCol) {
         // Counting Singles
         long startTime = System.currentTimeMillis();
         int[] singleCounts = new int[numSingles];
         int[] singleOCounts = new int[numSingles];
-        for (int i = 0; i < n; i++) {
+        boolean hasCountCol = countCol != null;
+        for (int i = 0; i < numRows; i++) {
             int[] curRow = encoded.get(i);
             for (int v : curRow) {
                 singleCounts[v] += hasCountCol ? countCol[i] : 1;
@@ -283,7 +293,7 @@ public class APrioriSummarizer extends BatchSummarizer {
         }
         Explanation finalExplanation = new Explanation(
                 results,
-                numTotal - numOutliers,
+                numEvents - numOutliers,
                 numOutliers,
                 timings[1]+timings[2]+timings[3]
         );

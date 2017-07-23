@@ -1,0 +1,18 @@
+pipeline: "CubePipeline"
+
+inputFile: "demo/sample_cubed.csv"
+
+classifier: "arithmetic"
+
+countColumn: "count"
+meanColumn: "mean"
+stdColumn: "std"
+percentile: 1.0
+includeLo: true
+includeHi: false
+
+attributes:
+  - "location"
+  - "version"
+minSupport: 0.2
+minRiskRatio: 10.0

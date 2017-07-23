@@ -29,9 +29,9 @@ public class CubePipeline implements Pipeline {
     private double percentile;
     private boolean includeHi;
     private boolean includeLo;
-    private String count;
-    private String mean;
-    private String std;
+    private String countColumn;
+    private String meanColumn;
+    private String stdColumn;
 
     private List<String> attributes;
     private double minSupport;
@@ -46,9 +46,9 @@ public class CubePipeline implements Pipeline {
         percentile = conf.getAs("percentile");
         includeHi = conf.getAs("includeHi");
         includeLo = conf.getAs("includeLo");
-        count = conf.getAs("count");
-        mean = conf.getAs("mean");
-        std = conf.getAs("std");
+        countColumn = conf.getAs("countColumn");
+        meanColumn = conf.getAs("meanColumn");
+        stdColumn = conf.getAs("stdColumn");
 
         attributes = conf.getAs("attributes");
         minSupport = conf.getAs("minSupport");
@@ -94,9 +94,9 @@ public class CubePipeline implements Pipeline {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         switch (classifierType) {
             case "arithmetic": {
-                colTypes.put(count, Schema.ColType.DOUBLE);
-                colTypes.put(mean, Schema.ColType.DOUBLE);
-                colTypes.put(std, Schema.ColType.DOUBLE);
+                colTypes.put(countColumn, Schema.ColType.DOUBLE);
+                colTypes.put(meanColumn, Schema.ColType.DOUBLE);
+                colTypes.put(stdColumn, Schema.ColType.DOUBLE);
             }
         }
         return colTypes;
@@ -106,7 +106,7 @@ public class CubePipeline implements Pipeline {
         switch (classifierType) {
             case "arithmetic": {
                 ArithmeticClassifier classifier =
-                        new ArithmeticClassifier(count, mean, std);
+                        new ArithmeticClassifier(countColumn, meanColumn, stdColumn);
                 classifier.setPercentile(percentile);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
