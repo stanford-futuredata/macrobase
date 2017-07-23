@@ -1,11 +1,10 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.stats.NormalDist;
+import edu.stanford.futuredata.macrobase.analysis.classify.stats.CubePercentile;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 
 import java.lang.Double;
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
-import org.apache.commons.math3.distribution.NormalDistribution;
 
 /**
  * Classify rows by high / low values based on the group mean and standard deviation.
@@ -38,20 +37,10 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
         double[] counts = input.getDoubleColumnByName(countColumnName);
         double[] stds = input.getDoubleColumnByName(stdColumnName);
         int len = means.length;
-        int numRawMetrics = 0;
-        for (int i = 0; i < len; i++) {
-            numRawMetrics += counts[i];
-        }
-        double[] rawMetrics = new double[numRawMetrics];
-        int cumRawMetrics = 0;
-        for (int i = 0; i < len; i++) {
-            for (int j = cumRawMetrics; j < cumRawMetrics + counts[i]; j++) {
-                rawMetrics[j] = means[i];
-            }
-            cumRawMetrics += counts[i];
-        }
-        lowCutoff = new Percentile().evaluate(rawMetrics, percentile);
-        highCutoff = new Percentile().evaluate(rawMetrics, 100.0 - percentile);
+
+        CubePercentile cp = new CubePercentile(counts, means);
+        lowCutoff = cp.evaluate(percentile);
+        highCutoff = cp.evaluate(100.0 - percentile);
 
         output = input.copy();
         double[] resultColumn = new double[len];
@@ -68,14 +57,11 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
                     numOutliers = count;
                 }
             } else {
-//                NormalDistribution dist = new NormalDistribution(mean, std);
                 if (includeHigh) {
-//                    double percentile = dist.cumulativeProbability(highCutoff);
                     double percentile = dist.cdf(mean, std, highCutoff);
                     numOutliers += count * (1.0 - percentile);
                 }
                 if (includeLow) {
-//                    double percentile = dist.cumulativeProbability(lowCutoff);
                     double percentile = dist.cdf(mean, std, lowCutoff);
                     numOutliers += count * percentile;
                 }

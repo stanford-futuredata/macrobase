@@ -1,7 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
+import edu.stanford.futuredata.macrobase.analysis.classify.stats.CubePercentile;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 /**
  * Classify rows by high / low values based on the group mean.
@@ -30,20 +30,10 @@ public class DiscreteClassifier extends CubeClassifier implements ThresholdClass
         double[] means = input.getDoubleColumnByName(meanColumnName);
         double[] counts = input.getDoubleColumnByName(countColumnName);
         int len = means.length;
-        int numRawMetrics = 0;
-        for (int i = 0; i < len; i++) {
-            numRawMetrics += counts[i];
-        }
-        double[] rawMetrics = new double[numRawMetrics];
-        int cumRawMetrics = 0;
-        for (int i = 0; i < len; i++) {
-            for (int j = cumRawMetrics; j < cumRawMetrics + counts[i]; j++) {
-                rawMetrics[j] = means[i];
-            }
-            cumRawMetrics += counts[i];
-        }
-        lowCutoff = new Percentile().evaluate(rawMetrics, percentile);
-        highCutoff = new Percentile().evaluate(rawMetrics, 100.0 - percentile);
+
+        CubePercentile cp = new CubePercentile(counts, means);
+        lowCutoff = cp.evaluate(percentile);
+        highCutoff = cp.evaluate(100.0 - percentile);
 
         output = input.copy();
         double[] resultColumn = new double[len];
