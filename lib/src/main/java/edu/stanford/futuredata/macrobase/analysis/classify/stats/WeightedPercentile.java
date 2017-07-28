@@ -1,7 +1,5 @@
 package edu.stanford.futuredata.macrobase.analysis.classify.stats;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 
 import java.util.*;

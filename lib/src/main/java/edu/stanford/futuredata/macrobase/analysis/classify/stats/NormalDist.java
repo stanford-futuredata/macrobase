@@ -1,12 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify.stats;
 
-import org.w3c.dom.CDATASection;
-
-import java.io.*;
-import java.lang.Math;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * Implements a look-up table in order to quickly obtain the CDF of a
@@ -49,8 +43,8 @@ public class NormalDist {
 
         // Interpolate the CDF
         double exactEntry = zscore / GRANULARITY + LUT_OFFSET;
-        int lowerEntry = (int) Math.floor(exactEntry);
-        int higherEntry = (int) Math.ceil(exactEntry);
+        int lowerEntry = (int) FastMath.floor(exactEntry);
+        int higherEntry = (int) FastMath.ceil(exactEntry);
 
         if (lowerEntry == higherEntry) {
             return CDF_LUT[lowerEntry];
