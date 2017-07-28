@@ -15,9 +15,8 @@ public class WeightedPercentile {
     private double[] metrics;
 
     // Computed
-    private int numRawMetrics = 0;
-    private Multiset<Double> metricCounts;
-    private List<Double> sortedMetrics;
+    private double numRawMetrics = 0;
+    private WeightedMetric[] weightedMetrics;
 
     public WeightedPercentile(double[] counts, double[] metrics) {
         this.counts = counts;
@@ -29,19 +28,19 @@ public class WeightedPercentile {
         if (percentile >= 50.0) {
             int numToPass = (int)((100.0 - percentile) / 100.0 * numRawMetrics);
             int numPassed = 0;
-            for (int i = sortedMetrics.size() - 1; i >= 0; i--) {
-                numPassed += metricCounts.count(sortedMetrics.get(i));
+            for (int i = weightedMetrics.length - 1; i >= 0; i--) {
+                numPassed += weightedMetrics[i].count;
                 if (numPassed >= numToPass) {
-                    return sortedMetrics.get(i);
+                    return weightedMetrics[i].metric;
                 }
             }
         } else {
             int numToPass = (int)(percentile / 100.0 * numRawMetrics);
             int numPassed = 0;
-            for (int i = 0; i < sortedMetrics.size(); i++) {
-                numPassed += metricCounts.count(sortedMetrics.get(i));
+            for (int i = 0; i < weightedMetrics.length; i++) {
+                numPassed += weightedMetrics[i].count;
                 if (numPassed >= numToPass) {
-                    return sortedMetrics.get(i);
+                    return weightedMetrics[i].metric;
                 }
             }
         }
@@ -49,13 +48,27 @@ public class WeightedPercentile {
     }
 
     private void computeCounts() {
-        metricCounts = HashMultiset.create();
-        int len = counts.length;
+        int len = metrics.length;
+        weightedMetrics = new WeightedMetric[len];
         for (int i = 0; i < len; i++) {
-            metricCounts.add(metrics[i], (int) counts[i]);
+            weightedMetrics[i] = new WeightedMetric(metrics[i], counts[i]);
+            numRawMetrics += counts[i];
         }
-        numRawMetrics = metricCounts.size();
-        sortedMetrics = new ArrayList<Double>(metricCounts.elementSet());
-        Collections.sort(sortedMetrics);
+        Arrays.sort(weightedMetrics);
+    }
+
+    public class WeightedMetric implements Comparable<WeightedMetric> {
+        public double metric;
+        public double count;
+
+        public WeightedMetric(double metric, double count) {
+            this.metric = metric;
+            this.count = count;
+        }
+
+        @Override
+        public int compareTo(WeightedMetric wm) {
+            return Double.compare(metric, wm.metric);
+        }
     }
 }
