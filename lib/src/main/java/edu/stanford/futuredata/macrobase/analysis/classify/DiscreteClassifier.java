@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.stats.CubePercentile;
+import edu.stanford.futuredata.macrobase.analysis.classify.stats.WeightedPercentile;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 
 /**
@@ -31,9 +31,9 @@ public class DiscreteClassifier extends CubeClassifier implements ThresholdClass
         double[] counts = input.getDoubleColumnByName(countColumnName);
         int len = means.length;
 
-        CubePercentile cp = new CubePercentile(counts, means);
-        lowCutoff = cp.evaluate(percentile);
-        highCutoff = cp.evaluate(100.0 - percentile);
+        WeightedPercentile wp = new WeightedPercentile(counts, means);
+        lowCutoff = wp.evaluate(percentile);
+        highCutoff = wp.evaluate(100.0 - percentile);
 
         output = input.copy();
         double[] resultColumn = new double[len];
