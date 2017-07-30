@@ -65,12 +65,15 @@ public class BatchPipeline implements Pipeline {
         classifier.setPercentile(percentile);
         classifier.setIncludeHigh(includeHi);
         classifier.setIncludeLow(includeLo);
+        startTime = System.currentTimeMillis();
         classifier.process(df);
-        df = classifier.getResults();
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Classification time: {}", elapsed);
         log.info("Outlier cutoffs: {} {}",
                 classifier.getLowCutoff(),
                 classifier.getHighCutoff()
         );
+        df = classifier.getResults();
 
         BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
         startTime = System.currentTimeMillis();

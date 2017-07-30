@@ -68,12 +68,15 @@ public class CubePipeline implements Pipeline {
         log.info("Attributes: {}", attributes);
 
         CubeClassifier classifier = getClassifier();
+        startTime = System.currentTimeMillis();
         classifier.process(df);
-        df = classifier.getResults();
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Classification time: {}", elapsed);
         log.info("Outlier cutoffs: {} {}",
                 classifier.getLowCutoff(),
                 classifier.getHighCutoff()
         );
+        df = classifier.getResults();
 
         APrioriSummarizer summarizer = new APrioriSummarizer();
         summarizer.setOutlierColumn(classifier.getOutputColumnName());
