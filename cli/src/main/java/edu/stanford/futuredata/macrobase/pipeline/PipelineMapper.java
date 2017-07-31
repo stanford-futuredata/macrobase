@@ -14,6 +14,8 @@ public class PipelineMapper {
                 return new BatchPipeline(conf);
             case "CubePipeline":
                 return new CubePipeline(conf);
+            case "RegressionPipeline":
+                return new RegressionPipeline(conf);
             default:
                 throw new MacrobaseException("Bad Pipeline Name");
         }
