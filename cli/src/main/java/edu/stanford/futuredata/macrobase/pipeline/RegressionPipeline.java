@@ -83,6 +83,7 @@ public class RegressionPipeline implements Pipeline {
         colTypes.put(countColumn, Schema.ColType.DOUBLE);
         colTypes.put(meanColumn, Schema.ColType.DOUBLE);
         colTypes.put(stdColumn, Schema.ColType.DOUBLE);
+        colTypes.put(maxColumn, Schema.ColType.DOUBLE);
         return colTypes;
     }
 }
