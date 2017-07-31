@@ -30,7 +30,6 @@ public class APrioriSummarizer extends BatchSummarizer {
     int numSingles;
 
     Set<Integer> singleNext;
-    List<Integer> pairRows;
     List<Integer> tripleRows;
 
     HashMap<Integer, HashMap<IntSet, Integer>> setIdxMapping;
@@ -133,8 +132,9 @@ public class APrioriSummarizer extends BatchSummarizer {
 
         boolean hasCountCol = countCol != null;
         if (order == 2) {
-            for (int row : pairRows) {
-                int[] curRow = encoded.get(row);
+            tripleRows = new ArrayList<Integer>();
+            for (int i = 0; i < numRows; i++) {
+                int[] curRow = encoded.get(i);
                 ArrayList<Integer> toExamine = new ArrayList<>();
                 for (int v : curRow) {
                     if (singleNext.contains(v)) {
@@ -159,35 +159,30 @@ public class APrioriSummarizer extends BatchSummarizer {
                         setMapping.put(curSet, setIdx);
                         maxSetIdx++;
                     }
-                    counts[setIdx] += hasCountCol ? countCol[row] : 1;
-                    oCounts[setIdx] += outlierCol[row];
+                    counts[setIdx] += hasCountCol ? countCol[i] : 1;
+                    oCounts[setIdx] += outlierCol[i];
                 }
-            }
-        }
-        for (int row : tripleRows) {
-            int[] curRow = encoded.get(row);
-            ArrayList<Integer> toExamine = new ArrayList<>();
-            for (int v : curRow) {
-                if (singleNext.contains(v)) {
-                    toExamine.add(v);
-                }
-            }
-            int l = toExamine.size();
 
-            ArrayList<IntSet> setsToAdd = new ArrayList<>();
-            if (order == 2) {
-                for (int p1 = 0; p1 < l; p1++) {
-                    int p1v = toExamine.get(p1);
-                    for (int p2 = p1 + 1; p2 < l; p2++) {
-                        int p2v = toExamine.get(p2);
-                        setsToAdd.add(new IntSet(p1v, p2v));
+                if (setsToAdd.size() > 1) {
+                    tripleRows.add(i);
+                }
+            }
+        } else if (order == 3) {
+            for (int row : tripleRows) {
+                int[] curRow = encoded.get(row);
+                ArrayList<Integer> toExamine = new ArrayList<>();
+                for (int v : curRow) {
+                    if (singleNext.contains(v)) {
+                        toExamine.add(v);
                     }
                 }
-            } else if (order == 3) {
+                int l = toExamine.size();
+
+                ArrayList<IntSet> setsToAdd = new ArrayList<>();
                 HashSet<IntSet> pairNext = setNext.get(2);
                 for (int p1 = 0; p1 < l; p1++) {
                     int p1v = toExamine.get(p1);
-                    for (int p2 = p1+1; p2 < l; p2++) {
+                    for (int p2 = p1 + 1; p2 < l; p2++) {
                         int p2v = toExamine.get(p2);
                         IntSet pair1 = new IntSet(p1v, p2v);
                         if (pairNext.contains(pair1)) {
@@ -198,22 +193,23 @@ public class APrioriSummarizer extends BatchSummarizer {
                         }
                     }
                 }
-            }
 
-            for (IntSet curSet : setsToAdd) {
-                int setIdx = setMapping.getOrDefault(curSet, -1);
-                if (setIdx < 0) {
-                    setIdx = maxSetIdx;
-                    setMapping.put(curSet, setIdx);
-                    maxSetIdx++;
+                for (IntSet curSet : setsToAdd) {
+                    int setIdx = setMapping.getOrDefault(curSet, -1);
+                    if (setIdx < 0) {
+                        setIdx = maxSetIdx;
+                        setMapping.put(curSet, setIdx);
+                        maxSetIdx++;
+                    }
+                    counts[setIdx] += hasCountCol ? countCol[row] : 1;
+                    oCounts[setIdx] += outlierCol[row];
                 }
-                counts[setIdx] += hasCountCol ? countCol[row] : 1;
-                oCounts[setIdx] += outlierCol[row];
             }
         }
         long elapsed = System.currentTimeMillis() - startTime;
         timings[order] = elapsed;
         log.debug("Counted order {} in: {}", order, elapsed);
+        log.debug("Triple Rows: {}", tripleRows.size());
 
         HashSet<IntSet> saved = new HashSet<>();
         int numPruned = 0;
@@ -280,28 +276,6 @@ public class APrioriSummarizer extends BatchSummarizer {
         log.debug("Itemsets Saved: {}", singleSaved.size());
         log.debug("Itemsets Pruned: {}", numPruned);
         log.debug("Itemsets Next: {}", singleNext.size());
-
-        startTime = System.currentTimeMillis();
-        pairRows = new ArrayList<Integer>();
-        tripleRows = new ArrayList<Integer>();
-        for (int i = 0; i < numRows; i++) {
-            int[] curRow = encoded.get(i);
-            int numSingleNext = 0;
-            for (int v : curRow) {
-                if (singleNext.contains(v)) {
-                    numSingleNext++;
-                }
-            }
-            if (numSingleNext == 2) {
-                pairRows.add(i);
-            } else if (numSingleNext >= 3) {
-                tripleRows.add(i);
-            }
-        }
-        elapsed = System.currentTimeMillis() - startTime;
-        log.debug("Filtered Rows in: {}", elapsed);
-        log.debug("Pair Rows: {}", pairRows.size());
-        log.debug("Triple Rows: {}", tripleRows.size());
 
         HashMap<IntSet, Integer> curIdxMapping = new HashMap<>(numSingles);
         HashSet<IntSet> curSaved = new HashSet<>(singleSaved.size());
