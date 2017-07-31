@@ -168,6 +168,7 @@ public class APrioriSummarizer extends BatchSummarizer {
                 }
             }
         } else if (order == 3) {
+            log.debug("Triple Rows: {}", tripleRows.size());
             for (int row : tripleRows) {
                 int[] curRow = encoded.get(row);
                 ArrayList<Integer> toExamine = new ArrayList<>();
@@ -209,7 +210,6 @@ public class APrioriSummarizer extends BatchSummarizer {
         long elapsed = System.currentTimeMillis() - startTime;
         timings[order] = elapsed;
         log.debug("Counted order {} in: {}", order, elapsed);
-        log.debug("Triple Rows: {}", tripleRows.size());
 
         HashSet<IntSet> saved = new HashSet<>();
         int numPruned = 0;
