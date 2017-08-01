@@ -30,6 +30,7 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
     String countColumn = "count";
     String meanColumn = "mean";
     String maxColumn = "max";
+    String stdColumn = "std";
 
     int numSingles;
 
@@ -64,6 +65,7 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
         }
         double[] meanCol = input.getDoubleColumnByName(meanColumn);
         double[] maxCol = input.getDoubleColumnByName(maxColumn);
+        double[] stdCol = input.getDoubleColumnByName(stdColumn);
         numEvents = 0;
         if (countCol != null) {
             for (int i = 0; i < numRows; i++) {
@@ -89,7 +91,8 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
                 encoded,
                 countCol,
                 meanCol,
-                maxCol
+                maxCol,
+                stdCol
         );
 
         countSet(
@@ -218,7 +221,7 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
         setCounts.put(order, counts);
     }
 
-    private void countSingles(List<int[]> encoded, double[] countCol, double[] meanCol, double[] maxCol) {
+    private void countSingles(List<int[]> encoded, double[] countCol, double[] meanCol, double[] maxCol, double[] stdCol) {
         // Counting Singles
         long startTime = System.currentTimeMillis();
         int[] singleCounts = new int[numSingles];
@@ -237,12 +240,12 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
                 }
             }
             sum += countCol[i] * meanCol[i];
-            squaredSum += countCol[i] * meanCol[i] * countCol[i] * meanCol[i];
+            squaredSum += (stdCol[i] * stdCol[i] + meanCol[i] * meanCol[i]) * countCol[i];
         }
         long elapsed = System.currentTimeMillis() - startTime;
         timings[1] = elapsed;
         double globalMean = sum / numEvents;
-        double globalStd = squaredSum / numEvents - (globalMean * globalMean);
+        double globalStd = Math.sqrt(squaredSum / numEvents - (globalMean * globalMean));
         minThreshold = (int)(globalMean + minStd * globalStd);
         log.info("Min Support Count: {}", minCount);
         log.info("Min Threshold: {}", minThreshold);
@@ -336,6 +339,11 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
 
     public RegressionSummarizer setMaxColumn(String maxColumn) {
         this.maxColumn = maxColumn;
+        return this;
+    }
+
+    public RegressionSummarizer setStdColumn(String stdColumn) {
+        this.stdColumn = stdColumn;
         return this;
     }
 
