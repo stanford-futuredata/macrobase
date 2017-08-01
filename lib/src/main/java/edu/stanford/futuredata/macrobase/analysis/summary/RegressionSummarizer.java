@@ -240,7 +240,11 @@ public class RegressionSummarizer implements Operator<DataFrame, Explanation> {
                 }
             }
             sum += countCol[i] * meanCol[i];
-            squaredSum += (stdCol[i] * stdCol[i] + meanCol[i] * meanCol[i]) * countCol[i];
+            if (Double.isNaN(stdCol[i])) {
+                squaredSum += countCol[i] * meanCol[i] * meanCol[i];
+            } else {
+                squaredSum += (stdCol[i] * stdCol[i] + meanCol[i] * meanCol[i]) * countCol[i];
+            }
         }
         long elapsed = System.currentTimeMillis() - startTime;
         timings[1] = elapsed;
