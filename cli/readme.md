@@ -22,4 +22,11 @@ mvn clean; mvn package
 ./bin/simple.sh demo/conf.yaml
 ```
 
+To run a pipeline over a data cube, replace the last
+line from above with:
+
+```
+./bin/simple.sh demo/cube.yaml
+```
+
 Logging settings are stored in `config/logback.xml`

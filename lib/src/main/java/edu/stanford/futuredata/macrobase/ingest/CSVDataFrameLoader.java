@@ -57,23 +57,23 @@ public class CSVDataFrameLoader implements DataFrameLoader {
         this.badRecords = 0;
         ArrayList<Row> rows = new ArrayList<>();
         for (CSVRecord record : csvParser) {
-            try {
-                ArrayList<Object> rowFields = new ArrayList<>(numColumns);
-                for (int c = 0; c < numColumns; c++) {
-                    Schema.ColType t = columnTypeList[c];
-                    String rowValue = record.get(c);
-                    if (t == Schema.ColType.STRING) {
-                        rowFields.add(rowValue);
-                    } else if (t == Schema.ColType.DOUBLE) {
+            ArrayList<Object> rowFields = new ArrayList<>(numColumns);
+            for (int c = 0; c < numColumns; c++) {
+                Schema.ColType t = columnTypeList[c];
+                String rowValue = record.get(c);
+                if (t == Schema.ColType.STRING) {
+                    rowFields.add(rowValue);
+                } else if (t == Schema.ColType.DOUBLE) {
+                    try {
                         rowFields.add(Double.parseDouble(rowValue));
-                    } else {
-                        throw new RuntimeException("Bad ColType");
+                    } catch (NumberFormatException e) {
+                        rowFields.add(Double.NaN);
                     }
+                } else {
+                    throw new RuntimeException("Bad ColType");
                 }
-                rows.add(new Row(rowFields));
-            } catch (NumberFormatException e) {
-                this.badRecords++;
             }
+            rows.add(new Row(rowFields));
         }
 
         DataFrame df = new DataFrame(schema, rows);

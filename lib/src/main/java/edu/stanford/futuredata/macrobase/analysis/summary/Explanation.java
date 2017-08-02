@@ -81,7 +81,7 @@ public class Explanation {
         StringBuilder header = new StringBuilder(String.format(
                 "Outlier Explanation:\n"
                 + "numOutliers: %d\n"
-                + "numInliners: %d\n"
+                + "numInliers: %d\n"
                 + "Itemsets: \n"
                 + "--------\n",
                 numOutliers,

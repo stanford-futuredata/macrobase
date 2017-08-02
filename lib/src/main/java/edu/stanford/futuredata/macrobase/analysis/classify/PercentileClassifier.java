@@ -1,7 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.operator.Transformer;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 /**
@@ -9,7 +8,7 @@ import org.apache.commons.math3.stat.descriptive.rank.Percentile;
  * Returns a new dataframe with a column representation the classification status for
  * each row: 1.0 if outlier, 0.0 otherwise.
  */
-public class PercentileClassifier extends Classifier {
+public class PercentileClassifier extends Classifier implements ThresholdClassifier {
     // Parameters
     private double percentile = 0.5;
     private boolean includeHigh = true;
@@ -62,6 +61,7 @@ public class PercentileClassifier extends Classifier {
         this.percentile = percentile;
         return this;
     }
+
     public boolean isIncludeHigh() {
         return includeHigh;
     }

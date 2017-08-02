@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
@@ -13,36 +14,42 @@ import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Simplest default pipeline: load, classify, and then explain
+ * Default pipeline for cubed data: load, classify, and then explain
  */
-public class BatchPipeline implements Pipeline {
-    Logger log = LoggerFactory.getLogger("BatchPipeline");
+public class CubePipeline implements Pipeline {
+    Logger log = LoggerFactory.getLogger("CubePipeline");
     private String inputFile;
 
-    private String summarizerType;
+    private String classifierType;
 
-    private String metric;
     private double percentile;
     private boolean includeHi;
     private boolean includeLo;
+    private String countColumn;
+    private String meanColumn;
+    private String stdColumn;
 
     private List<String> attributes;
     private double minSupport;
     private double minRiskRatio;
 
 
-    public BatchPipeline(Config conf) {
+    public CubePipeline(Config conf) {
         inputFile = conf.getAs("inputFile");
 
-        summarizerType = conf.getAs("summarizer");
+        classifierType = conf.getAs("classifier");
 
-        metric = conf.getAs("metric");
         percentile = conf.getAs("percentile");
         includeHi = conf.getAs("includeHi");
         includeLo = conf.getAs("includeLo");
+        countColumn = conf.getAs("countColumn");
+        meanColumn = conf.getAs("meanColumn");
+        stdColumn = conf.getAs("stdColumn");
 
         attributes = conf.getAs("attributes");
         minSupport = conf.getAs("minSupport");
@@ -51,8 +58,7 @@ public class BatchPipeline implements Pipeline {
 
     @Override
     public void run() throws Exception {
-        Map<String, Schema.ColType> colTypes = new HashMap<>();
-        colTypes.put(metric, Schema.ColType.DOUBLE);
+        Map<String, Schema.ColType> colTypes = getColTypes();
         CSVDataFrameLoader loader = new CSVDataFrameLoader(inputFile);
         loader.setColumnTypes(colTypes);
         long startTime = System.currentTimeMillis();
@@ -62,10 +68,7 @@ public class BatchPipeline implements Pipeline {
         log.info("{} rows", df.getNumRows());
         log.info("Attributes: {}", attributes);
 
-        PercentileClassifier classifier = new PercentileClassifier(metric);
-        classifier.setPercentile(percentile);
-        classifier.setIncludeHigh(includeHi);
-        classifier.setIncludeLow(includeLo);
+        CubeClassifier classifier = getClassifier();
         startTime = System.currentTimeMillis();
         classifier.process(df);
         elapsed = System.currentTimeMillis() - startTime;
@@ -76,7 +79,12 @@ public class BatchPipeline implements Pipeline {
         );
         df = classifier.getResults();
 
-        BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
+        APrioriSummarizer summarizer = new APrioriSummarizer();
+        summarizer.setOutlierColumn(classifier.getOutputColumnName());
+        summarizer.setCountColumn(classifier.getCountColumnName());
+        summarizer.setAttributes(attributes);
+        summarizer.setMinSupport(minSupport);
+        summarizer.setMinRiskRatio(minRiskRatio);
         startTime = System.currentTimeMillis();
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;
@@ -86,27 +94,30 @@ public class BatchPipeline implements Pipeline {
         System.out.println(output.prettyPrint());
     }
 
-    private BatchSummarizer getSummarizer(String outlierColumn) throws MacrobaseException {
-        switch (summarizerType) {
-            case "fpgrowth": {
-                FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
-                summarizer.setOutlierColumn(outlierColumn);
-                summarizer.setAttributes(attributes);
-                summarizer.setMinSupport(minSupport);
-                summarizer.setUseAttributeCombinations(true);
-                summarizer.setMinRiskRatio(minRiskRatio);
-                return summarizer;
+    private Map<String, Schema.ColType> getColTypes() {
+        Map<String, Schema.ColType> colTypes = new HashMap<>();
+        switch (classifierType) {
+            case "arithmetic": {
+                colTypes.put(countColumn, Schema.ColType.DOUBLE);
+                colTypes.put(meanColumn, Schema.ColType.DOUBLE);
+                colTypes.put(stdColumn, Schema.ColType.DOUBLE);
             }
-            case "apriori": {
-                APrioriSummarizer summarizer = new APrioriSummarizer();
-                summarizer.setOutlierColumn(outlierColumn);
-                summarizer.setAttributes(attributes);
-                summarizer.setMinSupport(minSupport);
-                summarizer.setMinRiskRatio(minRiskRatio);
-                return summarizer;
+        }
+        return colTypes;
+    }
+
+    private CubeClassifier getClassifier() throws MacrobaseException {
+        switch (classifierType) {
+            case "arithmetic": {
+                ArithmeticClassifier classifier =
+                        new ArithmeticClassifier(countColumn, meanColumn, stdColumn);
+                classifier.setPercentile(percentile);
+                classifier.setIncludeHigh(includeHi);
+                classifier.setIncludeLow(includeLo);
+                return classifier;
             }
             default:
-                throw new MacrobaseException("Bad Summarizer Name");
+                throw new MacrobaseException("Bad Classifier Name");
         }
     }
 }
