@@ -9,6 +9,7 @@ import edu.stanford.futuredata.macrobase.conf.Config;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
+import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,7 @@ public class BatchPipeline implements Pipeline {
         System.out.println(output.prettyPrint());
     }
 
-    private BatchSummarizer getSummarizer(String outlierColumn) {
+    private BatchSummarizer getSummarizer(String outlierColumn) throws MacrobaseException {
         switch (summarizerType) {
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
@@ -105,7 +106,7 @@ public class BatchPipeline implements Pipeline {
                 return summarizer;
             }
             default:
-                return null;
+                throw new MacrobaseException("Bad Summarizer Name");
         }
     }
 }

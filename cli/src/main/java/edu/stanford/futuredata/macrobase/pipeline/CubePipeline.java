@@ -10,6 +10,7 @@ import edu.stanford.futuredata.macrobase.conf.Config;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
+import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +106,7 @@ public class CubePipeline implements Pipeline {
         return colTypes;
     }
 
-    private CubeClassifier getClassifier() {
+    private CubeClassifier getClassifier() throws MacrobaseException {
         switch (classifierType) {
             case "arithmetic": {
                 ArithmeticClassifier classifier =
@@ -116,7 +117,7 @@ public class CubePipeline implements Pipeline {
                 return classifier;
             }
             default:
-                return null;
+                throw new MacrobaseException("Bad Classifier Name");
         }
     }
 }
