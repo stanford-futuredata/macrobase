@@ -83,16 +83,9 @@ public class BasicBatchPipeline implements Pipeline {
     }
 
     public DataFrame loadData() throws Exception {
-        if(inputURI.substring(0, 3).equals("csv")) {
-            CSVDataFrameLoader loader = new CSVDataFrameLoader(inputURI.substring(6));
-            Map<String, Schema.ColType> colTypes = new HashMap<>();
-            colTypes.put(metric, Schema.ColType.DOUBLE);
-            loader.setColumnTypes(colTypes);
-            DataFrame df = loader.load();
-            return df;
-        } else {
-            throw new MacrobaseException("Unsupported URI");
-        }
+        Map<String, Schema.ColType> colTypes = new HashMap<>();
+        colTypes.put(metric, Schema.ColType.DOUBLE);
+        return PipelineUtils.loadDataFrame(inputURI, colTypes);
     }
 
     @Override

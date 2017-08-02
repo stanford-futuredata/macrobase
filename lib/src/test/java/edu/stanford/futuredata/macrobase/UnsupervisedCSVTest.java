@@ -91,15 +91,6 @@ public class UnsupervisedCSVTest {
         summ.process(df_classified);
         results = summ.getResults();
         assertEquals(2, results.getItemsets().size());
-
-        // Invert outlier classes
-        summ = new FPGrowthSummarizer();
-        summ.setAttributes(explanationAttributes);
-        summ.setOutlierPredicate(d -> d == 0.0);
-        summ.process(df_classified);
-        results = summ.getResults();
-        assertEquals(1000, results.getNumOutliers());
-        assertEquals(0, results.getItemsets().size());
     }
 
     @Test

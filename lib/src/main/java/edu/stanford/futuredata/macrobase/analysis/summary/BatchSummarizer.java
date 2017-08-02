@@ -12,6 +12,9 @@ import java.util.function.DoublePredicate;
  * Takes a dataframe with binary classification and searches for explanations
  * (subgroup discovery / contrast set mining / feature selection)
  * that capture differences between the two groups.
+ *
+ * outlierColumn should either be 0.0 or 1.0 to signify outlying points or
+ * a count of the number of outliers represented by a row
  */
 public abstract class BatchSummarizer implements Operator<DataFrame, Explanation> {
     // Parameters
@@ -19,7 +22,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     protected double minOutlierSupport = 0.1;
     protected double minRiskRatio = 3;
     protected List<String> attributes = new ArrayList<>();
-    protected DoublePredicate predicate = d -> d != 0.0;
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -38,16 +40,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
      */
     public BatchSummarizer setMinRiskRatio(double minRiskRatio) {
         this.minRiskRatio = minRiskRatio;
-        return this;
-    }
-
-    /**
-     * By default, will check for nonzero entries in a column of doubles.
-     * @param predicate function to signify whether row should be treated as outlier.
-     * @return this
-     */
-    public BatchSummarizer setOutlierPredicate(DoublePredicate predicate) {
-        this.predicate = predicate;
         return this;
     }
 

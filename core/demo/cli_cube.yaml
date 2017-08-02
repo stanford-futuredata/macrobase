@@ -1,9 +1,8 @@
 pipeline: "CubePipeline"
 
-inputFile: "demo/sample_cubed.csv"
+inputURI: "csv://core/demo/sample_cubed.csv"
 
 classifier: "arithmetic"
-
 countColumn: "count"
 meanColumn: "mean"
 stdColumn: "std"

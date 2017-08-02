@@ -31,10 +31,13 @@ From the macrobase root directory:
 
 will attempt to summarize the outliers in `core/demo/sample.csv`
 
-To run a pipeline over a data cube, replace the last line from above with:
+If the data is in the cube form (grouped and aggregated by attribute values) then you will need
+to specify which columns contain the counts, mean, and standard deviation aggregations.
+To run a pipeline over a sample data cube in `core/demo/sampled_cubed.csv`, 
+replace the last line from above with:
 
 ```
-./bin/simple.sh core/demo/cube.yaml
+./bin/simple.sh core/demo/cli_cube.yaml
 ```
 
 #### Rest Server

@@ -17,15 +17,17 @@ import java.util.*;
 public class APrioriSummarizer extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APriori");
 
+    // Parameters
+    String countColumn = null;
+
+    // Calculated Values
     int numRows;
     AttributeEncoder encoder;
 
-    int numEvents;
-    int numOutliers;
+    long numEvents;
+    long numOutliers;
     double baseRate;
     int suppCount;
-
-    String countColumn = "count";
 
     int numSingles;
 
@@ -56,7 +58,7 @@ public class APrioriSummarizer extends BatchSummarizer {
         // Marking Outliers
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
         double[] countCol = null;
-        if (input.hasColumn(countColumn)) {
+        if (countColumn != null) {
             countCol = input.getDoubleColumnByName(countColumn);
         }
         numEvents = 0;
@@ -71,7 +73,7 @@ public class APrioriSummarizer extends BatchSummarizer {
         for (int i = 0; i < numRows; i++) {
             numOutliersExact += outlierCol[i];
         }
-        numOutliers = (int) numOutliersExact;
+        numOutliers = (long) numOutliersExact;
         baseRate = numOutliersExact*1.0/numEvents;
         suppCount = (int) (minOutlierSupport * numOutliers);
         log.info("Outliers: {}", numOutliers);

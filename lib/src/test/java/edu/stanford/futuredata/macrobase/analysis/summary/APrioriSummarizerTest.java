@@ -96,6 +96,7 @@ public class APrioriSummarizerTest {
         assertTrue(values.contains("v3"));
     }
 
+    @Test
     public void testGenCandidates() {
         HashSet<Integer> singleCandidates = new HashSet<>();
         for (int i = 1; i <= 4; i++) {
@@ -109,5 +110,39 @@ public class APrioriSummarizerTest {
         HashSet<IntSet> o3Candidates = APrioriSummarizer.getOrder3Candidates(o2Candidates, singleCandidates);
         assertEquals(1, o3Candidates.size());
         assertEquals(new IntSet(1,2,3), o3Candidates.iterator().next());
+    }
+
+    @Test
+    public void testOrder3() throws Exception {
+        DataFrame df = new DataFrame();
+        String[] col1 = {"a1", "a2", "a1", "a1"};
+        String[] col2 = {"b1", "b1", "b2", "b1"};
+        String[] col3 = {"c1", "c1", "c1", "c2"};
+        double[] counts = {100, 300, 400, 500};
+        double[] oCounts = {30, 5, 5, 7};
+        df.addStringColumn("col1", col1);
+        df.addStringColumn("col2", col2);
+        df.addStringColumn("col3", col3);
+        df.addDoubleColumn("counts", counts);
+        df.addDoubleColumn("oCounts", oCounts);
+
+        List<String> explanationAttributes = Arrays.asList(
+                "col1",
+                "col2",
+                "col3"
+        );
+        APrioriSummarizer summ = new APrioriSummarizer();
+        summ.setCountColumn("counts");
+        summ.setOutlierColumn("oCounts");
+        summ.setMinSupport(.1);
+        summ.setMinRiskRatio(5.0);
+        summ.setAttributes(explanationAttributes);
+        summ.process(df);
+        Explanation e = summ.getResults();
+
+        assertEquals(1,e.getItemsets().size());
+        AttributeSet mainResult = e.getItemsets().get(0);
+        assertEquals(3, mainResult.getItems().size());
+        assertEquals(100.0, mainResult.getNumRecords(), 1e-10);
     }
 }

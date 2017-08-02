@@ -20,32 +20,31 @@ import java.util.Map;
  */
 public class CubePipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger("CubePipeline");
-    private String inputFile;
+
+    private String inputURI;
 
     private String classifierType;
-
-    private double percentile;
-    private boolean includeHi;
-    private boolean includeLo;
     private String countColumn;
     private String meanColumn;
     private String stdColumn;
+    private double percentile;
+    private boolean includeHi;
+    private boolean includeLo;
 
     private List<String> attributes;
     private double minSupport;
     private double minRiskRatio;
 
     public CubePipeline(PipelineConfig conf) {
-        inputFile = conf.get("inputFile");
+        inputURI = conf.get("inputURI");
 
         classifierType = conf.get("classifier");
-
-        percentile = conf.get("percentile");
-        includeHi = conf.get("includeHi");
-        includeLo = conf.get("includeLo");
         countColumn = conf.get("countColumn");
         meanColumn = conf.get("meanColumn");
         stdColumn = conf.get("stdColumn");
+        percentile = conf.get("percentile");
+        includeHi = conf.get("includeHi");
+        includeLo = conf.get("includeLo");
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport");
@@ -54,10 +53,8 @@ public class CubePipeline implements Pipeline {
 
     public Explanation results() throws Exception {
         Map<String, Schema.ColType> colTypes = getColTypes();
-        CSVDataFrameLoader loader = new CSVDataFrameLoader(inputFile);
-        loader.setColumnTypes(colTypes);
         long startTime = System.currentTimeMillis();
-        DataFrame df = loader.load();
+        DataFrame df = PipelineUtils.loadDataFrame(inputURI, colTypes);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);
         log.info("{} rows", df.getNumRows());
