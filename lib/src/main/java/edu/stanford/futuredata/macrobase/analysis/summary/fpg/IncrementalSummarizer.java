@@ -162,7 +162,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
      *   - inlierItemsetWindowCount, outlierItemsetWindowCount:
      *          remove counts from the expired pane from the window count
      *   - trackingMap:
-     *          adjust the pane number indicating when we first started tracking an apriori
+     *          adjust the pane number indicating when we first started tracking an itemset
      */
     private void expireLastPane() {
         // Remove old pane counts from buffer
@@ -184,7 +184,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
                 outlierItemsetWindowCount.remove(itemset);
             }
         }
-        // Decrement pane number indicating where we first start tracking counts for an apriori
+        // Decrement pane number indicating where we first start tracking counts for an itemset
         // (since we removed the first pane)
         for (Set<Integer> itemset : trackingMap.keySet()) {
             int paneNo = trackingMap.get(itemset);
@@ -194,8 +194,8 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         }
     }
 
-    /* This function counts the occurrence of each supported apriori in the new pane,
-     * and update corresponding apriori counts for the entire window.
+    /* This function counts the occurrence of each supported itemset in the new pane,
+     * and update corresponding itemset counts for the entire window.
      *
      * Variables affected:
      *   - inlierItemsetPaneCount, outlierItemsetPaneCount
@@ -237,9 +237,9 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
      * still have enough outlier support (from the pane it first got promoted till now).
      *
      * Variables affected:
-     *   - trackingMap: remove unsupported apriori from tracking map
+     *   - trackingMap: remove unsupported itemset from tracking map
      *   - outlierItemsetPaneCount, inlierItemsetPaneCount, outlierItemsetWindowCount, inlierItemsetWindowCount:
-     *          remove unsupported apriori counts
+     *          remove unsupported itemset counts
      * */
     private void pruneUnsupported() {
         HashSet<Set<Integer>> unSupported = new HashSet<>();
@@ -261,7 +261,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
         inlierItemsetWindowCount.keySet().removeAll(unSupported);
     }
 
-    /* Helper function that updates internals to keep track of a promoted apriori. */
+    /* Helper function that updates internals to keep track of a promoted itemset. */
     private void trackItemset(Set<Integer> itemset, double count) {
         trackingMap.put(itemset, inlierPaneCounts.size() - 1);
         outlierItemsetWindowCount.put(itemset, count);
@@ -274,7 +274,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
      * Variables affected:
      *   - trackingMap: record that we start tracking new frequent itemsets in this pane
      *   - outlierItemsetPaneCount, inlierItemsetPaneCount, outlierItemsetWindowCount, inlierItemsetWindowCount:
-     *      add new frequent apriori counts
+     *      add new frequent itemset counts
      */
     private void addNewFrequent() {
         if (minOutlierSupport * outlierItemsets.size() < 1) { return; }
@@ -336,7 +336,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
                     outlierItemsetWindowCount.get(itemset),
                     inlierSupport,
                     outlierSupport);
-            // Add to output if the apriori has sufficient risk ratio
+            // Add to output if the itemset has sufficient risk ratio
             if (rr >= minRiskRatio) {
                 FPGItemsetResult result = new FPGItemsetResult(
                         outlierItemsetWindowCount.get(itemset) / outlierSupport,

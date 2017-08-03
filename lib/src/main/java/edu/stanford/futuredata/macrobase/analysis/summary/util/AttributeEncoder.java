@@ -5,7 +5,8 @@ import java.util.*;
 /**
  * Encode every combination of attribute names and values into a distinct integer.
  * This class assumes that attributes are stored in String columns in dataframes
- * and is mainly used for frequent apriori mining.
+ * and is used inside of the explanation operators to search for explanatory
+ * column values.
  */
 public class AttributeEncoder {
     private HashMap<Integer, Map<String, Integer>> encoder;
