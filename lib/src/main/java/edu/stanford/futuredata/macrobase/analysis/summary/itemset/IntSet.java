@@ -55,6 +55,35 @@ public class IntSet {
         return curSet;
     }
 
+    public boolean contains(int i) {
+        switch (values.length) {
+            case 1: {
+                return values[0] == 1;
+            }
+            case 2: {
+                return values[0] == i || values[1] == i;
+            }
+            case 3: {
+                return values[0] == i || values[1] == i || values[2] == i;
+            }
+            default: {
+                return Arrays.binarySearch(values, i) >= 0;
+            }
+        }
+    }
+
+    public boolean contains(IntSet other) {
+        int startIdx = 0;
+        int n = values.length;
+        for (int i : other.values) {
+            startIdx = Arrays.binarySearch(values, startIdx, n, i);
+            if (startIdx < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

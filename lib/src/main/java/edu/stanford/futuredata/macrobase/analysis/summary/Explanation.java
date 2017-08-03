@@ -22,7 +22,6 @@ public class Explanation {
                        long numOutliers,
                        long creationTimeMs) {
         itemsets = new ArrayList<>(resultList);
-        itemsets.sort((AttributeSet a, AttributeSet b) -> -a.compareTo(b));
         this.numInliers = numInliers;
         this.numOutliers = numOutliers;
         this.creationTimeMs = creationTimeMs;
@@ -33,6 +32,7 @@ public class Explanation {
      * @return New explanation with redundant itemsets removed.
      */
     public Explanation prune() {
+        itemsets.sort((AttributeSet a, AttributeSet b) -> -a.compareTo(b));
         List<AttributeSet> newItemsets = new ArrayList<>();
         int n = itemsets.size();
         for (int i = 0; i < n; i++) {
@@ -61,6 +61,14 @@ public class Explanation {
         return newExplanation;
     }
 
+    public void sortByRiskRatio() {
+        itemsets.sort((AttributeSet a, AttributeSet b) -> -a.compareTo(b));
+    }
+
+    public void sortBySupport() {
+        itemsets.sort((AttributeSet a, AttributeSet b) -> -Double.compare(a.getSupport(),b.getSupport()));
+    }
+
     public List<AttributeSet> getItemsets() {
         return itemsets;
     }
@@ -85,8 +93,7 @@ public class Explanation {
                 + "Itemsets: \n"
                 + "--------\n",
                 numOutliers,
-                numInliers,
-                itemsets));
+                numInliers));
         for (AttributeSet is : itemsets) {
             header.append(is.prettyPrint());
         }

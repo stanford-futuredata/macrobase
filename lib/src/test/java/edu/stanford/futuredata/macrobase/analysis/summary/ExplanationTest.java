@@ -37,5 +37,4 @@ public class ExplanationTest {
         assertEquals(1, e.prune().getItemsets().size());
 
     }
-
 }

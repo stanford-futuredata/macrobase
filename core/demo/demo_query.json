@@ -1,0 +1,15 @@
+{
+  "pipeline": "BasicBatchPiepline",
+  "inputURI": "csv://core/demo/sample.csv",
+
+  "classifier": "percentile",
+  "metric": "usage",
+  "cutoff": 1.0,
+  "includeHi": true,
+  "includeLo": true,
+
+  "summarizer": "apriori",
+  "attributes": ["location", "version"],
+  "minRiskRatio": 10.0,
+  "minSupport": 0.2
+}

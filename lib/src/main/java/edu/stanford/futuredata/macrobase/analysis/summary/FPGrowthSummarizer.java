@@ -42,8 +42,8 @@ public class FPGrowthSummarizer extends BatchSummarizer {
     @Override
     public void process(DataFrame df) {
         // Filter inliers and outliers
-        DataFrame outlierDF = df.filter(outlierColumn, predicate);
-        DataFrame inlierDF = df.filter(outlierColumn, predicate.negate());
+        DataFrame outlierDF = df.filter(outlierColumn, (double d) -> d > 0.0);
+        DataFrame inlierDF = df.filter(outlierColumn, (double d) -> d == 0.0);
 
         // Encode inlier and outlier attribute columns
         if (attributes.isEmpty()) {

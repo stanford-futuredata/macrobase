@@ -353,6 +353,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
                 (long) inlierCountCumSum.get(currPanes),
                 (long) outlierCountCumSum.get(currPanes),
                 elapsed);
+        explanation.sortByRiskRatio();
         return explanation;
     }
 

@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.summary.itemset.IntSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -93,5 +94,55 @@ public class APrioriSummarizerTest {
         values.addAll(firstResult.values());
         assertTrue(values.contains("CAN"));
         assertTrue(values.contains("v3"));
+    }
+
+    @Test
+    public void testGenCandidates() {
+        HashSet<Integer> singleCandidates = new HashSet<>();
+        for (int i = 1; i <= 4; i++) {
+            singleCandidates.add(i);
+        }
+        HashSet<IntSet> o2Candidates = new HashSet<IntSet>();
+        o2Candidates.add(new IntSet(1, 2));
+        o2Candidates.add(new IntSet(2, 3));
+        o2Candidates.add(new IntSet(1, 3));
+        o2Candidates.add(new IntSet(3, 4));
+        HashSet<IntSet> o3Candidates = APrioriSummarizer.getOrder3Candidates(o2Candidates, singleCandidates);
+        assertEquals(1, o3Candidates.size());
+        assertEquals(new IntSet(1,2,3), o3Candidates.iterator().next());
+    }
+
+    @Test
+    public void testOrder3() throws Exception {
+        DataFrame df = new DataFrame();
+        String[] col1 = {"a1", "a2", "a1", "a1"};
+        String[] col2 = {"b1", "b1", "b2", "b1"};
+        String[] col3 = {"c1", "c1", "c1", "c2"};
+        double[] counts = {100, 300, 400, 500};
+        double[] oCounts = {30, 5, 5, 7};
+        df.addStringColumn("col1", col1);
+        df.addStringColumn("col2", col2);
+        df.addStringColumn("col3", col3);
+        df.addDoubleColumn("counts", counts);
+        df.addDoubleColumn("oCounts", oCounts);
+
+        List<String> explanationAttributes = Arrays.asList(
+                "col1",
+                "col2",
+                "col3"
+        );
+        APrioriSummarizer summ = new APrioriSummarizer();
+        summ.setCountColumn("counts");
+        summ.setOutlierColumn("oCounts");
+        summ.setMinSupport(.1);
+        summ.setMinRiskRatio(5.0);
+        summ.setAttributes(explanationAttributes);
+        summ.process(df);
+        Explanation e = summ.getResults();
+
+        assertEquals(1,e.getItemsets().size());
+        AttributeSet mainResult = e.getItemsets().get(0);
+        assertEquals(3, mainResult.getItems().size());
+        assertEquals(100.0, mainResult.getNumRecords(), 1e-10);
     }
 }
