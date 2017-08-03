@@ -1,5 +1,6 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.RiskRatio;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

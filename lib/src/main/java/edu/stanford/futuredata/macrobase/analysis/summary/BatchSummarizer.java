@@ -1,12 +1,10 @@
 package edu.stanford.futuredata.macrobase.analysis.summary;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.DoublePredicate;
 
 /**
  * Takes a dataframe with binary classification and searches for explanations

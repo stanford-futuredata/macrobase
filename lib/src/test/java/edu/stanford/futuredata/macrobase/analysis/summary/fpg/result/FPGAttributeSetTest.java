@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset.result;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg.result;
 
 import org.junit.Test;
 
@@ -7,7 +7,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public class AttributeSetTest {
+public class FPGAttributeSetTest {
     @Test
     public void testSimple() throws Exception {
         Map<String, String> v1 = new HashMap<>();
@@ -17,10 +17,10 @@ public class AttributeSetTest {
         Map<String, String> v2 = new HashMap<>();
         v2.put("c2", "val2");
 
-        AttributeSet a1 = new AttributeSet(
+        FPGAttributeSet a1 = new FPGAttributeSet(
                 .2, 10.0, 21.2, v1
         );
-        AttributeSet a2 = new AttributeSet(
+        FPGAttributeSet a2 = new FPGAttributeSet(
                 .7, 30.0, 25.0, v2
         );
 

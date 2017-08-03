@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
 public class RiskRatio {
     private static double computeDouble(double exposedInlierCount,

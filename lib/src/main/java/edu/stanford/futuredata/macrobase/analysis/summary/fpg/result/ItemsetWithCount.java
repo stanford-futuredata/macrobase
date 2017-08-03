@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset.result;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg.result;
 
 import java.util.Set;
 

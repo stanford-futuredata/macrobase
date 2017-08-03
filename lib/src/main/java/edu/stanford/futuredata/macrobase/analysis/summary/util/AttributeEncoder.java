@@ -1,11 +1,11 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.*;
 
 /**
  * Encode every combination of attribute names and values into a distinct integer.
  * This class assumes that attributes are stored in String columns in dataframes
- * and is mainly used for frequent itemset mining.
+ * and is mainly used for frequent apriori mining.
  */
 public class AttributeEncoder {
     private HashMap<Integer, Map<String, Integer>> encoder;
@@ -82,6 +82,14 @@ public class AttributeEncoder {
 
     public int getNextKey() {
         return nextKey;
+    }
+
+    public Map<String, String> decodeSet(Set<Integer> set) {
+        HashMap<String, String> m = new HashMap<>(set.size());
+        for (int i : set) {
+            m.put(decodeColumnName(i), decodeValue(i));
+        }
+        return m;
     }
 
 }

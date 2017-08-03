@@ -2,9 +2,10 @@ package edu.stanford.futuredata.macrobase.integration;
 
 import edu.stanford.futuredata.macrobase.StreamingSummarizationTest;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.IncrementalSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.IncrementalSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.WindowedOperator;
 
@@ -37,7 +38,7 @@ public class StreamingSummarizationBenchmark {
         outlierSummarizer.setAttributes(attributes);
         outlierSummarizer.setOutlierColumn("outlier");
         outlierSummarizer.setMinSupport(.3);
-        WindowedOperator<Explanation> windowedSummarizer = new WindowedOperator<>(outlierSummarizer);
+        WindowedOperator<FPGExplanation> windowedSummarizer = new WindowedOperator<>(outlierSummarizer);
         windowedSummarizer.setWindowLength(windowSize);
         windowedSummarizer.setTimeColumn("time");
         windowedSummarizer.setSlideLength(slideSize);
@@ -62,7 +63,7 @@ public class StreamingSummarizationBenchmark {
             );
             long timerStart = System.currentTimeMillis();
             windowedSummarizer.process(curBatch);
-            Explanation curExplanation = windowedSummarizer
+            FPGExplanation curExplanation = windowedSummarizer
                     .getResults()
                     .prune();
             long timerElapsed = System.currentTimeMillis() - timerStart;
@@ -71,12 +72,12 @@ public class StreamingSummarizationBenchmark {
             if (windowedSummarizer.getMaxWindowTime() > eventIdx
                     && windowedSummarizer.getMaxWindowTime() - windowSize < eventEndIdx) {
                 //  make sure that the known anomalous attribute combination has the highest risk ratio
-                AttributeSet topRankedExplanation = curExplanation.getItemsets().get(0);
+                FPGAttributeSet topRankedExplanation = curExplanation.getItemsets().get(0);
                 assertTrue(topRankedExplanation.getItems().values().containsAll(buggyAttributeValues));
             } else {
                 // Otherwise make sure that the noisy explanations are all low-cardinality
                 if (curExplanation.getItemsets().size() > 0) {
-                    AttributeSet topRankedExplanation = curExplanation.getItemsets().get(0);
+                    FPGAttributeSet topRankedExplanation = curExplanation.getItemsets().get(0);
                     assertTrue(
                             topRankedExplanation.getNumRecords() < 20
                     );

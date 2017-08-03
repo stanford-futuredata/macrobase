@@ -1,9 +1,9 @@
-package edu.stanford.futuredata.macrobase.analysis.summary;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.FPGrowthEmerging;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
+import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 
@@ -21,7 +21,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
     private boolean useAttributeCombinations = true;
 
     // Output
-    private Explanation explanation = null;
+    private FPGExplanation explanation = null;
     private List<Set<Integer>> inlierItemsets, outlierItemsets;
     private FPGrowthEmerging fpg = new FPGrowthEmerging();
 
@@ -57,24 +57,24 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         }
 
         long startTime = System.currentTimeMillis();
-        List<ItemsetResult> itemsetResults = fpg.getEmergingItemsetsWithMinSupport(
+        List<FPGItemsetResult> itemsetResults = fpg.getEmergingItemsetsWithMinSupport(
             inlierItemsets,
             outlierItemsets,
             minOutlierSupport,
             minRiskRatio);
         // Decode results
-        List<AttributeSet> attributeSets = new ArrayList<>();
-        itemsetResults.forEach(i -> attributeSets.add(new AttributeSet(i, encoder)));
+        List<FPGAttributeSet> attributeSets = new ArrayList<>();
+        itemsetResults.forEach(i -> attributeSets.add(new FPGAttributeSet(i, encoder)));
         long elapsed = System.currentTimeMillis() - startTime;
 
-        explanation = new Explanation(attributeSets,
+        explanation = new FPGExplanation(attributeSets,
                 inlierItemsets.size(),
                 outlierItemsets.size(),
                 elapsed);
     }
 
     @Override
-    public Explanation getResults() {
+    public FPGExplanation getResults() {
         return explanation;
     }
 }

@@ -1,5 +1,6 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import org.junit.Test;
 
 import java.util.ArrayList;

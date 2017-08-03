@@ -1,8 +1,8 @@
 package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
@@ -53,7 +53,7 @@ public class UnsupervisedCSVTest {
         FPGrowthSummarizer summ = new FPGrowthSummarizer();
         summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
-        Explanation results = summ.getResults();
+        FPGExplanation results = summ.getResults();
         assertEquals(3, results.getItemsets().size());
     }
 
@@ -73,7 +73,7 @@ public class UnsupervisedCSVTest {
         summ.setAttributes(explanationAttributes);
         summ.setMinRiskRatio(5.0);
         summ.process(df_classified);
-        Explanation results = summ.getResults();
+        FPGExplanation results = summ.getResults();
         assertEquals(1, results.getItemsets().size());
 
         // Increase support requirement
@@ -110,7 +110,7 @@ public class UnsupervisedCSVTest {
         summ.setAttributes(explanationAttributes);
         summ.setUseAttributeCombinations(false);
         summ.process(df_classified);
-        Explanation results = summ.getResults();
+        FPGExplanation results = summ.getResults();
         assertEquals(2, results.getItemsets().size());
         assertTrue(results.getItemsets().get(0).getSupport() > .9);
     }
