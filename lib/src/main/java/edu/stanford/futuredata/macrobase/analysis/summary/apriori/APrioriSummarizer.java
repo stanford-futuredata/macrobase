@@ -20,7 +20,6 @@ public class APrioriSummarizer extends BatchSummarizer {
     // Parameters
     String countColumn = null;
     ExplanationMetric ratioMetric = new GlobalRatioMetric();
-    double minRatioMetric = 3;
 
     // Calculated Values
     int numRows;
@@ -108,21 +107,17 @@ public class APrioriSummarizer extends BatchSummarizer {
                 outlierCol
         );
 
-        countSet(
-                encoded,
-                countCol,
-                outlierCol,
-                2
-        );
+        for (int o = 2; o <= maxOrder; ++o) {
+            countSet(
+                    encoded,
+                    countCol,
+                    outlierCol,
+                    o
+            );
 
-        countSet(
-                encoded,
-                countCol,
-                outlierCol,
-                3
-        );
+        }
 
-        for (int o = 1; o <= 3; o++) {
+        for (int o = 1; o <= maxOrder; o++) {
             log.info("Order {} Explanations: {}", o, setSaved.get(o).size());
         }
 
@@ -324,7 +319,7 @@ public class APrioriSummarizer extends BatchSummarizer {
     @Override
     public APExplanation getResults() {
         List<ExplanationResult> results = new ArrayList<>();
-        for (int o = 1; o <= 3; o++) {
+        for (int o = 1; o <= maxOrder; o++) {
             HashSet<IntSet> curResults = setSaved.get(o);
             HashMap<IntSet, Integer> idxMapping = setIdxMapping.get(o);
             int[] oCounts = setOCounts.get(o);
@@ -380,13 +375,4 @@ public class APrioriSummarizer extends BatchSummarizer {
         this.ratioMetric = ratioMetric;
     }
 
-    /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public BatchSummarizer setMinRatioMetric(double minRatio) {
-        this.minRatioMetric = minRatio;
-        return this;
-    }
 }

@@ -16,7 +16,6 @@ import java.util.Set;
  * string attribute columns. Each batch is considered as an independent unit.
  */
 public class FPGrowthSummarizer extends BatchSummarizer {
-    protected double minRiskRatio = 3;
     // Encoder
     protected AttributeEncoder encoder = new AttributeEncoder();
     private boolean useAttributeCombinations = true;
@@ -62,7 +61,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
             inlierItemsets,
             outlierItemsets,
             minOutlierSupport,
-            minRiskRatio);
+            minRatioMetric);
         // Decode results
         List<FPGAttributeSet> attributeSets = new ArrayList<>();
         itemsetResults.forEach(i -> attributeSets.add(new FPGAttributeSet(i, encoder)));
@@ -79,13 +78,4 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         return explanation;
     }
 
-    /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public BatchSummarizer setMinRiskRatio(double minRiskRatio) {
-        this.minRiskRatio = minRiskRatio;
-        return this;
-    }
 }

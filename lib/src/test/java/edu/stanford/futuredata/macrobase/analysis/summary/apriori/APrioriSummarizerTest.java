@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.StdDevGroupClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -36,9 +36,10 @@ public class APrioriSummarizerTest {
                 "version"
         );
         APrioriSummarizer summ = new APrioriSummarizer();
-        summ.setMinSupport(.01);
-        summ.setMinRatioMetric(10.0);
-        summ.setAttributes(explanationAttributes);
+        summ.setMinSupport(.01)
+            .setMaxOrder(3)
+            .setMinRatioMetric(10.0)
+            .setAttributes(explanationAttributes);
         summ.process(df_classified);
 
         APExplanation e = summ.getResults();
@@ -66,7 +67,7 @@ public class APrioriSummarizerTest {
         ).setColumnTypes(schema);
         DataFrame df = loader.load();
 
-        ArithmeticClassifier ac = new ArithmeticClassifier(
+        StdDevGroupClassifier ac = new StdDevGroupClassifier(
                 "count", "mean", "std");
         ac.setPercentile(1.0);
         ac.setCountColumnName("count");
@@ -79,10 +80,11 @@ public class APrioriSummarizerTest {
                 "version"
         );
         APrioriSummarizer summ = new APrioriSummarizer();
-        summ.setCountColumn("count");
-        summ.setMinSupport(.01);
-        summ.setMinRatioMetric(10.0);
-        summ.setAttributes(explanationAttributes);
+        summ.setCountColumn("count")
+            .setMaxOrder(3)
+            .setMinSupport(.01)
+            .setMinRatioMetric(10.0)
+            .setAttributes(explanationAttributes);
         summ.process(df_classified);
 
         APExplanation e = summ.getResults();
@@ -136,11 +138,12 @@ public class APrioriSummarizerTest {
                 "col3"
         );
         APrioriSummarizer summ = new APrioriSummarizer();
-        summ.setCountColumn("counts");
-        summ.setOutlierColumn("oCounts");
-        summ.setMinSupport(.1);
-        summ.setMinRatioMetric(3.0);
-        summ.setAttributes(explanationAttributes);
+        summ.setCountColumn("counts")
+            .setOutlierColumn("oCounts")
+            .setMinSupport(.1)
+            .setMaxOrder(3)
+            .setMinRatioMetric(3.0)
+            .setAttributes(explanationAttributes);
         summ.process(df);
         APExplanation e = summ.getResults();
 

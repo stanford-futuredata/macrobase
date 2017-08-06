@@ -11,7 +11,7 @@ import java.lang.Double;
  * Returns a new dataframe with a column representation of the estimated number of outliers
  * for each group, which can be non-integer.
  */
-public class ArithmeticClassifier extends CubeClassifier implements ThresholdClassifier {
+public class StdDevGroupClassifier extends CubeClassifier implements ThresholdClassifier {
     // Parameters
     private String meanColumnName = "mean";
     private String stdColumnName = "std";
@@ -24,8 +24,8 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
     private double highCutoff;
     private DataFrame output;
 
-    public ArithmeticClassifier(String countColumnName, String meanColumnName,
-                                String stdColumnName) {
+    public StdDevGroupClassifier(String countColumnName, String meanColumnName,
+                                 String stdColumnName) {
         super(countColumnName);
         this.meanColumnName = meanColumnName;
         this.stdColumnName = stdColumnName;
@@ -85,7 +85,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
      * @param percentile Cutoff point for high or low values
      * @return this
      */
-    public ArithmeticClassifier setPercentile(double percentile) {
+    public StdDevGroupClassifier setPercentile(double percentile) {
         this.percentile = percentile;
         return this;
     }
@@ -99,7 +99,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
      *                       combination.
      * @return this
      */
-    public ArithmeticClassifier setMeanColumnName(String meanColumnName) {
+    public StdDevGroupClassifier setMeanColumnName(String meanColumnName) {
         this.meanColumnName = meanColumnName;
         return this;
     }
@@ -113,7 +113,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
      *                      corresponding to each row's attribute combination.
      * @return this
      */
-    public ArithmeticClassifier setStdColumnName(String stdColumnName) {
+    public StdDevGroupClassifier setStdColumnName(String stdColumnName) {
         this.stdColumnName = stdColumnName;
         return this;
     }
@@ -126,7 +126,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
      * @param includeHigh Whether to count high points as outliers.
      * @return this
      */
-    public ArithmeticClassifier setIncludeHigh(boolean includeHigh) {
+    public StdDevGroupClassifier setIncludeHigh(boolean includeHigh) {
         this.includeHigh = includeHigh;
         return this;
     }
@@ -138,7 +138,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
      * @param includeLow Whether to count low points as outliers
      * @return this
      */
-    public ArithmeticClassifier setIncludeLow(boolean includeLow) {
+    public StdDevGroupClassifier setIncludeLow(boolean includeLow) {
         this.includeLow = includeLow;
         return this;
     }

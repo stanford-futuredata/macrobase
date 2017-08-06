@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.StdDevGroupClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
@@ -113,8 +113,8 @@ public class CubePipeline implements Pipeline {
     private CubeClassifier getClassifier() throws MacrobaseException {
         switch (classifierType) {
             case "arithmetic": {
-                ArithmeticClassifier classifier =
-                        new ArithmeticClassifier(countColumn, meanColumn, stdColumn);
+                StdDevGroupClassifier classifier =
+                        new StdDevGroupClassifier(countColumn, meanColumn, stdColumn);
                 classifier.setPercentile(percentile);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);

@@ -44,6 +44,10 @@ public class PipelineConfig {
         return (T) values.getOrDefault(key, defaultValue);
     }
 
+    public String get(String key, String defaultValue) {
+        return ((String) values.getOrDefault(key, defaultValue)).trim().toLowerCase();
+    }
+
     public Map<String, Object> getValues() {
         return values;
     }

@@ -7,7 +7,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class ArithmeticClassifierTest {
+public class StdDevGroupClassifierTest {
     private DataFrame df;
 
     @Before
@@ -30,7 +30,7 @@ public class ArithmeticClassifierTest {
     @Test
     public void testClassify() throws Exception {
         assertEquals(1000, df.getNumRows());
-        ArithmeticClassifier ac = new ArithmeticClassifier("count", "mean", "std");
+        StdDevGroupClassifier ac = new StdDevGroupClassifier("count", "mean", "std");
         ac.process(df);
         DataFrame output = ac.getResults();
         assertEquals(100.0, ac.getLowCutoff(), 0.01);
@@ -60,7 +60,7 @@ public class ArithmeticClassifierTest {
 
     @Test
     public void testConfigure() throws Exception {
-        ArithmeticClassifier ac = new ArithmeticClassifier("col1", "col2", "col3");
+        StdDevGroupClassifier ac = new StdDevGroupClassifier("col1", "col2", "col3");
         ac.setMeanColumnName("mean");
         ac.setCountColumnName("count");
         ac.setStdColumnName("std");
