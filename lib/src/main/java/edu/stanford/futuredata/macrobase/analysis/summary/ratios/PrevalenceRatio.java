@@ -18,7 +18,7 @@ public class PrevalenceRatio extends ExplanationMetric {
         double matchedInlier = matchedTotal - matchedOutlier;
 
         if(matchedInlier == 0) {
-            return Double.POSITIVE_INFINITY;
+            matchedInlier += 1; // increment by 1 to avoid DivideByZero error
         }
 
         return (matchedOutlier / outlierCount) / (matchedInlier / inlierCount);

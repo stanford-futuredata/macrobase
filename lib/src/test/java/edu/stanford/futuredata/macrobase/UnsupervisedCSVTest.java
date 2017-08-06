@@ -71,7 +71,7 @@ public class UnsupervisedCSVTest {
         // Increase risk ratio
         FPGrowthSummarizer summ = new FPGrowthSummarizer();
         summ.setAttributes(explanationAttributes);
-        summ.setMinRiskRatio(5.0);
+        summ.setMinRatioMetric(5.0);
         summ.process(df_classified);
         FPGExplanation results = summ.getResults();
         assertEquals(1, results.getItemsets().size());

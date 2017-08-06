@@ -2,11 +2,10 @@ pipeline: "BasicBatchPipeline"
 
 input_uri: "csv://src/test/resources/tiny.csv"
 
-classifier: "percentile"
+classifier: "predicate"
 metric: "usage"
-cutoff: 1.0
-include_hi: true
-include_lo: true
+predicate: "=="
+value: 2.0
 
 summarizer: "apriori"
 attributes:
