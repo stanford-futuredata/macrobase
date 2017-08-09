@@ -68,7 +68,7 @@ public class BasicBatchPipeline implements Pipeline {
             case "raw_threshold": {
                 // default values for RawThresholdClassifier
                 // {predicate: "==", value: 1.0}
-                final String predicateStr = conf.get("predicate", "==");
+                final String predicateStr = conf.get("predicate", "==").trim();
                 final double metricValue = conf.get("value", 1.0);
                 return new RawThresholdClassifier(metric, predicateStr, metricValue);
             }
