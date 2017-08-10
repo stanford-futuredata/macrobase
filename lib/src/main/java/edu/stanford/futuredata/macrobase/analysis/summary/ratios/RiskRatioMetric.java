@@ -1,5 +1,9 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.ratios;
 
+/**
+ * P(outlier | exposure) / P(outlier | ~exposure)
+ * Used in epidemiology
+ */
 public class RiskRatioMetric extends ExplanationMetric {
     @Override
     public double calc(

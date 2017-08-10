@@ -1,5 +1,10 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.ratios;
 
+/**
+ * P(outlier | exposure) / P(outlier)
+ * Exponential pairwise mutual information
+ * Doesn't have NaN / Infty errors in edge cases as much as risk ratio does
+ */
 public class GlobalRatioMetric extends ExplanationMetric {
     @Override
     public double calc(
