@@ -37,7 +37,7 @@ public class APrioriSummarizerTest {
         );
         APrioriSummarizer summ = new APrioriSummarizer();
         summ.setMinSupport(.01);
-        summ.setMinRiskRatio(10.0);
+        summ.setMinRatioMetric(10.0);
         summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
 
@@ -51,6 +51,8 @@ public class APrioriSummarizerTest {
         values.addAll(firstResult.values());
         assertTrue(values.contains("CAN"));
         assertTrue(values.contains("v3"));
+
+        System.out.println(e.prettyPrint());
     }
 
     @Test
@@ -79,7 +81,7 @@ public class APrioriSummarizerTest {
         APrioriSummarizer summ = new APrioriSummarizer();
         summ.setCountColumn("count");
         summ.setMinSupport(.01);
-        summ.setMinRiskRatio(10.0);
+        summ.setMinRatioMetric(10.0);
         summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
 
@@ -137,7 +139,7 @@ public class APrioriSummarizerTest {
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
         summ.setMinSupport(.1);
-        summ.setMinRiskRatio(3.0);
+        summ.setMinRatioMetric(3.0);
         summ.setAttributes(explanationAttributes);
         summ.process(df);
         APExplanation e = summ.getResults();

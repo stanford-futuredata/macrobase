@@ -14,4 +14,4 @@ attributes:
   - "location"
   - "version"
 minSupport: 0.2
-minRiskRatio: 10.0
+minRatioMetric: 10.0

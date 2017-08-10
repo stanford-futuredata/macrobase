@@ -32,7 +32,7 @@ public class CubePipeline implements Pipeline {
 
     private List<String> attributes;
     private double minSupport;
-    private double minRiskRatio;
+    private double minRatioMetric;
 
     public CubePipeline(PipelineConfig conf) {
         inputURI = conf.get("inputURI");
@@ -47,7 +47,7 @@ public class CubePipeline implements Pipeline {
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport");
-        minRiskRatio = conf.get("minRiskRatio");
+        minRatioMetric = conf.get("minRatioMetric");
     }
 
     public Explanation results() throws Exception {
@@ -75,7 +75,7 @@ public class CubePipeline implements Pipeline {
         summarizer.setCountColumn(classifier.getCountColumnName());
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);
-        summarizer.setMinRiskRatio(minRiskRatio);
+        summarizer.setMinRatioMetric(minRatioMetric);
         startTime = System.currentTimeMillis();
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;

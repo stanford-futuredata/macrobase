@@ -1,15 +1,15 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
 
-import java.util.Map;
-import java.util.StringJoiner;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
+
+import java.util.*;
 
 public class ExplanationResult {
     private Map<String, String> matcher;
     private double matchedOutlier, matchedCount;
     private double totalOutlier, totalCount;
 
-    private double rateLift;
     private double support;
 
     public ExplanationResult(
@@ -25,7 +25,6 @@ public class ExplanationResult {
         this.totalOutlier = totalOutlier;
         this.totalCount = totalCount;
 
-        this.rateLift = (matchedOutlier / matchedCount) / (totalOutlier / totalCount);
         this.support = matchedOutlier / totalOutlier;
     }
 
@@ -38,25 +37,41 @@ public class ExplanationResult {
     public double matchedCount() {
         return matchedCount;
     }
-    public double rateLift() {
-        return rateLift;
-    }
+    public double totalOutlier() { return totalOutlier; }
+    public double totalCount() { return totalCount; }
     public double support() {
         return support;
     }
 
     public String prettyPrint() {
-        StringJoiner joiner = new StringJoiner(",");
-        matcher.forEach((k, v) -> joiner.add(k+"="+v));
+        return prettyPrint(new ArrayList<>());
+    }
+
+    /**
+     * @param printableMetrics custom metrics to be included with result
+     * @return component
+     */
+    public String prettyPrint(List<ExplanationMetric> printableMetrics) {
+        StringJoiner matchJoiner = new StringJoiner(", ");
+        matcher.forEach((k, v) -> matchJoiner.add(k+"="+v));
+
+        StringJoiner metricJoiner = new StringJoiner(", ");
+        printableMetrics.forEach(m -> metricJoiner.add(
+                m.name()+": "+m.calc(
+                        matchedOutlier, matchedCount,
+                        totalOutlier, totalCount
+                ))
+        );
 
         return String.format(
-                "--\n" +
-                        "outlier rate: %d / %d\n" +
-                        "rate lift: %fx, support: %f\n" +
-                        "matching: %s\n",
+                "outlier rate: %d / %d\n" +
+                "support: %f\n" +
+                "%s\n" +
+                "matching: %s\n",
                 (long)matchedOutlier, (long)matchedCount,
-                rateLift, support,
-                joiner.toString()
+                support,
+                metricJoiner.toString(),
+                matchJoiner.toString()
         );
     }
 }
