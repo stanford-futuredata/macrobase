@@ -16,4 +16,13 @@ public class BasicBatchPipelineTest {
         assertEquals(3, e.getNumInliers());
     }
 
+    @Test
+    public void testRawThresholdClassifier() throws Exception {
+        PipelineConfig conf = PipelineConfig.fromYamlFile(
+                "src/test/resources/tiny_raw_threshold_conf.yaml"
+        );
+        BasicBatchPipeline p = new BasicBatchPipeline(conf);
+        Explanation e = p.results();
+        assertEquals(2, e.getNumInliers());
+    }
 }

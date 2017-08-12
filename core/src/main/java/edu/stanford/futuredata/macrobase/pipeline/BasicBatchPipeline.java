@@ -2,17 +2,19 @@ package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.RawThresholdClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Simplest default pipeline: load, classify, and then explain
@@ -21,14 +23,15 @@ import java.util.*;
 public class BasicBatchPipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger(Pipeline.class);
 
-    private String inputURI = null;
+    // All classifier-specific fields need to be retrieved from ``conf''
+    private final PipelineConfig conf;
 
-    private String classifierType = "percentile";
-    private String metric = null;
-    private double cutoff = 1.0;
-    private boolean pctileHigh = true;
-    private boolean pctileLow = true;
+    // PipelineConfig params applicable to all classifiers
+    private final String inputURI;
+    private final String classifierType;
+    private final String metric;
 
+    // PipelineConfig params applicable to all summarizers
     private String summarizerType = "apriori";
     private List<String> attributes = null;
     private double minSupport = 0.01;
@@ -36,29 +39,38 @@ public class BasicBatchPipeline implements Pipeline {
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
+        this.conf = conf;
+        // these fields must be defined explicitly in the conf.yaml file
         inputURI = conf.get("inputURI");
-
         classifierType = conf.get("classifier");
         metric = conf.get("metric");
-        cutoff = conf.get("cutoff");
-        pctileHigh = conf.get("includeHi");
-        pctileLow = conf.get("includeLo");
 
         summarizerType = conf.get("summarizer");
         attributes = conf.get("attributes");
         minRiskRatio = conf.get("minRiskRatio");
         minSupport = conf.get("minSupport");
-
     }
 
     public Classifier getClassifier() throws MacrobaseException {
         switch (classifierType.toLowerCase()) {
             case "percentile": {
-                PercentileClassifier classifier = new PercentileClassifier(metric);
-                classifier.setPercentile(cutoff);
-                classifier.setIncludeHigh(pctileHigh);
-                classifier.setIncludeLow(pctileLow);
-                return classifier;
+                // default values for PercentileClassifier:
+                // {cuttoff: 1.0, includeHi: true, includeLo: true}
+                final double cutoff = conf.get("cutoff", 1.0);
+                final boolean pctileHigh = conf.get("includeHi", true);
+                final boolean pctileLow = conf.get("includeLo", true);
+
+                return new PercentileClassifier(metric)
+                        .setPercentile(cutoff)
+                        .setIncludeHigh(pctileHigh)
+                        .setIncludeLow(pctileLow);
+            }
+            case "raw_threshold": {
+                // default values for RawThresholdClassifier
+                // {predicate: "==", value: 1.0}
+                final String predicateStr = conf.get("predicate", "==").trim();
+                final double metricValue = conf.get("value", 1.0);
+                return new RawThresholdClassifier(metric, predicateStr, metricValue);
             }
             default : {
                 throw new MacrobaseException("Bad Classifier Type");
@@ -109,8 +121,6 @@ public class BasicBatchPipeline implements Pipeline {
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {}", elapsed);
-        Explanation output = summarizer.getResults();
-
-        return output;
+        return summarizer.getResults();
     }
 }
