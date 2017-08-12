@@ -1,6 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
 
 /**
  * Encode every combination of attribute names and values into a distinct integer.
@@ -15,6 +17,7 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
+    private HashMap<Integer, Function<String, String[]>> tokenizers;
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -22,13 +25,26 @@ public class AttributeEncoder {
         valueDecoder = new HashMap<>();
         columnDecoder = new HashMap<>();
     }
-    public void setColumnNames(List<String> colNames) {
+    public AttributeEncoder setColumnNames(List<String> colNames) {
         this.colNames = colNames;
+        return this;
     }
 
     public int decodeColumn(int i) {return columnDecoder.get(i);}
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
+
+    public AttributeEncoder columnTokenizer(String columnName,
+                                         Function<String, String[]> tokenizer) {
+        assert(colNames != null && colNames.contains(columnName));
+        if(tokenizers == null) {
+            tokenizers = new HashMap<>();
+        }
+
+        tokenizers.put(colNames.indexOf(columnName), tokenizer);
+
+        return this;
+    }
 
     public List<int[]> encodeAttributes(List<String[]> columns) {
         if (columns.isEmpty()) {
@@ -53,16 +69,30 @@ public class AttributeEncoder {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                String colVal = curCol[rowIdx];
-                if (!curColEncoder.containsKey(colVal)) {
-                    curColEncoder.put(colVal, nextKey);
-                    valueDecoder.put(nextKey, colVal);
-                    columnDecoder.put(nextKey, colIdx);
-                    nextKey++;
+                if (tokenizers == null || !tokenizers.containsKey(colIdx)) {
+                    String colVal = curCol[rowIdx];
+                    if (!curColEncoder.containsKey(colVal)) {
+                        curColEncoder.put(colVal, nextKey);
+                        valueDecoder.put(nextKey, colVal);
+                        columnDecoder.put(nextKey, colIdx);
+                        nextKey++;
+                    }
+                    int curKey = curColEncoder.get(colVal);
+                    encodedAttributes.get(rowIdx)[colIdx] = curKey;
+                } else {
+                    for (String colVal : tokenizers.get(colIdx).apply(curCol[rowIdx])) {
+                        if (!curColEncoder.containsKey(colVal)) {
+                            curColEncoder.put(colVal, nextKey);
+                            valueDecoder.put(nextKey, colVal);
+                            columnDecoder.put(nextKey, colIdx);
+                            nextKey++;
+                        }
+                        int curKey = curColEncoder.get(colVal);
+                        encodedAttributes.get(rowIdx)[colIdx] = curKey;
+                    }
                 }
-                int curKey = curColEncoder.get(colVal);
-                encodedAttributes.get(rowIdx)[colIdx] = curKey;
             }
+
         }
 
         return encodedAttributes;
