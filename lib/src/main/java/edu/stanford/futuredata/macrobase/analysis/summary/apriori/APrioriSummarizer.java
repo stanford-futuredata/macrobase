@@ -53,6 +53,10 @@ public class APrioriSummarizer extends BatchSummarizer {
         setOCounts = new HashMap<>();
     }
 
+    public void setEncoder(AttributeEncoder encoder) {
+        this.encoder = encoder;
+    }
+
     @Override
     public void process(DataFrame input) throws Exception {
         numRows = input.getNumRows();
@@ -85,7 +89,9 @@ public class APrioriSummarizer extends BatchSummarizer {
         log.info("Using Ratio of: {}", ratioMetric.getClass().toString());
 
         // Encoding
-        encoder = new AttributeEncoder();
+        if (encoder == null) {
+            encoder = new AttributeEncoder();
+        }
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
         List<int[]> encoded = encoder.encodeAttributes(
@@ -259,7 +265,7 @@ public class APrioriSummarizer extends BatchSummarizer {
         setOCounts.put(order, oCounts);
     }
 
-    private void countSingles(List<int[]> encoded, double[] countCol, double[] outlierCol) {
+    public void countSingles(List<int[]> encoded, double[] countCol, double[] outlierCol) {
         // Counting Singles
         long startTime = System.currentTimeMillis();
         int[] singleCounts = new int[numSingles];
