@@ -100,8 +100,12 @@ public class BasicBatchPipeline implements Pipeline {
         log.info("Attributes: {}", attributes);
 
         Classifier classifier = getClassifier();
+	
+	startTime = System.currentTimeMillis();
         classifier.process(df);
-        df = classifier.getResults();
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Classification time: {}", elapsed);
+	df = classifier.getResults();
 
         BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
 
