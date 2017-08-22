@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.count;
 
 import com.google.common.collect.Sets;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.ExactCount;
 import org.junit.Test;
 
 import java.util.*;

@@ -1,9 +1,9 @@
-package edu.stanford.futuredata.macrobase.analysis.summary;
+package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.IntSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
+import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Simple, direct itemset mining with pruning that is limited to low-order
+ * Simple, direct apriori mining with pruning that is limited to low-order
  * interactions.
  */
 public class APrioriSummarizer extends BatchSummarizer {
@@ -19,6 +19,8 @@ public class APrioriSummarizer extends BatchSummarizer {
 
     // Parameters
     String countColumn = null;
+    ExplanationMetric ratioMetric = new GlobalRatioMetric();
+    double minRatioMetric = 3;
 
     // Calculated Values
     int numRows;
@@ -79,7 +81,8 @@ public class APrioriSummarizer extends BatchSummarizer {
         log.info("Outliers: {}", numOutliers);
         log.info("Outlier Rate of: {}", baseRate);
         log.info("Min Support Count: {}", suppCount);
-        log.info("Min Risk Ratio: {}", minRiskRatio);
+        log.info("Min Ratio Metric: {}", minRatioMetric);
+        log.info("Using Ratio of: {}", ratioMetric.getClass().toString());
 
         // Encoding
         encoder = new AttributeEncoder();
@@ -236,8 +239,8 @@ public class APrioriSummarizer extends BatchSummarizer {
             if (oCount < suppCount) {
                 numPruned++;
             } else {
-                double ratio = oCount * 1.0 / (count * baseRate);
-                if (ratio > minRiskRatio) {
+                double ratio = computeRatio(oCount, count);
+                if (ratio > minRatioMetric) {
                     saved.add(curSet);
                 } else {
                     next.add(curSet);
@@ -280,8 +283,8 @@ public class APrioriSummarizer extends BatchSummarizer {
             if (singleOCounts[i] < suppCount) {
                 numPruned++;
             } else {
-                double ratio = singleOCounts[i]*1.0 / (singleCounts[i] * baseRate);
-                if (ratio > minRiskRatio) {
+                double ratio = computeRatio(singleOCounts[i], singleCounts[i]);
+                if (ratio > minRatioMetric) {
                     singleSaved.add(i);
                 } else {
                     singleNext.add(i);
@@ -313,8 +316,8 @@ public class APrioriSummarizer extends BatchSummarizer {
     }
 
     @Override
-    public Explanation getResults() {
-        List<AttributeSet> results = new ArrayList<>();
+    public APExplanation getResults() {
+        List<ExplanationResult> results = new ArrayList<>();
         for (int o = 1; o <= 3; o++) {
             HashSet<IntSet> curResults = setSaved.get(o);
             HashMap<IntSet, Integer> idxMapping = setIdxMapping.get(o);
@@ -324,26 +327,33 @@ public class APrioriSummarizer extends BatchSummarizer {
                 int idx = idxMapping.get(vs);
                 int oCount = oCounts[idx];
                 int count = counts[idx];
-                double lift = (oCount*1.0/count) / baseRate;
-                double support = oCount*1.0 / numOutliers;
-                ItemsetResult iResult = new ItemsetResult(
-                        support,
+                ExplanationResult result = new ExplanationResult(
+                        encoder.decodeSet(vs.getSet()),
+                        oCount,
                         count,
-                        lift,
-                        vs.getSet()
+                        numOutliers,
+                        numEvents
                 );
-                AttributeSet aSet = new AttributeSet(iResult, encoder);
-                results.add(aSet);
+                results.add(result);
             }
         }
-        Explanation finalExplanation = new Explanation(
+        APExplanation finalExplanation = new APExplanation(
                 results,
-                numEvents - numOutliers,
                 numOutliers,
-                timings[1]+timings[2]+timings[3]
+                numEvents,
+                minOutlierSupport,
+                minRatioMetric,
+                ratioMetric
         );
         finalExplanation.sortBySupport();
         return finalExplanation;
+    }
+
+    private double computeRatio(
+            double oCount,
+            double count
+    ) {
+        return ratioMetric.calc(oCount, count, numOutliers, numEvents);
     }
 
     /**
@@ -353,6 +363,24 @@ public class APrioriSummarizer extends BatchSummarizer {
     */
     public APrioriSummarizer setCountColumn(String countColumn) {
         this.countColumn = countColumn;
+        return this;
+    }
+
+    /**
+     * Configure what kind of ratio to use for measuring result severity
+     * @param ratioMetric configurable metric definition, e.g. RiskRatioMetric
+     */
+    public void setRatioMetric(ExplanationMetric ratioMetric) {
+        this.ratioMetric = ratioMetric;
+    }
+
+    /**
+     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
+     * @param minRatio lowest risk ratio to consider for meaningful explanations.
+     * @return this
+     */
+    public BatchSummarizer setMinRatioMetric(double minRatio) {
+        this.minRatioMetric = minRatio;
         return this;
     }
 }

@@ -1,12 +1,10 @@
 package edu.stanford.futuredata.macrobase.analysis.summary;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.DoublePredicate;
 
 /**
  * Takes a dataframe with binary classification and searches for explanations
@@ -20,7 +18,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     // Parameters
     protected String outlierColumn = "_OUTLIER";
     protected double minOutlierSupport = 0.1;
-    protected double minRiskRatio = 3;
     protected List<String> attributes = new ArrayList<>();
 
     /**
@@ -30,16 +27,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
      */
     public BatchSummarizer setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
-        return this;
-    }
-
-    /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public BatchSummarizer setMinRiskRatio(double minRiskRatio) {
-        this.minRiskRatio = minRiskRatio;
         return this;
     }
 

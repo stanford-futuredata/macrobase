@@ -12,5 +12,6 @@ summarizer: "apriori"
 attributes:
   - "location"
   - "version"
-minRiskRatio: 10.0
+ratioMetric: "globalratio"
+minRatioMetric: 10.0
 minSupport: 0.2

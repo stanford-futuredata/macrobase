@@ -1,8 +1,9 @@
 package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -85,7 +86,7 @@ public class SupervisedEventTest {
             return df;
         }
 
-        public Explanation predictBatch(DataFrame batch) throws Exception {
+        public FPGExplanation predictBatch(DataFrame batch) throws Exception {
             FPGrowthSummarizer summ = new FPGrowthSummarizer();
             summ.setAttributes(attributes);
             summ.process(batch);
@@ -104,13 +105,13 @@ public class SupervisedEventTest {
         DataFrame df = e.prepareBatch(events);
         assertEquals(1000,df.getNumRows());
 
-        Explanation s = e.predictBatch(df);
+        FPGExplanation s = e.predictBatch(df);
         assertEquals(100, s.getNumOutliers());
         assertEquals(900, s.getNumInliers());
-        List<AttributeSet> is = s.getItemsets();
+        List<FPGAttributeSet> is = s.getItemsets();
         assertEquals(5, is.size());
         int numSingleton = 0;
-        for (AttributeSet itemResult : is) {
+        for (FPGAttributeSet itemResult : is) {
             Map<String, String> curItems = itemResult.getItems();
             if (curItems.size() == 1) {
                 numSingleton++;

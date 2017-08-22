@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
 import org.junit.Test;
 

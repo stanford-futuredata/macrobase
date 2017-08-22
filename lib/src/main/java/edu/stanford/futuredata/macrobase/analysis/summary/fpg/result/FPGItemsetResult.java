@@ -1,17 +1,17 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset.result;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg.result;
 
 import java.util.Set;
 
-public class ItemsetResult {
+public class FPGItemsetResult {
     private double support;
     private double numRecords;
     private double ratioToInliers;
     private Set<Integer> items;
 
-    public ItemsetResult(double support,
-                         double numRecords,
-                         double ratioToInliers,
-                         Set<Integer> items) {
+    public FPGItemsetResult(double support,
+                            double numRecords,
+                            double ratioToInliers,
+                            Set<Integer> items) {
         this.support = support;
         this.numRecords = numRecords;
         this.ratioToInliers = ratioToInliers;
@@ -36,7 +36,7 @@ public class ItemsetResult {
 
     @Override
     public String toString() {
-        return "ItemsetResult{" +
+        return "FPGItemsetResult{" +
                 "support=" + support +
                 ", numRecords=" + numRecords +
                 ", ratioToInliers=" + ratioToInliers +

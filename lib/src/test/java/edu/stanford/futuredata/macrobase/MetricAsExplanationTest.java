@@ -1,9 +1,9 @@
 package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.FPGrowthSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 import edu.stanford.futuredata.macrobase.analysis.transform.MetricBucketTransformer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
@@ -80,9 +80,9 @@ public class MetricAsExplanationTest {
         bs.setMinRiskRatio(2.0);
         bs.setMinSupport(.3);
         bs.process(tcdf);
-        Explanation e = bs.getResults();
+        FPGExplanation e = bs.getResults();
 
-        List<AttributeSet> results = e.getItemsets();
+        List<FPGAttributeSet> results = e.getItemsets();
         // Top result should involve both explanatory metrics
         assertTrue(results.get(0).getItems().keySet().containsAll(Arrays.asList("m1_a", "m2_a")));
         assertTrue(results.size() >= 4);

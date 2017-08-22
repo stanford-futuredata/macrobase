@@ -1,6 +1,6 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.ItemsetWithCount;
 import org.junit.Test;
 
 import java.util.*;

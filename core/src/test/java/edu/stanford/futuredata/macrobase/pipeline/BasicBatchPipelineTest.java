@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -13,7 +14,7 @@ public class BasicBatchPipelineTest {
         );
         BasicBatchPipeline p = new BasicBatchPipeline(conf);
         Explanation e = p.results();
-        assertEquals(3, e.getNumInliers());
+        assertEquals(3.0, e.numTotal(), 1e-10);
     }
 
 }

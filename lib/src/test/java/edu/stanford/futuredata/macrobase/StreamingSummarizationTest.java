@@ -1,8 +1,9 @@
 package edu.stanford.futuredata.macrobase;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.IncrementalSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.IncrementalSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.WindowedOperator;
 import org.junit.Test;
@@ -112,7 +113,7 @@ public class StreamingSummarizationTest {
         outlierSummarizer.setAttributes(attributes);
         outlierSummarizer.setOutlierColumn("outlier");
         outlierSummarizer.setMinSupport(.5);
-        WindowedOperator<Explanation> windowedSummarizer = new WindowedOperator<>(outlierSummarizer);
+        WindowedOperator<FPGExplanation> windowedSummarizer = new WindowedOperator<>(outlierSummarizer);
         windowedSummarizer.setWindowLength(windowSize);
         windowedSummarizer.setTimeColumn("time");
         windowedSummarizer.setSlideLength(slideSize);
@@ -127,7 +128,7 @@ public class StreamingSummarizationTest {
 
             /* Code to process windowed summarizer on a minibatch */
             windowedSummarizer.process(curBatch);
-            Explanation explanation = windowedSummarizer.getResults();
+            FPGExplanation explanation = windowedSummarizer.getResults();
             /* End */
 
             if (endTime > windowSize) {
@@ -137,12 +138,12 @@ public class StreamingSummarizationTest {
             if (windowedSummarizer.getMaxWindowTime() > eventIdx
                     && windowedSummarizer.getMaxWindowTime() - windowSize < eventEndIdx) {
                 //  make sure that the known anomalous attribute combination has the highest risk ratio
-                AttributeSet topRankedExplanation = explanation.getItemsets().get(0);
+                FPGAttributeSet topRankedExplanation = explanation.getItemsets().get(0);
                 assertTrue(topRankedExplanation.getItems().values().containsAll(buggyAttributeValues));
             } else {
                 // Otherwise make sure that the noisy explanations are all low-cardinality
                 if (explanation.getItemsets().size() > 0) {
-                    AttributeSet topRankedExplanation = explanation.getItemsets().get(0);
+                    FPGAttributeSet topRankedExplanation = explanation.getItemsets().get(0);
                     assertTrue(
                             topRankedExplanation.getNumRecords() < 20
                     );

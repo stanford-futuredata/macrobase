@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.count;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
 import java.util.HashMap;
 import java.util.List;

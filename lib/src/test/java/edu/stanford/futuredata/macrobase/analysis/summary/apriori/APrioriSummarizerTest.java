@@ -1,9 +1,7 @@
-package edu.stanford.futuredata.macrobase.analysis.summary;
+package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.IntSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
@@ -39,20 +37,22 @@ public class APrioriSummarizerTest {
         );
         APrioriSummarizer summ = new APrioriSummarizer();
         summ.setMinSupport(.01);
-        summ.setMinRiskRatio(10.0);
+        summ.setMinRatioMetric(10.0);
         summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
 
-        Explanation e = summ.getResults();
-        List<AttributeSet> results = e.getItemsets();
-        assertEquals(20, e.getNumOutliers());
+        APExplanation e = summ.getResults();
+        List<ExplanationResult> results = e.getResults();
+        assertEquals(20.0, e.numOutliers(), 1e-10);
         assertEquals(1, results.size());
-        assertEquals(0.5, results.get(0).getSupport(), 1e-10);
-        Map<String, String> firstResult = results.get(0).getItems();
+        assertEquals(0.5, results.get(0).support(), 1e-10);
+        Map<String, String> firstResult = results.get(0).getMatcher();
         HashSet<String> values = new HashSet<>();
         values.addAll(firstResult.values());
         assertTrue(values.contains("CAN"));
         assertTrue(values.contains("v3"));
+
+        System.out.println(e.prettyPrint());
     }
 
     @Test
@@ -66,8 +66,9 @@ public class APrioriSummarizerTest {
         ).setColumnTypes(schema);
         DataFrame df = loader.load();
 
-        ArithmeticClassifier ac = new ArithmeticClassifier("count", "mean", "std")
-                .setPercentile(1.0);
+        ArithmeticClassifier ac = new ArithmeticClassifier(
+                "count", "mean", "std");
+        ac.setPercentile(1.0);
         ac.setCountColumnName("count");
         ac.setIncludeHigh(false);
         ac.process(df);
@@ -80,16 +81,16 @@ public class APrioriSummarizerTest {
         APrioriSummarizer summ = new APrioriSummarizer();
         summ.setCountColumn("count");
         summ.setMinSupport(.01);
-        summ.setMinRiskRatio(10.0);
+        summ.setMinRatioMetric(10.0);
         summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
 
-        Explanation e = summ.getResults();
-        List<AttributeSet> results = e.getItemsets();
-        assertEquals(10, e.getNumOutliers());
+        APExplanation e = summ.getResults();
+        List<ExplanationResult> results = e.getResults();
+        assertEquals(10.0, e.numOutliers(), 1e-10);
         assertEquals(1, results.size());
-        assertEquals(1.0, results.get(0).getSupport(), 1e-10);
-        Map<String, String> firstResult = results.get(0).getItems();
+        assertEquals(1.0, results.get(0).support(), 1e-10);
+        Map<String, String> firstResult = results.get(0).getMatcher();
         HashSet<String> values = new HashSet<>();
         values.addAll(firstResult.values());
         assertTrue(values.contains("CAN"));
@@ -107,7 +108,10 @@ public class APrioriSummarizerTest {
         o2Candidates.add(new IntSet(2, 3));
         o2Candidates.add(new IntSet(1, 3));
         o2Candidates.add(new IntSet(3, 4));
-        HashSet<IntSet> o3Candidates = APrioriSummarizer.getOrder3Candidates(o2Candidates, singleCandidates);
+        HashSet<IntSet> o3Candidates = APrioriSummarizer.getOrder3Candidates(
+                o2Candidates,
+                singleCandidates
+        );
         assertEquals(1, o3Candidates.size());
         assertEquals(new IntSet(1,2,3), o3Candidates.iterator().next());
     }
@@ -135,14 +139,15 @@ public class APrioriSummarizerTest {
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
         summ.setMinSupport(.1);
-        summ.setMinRiskRatio(5.0);
+        summ.setMinRatioMetric(3.0);
         summ.setAttributes(explanationAttributes);
         summ.process(df);
-        Explanation e = summ.getResults();
+        APExplanation e = summ.getResults();
 
-        assertEquals(1,e.getItemsets().size());
-        AttributeSet mainResult = e.getItemsets().get(0);
-        assertEquals(3, mainResult.getItems().size());
-        assertEquals(100.0, mainResult.getNumRecords(), 1e-10);
+        assertEquals(1,e.getResults().size());
+        ExplanationResult mainResult = e.getResults().get(0);
+        System.out.println(mainResult.prettyPrint());
+        assertEquals(3, mainResult.getMatcher().size());
+        assertEquals(100.0, mainResult.matchedCount(), 1e-10);
     }
 }

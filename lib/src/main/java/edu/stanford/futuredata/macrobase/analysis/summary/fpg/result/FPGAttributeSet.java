@@ -1,35 +1,35 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset.result;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg.result;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
-public class AttributeSet implements Comparable<AttributeSet>{
+public class FPGAttributeSet implements Comparable<FPGAttributeSet>{
     private double support;
     private long numRecords;
     private double ratioToInliers;
     private Map<String, String> items = new HashMap<>();
 
-    public AttributeSet(ItemsetResult its, AttributeEncoder encoder) {
+    public FPGAttributeSet(FPGItemsetResult its, AttributeEncoder encoder) {
         this.support = its.getSupport();
         this.numRecords = (long)its.getNumRecords();
         this.ratioToInliers = its.getRatioToInliers();
         its.getItems().forEach(i -> items.put(encoder.decodeColumnName(i), encoder.decodeValue(i)));
     }
 
-    public AttributeSet(double support,
-                        double numRecords,
-                        double ratioToInliers,
-                        Map<String, String> items) {
+    public FPGAttributeSet(double support,
+                           double numRecords,
+                           double ratioToInliers,
+                           Map<String, String> items) {
         this.support = support;
         this.numRecords = (long)numRecords;
         this.ratioToInliers = ratioToInliers;
         this.items = items;
     }
 
-    public boolean contains(AttributeSet other) {
+    public boolean contains(FPGAttributeSet other) {
         Map<String, String> otherItems = other.items;
         for (Map.Entry<String, String> oEntry : otherItems.entrySet()) {
             String colName = oEntry.getKey();
@@ -80,7 +80,7 @@ public class AttributeSet implements Comparable<AttributeSet>{
 
     @Override
     public String toString() {
-        return "AttributeSet{" +
+        return "FPGAttributeSet{" +
                 "support=" + support +
                 ", numRecords=" + numRecords +
                 ", ratioToInliers=" + ratioToInliers +
@@ -89,7 +89,7 @@ public class AttributeSet implements Comparable<AttributeSet>{
     }
 
     @Override
-    public int compareTo(AttributeSet o) {
+    public int compareTo(FPGAttributeSet o) {
         double r1 = this.getRatioToInliers();
         double r2 = o.getRatioToInliers();
         return Double.compare(r1, r2);

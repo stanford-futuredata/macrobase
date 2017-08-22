@@ -1,9 +1,8 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.itemset;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
 import com.google.common.collect.Sets;
-import edu.stanford.futuredata.macrobase.analysis.summary.count.ExactCount;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.ItemsetWithCount;
 
 import java.util.*;
 
@@ -18,13 +17,13 @@ public class FPGrowthEmerging {
     }
 
 
-    private List<ItemsetResult> getSingletonItemsets(List<Set<Integer>> inliers,
-                                                     List<Set<Integer>> outliers,
-                                                     double minSupport,
-                                                     double minRatio) {
+    private List<FPGItemsetResult> getSingletonItemsets(List<Set<Integer>> inliers,
+                                                        List<Set<Integer>> outliers,
+                                                        double minSupport,
+                                                        double minRatio) {
         int supportCountRequired = (int) (outliers.size() * minSupport);
 
-        List<ItemsetResult> ret = new ArrayList<>();
+        List<FPGItemsetResult> ret = new ArrayList<>();
 
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
@@ -43,7 +42,7 @@ public class FPGrowthEmerging {
                                              outliers.size());
 
             if (ratio > minRatio) {
-                ret.add(new ItemsetResult(
+                ret.add(new FPGItemsetResult(
                         attrOutlierCountEntry.getValue() / outliers.size(),
                         attrOutlierCountEntry.getValue(),
                         ratio,
@@ -54,10 +53,10 @@ public class FPGrowthEmerging {
         return ret;
     }
 
-    public List<ItemsetResult> getEmergingItemsetsWithMinSupport(List<Set<Integer>> inliers,
-                                                                 List<Set<Integer>> outliers,
-                                                                 double minSupport,
-                                                                 double minRatio) {
+    public List<FPGItemsetResult> getEmergingItemsetsWithMinSupport(List<Set<Integer>> inliers,
+                                                                    List<Set<Integer>> outliers,
+                                                                    double minSupport,
+                                                                    double minRatio) {
         if (!combinationsEnabled || (inliers.size() > 0 && inliers.get(0).size() == 1)) {
             return getSingletonItemsets(inliers, outliers, minSupport, minRatio);
         }
@@ -115,7 +114,7 @@ public class FPGrowthEmerging {
 
         Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
-        List<ItemsetResult> ret = new ArrayList<>();
+        List<FPGItemsetResult> ret = new ArrayList<>();
 
         Set<Integer> prevSet = null;
         Double prevCount = -1.;
@@ -138,7 +137,7 @@ public class FPGrowthEmerging {
                                           inliers.size(),
                                           outliers.size());
 
-                ret.add(new ItemsetResult(i.getCount() / (double) outliers.size(),
+                ret.add(new FPGItemsetResult(i.getCount() / (double) outliers.size(),
                                           i.getCount(),
                                           ratio,
                                           i.getItems()));
@@ -166,7 +165,7 @@ public class FPGrowthEmerging {
                                              outliers.size());
 
             if (ratio >= minRatio) {
-                ret.add(new ItemsetResult(oc.getCount() / (double) outliers.size(),
+                ret.add(new FPGItemsetResult(oc.getCount() / (double) outliers.size(),
                                           oc.getCount(),
                                           ratio,
                                           oc.getItems()));

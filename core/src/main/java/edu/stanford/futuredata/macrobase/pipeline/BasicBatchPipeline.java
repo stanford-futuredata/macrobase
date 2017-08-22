@@ -2,12 +2,15 @@ package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,32 +26,33 @@ public class BasicBatchPipeline implements Pipeline {
 
     private String inputURI = null;
 
-    private String classifierType = "percentile";
-    private String metric = null;
-    private double cutoff = 1.0;
-    private boolean pctileHigh = true;
-    private boolean pctileLow = true;
+    private String classifierType;
+    private String metric;
+    private double cutoff;
+    private boolean pctileHigh;
+    private boolean pctileLow;
 
-    private String summarizerType = "apriori";
-    private List<String> attributes = null;
-    private double minSupport = 0.01;
-    private double minRiskRatio = 5.0;
+    private String summarizerType;
+    private List<String> attributes;
+    private String ratioMetric;
+    private double minSupport;
+    private double minRiskRatio;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
         inputURI = conf.get("inputURI");
 
-        classifierType = conf.get("classifier");
+        classifierType = conf.get("classifier", "percentile");
         metric = conf.get("metric");
-        cutoff = conf.get("cutoff");
-        pctileHigh = conf.get("includeHi");
-        pctileLow = conf.get("includeLo");
+        cutoff = conf.get("cutoff", 1.0);
+        pctileHigh = conf.get("includeHi", true);
+        pctileLow = conf.get("includeLo", true);
 
-        summarizerType = conf.get("summarizer");
+        summarizerType = conf.get("summarizer", "apriori");
         attributes = conf.get("attributes");
-        minRiskRatio = conf.get("minRiskRatio");
-        minSupport = conf.get("minSupport");
-
+        ratioMetric = conf.get("ratioMetric", "globalRatio");
+        minRiskRatio = conf.get("minRatioMetric", 3.0);
+        minSupport = conf.get("minSupport", 0.01);
     }
 
     public Classifier getClassifier() throws MacrobaseException {
@@ -66,14 +70,38 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
+    public ExplanationMetric getRatioMetric() throws MacrobaseException {
+        switch (ratioMetric.toLowerCase()) {
+            case "globalratio": {
+                return new GlobalRatioMetric();
+            }
+            case "riskratio": {
+                return new RiskRatioMetric();
+            }
+            default: {
+                throw new MacrobaseException("Bad Ratio Metric");
+            }
+        }
+    }
+
     public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
         switch (summarizerType.toLowerCase()) {
             case "apriori": {
                 APrioriSummarizer summarizer = new APrioriSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
+                summarizer.setRatioMetric(getRatioMetric());
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRiskRatio);
+                return summarizer;
+            }
+            case "fpgrowth": {
+                FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
+                summarizer.setOutlierColumn(outlierColumnName);
+                summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRiskRatio(minRiskRatio);
+                summarizer.setUseAttributeCombinations(true);
                 return summarizer;
             }
             default: {

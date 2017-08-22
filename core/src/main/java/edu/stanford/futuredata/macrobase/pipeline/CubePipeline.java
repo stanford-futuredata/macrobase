@@ -2,11 +2,10 @@ package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ public class CubePipeline implements Pipeline {
 
     private List<String> attributes;
     private double minSupport;
-    private double minRiskRatio;
+    private double minRatioMetric;
 
     public CubePipeline(PipelineConfig conf) {
         inputURI = conf.get("inputURI");
@@ -48,7 +47,7 @@ public class CubePipeline implements Pipeline {
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport");
-        minRiskRatio = conf.get("minRiskRatio");
+        minRatioMetric = conf.get("minRatioMetric");
     }
 
     public Explanation results() throws Exception {
@@ -76,7 +75,7 @@ public class CubePipeline implements Pipeline {
         summarizer.setCountColumn(classifier.getCountColumnName());
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);
-        summarizer.setMinRiskRatio(minRiskRatio);
+        summarizer.setMinRatioMetric(minRatioMetric);
         startTime = System.currentTimeMillis();
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;

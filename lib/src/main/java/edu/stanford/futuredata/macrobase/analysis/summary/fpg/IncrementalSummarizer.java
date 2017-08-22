@@ -1,12 +1,10 @@
-package edu.stanford.futuredata.macrobase.analysis.summary;
+package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.count.ExactCount;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.AttributeEncoder;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.FPGrowth;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.RiskRatio;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.AttributeSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetResult;
-import edu.stanford.futuredata.macrobase.analysis.summary.itemset.result.ItemsetWithCount;
+import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.ItemsetWithCount;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.operator.IncrementalOperator;
@@ -325,12 +323,12 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
      *                     of the results returned.
      * @return explanation
      */
-    public Explanation getResults(double minRiskRatio) {
+    public FPGExplanation getResults(double minRiskRatio) {
         long startTime = System.currentTimeMillis();
 
         calcCumSum();
         int currPanes = outlierPaneCounts.size();
-        List<AttributeSet> attributeSets = new ArrayList<>();
+        List<FPGAttributeSet> attributeSets = new ArrayList<>();
         for (Set<Integer> itemset : outlierItemsetWindowCount.keySet()) {
             int outlierSupport = outlierCountCumSum.get(currPanes) - outlierCountCumSum.get(trackingMap.get(itemset));
             int inlierSupport = inlierCountCumSum.get(currPanes) - inlierCountCumSum.get(trackingMap.get(itemset));
@@ -340,16 +338,16 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
                     outlierSupport);
             // Add to output if the itemset has sufficient risk ratio
             if (rr >= minRiskRatio) {
-                ItemsetResult result = new ItemsetResult(
+                FPGItemsetResult result = new FPGItemsetResult(
                         outlierItemsetWindowCount.get(itemset) / outlierSupport,
                         outlierItemsetWindowCount.get(itemset),
                         rr,
                         itemset);
-                attributeSets.add(new AttributeSet(result, encoder));
+                attributeSets.add(new FPGAttributeSet(result, encoder));
             }
         }
         long elapsed = System.currentTimeMillis() - startTime;
-        Explanation explanation = new Explanation(attributeSets,
+        FPGExplanation explanation = new FPGExplanation(attributeSets,
                 (long) inlierCountCumSum.get(currPanes),
                 (long) outlierCountCumSum.get(currPanes),
                 elapsed);
@@ -359,7 +357,7 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
 
     /* Use a default risk ratio of 3 if the users don't specify the minimum required risk ratio. */
     @Override
-    public Explanation getResults() {
+    public FPGExplanation getResults() {
         return getResults(3);
     }
 }
