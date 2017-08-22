@@ -70,7 +70,7 @@ public class BasicBatchPipeline implements Pipeline {
             case "predicate": {
                 // default values for PredicateClassifier:
                 // {predicate: "==", value: 1.0}
-                final String predicateStr = conf.get("predicate", "==").trim();
+                final String predicateStr = conf.get("predicate", "==");
                 final double metricValue = conf.get("value", 1.0);
                 return new PredicateClassifier(metricColName, predicateStr, metricValue);
             }
