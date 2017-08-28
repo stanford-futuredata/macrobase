@@ -5,13 +5,14 @@ import edu.stanford.futuredata.macrobase.contrib.aria.json.APICubeRequest;
 import edu.stanford.futuredata.macrobase.contrib.aria.json.CubeDimensionParser;
 import edu.stanford.futuredata.macrobase.contrib.aria.json.CubeParser;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class CubeQueryService {
     // Params
@@ -64,7 +65,7 @@ public class CubeQueryService {
             List<String> dimNames,
             List<String> operations,
             double supportCutoff
-    ) throws IOException {
+    ) throws IOException, ExecutionException, InterruptedException, MacrobaseException {
         Map<String, List<String>> dimValues = getFrequentDimensionValues(
                 measureName, dimNames, supportCutoff
         );
@@ -96,31 +97,47 @@ public class CubeQueryService {
             String measureName,
             List<String> dimNames,
             double supportCutoff
-    ) throws IOException {
+    ) throws IOException, InterruptedException, ExecutionException, MacrobaseException {
         Map<String, List<String>> dimValues = getDimensionValues();
         List<String> countOp = Arrays.asList("Count");
 
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        List<Callable<List<String>>> tasks = new ArrayList<>();
+
+        for (String curDim: dimNames) {
+            Callable<List<String>>  calcDimValues = () -> {
+                List<String> curDimValues = dimValues.get(curDim);
+                Map<String, List<String>> singletonDimMap = new HashMap<>();
+                singletonDimMap.put(curDim, curDimValues);
+                DataFrame curDimDF = getCubeValues(
+                        measureName,
+                        singletonDimMap,
+                        countOp
+                );
+
+                double[] counts = curDimDF.getDoubleColumnByName("Count");
+                String[] values = curDimDF.getStringColumnByName(curDim);
+                double total = 0.0;
+                for (double x : counts) {total += x;}
+
+                ArrayList<String> curFrequent = new ArrayList<>();
+                for (int i = 0; i < values.length; i++) {
+                    if (counts[i] > total * supportCutoff) {curFrequent.add(values[i]);}
+                }
+                return curFrequent;
+            };
+            tasks.add(calcDimValues);
+        }
+
+        List<Future<List<String>>> futures = executor.invokeAll(tasks);
+        executor.shutdown();
         Map<String, List<String>> frequentDimValues = new HashMap<>();
-        for (String curDim : dimNames) {
-            List<String> curDimValues = dimValues.get(curDim);
-            Map<String, List<String>> singletonDimMap = new HashMap<>();
-            singletonDimMap.put(curDim, curDimValues);
-            DataFrame curDimDF = getCubeValues(
-                    measureName,
-                    singletonDimMap,
-                    countOp
-            );
-
-            double[] counts = curDimDF.getDoubleColumnByName("Count");
-            String[] values = curDimDF.getStringColumnByName(curDim);
-            double total = 0.0;
-            for (double x : counts) {total += x;}
-
-            ArrayList<String> curFrequent = new ArrayList<>();
-            for (int i = 0; i < values.length; i++) {
-                if (counts[i] > total * supportCutoff) {curFrequent.add(values[i]);}
+        for (int i = 0; i < dimNames.size(); i++) {
+            Future<List<String>> curFuture = futures.get(i);
+            if (curFuture.isCancelled()) {
+                throw new MacrobaseException("Freq request failed");
             }
-            frequentDimValues.put(curDim, curFrequent);
+            frequentDimValues.put(dimNames.get(i), curFuture.get());
         }
 
         return frequentDimValues;
