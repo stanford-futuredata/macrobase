@@ -1,6 +1,8 @@
-package edu.stanford.futuredata.macrobase.contrib.aria;
+package edu.stanford.futuredata.macrobase.contrib.aria.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.stanford.futuredata.macrobase.contrib.aria.json.APICubeResult;
+import edu.stanford.futuredata.macrobase.contrib.aria.json.CubeParser;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
 

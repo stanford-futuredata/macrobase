@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.contrib.aria;
+package edu.stanford.futuredata.macrobase.contrib.aria.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -20,6 +20,11 @@ public class CubeParser {
 
     public CubeParser(APICubeResult result) {
         this.apiResult = result;
+    }
+    public static CubeParser loadFromString(String s) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        APICubeResult cube = mapper.readValue(s, APICubeResult.class);
+        return new CubeParser(cube);
     }
     public static CubeParser loadFromFile(File f) throws IOException {
         ObjectMapper mapper = new ObjectMapper();

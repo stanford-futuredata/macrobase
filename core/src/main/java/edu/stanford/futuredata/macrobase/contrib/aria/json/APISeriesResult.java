@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.contrib.aria;
+package edu.stanford.futuredata.macrobase.contrib.aria.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
