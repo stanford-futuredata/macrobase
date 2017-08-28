@@ -46,7 +46,16 @@ public class QuantileClassifier extends CubeClassifier implements ThresholdClass
         int len = counts.length;
         int numQuantiles = quantiles.length;
 
-        WeightedPercentile wp = new WeightedPercentile(counts, means);
+        double[] modifiedCounts = new double[len * (numQuantiles-1)];
+        double[] modifiedMeans = new double[len * (numQuantiles-1)];
+        for (int i = 0; i < len; i++) {
+            for (int j = 0; j < quantiles.length - 1; j++) {
+                modifiedCounts[i * (numQuantiles-1) + j] = (quantiles[j+1] - quantiles[j]) * counts[i];
+                modifiedMeans[i * (numQuantiles-1) + j] =
+                        (quantileColumns.get(j)[i] + quantileColumns.get(j+1)[i]) / 2.0;
+            }
+        }
+        WeightedPercentile wp = new WeightedPercentile(modifiedCounts, modifiedMeans);
         lowCutoff = wp.evaluate(percentile);
         highCutoff = wp.evaluate(100.0 - percentile);
 
