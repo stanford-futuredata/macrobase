@@ -4,9 +4,6 @@ import edu.stanford.futuredata.macrobase.analysis.classify.stats.LinearInterpola
 import edu.stanford.futuredata.macrobase.analysis.classify.stats.WeightedPercentile;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 
-//import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
-import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-
 import java.util.*;
 
 /**
