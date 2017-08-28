@@ -2,16 +2,22 @@ package edu.stanford.futuredata.macrobase.contrib.aria;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import edu.stanford.futuredata.macrobase.pipeline.Pipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -83,6 +89,9 @@ public class AriaCubePipeline implements Pipeline {
                 classifier.getHighCutoff()
         );
         df = classifier.getResults();
+        CSVDataFrameWriter writer = new CSVDataFrameWriter();
+        PrintWriter out = new PrintWriter("df.csv");
+        writer.writeToStream(df, out);
 
         APrioriSummarizer summarizer = new APrioriSummarizer();
         summarizer.setOutlierColumn(classifier.getOutputColumnName());
@@ -113,16 +122,21 @@ public class AriaCubePipeline implements Pipeline {
                 classifier.setIncludeLow(includeLo);
                 return classifier;
             }
-            case "percentile": {
-                Map<String, Double> percentileColumns = new HashMap<>();
-                percentileColumns.put("Percentile001", 0.1);
-                percentileColumns.put("Percentile01", 1.0);
-                percentileColumns.put("Percentile05", 5.0);
-                percentileColumns.put("Percentile50", 50.0);
-                percentileColumns.put("Percentile95", 95.0);
-                percentileColumns.put("Percentile99", 99.0);
-                percentileColumns.put("Percentile999", 99.9);
-                return null;
+            case "quantile": {
+                LinkedHashMap<String, Double> percentileColumns = new LinkedHashMap<>();
+                percentileColumns.put("Percentile001", 0.001);
+                percentileColumns.put("Percentile01", 0.01);
+                percentileColumns.put("Percentile05", 0.05);
+                percentileColumns.put("Percentile50", 0.50);
+                percentileColumns.put("Percentile95", 0.95);
+                percentileColumns.put("Percentile99", 0.99);
+                percentileColumns.put("Percentile999", 0.999);
+                QuantileClassifier classifier =
+                        new QuantileClassifier("Count", percentileColumns);
+                classifier.setPercentile(cutoff);
+                classifier.setIncludeHigh(includeHi);
+                classifier.setIncludeLow(includeLo);
+                return classifier;
             }
             default:
                 throw new MacrobaseException("Bad Classifier Name");

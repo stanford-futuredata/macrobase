@@ -123,7 +123,7 @@ public class CubePipeline implements Pipeline {
             }
             case "quantile": {
                 QuantileClassifier classifier =
-                        new QuantileClassifier(countColumn, meanColumn, quantileColumns);
+                        new QuantileClassifier(countColumn, quantileColumns);
                 classifier.setPercentile(percentile);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
