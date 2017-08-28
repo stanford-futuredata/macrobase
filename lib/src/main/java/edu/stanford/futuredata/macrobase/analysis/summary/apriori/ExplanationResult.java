@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 
 import java.util.*;
@@ -31,14 +32,20 @@ public class ExplanationResult {
     public Map<String, String> getMatcher() {
         return matcher;
     }
+
+    @JsonProperty("matchedOutlier")
     public double matchedOutlier() {
         return matchedOutlier;
     }
+    @JsonProperty("matchedCount")
     public double matchedCount() {
         return matchedCount;
     }
+    @JsonProperty("totalOutlier")
     public double totalOutlier() { return totalOutlier; }
+    @JsonProperty("totalCount")
     public double totalCount() { return totalCount; }
+    @JsonProperty("support")
     public double support() {
         return support;
     }

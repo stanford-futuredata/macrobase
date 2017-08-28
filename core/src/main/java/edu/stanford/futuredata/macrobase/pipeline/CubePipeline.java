@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -84,7 +85,7 @@ public class CubePipeline implements Pipeline {
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {}", elapsed);
-        Explanation output = summarizer.getResults();
+        APExplanation output = summarizer.getResults();
         return output;
     }
 
