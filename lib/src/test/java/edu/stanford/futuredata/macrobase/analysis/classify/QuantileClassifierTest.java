@@ -23,6 +23,7 @@ public class QuantileClassifierTest {
         put("q1.0", 1.0);
     }};
     private double[] rawData;
+    private List<double[]> rawGroups;
 
     @Before
     public void setUp() {
@@ -38,15 +39,20 @@ public class QuantileClassifierTest {
         }
 
         rawData = new double[length*101];
+        rawGroups = new ArrayList<>();
         int d = 0;
         List<double[]> quantileColumns = new ArrayList<double[]>();
         for (int i = 0; i < quantiles.length; i++) {
             quantileColumns.add(new double[length]);
         }
         for (int i = 0; i < length; i++) {
+            double[] rawGroup = new double[101];
+            int g = 0;
             for (int j = i-50; j <= i+50; j++) {
                 rawData[d++] = j;
+                rawGroup[g++] = j;
             }
+            rawGroups.add(rawGroup);
             counts[i] = 101;
             means[i] = i;
             for (int j = 0; j < quantiles.length; j++) {
@@ -81,8 +87,12 @@ public class QuantileClassifierTest {
 
         for (int i = 0; i < outliers.length; i++) {
             int trueNumOutliers = 0;
-            trueNumOutliers += Math.max(0, trueLowCutoff - (i-50));
-            trueNumOutliers += Math.max(0, (i+50) - trueHighCutoff);
+            double[] rawGroup = rawGroups.get(i);
+            for (int j = 0; j < rawGroup.length; j++) {
+                if (rawGroup[j] < trueLowCutoff || rawGroup[j] > trueHighCutoff) {
+                    trueNumOutliers++;
+                }
+            }
             assertEquals(trueNumOutliers, outliers[i], 5.0);
         }
     }
@@ -113,7 +123,12 @@ public class QuantileClassifierTest {
 
         for (int i = 0; i < outliers.length; i++) {
             int trueNumOutliers = 0;
-            trueNumOutliers += Math.max(0, trueLowCutoff - (i-50));
+            double[] rawGroup = rawGroups.get(i);
+            for (int j = 0; j < rawGroup.length; j++) {
+                if (rawGroup[j] < trueLowCutoff) {
+                    trueNumOutliers++;
+                }
+            }
             assertEquals(trueNumOutliers, outliers[i], 5.0);
         }
     }
