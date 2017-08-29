@@ -13,10 +13,8 @@ import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +69,7 @@ public class AriaCubePipeline implements Pipeline {
         DataFrame df = cs.getFrequentCubeEntries(
                 metric,
                 attributes,
-                CubeQueryService.quantileOperators,
+                getOperations(),
                 minSupport
         );
         long elapsed = System.currentTimeMillis() - startTime;
@@ -79,23 +77,29 @@ public class AriaCubePipeline implements Pipeline {
         log.info("{} rows", df.getNumRows());
         log.info("Attributes: {}", attributes);
 
+        String outlierColumnName = "Sum";
+        String countColumName = "Count";
         startTime = System.currentTimeMillis();
         CubeClassifier classifier = getClassifier();
-        classifier.process(df);
-        elapsed = System.currentTimeMillis() - startTime;
-        log.info("Classification time: {}", elapsed);
-        log.info("Outlier cutoffs: {} {}",
-                classifier.getLowCutoff(),
-                classifier.getHighCutoff()
-        );
-        df = classifier.getResults();
+        if (classifier != null) {
+            classifier.process(df);
+            elapsed = System.currentTimeMillis() - startTime;
+            log.info("Classification time: {}", elapsed);
+            log.info("Outlier cutoffs: {} {}",
+                    classifier.getLowCutoff(),
+                    classifier.getHighCutoff()
+            );
+            df = classifier.getResults();
+            outlierColumnName = classifier.getOutputColumnName();
+            countColumName = classifier.getCountColumnName();
+        }
         CSVDataFrameWriter writer = new CSVDataFrameWriter();
         PrintWriter out = new PrintWriter("df.csv");
         writer.writeToStream(df, out);
 
         APrioriSummarizer summarizer = new APrioriSummarizer();
-        summarizer.setOutlierColumn(classifier.getOutputColumnName());
-        summarizer.setCountColumn(classifier.getCountColumnName());
+        summarizer.setOutlierColumn(outlierColumnName);
+        summarizer.setCountColumn(countColumName);
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);
         summarizer.setMinRatioMetric(minRatioMetric);
@@ -105,6 +109,19 @@ public class AriaCubePipeline implements Pipeline {
         log.info("Summarization time: {}", elapsed);
         Explanation output = summarizer.getResults();
         return output;
+    }
+
+    public List<String> getOperations() throws MacrobaseException {
+        switch (classifierType) {
+            case "quantile": {
+                return CubeQueryService.quantileOperators;
+            }
+            case "raw": {
+                return Arrays.asList("Count", "Sum");
+            }
+            default:
+                throw new MacrobaseException("Unsupported classifier");
+        }
     }
 
 
@@ -137,6 +154,9 @@ public class AriaCubePipeline implements Pipeline {
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
                 return classifier;
+            }
+            case "raw": {
+                return null;
             }
             default:
                 throw new MacrobaseException("Bad Classifier Name");
