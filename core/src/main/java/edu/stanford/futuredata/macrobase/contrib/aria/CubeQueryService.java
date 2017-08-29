@@ -137,7 +137,8 @@ public class CubeQueryService {
             if (curFuture.isCancelled()) {
                 throw new MacrobaseException("Freq request failed");
             }
-            frequentDimValues.put(dimNames.get(i), curFuture.get());
+            List<String> values = curFuture.get();
+            frequentDimValues.put(dimNames.get(i), values);
         }
 
         return frequentDimValues;
