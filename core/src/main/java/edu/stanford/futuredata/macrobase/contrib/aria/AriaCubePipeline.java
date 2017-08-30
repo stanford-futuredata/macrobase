@@ -30,6 +30,7 @@ public class AriaCubePipeline implements Pipeline {
     private String startTimeStamp;
     private String endTimeStamp;
     private Map<String, String> restHeader;
+    private boolean prunedLoading;
 
     private String metric;
     private String classifierType;
@@ -46,6 +47,7 @@ public class AriaCubePipeline implements Pipeline {
         startTimeStamp = conf.get("startTime");
         endTimeStamp = conf.get("endTime");
         restHeader = conf.get("restHeader");
+        prunedLoading = conf.get("prunedLoading", true);
 
         metric = conf.get("metric");
         classifierType = conf.get("classifier");
@@ -66,12 +68,21 @@ public class AriaCubePipeline implements Pipeline {
                 startTimeStamp,
                 endTimeStamp
         );
-        DataFrame df = cs.getFrequentCubeEntries(
-                metric,
-                attributes,
-                getOperations(),
-                minSupport
-        );
+        DataFrame df;
+        if (prunedLoading) {
+            df = cs.getFrequentCubeEntries(
+                    metric,
+                    attributes,
+                    getOperations(),
+                    minSupport
+            );
+        } else {
+            df = cs.getAllCubeEntries(
+                    metric,
+                    attributes,
+                    getOperations()
+            );
+        }
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);
         log.info("{} rows", df.getNumRows());
