@@ -12,13 +12,15 @@ public class ExplanationResult {
     private double totalOutlier, totalCount;
 
     private double support;
+    private double ratio;
 
     public ExplanationResult(
             Map<String, String> matcher,
             double matchedOutlier,
             double matchedCount,
             double totalOutlier,
-            double totalCount
+            double totalCount,
+            ExplanationMetric ratioMetric
     ) {
         this.matcher = matcher;
         this.matchedOutlier = matchedOutlier;
@@ -27,6 +29,7 @@ public class ExplanationResult {
         this.totalCount = totalCount;
 
         this.support = matchedOutlier / totalOutlier;
+        this.ratio = ratioMetric.calc(matchedOutlier, matchedCount, totalOutlier, totalCount);
     }
 
     public Map<String, String> getMatcher() {
@@ -49,6 +52,8 @@ public class ExplanationResult {
     public double support() {
         return support;
     }
+    @JsonProperty("ratio")
+    public double ratio() { return ratio; }
 
     public String prettyPrint() {
         return prettyPrint(new ArrayList<>());
