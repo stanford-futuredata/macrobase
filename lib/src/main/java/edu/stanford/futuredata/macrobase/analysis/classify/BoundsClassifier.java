@@ -79,13 +79,14 @@ public class BoundsClassifier extends CubeClassifier implements ThresholdClassif
                         double maxStdBound = (((std * std * (count - 1) / count) + (min - mean) * (highCutoff - mean)) /
                                 ((max - highCutoff) * (max - min)));
                         double minStdBound;
+                        double markovBound = 1 - (max - mean) / (max - highCutoff);;
                         if (mean <= highCutoff) {
                             minStdBound = 0;
                         } else {
-                            double k = (std * std * (count - 1) / count) / ((highCutoff - mean) * (highCutoff - mean));
-                            minStdBound = (1 - k / (1 + k));
+                            minStdBound = ((highCutoff - mean) * (highCutoff - mean)) /
+                                    (((highCutoff - mean) * (highCutoff - mean)) + (std * std * (count - 1) / count));
                         }
-                        numOutliers += count * Math.max(maxStdBound, minStdBound);
+                        numOutliers += count * Math.max(maxStdBound, Math.max(minStdBound, markovBound));
                     }
                 }
                 if (includeLow) {
@@ -97,13 +98,14 @@ public class BoundsClassifier extends CubeClassifier implements ThresholdClassif
                         double maxStdBound = (((std * std * (count - 1) / count) + (max - mean) * (lowCutoff - mean)) /
                                 ((min - lowCutoff) * (min - max)));
                         double minStdBound;
+                        double markovBound = 1 - (mean - min) / (lowCutoff - min);;
                         if (mean >= lowCutoff) {
                             minStdBound = 0;
                         } else {
-                            double k = (std * std * (count - 1) / count) / ((mean - lowCutoff) * (mean - lowCutoff));
-                            minStdBound = (1 - k / (1 + k));
+                            minStdBound = ((mean - lowCutoff) * (mean - lowCutoff)) /
+                                    (((mean - lowCutoff) * (mean - lowCutoff)) + (std * std * (count - 1) / count));
                         }
-                        numOutliers += count * Math.max(maxStdBound, minStdBound);
+                        numOutliers += count * Math.max(maxStdBound, Math.max(minStdBound, markovBound));
                     }
                 }
             }
