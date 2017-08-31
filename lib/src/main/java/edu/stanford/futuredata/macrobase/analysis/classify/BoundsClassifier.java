@@ -70,6 +70,8 @@ public class BoundsClassifier extends CubeClassifier implements ThresholdClassif
                 // The minStdBound is based on the fact that the true standard deviation must be
                 // no less than the minimum possible standard deviation. It is computed using
                 // Cantelli's inequality.
+                // The markovBound is based on Markov's inequality and makes use of the mean,
+                // maximum, and minimum.
                 if (includeHigh) {
                     if (highCutoff >= max) {
                         numOutliers += 0.0;
