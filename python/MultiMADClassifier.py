@@ -4,7 +4,7 @@ from weld_matrix import WeldMatrix
 from timeit import default_timer as timer
 
 class MultiMADClassifier:
-	MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
+	MAD_TO_ZSCORE_COEFFICIENT = 1.4826
 
 	def __init__(self):
 		self.median = 0
@@ -17,7 +17,7 @@ class MultiMADClassifier:
 		self.scoreTime = 0
 
 	def process(self, input):
-		for row in xrange(input.shape[0]):
+		for row in range(input.shape[0]):
 			metrics = input[row,:]
 			self.median, self.MAD = self.computeStatistics(metrics)
 			self.zscore_coefficient = self.MAD * self.MAD_TO_ZSCORE_COEFFICIENT
@@ -29,7 +29,7 @@ class MultiMADClassifier:
 	def processWeld(self, input, scoring=True):
 		self.medians = []
 		self.MADs = []
-		for row in xrange(input.shape[0]):
+		for row in range(input.shape[0]):
 			metrics = input[row,:]
 			self.median, self.MAD = self.computeStatistics(metrics)
 			self.medians.append(self.median)

@@ -25,37 +25,37 @@ def test():
 	mad = MultiMADClassifier()
 	
 	start = timer()
-	for _ in xrange(NUM_TRIALS):
+	for _ in range(NUM_TRIALS):
 		mad.process(input)
 	end = timer()
-	print "Without Weld:"
-	print "Scoring time: {}".format(mad.scoreTime)
-	print "Total time elapsed: {}".format(end - start)
+	print("Without Weld:")
+	print("Scoring time: {}".format(mad.scoreTime))
+	print("Total time elapsed: {}".format(end - start))
 	classification1 = mad.classification
 
 	mad.scoreTime = 0
 
 	start = timer()
-	for _ in xrange(NUM_TRIALS):
+	for _ in range(NUM_TRIALS):
 		mad.processWeld(input, False)
 	end = timer()
-	print "Using Weld, only encoding/decoding:"
-	print "Scoring time: {}".format(mad.scoreTime)
-	print "Total time elapsed: {}".format(end - start)
+	print("Using Weld, only encoding/decoding:")
+	print("Scoring time: {}".format(mad.scoreTime))
+	print("Total time elapsed: {}".format(end - start))
 
 	mad.scoreTime = 0
 
 	start = timer()
-	for _ in xrange(NUM_TRIALS):
+	for _ in range(NUM_TRIALS):
 		mad.processWeld(input, True)
 	end = timer()
-	print "Using Weld:"
-	print "Scoring time: {}".format(mad.scoreTime)
-	print "Total time elapsed: {}".format(end - start)
+	print("Using Weld:")
+	print("Scoring time: {}".format(mad.scoreTime))
+	print("Total time elapsed: {}".format(end - start))
 
 	classification2 = mad.classification
-	print "Classifications agree: {} out of {}".format(
-		sum(classification1[1] == classification2[1]), num_rows)
+	print("Classifications agree: {} out of {}".format(
+		sum(classification1[1] == classification2[1]), num_rows))
 
 if __name__ == "__main__":
 	test()
