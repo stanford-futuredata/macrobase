@@ -26,7 +26,7 @@ public class FeatureSelector {
         this.topFeatures = new ArrayList<String>();
     }
 
-    public List<Double> process(DataFrame input) {
+    public List<Double> process_anova(DataFrame input) {
     	List<double[]> columns = new ArrayList<double[]>();
     	String[] attributeColumn = input.getStringColumnByName(attributeName);
     	for (String columnName : columnNames) {

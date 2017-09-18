@@ -88,6 +88,7 @@ def test():
     # num_rows = 1000000
     # input = np.random.rand(num_cols, num_rows)
 
+    # TODO: uncomment this line
     # visualize_data(X, y, metricColumns)
     # return
 
@@ -189,46 +190,6 @@ def test():
     # print("Recursive:")
     # print("Total time elapsed: {}".format(end - start))
     # print("{}".format(selector.selector.ranking_))
-
-
-# def time_test():
-#     with open('../lib/src/test/resources/shuttle.csv', 'r') as f:
-#         columns = next(f).strip().split(',')
-#         metricColumns = columns[:-1]
-#         X = []
-#         y = []
-#         index = range(9)
-#         for line in f:
-#             data = [float(x) for x in line.strip().split(',')]
-#             X.append(data[:-1])
-#             y.append(data[-1])
-#         X = np.asarray(X)
-#         y = np.asarray(y)
-#         real_metrics = range(len(metricColumns))
-#         # X = add_noise(X, 9, 9, 9)
-#         # fake_metrics = range(len(metricColumns), X.shape[1])
-#         print(X.shape)
-#         print(y.shape)
-#
-#     selector = UnivariateSelector()
-#
-#     f = open('../lib/anova.csv', 'w')
-#     for num_trials in [10, 100, 1000]:
-#         start = timer()
-#         for _ in range(num_trials):
-#             selector.select_features(X, y, 'anova')
-#         end = timer()
-#         print("Total time elapsed: {}".format(end - start))
-#         f.write("{}, {}\n".format(num_trials, end - start))
-#         anova_ranking = selector.scores.argsort()[::-1]
-#     # anova_columns = anova_ranking[:len(percentile_columns)]
-#     # accuracy(anova_columns, real_metrics)
-#     # print "anova columns: {}".format(anova_columns)
-#     # print "{}".format(anova_ranking)
-#     # for i in anova_ranking:
-#     # 	if i in real_metrics:
-#     # 		print (columns[index[i]], selector.scores[i])
-#     f.close()
 
 
 def jaccard_sim(col1, col2, clf1='clf1', clf2='clf2'):

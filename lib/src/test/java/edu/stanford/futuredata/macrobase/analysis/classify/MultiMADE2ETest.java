@@ -39,7 +39,7 @@ public class MultiMADE2ETest {
     private static List<Double> trueMedians;
     private static List<Double> trueMADs;
     private static List<Integer> trueOutliers;
-    private int numTrials = 10000;
+    private int numTrials = 100;  // TODO: change this
     private double percentOutliers = 1;
     private long startTime = 0;
     private long estimatedTime = 0;
@@ -116,86 +116,105 @@ public class MultiMADE2ETest {
     }
 
     public void runTests() throws Exception {
-        // startTime = System.currentTimeMillis();
+        // MultiMAD only classification (no group by)
+         startTime = System.currentTimeMillis();
 
-        // mad = new MultiMADClassifierE2E(attributeName, metricNames)
-        //         // .setPercentile(percentOutliers);
-        //         .setZscore(1.64485);
-        // for (int i = 0; i < numTrials; i++) {
-        //     mad.process(df);
-        // }
+         mad = new MultiMADClassifierE2E(attributeName, metricNames)
+                  .setPercentile(percentOutliers);
+//                 .setZscore(1.64485);
+         for (int i = 0; i < numTrials; i++) {
+             mad.process(df);
+         }
 
-        // estimatedTime = System.currentTimeMillis() - startTime;
-        // System.out.format("Only classification time elapsed: %d ms\n", estimatedTime);
+         estimatedTime = System.currentTimeMillis() - startTime;
+         System.out.format("Only classification time elapsed: %d ms\n", estimatedTime);
 
-        // startTime = System.currentTimeMillis();
+        // Percentile Group By E2E
+         startTime = System.currentTimeMillis();
 
-        // mad = new MultiMADClassifierE2E(attributeName, metricNames)
-        //         .setPercentile(percentOutliers)
-        //         .setDoGroupBy(true)
-        //         .setUsePercentile(true);
-        // for (int i = 0; i < numTrials; i++) {
-        //     mad.process(df);
-        // }
+         mad = new MultiMADClassifierE2E(attributeName, metricNames)
+                 .setPercentile(percentOutliers)
+                 .setDoGroupBy(true)
+                 .setUsePercentile(true);
+         for (int i = 0; i < numTrials; i++) {
+             mad.process(df);
+         }
 
-        // estimatedTime = System.currentTimeMillis() - startTime;
-        // System.out.format("Percentile E2E time elapsed: %d ms\n", estimatedTime);
-        // System.out.format("\t%s\n", Arrays.toString(mad.features.entrySet().toArray()));
-        // System.out.format("\t%s\n", Arrays.toString(mad.ratios.entrySet().toArray()));
+         estimatedTime = System.currentTimeMillis() - startTime;
+         System.out.format("Percentile E2E w/group by time elapsed: %d ms\n", estimatedTime);
+//         System.out.format("\t%s\n", Arrays.toString(mad.features.entrySet().toArray()));
+//         System.out.format("\t%s\n", Arrays.toString(mad.ratios.entrySet().toArray()));
 
-        // startTime = System.currentTimeMillis();
+        // MultiMAD Group By E2E
+         startTime = System.currentTimeMillis();
 
-        // mad = new MultiMADClassifierE2E(attributeName, metricNames)
-        //         .setPercentile(percentOutliers)
-        //         .setDoGroupBy(true);
-        // for (int i = 0; i < numTrials; i++) {
-        //     mad.process(df);
-        // }
+         mad = new MultiMADClassifierE2E(attributeName, metricNames)
+                 .setPercentile(percentOutliers)
+                 .setDoGroupBy(true);
+         for (int i = 0; i < numTrials; i++) {
+             mad.process(df);
+         }
 
-        // estimatedTime = System.currentTimeMillis() - startTime;
-        // System.out.format("E2E time elapsed: %d ms\n", estimatedTime);
-        // System.out.format("\t%s\n", Arrays.toString(mad.features.entrySet().toArray()));
-        // System.out.format("\t%s\n", Arrays.toString(mad.ratios.entrySet().toArray()));
-        // // System.out.format("%s\n", mad.explanations.get(0).prettyPrint());
+         estimatedTime = System.currentTimeMillis() - startTime;
+         System.out.format("Multimad E2E w/group by time elapsed: %d ms\n", estimatedTime);
+//         System.out.format("\t%s\n", Arrays.toString(mad.features.entrySet().toArray()));
+//         System.out.format("\t%s\n", Arrays.toString(mad.ratios.entrySet().toArray()));
 
-        fastGroupByMeasures();
+        // MultiMAD Fast Group By E2E
+        startTime = System.currentTimeMillis();
 
-        // startTime = System.currentTimeMillis();
+        mad = new MultiMADClassifierE2E(attributeName, metricNames)
+                .setPercentile(percentOutliers)
+                .setDoGroupByFast(true);
+        for (int i = 0; i < numTrials; i++) {
+            mad.process(df);
+        }
 
-        // FeatureSelector fs = new FeatureSelector(attributeName, metricNames);
-        // List<Double> feature_ranks = new ArrayList<Double>();
-        // for (int i = 0; i < numTrials; i++) {
-        //     feature_ranks = fs.process(df);
-        // }
+        estimatedTime = System.currentTimeMillis() - startTime;
+        System.out.format("Multimad E2E w/fast group by time elapsed: %d ms\n", estimatedTime);
+//        System.out.format("\t%s\n", Arrays.toString(mad.features.entrySet().toArray()));
+//        System.out.format("\t%s\n", Arrays.toString(mad.ratios.entrySet().toArray()));
+//        fastGroupByMeasures();
 
-        // estimatedTime = System.currentTimeMillis() - startTime;
-        // System.out.format("Feature selection time elapsed: %d ms\n", estimatedTime);
-        // System.out.format("\t%s\n", Arrays.toString(feature_ranks.toArray()));
+        // Univariate feature selectors
+         startTime = System.currentTimeMillis();
 
-        // startTime = System.currentTimeMillis();
+         FeatureSelector fs = new FeatureSelector(attributeName, metricNames);
+         List<Double> feature_ranks = new ArrayList<Double>();
+         for (int i = 0; i < numTrials; i++) {
+             feature_ranks = fs.process_anova(df);
+         }
 
-        // double[] feature_ranks2 = new double[]{};
-        // for (int i = 0; i < numTrials; i++) {
-        //     feature_ranks2 = fs.process_ssr(df);
-        // }
+         estimatedTime = System.currentTimeMillis() - startTime;
+         System.out.format("Feature selection time elapsed (with Apache commons anova): %d ms\n", estimatedTime);
+//         System.out.format("\t%s\n", Arrays.toString(feature_ranks.toArray()));
 
-        // estimatedTime = System.currentTimeMillis() - startTime;
-        // System.out.format("Feature selection time elapsed: %d ms\n", estimatedTime);
-        // System.out.format("\t%s\n", Arrays.toString(feature_ranks2));
+         startTime = System.currentTimeMillis();
 
-        // startTime = System.currentTimeMillis();
+         double[] feature_ranks2 = new double[]{};
+         for (int i = 0; i < numTrials; i++) {
+             feature_ranks2 = fs.process_ssr(df);
+         }
 
-        // LRClassifier lr = new LRClassifier(attributeName, metricNames);
-        // for (int i = 0; i < numTrials; i++) {
-        //     lr.process(df);
-        // }
+         estimatedTime = System.currentTimeMillis() - startTime;
+         System.out.format("Feature selection time elapsed (with Smile SSR): %d ms\n", estimatedTime);
+//         System.out.format("\t%s\n", Arrays.toString(feature_ranks2));
 
-        // estimatedTime = System.currentTimeMillis() - startTime;
-        // System.out.format("Logistic regression time elapsed: %d ms\n", estimatedTime);
-        // System.out.format("\t%s\n", Arrays.toString(lr.topFeatures.toArray()));
-        // // System.out.format("%s\n", mad.explanations.get(0).prettyPrint());
+//         // Logistic Regression feature selector
+//         startTime = System.currentTimeMillis();
+//
+//         LRClassifier lr = new LRClassifier(attributeName, metricNames);
+//         for (int i = 0; i < numTrials; i++) {
+//             lr.process(df);
+//         }
+//
+//         estimatedTime = System.currentTimeMillis() - startTime;
+//         System.out.format("Logistic regression time elapsed: %d ms\n", estimatedTime);
+//         System.out.format("\t%s\n", Arrays.toString(lr.topFeatures.toArray()));
+//         // System.out.format("%s\n", mad.explanations.get(0).prettyPrint());
 
-        // startTime = System.currentTimeMillis();
+        // Not sure what this next part is
+//         startTime = System.currentTimeMillis();
 
         // mad = new MultiMADClassifierE2E(attributeName, metricNames)
         //         .setPercentile(percentOutliers);

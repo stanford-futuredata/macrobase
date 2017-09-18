@@ -31,10 +31,12 @@ public class MultiMADClassifierDebug implements Transformer {
     private String outputColumnName = "_OUTLIER";
     private List<Double> medians;
     private List<Double> MADs;
+    // Bounds based on 95% confidence interval
     public List<Double> upperBoundsMedian;
     public List<Double> lowerBoundsMedian;
     public List<Double> upperBoundsMAD;
     public List<Double> lowerBoundsMAD;
+    private double[] bootstrapMetrics;
     private long startTime = 0;
     private long trainTime = 0;
     private long scoreTime = 0;
@@ -42,8 +44,25 @@ public class MultiMADClassifierDebug implements Transformer {
     private long samplingTime = 0;
     private static final int procs = Runtime.getRuntime().availableProcessors();
     private final ExecutorService executorService = Executors.newFixedThreadPool(procs);
+    private final double trimmedMeanFallback = 0.05;
+    // https://en.wikipedia.org/wiki/Median_absolute_deviation#Relation_to_standard_deviation
+    private final double MAD_TO_ZSCORE_COEFFICIENT = 1.4826;
+
+    enum SamplingMethod {RESERVOIR, FISHER_YATES, REJECTION};
+    enum ScoringMethod {PARALLEL_STREAM, THREADS, PARALLEL_LAMBDA, SERIAL, EXECUTOR_SERVICE};
+    enum TrainingMethod {MAD_SORT, MAD_PERCENTILE};
+
+    // Change these to configure the classifier
+    public boolean includeLow = true;
+    public boolean includeHigh = true;
+    public SamplingMethod samplingMethod = SamplingMethod.RESERVOIR;
+    public ScoringMethod scoringMethod = ScoringMethod.PARALLEL_LAMBDA;
+    public TrainingMethod trainingMethod = TrainingMethod.MAD_PERCENTILE;
+    public boolean doBootstrap = true;
 
     // Calculated values
+    private double lowCutoff;
+    private double highCutoff;
     private DataFrame output;
 
     public MultiMADClassifierDebug(String attributeName, String... columnNames) {
@@ -63,14 +82,14 @@ public class MultiMADClassifierDebug implements Transformer {
         output = input.copy();
         double[] resultColumn = new double[input.getNumRows()];
 
-        // long startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
 
         int[] sampleIndices = new int[input.numRows / samplingRate];
         if (samplingRate != 1) {
             sampleIndices = getRandomSample(input);
         }
 
-        // samplingTime += (System.currentTimeMillis() - startTime);
+        samplingTime += (System.currentTimeMillis() - startTime);
 
         // double[][] metrics = new double[columnNames.size()][input.getNumRows()];
 
@@ -79,12 +98,11 @@ public class MultiMADClassifierDebug implements Transformer {
 
         // for (String column : columnNames) {
         for (int i = 0; i < columnNames.size(); i++) {
-            startTime = System.currentTimeMillis();
-
             double[] metrics = input.getDoubleColumnByName(columnNames.get(i));
             // metrics[i] = input.getDoubleColumnByName(columnNames.get(i));
             // double[] trainingMetrics = trainingInput.getDoubleColumnByName(columnNames.get(i));
 
+            startTime = System.currentTimeMillis();
             double[] trainingMetrics = new double[input.numRows / samplingRate];
             if (samplingRate == 1) {
                 // trainingMetrics = metrics;
@@ -95,156 +113,128 @@ public class MultiMADClassifierDebug implements Transformer {
                     trainingMetrics[j] = metrics[sampleIndices[j]];
                 }
             }
+            samplingTime += (System.currentTimeMillis() - startTime);
 
-            // // For bootstrapping
-            // double[] bootstrapMetrics = new double[trainingMetrics.length];
-            // System.arraycopy(trainingMetrics, 0, bootstrapMetrics, 0, trainingMetrics.length);
-            
+            // For bootstrapping
+            if (doBootstrap) {
+                bootstrapMetrics = new double[trainingMetrics.length];
+                System.arraycopy(trainingMetrics, 0, bootstrapMetrics, 0, trainingMetrics.length);
+            }
+
+            startTime = System.currentTimeMillis();
+
+//            mad.train(trainingMetrics);
+//            medians.add(mad.getMedian());
+//            MADs.add(mad.getMAD());
+//            lowCutoff = mad.getMedian() - (cutoff * mad.getMAD());
+//            highCutoff = mad.getMedian() + (cutoff * mad.getMAD());
+
+            Stats stats = train(trainingMetrics);
+            medians.add(stats.median);
+            MADs.add(stats.mad);
+            lowCutoff = stats.median - (cutoff * stats.mad);
+            highCutoff = stats.median + (cutoff * stats.mad);
+
             trainTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
-            mad.train(trainingMetrics);
-            medians.add(mad.getMedian());
-            MADs.add(mad.getMAD());
-            double lowCutoff = mad.getMedian() - (cutoff * mad.getMAD());
-            double highCutoff = mad.getMedian() + (cutoff * mad.getMAD());
-
-            trainTime += (System.currentTimeMillis() - startTime);
-            startTime = System.currentTimeMillis();
-
-            // // Bootstrap the confidence interval
-            // bootstrap(bootstrapMetrics, mad.getMedian(), mad.getMAD());
+            // Bootstrap the confidence interval
+            if (doBootstrap) {
+                bootstrap(bootstrapMetrics, mad.getMedian(), mad.getMAD());
+            }
 
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
-            // // Parallelized stream scoring:
-            // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
-            // double[] outliers = IntStream.range(0, input.getNumRows()).parallel().mapToDouble(r -> Math.abs(metrics[r] - mad.median) / adjustedMAD > cutoff ? 1.0 : 0.0).toArray();
-            // // System.out.format("Column %d has %d outliers\n", i, outliers.length);
-            // output.addDoubleColumn(columnNames.get(i) + outputColumnName, outliers);
-
-
-            // // Multi-threaded scoring
-            // double[] results = new double[metrics.length];
-            // System.arraycopy(metrics, 0, results, 0, metrics.length);
-            // int blockSize = (results.length + procs - 1) / procs;
-            // Thread[] threads = new Thread[procs];
-            // for (int j = 0; j < procs; j++) {
-            //     int start = j * blockSize;
-            //     int end = Math.min(results.length, (j + 1) * blockSize);
-            //     threads[j] = new Thread(new Scorer(results, start, end, lowCutoff, highCutoff));
-            //     threads[j].start();
-            // }
-            // for (int j = 0; j < procs; j++) {
-            //     try {
-            //         threads[j].join();
-            //     } catch (InterruptedException e) {
-            //         System.exit(1);
-            //     }
-            // }
-
-            // // Parallel lambdas scoring:
-            // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
-            // double[] results = new double[metrics.length];
-            // System.arraycopy(metrics, 0, results, 0, metrics.length);
-            // Arrays.parallelSetAll(results, m -> Math.abs(m - mad.median) / adjustedMAD > cutoff ? 1.0 : 0.0);
-            // output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
-
-            // Original Scoring:
-            int numInliers = 0;
-            int numOutliers = 0;
-            HashMap<Double, List<MutableInt>> counts = new HashMap<Double, List<MutableInt>>();
-            double[] results = new double[metrics.length];
-            for (int r = 0; r < input.getNumRows(); r++) {
-                boolean isOutlier = (metrics[r] > highCutoff) || (metrics[r] < lowCutoff);
-                results[r] = isOutlier ? 1.0 : 0.0;
-                if (isOutlier) {
-                    numOutliers++;
-                } else {
-                    numInliers++;
-                }
-                if (counts.containsKey(attributes[r])) {
-                    counts.get(attributes[r]).get(isOutlier ? 0 : 1).increment();
-                } else {
-                    counts.put(attributes[r], isOutlier ?
-                        Arrays.asList(new MutableInt(1), new MutableInt(0)) :
-                        Arrays.asList(new MutableInt(0), new MutableInt(1)));
-                }
+            double[] results;
+            int blockSize;
+            switch(scoringMethod) {
+                case PARALLEL_STREAM:
+                    // Parallelized stream scoring:
+                    double[] outliers = IntStream.range(0, input.getNumRows()).parallel().mapToDouble(
+                            r -> ((metrics[r] > highCutoff && includeHigh) || (metrics[r] < lowCutoff && includeLow)) ? 1.0 : 0.0
+                    ).toArray();
+                    output.addDoubleColumn(columnNames.get(i) + outputColumnName, outliers);
+                    break;
+                case THREADS:
+                    // Multi-threaded scoring
+                    results = new double[metrics.length];
+                    blockSize = (results.length + procs - 1) / procs;
+                    Thread[] threads = new Thread[procs];
+                    for (int j = 0; j < procs; j++) {
+                        int start = j * blockSize;
+                        int end = Math.min(results.length, (j + 1) * blockSize);
+                        threads[j] = new Thread(new Scorer(metrics, results, start, end, lowCutoff, highCutoff, includeLow, includeHigh));
+                        threads[j].start();
+                    }
+                    for (int j = 0; j < procs; j++) {
+                        try {
+                            threads[j].join();
+                        } catch (InterruptedException e) {
+                            System.exit(1);
+                        }
+                    }
+                    output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
+                    break;
+                case PARALLEL_LAMBDA:
+                    // Parallel lambdas scoring:
+                    results = new double[metrics.length];
+                    System.arraycopy(metrics, 0, results, 0, metrics.length);
+                    Arrays.parallelSetAll(results, m -> ((m > highCutoff && includeHigh) || (m < lowCutoff && includeLow)) ? 1.0 : 0.0);
+                    output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
+                    break;
+                case SERIAL:
+                    // Original Scoring:
+                    results = new double[metrics.length];
+                    for (int r = 0; r < input.getNumRows(); r++) {
+                        boolean isOutlier = (metrics[r] > highCutoff && includeHigh) ||
+                                (metrics[r] < lowCutoff && includeLow);
+                        results[r] = isOutlier ? 1.0 : 0.0;
+                    }
+                    output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
+                    break;
+                case EXECUTOR_SERVICE:
+                    // Executer service scoring:
+                    results = new double[metrics.length];
+                    blockSize = (results.length + procs - 1) / procs;
+                    for(int j = 0; j < procs; j++) {
+                        int start = j * blockSize;
+                        int end = Math.min(results.length, (j + 1) * blockSize);
+                        executorService.submit(new Scorer(metrics, results, start, end, lowCutoff, highCutoff, includeLow, includeHigh));
+                    }
+                    executorService.shutdown();
+                    try {
+                        executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                    } catch (InterruptedException e) {
+                        System.exit(1);
+                    }
+                    output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
+                    break;
             }
-            System.out.format("Inliers: %d, Outliers: %d\n", numInliers, numOutliers);
-            for (Double attr : counts.keySet()) {
-                List<MutableInt> numInOut = counts.get(attr);
-                System.out.format("Attribute: %.0f, inliers: %d, outliers: %d\n", attr,
-                    numInOut.get(1).get(), numInOut.get(0).get());
-            }
-            output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
-
-            // // Executer service scoring:
-            // double adjustedMAD = mad.MAD * mad.MAD_TO_ZSCORE_COEFFICIENT;
-            // List<Future<double[]>> futures = new ArrayList<>();
-            // int blockSize = (metrics.length + procs - 1) / procs;
-            // for(int j = 0; j < procs; j++) {
-            //     int start = j * blockSize;
-            //     int end = Math.min(metrics.length, (j + 1) * blockSize);
-            //     futures.add(executorService.submit(new Scorer(Arrays.copyOfRange(metrics, start, end), mad.median, adjustedMAD, cutoff)));
-            // }
-            // double[] results = new double[metrics.length];
-            // int curr = 0;
-            // for(Future<double[]> future: futures) {
-            //     try {
-            //         double[] result = future.get();
-            //         for (int j = curr; j < curr + result.length; j++) {
-            //             results[j] = result[j - curr];
-            //         }
-            //         curr += result.length;
-            //     } catch(Exception e) {
-            //         System.exit(1);
-            //     }
-            // }
-            // output.addDoubleColumn(columnNames.get(i) + outputColumnName, results);
-
-            // // Old Original Scoring:
-            // for (int r = 0; r < input.getNumRows(); r++) {
-            //     double curVal = metrics[r];
-            //     double score = mad.zscore(curVal);
-            //     if (score >= cutoff) {
-            //         resultColumn[r] = 1.0;
-            //     }
-            // }
-
-            // // Old Parallelized stream scoring:
-            // int[] outliers = IntStream.range(0, input.getNumRows()).parallel().filter(r -> mad.zscore(metrics[r]) >= cutoff).toArray();
-            // // System.out.format("Column %d has %d outliers\n", i, outliers.length);
-            // for (int r : outliers) {
-            //     resultColumn[r] = 1.0;
-            // }
 
             scoreTime += (System.currentTimeMillis() - startTime);
         }
 
-        startTime = System.currentTimeMillis();
-        
-        // Even more parallelized scoring
-        // RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
-        // resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
-        //     i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.score(m)).max().getAsDouble() >= cutoff) ? 1 : 0
-        // ).asDoubleStream().toArray();
-
-        // RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
-        // resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
-        //     i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.zscore(m)).filter(s -> s > cutoff).count() > 0) ? 1 : 0
-        // ).asDoubleStream().toArray();
-
-        scoreTime += (System.currentTimeMillis() - startTime);
-
-        // input.addDoubleColumn(outputColumnName, resultColumn);
-        // output.addDoubleColumn(outputColumnName, resultColumn);
+//        // Even more parallelized scoring
+//        startTime = System.currentTimeMillis();
+//
+//         RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
+//         resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
+//             i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.score(m)).max().getAsDouble() >= cutoff) ? 1 : 0
+//         ).asDoubleStream().toArray();
+//
+//         RealMatrix metrics_matrix = new Array2DRowRealMatrix(metrics);
+//         resultColumn = IntStream.range(0, input.getNumRows()).parallel().map(
+//             i -> (Arrays.stream(metrics_matrix.getColumn(i)).map(m -> mad.zscore(m)).filter(s -> s > cutoff).count() > 0) ? 1 : 0
+//         ).asDoubleStream().toArray();
+//
+//        scoreTime += (System.currentTimeMillis() - startTime);
+//
+//         input.addDoubleColumn(outputColumnName, resultColumn);
+//         output.addDoubleColumn(outputColumnName, resultColumn);
     }
 
     private int[] getRandomSample(DataFrame input) {
-        long startSamplingTime = System.currentTimeMillis();
-
         // // Inefficient shuffling implementation:
         // // Integer[] arr = new Integer[input.getNumRows()];
         // List<Integer> arr = new ArrayList<Integer>();
@@ -262,62 +252,125 @@ public class MultiMADClassifierDebug implements Transformer {
         //     sampleIndices[i] = arr.get(i);
         // }
 
-        // // Reservoir Sampling:
-        // int sampleSize = input.numRows / samplingRate;
-        // int[] sampleIndices = new int[sampleSize];
-        // for (int i = 0; i < sampleSize; i++) {
-        //     sampleIndices[i] = i;
-        // }
-        // Random rand = new Random();
-        // for (int i = sampleSize; i < input.numRows; i++) {
-        //     int j = rand.nextInt(i+1);
-        //     if (j < sampleSize) {
-        //         sampleIndices[j] = i;
-        //     }
-        // }
-
-        // Rejection sampling:
-        boolean[] mask = new boolean[input.numRows];
         int sampleSize = input.numRows / samplingRate;
         int[] sampleIndices = new int[sampleSize];
-        int numSamples = 0;
         Random rand = new Random();
-        while (true) {
-            int sample = rand.nextInt(input.numRows);
-            if (mask[sample] == false) {
-                mask[sample] = true;
-                sampleIndices[numSamples] = sample;
-                numSamples++;
-                if (numSamples == sampleSize) {
-                    break;
+        switch(samplingMethod) {
+            case RESERVOIR:
+                 // Reservoir Sampling:
+                 for (int i = 0; i < sampleSize; i++) {
+                     sampleIndices[i] = i;
+                 }
+                 for (int i = sampleSize; i < input.numRows; i++) {
+                     int j = rand.nextInt(i+1);
+                     if (j < sampleSize) {
+                         sampleIndices[j] = i;
+                     }
+                 }
+                 break;
+            case REJECTION:
+                // Rejection sampling:
+                boolean[] mask = new boolean[input.numRows];
+                int numSamples = 0;
+                while (true) {
+                    int sample = rand.nextInt(input.numRows);
+                    if (mask[sample] == false) {
+                        mask[sample] = true;
+                        sampleIndices[numSamples] = sample;
+                        numSamples++;
+                        if (numSamples == sampleSize) {
+                            break;
+                        }
+                    }
                 }
-            }
+                break;
+            case FISHER_YATES:
+                // Fisher-Yates
+                int[] range = new int[input.numRows];
+                for (int i = 0; i < input.numRows; i++) {
+                    range[i] = i;
+                }
+                for (int i = 0; i < sampleSize; i++) {
+                    int j = rand.nextInt(input.numRows - i) + i;
+                    int temp = range[j];
+                    range[j] = range[i];
+                    range[i] = temp;
+                }
+                System.arraycopy(range, 0, sampleIndices, 0, sampleSize);
+                break;
         }
-        
-        // // Fisher-Yates
-        // int[] range = new int[input.numRows];
-        // for (int i = 0; i < input.numRows; i++) {
-        //     range[i] = i;
-        // }
-        // int sampleSize = input.numRows / samplingRate;
-        // Random rand = new Random();
-        // for (int i = 0; i < sampleSize; i++) {
-        //     int j = rand.nextInt(input.numRows - i) + i;
-        //     int temp = range[j];
-        //     range[j] = range[i];
-        //     range[i] = temp;
-        // }
-        // int[] sampleIndices = new int[sampleSize];
-        // System.arraycopy(range, 0, sampleIndices, 0, sampleSize);
-
-        samplingTime += (System.currentTimeMillis() - startSamplingTime);
 
         return sampleIndices;
-        // return input.filter(mask);
+    }
+
+    private Stats train(double[] metrics) {
+        double median = 0;
+        double MAD = 1;
+        switch(trainingMethod) {
+            case MAD_PERCENTILE:
+                median = new Percentile().evaluate(metrics, 50);
+
+                for (int i = 0; i < metrics.length; i++) {
+                    metrics[i] = Math.abs(metrics[i] - median);
+                }
+
+                MAD = new Percentile().evaluate(metrics, 50);
+
+                if (MAD == 0) {
+                    Arrays.sort(metrics);
+                    int lowerTrimmedMeanIndex = (int) (metrics.length * trimmedMeanFallback);
+                    int upperTrimmedMeanIndex = (int) (metrics.length * (1 - trimmedMeanFallback));
+                    double sum = 0;
+                    for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
+                        sum += metrics[i];
+                    }
+                    MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
+                    assert (MAD != 0);
+                }
+                break;
+            case MAD_SORT:
+                int len = metrics.length;
+
+                Arrays.sort(metrics);
+
+                if (len % 2 == 0) {
+                    median = (metrics[len / 2 - 1] + metrics[len / 2]) / 2;
+                } else {
+                    median = metrics[(int) Math.ceil(len / 2)];
+                }
+
+                double[] residuals = new double[len];
+                for (int i = 0; i < len; i++) {
+                    residuals[i] = Math.abs(metrics[i] - median);
+                }
+
+                Arrays.sort(residuals);
+
+                if (len % 2 == 0) {
+                    MAD = (residuals[len / 2 - 1] +
+                            residuals[len / 2]) / 2;
+                } else {
+                    MAD = residuals[(int) Math.ceil(len / 2)];
+                }
+
+                if (MAD == 0) {
+                    int lowerTrimmedMeanIndex = (int) (residuals.length * trimmedMeanFallback);
+                    int upperTrimmedMeanIndex = (int) (residuals.length * (1 - trimmedMeanFallback));
+                    double sum = 0;
+                    for (int i = lowerTrimmedMeanIndex; i < upperTrimmedMeanIndex; ++i) {
+                        sum += residuals[i];
+                    }
+                    MAD = sum / (upperTrimmedMeanIndex - lowerTrimmedMeanIndex);
+                    assert (MAD != 0);
+                }
+                break;
+        }
+        Stats stats = new Stats(median, MAD * MAD_TO_ZSCORE_COEFFICIENT);
+        return stats;
     }
 
     private void bootstrap(double[] trainingMetrics, double median, double MAD) {
-        int num_trials = 50;
+        int num_trials = 200;
         int len = trainingMetrics.length;
         double[] bootstrapped_diffs_median = new double[num_trials];
         double[] bootstrapped_diffs_MAD = new double[num_trials];
@@ -341,10 +394,10 @@ public class MultiMADClassifierDebug implements Transformer {
         Percentile percentile = new Percentile();
         // System.out.format("%f %f %f\n", median, bootstrapped_diffs_median[18], bootstrapped_diffs_median[18]);
         // System.out.format("[%f %f]\n", median-bootstrapped_diffs[8], median-bootstrapped_diffs[0]);
-        upperBoundsMedian.add(median - percentile.evaluate(bootstrapped_diffs_median, 5));
-        lowerBoundsMedian.add(median - percentile.evaluate(bootstrapped_diffs_median, 95));
-        upperBoundsMAD.add(MAD - percentile.evaluate(bootstrapped_diffs_MAD, 5));
-        lowerBoundsMAD.add(MAD - percentile.evaluate(bootstrapped_diffs_MAD, 95));
+        upperBoundsMedian.add(median - percentile.evaluate(bootstrapped_diffs_median, 2.5));
+        lowerBoundsMedian.add(median - percentile.evaluate(bootstrapped_diffs_median, 97.5));
+        upperBoundsMAD.add(MAD - percentile.evaluate(bootstrapped_diffs_MAD, 2.5));
+        lowerBoundsMAD.add(MAD - percentile.evaluate(bootstrapped_diffs_MAD, 97.5));
     }
 
     @Override
@@ -431,5 +484,23 @@ public class MultiMADClassifierDebug implements Transformer {
         }
         public void increment() { ++value;      }
         public int  get()       { return value; }
+    }
+
+    private final class Stats {
+        private final double median;
+        private final double mad;
+
+        public Stats(double median, double mad) {
+            this.median = median;
+            this.mad = mad;
+        }
+
+        public double getMedian() {
+            return median;
+        }
+
+        public double getMAD() {
+            return mad;
+        }
     }
 }

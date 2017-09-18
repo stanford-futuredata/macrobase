@@ -143,7 +143,7 @@ public class ScoringTest {
         for(int j = 0; j < procs; j++) {
             int start = j * blockSize;
             int end = Math.min(results.length, (j + 1) * blockSize);
-            executorService.submit(new Scorer(metrics, results, start, end, lowCutoff, highCutoff));
+            executorService.submit(new Scorer(metrics, results, start, end, lowCutoff, highCutoff, includeLow, includeHigh));
             // futures.add(executorService.submit(new Scorer(Arrays.copyOfRange(metrics, start, end), lowCutoff, highCutoff)));
         }
         executorService.shutdown();
@@ -174,7 +174,7 @@ public class ScoringTest {
         for (int j = 0; j < procs; j++) {
             int start = j * blockSize;
             int end = Math.min(results.length, (j + 1) * blockSize);
-            threads[j] = new Thread(new Scorer(metrics, results, start, end, lowCutoff, highCutoff));
+            threads[j] = new Thread(new Scorer(metrics, results, start, end, lowCutoff, highCutoff, includeLow, includeHigh));
             threads[j].start();
         }
         for (int j = 0; j < procs; j++) {

@@ -11,16 +11,19 @@ public class Scorer implements Runnable {
     private final double highCutoff;
     private final int start;
     private final int end;
-    private final boolean includeHigh = true;
-    private final boolean includeLow = true;
+    private final boolean includeHigh;
+    private final boolean includeLow;
 
-    public Scorer(double[] metrics, double[] results, int start, int end, double lowCutoff, double highCutoff) {
+    public Scorer(double[] metrics, double[] results, int start, int end, double lowCutoff, double highCutoff,
+                  boolean includeLow, boolean includeHigh) {
         this.metrics = metrics;
         this.results = results;
         this.start = start;
         this.end = end;
         this.lowCutoff = lowCutoff;
         this.highCutoff = highCutoff;
+        this.includeLow = includeLow;
+        this.includeHigh = includeHigh;
     }
 
     @Override
