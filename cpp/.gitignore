@@ -1,0 +1,6 @@
+macrodiff
+*.swp
+*.tsv
+*.txt
+*.csv
+*.parquet
