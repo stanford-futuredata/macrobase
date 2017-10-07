@@ -1,4 +1,5 @@
 macrodiff
+macrodiff.dSYM/
 *.swp
 *.tsv
 *.txt

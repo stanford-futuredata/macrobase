@@ -1,8 +1,9 @@
 
 CC=clang++
-CFLAGS=-std=c++11 -O3 -march=native -g -Wall
-INCLUDES=-I./parquet-cpp/build/debug/include -I./parquet-cpp/src
-LDFLAGS=-Lparquet-cpp/build/debug -lparquet -larrow
+CFLAGS=-std=c++11 -lstdc++ -march=native
+WARNINGS=-Wall -Werror -Wnull-dereference
+INCLUDES=
+LDFLAGS=-L./sql-parser -lsqlparser -lreadline
 SRC=main.cpp
 TARGET=macrodiff
 
@@ -10,7 +11,10 @@ TARGET=macrodiff
 .PHONY: all clean
 
 all:
-	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) $(SRC) -o $(TARGET)
+	$(CC) $(CFLAGS) -g -O3 $(WARNINGS) $(INCLUDES) $(LDFLAGS) $(SRC) -o $(TARGET)
+
+debug:
+	$(CC) $(CFLAGS) -g -O0 -DDEBUG $(WARNINGS) $(INCLUDES) $(LDFLAGS) $(SRC) -o $(TARGET)
 
 clean:
 	rm -rf $(TARGET)
