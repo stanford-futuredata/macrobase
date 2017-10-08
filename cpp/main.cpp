@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <readline/history.h>
-#include <readline/readline.h>
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
@@ -322,13 +321,13 @@ void repl() {
   vector<Row> output;
 
   while (true) {
-    char* query_str = readline("macrodiff> ");
-    if (query_str == nullptr) {
+    const string query_str = read_repl_input();
+    if (query_str == "") {
       break;
     }
 
     // Add query to history.
-    add_history(query_str);
+    add_history(query_str.c_str());
 
     // parse a given query_str
     hsql::SQLParserResult query;
@@ -351,10 +350,8 @@ void repl() {
           import_table(
               static_cast<const hsql::ImportStatement*>(query_statement), DATA,
               schema);
-#ifdef DEBUG
           cout << "Num rows: " << DATA.size() << endl;
           print_table(DATA, schema);
-#endif
           break;
         case hsql::kStmtSelect:
           output.clear();
@@ -384,12 +381,25 @@ void repl() {
       fprintf(stderr, "%s (L%d:%d)\n", query.errorMsg(), query.errorLine(),
               query.errorColumn());
     }
-
-    free(query_str);
   }
 }
 
+void print_welcome() {
+  const string ascii_art =
+      R"!(
+Welcome to
+    __  ___                          ___ ________
+   /  |/  /___ _______________  ____/ (_) __/ __/
+  / /|_/ / __ `/ ___/ ___/ __ \/ __  / / /_/ /_  
+ / /  / / /_/ / /__/ /  / /_/ / /_/ / / __/ __/  
+/_/  /_/\__,_/\___/_/   \____/\__,_/_/_/ /_/     
+
+)!";
+  cout << ascii_art << endl;
+}
+
 int main(/*int argc, const char* argv[]*/) {
+  print_welcome();
   repl();
   return 0;
 }

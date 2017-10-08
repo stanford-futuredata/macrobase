@@ -1,6 +1,7 @@
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#include <readline/readline.h>
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -34,6 +35,28 @@ vector<string> get_attribute_cols(vector<hsql::Expr*>* attribute_cols) {
     to_return.push_back((*it)->getName());
   }
   return to_return;
+}
+
+string read_repl_input() {
+  string query_str = "";
+  char* temp = readline("macrodiff> ");
+  if (temp == NULL) {
+    return "";
+  }
+
+  query_str += temp;
+  free(temp);
+
+  while (*(query_str.end() - 1) != ';') {
+    temp = readline("... ");
+    if (temp == NULL) {
+      return "";
+    }
+    query_str += "\n";
+    query_str += temp;
+    free(temp);
+  }
+  return query_str;
 }
 
 void print_table(const vector<Row>& data, const map<string, uint32_t>& schema,
