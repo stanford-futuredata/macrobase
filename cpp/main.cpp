@@ -1,47 +1,41 @@
 #include <assert.h>
 #include <readline/history.h>
-#include <stdio.h>
-#include <fstream>
-#include <iostream>
+#include <algorithm>
 #include <map>
-#include <set>
-#include <sstream>
 #include <string>
 #include <vector>
 
 #include "compare_by.h"
+#include "io_util.h"
+#include "sql-parser/src/SQLParser.h"
 #include "time_util.h"
 #include "types.h"
 #include "util.h"
 
-// include the sql parser
-#include "sql-parser/src/SQLParser.h"
-// contains printing utilities
+#ifdef DEBUG
 #include "sql-parser/src/util/sqlhelper.h"
+#endif
 
 using std::cout;
-using std::cin;
 using std::endl;
-using std::ifstream;
-using std::cerr;
-using std::vector;
-using std::array;
-using std::string;
 using std::map;
-using std::stringstream;
-using std::pair;
+using std::min;
+using std::string;
 using std::tuple;
+using std::vector;
 
-// TODO: handle projections
-void select(hsql::TableRef* tbl, const vector<Row>& input, vector<Row>& output,
-            const map<string, uint32_t>& schema) {
-  const hsql::Expr* whereClause = tbl->select->whereClause;
+void diff(hsql::DiffDefinition* diff, const vector<Row>& input,
+          const map<string, uint32_t>& input_schema, vector<Row>& output,
+          map<string, uint32_t>& output_schema);
+
+void apply_where_predicates(hsql::Expr* whereClause, const vector<Row>& input,
+                            const map<string, uint32_t>& input_schema,
+                            vector<Row>& output) {
   const hsql::OperatorType op = whereClause->opType;
   const string column_name = whereClause->expr->name;
-  const uint32_t column_ind = schema.at(column_name);
-
   // TODO: handle multiple types
   const float val = whereClause->expr2->fval;
+  const uint32_t column_ind = input_schema.at(column_name);
 #ifdef DEBUG
   cout << "Where Operator Type: " << op << endl;
   cout << "Where Column: " << column_name << endl;
@@ -84,11 +78,9 @@ void select(hsql::TableRef* tbl, const vector<Row>& input, vector<Row>& output,
         break;
 
       case hsql::kOpNone:
-
       // Ternary operators
       case hsql::kOpBetween:
       case hsql::kOpCase:
-
       // Binary operators.
       case hsql::kOpPlus:
       case hsql::kOpMinus:
@@ -113,6 +105,29 @@ void select(hsql::TableRef* tbl, const vector<Row>& input, vector<Row>& output,
       default:
         break;
     }
+  }
+}
+
+// TODO: handle projections
+void select(const hsql::SelectStatement* stmt, const vector<Row>& input,
+            const map<string, uint32_t>& input_schema, vector<Row>& output,
+            map<string, uint32_t>& output_schema) {
+  const hsql::TableRef* fromTable = stmt->fromTable;
+
+  if (fromTable->type == hsql::kTableDiff) {
+    if (stmt->whereClause != nullptr) {
+      vector<Row> diff_output;
+      diff(stmt->fromTable->diff, input, input_schema, diff_output, output_schema);
+      apply_where_predicates(stmt->whereClause, diff_output, output_schema,
+                             output);
+    } else {
+      diff(stmt->fromTable->diff, input, input_schema, output, output_schema);
+    }
+    return;
+  }
+
+  if (stmt->whereClause != nullptr) {
+    apply_where_predicates(stmt->whereClause, input, input_schema, output);
   }
 }
 
@@ -185,25 +200,25 @@ vector<uint32_t> get_attribute_indices(
   return indices;
 }
 
-void diff(const hsql::SelectStatement* stmt, const vector<Row>& data,
-          const map<string, uint32_t>& schema, vector<Row>& output,
+void diff(hsql::DiffDefinition* diff, const vector<Row>& input,
+          const map<string, uint32_t>& input_schema, vector<Row>& output,
           map<string, uint32_t>& output_schema) {
-  // assert(stmt->fromTable->type == hsql::kTableDiff);
   vector<Row> outliers;
-  select(stmt->fromTable->diff->first, data, outliers, schema);
+  map<string, uint32_t> dummy_schema;  // TODO: this is janky; get rid of this
+  select(diff->first->select, input, input_schema, outliers, dummy_schema);
   vector<Row> inliers;
   // TODO: handle case where->diff->second == null
-  select(stmt->fromTable->diff->second, data, inliers, schema);
+  select(diff->second->select, input, input_schema, inliers, dummy_schema);
 
-  const string compare_by_fn_name =
-      stmt->fromTable->diff->compare_by->getName();
-  const string metric_col =
-      stmt->fromTable->diff->compare_by->exprList->at(0)->getName();
+  const string compare_by_fn_name = diff->compare_by->getName();
+  const string metric_col = diff->compare_by->exprList->at(0)->getName();
 
-  const uint32_t max_combo = stmt->fromTable->diff->max_combo->ival;
   const std::vector<string> attribute_cols =
-      get_attribute_cols(stmt->fromTable->diff->attribute_cols);
-  vector<uint32_t> attr_indices = get_attribute_indices(attribute_cols, schema);
+      get_attribute_cols(diff->attribute_cols);
+  vector<uint32_t> attr_indices =
+      get_attribute_indices(attribute_cols, input_schema);
+  const uint32_t max_combo =
+      min((uint32_t)attribute_cols.size(), (uint32_t)diff->max_combo->ival);
 #ifdef DEBUG
   cout << "Attribute cols: ";
   for (auto col : attribute_cols) {
@@ -276,49 +291,12 @@ void diff(const hsql::SelectStatement* stmt, const vector<Row>& data,
 #endif
 }
 
-void read_csv(const char* filename, vector<Row>& data,
-              map<string, uint32_t>& schema) {
-  ifstream input(filename);
-  // Parse header first to get schema (TODO: handle schemaless CSVs)
-  string line;
-  getline(input, line);
-  size_t last = 0;
-  size_t next = 0;
-  auto ind = 0u;
-  while ((next = line.find(',', last)) != string::npos) {
-    schema[line.substr(last, next - last)] = ind++;
-    last = next + 1;
-  }
-  schema[line.substr(last)] = ind;
-
-  // Parse remaining rows
-  for (; getline(input, line);) {
-    if (line == "") {
-      continue;
-    }
-    Row row;
-    size_t last = 0;
-    size_t next = 0;
-    while ((next = line.find(',', last)) != string::npos) {
-      row.push_back(line.substr(last, next - last));
-      last = next + 1;
-    }
-    row.push_back(line.substr(last));
-    data.push_back(row);
-  }
-}
-
-void import_table(const hsql::ImportStatement* query, vector<Row>& data,
-                  map<string, uint32_t>& schema) {
-  read_csv(query->filePath, data, schema);
-}
-
 void repl() {
   rl_bind_key('\t', rl_complete);
-  map<string, uint32_t> schema;
-  vector<Row> DATA;
+  map<string, uint32_t> input_schema;
+  vector<Row> INPUT;
   map<string, uint32_t> output_schema;
-  vector<Row> output;
+  vector<Row> OUTPUT;
 
   while (true) {
     const string query_str = read_repl_input();
@@ -346,19 +324,19 @@ void repl() {
 
       switch (query_statement->type()) {
         case hsql::kStmtImport:
-          DATA.clear();
+          INPUT.clear();
           import_table(
-              static_cast<const hsql::ImportStatement*>(query_statement), DATA,
-              schema);
-          cout << "Num rows: " << DATA.size() << endl;
-          print_table(DATA, schema);
+              static_cast<const hsql::ImportStatement*>(query_statement), INPUT,
+              input_schema);
+          cout << "Num rows: " << INPUT.size() << endl;
+          print_table(INPUT, input_schema);
           break;
         case hsql::kStmtSelect:
-          output.clear();
+          OUTPUT.clear();
           output_schema.clear();
-          diff(static_cast<const hsql::SelectStatement*>(query_statement), DATA,
-               schema, output, output_schema);
-          print_table(output, output_schema);
+          select(static_cast<const hsql::SelectStatement*>(query_statement),
+                 INPUT, input_schema, OUTPUT, output_schema);
+          print_table(OUTPUT, output_schema);
           break;
         case hsql::kStmtError:  // unused
         case hsql::kStmtInsert:

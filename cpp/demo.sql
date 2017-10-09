@@ -7,8 +7,7 @@ SELECT * FROM
   ON
     location, version
   COMPARE BY
-    risk_ratio(COUNT(*))
-  MAX COMBO 2;
+    risk_ratio(COUNT(*));
 
 SELECT * FROM
   DIFF
@@ -18,5 +17,4 @@ SELECT * FROM
     location, version
   COMPARE BY
     risk_ratio(COUNT(*))
-  MAX COMBO 2
 WHERE risk_ratio > 10.0;

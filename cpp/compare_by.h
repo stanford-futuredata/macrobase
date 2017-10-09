@@ -77,7 +77,8 @@ macrodiff_compare_by_func get_compare_by_func(const std::string fn_name) {
     return pmi_ratio;
   } else {
     // default, TODO: throw exception if fn_name isn't valid
-    return risk_ratio;
+    // TODO: risk_ratio
+    return pmi_ratio;
   }
 }
 #endif
