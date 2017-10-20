@@ -1,0 +1,7 @@
+macrodiff
+macrodiff.dSYM/
+*.swp
+*.tsv
+*.txt
+*.csv
+*.parquet
