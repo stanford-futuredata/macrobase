@@ -1,7 +1,8 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
+package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
 
-import java.util.Arrays;
-
+/**
+ * Measures the relative outlier rate w.r.t. the global outlier rate
+ */
 public class GlobalRatioMetric implements QualityMetric{
     private int outlierCountIdx;
     private int totalCountIdx;

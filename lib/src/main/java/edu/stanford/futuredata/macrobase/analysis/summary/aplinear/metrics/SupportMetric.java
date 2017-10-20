@@ -1,11 +1,14 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
+package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
 
+/**
+ * Measures how large a subgroup is relative to a global count
+ */
 public class SupportMetric implements QualityMetric{
-    private int outlierCountIdx;
-    private double globalOutliercount;
+    private int countIdx;
+    private double globalCount;
 
-    public SupportMetric(int outlierCountIdx) {
-        this.outlierCountIdx = outlierCountIdx;
+    public SupportMetric(int countIdx) {
+        this.countIdx = countIdx;
     }
 
     @Override
@@ -16,13 +19,13 @@ public class SupportMetric implements QualityMetric{
 
     @Override
     public QualityMetric initialize(double[] globalAggregates) {
-        globalOutliercount = globalAggregates[outlierCountIdx];
+        globalCount = globalAggregates[countIdx];
         return this;
     }
 
     @Override
     public double value(double[] aggregates) {
-        return aggregates[outlierCountIdx] / globalOutliercount;
+        return aggregates[countIdx] / globalCount;
     }
 
     @Override
