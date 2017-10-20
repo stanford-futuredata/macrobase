@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
@@ -8,6 +9,12 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+/**
+ * Class for handling the generic, algorithmic aspects of apriori explanation.
+ * This class assumes that subgroups posses "aggregates" such as count and outlier_count
+ * which can be combined additively. Then, we use APriori to find the subgroups which
+ * are the most interesting as defined by "quality metrics" on these aggregates.
+ */
 public class APrioriLinear{
     Logger log = LoggerFactory.getLogger("APLSummarizer");
 
@@ -143,7 +150,7 @@ public class APrioriLinear{
                     metrics[i] = qualityMetrics[i].value(aggregates);
                 }
                 results.add(
-                        new APLExplanationResult(curSet, aggregates, metrics)
+                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
                 );
             }
         }
@@ -205,7 +212,7 @@ public class APrioriLinear{
                 HashSet<IntSet> pairNext = setNext.get(2);
                 for (int p1 = 0; p1 < l; p1++) {
                     int p1v = toExamine.get(p1);
-                    for (int p2 = p1+1; p2 < l; p2++) {
+                    for (int p2 = p1 + 1; p2 < l; p2++) {
                         int p2v = toExamine.get(p2);
                         IntSet pair1 = new IntSet(p1v, p2v);
                         if (pairNext.contains(pair1)) {

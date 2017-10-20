@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.GlobalRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.MeanDevMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.SupportMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -12,25 +13,30 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Summarizer that works over both cube and row-based labeled ratio-based
- * outlier summarization.
+ * Summarizer that works over cube-based summarization based on mean shift.
  */
-public class APLOutlierSummarizer extends APLSummarizer {
-    private Logger log = LoggerFactory.getLogger("APLOutlierSummarizer");
-    private String outlierColumn = "_OUTLIER";
+public class APLMeanSummarizer extends APLSummarizer {
+    private Logger log = LoggerFactory.getLogger("APLMeanSummarizer");
+
     private String countColumn = null;
-    private double minOutlierSupport = 0.1;
-    private double minRatioMetric = 2.0;
+
+    private String meanColumn = "mean";
+    private String stdColumn = "std";
+
+    private double minSupport = 0.1;
+    private double minStdDev = 3.0;
 
     @Override
     public List<String> getAggregateNames() {
-        return Arrays.asList("Outliers", "Count");
+        return Arrays.asList("count", "m1", "m2");
     }
 
     @Override
     public double[][] getAggregateColumns(DataFrame input) {
-        double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
-        int numRows = outlierCol.length;
+        double[] meanCol = input.getDoubleColumnByName(meanColumn);
+        double[] stdCol = input.getDoubleColumnByName(stdColumn);
+
+        int numRows = meanCol.length;
         double[] countCol = null;
         if (countColumn != null) {
             countCol = input.getDoubleColumnByName(countColumn);
@@ -41,9 +47,17 @@ public class APLOutlierSummarizer extends APLSummarizer {
             }
         }
 
-        double[][] aggregateColumns = new double[2][];
-        aggregateColumns[0] = outlierCol;
-        aggregateColumns[1] = countCol;
+        double[] m1Col = new double[numRows];
+        double[] m2Col = new double[numRows];
+        for (int i = 0; i < meanCol.length; i++) {
+            m1Col[i] = meanCol[i]*countCol[i];
+            m2Col[i] = (stdCol[i]*stdCol[i] + meanCol[i]*meanCol[i])*countCol[i];
+        }
+
+        double[][] aggregateColumns = new double[3][];
+        aggregateColumns[0] = countCol;
+        aggregateColumns[1] = m1Col;
+        aggregateColumns[2] = m2Col;
 
         return aggregateColumns;
     }
@@ -55,14 +69,14 @@ public class APLOutlierSummarizer extends APLSummarizer {
                 new SupportMetric(0)
         );
         qualityMetricList.add(
-                new GlobalRatioMetric(0, 1)
+                new MeanDevMetric(0, 1, 2)
         );
         return qualityMetricList;
     }
 
     @Override
     public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minRatioMetric);
+        return Arrays.asList(minSupport, minStdDev);
     }
 
     @Override
@@ -76,16 +90,21 @@ public class APLOutlierSummarizer extends APLSummarizer {
     public void setCountColumn(String countColumn) {
         this.countColumn = countColumn;
     }
-    public double getMinRatioMetric() {
-        return minRatioMetric;
+
+    public void setMeanColumn(String meanColumn) {
+        this.meanColumn = meanColumn;
     }
-    public void setMinRatioMetric(double minRatioMetric) {
-        this.minRatioMetric = minRatioMetric;
+
+    public void setStdColumn(String stdColumn) {
+        this.stdColumn = stdColumn;
     }
+
     public void setMinSupport(double minSupport) {
-        this.minOutlierSupport = minSupport;
+        this.minSupport = minSupport;
     }
-    public void setOutlierColumn(String outlierColumn) {
-        this.outlierColumn = outlierColumn;
+
+    public void setMinStdDev(double minStdDev) {
+        this.minStdDev = minStdDev;
     }
+
 }
