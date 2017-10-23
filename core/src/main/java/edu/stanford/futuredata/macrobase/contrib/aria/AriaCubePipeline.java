@@ -77,11 +77,7 @@ public class AriaCubePipeline implements Pipeline {
                     minSupport
             );
         } else {
-            df = cs.getAllCubeEntries(
-                    metric,
-                    attributes,
-                    getOperations()
-            );
+            df = cs.getAllCubeValues(metric);
         }
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);

@@ -5,12 +5,17 @@ import edu.stanford.futuredata.macrobase.contrib.aria.json.APICubeRequest;
 import edu.stanford.futuredata.macrobase.contrib.aria.json.CubeDimensionParser;
 import edu.stanford.futuredata.macrobase.contrib.aria.json.CubeParser;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import okhttp3.*;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -30,6 +35,8 @@ public class CubeQueryService {
             "Max",
             "Average",
             "StandardDeviation",
+            "Variance",
+            "Sum",
             "Percentile001",
             "Percentile01",
             "Percentile05",
@@ -186,6 +193,41 @@ public class CubeQueryService {
         String rawResponse = getRequest(baseURL, params);
         CubeDimensionParser p = CubeDimensionParser.loadFromString(rawResponse);
         return p.getDimensionValues();
+    }
+
+    /**
+     * Retrieves all of the entries for a given measure using the bulk API
+     * @return parsed dataframe
+     * @throws Exception
+     */
+    public DataFrame getAllCubeValues(
+            String measureName
+    ) throws Exception {
+        String pathString = String.format(
+                "measures/%s/data/v2/",
+                measureName
+        );
+        URL mergedURL = new URL(baseURL, pathString);
+        APICubeRequest req = APICubeRequest.fromDimensionValues(
+                new HashMap<>(),
+                startTime,
+                endTime,
+                new ArrayList<>()
+        );
+        ObjectMapper mapper = new ObjectMapper();
+        String rawResponse = postRequest(mergedURL, mapper.writeValueAsString(req));
+
+        CSVParser csvParser = CSVParser.parse(
+                rawResponse,
+                CSVFormat.DEFAULT.withHeader()
+        );
+        CSVDataFrameParser dfParser = new CSVDataFrameParser(csvParser);
+        HashMap<String, Schema.ColType> typeMape = new HashMap<>();
+        for (String operationName : quantileOperators) {
+            typeMape.put(operationName, Schema.ColType.DOUBLE);
+        }
+        dfParser.setColumnTypes(typeMape);
+        return dfParser.load();
     }
 
     public DataFrame getCubeValues(
