@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.BoundsClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
@@ -28,6 +29,8 @@ public class CubePipeline implements Pipeline {
     private String countColumn;
     private String meanColumn;
     private String stdColumn;
+    private String minColumn;
+    private String maxColumn;
     private LinkedHashMap<String, Double> quantileColumns;
     private double percentile;
     private boolean includeHi;
@@ -44,6 +47,8 @@ public class CubePipeline implements Pipeline {
         countColumn = conf.get("countColumn", "count");
         meanColumn = conf.get("meanColumn", "mean");
         stdColumn = conf.get("stdColumn", "std");
+        minColumn = conf.get("minColumn", "min");
+        maxColumn = conf.get("maxColumn", "max");
         quantileColumns = conf.get("quantileColumns", new LinkedHashMap<String, Double>());
         percentile = conf.get("percentile", 1.0);
         includeHi = conf.get("includeHi", true);
@@ -105,6 +110,14 @@ public class CubePipeline implements Pipeline {
                 }
                 return colTypes;
             }
+            case "bounds": {
+                colTypes.put(countColumn, Schema.ColType.DOUBLE);
+                colTypes.put(meanColumn, Schema.ColType.DOUBLE);
+                colTypes.put(stdColumn, Schema.ColType.DOUBLE);
+                colTypes.put(minColumn, Schema.ColType.DOUBLE);
+                colTypes.put(maxColumn, Schema.ColType.DOUBLE);
+                return colTypes;
+            }
             default:
                 throw new MacrobaseException("Bad Classifier Name");
         }
@@ -123,6 +136,14 @@ public class CubePipeline implements Pipeline {
             case "quantile": {
                 QuantileClassifier classifier =
                         new QuantileClassifier(countColumn, meanColumn, quantileColumns);
+                classifier.setPercentile(percentile);
+                classifier.setIncludeHigh(includeHi);
+                classifier.setIncludeLow(includeLo);
+                return classifier;
+            }
+            case "bounds": {
+                BoundsClassifier classifier =
+                        new BoundsClassifier(countColumn, meanColumn, stdColumn, minColumn, maxColumn);
                 classifier.setPercentile(percentile);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
