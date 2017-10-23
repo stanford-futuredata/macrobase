@@ -29,6 +29,12 @@ public class CubeQueryService {
     private OkHttpClient client;
     private Map<String, Map<String, Double>> dimensionValuecounts;
 
+    public static final List<String> arithmeticOperators = Arrays.asList(
+            "Count",
+            "Average",
+            "StandardDeviation"
+    );
+
     public static final List<String> quantileOperators = Arrays.asList(
             "Count",
             "Min",

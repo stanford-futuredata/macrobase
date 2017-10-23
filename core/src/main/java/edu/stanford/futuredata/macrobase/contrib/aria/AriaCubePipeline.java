@@ -47,7 +47,7 @@ public class AriaCubePipeline implements Pipeline {
         startTimeStamp = conf.get("startTime");
         endTimeStamp = conf.get("endTime");
         restHeader = conf.get("restHeader");
-        prunedLoading = conf.get("prunedLoading", true);
+        prunedLoading = conf.get("prunedLoading", false);
 
         metric = conf.get("metric");
         classifierType = conf.get("classifier");
@@ -125,6 +125,9 @@ public class AriaCubePipeline implements Pipeline {
             }
             case "raw": {
                 return Arrays.asList("Count", "Sum");
+            }
+            case "arithmetic": {
+                return CubeQueryService.arithmeticOperators;
             }
             default:
                 throw new MacrobaseException("Unsupported classifier");
