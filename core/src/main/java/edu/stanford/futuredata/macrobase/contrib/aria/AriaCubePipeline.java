@@ -1,12 +1,15 @@
 package edu.stanford.futuredata.macrobase.contrib.aria;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
+import edu.stanford.futuredata.macrobase.ingest.RESTDataFrameLoader;
 import edu.stanford.futuredata.macrobase.pipeline.Pipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
@@ -14,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Aria pipeline for cubed data: load, classify, and then explain
@@ -27,12 +27,18 @@ public class AriaCubePipeline implements Pipeline {
 
     // API ingester params
     private String inputURI;
-    private String startTimeStamp;
-    private String endTimeStamp;
     private Map<String, String> restHeader;
     private boolean prunedLoading;
 
+    // prunedLoading=false
+    private Map<String, Object> jsonBody;
+
+    // prunedLoading=true
+    private String startTimeStamp;
+    private String endTimeStamp;
     private String metric;
+
+    // classifier
     private String classifierType;
     private double cutoff;
     private boolean includeHi;
@@ -44,12 +50,15 @@ public class AriaCubePipeline implements Pipeline {
 
     public AriaCubePipeline(PipelineConfig conf) {
         inputURI = conf.get("inputURI");
-        startTimeStamp = conf.get("startTime");
-        endTimeStamp = conf.get("endTime");
         restHeader = conf.get("restHeader");
         prunedLoading = conf.get("prunedLoading", false);
 
-        metric = conf.get("metric");
+        jsonBody = conf.get("jsonBody", null);
+
+        startTimeStamp = conf.get("startTime", null);
+        endTimeStamp = conf.get("endTime", null);
+        metric = conf.get("metric", null);
+
         classifierType = conf.get("classifier");
         cutoff = conf.get("cutoff", 1.0);
         includeHi = conf.get("includeHi", true);
@@ -77,7 +86,21 @@ public class AriaCubePipeline implements Pipeline {
                     minSupport
             );
         } else {
-            df = cs.getAllCubeValues(metric);
+            HashMap<String, Schema.ColType> typeMap = new HashMap<>();
+            for (String operationName : CubeQueryService.quantileOperators) {
+                typeMap.put(operationName, Schema.ColType.DOUBLE);
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            String bodyString = mapper.writeValueAsString(jsonBody);
+
+            RESTDataFrameLoader loader = new RESTDataFrameLoader(
+                    inputURI,
+                    restHeader
+            );
+            loader.setUsePost(true);
+            loader.setJsonBody(bodyString);
+            loader.setColumnTypes(typeMap);
+            df = loader.load();
         }
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);
