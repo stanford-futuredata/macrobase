@@ -22,33 +22,41 @@ import java.text.SimpleDateFormat;
 
 public class MultiMADOptimizationTest {
     public static DateFormat minute = new SimpleDateFormat("HH_mm");
-    Date date = new Date();
+    Date date;
 
-    private String inputFileName = "/data/pbailis/preagg/cmt_sm.csv";
-    private String[] columnNames = {"data_count_accel_samples", "data_count_netloc_samples"};
-    private String attributeName = "build_version";
-    private Integer[] samplingRates = {2, 10, 100};
-    private int numTrials = 1;
-
+    private String inputFileName, attributeName;
+    private String[] columnNames;
+    private int numTrials;
+    private Integer[] samplingRates;
 
     private double totalTime, trainTime, scoreTime, samplingTime, bootstrapTime;
-    private double medCISize, MADCISize;
-    private double medError, MADError;
+    private double medCISize, MADCISize, medError, MADError;
 
-    private List<String> tLines = new ArrayList<String>();
-    private List<String> eLines = new ArrayList<String>();
-    private String timingFile = String.format("multiMAD/timing/%s.csv", minute.format(date));//,Arrays.toString(samplingRates));
-    private String estimateFile = String.format("multiMAD/errors/%s.csv", minute.format(date));
+    private List<String> tLines, eLines;
+    private String timingFile;
+    private String estimateFile;
 
     private DataFrame df;
     private static List<Double> trueMedians, trueMADs;
-    private double percentOutliers = 0.1;
-    private long startTime = 0;
-    private long estimatedTime = 0;
+    private double percentOutliers;
+    private long startTime, estimatedTime;
     private MultiMADClassifierDebug mad;
 
     @Before
     public void setUp() throws Exception {
+        date = new Date();
+        inputFileName = System.getProperty("input");
+        columnNames = System.getProperty("metrics").split(",");
+        attributeName = System.getProperty("attr");
+        numTrials = Integer.valueOf(System.getProperty("trials"));
+        timingFile = String.format("multiMAD/timing/%s_%s.csv", minute.format(date), System.getProperty("dataset"));//,Arrays.toString(samplingRates));
+        estimateFile = String.format("multiMAD/errors/%s_%s.csv", minute.format(date), System.getProperty("dataset"));
+
+        samplingRates = new Integer[]{2,10,100};
+        percentOutliers = 0.1;
+        startTime = 0;
+        estimatedTime = 0;
+
         Map<String, Schema.ColType> schema = new HashMap<>();
         for (String c: columnNames) {
             schema.put(c, Schema.ColType.DOUBLE);
@@ -57,12 +65,23 @@ public class MultiMADOptimizationTest {
         DataFrameLoader loader = new CSVDataFrameLoader(inputFileName).setColumnTypes(schema);
         df = loader.load();
 
+        tLines = new ArrayList<>();
+        eLines = new ArrayList<>();
         tLines.add("total, train, score, sampling, bootstrap");
         eLines.add("medCI, MADCI, medError, MADError");
     }
 
     @Test
-    public void testBenchmark() throws Exception {
+    public void warmUp() throws Exception {
+        mad = new MultiMADClassifierDebug(attributeName, columnNames)
+                .setPercentile(percentOutliers);
+        for (int i = 0; i < 2; i++) {
+            mad.process(df);
+        }
+    }
+
+    @Test
+    public void testBenchmarkAndSampling() throws Exception {
         startTime = System.currentTimeMillis();
 
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
@@ -88,14 +107,11 @@ public class MultiMADOptimizationTest {
                 +String.valueOf(scoreTime)+","
                 +String.valueOf(samplingTime)+","
                 +String.valueOf(bootstrapTime));
-    }
 
-     @Test
-     public void testSamplingOptimization() throws Exception {
         for (int rate: samplingRates){
             samplingRun(rate);
         }
-     }
+    }
 
     public void samplingRun(int samplingRate) {
         startTime = System.currentTimeMillis();
