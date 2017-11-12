@@ -77,9 +77,12 @@ public class MultiMADOptimizationTest {
         //     metrics[metrics.length-1], mad.getMADs().get(24));
 
         estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.format("Unoptimized time elapsed: %d ms\n", estimatedTime - mad.getOtherTime());
-        System.out.format("train: %d ms, score: %d ms, sampling: %d ms, bootstrap (not counted): %d ms\n",
-            mad.getTrainTime(), mad.getScoreTime(), mad.getSamplingTime(), mad.getOtherTime());
+        System.out.format("Unoptimized avg time elapsed: %f ms\n", (estimatedTime - mad.getOtherTime())/((double)numTrials));
+        System.out.format("train: %f ms, score: %f ms, sampling: %f ms, bootstrap (not counted): %f ms\n",
+                mad.getTrainTime()/((double)numTrials),
+                mad.getScoreTime()/((double)numTrials),
+                mad.getSamplingTime()/((double)numTrials),
+                mad.getOtherTime()/((double)numTrials));
         System.out.println("");
 
         // trueOutliers = mad.getOutlierIndices();
@@ -106,9 +109,14 @@ public class MultiMADOptimizationTest {
         }
 
         estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.format("Sampling (1/%d of elements) time elapsed: %d ms\n", samplingRate, estimatedTime - mad.getOtherTime());
-        System.out.format("train: %d ms, score: %d ms, sampling: %d ms, boostrap (not counted): %d ms\n",
-            mad.getTrainTime(), mad.getScoreTime(), mad.getSamplingTime(), mad.getOtherTime());
+        System.out.format("Sampling (1/%d of elements) time elapsed: %f ms\n",
+                samplingRate,
+                estimatedTime - mad.getOtherTime()/((double)numTrials));
+        System.out.format("train: %f ms, score: %f ms, sampling: %f ms, boostrap (not counted): %f ms\n",
+                mad.getTrainTime()/((double)numTrials),
+                mad.getScoreTime()/((double)numTrials),
+                mad.getSamplingTime()/((double)numTrials),
+                mad.getOtherTime()/((double)numTrials));
 
         // // True positive rate
         // List<Integer> outliers = mad.getOutlierIndices();
@@ -133,24 +141,27 @@ public class MultiMADOptimizationTest {
             double mad_err_sum = 0;
             int num_metrics = columnNames.length;
             for (int i = 0; i < num_metrics; i++) {
-                double medianError = Math.abs(medians.get(i) - trueMedians.get(i)) / trueMADs.get(i);
-                double MADError = Math.abs(MADs.get(i) - trueMADs.get(i)) / trueMADs.get(i);
-                double medianCItoMAD = (upperBoundsMedian.get(i) - lowerBoundsMedian.get(i)) / trueMADs.get(i);
-                double madCItoMAD = (upperBoundsMAD.get(i) - lowerBoundsMAD.get(i)) / trueMADs.get(i);
-                med_sum += medianCItoMAD;
-                mad_sum += madCItoMAD;
-                med_err_sum += medianError;
-                mad_err_sum += MADError;
-                // System.out.format("Column %d: median %f [%f, %f], ratio: %f, raw err: %f\n",
-                //     i, medians.get(i), lowerBoundsMedian.get(i), upperBoundsMedian.get(i), medianCItoMAD, medianError);
-                // System.out.format("Column %d: MAD %f [%f, %f], ratio: %f, raw err: %f\n",
-                //     i, MADs.get(i), lowerBoundsMAD.get(i), upperBoundsMAD.get(i), madCItoMAD, medianError);
+                for (int t = 0; t < numTrials; t++) {
+                    int idx = t * num_metrics + i;
+                    double medianError = Math.abs(medians.get(idx) - trueMedians.get(i)) / trueMADs.get(i);
+                    double MADError = Math.abs(MADs.get(idx) - trueMADs.get(i)) / trueMADs.get(i);
+                    double medianCItoMAD = (upperBoundsMedian.get(idx) - lowerBoundsMedian.get(i)) / trueMADs.get(i);
+                    double madCItoMAD = (upperBoundsMAD.get(idx) - lowerBoundsMAD.get(i)) / trueMADs.get(i);
+                    med_sum += medianCItoMAD;
+                    mad_sum += madCItoMAD;
+                    med_err_sum += medianError;
+                    mad_err_sum += MADError;
+                    // System.out.format("Column %d: median %f [%f, %f], ratio: %f, raw err: %f\n",
+                    //     i, medians.get(i), lowerBoundsMedian.get(i), upperBoundsMedian.get(i), medianCItoMAD, medianError);
+                    // System.out.format("Column %d: MAD %f [%f, %f], ratio: %f, raw err: %f\n",
+                    //     i, MADs.get(i), lowerBoundsMAD.get(i), upperBoundsMAD.get(i), madCItoMAD, medianError);
+                }
             }
-            System.out.format("Avg median ratio: %f, avg MAD ratio: %f, med error: %f, MAD error: %f\n",
-                    med_sum / (double) num_metrics,
-                    mad_sum / (double) num_metrics,
-                    med_err_sum / (double) num_metrics,
-                    mad_err_sum / (double) num_metrics
+            System.out.format("Avg median 95%% CI size: %f, avg MAD 95%% CI size: %f, avg median error: %f, avg MAD error: %f\n",
+                    med_sum / (double) (num_metrics * numTrials),
+                    mad_sum / (double) (num_metrics * numTrials),
+                    med_err_sum / (double) (num_metrics * numTrials),
+                    mad_err_sum / (double) (num_metrics * numTrials)
             );
             System.out.println("");
         }
