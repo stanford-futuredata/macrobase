@@ -4,29 +4,44 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
 import edu.stanford.futuredata.macrobase.ingest.DataFrameLoader;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.lang.Math;
 import java.lang.Double;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.*;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class MultiMADOptimizationTest {
+    public static DateFormat minute = new SimpleDateFormat("HH_mm");
+    Date date = new Date();
+
+    private String inputFileName = "/data/pbailis/preagg/cmt_sm.csv";
+    private String[] columnNames = {"data_count_accel_samples", "data_count_netloc_samples"};
+    private String attributeName = "build_version";
+    private Integer[] samplingRates = {2, 10, 100};
+    private int numTrials = 1;
+
+
+    private double totalTime, trainTime, scoreTime, samplingTime, bootstrapTime;
+    private double medCISize, MADCISize;
+    private double medError, MADError;
+
+    private List<String> tLines = new ArrayList<String>();
+    private List<String> eLines = new ArrayList<String>();
+    private String timingFile = String.format("multiMAD/timing/%s_%s.csv", minute.format(date));//,Arrays.toString(samplingRates));
+    private String estimateFile = String.format("multiMAD/errors/%s.csv", minute.format(date));
+
     private DataFrame df;
-    private String[] columnNames;
-    private String attributeName = "A9";
-    private static List<Double> trueMedians;
-    private static List<Double> trueMADs;
-    private static List<Integer> trueOutliers;
-    private int numTrials = 10;  // TODO: change this
+    private static List<Double> trueMedians, trueMADs;
     private double percentOutliers = 0.1;
     private long startTime = 0;
     private long estimatedTime = 0;
@@ -34,35 +49,20 @@ public class MultiMADOptimizationTest {
 
     @Before
     public void setUp() throws Exception {
-//         Map<String, Schema.ColType> schema = new HashMap<>();
-//         columnNames = new String[27];
-//         for (int i = 0; i < 27; i++) {
-//             columnNames[i] = "f" + String.valueOf(i);
-//             schema.put(columnNames[i], Schema.ColType.DOUBLE);
-//         }
-//         DataFrameLoader loader = new CSVDataFrameLoader(
-//                 "src/test/resources/hepmass100k.csv"
-//         ).setColumnTypes(schema);
-//         df = loader.load();
-
         Map<String, Schema.ColType> schema = new HashMap<>();
-        columnNames = new String[9];
-        for (int i = 0; i < 9; i++) {
-            columnNames[i] = "A" + String.valueOf(i);
-            schema.put(columnNames[i], Schema.ColType.DOUBLE);
+        for (String c: columnNames) {
+            schema.put(c, Schema.ColType.DOUBLE);
         }
-        schema.put("A9", Schema.ColType.DOUBLE);
-        DataFrameLoader loader = new CSVDataFrameLoader(
-                "src/test/resources/shuttle.csv"
-        ).setColumnTypes(schema);
+        schema.put(attributeName, Schema.ColType.DOUBLE);
+        DataFrameLoader loader = new CSVDataFrameLoader(inputFileName).setColumnTypes(schema);
         df = loader.load();
+
+        tLines.add("total, train, score, sampling, bootstrap");
+        eLines.add("medCI, MADCI, medError, MADError");
     }
 
     @Test
     public void testBenchmark() throws Exception {
-        // double[] metrics = df.getDoubleColumnByName(columnNames[24]);
-        // Arrays.sort(metrics);
-
         startTime = System.currentTimeMillis();
 
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
@@ -70,32 +70,31 @@ public class MultiMADOptimizationTest {
         for (int i = 0; i < numTrials; i++) {
             mad.process(df);
         }
-
-        // int len = metrics.length;
-        // System.out.format("min: %f, 25: %f, median: %f, 75: %f, max: %f, MAD: %f\n",
-        //     metrics[0], metrics[len/4], metrics[len/2], metrics[len*3/4],
-        //     metrics[metrics.length-1], mad.getMADs().get(24));
+        trueMedians = mad.getMedians();
+        trueMADs = mad.getMADs();
 
         estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.format("Unoptimized avg time elapsed: %f ms\n", (estimatedTime - mad.getOtherTime())/((double)numTrials));
+        totalTime = (estimatedTime - mad.getOtherTime())/((double)numTrials);
+        trainTime = mad.getTrainTime()/((double)numTrials);
+        scoreTime = mad.getScoreTime()/((double)numTrials);
+        samplingTime = mad.getSamplingTime()/((double)numTrials);
+        bootstrapTime = mad.getOtherTime()/((double)numTrials);
+
+        System.out.format("Unoptimized avg time elapsed: %f ms\n", totalTime);
         System.out.format("train: %f ms, score: %f ms, sampling: %f ms, bootstrap (not counted): %f ms\n",
-                mad.getTrainTime()/((double)numTrials),
-                mad.getScoreTime()/((double)numTrials),
-                mad.getSamplingTime()/((double)numTrials),
-                mad.getOtherTime()/((double)numTrials));
+                trainTime, scoreTime, samplingTime, bootstrapTime);
         System.out.println("");
-
-        // trueOutliers = mad.getOutlierIndices();
-
-         trueMedians = mad.getMedians();
-         trueMADs = mad.getMADs();
+        tLines.add(String.valueOf(totalTime)+","+String.valueOf(trainTime)+","
+                +String.valueOf(scoreTime)+","
+                +String.valueOf(samplingTime)+","
+                +String.valueOf(bootstrapTime));
     }
 
      @Test
      public void testSamplingOptimization() throws Exception {
-         samplingRun(2);
-         samplingRun(10);
-         samplingRun(100);
+        for (int rate: samplingRates){
+            samplingRun(rate);
+        }
      }
 
     public void samplingRun(int samplingRate) {
@@ -109,24 +108,21 @@ public class MultiMADOptimizationTest {
         }
 
         estimatedTime = System.currentTimeMillis() - startTime;
-        System.out.format("Sampling (1/%d of elements) time elapsed: %f ms\n",
-                samplingRate,
-                estimatedTime - mad.getOtherTime()/((double)numTrials));
-        System.out.format("train: %f ms, score: %f ms, sampling: %f ms, boostrap (not counted): %f ms\n",
-                mad.getTrainTime()/((double)numTrials),
-                mad.getScoreTime()/((double)numTrials),
-                mad.getSamplingTime()/((double)numTrials),
-                mad.getOtherTime()/((double)numTrials));
+        totalTime = (estimatedTime - mad.getOtherTime())/((double)numTrials);
+        trainTime = mad.getTrainTime()/((double)numTrials);
+        scoreTime = mad.getScoreTime()/((double)numTrials);
+        samplingTime = mad.getSamplingTime()/((double)numTrials);
+        bootstrapTime = mad.getOtherTime()/((double)numTrials);
 
-        // // True positive rate
-        // List<Integer> outliers = mad.getOutlierIndices();
-        // int numOutliersFound = outliers.size();
-        // outliers.retainAll(trueOutliers);
-        // int numTrueOutliersFound = outliers.size();
-        // System.out.format("Found %d of %d outliers (%f), with %d false positives\n",
-        //     numTrueOutliersFound, trueOutliers.size(),
-        //     (double)numTrueOutliersFound / trueOutliers.size(),
-        //     numOutliersFound - numTrueOutliersFound);
+        System.out.format("Sampling (1/%d of elements) time elapsed: %f ms\n",
+                samplingRate, totalTime);
+        System.out.format("train: %f ms, score: %f ms, sampling: %f ms, boostrap (not counted): %f ms\n",
+                trainTime, scoreTime, samplingTime, bootstrapTime);
+        tLines.add(String.valueOf(totalTime)+","
+                +String.valueOf(trainTime)+","
+                +String.valueOf(scoreTime)+","
+                +String.valueOf(samplingTime)+","
+                +String.valueOf(bootstrapTime));
 
         if (mad.doBootstrap) {
             List<Double> medians = mad.getMedians();
@@ -151,19 +147,41 @@ public class MultiMADOptimizationTest {
                     mad_sum += madCItoMAD;
                     med_err_sum += medianError;
                     mad_err_sum += MADError;
-                    // System.out.format("Column %d: median %f [%f, %f], ratio: %f, raw err: %f\n",
-                    //     i, medians.get(i), lowerBoundsMedian.get(i), upperBoundsMedian.get(i), medianCItoMAD, medianError);
-                    // System.out.format("Column %d: MAD %f [%f, %f], ratio: %f, raw err: %f\n",
-                    //     i, MADs.get(i), lowerBoundsMAD.get(i), upperBoundsMAD.get(i), madCItoMAD, medianError);
                 }
             }
+
+            medCISize = med_sum / (double) (num_metrics * numTrials);
+            MADCISize = mad_sum / (double) (num_metrics * numTrials);
+            medError = med_err_sum / (double) (num_metrics * numTrials);
+            MADError = mad_err_sum / (double) (num_metrics * numTrials);
+
             System.out.format("Avg median 95%% CI size: %f, avg MAD 95%% CI size: %f, avg median error: %f, avg MAD error: %f\n",
-                    med_sum / (double) (num_metrics * numTrials),
-                    mad_sum / (double) (num_metrics * numTrials),
-                    med_err_sum / (double) (num_metrics * numTrials),
-                    mad_err_sum / (double) (num_metrics * numTrials)
-            );
+                medCISize, MADCISize, medError, MADError);
             System.out.println("");
+            eLines.add(String.valueOf(medCISize)+","
+                    +String.valueOf(MADCISize)+","
+                    +String.valueOf(medError)+","
+                    +String.valueOf(MADError));
+        }
+    }
+
+    @After
+    public void dumpToCSV(){
+        arrayListToCSV(tLines,timingFile);
+        arrayListToCSV(eLines,estimateFile);
+    }
+
+    public void arrayListToCSV(List<String> data, String path) {
+        File f = new File(path);
+        f.getParentFile().mkdirs();
+        String eol =  System.getProperty("line.separator");
+        try (Writer writer = new FileWriter(f)) {
+            for (String entry: data) {
+                writer.append(entry);
+                writer.append(eol);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
         }
     }
 }
