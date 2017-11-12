@@ -1,0 +1,17 @@
+pipeline: "BasicBatchPipeline"
+
+inputURI: "csv://core/demo/sample.csv"
+
+classifier: "percentile"
+metric: "usage"
+cutoff: 1.0
+includeHi: true
+includeLo: true
+
+summarizer: "fpgrowth"
+preAggregate: true
+attributes:
+  - "location"
+  - "version"
+minRatioMetric: 10.0
+minSupport: 0.2

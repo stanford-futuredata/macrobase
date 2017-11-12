@@ -51,6 +51,7 @@ public class UnsupervisedCSVTest {
                 "version"
         );
         FPGrowthSummarizer summ = new FPGrowthSummarizer();
+        summ.setPreaggregate(true);
         summ.setAttributes(explanationAttributes);
         summ.process(df_classified);
         FPGExplanation results = summ.getResults();

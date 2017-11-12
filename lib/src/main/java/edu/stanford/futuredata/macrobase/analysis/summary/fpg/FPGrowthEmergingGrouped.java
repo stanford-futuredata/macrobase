@@ -7,14 +7,12 @@ import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.ItemsetWith
 import java.util.*;
 
 
-public class FPGrowthEmerging implements FPGrowthAlgorithm {
+public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
     private boolean combinationsEnabled = true;
 
-    public FPGrowthEmerging() {};
-    @Override
+    public FPGrowthEmergingGrouped() {};
     public void setCombinationsEnabled(boolean flag) {
         this.combinationsEnabled = flag;
-        return;
     }
 
 
@@ -55,28 +53,38 @@ public class FPGrowthEmerging implements FPGrowthAlgorithm {
     }
 
 
-    @Override
     public List<FPGItemsetResult> getEmergingItemsetsWithMinSupport(
-            List<Set<Integer>> inliers,
-            List<Set<Integer>> outliers,
+            List<Set<Integer>> inliersRaw,
+            List<Set<Integer>> outliersRaw,
             double minSupport,
             double minRatio
     ) {
-        if (!combinationsEnabled || (inliers.size() > 0 && inliers.get(0).size() == 1)) {
-            return getSingletonItemsets(inliers, outliers, minSupport, minRatio);
+        GroupByAggregator gb = new GroupByAggregator();
+        List<ItemsetWithCount> inlierGrouped = gb.groupBy(inliersRaw);
+        List<ItemsetWithCount> outlierGrouped = gb.groupBy(outliersRaw);
+        Map<Integer, Double> inlierCounts = new ExactCount().countGrouped(inlierGrouped).getCounts();
+        Map<Integer, Double> outlierCounts = new ExactCount().countGrouped(outlierGrouped).getCounts();
+
+
+        double numOutliers = 0;
+        for (ItemsetWithCount ic : outlierGrouped) {
+            numOutliers += ic.getCount();
         }
-
-        ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
-
-        Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
-        Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
+        double numInliers = 0;
+        for (ItemsetWithCount ic : inlierGrouped) {
+            numInliers += ic.getCount();
+        }
+        int supportCountRequired = (int) (numOutliers * minSupport);
 
         Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
 
-        int supportCountRequired = (int) (outliers.size() * minSupport);
 
-        for (Set<Integer> o: outliers) {
+        ArrayList<ItemsetWithCount> outlierTransactionsRaw = new ArrayList<>();
+        for (ItemsetWithCount oGroup: outlierGrouped) {
             Set<Integer> txn = null;
+
+            Set<Integer> o = oGroup.getItems();
+            double x = oGroup.getCount();
 
             for (int i : o) {
                 double outlierCount = outlierCounts.get(i);
@@ -85,8 +93,8 @@ public class FPGrowthEmerging implements FPGrowthAlgorithm {
 
                     double outlierInlierRatio = RiskRatio.compute(inlierCount,
                                                                   outlierCount,
-                                                                  inliers.size(),
-                                                                  outliers.size());
+                                                                  numInliers,
+                                                                  numOutliers);
 
                     if (outlierInlierRatio > minRatio) {
                         if (txn == null) {
@@ -103,15 +111,17 @@ public class FPGrowthEmerging implements FPGrowthAlgorithm {
             }
 
             if (txn != null) {
-                outlierTransactions.add(txn);
+                outlierTransactionsRaw.add(new ItemsetWithCount(txn,x));
             }
         }
 
-        FPGrowth fpg = new FPGrowth();
+        List<ItemsetWithCount> outlierTransactions = gb.groupByWithCounts(outlierTransactionsRaw);
+
+        FPGrowthGrouped fpg = new FPGrowthGrouped();
         List<ItemsetWithCount> iwc = fpg.getItemsetsWithSupportCount(
                 outlierTransactions,
                 supportedOutlierCounts,
-                outliers.size() * minSupport);
+                numOutliers * minSupport);
 
         iwc.sort((x, y) -> x.getCount() != y.getCount() ?
                 -Double.compare(x.getCount(), y.getCount()) :
@@ -139,10 +149,10 @@ public class FPGrowthEmerging implements FPGrowthAlgorithm {
 
                 double ratio = RiskRatio.compute(inlierCount,
                                           i.getCount(),
-                                          inliers.size(),
-                                          outliers.size());
+                                          numInliers,
+                                          numOutliers);
 
-                ret.add(new FPGItemsetResult(i.getCount() / (double) outliers.size(),
+                ret.add(new FPGItemsetResult(i.getCount() / numOutliers,
                                           i.getCount(),
                                           ratio,
                                           i.getItems()));
@@ -153,8 +163,8 @@ public class FPGrowthEmerging implements FPGrowthAlgorithm {
         }
 
         // check the ratios of any itemsets we just marked
-        FPGrowth inlierTree = new FPGrowth();
-        List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inliers,
+        FPGrowthGrouped inlierTree = new FPGrowthGrouped();
+        List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inlierGrouped,
                                                                            inlierCounts,
                                                                            ratioItemsToCheck,
                                                                            ratioSetsToCheck);
@@ -166,11 +176,11 @@ public class FPGrowthEmerging implements FPGrowthAlgorithm {
 
             double ratio = RiskRatio.compute(ic.getCount(),
                                              oc.getCount(),
-                                             inliers.size(),
-                                             outliers.size());
+                                             numInliers,
+                                             numOutliers);
 
             if (ratio >= minRatio) {
-                ret.add(new FPGItemsetResult(oc.getCount() / (double) outliers.size(),
+                ret.add(new FPGItemsetResult(oc.getCount() / numOutliers,
                                           oc.getCount(),
                                           ratio,
                                           oc.getItems()));

@@ -29,4 +29,9 @@ public class ItemsetWithCount {
         final ItemsetWithCount other = (ItemsetWithCount) o;
         return (Math.round(other.getCount()) == Math.round(count)) && (other.getItems().equals(items));
     }
+
+    @Override
+    public String toString() {
+        return items.toString()+"=>"+Integer.toString((int)count);
+    }
 }

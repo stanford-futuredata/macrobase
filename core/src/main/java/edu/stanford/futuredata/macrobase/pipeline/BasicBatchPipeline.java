@@ -33,6 +33,7 @@ public class BasicBatchPipeline implements Pipeline {
     private boolean pctileLow;
 
     private String summarizerType;
+    private boolean preAggregate;
     private List<String> attributes;
     private String ratioMetric;
     private double minSupport;
@@ -49,6 +50,7 @@ public class BasicBatchPipeline implements Pipeline {
         pctileLow = conf.get("includeLo", true);
 
         summarizerType = conf.get("summarizer", "apriori");
+        preAggregate = conf.get("preAggregate", false);
         attributes = conf.get("attributes");
         ratioMetric = conf.get("ratioMetric", "globalRatio");
         minRiskRatio = conf.get("minRatioMetric", 3.0);
@@ -97,6 +99,7 @@ public class BasicBatchPipeline implements Pipeline {
             }
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
+                summarizer.setPreaggregate(preAggregate);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);

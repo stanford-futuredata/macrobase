@@ -17,6 +17,7 @@ import java.util.Set;
  */
 public class FPGrowthSummarizer extends BatchSummarizer {
     protected double minRiskRatio = 3;
+    protected boolean preaggregate = false;
     // Encoder
     protected AttributeEncoder encoder = new AttributeEncoder();
     private boolean useAttributeCombinations = true;
@@ -24,7 +25,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
     // Output
     private FPGExplanation explanation = null;
     private List<Set<Integer>> inlierItemsets, outlierItemsets;
-    private FPGrowthEmerging fpg = new FPGrowthEmerging();
+    private FPGrowthAlgorithm fpg = null;
 
     public FPGrowthSummarizer() { }
 
@@ -36,12 +37,22 @@ public class FPGrowthSummarizer extends BatchSummarizer {
      */
     public FPGrowthSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
         this.useAttributeCombinations = useAttributeCombinations;
-        fpg.setCombinationsEnabled(useAttributeCombinations);
         return this;
+    }
+    public void setPreaggregate(boolean flag) {
+        this.preaggregate = flag;
     }
 
     @Override
     public void process(DataFrame df) {
+        if(preaggregate) {
+            fpg = new FPGrowthEmergingGrouped();
+            fpg.setCombinationsEnabled(useAttributeCombinations);
+        } else {
+            fpg = new FPGrowthEmerging();
+            fpg.setCombinationsEnabled(useAttributeCombinations);
+        }
+
         // Filter inliers and outliers
         DataFrame outlierDF = df.filter(outlierColumn, (double d) -> d > 0.0);
         DataFrame inlierDF = df.filter(outlierColumn, (double d) -> d == 0.0);
@@ -62,7 +73,8 @@ public class FPGrowthSummarizer extends BatchSummarizer {
             inlierItemsets,
             outlierItemsets,
             minOutlierSupport,
-            minRiskRatio);
+            minRiskRatio
+        );
         // Decode results
         List<FPGAttributeSet> attributeSets = new ArrayList<>();
         itemsetResults.forEach(i -> attributeSets.add(new FPGAttributeSet(i, encoder)));
