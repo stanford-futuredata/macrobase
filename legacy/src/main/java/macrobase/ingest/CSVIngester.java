@@ -103,7 +103,7 @@ public class CSVIngester extends DataIngester {
                     badRows++;
                 }
             }
-            log.info("{}/{} rows successfully parsed ({} malformed rows)", numRows-badRows, numRows, badRows);
+            log.info("{}/{} rows successfully parsed ({} malformed rows)", numRows, numRows + badRows, badRows);
         }
 
         return dataStream;
