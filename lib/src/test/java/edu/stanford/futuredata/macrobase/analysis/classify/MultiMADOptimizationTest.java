@@ -37,7 +37,7 @@ public class MultiMADOptimizationTest {
 
     private List<String> tLines = new ArrayList<String>();
     private List<String> eLines = new ArrayList<String>();
-    private String timingFile = String.format("multiMAD/timing/%s_%s.csv", minute.format(date));//,Arrays.toString(samplingRates));
+    private String timingFile = String.format("multiMAD/timing/%s.csv", minute.format(date));//,Arrays.toString(samplingRates));
     private String estimateFile = String.format("multiMAD/errors/%s.csv", minute.format(date));
 
     private DataFrame df;
