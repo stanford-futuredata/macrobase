@@ -68,6 +68,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
             outlierItemsets = encoder.encodeAttributesAsSets(outlierDF.getStringColsByName(attributes));
         }
 
+        System.gc();
         long startTime = System.currentTimeMillis();
         List<FPGItemsetResult> itemsetResults = fpg.getEmergingItemsetsWithMinSupport(
             inlierItemsets,

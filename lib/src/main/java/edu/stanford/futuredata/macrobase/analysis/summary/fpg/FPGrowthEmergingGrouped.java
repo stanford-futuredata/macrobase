@@ -59,12 +59,12 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
             double minSupport,
             double minRatio
     ) {
-        GroupByAggregator gb = new GroupByAggregator();
         long startTime = System.currentTimeMillis();
+        GroupByAggregator gb = new GroupByAggregator();
         List<ItemsetWithCount> inlierGrouped = gb.groupBy(inliersRaw);
         List<ItemsetWithCount> outlierGrouped = gb.groupBy(outliersRaw);
-        long elapsed = System.currentTimeMillis() - startTime;
         System.gc();
+        long elapsed = System.currentTimeMillis() - startTime;
         System.out.println("Grouping Time: "+elapsed);
         System.out.println(String.format("Orig: %d/%d After: %d/%d",
                 outliersRaw.size(), inliersRaw.size(),
