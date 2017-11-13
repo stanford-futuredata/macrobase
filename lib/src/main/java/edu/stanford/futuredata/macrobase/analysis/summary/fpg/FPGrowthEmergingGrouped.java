@@ -70,8 +70,10 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
                 outlierGrouped.size(), inlierGrouped.size()
         ));
         startTime = System.currentTimeMillis();
-        Map<Integer, Double> inlierCounts = new ExactCount().countGrouped(inlierGrouped).getCounts();
-        Map<Integer, Double> outlierCounts = new ExactCount().countGrouped(outlierGrouped).getCounts();
+//        Map<Integer, Double> inlierCounts = new ExactCount().countGrouped(inlierGrouped).getCounts();
+//        Map<Integer, Double> outlierCounts = new ExactCount().countGrouped(outlierGrouped).getCounts();
+        Map<Integer, Double> inlierCounts = new ExactCount().count(inliersRaw).getCounts();
+        Map<Integer, Double> outlierCounts = new ExactCount().count(outliersRaw).getCounts();
 
 
         double numOutliers = 0;
