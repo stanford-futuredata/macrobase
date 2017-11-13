@@ -69,11 +69,11 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
                 outliersRaw.size(), inliersRaw.size(),
                 outlierGrouped.size(), inlierGrouped.size()
         ));
+        startTime = System.currentTimeMillis();
         Map<Integer, Double> inlierCounts = new ExactCount().countGrouped(inlierGrouped).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().countGrouped(outlierGrouped).getCounts();
 
 
-        startTime = System.currentTimeMillis();
         double numOutliers = 0;
         for (ItemsetWithCount ic : outlierGrouped) {
             numOutliers += ic.getCount();
@@ -211,6 +211,8 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
                 -Double.compare(x.getNumRecords(), y.getNumRecords()) :
                 -Double.compare(x.getItems().size(), y.getItems().size()));
 
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Check 6: "+elapsed);
         return ret;
     }
 }
