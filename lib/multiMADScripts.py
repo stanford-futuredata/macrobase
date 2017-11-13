@@ -31,10 +31,13 @@ elif sys.argv[2] == "accidents":
     metrics = "number_of_casualties,accident_severity,number_of_vehicles"
     attr = "speed_limit"
 
-else:
+elif sys.argv[2] == "shuttle":
     input = "src/test/resources/shuttle.csv"
     metrics = "A0,A1,A2,A3,A4,A5,A6,A7,A8"
     attr = "A9"
+
+else:
+    print("NOT VALID QUERY")
 
 subprocess.call(proc.format(input, metrics, attr, trials, sys.argv[2]), shell=True)
 
