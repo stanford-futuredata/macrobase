@@ -79,6 +79,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         List<FPGAttributeSet> attributeSets = new ArrayList<>();
         itemsetResults.forEach(i -> attributeSets.add(new FPGAttributeSet(i, encoder)));
         long elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("FPG Time: "+elapsed);
 
         explanation = new FPGExplanation(attributeSets,
                 inlierItemsets.size(),
