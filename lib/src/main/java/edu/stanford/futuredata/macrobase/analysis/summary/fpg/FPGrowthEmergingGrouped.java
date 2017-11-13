@@ -73,6 +73,7 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
         Map<Integer, Double> outlierCounts = new ExactCount().countGrouped(outlierGrouped).getCounts();
 
 
+        startTime = System.currentTimeMillis();
         double numOutliers = 0;
         for (ItemsetWithCount ic : outlierGrouped) {
             numOutliers += ic.getCount();
@@ -85,7 +86,8 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
 
         Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
 
-
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Check 1: "+elapsed);
         ArrayList<ItemsetWithCount> outlierTransactionsRaw = new ArrayList<>();
         for (ItemsetWithCount oGroup: outlierGrouped) {
             Set<Integer> txn = null;
@@ -121,6 +123,8 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
                 outlierTransactionsRaw.add(new ItemsetWithCount(txn,x));
             }
         }
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Check 2: "+elapsed);
 
 //        List<ItemsetWithCount> outlierTransactions = gb.groupByWithCounts(outlierTransactionsRaw);
         List<ItemsetWithCount> outlierTransactions = outlierTransactionsRaw;
@@ -141,6 +145,9 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
 
         Set<Integer> prevSet = null;
         Double prevCount = -1.;
+
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Check 3: "+elapsed);
         for (ItemsetWithCount i : iwc) {
             if (i.getCount() == prevCount) {
                 if (prevSet != null && Sets.difference(i.getItems(), prevSet).size() == 0) {
@@ -170,6 +177,8 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
             }
         }
 
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Check 4: "+elapsed);
         // check the ratios of any itemsets we just marked
         FPGrowthGrouped inlierTree = new FPGrowthGrouped();
         List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inlierGrouped,
@@ -194,7 +203,8 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
                                           oc.getItems()));
             }
         }
-
+        elapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Check 5: "+elapsed);
 
         // finally sort one last time
         ret.sort((x, y) -> x.getNumRecords() != y.getNumRecords() ?
