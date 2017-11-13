@@ -26,6 +26,11 @@ elif sys.argv[2] == "campaign":
     metrics = "sms_in_activity,sms_out_activity,call_in_activity,call_out_activity,internet_traffic_activity"
     attr = "square_id"
 
+elif sys.argv[2] == "accidents":
+    input = "/data/pbailis/preagg/accidents.csv"
+    metrics = "number_of_casualties,accident_severity,number_of_vehicles"
+    attr = "speed_limit"
+
 else:
     input = "src/test/resources/shuttle.csv"
     metrics = "A0,A1,A2,A3,A4,A5,A6,A7,A8"
