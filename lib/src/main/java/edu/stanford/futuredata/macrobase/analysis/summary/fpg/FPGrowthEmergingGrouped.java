@@ -122,7 +122,8 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
             }
         }
 
-        List<ItemsetWithCount> outlierTransactions = gb.groupByWithCounts(outlierTransactionsRaw);
+//        List<ItemsetWithCount> outlierTransactions = gb.groupByWithCounts(outlierTransactionsRaw);
+        List<ItemsetWithCount> outlierTransactions = outlierTransactionsRaw;
 
         FPGrowthGrouped fpg = new FPGrowthGrouped();
         List<ItemsetWithCount> iwc = fpg.getItemsetsWithSupportCount(
