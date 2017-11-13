@@ -64,6 +64,7 @@ public class FPGrowthEmergingGrouped implements FPGrowthAlgorithm {
         List<ItemsetWithCount> inlierGrouped = gb.groupBy(inliersRaw);
         List<ItemsetWithCount> outlierGrouped = gb.groupBy(outliersRaw);
         long elapsed = System.currentTimeMillis() - startTime;
+        System.gc();
         System.out.println("Grouping Time: "+elapsed);
         System.out.println(String.format("Orig: %d/%d After: %d/%d",
                 outliersRaw.size(), inliersRaw.size(),
