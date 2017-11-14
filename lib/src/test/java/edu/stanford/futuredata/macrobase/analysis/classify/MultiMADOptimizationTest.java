@@ -69,6 +69,7 @@ public class MultiMADOptimizationTest {
         eLines = new ArrayList<>();
         tLines.add("total, train, score, sampling, bootstrap");
         eLines.add("medCI, MADCI, medError, MADError");
+        System.out.println("Done Setting Up");
 
     }
 
@@ -83,6 +84,7 @@ public class MultiMADOptimizationTest {
         for (int i = 0; i < 2; i++) {
             mad.process(df);
         }
+        System.out.println("Done Warming Up");
     }
 
     @Test
