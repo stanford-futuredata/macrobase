@@ -133,7 +133,7 @@ public class MultiMADOptimizationTest {
         }
 
         //TURNING OFF BOOTSTRAP TEMPORARILY FOR TIME CALC
-        mad.doBootstrap = false;
+        //mad.doBootstrap = false;
 
         estimatedTime = System.currentTimeMillis() - startTime;
         totalTime = (estimatedTime - mad.getOtherTime())/((double)numTrials);
@@ -152,6 +152,7 @@ public class MultiMADOptimizationTest {
                 +String.valueOf(samplingTime)+","
                 +String.valueOf(bootstrapTime));
 
+        /*
         if (mad.doBootstrap) {
             List<Double> medians = mad.getMedians();
             List<Double> MADs = mad.getMADs();
@@ -191,6 +192,7 @@ public class MultiMADOptimizationTest {
                     +String.valueOf(medError)+","
                     +String.valueOf(MADError));
         }
+        */
     }
 
     @After
