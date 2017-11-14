@@ -52,7 +52,7 @@ public class MultiMADOptimizationTest {
         timingFile = String.format("multiMAD/timing/%s_%s.csv", minute.format(date), System.getProperty("dataset"));//,Arrays.toString(samplingRates));
         estimateFile = String.format("multiMAD/errors/%s_%s.csv", minute.format(date), System.getProperty("dataset"));
 
-        samplingRates = new Integer[]{2,10,100};
+        samplingRates = new Integer[]{1, 2,10,100};
         percentOutliers = 0.1;
         startTime = 0;
         estimatedTime = 0;
