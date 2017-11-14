@@ -56,7 +56,7 @@ public class MultiMADClassifierDebug implements Transformer {
     public boolean includeLow = true;
     public boolean includeHigh = true;
     public SamplingMethod samplingMethod = SamplingMethod.RESERVOIR;
-    public ScoringMethod scoringMethod = ScoringMethod.PARALLEL_LAMBDA;
+    public ScoringMethod scoringMethod = ScoringMethod.SERIAL;//ScoringMethod.PARALLEL_LAMBDA;
     public TrainingMethod trainingMethod = TrainingMethod.MAD_PERCENTILE;
     public boolean doBootstrap = true;
 
