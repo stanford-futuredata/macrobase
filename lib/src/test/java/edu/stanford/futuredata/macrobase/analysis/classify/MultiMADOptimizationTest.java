@@ -70,14 +70,16 @@ public class MultiMADOptimizationTest {
         tLines.add("total, train, score, sampling, bootstrap");
         eLines.add("medCI, MADCI, medError, MADError");
 
-        //TURNING OFF BOOTSTRAP TEMPORARILY FOR TIME CALC
-        mad.doBootstrap = false;
     }
 
     @Test
     public void warmUp() throws Exception {
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
                 .setPercentile(percentOutliers);
+
+        //TURNING OFF BOOTSTRAP TEMPORARILY FOR TIME CALC
+        mad.doBootstrap = false;
+
         for (int i = 0; i < 2; i++) {
             mad.process(df);
         }
@@ -85,7 +87,7 @@ public class MultiMADOptimizationTest {
 
     @Test
     public void testBenchmarkAndSampling() throws Exception {
-        //System.gc();
+        System.gc();
         startTime = System.currentTimeMillis();
 
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
@@ -118,7 +120,7 @@ public class MultiMADOptimizationTest {
     }
 
     public void samplingRun(int samplingRate) {
-        //System.gc();
+        System.gc();
         startTime = System.currentTimeMillis();
 
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
@@ -127,6 +129,9 @@ public class MultiMADOptimizationTest {
         for (int i = 0; i < numTrials; i++) {
             mad.process(df);
         }
+
+        //TURNING OFF BOOTSTRAP TEMPORARILY FOR TIME CALC
+        mad.doBootstrap = false;
 
         estimatedTime = System.currentTimeMillis() - startTime;
         totalTime = (estimatedTime - mad.getOtherTime())/((double)numTrials);
