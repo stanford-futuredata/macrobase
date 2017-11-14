@@ -79,7 +79,7 @@ public class MultiMADOptimizationTest {
                 .setPercentile(percentOutliers);
 
         //TURNING OFF BOOTSTRAP TEMPORARILY FOR TIME CALC
-        mad.doBootstrap = false;
+        //mad.doBootstrap = false;
 
         for (int i = 0; i < 2; i++) {
             mad.process(df);
@@ -152,7 +152,7 @@ public class MultiMADOptimizationTest {
                 +String.valueOf(samplingTime)+","
                 +String.valueOf(bootstrapTime));
 
-        /*
+
         if (mad.doBootstrap) {
             List<Double> medians = mad.getMedians();
             List<Double> MADs = mad.getMADs();
@@ -192,7 +192,7 @@ public class MultiMADOptimizationTest {
                     +String.valueOf(medError)+","
                     +String.valueOf(MADError));
         }
-        */
+
     }
 
     @After

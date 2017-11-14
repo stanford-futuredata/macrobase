@@ -115,13 +115,13 @@ public class MultiMADClassifierDebug implements Transformer {
             }
             samplingTime += (System.currentTimeMillis() - startTime);
 
-            /*
+
             // For bootstrapping
             if (doBootstrap) {
                 bootstrapMetrics = new double[trainingMetrics.length];
                 System.arraycopy(trainingMetrics, 0, bootstrapMetrics, 0, trainingMetrics.length);
             }
-            */
+
 
             startTime = System.currentTimeMillis();
 
@@ -140,12 +140,12 @@ public class MultiMADClassifierDebug implements Transformer {
             trainTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
 
-            /*
+
             // Bootstrap the confidence interval
             if (doBootstrap) {
                 bootstrap(bootstrapMetrics, mad.getMedian(), mad.getMAD());
             }
-            */
+
 
             otherTime += (System.currentTimeMillis() - startTime);
             startTime = System.currentTimeMillis();
