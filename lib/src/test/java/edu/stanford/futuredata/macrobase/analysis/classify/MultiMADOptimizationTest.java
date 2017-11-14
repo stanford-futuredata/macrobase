@@ -85,7 +85,7 @@ public class MultiMADOptimizationTest {
 
     @Test
     public void testBenchmarkAndSampling() throws Exception {
-        System.gc();
+        //System.gc();
         startTime = System.currentTimeMillis();
 
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
@@ -118,7 +118,7 @@ public class MultiMADOptimizationTest {
     }
 
     public void samplingRun(int samplingRate) {
-        System.gc();
+        //System.gc();
         startTime = System.currentTimeMillis();
 
         mad = new MultiMADClassifierDebug(attributeName, columnNames)
