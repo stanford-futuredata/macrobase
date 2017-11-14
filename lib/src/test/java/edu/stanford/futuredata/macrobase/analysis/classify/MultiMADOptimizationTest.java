@@ -21,7 +21,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 public class MultiMADOptimizationTest {
-    public static DateFormat minute = new SimpleDateFormat("HH_mm");
+    public static DateFormat minute = new SimpleDateFormat("dd_HH_mm");
     Date date;
 
     private String inputFileName, attributeName;
