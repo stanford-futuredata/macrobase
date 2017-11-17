@@ -2,6 +2,7 @@
 import pandas as pd
 from collections import defaultdict
 import itertools
+from streamlib import CountMin
 
 #true_card = defaultdict(int)
 ##hll = hyperloglog.HyperLogLog(0.01)
@@ -55,11 +56,73 @@ import itertools
 # bitvector can't really be compressed because we expect to see many 1s
 # possibly tqke advantage of skew to compress subregions of the bitvectors
 
+
 ATTR_COLS = ['location', 'version']
 METRIC_COLS = ['usage', 'latency']
-
+THRESHOLD = 0.1
 INT_SIZE = 32
 
+
+def generate_candidate_col(df):
+    num_rows = len(df)
+    candidate_vals_for_cols = {}
+
+    for col in df.columns:
+        if col not in ATTR_COLS:
+            continue
+        candidate_vals_for_cols[col] = {}
+        cm = CountMin()
+        vals = set(df[col])
+        cm.processBatch(df[col])
+        for val in vals:
+            est = cm.estimate(val)
+            if (1.0*est/num_rows >= THRESHOLD):
+                candidate_vals_for_cols[col][val] = est
+
+    valid_columns = []
+    for col in candidate_vals_for_cols.keys():
+        print "column:", col
+        l = candidate_vals_for_cols[col]
+        if len(l) == 0:
+            continue
+        valid_columns.append(col)
+        for val, cnt in l.iteritems():
+            print "value:", val, "count:", cnt
+    valid_columns.sort()
+    return valid_columns, candidate_vals_for_cols
+    
+def get_pairs(df, valid_columns, candidate_vals_for_cols):
+    cmsPairs = {}
+    for combo in itertools.combinations(valid_columns, 2):
+        cmsPairs[combo] = CountMin()
+    for _, row in df.iterrows():
+        for combo in itertools.combinations(valid_columns, 2):
+            a, b = combo 
+            if row[a] in candidate_vals_for_cols[a] and row[b] in candidate_vals_for_cols[b]:
+                cmsPairs[combo].processItem((row[a], row[b]))
+
+    for combo in itertools.combinations(valid_columns, 2):
+        a, b = combo
+        for aval in candidate_vals_for_cols[a].keys():
+            for bval in candidate_vals_for_cols[b].keys():
+                print aval, bval, "count:", cmsPairs[combo].estimate((aval, bval))
+
+def get_triples(df, valid_columns, candidate_vals_for_cols):
+    cmsTriples = {}
+    for combo in itertools.combinations(valid_columns, 3):
+        cmsTriples[combo] = CountMin()
+    for _, row in df.iterrows():
+        for combo in itertools.combinations(valid_columns, 3):
+            a, b, c = combo 
+            if row[a] in candidate_vals_for_cols[a] and row[b] in candidate_vals_for_cols[b] and row[c] in candidate_vals_for_cols[c]:
+                cmsTriples[combo].processItem((row[a], row[b], row[c]))
+
+    for combo in itertools.combinations(valid_columns, 3):
+        a, b, c = combo
+        for aval in candidate_vals_for_cols[a].keys():
+            for bval in candidate_vals_for_cols[b].keys():
+                for cval in candidate_vals_for_cols[c].keys():
+                    print aval, bval, cval, "count:", cmsPairs[combo].estimate((aval, bval, cval))
 
 def generate_bitvectors(df, attr_cols=ATTR_COLS):
     bitvector_dict = {}
@@ -88,6 +151,10 @@ def main():
 
         print('Combined cardinality', '(%s, %s)' % (location_key, version_key),
               len(combined))
+
+    valid_columns, candidate_vals_for_cols = generate_candidate_col(df)
+    get_pairs(df, valid_columns, candidate_vals_for_cols)
+    #get_triples(df, valid_columns, candidate_vals_for_cols)
 
 
 if __name__ == '__main__':
