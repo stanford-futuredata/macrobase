@@ -1,0 +1,15 @@
+{
+  "pipeline": "BasicBatchPipeline",
+  "inputURI": "csv://core/demo/tiny_predicate.csv",
+  "classifier": "predicate",
+  "metric": "release",
+  "predicate": ">=",
+  "cutoff": "10-19-17",
+  "summarizer": "apriori",
+  "attributes": [
+    "location",
+    "version"
+  ],
+  "minRatioMetric": 2.0,
+  "minSupport": 0.2
+}

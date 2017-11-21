@@ -1,0 +1,15 @@
+pipeline: "BasicBatchPipeline"
+
+inputURI: "csv://src/test/resources/tiny.csv"
+
+classifier: "predicate"
+metric: "usage"
+predicate: "=="
+cutoff: 2.0
+
+summarizer: "apriori"
+attributes:
+  - "location"
+  - "version"
+minRatioMetric: 10.0
+minSupport: 0.2

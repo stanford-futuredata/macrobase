@@ -9,7 +9,7 @@ import edu.stanford.futuredata.macrobase.operator.Transformer;
  * Returns a new dataframe with a column representation of the estimated number of
  * outliers in each group.
  */
-public abstract class CubeClassifier implements Transformer, ThresholdClassifier {
+public abstract class CubeClassifier implements Transformer {
     protected String countColumnName = "count";
     protected String outputColumnName = "_OUTLIER";
 

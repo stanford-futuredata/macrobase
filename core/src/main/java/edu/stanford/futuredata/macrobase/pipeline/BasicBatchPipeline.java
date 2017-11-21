@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
@@ -28,9 +29,13 @@ public class BasicBatchPipeline implements Pipeline {
 
     private String classifierType;
     private String metric;
+    private Object rawCutoff;
     private double cutoff;
+    private String strCutoff;
+    private boolean isStrPredicate;
     private boolean pctileHigh;
     private boolean pctileLow;
+    private String predicateStr;
 
     private String summarizerType;
     private List<String> attributes;
@@ -44,9 +49,22 @@ public class BasicBatchPipeline implements Pipeline {
 
         classifierType = conf.get("classifier", "percentile");
         metric = conf.get("metric");
-        cutoff = conf.get("cutoff", 1.0);
-        pctileHigh = conf.get("includeHi", true);
+
+        if (classifierType.equals("predicate")) {
+            rawCutoff = conf.get("cutoff");
+            isStrPredicate = rawCutoff instanceof String;
+            if (isStrPredicate) {
+                strCutoff = (String) rawCutoff;
+            } else {
+                cutoff = (double) rawCutoff;
+            }
+        } else {
+            cutoff = conf.get("cutoff", 1.0);
+        }
+
+        pctileHigh = conf.get("includeHi",true);
         pctileLow = conf.get("includeLo", true);
+        predicateStr = conf.get("predicate", "==").trim();
 
         summarizerType = conf.get("summarizer", "apriori");
         attributes = conf.get("attributes");
@@ -62,6 +80,14 @@ public class BasicBatchPipeline implements Pipeline {
                 classifier.setPercentile(cutoff);
                 classifier.setIncludeHigh(pctileHigh);
                 classifier.setIncludeLow(pctileLow);
+                return classifier;
+            }
+            case "predicate": {
+                if (isStrPredicate){
+                    PredicateClassifier classifier = new PredicateClassifier(metric, predicateStr, strCutoff);
+                    return classifier;
+                }
+                PredicateClassifier classifier = new PredicateClassifier(metric, predicateStr, cutoff);
                 return classifier;
             }
             default : {
@@ -113,6 +139,9 @@ public class BasicBatchPipeline implements Pipeline {
     public DataFrame loadData() throws Exception {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put(metric, Schema.ColType.DOUBLE);
+        if (isStrPredicate) {
+            colTypes.put(metric, Schema.ColType.STRING);
+        }
         return PipelineUtils.loadDataFrame(inputURI, colTypes);
     }
 
