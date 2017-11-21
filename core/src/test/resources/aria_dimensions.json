@@ -1,0 +1,22 @@
+{
+  "href": "",
+  "interval": "2017-08-24T00:00:00Z\/2017-08-28T00:00:00Z",
+  "dimensions": {
+    "dim_a": {
+      "href": "test.com/dim_a",
+      "name": "dim_a",
+      "type": "String",
+      "values": [
+        "hello", "world"
+      ]
+    },
+    "dim_b": {
+      "href": "test.com/dim_b",
+      "name": "dim_b",
+      "type": "String",
+      "values": [
+        "goodnight", "moon"
+      ]
+    }
+  }
+}

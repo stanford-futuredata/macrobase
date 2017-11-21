@@ -13,7 +13,6 @@ import java.util.*;
  */
 public class QuantileClassifier extends CubeClassifier implements ThresholdClassifier {
     // Parameters
-    private String meanColumnName;
     private List<String> quantileColumnNames;
     private double[] quantiles;
     private double percentile = 1.0;
@@ -25,10 +24,11 @@ public class QuantileClassifier extends CubeClassifier implements ThresholdClass
     private double highCutoff;
     private DataFrame output;
 
-    public QuantileClassifier(String countColumnName, String meanColumnName,
-                              LinkedHashMap<String, Double> quantileColumns) {
+    public QuantileClassifier(
+            String countColumnName,
+            LinkedHashMap<String, Double> quantileColumns
+    ) {
         super(countColumnName);
-        this.meanColumnName = meanColumnName;
         this.quantileColumnNames = new ArrayList<String>();
         this.quantiles = new double[quantileColumns.size()];
         int i = 0;
@@ -41,7 +41,6 @@ public class QuantileClassifier extends CubeClassifier implements ThresholdClass
     @Override
     public void process(DataFrame input) {
         double[] counts = input.getDoubleColumnByName(countColumnName);
-        double[] means = input.getDoubleColumnByName(meanColumnName);
         List<double[]> quantileColumns = input.getDoubleColsByName(quantileColumnNames);
         int len = counts.length;
         int numQuantiles = quantiles.length;
@@ -106,20 +105,6 @@ public class QuantileClassifier extends CubeClassifier implements ThresholdClass
      */
     public QuantileClassifier setPercentile(double percentile) {
         this.percentile = percentile;
-        return this;
-    }
-
-    public String getMeanColumnName() {
-        return meanColumnName;
-    }
-
-    /**
-     * @param meanColumnName Which column contains the mean of each row's attribute
-     *                       combination.
-     * @return this
-     */
-    public QuantileClassifier setMeanColumnName(String meanColumnName) {
-        this.meanColumnName = meanColumnName;
         return this;
     }
 

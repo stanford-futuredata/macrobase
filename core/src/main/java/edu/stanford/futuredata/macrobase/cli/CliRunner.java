@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.cli;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.contrib.aria.AriaCubePipeline;
 import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
 import edu.stanford.futuredata.macrobase.pipeline.CubePipeline;
 import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
@@ -37,6 +38,9 @@ public class CliRunner {
             }
             case "CubePipeline": {
                 return new CubePipeline(conf);
+            }
+            case "AriaCubePipeline": {
+                return new AriaCubePipeline(conf);
             }
             default: {
                 throw new MacrobaseException("Bad Pipeline");

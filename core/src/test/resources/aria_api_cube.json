@@ -1,0 +1,45 @@
+{
+  "interval": "2017-08-01T00:00:00Z/2017-08-03T00:00:00Z",
+  "granularity": "PT4H",
+  "units": "",
+  "series": [
+    {
+      "operation": "Count",
+      "values": [1.0, 2.0, 3.0],
+      "segment": null,
+      "filters": [
+        {
+          "dimension": "version",
+          "operation": "In",
+          "values": ["1.0"],
+          "action": "Separate"
+        },
+        {
+          "dimension": "country",
+          "operation": "In",
+          "values": ["USA"],
+          "action": "Separate"
+        }
+      ]
+    },
+    {
+      "operation": "Average",
+      "values": [88.0, 67.4, 0.0],
+      "segment": null,
+      "filters": [
+        {
+          "dimension": "version",
+          "operation": "In",
+          "values": ["1.0"],
+          "action": "Separate"
+        },
+        {
+          "dimension": "country",
+          "operation": "In",
+          "values": ["USA"],
+          "action": "Separate"
+        }
+      ]
+    }
+  ]
+}
