@@ -1,0 +1,22 @@
+site_name: MacroBase Documentation
+docs_dir: source
+
+pages:
+  - Home: 'index.md'
+  - User Guide:
+    - 'Tutorial': 'user-guide/tutorial.md'
+    - 'Common Parameters': 'user-guide/parameters.md'
+    - 'Advanced Configuration': 'user-guide/advanced-configuration.md'
+
+theme:
+  name: 'material'
+  palette:
+    primary: 'red'
+    accent: 'red'
+  logo:
+    icon: 'adjust'
+
+extra:
+  social:
+    - type: 'github'
+      link: 'https://github.com/stanford-futuredata/macrobase'
