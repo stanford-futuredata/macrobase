@@ -9,12 +9,14 @@ import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttribut
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.WindowedOperator;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
 /**
- * Compare the performancce of sliding window summarization with repeated batch summarization.
+ * Compare the performance of sliding window summarization with repeated batch summarization.
  * The incremental sliding window operator should be noticeably faster.
  */
 public class StreamingSummarizationBenchmark {
@@ -25,7 +27,7 @@ public class StreamingSummarizationBenchmark {
         int C = 4;
         int d = 10;
         double p = 0.005;
-        int eventIdx = 50000;
+        int eventIdx = 40000;
         int eventEndIdx = 100000;
         int windowSize = 50000;
         int slideSize = 1000;
@@ -54,7 +56,8 @@ public class StreamingSummarizationBenchmark {
         double totalBatchTime = 0.0;
 
         double startTime = 0.0;
-        while (startTime < n) {
+        int nRows = df.getNumRows();
+        while (startTime < nRows) {
             double endTime = startTime + miniBatchSize;
             double ls = startTime;
             DataFrame curBatch = df.filter(
@@ -63,41 +66,39 @@ public class StreamingSummarizationBenchmark {
             );
             long timerStart = System.currentTimeMillis();
             windowedSummarizer.process(curBatch);
-            FPGExplanation curExplanation = windowedSummarizer
-                    .getResults()
-                    .prune();
-            long timerElapsed = System.currentTimeMillis() - timerStart;
-            totalStreamingTime += timerElapsed;
+            windowedSummarizer.flushBuffer();
+            if (endTime >= windowSize) {
+                FPGExplanation curExplanation = windowedSummarizer
+                        .getResults()
+                        .prune();
+                long timerElapsed = System.currentTimeMillis() - timerStart;
+                totalStreamingTime += timerElapsed;
 
-            if (windowedSummarizer.getMaxWindowTime() > eventIdx
-                    && windowedSummarizer.getMaxWindowTime() - windowSize < eventEndIdx) {
+                DataFrame curWindow = df.filter(
+                        "time",
+                        (double t) -> t >= (endTime - windowSize) && t < endTime
+                );
+                timerStart = System.currentTimeMillis();
+                bsumm.process(curWindow);
+                FPGExplanation batchExplanation = bsumm.getResults().prune();
+                timerElapsed = System.currentTimeMillis() - timerStart;
+                totalBatchTime += timerElapsed;
+
                 //  make sure that the known anomalous attribute combination has the highest risk ratio
-                FPGAttributeSet topRankedExplanation = curExplanation.getItemsets().get(0);
-                assertTrue(topRankedExplanation.getItems().values().containsAll(buggyAttributeValues));
-            } else {
-                // Otherwise make sure that the noisy explanations are all low-cardinality
                 if (curExplanation.getItemsets().size() > 0) {
-                    FPGAttributeSet topRankedExplanation = curExplanation.getItemsets().get(0);
-                    assertTrue(
-                            topRankedExplanation.getNumRecords() < 20
-                    );
+                    FPGAttributeSet streamTopRankedExplanation = curExplanation.getItemsets().get(0);
+                    FPGAttributeSet batchTopRankedExplanation = batchExplanation.getItemsets().get(0);
+                    assertTrue(streamTopRankedExplanation.getItems().values().containsAll(buggyAttributeValues));
+                    assertTrue(batchTopRankedExplanation.getItems().values().containsAll(buggyAttributeValues));
                 }
+            } else {
+                long timerElapsed = System.currentTimeMillis() - timerStart;
+                totalStreamingTime += timerElapsed;
             }
-
-
-            DataFrame curWindow = df.filter(
-                    "time",
-                    (double t) -> t >= (endTime - windowSize) && t < endTime
-            );
-            timerStart = System.currentTimeMillis();
-            bsumm.process(curWindow);
-            Explanation batchExplanation = bsumm.getResults();
-            timerElapsed = System.currentTimeMillis() - timerStart;
-            totalBatchTime += timerElapsed;
-
             startTime = endTime;
         }
 
+        System.out.println(String.format("window size: %d, slide size: %d", windowSize, slideSize));
         System.out.println("Streaming Time: "+totalStreamingTime);
         System.out.println("Batch Time: "+totalBatchTime);
     }
