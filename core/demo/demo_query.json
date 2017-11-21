@@ -10,6 +10,6 @@
 
   "summarizer": "apriori",
   "attributes": ["location", "version"],
-  "minRiskRatio": 10.0,
+  "minRatioMetric": 10.0,
   "minSupport": 0.2
 }

@@ -3,8 +3,7 @@ package edu.stanford.futuredata.macrobase.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
-import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
+import edu.stanford.futuredata.macrobase.pipeline.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -28,7 +27,8 @@ public class RestServer {
     ) throws Exception {
         res.type("application/json");
         PipelineConfig conf = PipelineConfig.fromJsonString(req.body());
-        Explanation e = new BasicBatchPipeline(conf).results();
+        Pipeline p = PipelineUtils.createPipeline(conf);
+        Explanation e = p.results();
         return e;
     }
 
