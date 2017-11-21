@@ -1,6 +1,6 @@
 pipeline: "BasicBatchPipeline"
 
-input_uri: "csv://src/test/resources/tiny.csv"
+inputUri: "csv://src/test/resources/tiny.csv"
 
 classifier: "predicate"
 metric: "usage"
@@ -11,5 +11,5 @@ summarizer: "apriori"
 attributes:
   - "location"
   - "version"
-min_ratio_metric: 10.0
-min_support: 0.2
+minRatioMetric: 10.0
+minSupport: 0.2

@@ -45,11 +45,11 @@ public class BasicBatchPipeline implements Pipeline {
         this.conf = conf;
 
         // these fields must be defined explicitly in the conf.yaml file
-        inputURI = conf.get("input_uri");
+        inputURI = conf.get("inputURI");
         metricColName = conf.get("metric");
         attributes = conf.get("attributes");
-        minRiskRatio = conf.get("min_ratio_metric", 3.0);
-        minSupport = conf.get("min_support", 0.01);
+        minRiskRatio = conf.get("minRatioMetric", 3.0);
+        minSupport = conf.get("minSupport", 0.01);
     }
 
     public Classifier getClassifier() throws MacrobaseException {
@@ -59,8 +59,8 @@ public class BasicBatchPipeline implements Pipeline {
                 // default values for PercentileClassifier:
                 // {cuttoff: 1.0, includeHi: true, includeLo: true}
                 final double cutoff = conf.get("cutoff", 1.0);
-                final boolean pctileHigh = conf.get("include_hi", true);
-                final boolean pctileLow = conf.get("include_lo", true);
+                final boolean pctileHigh = conf.get("includeHi", true);
+                final boolean pctileLow = conf.get("includeLo", true);
 
                 return new PercentileClassifier(metricColName)
                         .setPercentile(cutoff)
@@ -81,15 +81,15 @@ public class BasicBatchPipeline implements Pipeline {
     }
 
     public ExplanationMetric getRatioMetric() throws MacrobaseException {
-        final String ratioMetric = conf.get("ratio_metric", "global_ratio");
+        final String ratioMetric = conf.get("ratioMetric", "globalratio");
         switch (ratioMetric) {
-            case "global_ratio": {
+            case "globalratio": {
                 return new GlobalRatioMetric();
             }
-            case "prevalence_ratio": {
+            case "prevalenceratio": {
                 return new PrevalenceRatio();
             }
-            case "risk_ratio": {
+            case "riskratio": {
                 return new RiskRatioMetric();
             }
             default: {
@@ -100,9 +100,9 @@ public class BasicBatchPipeline implements Pipeline {
 
     public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
         final String summarizerType = conf.get("summarizer", "apriori");
-        final int maxOrder = conf.get("max_order", 3);
+        final int maxOrder = conf.get("maxOrder", 3);
         if (maxOrder <= 0 || maxOrder > 3) {
-            throw new MacrobaseException("0 < max_order <= 3 must hold, max_order set to " + maxOrder);
+            throw new MacrobaseException("0 < maxOrder <= 3 must hold, maxOrder set to " + maxOrder);
         }
         switch (summarizerType) {
             case "apriori": {
