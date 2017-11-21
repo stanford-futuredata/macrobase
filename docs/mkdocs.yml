@@ -1,0 +1,11 @@
+site_name: MacroBase
+docs_dir: source
+
+theme: readthedocs
+
+pages:
+  - Home: 'index.md'
+  - User Guide:
+    - 'Tutorial': 'user-guide/tutorial.md'
+    - 'Common Parameters': 'user-guide/parameters.md'
+    - 'Advanced Configuration': 'user-guide/advanced-configuration.md'
