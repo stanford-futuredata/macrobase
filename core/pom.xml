@@ -50,6 +50,11 @@
             <artifactId>okhttp</artifactId>
             <version>3.8.1</version>
         </dependency>
+        <dependency>
+          <groupId>com.microsoft.aria</groupId>
+          <artifactId>aria-client</artifactId>
+          <version>0.4</version>
+        </dependency>
     </dependencies>
 
     <build>
