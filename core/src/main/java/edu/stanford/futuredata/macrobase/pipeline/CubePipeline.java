@@ -5,7 +5,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -100,23 +100,13 @@ public class CubePipeline implements Pipeline {
             writer.writeToStream(df, out);
         }
 
-        APrioriSummarizer summarizer = new APrioriSummarizer();
-        summarizer.setOutlierColumn(classifier.getOutputColumnName());
-        summarizer.setCountColumn(classifier.getCountColumnName());
-        summarizer.setAttributes(attributes);
-        summarizer.setMinSupport(minSupport);
-        summarizer.setMinRatioMetric(minRatioMetric);
-        startTime = System.currentTimeMillis();
-        summarizer.process(df);
-        elapsed = System.currentTimeMillis() - startTime;
-        log.info("Summarization time: {}", elapsed);
-        APExplanation output = summarizer.getResults();
-        return output;
+        return getExplanation(classifier, df);
     }
 
     private Map<String, Schema.ColType> getColTypes() throws MacrobaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         switch (classifierType) {
+            case "meanshift":
             case "arithmetic": {
                 colTypes.put(countColumn, Schema.ColType.DOUBLE);
                 colTypes.put(meanColumn, Schema.ColType.DOUBLE);
@@ -157,6 +147,7 @@ public class CubePipeline implements Pipeline {
                 classifier.setIncludeLow(includeLo);
                 return classifier;
             }
+            case "meanshift":
             case "raw": {
                 return new RawClassifier(
                         countColumn,
@@ -165,6 +156,38 @@ public class CubePipeline implements Pipeline {
             }
             default:
                 throw new MacrobaseException("Bad Classifier Name");
+        }
+    }
+
+    private Explanation getExplanation(CubeClassifier classifier, DataFrame df) throws Exception {
+        switch (classifierType) {
+            case "meanshift": {
+                APLMeanSummarizer summarizer = new APLMeanSummarizer();
+                summarizer.setCountColumn(countColumn);
+                summarizer.setMeanColumn(meanColumn);
+                summarizer.setStdColumn(stdColumn);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinStdDev(minRatioMetric);
+                long startTime = System.currentTimeMillis();
+                summarizer.process(df);
+                long elapsed = System.currentTimeMillis() - startTime;
+                log.info("Summarization time: {}", elapsed);
+                return summarizer.getResults();
+            }
+            default: {
+                APrioriSummarizer summarizer = new APrioriSummarizer();
+                summarizer.setOutlierColumn(classifier.getOutputColumnName());
+                summarizer.setCountColumn(classifier.getCountColumnName());
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRatioMetric);
+                long startTime = System.currentTimeMillis();
+                summarizer.process(df);
+                long elapsed = System.currentTimeMillis() - startTime;
+                log.info("Summarization time: {}", elapsed);
+                return summarizer.getResults();
+            }
         }
     }
 }
