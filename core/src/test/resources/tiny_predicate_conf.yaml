@@ -1,6 +1,6 @@
 pipeline: "BasicBatchPipeline"
 
-inputUri: "csv://src/test/resources/tiny.csv"
+inputURI: "csv://src/test/resources/tiny.csv"
 
 classifier: "predicate"
 metric: "usage"
