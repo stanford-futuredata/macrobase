@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.IncrementalSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
@@ -128,7 +127,7 @@ public class StreamingSummarizationTest {
 
             /* Code to process windowed summarizer on a minibatch */
             windowedSummarizer.process(curBatch);
-            FPGExplanation explanation = windowedSummarizer.getResults();
+            FPGExplanation explanation = windowedSummarizer.getResults().prune();
             /* End */
 
             if (endTime > windowSize) {
