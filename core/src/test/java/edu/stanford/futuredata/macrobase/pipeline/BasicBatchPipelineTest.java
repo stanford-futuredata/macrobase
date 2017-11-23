@@ -1,10 +1,9 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class BasicBatchPipelineTest {
     @Test

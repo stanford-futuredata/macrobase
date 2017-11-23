@@ -1,11 +1,7 @@
 package edu.stanford.futuredata.macrobase.cli;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.pipeline.BasicBatchPipeline;
-import edu.stanford.futuredata.macrobase.pipeline.CubePipeline;
-import edu.stanford.futuredata.macrobase.pipeline.PipelineConfig;
-import edu.stanford.futuredata.macrobase.pipeline.Pipeline;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.pipeline.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,24 +19,9 @@ public class CliRunner {
     public static void main(String[] args) throws Exception {
         String configFile = args[0];
         PipelineConfig conf = PipelineConfig.fromYamlFile(configFile);
-        Pipeline p = loadPipeline(conf);
+        Pipeline p = PipelineUtils.createPipeline(conf);
         Explanation e = p.results();
         log.info("Computed Results");
         System.out.println(e.prettyPrint());
-    }
-
-    public static Pipeline loadPipeline(PipelineConfig conf) throws MacrobaseException{
-        String pipelineName = conf.get("pipeline");
-        switch (pipelineName) {
-            case "BasicBatchPipeline": {
-                return new BasicBatchPipeline(conf);
-            }
-            case "CubePipeline": {
-                return new CubePipeline(conf);
-            }
-            default: {
-                throw new MacrobaseException("Bad Pipeline");
-            }
-        }
     }
 }

@@ -6,7 +6,7 @@ classifier: "arithmetic"
 countColumn: "count"
 meanColumn: "mean"
 stdColumn: "std"
-percentile: 1.0
+cutoff: 1.0
 includeLo: true
 includeHi: false
 

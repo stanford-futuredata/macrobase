@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 
@@ -51,9 +52,12 @@ public class APExplanation implements Explanation {
         return results;
     }
 
+    @JsonProperty("outliers")
     public double numOutliers() {
         return numOutliers;
     }
+
+    @JsonProperty("numTotal")
     public double numTotal() {
         return numTotal;
     }
