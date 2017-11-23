@@ -7,6 +7,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class APLExplanation implements Explanation {
     private AttributeEncoder encoder;
@@ -35,6 +36,15 @@ public class APLExplanation implements Explanation {
 
     public List<APLExplanationResult> getResults() {
         return results;
+    }
+
+    @JsonProperty("results")
+    public List<Map<String, String>> results() {
+        List<Map<String, String>> r = new ArrayList<>();
+        for (APLExplanationResult is : results) {
+            r.add(is.jsonPrint(encoder, aggregateNames));
+        }
+        return r;
     }
 
     @JsonProperty("numTotal")

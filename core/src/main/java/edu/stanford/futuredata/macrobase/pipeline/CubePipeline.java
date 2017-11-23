@@ -100,7 +100,12 @@ public class CubePipeline implements Pipeline {
             writer.writeToStream(df, out);
         }
 
-        return getExplanation(classifier, df);
+        startTime = System.currentTimeMillis();
+        Explanation explanation = getExplanation(classifier, df);
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Summarization time: {}", elapsed);
+
+        return explanation;
     }
 
     private Map<String, Schema.ColType> getColTypes() throws MacrobaseException {
@@ -169,10 +174,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);
-                long startTime = System.currentTimeMillis();
                 summarizer.process(df);
-                long elapsed = System.currentTimeMillis() - startTime;
-                log.info("Summarization time: {}", elapsed);
                 return summarizer.getResults();
             }
             default: {
@@ -182,10 +184,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRatioMetric);
-                long startTime = System.currentTimeMillis();
                 summarizer.process(df);
-                long elapsed = System.currentTimeMillis() - startTime;
-                log.info("Summarization time: {}", elapsed);
                 return summarizer.getResults();
             }
         }
