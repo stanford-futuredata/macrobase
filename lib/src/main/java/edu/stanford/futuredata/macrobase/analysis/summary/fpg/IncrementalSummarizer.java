@@ -327,10 +327,10 @@ public class IncrementalSummarizer implements IncrementalOperator<Explanation> {
             }
         }
         // Get support in the inlier transactions
-        List<ItemsetWithCount> inlierCount = fpGrowth.getCounts(
+        List<ItemsetWithCount> newFrequentInlierCounts = fpGrowth.getCounts(
                 inlierItemsets, inlierPaneSingletonCount, inlierPaneSingletonCount.keySet(), newFrequent);
         for (int i = 0; i < newFrequent.size(); i ++) {
-            ItemsetWithCount iiwc = inlierCount.get(i);
+            ItemsetWithCount iiwc = newFrequentInlierCounts.get(i);
             ItemsetWithCount oiwc = newFrequent.get(i);
             double exposedInlierCount = iiwc.getCount();
             double exposedOutlierCount = oiwc.getCount();
