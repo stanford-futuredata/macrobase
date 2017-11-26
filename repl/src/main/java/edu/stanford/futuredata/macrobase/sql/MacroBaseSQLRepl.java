@@ -1,17 +1,18 @@
-package edu.stanford.futuredata.macrobase;
+package edu.stanford.futuredata.macrobase.sql;
 
-import org.antlr.v4.runtime.CharStreams;
+import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
+import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
+import edu.stanford.futuredata.macrobase.sql.tree.Query;
+import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import jline.console.ConsoleReader;
-import jline.console.completer.*;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.misc.NotNull;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import jline.console.completer.CandidateListCompletionHandler;
+import jline.console.completer.Completer;
+import jline.console.completer.FileNameCompleter;
+import jline.console.completer.StringsCompleter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -45,40 +46,15 @@ public class MacroBaseSQLRepl {
 
 
     public static void parse(final String sql) {
-        final List<String> functionNames = new ArrayList<>();
-
-
-        // Create a lexer and parser for the input.
-//        SQLiteLexer lexer = new SQLiteLexer(new ANTLRInputStream(sql));
-        SqlBaseLexer lexer = new SqlBaseLexer(new UpperCaseCharStream(CharStreams.fromString(sql)));
-        lexer.removeErrorListeners();
-        lexer.addErrorListener(ParseErrorListener);
-        SqlBaseParser parser = new SqlBaseParser(new CommonTokenStream(lexer));
-
-        // Invoke the `select_stmt` production.
-        ParseTree tree = parser.select_stmt();
-        SQLiteParser.Select_stmtContext ctx = parser.select_stmt();
-        SQLiteParser.Select_or_valuesContext ctx2 = ctx.select_or_values(0);
-        SQLiteParser.Table_or_subqueryContext ctx3 = ctx2.table_or_subquery(0);
-        System.out.println("Table: " + ctx3.table_name().getText());
-
-        // Walk the `select_stmt` production and listen when the parser
-        // enters the `expr` production.
-        ParseTreeWalker.DEFAULT.walk(new SQLiteBaseListener(){
-
-            @Override
-            public void enterExpr(@NotNull SQLiteParser.ExprContext ctx) {
-                // Check if the expression is a function call.
-                if (ctx.function_name() != null) {
-                    // Yes, it was a function call: add the name of the function
-                    // to out list.
-                    functionNames.add(ctx.function_name().getText());
-                }
-            }
-        }, tree);
-
-        // Print the parsed functions.
-        System.out.println("functionNames=" + functionNames);
+        SqlParser parser = new SqlParser();
+        StatementSplitter splitter = new StatementSplitter(sql);
+        for (StatementSplitter.Statement stmt : splitter.getCompleteStatements()) {
+            Query q = (Query) parser.createStatement(stmt.statement());
+            QuerySpecification querySpec = (QuerySpecification) q.getQueryBody();
+            System.out.println(querySpec.getWhere());
+            System.out.println(querySpec.getFrom());
+            System.out.println(querySpec.getSelect());
+        }
     }
 
 
@@ -104,7 +80,6 @@ public class MacroBaseSQLRepl {
     }
 
     public static void main(String ...args) {
-        // The list that will hold our function names.
 
         final String ascii_art = readResourcesFile(ASCII_ART_FILE);
         System.out.println(ascii_art);
