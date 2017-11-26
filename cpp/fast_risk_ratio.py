@@ -4,6 +4,121 @@ from collections import defaultdict
 import itertools
 from streamlib import CountMin
 
+
+ATTR_COLS = ['location', 'version', 'name']
+METRIC_COLS = ['usage', 'latency']
+THRESHOLD = 0.1
+INT_SIZE = 32
+
+
+def generate_candidate_col(df):
+    num_rows = len(df)
+    candidate_vals_for_cols = {}
+
+    for col in ATTR_COLS:
+        candidate_vals_for_cols[col] = {}
+        cm = CountMin()
+        vals = set(df[col])
+        cm.processBatch(df[col])
+        for val in vals:
+            est = cm.estimate(val)
+            if (1.0*est/num_rows >= THRESHOLD):
+                candidate_vals_for_cols[col][val] = est
+
+    valid_columns = []
+    for col in candidate_vals_for_cols.keys():
+        print "column:", col
+        l = candidate_vals_for_cols[col]
+        if len(l) == 0:
+            continue
+        valid_columns.append(col)
+        for val, cnt in l.iteritems():
+            print "value:", val, "count:", cnt
+    valid_columns.sort()
+    return valid_columns, candidate_vals_for_cols
+    
+def get_pairs(df, valid_columns, candidate_vals_for_cols):
+    cmsPairs = {}
+    for combo in itertools.combinations(valid_columns, 2):
+        cmsPairs[combo] = CountMin()
+    for _, row in df.iterrows():
+        for combo in itertools.combinations(valid_columns, 2):
+            a, b = combo 
+            if row[a] in candidate_vals_for_cols[a] and row[b] in candidate_vals_for_cols[b]:
+                cmsPairs[combo].processItem((row[a], row[b]))
+
+    for combo in itertools.combinations(valid_columns, 2):
+        a, b = combo
+        for aval, bval in itertools.product(candidate_vals_for_cols[a].keys(), candidate_vals_for_cols[b].keys()):
+            print aval, bval, "count:", cmsPairs[combo].estimate((aval, bval))
+
+def get_triples(df, valid_columns, candidate_vals_for_cols):
+    cmsTriples = {}
+    for combo in itertools.combinations(valid_columns, 3):
+        cmsTriples[combo] = CountMin()
+    for _, row in df.iterrows():
+        for combo in itertools.combinations(valid_columns, 3):
+            a, b, c = combo 
+            if row[a] in candidate_vals_for_cols[a] and row[b] in candidate_vals_for_cols[b] and row[c] in candidate_vals_for_cols[c]:
+                cmsTriples[combo].processItem((row[a], row[b], row[c]))
+
+    for combo in itertools.combinations(valid_columns, 3):
+        a, b, c = combo
+        for aval, bval, cval in itertools.product(candidate_vals_for_cols[a].keys(), candidate_vals_for_cols[b].keys(), candidate_vals_for_cols[c].keys()):
+            print aval, bval, cval, "count:", cmsTriples[combo].estimate((aval, bval, cval))
+
+def generate_bitvectors(df, attr_cols=ATTR_COLS):
+    bitvector_dict = {}
+    for col in attr_cols:
+        bitvector_dict[col] = defaultdict(set)
+    for i, row in df.iterrows():
+        for col in attr_cols:
+            bitvector_dict[col][row[col]].add(i)
+    return bitvector_dict
+
+def main():
+    df = pd.read_csv('../core/demo/generated_sample.csv')
+    #df = pd.read_csv('../core/demo/sample.csv')
+    
+    bitvectors = generate_bitvectors(df)
+    for col in ATTR_COLS:
+        for key in bitvectors[col].keys():
+            print ('Cardinality', '%s' % key, len(bitvectors[col][key]))
+
+    for combo in itertools.combinations(ATTR_COLS, 2):
+        a, b = combo
+        bitmapa = bitvectors[a]
+        bitmapb = bitvectors[b]
+        for keya, keyb in itertools.product(bitmapa.keys(), bitmapb.keys()):
+            bitmaska = bitmapa[keya]
+            bitmaskb = bitmapb[keyb]
+            combined = bitmaska.intersection(bitmaskb)
+            print('Combined cardinality', '(%s, %s)' % (keya, keyb), len(combined))
+            #print('Location cardinality of', location_key, len(bits_for_loc_key))
+            #print('Version cardinality of', version_key, len(bits_for_version_key))
+    
+    for combo in itertools.combinations(ATTR_COLS, 3):
+        a, b, c = combo
+        bitmapa = bitvectors[a]
+        bitmapb = bitvectors[b]
+        bitmapc = bitvectors[c]
+        for keya, keyb, keyc in itertools.product(bitmapa.keys(), bitmapb.keys(), bitmapc.keys()):
+            bitmaska = bitmapa[keya]
+            bitmaskb = bitmapb[keyb]
+            bitmaskc = bitmapc[keyc]
+            combined = bitmaska.intersection(bitmaskb.intersection(bitmaskc))
+            print('Combined cardinality', '(%s, %s, %s)' % (keya, keyb, keyc), len(combined))
+
+    '''
+    valid_columns, candidate_vals_for_cols = generate_candidate_col(df)
+    get_pairs(df, valid_columns, candidate_vals_for_cols)
+    get_triples(df, valid_columns, candidate_vals_for_cols)
+    '''
+
+if __name__ == '__main__':
+    main()
+
+# hypothesis: NC3 candidate generation is much slower than bitvectors
 #true_card = defaultdict(int)
 ##hll = hyperloglog.HyperLogLog(0.01)
 #for _, row in df.iterrows():
@@ -55,109 +170,3 @@ from streamlib import CountMin
 # length of bitvector is num_rows
 # bitvector can't really be compressed because we expect to see many 1s
 # possibly tqke advantage of skew to compress subregions of the bitvectors
-
-
-ATTR_COLS = ['location', 'version']
-METRIC_COLS = ['usage', 'latency']
-THRESHOLD = 0.1
-INT_SIZE = 32
-
-
-def generate_candidate_col(df):
-    num_rows = len(df)
-    candidate_vals_for_cols = {}
-
-    for col in df.columns:
-        if col not in ATTR_COLS:
-            continue
-        candidate_vals_for_cols[col] = {}
-        cm = CountMin()
-        vals = set(df[col])
-        cm.processBatch(df[col])
-        for val in vals:
-            est = cm.estimate(val)
-            if (1.0*est/num_rows >= THRESHOLD):
-                candidate_vals_for_cols[col][val] = est
-
-    valid_columns = []
-    for col in candidate_vals_for_cols.keys():
-        print "column:", col
-        l = candidate_vals_for_cols[col]
-        if len(l) == 0:
-            continue
-        valid_columns.append(col)
-        for val, cnt in l.iteritems():
-            print "value:", val, "count:", cnt
-    valid_columns.sort()
-    return valid_columns, candidate_vals_for_cols
-    
-def get_pairs(df, valid_columns, candidate_vals_for_cols):
-    cmsPairs = {}
-    for combo in itertools.combinations(valid_columns, 2):
-        cmsPairs[combo] = CountMin()
-    for _, row in df.iterrows():
-        for combo in itertools.combinations(valid_columns, 2):
-            a, b = combo 
-            if row[a] in candidate_vals_for_cols[a] and row[b] in candidate_vals_for_cols[b]:
-                cmsPairs[combo].processItem((row[a], row[b]))
-
-    for combo in itertools.combinations(valid_columns, 2):
-        a, b = combo
-        for aval in candidate_vals_for_cols[a].keys():
-            for bval in candidate_vals_for_cols[b].keys():
-                print aval, bval, "count:", cmsPairs[combo].estimate((aval, bval))
-
-def get_triples(df, valid_columns, candidate_vals_for_cols):
-    cmsTriples = {}
-    for combo in itertools.combinations(valid_columns, 3):
-        cmsTriples[combo] = CountMin()
-    for _, row in df.iterrows():
-        for combo in itertools.combinations(valid_columns, 3):
-            a, b, c = combo 
-            if row[a] in candidate_vals_for_cols[a] and row[b] in candidate_vals_for_cols[b] and row[c] in candidate_vals_for_cols[c]:
-                cmsTriples[combo].processItem((row[a], row[b], row[c]))
-
-    for combo in itertools.combinations(valid_columns, 3):
-        a, b, c = combo
-        for aval in candidate_vals_for_cols[a].keys():
-            for bval in candidate_vals_for_cols[b].keys():
-                for cval in candidate_vals_for_cols[c].keys():
-                    print aval, bval, cval, "count:", cmsPairs[combo].estimate((aval, bval, cval))
-
-def generate_bitvectors(df, attr_cols=ATTR_COLS):
-    bitvector_dict = {}
-    for col in attr_cols:
-        bitvectors_for_col = defaultdict(set)
-        for i, row in df.iterrows():
-            bitvectors_for_col[row[col]].add(i)
-
-        bitvector_dict[col] = bitvectors_for_col
-    return bitvector_dict
-
-
-def main():
-    df = pd.read_csv('../core/demo/sample.csv')
-    bitvectors = generate_bitvectors(df)
-    location_bitvectors = bitvectors['location']
-    version_bitvectors = bitvectors['version']
-    for location_key, version_key in itertools.product(
-            location_bitvectors.keys(), version_bitvectors.keys()):
-        bits_for_loc_key = location_bitvectors[location_key]
-        bits_for_version_key = version_bitvectors[version_key]
-        combined = bits_for_loc_key.intersection(bits_for_version_key)
-        #print('Location cardinality of', location_key, len(bits_for_loc_key))
-
-        #print('Version cardinality of', version_key, len(bits_for_version_key))
-
-        print('Combined cardinality', '(%s, %s)' % (location_key, version_key),
-              len(combined))
-
-    valid_columns, candidate_vals_for_cols = generate_candidate_col(df)
-    get_pairs(df, valid_columns, candidate_vals_for_cols)
-    #get_triples(df, valid_columns, candidate_vals_for_cols)
-
-
-if __name__ == '__main__':
-    main()
-
-# hypothesis: NC3 candidate generation is much slower than bitvectors
