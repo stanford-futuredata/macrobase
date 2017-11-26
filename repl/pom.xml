@@ -19,6 +19,24 @@
   <dependencies>
 
     <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>3.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>21.0</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.antlr</groupId>
       <artifactId>antlr4-runtime</artifactId>
       <version>${antlr4.version}</version>
@@ -26,11 +44,19 @@
     </dependency>
 
     <dependency>
+      <groupId>io.airlift</groupId>
+      <artifactId>slice</artifactId>
+      <version>0.31</version>
+    </dependency>
+
+    <!--
+    <dependency>
       <groupId>org.antlr</groupId>
       <artifactId>antlr4-maven-plugin</artifactId>
       <version>${antlr4.version}</version>
       <scope>compile</scope>
     </dependency>
+    -->
 
     <dependency>
       <groupId>jline</groupId>
