@@ -13,71 +13,62 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.base.CharMatcher;
-import io.airlift.slice.Slice;
-
-import java.util.Objects;
-import java.util.Optional;
-
 import static io.airlift.slice.Slices.utf8Slice;
 import static java.util.Objects.requireNonNull;
 
+import com.google.common.base.CharMatcher;
+import io.airlift.slice.Slice;
+import java.util.Objects;
+import java.util.Optional;
+
 public class CharLiteral
-        extends Literal
-{
-    private final String value;
-    private final Slice slice;
+    extends Literal {
 
-    public CharLiteral(String value)
-    {
-        this(Optional.empty(), value);
-    }
+  private final String value;
+  private final Slice slice;
 
-    public CharLiteral(NodeLocation location, String value)
-    {
-        this(Optional.of(location), value);
-    }
+  public CharLiteral(String value) {
+    this(Optional.empty(), value);
+  }
 
-    public CharLiteral(Optional<NodeLocation> location, String value)
-    {
-        super(location);
-        requireNonNull(value, "value is null");
-        this.value = value;
-        this.slice = utf8Slice(CharMatcher.is(' ').trimTrailingFrom(value));
-    }
+  public CharLiteral(NodeLocation location, String value) {
+    this(Optional.of(location), value);
+  }
 
-    public String getValue()
-    {
-        return value;
-    }
+  public CharLiteral(Optional<NodeLocation> location, String value) {
+    super(location);
+    requireNonNull(value, "value is null");
+    this.value = value;
+    this.slice = utf8Slice(CharMatcher.is(' ').trimTrailingFrom(value));
+  }
 
-    public Slice getSlice()
-    {
-        return slice;
-    }
+  public String getValue() {
+    return value;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitCharLiteral(this, context);
-    }
+  public Slice getSlice() {
+    return slice;
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        CharLiteral that = (CharLiteral) o;
-        return Objects.equals(value, that.value);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitCharLiteral(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(value);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    CharLiteral that = (CharLiteral) o;
+    return Objects.equals(value, that.value);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(value);
+  }
 }

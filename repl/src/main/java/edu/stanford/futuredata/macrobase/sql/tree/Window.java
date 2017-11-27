@@ -13,99 +13,90 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class Window
-        extends Node
-{
-    private final List<Expression> partitionBy;
-    private final Optional<OrderBy> orderBy;
-    private final Optional<WindowFrame> frame;
+    extends Node {
 
-    public Window(List<Expression> partitionBy, Optional<OrderBy> orderBy, Optional<WindowFrame> frame)
-    {
-        this(Optional.empty(), partitionBy, orderBy, frame);
-    }
+  private final List<Expression> partitionBy;
+  private final Optional<OrderBy> orderBy;
+  private final Optional<WindowFrame> frame;
 
-    public Window(NodeLocation location, List<Expression> partitionBy, Optional<OrderBy> orderBy, Optional<WindowFrame> frame)
-    {
-        this(Optional.of(location), partitionBy, orderBy, frame);
-    }
+  public Window(List<Expression> partitionBy, Optional<OrderBy> orderBy,
+      Optional<WindowFrame> frame) {
+    this(Optional.empty(), partitionBy, orderBy, frame);
+  }
 
-    private Window(Optional<NodeLocation> location, List<Expression> partitionBy, Optional<OrderBy> orderBy, Optional<WindowFrame> frame)
-    {
-        super(location);
-        this.partitionBy = requireNonNull(partitionBy, "partitionBy is null");
-        this.orderBy = requireNonNull(orderBy, "orderBy is null");
-        this.frame = requireNonNull(frame, "frame is null");
-    }
+  public Window(NodeLocation location, List<Expression> partitionBy, Optional<OrderBy> orderBy,
+      Optional<WindowFrame> frame) {
+    this(Optional.of(location), partitionBy, orderBy, frame);
+  }
 
-    public List<Expression> getPartitionBy()
-    {
-        return partitionBy;
-    }
+  private Window(Optional<NodeLocation> location, List<Expression> partitionBy,
+      Optional<OrderBy> orderBy, Optional<WindowFrame> frame) {
+    super(location);
+    this.partitionBy = requireNonNull(partitionBy, "partitionBy is null");
+    this.orderBy = requireNonNull(orderBy, "orderBy is null");
+    this.frame = requireNonNull(frame, "frame is null");
+  }
 
-    public Optional<OrderBy> getOrderBy()
-    {
-        return orderBy;
-    }
+  public List<Expression> getPartitionBy() {
+    return partitionBy;
+  }
 
-    public Optional<WindowFrame> getFrame()
-    {
-        return frame;
-    }
+  public Optional<OrderBy> getOrderBy() {
+    return orderBy;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitWindow(this, context);
-    }
+  public Optional<WindowFrame> getFrame() {
+    return frame;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-        nodes.addAll(partitionBy);
-        orderBy.ifPresent(nodes::add);
-        frame.ifPresent(nodes::add);
-        return nodes.build();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitWindow(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        Window o = (Window) obj;
-        return Objects.equals(partitionBy, o.partitionBy) &&
-                Objects.equals(orderBy, o.orderBy) &&
-                Objects.equals(frame, o.frame);
-    }
+  @Override
+  public List<Node> getChildren() {
+    ImmutableList.Builder<Node> nodes = ImmutableList.builder();
+    nodes.addAll(partitionBy);
+    orderBy.ifPresent(nodes::add);
+    frame.ifPresent(nodes::add);
+    return nodes.build();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(partitionBy, orderBy, frame);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    Window o = (Window) obj;
+    return Objects.equals(partitionBy, o.partitionBy) &&
+        Objects.equals(orderBy, o.orderBy) &&
+        Objects.equals(frame, o.frame);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("partitionBy", partitionBy)
-                .add("orderBy", orderBy)
-                .add("frame", frame)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(partitionBy, orderBy, frame);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("partitionBy", partitionBy)
+        .add("orderBy", orderBy)
+        .add("frame", frame)
+        .toString();
+  }
 }

@@ -13,61 +13,52 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 public class ShowFunctions
-        extends Statement
-{
-    public ShowFunctions()
-    {
-        this(Optional.empty());
-    }
+    extends Statement {
 
-    public ShowFunctions(NodeLocation location)
-    {
-        this(Optional.of(location));
-    }
+  public ShowFunctions() {
+    this(Optional.empty());
+  }
 
-    private ShowFunctions(Optional<NodeLocation> location)
-    {
-        super(location);
-    }
+  public ShowFunctions(NodeLocation location) {
+    this(Optional.of(location));
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitShowFunctions(this, context);
-    }
+  private ShowFunctions(Optional<NodeLocation> location) {
+    super(location);
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitShowFunctions(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return 0;
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        return (obj != null) && (getClass() == obj.getClass());
-    }
+  @Override
+  public int hashCode() {
+    return 0;
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this).toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    return (obj != null) && (getClass() == obj.getClass());
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this).toString();
+  }
 }

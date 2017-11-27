@@ -1,5 +1,3 @@
-
-
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +16,14 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 import java.util.Optional;
 
 public abstract class TransactionMode
-        extends Node
-{
-    public TransactionMode(Optional<NodeLocation> location)
-    {
-        super(location);
-    }
+    extends Node {
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitTransactionMode(this, context);
-    }
+  public TransactionMode(Optional<NodeLocation> location) {
+    super(location);
+  }
+
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitTransactionMode(this, context);
+  }
 }

@@ -13,88 +13,78 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class ShowGrants
-        extends Statement
-{
-    private final boolean table;
-    private final Optional<QualifiedName> tableName;
+    extends Statement {
 
-    public ShowGrants(boolean table, Optional<QualifiedName> tableName)
-    {
-        this(Optional.empty(), table, tableName);
+  private final boolean table;
+  private final Optional<QualifiedName> tableName;
+
+  public ShowGrants(boolean table, Optional<QualifiedName> tableName) {
+    this(Optional.empty(), table, tableName);
+  }
+
+  public ShowGrants(NodeLocation location, boolean table, Optional<QualifiedName> tableName) {
+    this(Optional.of(location), table, tableName);
+  }
+
+  public ShowGrants(Optional<NodeLocation> location, boolean table,
+      Optional<QualifiedName> tableName) {
+    super(location);
+    requireNonNull(tableName, "tableName is null");
+
+    this.table = table;
+    this.tableName = tableName;
+  }
+
+  public boolean getTable() {
+    return table;
+  }
+
+  public Optional<QualifiedName> getTableName() {
+    return tableName;
+  }
+
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitShowGrants(this, context);
+  }
+
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(table, tableName);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
-
-    public ShowGrants(NodeLocation location, boolean table, Optional<QualifiedName> tableName)
-    {
-        this(Optional.of(location), table, tableName);
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
     }
+    ShowGrants o = (ShowGrants) obj;
+    return Objects.equals(table, o.table) &&
+        Objects.equals(tableName, o.tableName);
+  }
 
-    public ShowGrants(Optional<NodeLocation> location, boolean table, Optional<QualifiedName> tableName)
-    {
-        super(location);
-        requireNonNull(tableName, "tableName is null");
-
-        this.table = table;
-        this.tableName = tableName;
-    }
-
-    public boolean getTable()
-    {
-        return table;
-    }
-
-    public Optional<QualifiedName> getTableName()
-    {
-        return tableName;
-    }
-
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitShowGrants(this, context);
-    }
-
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(table, tableName);
-    }
-
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        ShowGrants o = (ShowGrants) obj;
-        return Objects.equals(table, o.table) &&
-                Objects.equals(tableName, o.tableName);
-    }
-
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("table", table)
-                .add("tableName", tableName)
-                .toString();
-    }
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("table", table)
+        .add("tableName", tableName)
+        .toString();
+  }
 }

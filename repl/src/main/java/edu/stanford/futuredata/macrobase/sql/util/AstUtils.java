@@ -13,31 +13,29 @@
  */
 package edu.stanford.futuredata.macrobase.sql.util;
 
-import com.google.common.collect.TreeTraverser;
-import edu.stanford.futuredata.macrobase.sql.tree.Node;
-
-import java.util.stream.Stream;
-
 import static com.google.common.collect.Iterables.unmodifiableIterable;
 import static java.util.Objects.requireNonNull;
 
-public class AstUtils
-{
-    public static boolean nodeContains(Node node, Node subNode)
-    {
-        requireNonNull(node, "node is null");
-        requireNonNull(subNode, "subNode is null");
+import com.google.common.collect.TreeTraverser;
+import edu.stanford.futuredata.macrobase.sql.tree.Node;
+import java.util.stream.Stream;
 
-        return preOrder(node)
-                .anyMatch(childNode -> childNode == subNode);
-    }
+public class AstUtils {
 
-    public static Stream<Node> preOrder(Node node)
-    {
-        return TreeTraverser.using((Node n) -> unmodifiableIterable(n.getChildren()))
-                .preOrderTraversal(requireNonNull(node, "node is null"))
-                .stream();
-    }
+  public static boolean nodeContains(Node node, Node subNode) {
+    requireNonNull(node, "node is null");
+    requireNonNull(subNode, "subNode is null");
 
-    private AstUtils() {}
+    return preOrder(node)
+        .anyMatch(childNode -> childNode == subNode);
+  }
+
+  public static Stream<Node> preOrder(Node node) {
+    return TreeTraverser.using((Node n) -> unmodifiableIterable(n.getChildren()))
+        .preOrderTraversal(requireNonNull(node, "node is null"))
+        .stream();
+  }
+
+  private AstUtils() {
+  }
 }
