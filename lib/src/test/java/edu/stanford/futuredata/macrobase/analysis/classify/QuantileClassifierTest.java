@@ -69,7 +69,10 @@ public class QuantileClassifierTest {
     @Test
     public void testClassify() throws Exception {
         assertEquals(length, df.getNumRows());
-        QuantileClassifier ac = new QuantileClassifier("count", "mean", quantileColumnsMap);
+        QuantileClassifier ac = new QuantileClassifier(
+                "count",
+                quantileColumnsMap
+        );
         ac.process(df);
         DataFrame output = ac.getResults();
         assertEquals(df.getNumRows(), output.getNumRows());
@@ -99,9 +102,10 @@ public class QuantileClassifierTest {
 
     @Test
     public void testConfigure() throws Exception {
-        QuantileClassifier ac = new QuantileClassifier("col1", "col2",
-                new LinkedHashMap<>());
-        ac.setMeanColumnName("mean");
+        QuantileClassifier ac = new QuantileClassifier(
+                "col1",
+                new LinkedHashMap<>()
+        );
         ac.setCountColumnName("count");
         ac.setQuantileColumnNames(quantileColumnNames);
         ac.setQuantiles(quantiles);

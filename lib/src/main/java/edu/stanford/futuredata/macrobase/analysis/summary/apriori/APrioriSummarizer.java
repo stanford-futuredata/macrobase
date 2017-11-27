@@ -332,7 +332,8 @@ public class APrioriSummarizer extends BatchSummarizer {
                         oCount,
                         count,
                         numOutliers,
-                        numEvents
+                        numEvents,
+                        ratioMetric
                 );
                 results.add(result);
             }
