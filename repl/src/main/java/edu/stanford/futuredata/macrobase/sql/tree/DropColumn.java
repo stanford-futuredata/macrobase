@@ -13,86 +13,75 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class DropColumn
-        extends Statement
-{
-    private final QualifiedName table;
-    private final Identifier column;
+    extends Statement {
 
-    public DropColumn(QualifiedName table, Identifier column)
-    {
-        this(Optional.empty(), table, column);
-    }
+  private final QualifiedName table;
+  private final Identifier column;
 
-    public DropColumn(NodeLocation location, QualifiedName table, Identifier column)
-    {
-        this(Optional.of(location), table, column);
-    }
+  public DropColumn(QualifiedName table, Identifier column) {
+    this(Optional.empty(), table, column);
+  }
 
-    private DropColumn(Optional<NodeLocation> location, QualifiedName table, Identifier column)
-    {
-        super(location);
-        this.table = requireNonNull(table, "table is null");
-        this.column = requireNonNull(column, "column is null");
-    }
+  public DropColumn(NodeLocation location, QualifiedName table, Identifier column) {
+    this(Optional.of(location), table, column);
+  }
 
-    public QualifiedName getTable()
-    {
-        return table;
-    }
+  private DropColumn(Optional<NodeLocation> location, QualifiedName table, Identifier column) {
+    super(location);
+    this.table = requireNonNull(table, "table is null");
+    this.column = requireNonNull(column, "column is null");
+  }
 
-    public Identifier getColumn()
-    {
-        return column;
-    }
+  public QualifiedName getTable() {
+    return table;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitDropColumn(this, context);
-    }
+  public Identifier getColumn() {
+    return column;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitDropColumn(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        DropColumn that = (DropColumn) o;
-        return Objects.equals(table, that.table) &&
-                Objects.equals(column, that.column);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(table, column);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    DropColumn that = (DropColumn) o;
+    return Objects.equals(table, that.table) &&
+        Objects.equals(column, that.column);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("table", table)
-                .add("column", column)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(table, column);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("table", table)
+        .add("column", column)
+        .toString();
+  }
 }

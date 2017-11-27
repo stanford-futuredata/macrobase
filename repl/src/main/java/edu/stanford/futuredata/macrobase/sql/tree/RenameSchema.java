@@ -13,86 +13,75 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class RenameSchema
-        extends Statement
-{
-    private final QualifiedName source;
-    private final Identifier target;
+    extends Statement {
 
-    public RenameSchema(QualifiedName source, Identifier target)
-    {
-        this(Optional.empty(), source, target);
-    }
+  private final QualifiedName source;
+  private final Identifier target;
 
-    public RenameSchema(NodeLocation location, QualifiedName source, Identifier target)
-    {
-        this(Optional.of(location), source, target);
-    }
+  public RenameSchema(QualifiedName source, Identifier target) {
+    this(Optional.empty(), source, target);
+  }
 
-    private RenameSchema(Optional<NodeLocation> location, QualifiedName source, Identifier target)
-    {
-        super(location);
-        this.source = requireNonNull(source, "source is null");
-        this.target = requireNonNull(target, "target is null");
-    }
+  public RenameSchema(NodeLocation location, QualifiedName source, Identifier target) {
+    this(Optional.of(location), source, target);
+  }
 
-    public QualifiedName getSource()
-    {
-        return source;
-    }
+  private RenameSchema(Optional<NodeLocation> location, QualifiedName source, Identifier target) {
+    super(location);
+    this.source = requireNonNull(source, "source is null");
+    this.target = requireNonNull(target, "target is null");
+  }
 
-    public Identifier getTarget()
-    {
-        return target;
-    }
+  public QualifiedName getSource() {
+    return source;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitRenameSchema(this, context);
-    }
+  public Identifier getTarget() {
+    return target;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitRenameSchema(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(source, target);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        RenameSchema o = (RenameSchema) obj;
-        return Objects.equals(source, o.source) &&
-                Objects.equals(target, o.target);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(source, target);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("source", source)
-                .add("target", target)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    RenameSchema o = (RenameSchema) obj;
+    return Objects.equals(source, o.source) &&
+        Objects.equals(target, o.target);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("source", source)
+        .add("target", target)
+        .toString();
+  }
 }

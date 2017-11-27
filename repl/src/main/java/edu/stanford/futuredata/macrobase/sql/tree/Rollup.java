@@ -13,98 +13,87 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-
 public final class Rollup
-        extends GroupingElement
-{
-    private final List<QualifiedName> columns;
+    extends GroupingElement {
 
-    public Rollup(List<QualifiedName> columns)
-    {
-        this(Optional.empty(), columns);
-    }
+  private final List<QualifiedName> columns;
 
-    public Rollup(NodeLocation location, List<QualifiedName> columns)
-    {
-        this(Optional.of(location), columns);
-    }
+  public Rollup(List<QualifiedName> columns) {
+    this(Optional.empty(), columns);
+  }
 
-    private Rollup(Optional<NodeLocation> location, List<QualifiedName> columns)
-    {
-        super(location);
-        this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
-    }
+  public Rollup(NodeLocation location, List<QualifiedName> columns) {
+    this(Optional.of(location), columns);
+  }
 
-    public List<QualifiedName> getColumns()
-    {
-        return columns;
-    }
+  private Rollup(Optional<NodeLocation> location, List<QualifiedName> columns) {
+    super(location);
+    this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
+  }
 
-    @Override
-    public List<Set<Expression>> enumerateGroupingSets()
-    {
-        int numColumns = columns.size();
-        return ImmutableList.<Set<Expression>>builder()
-                .addAll(IntStream.range(0, numColumns)
-                        .mapToObj(i -> columns.subList(0, numColumns - i)
-                                .stream()
-                                .map(DereferenceExpression::from)
-                                .map(Expression.class::cast)
-                                .collect(toSet()))
-                        .collect(toList()))
-                .add(ImmutableSet.of())
-                .build();
-    }
+  public List<QualifiedName> getColumns() {
+    return columns;
+  }
 
-    @Override
-    protected <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitRollup(this, context);
-    }
+  @Override
+  public List<Set<Expression>> enumerateGroupingSets() {
+    int numColumns = columns.size();
+    return ImmutableList.<Set<Expression>>builder()
+        .addAll(IntStream.range(0, numColumns)
+            .mapToObj(i -> columns.subList(0, numColumns - i)
+                .stream()
+                .map(DereferenceExpression::from)
+                .map(Expression.class::cast)
+                .collect(toSet()))
+            .collect(toList()))
+        .add(ImmutableSet.of())
+        .build();
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitRollup(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Rollup rollup = (Rollup) o;
-        return Objects.equals(columns, rollup.columns);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(columns);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Rollup rollup = (Rollup) o;
+    return Objects.equals(columns, rollup.columns);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("columns", columns)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(columns);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("columns", columns)
+        .toString();
+  }
 }

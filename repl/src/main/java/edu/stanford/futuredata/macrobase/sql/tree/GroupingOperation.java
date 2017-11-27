@@ -13,64 +13,57 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
 public class GroupingOperation
-        extends Expression
-{
-    private final List<Expression> groupingColumns;
+    extends Expression {
 
-    public GroupingOperation(Optional<NodeLocation> location, List<QualifiedName> groupingColumns)
-    {
-        super(location);
-        requireNonNull(groupingColumns);
-        checkArgument(!groupingColumns.isEmpty(), "grouping operation columns cannot be empty");
-        this.groupingColumns = groupingColumns.stream()
-                .map(DereferenceExpression::from)
-                .collect(toImmutableList());
-    }
+  private final List<Expression> groupingColumns;
 
-    public List<Expression> getGroupingColumns()
-    {
-        return groupingColumns;
-    }
+  public GroupingOperation(Optional<NodeLocation> location, List<QualifiedName> groupingColumns) {
+    super(location);
+    requireNonNull(groupingColumns);
+    checkArgument(!groupingColumns.isEmpty(), "grouping operation columns cannot be empty");
+    this.groupingColumns = groupingColumns.stream()
+        .map(DereferenceExpression::from)
+        .collect(toImmutableList());
+  }
 
-    @Override
-    protected <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitGroupingOperation(this, context);
-    }
+  public List<Expression> getGroupingColumns() {
+    return groupingColumns;
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitGroupingOperation(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        GroupingOperation other = (GroupingOperation) o;
-        return Objects.equals(groupingColumns, other.groupingColumns);
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(groupingColumns);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    GroupingOperation other = (GroupingOperation) o;
+    return Objects.equals(groupingColumns, other.groupingColumns);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(groupingColumns);
+  }
 }

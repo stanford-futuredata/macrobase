@@ -13,91 +13,82 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * IF(v1,v2[,v3]): CASE WHEN v1 THEN v2 [ELSE v3] END
  */
 public class IfExpression
-        extends Expression
-{
-    private final Expression condition;
-    private final Expression trueValue;
-    private final Optional<Expression> falseValue;
+    extends Expression {
 
-    public IfExpression(Expression condition, Expression trueValue, Expression falseValue)
-    {
-        this(Optional.empty(), condition, trueValue, falseValue);
-    }
+  private final Expression condition;
+  private final Expression trueValue;
+  private final Optional<Expression> falseValue;
 
-    public IfExpression(NodeLocation location, Expression condition, Expression trueValue, Expression falseValue)
-    {
-        this(Optional.of(location), condition, trueValue, falseValue);
-    }
+  public IfExpression(Expression condition, Expression trueValue, Expression falseValue) {
+    this(Optional.empty(), condition, trueValue, falseValue);
+  }
 
-    private IfExpression(Optional<NodeLocation> location, Expression condition, Expression trueValue, Expression falseValue)
-    {
-        super(location);
-        this.condition = requireNonNull(condition, "condition is null");
-        this.trueValue = requireNonNull(trueValue, "trueValue is null");
-        this.falseValue = Optional.ofNullable(falseValue);
-    }
+  public IfExpression(NodeLocation location, Expression condition, Expression trueValue,
+      Expression falseValue) {
+    this(Optional.of(location), condition, trueValue, falseValue);
+  }
 
-    public Expression getCondition()
-    {
-        return condition;
-    }
+  private IfExpression(Optional<NodeLocation> location, Expression condition, Expression trueValue,
+      Expression falseValue) {
+    super(location);
+    this.condition = requireNonNull(condition, "condition is null");
+    this.trueValue = requireNonNull(trueValue, "trueValue is null");
+    this.falseValue = Optional.ofNullable(falseValue);
+  }
 
-    public Expression getTrueValue()
-    {
-        return trueValue;
-    }
+  public Expression getCondition() {
+    return condition;
+  }
 
-    public Optional<Expression> getFalseValue()
-    {
-        return falseValue;
-    }
+  public Expression getTrueValue() {
+    return trueValue;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitIfExpression(this, context);
-    }
+  public Optional<Expression> getFalseValue() {
+    return falseValue;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-        falseValue.ifPresent(nodes::add);
-        return nodes.add(condition)
-                .add(trueValue)
-                .build();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitIfExpression(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        IfExpression o = (IfExpression) obj;
-        return Objects.equals(condition, o.condition) &&
-                Objects.equals(trueValue, o.trueValue) &&
-                Objects.equals(falseValue, o.falseValue);
-    }
+  @Override
+  public List<Node> getChildren() {
+    ImmutableList.Builder<Node> nodes = ImmutableList.builder();
+    falseValue.ifPresent(nodes::add);
+    return nodes.add(condition)
+        .add(trueValue)
+        .build();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(condition, trueValue, falseValue);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    IfExpression o = (IfExpression) obj;
+    return Objects.equals(condition, o.condition) &&
+        Objects.equals(trueValue, o.trueValue) &&
+        Objects.equals(falseValue, o.falseValue);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(condition, trueValue, falseValue);
+  }
 }

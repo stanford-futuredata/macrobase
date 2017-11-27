@@ -13,76 +13,66 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 public final class TransactionAccessMode
-        extends TransactionMode
-{
-    private final boolean readOnly;
+    extends TransactionMode {
 
-    public TransactionAccessMode(boolean readOnly)
-    {
-        this(Optional.empty(), readOnly);
-    }
+  private final boolean readOnly;
 
-    public TransactionAccessMode(NodeLocation location, boolean readOnly)
-    {
-        this(Optional.of(location), readOnly);
-    }
+  public TransactionAccessMode(boolean readOnly) {
+    this(Optional.empty(), readOnly);
+  }
 
-    private TransactionAccessMode(Optional<NodeLocation> location, boolean readOnly)
-    {
-        super(location);
-        this.readOnly = readOnly;
-    }
+  public TransactionAccessMode(NodeLocation location, boolean readOnly) {
+    this(Optional.of(location), readOnly);
+  }
 
-    public boolean isReadOnly()
-    {
-        return readOnly;
-    }
+  private TransactionAccessMode(Optional<NodeLocation> location, boolean readOnly) {
+    super(location);
+    this.readOnly = readOnly;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitTransactionAccessMode(this, context);
-    }
+  public boolean isReadOnly() {
+    return readOnly;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitTransactionAccessMode(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(readOnly);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        final TransactionAccessMode other = (TransactionAccessMode) obj;
-        return this.readOnly == other.readOnly;
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(readOnly);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("readOnly", readOnly)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final TransactionAccessMode other = (TransactionAccessMode) obj;
+    return this.readOnly == other.readOnly;
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("readOnly", readOnly)
+        .toString();
+  }
 }

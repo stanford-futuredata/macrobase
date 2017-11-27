@@ -13,86 +13,77 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class GroupBy
-        extends Node
-{
-    private final boolean isDistinct;
-    private final List<GroupingElement> groupingElements;
+    extends Node {
 
-    public GroupBy(boolean isDistinct, List<GroupingElement> groupingElements)
-    {
-        this(Optional.empty(), isDistinct, groupingElements);
-    }
+  private final boolean isDistinct;
+  private final List<GroupingElement> groupingElements;
 
-    public GroupBy(NodeLocation location, boolean isDistinct, List<GroupingElement> groupingElements)
-    {
-        this(Optional.of(location), isDistinct, groupingElements);
-    }
+  public GroupBy(boolean isDistinct, List<GroupingElement> groupingElements) {
+    this(Optional.empty(), isDistinct, groupingElements);
+  }
 
-    private GroupBy(Optional<NodeLocation> location, boolean isDistinct, List<GroupingElement> groupingElements)
-    {
-        super(location);
-        this.isDistinct = isDistinct;
-        this.groupingElements = ImmutableList.copyOf(requireNonNull(groupingElements));
-    }
+  public GroupBy(NodeLocation location, boolean isDistinct,
+      List<GroupingElement> groupingElements) {
+    this(Optional.of(location), isDistinct, groupingElements);
+  }
 
-    public boolean isDistinct()
-    {
-        return isDistinct;
-    }
+  private GroupBy(Optional<NodeLocation> location, boolean isDistinct,
+      List<GroupingElement> groupingElements) {
+    super(location);
+    this.isDistinct = isDistinct;
+    this.groupingElements = ImmutableList.copyOf(requireNonNull(groupingElements));
+  }
 
-    public List<GroupingElement> getGroupingElements()
-    {
-        return groupingElements;
-    }
+  public boolean isDistinct() {
+    return isDistinct;
+  }
 
-    @Override
-    protected <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitGroupBy(this, context);
-    }
+  public List<GroupingElement> getGroupingElements() {
+    return groupingElements;
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return groupingElements;
-    }
+  @Override
+  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitGroupBy(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        GroupBy groupBy = (GroupBy) o;
-        return isDistinct == groupBy.isDistinct &&
-                Objects.equals(groupingElements, groupBy.groupingElements);
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return groupingElements;
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(isDistinct, groupingElements);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    GroupBy groupBy = (GroupBy) o;
+    return isDistinct == groupBy.isDistinct &&
+        Objects.equals(groupingElements, groupBy.groupingElements);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("isDistinct", isDistinct)
-                .add("groupingElements", groupingElements)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(isDistinct, groupingElements);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("isDistinct", isDistinct)
+        .add("groupingElements", groupingElements)
+        .toString();
+  }
 }

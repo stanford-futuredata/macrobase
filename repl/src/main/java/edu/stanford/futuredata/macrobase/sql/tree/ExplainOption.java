@@ -16,16 +16,14 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 import java.util.Optional;
 
 public abstract class ExplainOption
-        extends Node
-{
-    protected ExplainOption(Optional<NodeLocation> location)
-    {
-        super(location);
-    }
+    extends Node {
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitExplainOption(this, context);
-    }
+  protected ExplainOption(Optional<NodeLocation> location) {
+    super(location);
+  }
+
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitExplainOption(this, context);
+  }
 }

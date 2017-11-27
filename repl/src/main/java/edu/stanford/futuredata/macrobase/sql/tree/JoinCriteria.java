@@ -15,17 +15,17 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 
 import java.util.List;
 
-public abstract class JoinCriteria
-{
-    // Force subclasses to have a proper equals and hashcode implementation
-    @Override
-    public abstract boolean equals(Object obj);
+public abstract class JoinCriteria {
 
-    @Override
-    public abstract int hashCode();
+  // Force subclasses to have a proper equals and hashcode implementation
+  @Override
+  public abstract boolean equals(Object obj);
 
-    @Override
-    public abstract String toString();
+  @Override
+  public abstract int hashCode();
 
-    public abstract List<Node> getNodes();
+  @Override
+  public abstract String toString();
+
+  public abstract List<Node> getNodes();
 }

@@ -16,40 +16,31 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 import java.util.Optional;
 
 public class NullLiteral
-        extends Literal
-{
-    public NullLiteral()
-    {
-        super(Optional.empty());
-    }
+    extends Literal {
 
-    public NullLiteral(NodeLocation location)
-    {
-        super(Optional.of(location));
-    }
+  public NullLiteral() {
+    super(Optional.empty());
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitNullLiteral(this, context);
-    }
+  public NullLiteral(NodeLocation location) {
+    super(Optional.of(location));
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitNullLiteral(this, context);
+  }
 
-        return true;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    return o != null && getClass() == o.getClass();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return 0;
-    }
+  @Override
+  public int hashCode() {
+    return 0;
+  }
 }

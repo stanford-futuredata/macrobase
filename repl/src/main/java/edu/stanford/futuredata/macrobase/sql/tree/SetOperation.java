@@ -17,26 +17,23 @@ import java.util.List;
 import java.util.Optional;
 
 public abstract class SetOperation
-        extends QueryBody
-{
-    private final boolean distinct;
+    extends QueryBody {
 
-    protected SetOperation(Optional<NodeLocation> location, boolean distinct)
-    {
-        super(location);
-        this.distinct = distinct;
-    }
+  private final boolean distinct;
 
-    public boolean isDistinct()
-    {
-        return distinct;
-    }
+  protected SetOperation(Optional<NodeLocation> location, boolean distinct) {
+    super(location);
+    this.distinct = distinct;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitSetOperation(this, context);
-    }
+  public boolean isDistinct() {
+    return distinct;
+  }
 
-    public abstract List<Relation> getRelations();
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitSetOperation(this, context);
+  }
+
+  public abstract List<Relation> getRelations();
 }
