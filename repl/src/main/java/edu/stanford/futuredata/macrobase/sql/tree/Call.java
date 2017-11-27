@@ -13,86 +13,75 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class Call
-        extends Statement
-{
-    private final QualifiedName name;
-    private final List<CallArgument> arguments;
+    extends Statement {
 
-    public Call(QualifiedName name, List<CallArgument> arguments)
-    {
-        this(Optional.empty(), name, arguments);
-    }
+  private final QualifiedName name;
+  private final List<CallArgument> arguments;
 
-    public Call(NodeLocation location, QualifiedName name, List<CallArgument> arguments)
-    {
-        this(Optional.of(location), name, arguments);
-    }
+  public Call(QualifiedName name, List<CallArgument> arguments) {
+    this(Optional.empty(), name, arguments);
+  }
 
-    public Call(Optional<NodeLocation> location, QualifiedName name, List<CallArgument> arguments)
-    {
-        super(location);
-        this.name = requireNonNull(name, "name is null");
-        this.arguments = ImmutableList.copyOf(requireNonNull(arguments, "arguments is null"));
-    }
+  public Call(NodeLocation location, QualifiedName name, List<CallArgument> arguments) {
+    this(Optional.of(location), name, arguments);
+  }
 
-    public QualifiedName getName()
-    {
-        return name;
-    }
+  public Call(Optional<NodeLocation> location, QualifiedName name, List<CallArgument> arguments) {
+    super(location);
+    this.name = requireNonNull(name, "name is null");
+    this.arguments = ImmutableList.copyOf(requireNonNull(arguments, "arguments is null"));
+  }
 
-    public List<CallArgument> getArguments()
-    {
-        return arguments;
-    }
+  public QualifiedName getName() {
+    return name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitCall(this, context);
-    }
+  public List<CallArgument> getArguments() {
+    return arguments;
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return arguments;
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitCall(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        Call o = (Call) obj;
-        return Objects.equals(name, o.name) &&
-                Objects.equals(arguments, o.arguments);
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return arguments;
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name, arguments);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    Call o = (Call) obj;
+    return Objects.equals(name, o.name) &&
+        Objects.equals(arguments, o.arguments);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .add("arguments", arguments)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, arguments);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .add("arguments", arguments)
+        .toString();
+  }
 }

@@ -13,195 +13,199 @@
  */
 package edu.stanford.futuredata.macrobase.sql;
 
-import edu.stanford.futuredata.macrobase.sql.tree.*;
-import com.google.common.collect.ImmutableList;
+import static edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral.FALSE_LITERAL;
+import static edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral.TRUE_LITERAL;
 
+import com.google.common.collect.ImmutableList;
+import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
+import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
+import edu.stanford.futuredata.macrobase.sql.tree.CoalesceExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
+import edu.stanford.futuredata.macrobase.sql.tree.Expression;
+import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
+import edu.stanford.futuredata.macrobase.sql.tree.GroupBy;
+import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
+import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
+import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
+import edu.stanford.futuredata.macrobase.sql.tree.Query;
+import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
+import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
+import edu.stanford.futuredata.macrobase.sql.tree.Relation;
+import edu.stanford.futuredata.macrobase.sql.tree.Row;
+import edu.stanford.futuredata.macrobase.sql.tree.SearchedCaseExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.Select;
+import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
+import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
+import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
+import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
+import edu.stanford.futuredata.macrobase.sql.tree.Table;
+import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
+import edu.stanford.futuredata.macrobase.sql.tree.Values;
+import edu.stanford.futuredata.macrobase.sql.tree.WhenClause;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral.FALSE_LITERAL;
-import static edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral.TRUE_LITERAL;
+public final class QueryUtil {
 
-public final class QueryUtil
-{
-    private QueryUtil() {}
+  private QueryUtil() {
+  }
 
-    public static Identifier identifier(String name)
-    {
-        return new Identifier(name);
+  public static Identifier identifier(String name) {
+    return new Identifier(name);
+  }
+
+  public static Identifier quotedIdentifier(String name) {
+    return new Identifier(name, true);
+  }
+
+  public static SelectItem unaliasedName(String name) {
+    return new SingleColumn(identifier(name));
+  }
+
+  public static SelectItem aliasedName(String name, String alias) {
+    return new SingleColumn(identifier(name), identifier(alias));
+  }
+
+  public static Select selectList(Expression... expressions) {
+    ImmutableList.Builder<SelectItem> items = ImmutableList.builder();
+    for (Expression expression : expressions) {
+      items.add(new SingleColumn(expression));
     }
+    return new Select(false, items.build());
+  }
 
-    public static Identifier quotedIdentifier(String name)
-    {
-        return new Identifier(name, true);
-    }
+  public static Select selectList(SelectItem... items) {
+    return new Select(false, ImmutableList.copyOf(items));
+  }
 
-    public static SelectItem unaliasedName(String name)
-    {
-        return new SingleColumn(identifier(name));
-    }
+  public static Select selectAll(List<SelectItem> items) {
+    return new Select(false, items);
+  }
 
-    public static SelectItem aliasedName(String name, String alias)
-    {
-        return new SingleColumn(identifier(name), identifier(alias));
-    }
+  public static Table table(QualifiedName name) {
+    return new Table(name);
+  }
 
-    public static Select selectList(Expression... expressions)
-    {
-        ImmutableList.Builder<SelectItem> items = ImmutableList.builder();
-        for (Expression expression : expressions) {
-            items.add(new SingleColumn(expression));
-        }
-        return new Select(false, items.build());
-    }
+  public static Relation subquery(Query query) {
+    return new TableSubquery(query);
+  }
 
-    public static Select selectList(SelectItem... items)
-    {
-        return new Select(false, ImmutableList.copyOf(items));
-    }
+  public static SortItem ascending(String name) {
+    return new SortItem(identifier(name), SortItem.Ordering.ASCENDING,
+        SortItem.NullOrdering.UNDEFINED);
+  }
 
-    public static Select selectAll(List<SelectItem> items)
-    {
-        return new Select(false, items);
-    }
+  public static Expression logicalAnd(Expression left, Expression right) {
+    return new LogicalBinaryExpression(LogicalBinaryExpression.Type.AND, left, right);
+  }
 
-    public static Table table(QualifiedName name)
-    {
-        return new Table(name);
-    }
+  public static Expression equal(Expression left, Expression right) {
+    return new ComparisonExpression(ComparisonExpressionType.EQUAL, left, right);
+  }
 
-    public static Relation subquery(Query query)
-    {
-        return new TableSubquery(query);
-    }
+  public static Expression caseWhen(Expression operand, Expression result) {
+    return new SearchedCaseExpression(ImmutableList.of(new WhenClause(operand, result)),
+        Optional.empty());
+  }
 
-    public static SortItem ascending(String name)
-    {
-        return new SortItem(identifier(name), SortItem.Ordering.ASCENDING, SortItem.NullOrdering.UNDEFINED);
-    }
+  public static Expression functionCall(String name, Expression... arguments) {
+    return new FunctionCall(QualifiedName.of(name), ImmutableList.copyOf(arguments));
+  }
 
-    public static Expression logicalAnd(Expression left, Expression right)
-    {
-        return new LogicalBinaryExpression(LogicalBinaryExpression.Type.AND, left, right);
-    }
+  public static Values values(Row... row) {
+    return new Values(ImmutableList.copyOf(row));
+  }
 
-    public static Expression equal(Expression left, Expression right)
-    {
-        return new ComparisonExpression(ComparisonExpressionType.EQUAL, left, right);
-    }
+  public static Row row(Expression... values) {
+    return new Row(ImmutableList.copyOf(values));
+  }
 
-    public static Expression caseWhen(Expression operand, Expression result)
-    {
-        return new SearchedCaseExpression(ImmutableList.of(new WhenClause(operand, result)), Optional.empty());
-    }
+  public static Relation aliased(Relation relation, String alias, List<String> columnAliases) {
+    return new AliasedRelation(
+        relation,
+        identifier(alias),
+        columnAliases.stream()
+            .map(QueryUtil::identifier)
+            .collect(Collectors.toList()));
+  }
 
-    public static Expression functionCall(String name, Expression... arguments)
-    {
-        return new FunctionCall(QualifiedName.of(name), ImmutableList.copyOf(arguments));
-    }
+  public static SelectItem aliasedNullToEmpty(String column, String alias) {
+    return new SingleColumn(new CoalesceExpression(identifier(column), new StringLiteral("")),
+        identifier(alias));
+  }
 
-    public static Values values(Row... row)
-    {
-        return new Values(ImmutableList.copyOf(row));
-    }
+  public static OrderBy ordering(SortItem... items) {
+    return new OrderBy(ImmutableList.copyOf(items));
+  }
 
-    public static Row row(Expression... values)
-    {
-        return new Row(ImmutableList.copyOf(values));
-    }
+  public static Query simpleQuery(Select select) {
+    return query(new QuerySpecification(
+        select,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty()));
+  }
 
-    public static Relation aliased(Relation relation, String alias, List<String> columnAliases)
-    {
-        return new AliasedRelation(
-                relation,
-                identifier(alias),
-                columnAliases.stream()
-                        .map(QueryUtil::identifier)
-                        .collect(Collectors.toList()));
-    }
+  public static Query simpleQuery(Select select, Relation from) {
+    return simpleQuery(select, from, Optional.empty(), Optional.empty());
+  }
 
-    public static SelectItem aliasedNullToEmpty(String column, String alias)
-    {
-        return new SingleColumn(new CoalesceExpression(identifier(column), new StringLiteral("")), identifier(alias));
-    }
+  public static Query simpleQuery(Select select, Relation from, OrderBy orderBy) {
+    return simpleQuery(select, from, Optional.empty(), Optional.of(orderBy));
+  }
 
-    public static OrderBy ordering(SortItem... items)
-    {
-        return new OrderBy(ImmutableList.copyOf(items));
-    }
+  public static Query simpleQuery(Select select, Relation from, Expression where) {
+    return simpleQuery(select, from, Optional.of(where), Optional.empty());
+  }
 
-    public static Query simpleQuery(Select select)
-    {
-        return query(new QuerySpecification(
-                select,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()));
-    }
+  public static Query simpleQuery(Select select, Relation from, Expression where, OrderBy orderBy) {
+    return simpleQuery(select, from, Optional.of(where), Optional.of(orderBy));
+  }
 
-    public static Query simpleQuery(Select select, Relation from)
-    {
-        return simpleQuery(select, from, Optional.empty(), Optional.empty());
-    }
+  public static Query simpleQuery(Select select, Relation from, Optional<Expression> where,
+      Optional<OrderBy> orderBy) {
+    return simpleQuery(select, from, where, Optional.empty(), Optional.empty(), orderBy,
+        Optional.empty());
+  }
 
-    public static Query simpleQuery(Select select, Relation from, OrderBy orderBy)
-    {
-        return simpleQuery(select, from, Optional.empty(), Optional.of(orderBy));
-    }
+  public static Query simpleQuery(Select select, Relation from, Optional<Expression> where,
+      Optional<GroupBy> groupBy, Optional<Expression> having, Optional<OrderBy> orderBy,
+      Optional<String> limit) {
+    return query(new QuerySpecification(
+        select,
+        Optional.of(from),
+        where,
+        groupBy,
+        having,
+        orderBy,
+        limit));
+  }
 
-    public static Query simpleQuery(Select select, Relation from, Expression where)
-    {
-        return simpleQuery(select, from, Optional.of(where), Optional.empty());
-    }
+  public static Query singleValueQuery(String columnName, String value) {
+    Relation values = values(row(new StringLiteral((value))));
+    return simpleQuery(
+        selectList(new AllColumns()),
+        aliased(values, "t", ImmutableList.of(columnName)));
+  }
 
-    public static Query simpleQuery(Select select, Relation from, Expression where, OrderBy orderBy)
-    {
-        return simpleQuery(select, from, Optional.of(where), Optional.of(orderBy));
-    }
+  public static Query singleValueQuery(String columnName, boolean value) {
+    Relation values = values(row(value ? TRUE_LITERAL : FALSE_LITERAL));
+    return simpleQuery(
+        selectList(new AllColumns()),
+        aliased(values, "t", ImmutableList.of(columnName)));
+  }
 
-    public static Query simpleQuery(Select select, Relation from, Optional<Expression> where, Optional<OrderBy> orderBy)
-    {
-        return simpleQuery(select, from, where, Optional.empty(), Optional.empty(), orderBy, Optional.empty());
-    }
-
-    public static Query simpleQuery(Select select, Relation from, Optional<Expression> where, Optional<GroupBy> groupBy, Optional<Expression> having, Optional<OrderBy> orderBy, Optional<String> limit)
-    {
-        return query(new QuerySpecification(
-                select,
-                Optional.of(from),
-                where,
-                groupBy,
-                having,
-                orderBy,
-                limit));
-    }
-
-    public static Query singleValueQuery(String columnName, String value)
-    {
-        Relation values = values(row(new StringLiteral((value))));
-        return simpleQuery(
-                selectList(new AllColumns()),
-                aliased(values, "t", ImmutableList.of(columnName)));
-    }
-
-    public static Query singleValueQuery(String columnName, boolean value)
-    {
-        Relation values = values(row(value ? TRUE_LITERAL : FALSE_LITERAL));
-        return simpleQuery(
-                selectList(new AllColumns()),
-                aliased(values, "t", ImmutableList.of(columnName)));
-    }
-
-    public static Query query(QueryBody body)
-    {
-        return new Query(
-                Optional.empty(),
-                body,
-                Optional.empty(),
-                Optional.empty());
-    }
+  public static Query query(QueryBody body) {
+    return new Query(
+        Optional.empty(),
+        body,
+        Optional.empty(),
+        Optional.empty());
+  }
 }

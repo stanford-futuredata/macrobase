@@ -13,86 +13,75 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class RenameTable
-        extends Statement
-{
-    private final QualifiedName source;
-    private final QualifiedName target;
+    extends Statement {
 
-    public RenameTable(QualifiedName source, QualifiedName target)
-    {
-        this(Optional.empty(), source, target);
-    }
+  private final QualifiedName source;
+  private final QualifiedName target;
 
-    public RenameTable(NodeLocation location, QualifiedName source, QualifiedName target)
-    {
-        this(Optional.of(location), source, target);
-    }
+  public RenameTable(QualifiedName source, QualifiedName target) {
+    this(Optional.empty(), source, target);
+  }
 
-    private RenameTable(Optional<NodeLocation> location, QualifiedName source, QualifiedName target)
-    {
-        super(location);
-        this.source = requireNonNull(source, "source name is null");
-        this.target = requireNonNull(target, "target name is null");
-    }
+  public RenameTable(NodeLocation location, QualifiedName source, QualifiedName target) {
+    this(Optional.of(location), source, target);
+  }
 
-    public QualifiedName getSource()
-    {
-        return source;
-    }
+  private RenameTable(Optional<NodeLocation> location, QualifiedName source, QualifiedName target) {
+    super(location);
+    this.source = requireNonNull(source, "source name is null");
+    this.target = requireNonNull(target, "target name is null");
+  }
 
-    public QualifiedName getTarget()
-    {
-        return target;
-    }
+  public QualifiedName getSource() {
+    return source;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitRenameTable(this, context);
-    }
+  public QualifiedName getTarget() {
+    return target;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitRenameTable(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(source, target);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        RenameTable o = (RenameTable) obj;
-        return Objects.equals(source, o.source) &&
-                Objects.equals(target, o.target);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(source, target);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("source", source)
-                .add("target", target)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    RenameTable o = (RenameTable) obj;
+    return Objects.equals(source, o.source) &&
+        Objects.equals(target, o.target);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("source", source)
+        .add("target", target)
+        .toString();
+  }
 }

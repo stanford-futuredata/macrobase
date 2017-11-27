@@ -13,97 +13,84 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class CallArgument
-        extends Node
-{
-    private final Optional<String> name;
-    private final Expression value;
+    extends Node {
 
-    public CallArgument(Expression value)
-    {
-        this(Optional.empty(), Optional.empty(), value);
-    }
+  private final Optional<String> name;
+  private final Expression value;
 
-    public CallArgument(NodeLocation location, Expression value)
-    {
-        this(Optional.of(location), Optional.empty(), value);
-    }
+  public CallArgument(Expression value) {
+    this(Optional.empty(), Optional.empty(), value);
+  }
 
-    public CallArgument(String name, Expression value)
-    {
-        this(Optional.empty(), Optional.of(name), value);
-    }
+  public CallArgument(NodeLocation location, Expression value) {
+    this(Optional.of(location), Optional.empty(), value);
+  }
 
-    public CallArgument(NodeLocation location, String name, Expression value)
-    {
-        this(Optional.of(location), Optional.of(name), value);
-    }
+  public CallArgument(String name, Expression value) {
+    this(Optional.empty(), Optional.of(name), value);
+  }
 
-    public CallArgument(Optional<NodeLocation> location, Optional<String> name, Expression value)
-    {
-        super(location);
-        this.name = requireNonNull(name, "name is null");
-        this.value = requireNonNull(value, "value is null");
-    }
+  public CallArgument(NodeLocation location, String name, Expression value) {
+    this(Optional.of(location), Optional.of(name), value);
+  }
 
-    public Optional<String> getName()
-    {
-        return name;
-    }
+  public CallArgument(Optional<NodeLocation> location, Optional<String> name, Expression value) {
+    super(location);
+    this.name = requireNonNull(name, "name is null");
+    this.value = requireNonNull(value, "value is null");
+  }
 
-    public Expression getValue()
-    {
-        return value;
-    }
+  public Optional<String> getName() {
+    return name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitCallArgument(this, context);
-    }
+  public Expression getValue() {
+    return value;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of(value);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitCallArgument(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        CallArgument o = (CallArgument) obj;
-        return Objects.equals(name, o.name) &&
-                Objects.equals(value, o.value);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of(value);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name, value);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    CallArgument o = (CallArgument) obj;
+    return Objects.equals(name, o.name) &&
+        Objects.equals(value, o.value);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name.orElse(null))
-                .add("value", value)
-                .omitNullValues()
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, value);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name.orElse(null))
+        .add("value", value)
+        .omitNullValues()
+        .toString();
+  }
 }

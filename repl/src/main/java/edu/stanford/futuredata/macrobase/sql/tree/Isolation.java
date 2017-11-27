@@ -1,5 +1,3 @@
-
-
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,97 +13,84 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class Isolation
-        extends TransactionMode
-{
-    public enum Level
-    {
-        SERIALIZABLE("SERIALIZABLE"),
-        REPEATABLE_READ("REPEATABLE READ"),
-        READ_COMMITTED("READ COMMITTED"),
-        READ_UNCOMMITTED("READ UNCOMMITTED");
+    extends TransactionMode {
 
-        private final String text;
+  public enum Level {
+    SERIALIZABLE("SERIALIZABLE"),
+    REPEATABLE_READ("REPEATABLE READ"),
+    READ_COMMITTED("READ COMMITTED"),
+    READ_UNCOMMITTED("READ UNCOMMITTED");
 
-        Level(String text)
-        {
-            this.text = requireNonNull(text, "text is null");
-        }
+    private final String text;
 
-        public String getText()
-        {
-            return text;
-        }
+    Level(String text) {
+      this.text = requireNonNull(text, "text is null");
     }
 
-    private final Level level;
-
-    public Isolation(Level level)
-    {
-        this(Optional.empty(), level);
+    public String getText() {
+      return text;
     }
+  }
 
-    public Isolation(NodeLocation location, Level level)
-    {
-        this(Optional.of(location), level);
-    }
+  private final Level level;
 
-    private Isolation(Optional<NodeLocation> location, Level level)
-    {
-        super(location);
-        this.level = requireNonNull(level, "level is null");
-    }
+  public Isolation(Level level) {
+    this(Optional.empty(), level);
+  }
 
-    public Level getLevel()
-    {
-        return level;
-    }
+  public Isolation(NodeLocation location, Level level) {
+    this(Optional.of(location), level);
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitIsolationLevel(this, context);
-    }
+  private Isolation(Optional<NodeLocation> location, Level level) {
+    super(location);
+    this.level = requireNonNull(level, "level is null");
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  public Level getLevel() {
+    return level;
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(level);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitIsolationLevel(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        final Isolation other = (Isolation) obj;
-        return this.level == other.level;
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("level", level)
-                .toString();
+  @Override
+  public int hashCode() {
+    return Objects.hash(level);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final Isolation other = (Isolation) obj;
+    return this.level == other.level;
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("level", level)
+        .toString();
+  }
 }

@@ -13,85 +13,74 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 public class DropView
-        extends Statement
-{
-    private final QualifiedName name;
-    private final boolean exists;
+    extends Statement {
 
-    public DropView(QualifiedName name, boolean exists)
-    {
-        this(Optional.empty(), name, exists);
-    }
+  private final QualifiedName name;
+  private final boolean exists;
 
-    public DropView(NodeLocation location, QualifiedName name, boolean exists)
-    {
-        this(Optional.of(location), name, exists);
-    }
+  public DropView(QualifiedName name, boolean exists) {
+    this(Optional.empty(), name, exists);
+  }
 
-    private DropView(Optional<NodeLocation> location, QualifiedName name, boolean exists)
-    {
-        super(location);
-        this.name = name;
-        this.exists = exists;
-    }
+  public DropView(NodeLocation location, QualifiedName name, boolean exists) {
+    this(Optional.of(location), name, exists);
+  }
 
-    public QualifiedName getName()
-    {
-        return name;
-    }
+  private DropView(Optional<NodeLocation> location, QualifiedName name, boolean exists) {
+    super(location);
+    this.name = name;
+    this.exists = exists;
+  }
 
-    public boolean isExists()
-    {
-        return exists;
-    }
+  public QualifiedName getName() {
+    return name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitDropView(this, context);
-    }
+  public boolean isExists() {
+    return exists;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitDropView(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name, exists);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        DropView o = (DropView) obj;
-        return Objects.equals(name, o.name)
-                && (exists == o.exists);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, exists);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .add("exists", exists)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    DropView o = (DropView) obj;
+    return Objects.equals(name, o.name)
+        && (exists == o.exists);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .add("exists", exists)
+        .toString();
+  }
 }

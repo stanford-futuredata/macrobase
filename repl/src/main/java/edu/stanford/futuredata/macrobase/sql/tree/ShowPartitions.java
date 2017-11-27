@@ -13,107 +13,97 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class ShowPartitions
-        extends Statement
-{
-    private final QualifiedName table;
-    private final Optional<Expression> where;
-    private final List<SortItem> orderBy;
-    private final Optional<String> limit;
+    extends Statement {
 
-    public ShowPartitions(QualifiedName table, Optional<Expression> where, List<SortItem> orderBy, Optional<String> limit)
-    {
-        this(Optional.empty(), table, where, orderBy, limit);
-    }
+  private final QualifiedName table;
+  private final Optional<Expression> where;
+  private final List<SortItem> orderBy;
+  private final Optional<String> limit;
 
-    public ShowPartitions(NodeLocation location, QualifiedName table, Optional<Expression> where, List<SortItem> orderBy, Optional<String> limit)
-    {
-        this(Optional.of(location), table, where, orderBy, limit);
-    }
+  public ShowPartitions(QualifiedName table, Optional<Expression> where, List<SortItem> orderBy,
+      Optional<String> limit) {
+    this(Optional.empty(), table, where, orderBy, limit);
+  }
 
-    private ShowPartitions(Optional<NodeLocation> location, QualifiedName table, Optional<Expression> where, List<SortItem> orderBy, Optional<String> limit)
-    {
-        super(location);
-        this.table = requireNonNull(table, "table is null");
-        this.where = requireNonNull(where, "where is null");
-        this.orderBy = ImmutableList.copyOf(requireNonNull(orderBy, "orderBy is null"));
-        this.limit = requireNonNull(limit, "limit is null");
-    }
+  public ShowPartitions(NodeLocation location, QualifiedName table, Optional<Expression> where,
+      List<SortItem> orderBy, Optional<String> limit) {
+    this(Optional.of(location), table, where, orderBy, limit);
+  }
 
-    public QualifiedName getTable()
-    {
-        return table;
-    }
+  private ShowPartitions(Optional<NodeLocation> location, QualifiedName table,
+      Optional<Expression> where, List<SortItem> orderBy, Optional<String> limit) {
+    super(location);
+    this.table = requireNonNull(table, "table is null");
+    this.where = requireNonNull(where, "where is null");
+    this.orderBy = ImmutableList.copyOf(requireNonNull(orderBy, "orderBy is null"));
+    this.limit = requireNonNull(limit, "limit is null");
+  }
 
-    public Optional<Expression> getWhere()
-    {
-        return where;
-    }
+  public QualifiedName getTable() {
+    return table;
+  }
 
-    public List<SortItem> getOrderBy()
-    {
-        return orderBy;
-    }
+  public Optional<Expression> getWhere() {
+    return where;
+  }
 
-    public Optional<String> getLimit()
-    {
-        return limit;
-    }
+  public List<SortItem> getOrderBy() {
+    return orderBy;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitShowPartitions(this, context);
-    }
+  public Optional<String> getLimit() {
+    return limit;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-        where.ifPresent(nodes::add);
-        nodes.addAll(orderBy);
-        return nodes.build();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitShowPartitions(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(table, where, orderBy, limit);
-    }
+  @Override
+  public List<Node> getChildren() {
+    ImmutableList.Builder<Node> nodes = ImmutableList.builder();
+    where.ifPresent(nodes::add);
+    nodes.addAll(orderBy);
+    return nodes.build();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        ShowPartitions o = (ShowPartitions) obj;
-        return Objects.equals(table, o.table) &&
-                Objects.equals(where, o.where) &&
-                Objects.equals(orderBy, o.orderBy) &&
-                Objects.equals(limit, o.limit);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(table, where, orderBy, limit);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("table", table)
-                .add("where", where)
-                .add("orderBy", orderBy)
-                .add("limit", limit)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    ShowPartitions o = (ShowPartitions) obj;
+    return Objects.equals(table, o.table) &&
+        Objects.equals(where, o.where) &&
+        Objects.equals(orderBy, o.orderBy) &&
+        Objects.equals(limit, o.limit);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("table", table)
+        .add("where", where)
+        .add("orderBy", orderBy)
+        .add("limit", limit)
+        .toString();
+  }
 }

@@ -13,77 +13,67 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class Deallocate
-        extends Statement
-{
-    private final Identifier name;
+    extends Statement {
 
-    public Deallocate(NodeLocation location, Identifier name)
-    {
-        this(Optional.of(location), name);
-    }
+  private final Identifier name;
 
-    public Deallocate(Identifier name)
-    {
-        this(Optional.empty(), name);
-    }
+  public Deallocate(NodeLocation location, Identifier name) {
+    this(Optional.of(location), name);
+  }
 
-    private Deallocate(Optional<NodeLocation> location, Identifier name)
-    {
-        super(location);
-        this.name = requireNonNull(name, "name is null");
-    }
+  public Deallocate(Identifier name) {
+    this(Optional.empty(), name);
+  }
 
-    public Identifier getName()
-    {
-        return name;
-    }
+  private Deallocate(Optional<NodeLocation> location, Identifier name) {
+    super(location);
+    this.name = requireNonNull(name, "name is null");
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitDeallocate(this, context);
-    }
+  public Identifier getName() {
+    return name;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitDeallocate(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        Deallocate o = (Deallocate) obj;
-        return Objects.equals(name, o.name);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    Deallocate o = (Deallocate) obj;
+    return Objects.equals(name, o.name);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .toString();
+  }
 }

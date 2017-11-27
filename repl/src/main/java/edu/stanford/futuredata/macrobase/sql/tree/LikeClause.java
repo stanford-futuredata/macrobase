@@ -13,92 +13,82 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class LikeClause
-        extends TableElement
-{
-    private final QualifiedName tableName;
-    private final Optional<PropertiesOption> propertiesOption;
+    extends TableElement {
 
-    public enum PropertiesOption
-    {
-        INCLUDING,
-        EXCLUDING
-    }
+  private final QualifiedName tableName;
+  private final Optional<PropertiesOption> propertiesOption;
 
-    public LikeClause(QualifiedName tableName, Optional<PropertiesOption> propertiesOption)
-    {
-        this(Optional.empty(), tableName, propertiesOption);
-    }
+  public enum PropertiesOption {
+    INCLUDING,
+    EXCLUDING
+  }
 
-    public LikeClause(NodeLocation location, QualifiedName tableName, Optional<PropertiesOption> propertiesOption)
-    {
-        this(Optional.of(location), tableName, propertiesOption);
-    }
+  public LikeClause(QualifiedName tableName, Optional<PropertiesOption> propertiesOption) {
+    this(Optional.empty(), tableName, propertiesOption);
+  }
 
-    private LikeClause(Optional<NodeLocation> location, QualifiedName tableName, Optional<PropertiesOption> propertiesOption)
-    {
-        super(location);
-        this.tableName = requireNonNull(tableName, "tableName is null");
-        this.propertiesOption = requireNonNull(propertiesOption, "propertiesOption is null");
-    }
+  public LikeClause(NodeLocation location, QualifiedName tableName,
+      Optional<PropertiesOption> propertiesOption) {
+    this(Optional.of(location), tableName, propertiesOption);
+  }
 
-    public QualifiedName getTableName()
-    {
-        return tableName;
-    }
+  private LikeClause(Optional<NodeLocation> location, QualifiedName tableName,
+      Optional<PropertiesOption> propertiesOption) {
+    super(location);
+    this.tableName = requireNonNull(tableName, "tableName is null");
+    this.propertiesOption = requireNonNull(propertiesOption, "propertiesOption is null");
+  }
 
-    public Optional<PropertiesOption> getPropertiesOption()
-    {
-        return propertiesOption;
-    }
+  public QualifiedName getTableName() {
+    return tableName;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitLikeClause(this, context);
-    }
+  public Optional<PropertiesOption> getPropertiesOption() {
+    return propertiesOption;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitLikeClause(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        LikeClause o = (LikeClause) obj;
-        return Objects.equals(this.tableName, o.tableName) &&
-                Objects.equals(this.propertiesOption, o.propertiesOption);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(tableName, propertiesOption);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    LikeClause o = (LikeClause) obj;
+    return Objects.equals(this.tableName, o.tableName) &&
+        Objects.equals(this.propertiesOption, o.propertiesOption);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("tableName", tableName)
-                .add("propertiesOption", propertiesOption)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(tableName, propertiesOption);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("tableName", tableName)
+        .add("propertiesOption", propertiesOption)
+        .toString();
+  }
 }
