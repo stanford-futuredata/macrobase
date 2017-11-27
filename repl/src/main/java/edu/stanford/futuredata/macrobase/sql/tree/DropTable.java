@@ -13,85 +13,74 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 public class DropTable
-        extends Statement
-{
-    private final QualifiedName tableName;
-    private final boolean exists;
+    extends Statement {
 
-    public DropTable(QualifiedName tableName, boolean exists)
-    {
-        this(Optional.empty(), tableName, exists);
-    }
+  private final QualifiedName tableName;
+  private final boolean exists;
 
-    public DropTable(NodeLocation location, QualifiedName tableName, boolean exists)
-    {
-        this(Optional.of(location), tableName, exists);
-    }
+  public DropTable(QualifiedName tableName, boolean exists) {
+    this(Optional.empty(), tableName, exists);
+  }
 
-    private DropTable(Optional<NodeLocation> location, QualifiedName tableName, boolean exists)
-    {
-        super(location);
-        this.tableName = tableName;
-        this.exists = exists;
-    }
+  public DropTable(NodeLocation location, QualifiedName tableName, boolean exists) {
+    this(Optional.of(location), tableName, exists);
+  }
 
-    public QualifiedName getTableName()
-    {
-        return tableName;
-    }
+  private DropTable(Optional<NodeLocation> location, QualifiedName tableName, boolean exists) {
+    super(location);
+    this.tableName = tableName;
+    this.exists = exists;
+  }
 
-    public boolean isExists()
-    {
-        return exists;
-    }
+  public QualifiedName getTableName() {
+    return tableName;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitDropTable(this, context);
-    }
+  public boolean isExists() {
+    return exists;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitDropTable(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(tableName, exists);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        DropTable o = (DropTable) obj;
-        return Objects.equals(tableName, o.tableName)
-                && (exists == o.exists);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(tableName, exists);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("tableName", tableName)
-                .add("exists", exists)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    DropTable o = (DropTable) obj;
+    return Objects.equals(tableName, o.tableName)
+        && (exists == o.exists);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("tableName", tableName)
+        .add("exists", exists)
+        .toString();
+  }
 }

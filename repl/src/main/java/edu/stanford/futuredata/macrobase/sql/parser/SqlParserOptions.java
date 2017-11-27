@@ -13,32 +13,29 @@
  */
 package edu.stanford.futuredata.macrobase.sql.parser;
 
-import com.google.common.collect.Iterables;
-
-import java.util.EnumSet;
-
 import static java.util.Objects.requireNonNull;
 
-public class SqlParserOptions
-{
-    private final EnumSet<IdentifierSymbol> allowedIdentifierSymbols = EnumSet.noneOf(IdentifierSymbol.class);
+import com.google.common.collect.Iterables;
+import java.util.EnumSet;
 
-    public SqlParserOptions allowIdentifierSymbol(Iterable<IdentifierSymbol> identifierSymbols)
-    {
-        Iterables.addAll(allowedIdentifierSymbols, identifierSymbols);
-        return this;
-    }
+public class SqlParserOptions {
 
-    public EnumSet<IdentifierSymbol> getAllowedIdentifierSymbols()
-    {
-        return EnumSet.copyOf(allowedIdentifierSymbols);
-    }
+  private final EnumSet<IdentifierSymbol> allowedIdentifierSymbols = EnumSet
+      .noneOf(IdentifierSymbol.class);
 
-    public SqlParserOptions allowIdentifierSymbol(IdentifierSymbol... identifierSymbols)
-    {
-        for (IdentifierSymbol identifierSymbol : identifierSymbols) {
-            allowedIdentifierSymbols.add(requireNonNull(identifierSymbol, "identifierSymbol is null"));
-        }
-        return this;
+  public SqlParserOptions allowIdentifierSymbol(Iterable<IdentifierSymbol> identifierSymbols) {
+    Iterables.addAll(allowedIdentifierSymbols, identifierSymbols);
+    return this;
+  }
+
+  public EnumSet<IdentifierSymbol> getAllowedIdentifierSymbols() {
+    return EnumSet.copyOf(allowedIdentifierSymbols);
+  }
+
+  public SqlParserOptions allowIdentifierSymbol(IdentifierSymbol... identifierSymbols) {
+    for (IdentifierSymbol identifierSymbol : identifierSymbols) {
+      allowedIdentifierSymbols.add(requireNonNull(identifierSymbol, "identifierSymbol is null"));
     }
+    return this;
+  }
 }

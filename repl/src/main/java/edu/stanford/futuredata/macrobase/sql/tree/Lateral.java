@@ -14,74 +14,64 @@
 
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.util.Objects.requireNonNull;
-
 public final class Lateral
-        extends Relation
-{
-    private final Query query;
+    extends Relation {
 
-    public Lateral(Query query)
-    {
-        this(Optional.empty(), query);
-    }
+  private final Query query;
 
-    public Lateral(NodeLocation location, Query query)
-    {
-        this(Optional.of(location), query);
-    }
+  public Lateral(Query query) {
+    this(Optional.empty(), query);
+  }
 
-    private Lateral(Optional<NodeLocation> location, Query query)
-    {
-        super(location);
-        this.query = requireNonNull(query, "query is null");
-    }
+  public Lateral(NodeLocation location, Query query) {
+    this(Optional.of(location), query);
+  }
 
-    public Query getQuery()
-    {
-        return query;
-    }
+  private Lateral(Optional<NodeLocation> location, Query query) {
+    super(location);
+    this.query = requireNonNull(query, "query is null");
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitLateral(this, context);
-    }
+  public Query getQuery() {
+    return query;
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return ImmutableList.of(query);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitLateral(this, context);
+  }
 
-    @Override
-    public String toString()
-    {
-        return "LATERAL(" + query + ")";
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return ImmutableList.of(query);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(query);
-    }
+  @Override
+  public String toString() {
+    return "LATERAL(" + query + ")";
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        Lateral other = (Lateral) obj;
-        return Objects.equals(this.query, other.query);
+  @Override
+  public int hashCode() {
+    return Objects.hash(query);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    Lateral other = (Lateral) obj;
+    return Objects.equals(this.query, other.query);
+  }
 }

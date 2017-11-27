@@ -13,85 +13,76 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public final class SimpleGroupBy
-        extends GroupingElement
-{
-    private final List<Expression> columns;
+    extends GroupingElement {
 
-    public SimpleGroupBy(List<Expression> simpleGroupByExpressions)
-    {
-        this(Optional.empty(), simpleGroupByExpressions);
-    }
+  private final List<Expression> columns;
 
-    public SimpleGroupBy(NodeLocation location, List<Expression> simpleGroupByExpressions)
-    {
-        this(Optional.of(location), simpleGroupByExpressions);
-    }
+  public SimpleGroupBy(List<Expression> simpleGroupByExpressions) {
+    this(Optional.empty(), simpleGroupByExpressions);
+  }
 
-    private SimpleGroupBy(Optional<NodeLocation> location, List<Expression> simpleGroupByExpressions)
-    {
-        super(location);
-        this.columns = ImmutableList.copyOf(requireNonNull(simpleGroupByExpressions, "simpleGroupByExpressions is null"));
-    }
+  public SimpleGroupBy(NodeLocation location, List<Expression> simpleGroupByExpressions) {
+    this(Optional.of(location), simpleGroupByExpressions);
+  }
 
-    public List<Expression> getColumnExpressions()
-    {
-        return columns;
-    }
+  private SimpleGroupBy(Optional<NodeLocation> location,
+      List<Expression> simpleGroupByExpressions) {
+    super(location);
+    this.columns = ImmutableList
+        .copyOf(requireNonNull(simpleGroupByExpressions, "simpleGroupByExpressions is null"));
+  }
 
-    @Override
-    public List<Set<Expression>> enumerateGroupingSets()
-    {
-        return ImmutableList.of(ImmutableSet.copyOf(columns));
-    }
+  public List<Expression> getColumnExpressions() {
+    return columns;
+  }
 
-    @Override
-    protected <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitSimpleGroupBy(this, context);
-    }
+  @Override
+  public List<Set<Expression>> enumerateGroupingSets() {
+    return ImmutableList.of(ImmutableSet.copyOf(columns));
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return columns;
-    }
+  @Override
+  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitSimpleGroupBy(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        SimpleGroupBy that = (SimpleGroupBy) o;
-        return Objects.equals(columns, that.columns);
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return columns;
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(columns);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SimpleGroupBy that = (SimpleGroupBy) o;
+    return Objects.equals(columns, that.columns);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("columns", columns)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(columns);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("columns", columns)
+        .toString();
+  }
 }

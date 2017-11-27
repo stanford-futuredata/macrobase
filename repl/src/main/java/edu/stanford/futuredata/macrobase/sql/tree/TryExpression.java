@@ -13,68 +13,59 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.util.Objects.requireNonNull;
-
 public class TryExpression
-        extends Expression
-{
-    private final Expression innerExpression;
+    extends Expression {
 
-    public TryExpression(Expression innerExpression)
-    {
-        this(Optional.empty(), innerExpression);
-    }
+  private final Expression innerExpression;
 
-    public TryExpression(NodeLocation location, Expression innerExpression)
-    {
-        this(Optional.of(location), innerExpression);
-    }
+  public TryExpression(Expression innerExpression) {
+    this(Optional.empty(), innerExpression);
+  }
 
-    private TryExpression(Optional<NodeLocation> location, Expression innerExpression)
-    {
-        super(location);
-        this.innerExpression = requireNonNull(innerExpression, "innerExpression is null");
-    }
+  public TryExpression(NodeLocation location, Expression innerExpression) {
+    this(Optional.of(location), innerExpression);
+  }
 
-    public Expression getInnerExpression()
-    {
-        return innerExpression;
-    }
+  private TryExpression(Optional<NodeLocation> location, Expression innerExpression) {
+    super(location);
+    this.innerExpression = requireNonNull(innerExpression, "innerExpression is null");
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitTryExpression(this, context);
-    }
+  public Expression getInnerExpression() {
+    return innerExpression;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of(innerExpression);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitTryExpression(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        TryExpression o = (TryExpression) obj;
-        return Objects.equals(innerExpression, o.innerExpression);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of(innerExpression);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(innerExpression);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    TryExpression o = (TryExpression) obj;
+    return Objects.equals(innerExpression, o.innerExpression);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(innerExpression);
+  }
 }

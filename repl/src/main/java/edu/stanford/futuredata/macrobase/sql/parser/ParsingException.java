@@ -13,53 +13,47 @@
  */
 package edu.stanford.futuredata.macrobase.sql.parser;
 
+import static java.lang.String.format;
+
 import edu.stanford.futuredata.macrobase.sql.tree.NodeLocation;
 import org.antlr.v4.runtime.RecognitionException;
 
-import static java.lang.String.format;
-
 public class ParsingException
-        extends RuntimeException
-{
-    private final int line;
-    private final int charPositionInLine;
+    extends RuntimeException {
 
-    public ParsingException(String message, RecognitionException cause, int line, int charPositionInLine)
-    {
-        super(message, cause);
+  private final int line;
+  private final int charPositionInLine;
 
-        this.line = line;
-        this.charPositionInLine = charPositionInLine;
-    }
+  public ParsingException(String message, RecognitionException cause, int line,
+      int charPositionInLine) {
+    super(message, cause);
 
-    public ParsingException(String message)
-    {
-        this(message, null, 1, 0);
-    }
+    this.line = line;
+    this.charPositionInLine = charPositionInLine;
+  }
 
-    public ParsingException(String message, NodeLocation nodeLocation)
-    {
-        this(message, null, nodeLocation.getLineNumber(), nodeLocation.getColumnNumber());
-    }
+  public ParsingException(String message) {
+    this(message, null, 1, 0);
+  }
 
-    public int getLineNumber()
-    {
-        return line;
-    }
+  public ParsingException(String message, NodeLocation nodeLocation) {
+    this(message, null, nodeLocation.getLineNumber(), nodeLocation.getColumnNumber());
+  }
 
-    public int getColumnNumber()
-    {
-        return charPositionInLine + 1;
-    }
+  public int getLineNumber() {
+    return line;
+  }
 
-    public String getErrorMessage()
-    {
-        return super.getMessage();
-    }
+  public int getColumnNumber() {
+    return charPositionInLine + 1;
+  }
 
-    @Override
-    public String getMessage()
-    {
-        return format("line %s:%s: %s", getLineNumber(), getColumnNumber(), getErrorMessage());
-    }
+  public String getErrorMessage() {
+    return super.getMessage();
+  }
+
+  @Override
+  public String getMessage() {
+    return format("line %s:%s: %s", getLineNumber(), getColumnNumber(), getErrorMessage());
+  }
 }

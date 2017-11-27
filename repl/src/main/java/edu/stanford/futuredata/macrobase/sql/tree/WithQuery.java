@@ -13,96 +13,86 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class WithQuery
-        extends Node
-{
-    private final Identifier name;
-    private final Query query;
-    private final Optional<List<Identifier>> columnNames;
+    extends Node {
 
-    public WithQuery(Identifier name, Query query, Optional<List<Identifier>> columnNames)
-    {
-        this(Optional.empty(), name, query, columnNames);
-    }
+  private final Identifier name;
+  private final Query query;
+  private final Optional<List<Identifier>> columnNames;
 
-    public WithQuery(NodeLocation location, Identifier name, Query query, Optional<List<Identifier>> columnNames)
-    {
-        this(Optional.of(location), name, query, columnNames);
-    }
+  public WithQuery(Identifier name, Query query, Optional<List<Identifier>> columnNames) {
+    this(Optional.empty(), name, query, columnNames);
+  }
 
-    private WithQuery(Optional<NodeLocation> location, Identifier name, Query query, Optional<List<Identifier>> columnNames)
-    {
-        super(location);
-        this.name = name;
-        this.query = requireNonNull(query, "query is null");
-        this.columnNames = requireNonNull(columnNames, "columnNames is null");
-    }
+  public WithQuery(NodeLocation location, Identifier name, Query query,
+      Optional<List<Identifier>> columnNames) {
+    this(Optional.of(location), name, query, columnNames);
+  }
 
-    public Identifier getName()
-    {
-        return name;
-    }
+  private WithQuery(Optional<NodeLocation> location, Identifier name, Query query,
+      Optional<List<Identifier>> columnNames) {
+    super(location);
+    this.name = name;
+    this.query = requireNonNull(query, "query is null");
+    this.columnNames = requireNonNull(columnNames, "columnNames is null");
+  }
 
-    public Query getQuery()
-    {
-        return query;
-    }
+  public Identifier getName() {
+    return name;
+  }
 
-    public Optional<List<Identifier>> getColumnNames()
-    {
-        return columnNames;
-    }
+  public Query getQuery() {
+    return query;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitWithQuery(this, context);
-    }
+  public Optional<List<Identifier>> getColumnNames() {
+    return columnNames;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of(query);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitWithQuery(this, context);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .add("query", query)
-                .add("columnNames", columnNames)
-                .omitNullValues()
-                .toString();
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of(query);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name, query, columnNames);
-    }
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .add("query", query)
+        .add("columnNames", columnNames)
+        .omitNullValues()
+        .toString();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        WithQuery o = (WithQuery) obj;
-        return Objects.equals(name, o.name) &&
-                Objects.equals(query, o.query) &&
-                Objects.equals(columnNames, o.columnNames);
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, query, columnNames);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    WithQuery o = (WithQuery) obj;
+    return Objects.equals(name, o.name) &&
+        Objects.equals(query, o.query) &&
+        Objects.equals(columnNames, o.columnNames);
+  }
 }

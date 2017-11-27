@@ -13,76 +13,66 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 public class DescribeInput
-        extends Statement
-{
-    private final Identifier name;
+    extends Statement {
 
-    public DescribeInput(NodeLocation location, Identifier name)
-    {
-        this(Optional.of(location), name);
-    }
+  private final Identifier name;
 
-    public DescribeInput(Identifier name)
-    {
-        this(Optional.empty(), name);
-    }
+  public DescribeInput(NodeLocation location, Identifier name) {
+    this(Optional.of(location), name);
+  }
 
-    private DescribeInput(Optional<NodeLocation> location, Identifier name)
-    {
-        super(location);
-        this.name = name;
-    }
+  public DescribeInput(Identifier name) {
+    this(Optional.empty(), name);
+  }
 
-    public Identifier getName()
-    {
-        return name;
-    }
+  private DescribeInput(Optional<NodeLocation> location, Identifier name) {
+    super(location);
+    this.name = name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitDescribeInput(this, context);
-    }
+  public Identifier getName() {
+    return name;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitDescribeInput(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        DescribeInput o = (DescribeInput) obj;
-        return Objects.equals(name, o.name);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    DescribeInput o = (DescribeInput) obj;
+    return Objects.equals(name, o.name);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .toString();
+  }
 }

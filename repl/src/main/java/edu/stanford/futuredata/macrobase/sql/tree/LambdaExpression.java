@@ -13,79 +13,71 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.util.Objects.requireNonNull;
-
 public class LambdaExpression
-        extends Expression
-{
-    private final List<LambdaArgumentDeclaration> arguments;
-    private final Expression body;
+    extends Expression {
 
-    public LambdaExpression(List<LambdaArgumentDeclaration> arguments, Expression body)
-    {
-        this(Optional.empty(), arguments, body);
-    }
+  private final List<LambdaArgumentDeclaration> arguments;
+  private final Expression body;
 
-    public LambdaExpression(NodeLocation location, List<LambdaArgumentDeclaration> arguments, Expression body)
-    {
-        this(Optional.of(location), arguments, body);
-    }
+  public LambdaExpression(List<LambdaArgumentDeclaration> arguments, Expression body) {
+    this(Optional.empty(), arguments, body);
+  }
 
-    private LambdaExpression(Optional<NodeLocation> location, List<LambdaArgumentDeclaration> arguments, Expression body)
-    {
-        super(location);
-        this.arguments = requireNonNull(arguments, "arguments is null");
-        this.body = requireNonNull(body, "body is null");
-    }
+  public LambdaExpression(NodeLocation location, List<LambdaArgumentDeclaration> arguments,
+      Expression body) {
+    this(Optional.of(location), arguments, body);
+  }
 
-    public List<LambdaArgumentDeclaration> getArguments()
-    {
-        return arguments;
-    }
+  private LambdaExpression(Optional<NodeLocation> location,
+      List<LambdaArgumentDeclaration> arguments, Expression body) {
+    super(location);
+    this.arguments = requireNonNull(arguments, "arguments is null");
+    this.body = requireNonNull(body, "body is null");
+  }
 
-    public Expression getBody()
-    {
-        return body;
-    }
+  public List<LambdaArgumentDeclaration> getArguments() {
+    return arguments;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitLambdaExpression(this, context);
-    }
+  public Expression getBody() {
+    return body;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-        nodes.addAll(arguments);
-        nodes.add(body);
-        return nodes.build();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitLambdaExpression(this, context);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        LambdaExpression that = (LambdaExpression) obj;
-        return Objects.equals(arguments, that.arguments) &&
-                Objects.equals(body, that.body);
-    }
+  @Override
+  public List<Node> getChildren() {
+    ImmutableList.Builder<Node> nodes = ImmutableList.builder();
+    nodes.addAll(arguments);
+    nodes.add(body);
+    return nodes.build();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(arguments, body);
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    LambdaExpression that = (LambdaExpression) obj;
+    return Objects.equals(arguments, that.arguments) &&
+        Objects.equals(body, that.body);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(arguments, body);
+  }
 }

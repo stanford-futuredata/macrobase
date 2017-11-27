@@ -14,55 +14,48 @@
 package edu.stanford.futuredata.macrobase.sql.tree;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 public class SymbolReference
-        extends Expression
-{
-    private final String name;
+    extends Expression {
 
-    public SymbolReference(String name)
-    {
-        super(Optional.empty());
-        this.name = name;
-    }
+  private final String name;
 
-    public String getName()
-    {
-        return name;
-    }
+  public SymbolReference(String name) {
+    super(Optional.empty());
+    this.name = name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitSymbolReference(this, context);
-    }
+  public String getName() {
+    return name;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitSymbolReference(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        SymbolReference that = (SymbolReference) o;
-        return Objects.equals(name, that.name);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SymbolReference that = (SymbolReference) o;
+    return Objects.equals(name, that.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
+  }
 }
