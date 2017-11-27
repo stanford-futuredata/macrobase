@@ -13,91 +13,84 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.collectingAndThen;
 
+import com.google.common.collect.ImmutableList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public final class GroupingSets
-        extends GroupingElement
-{
-    private final List<List<QualifiedName>> sets;
+    extends GroupingElement {
 
-    public GroupingSets(List<List<QualifiedName>> groupingSetList)
-    {
-        this(Optional.empty(), groupingSetList);
-    }
+  private final List<List<QualifiedName>> sets;
 
-    public GroupingSets(NodeLocation location, List<List<QualifiedName>> sets)
-    {
-        this(Optional.of(location), sets);
-    }
+  public GroupingSets(List<List<QualifiedName>> groupingSetList) {
+    this(Optional.empty(), groupingSetList);
+  }
 
-    private GroupingSets(Optional<NodeLocation> location, List<List<QualifiedName>> sets)
-    {
-        super(location);
-        requireNonNull(sets, "sets is null");
-        checkArgument(!sets.isEmpty(), "grouping sets cannot be empty");
-        this.sets = sets.stream().map(ImmutableList::copyOf).collect(toImmutableList());
-    }
+  public GroupingSets(NodeLocation location, List<List<QualifiedName>> sets) {
+    this(Optional.of(location), sets);
+  }
 
-    public List<List<QualifiedName>> getSets()
-    {
-        return sets;
-    }
+  private GroupingSets(Optional<NodeLocation> location, List<List<QualifiedName>> sets) {
+    super(location);
+    requireNonNull(sets, "sets is null");
+    checkArgument(!sets.isEmpty(), "grouping sets cannot be empty");
+    this.sets = sets.stream().map(ImmutableList::copyOf).collect(toImmutableList());
+  }
 
-    @Override
-    public List<Set<Expression>> enumerateGroupingSets()
-    {
-        return sets.stream()
-                .map(groupingSet -> groupingSet.stream()
-                        .map(DereferenceExpression::from)
-                        .collect(Collectors.<Expression>toSet()))
-                .collect(collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
-    }
+  public List<List<QualifiedName>> getSets() {
+    return sets;
+  }
 
-    @Override
-    protected <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitGroupingSets(this, context);
-    }
+  @Override
+  public List<Set<Expression>> enumerateGroupingSets() {
+    return sets.stream()
+        .map(groupingSet -> groupingSet.stream()
+            .map(DereferenceExpression::from)
+            .collect(Collectors.toSet()))
+        .collect(collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitGroupingSets(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        GroupingSets groupingSets = (GroupingSets) o;
-        return Objects.equals(sets, groupingSets.sets);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(sets);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    GroupingSets groupingSets = (GroupingSets) o;
+    return Objects.equals(sets, groupingSets.sets);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("sets", sets)
-                .toString();
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(sets);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("sets", sets)
+        .toString();
+  }
 }

@@ -13,73 +13,64 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 public class ShowStats
-        extends Statement
-{
-    private final Relation relation;
+    extends Statement {
 
-    @VisibleForTesting
-    public ShowStats(Relation relation)
-    {
-        this(Optional.empty(), relation);
-    }
+  private final Relation relation;
 
-    public ShowStats(Optional<NodeLocation> location, Relation relation)
-    {
-        super(location);
-        this.relation = relation;
-    }
+  @VisibleForTesting
+  public ShowStats(Relation relation) {
+    this(Optional.empty(), relation);
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitShowStats(this, context);
-    }
+  public ShowStats(Optional<NodeLocation> location, Relation relation) {
+    super(location);
+    this.relation = relation;
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return ImmutableList.of(relation);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitShowStats(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(relation);
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return ImmutableList.of(relation);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        ShowStats o = (ShowStats) obj;
-        return Objects.equals(relation, o.relation);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(relation);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("query", relation)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    ShowStats o = (ShowStats) obj;
+    return Objects.equals(relation, o.relation);
+  }
 
-    public Relation getRelation()
-    {
-        return relation;
-    }
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("query", relation)
+        .toString();
+  }
+
+  public Relation getRelation() {
+    return relation;
+  }
 }

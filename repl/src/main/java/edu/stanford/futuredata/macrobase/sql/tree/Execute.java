@@ -13,86 +13,75 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class Execute
-        extends Statement
-{
-    private final Identifier name;
-    private final List<Expression> parameters;
+    extends Statement {
 
-    public Execute(NodeLocation location, Identifier name, List<Expression> parameters)
-    {
-        this(Optional.of(location), name, parameters);
-    }
+  private final Identifier name;
+  private final List<Expression> parameters;
 
-    public Execute(Identifier name, List<Expression> parameters)
-    {
-        this(Optional.empty(), name, parameters);
-    }
+  public Execute(NodeLocation location, Identifier name, List<Expression> parameters) {
+    this(Optional.of(location), name, parameters);
+  }
 
-    private Execute(Optional<NodeLocation> location, Identifier name, List<Expression> parameters)
-    {
-        super(location);
-        this.name = requireNonNull(name, "name is null");
-        this.parameters = requireNonNull(ImmutableList.copyOf(parameters), "parameters is null");
-    }
+  public Execute(Identifier name, List<Expression> parameters) {
+    this(Optional.empty(), name, parameters);
+  }
 
-    public Identifier getName()
-    {
-        return name;
-    }
+  private Execute(Optional<NodeLocation> location, Identifier name, List<Expression> parameters) {
+    super(location);
+    this.name = requireNonNull(name, "name is null");
+    this.parameters = requireNonNull(ImmutableList.copyOf(parameters), "parameters is null");
+  }
 
-    public List<Expression> getParameters()
-    {
-        return parameters;
-    }
+  public Identifier getName() {
+    return name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitExecute(this, context);
-    }
+  public List<Expression> getParameters() {
+    return parameters;
+  }
 
-    @Override
-    public List<? extends Node> getChildren()
-    {
-        return parameters;
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitExecute(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name, parameters);
-    }
+  @Override
+  public List<? extends Node> getChildren() {
+    return parameters;
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        Execute o = (Execute) obj;
-        return Objects.equals(name, o.name) &&
-                Objects.equals(parameters, o.parameters);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, parameters);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .add("parameters", parameters)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    Execute o = (Execute) obj;
+    return Objects.equals(name, o.name) &&
+        Objects.equals(parameters, o.parameters);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .add("parameters", parameters)
+        .toString();
+  }
 }

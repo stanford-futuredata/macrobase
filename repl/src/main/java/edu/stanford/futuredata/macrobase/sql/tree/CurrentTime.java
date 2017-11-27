@@ -13,108 +13,93 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static java.util.Objects.requireNonNull;
-
 public class CurrentTime
-        extends Expression
-{
-    private final Type type;
-    private final Integer precision;
+    extends Expression {
 
-    public enum Type
-    {
-        TIME("current_time"),
-        DATE("current_date"),
-        TIMESTAMP("current_timestamp"),
-        LOCALTIME("localtime"),
-        LOCALTIMESTAMP("localtimestamp");
+  private final Type type;
+  private final Integer precision;
 
-        private final String name;
+  public enum Type {
+    TIME("current_time"),
+    DATE("current_date"),
+    TIMESTAMP("current_timestamp"),
+    LOCALTIME("localtime"),
+    LOCALTIMESTAMP("localtimestamp");
 
-        Type(String name)
-        {
-            this.name = name;
-        }
+    private final String name;
 
-        public String getName()
-        {
-            return name;
-        }
+    Type(String name) {
+      this.name = name;
     }
 
-    public CurrentTime(Type type)
-    {
-        this(Optional.empty(), type, null);
+    public String getName() {
+      return name;
     }
+  }
 
-    public CurrentTime(NodeLocation location, Type type)
-    {
-        this(Optional.of(location), type, null);
-    }
+  public CurrentTime(Type type) {
+    this(Optional.empty(), type, null);
+  }
 
-    public CurrentTime(Type type, Integer precision)
-    {
-        this(Optional.empty(), type, precision);
-    }
+  public CurrentTime(NodeLocation location, Type type) {
+    this(Optional.of(location), type, null);
+  }
 
-    public CurrentTime(NodeLocation location, Type type, Integer precision)
-    {
-        this(Optional.of(location), type, precision);
-    }
+  public CurrentTime(Type type, Integer precision) {
+    this(Optional.empty(), type, precision);
+  }
 
-    private CurrentTime(Optional<NodeLocation> location, Type type, Integer precision)
-    {
-        super(location);
-        requireNonNull(type, "type is null");
-        this.type = type;
-        this.precision = precision;
-    }
+  public CurrentTime(NodeLocation location, Type type, Integer precision) {
+    this(Optional.of(location), type, precision);
+  }
 
-    public Type getType()
-    {
-        return type;
-    }
+  private CurrentTime(Optional<NodeLocation> location, Type type, Integer precision) {
+    super(location);
+    requireNonNull(type, "type is null");
+    this.type = type;
+    this.precision = precision;
+  }
 
-    public Integer getPrecision()
-    {
-        return precision;
-    }
+  public Type getType() {
+    return type;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitCurrentTime(this, context);
-    }
+  public Integer getPrecision() {
+    return precision;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of();
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitCurrentTime(this, context);
+  }
 
-    @Override
-    public boolean equals(Object o)
-    {
-        if (this == o) {
-            return true;
-        }
-        if ((o == null) || (getClass() != o.getClass())) {
-            return false;
-        }
-        CurrentTime that = (CurrentTime) o;
-        return (type == that.type) &&
-                Objects.equals(precision, that.precision);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of();
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(type, precision);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if ((o == null) || (getClass() != o.getClass())) {
+      return false;
+    }
+    CurrentTime that = (CurrentTime) o;
+    return (type == that.type) &&
+        Objects.equals(precision, that.precision);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, precision);
+  }
 }

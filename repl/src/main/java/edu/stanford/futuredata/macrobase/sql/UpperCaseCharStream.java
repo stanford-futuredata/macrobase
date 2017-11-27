@@ -27,71 +27,69 @@ import org.antlr.v4.runtime.misc.Interval;
 
 public class UpperCaseCharStream implements CharStream {
 
-    private final CodePointCharStream wrapped;
+  private final CodePointCharStream wrapped;
 
-    UpperCaseCharStream(final CodePointCharStream wrapped) {
-        this.wrapped = wrapped;
+  UpperCaseCharStream(final CodePointCharStream wrapped) {
+    this.wrapped = wrapped;
+  }
+
+  @Override
+  public String getText(Interval interval) {
+    // ANTLR 4.7's CodePointCharStream implementations have bugs when
+    // getText() is called with an empty stream, or intervals where
+    // the start > end. See
+    // https://github.com/antlr/antlr4/commit/ac9f7530 for one fix
+    // that is not yet in a released ANTLR artifact.
+    if (size() > 0 && (interval.b - interval.a >= 0)) {
+      return wrapped.getText(interval);
+    } else {
+      return "";
     }
+  }
 
-    @Override
-    public String getText(Interval interval) {
-        // ANTLR 4.7's CodePointCharStream implementations have bugs when
-        // getText() is called with an empty stream, or intervals where
-        // the start > end. See
-        // https://github.com/antlr/antlr4/commit/ac9f7530 for one fix
-        // that is not yet in a released ANTLR artifact.
-        if (size() > 0 && (interval.b - interval.a >= 0)) {
-            return wrapped.getText(interval);
-        } else {
-            return "";
-        }
+  @Override
+  public void consume() {
+    wrapped.consume();
+  }
+
+  @Override
+  public int LA(int i) {
+    final int la = wrapped.LA(i);
+    if (la == 0 || la == IntStream.EOF) {
+      return la;
     }
+    return Character.toUpperCase(la);
+  }
 
-    @Override
-    public void consume() {
-        wrapped.consume();
-    }
+  @Override
+  public int mark() {
+    return wrapped.mark();
+  }
 
-    @Override
-    public int LA(int i) {
-        final int la = wrapped.LA(i);
-        if (la == 0 || la == IntStream.EOF) {
-            return la;
-        }
-        return Character.toUpperCase(la);
-    }
+  @Override
+  public void release(int marker) {
+    wrapped.release(marker);
+  }
 
-    @Override
-    public int mark() {
-        return wrapped.mark();
-    }
+  @Override
+  public int index() {
+    return wrapped.index();
+  }
 
-    @Override
-    public void release(int marker) {
-        wrapped.release(marker);
-    }
+  @Override
+  public void seek(int index) {
+    wrapped.seek(index);
+  }
 
-    @Override
-    public int index() {
-        return wrapped.index();
-    }
+  @Override
+  public int size() {
+    return wrapped.size();
+  }
 
-    @Override
-    public void seek(int index) {
-        wrapped.seek(index);
-    }
-
-    @Override
-    public int size() {
-        return wrapped.size();
-    }
-
-    @Override
-    public String getSourceName() {
-        return wrapped.getSourceName();
-    }
-
-
+  @Override
+  public String getSourceName() {
+    return wrapped.getSourceName();
+  }
 
 ///**
 // * The ParseErrorListener converts parse errors into AnalysisExceptions.
@@ -109,10 +107,10 @@ public class UpperCaseCharStream implements CharStream {
 //  }
 //    }
 
-    /**
-     * A [[ParseException]] is an [[AnalysisException]] that is thrown during the parse process. It
-     * contains fields and an extended error message that make reporting and diagnosing errors easier.
-     */
+  /**
+   * A [[ParseException]] is an [[AnalysisException]] that is thrown during the parse process. It
+   * contains fields and an extended error message that make reporting and diagnosing errors easier.
+   */
 //    class ParseException(
 //    val command: Option[String],
 //    message: String,

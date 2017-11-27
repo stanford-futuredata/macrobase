@@ -13,86 +13,75 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static java.util.Objects.requireNonNull;
-
 public class AddColumn
-        extends Statement
-{
-    private final QualifiedName name;
-    private final ColumnDefinition column;
+    extends Statement {
 
-    public AddColumn(QualifiedName name, ColumnDefinition column)
-    {
-        this(Optional.empty(), name, column);
-    }
+  private final QualifiedName name;
+  private final ColumnDefinition column;
 
-    public AddColumn(NodeLocation location, QualifiedName name, ColumnDefinition column)
-    {
-        this(Optional.of(location), name, column);
-    }
+  public AddColumn(QualifiedName name, ColumnDefinition column) {
+    this(Optional.empty(), name, column);
+  }
 
-    private AddColumn(Optional<NodeLocation> location, QualifiedName name, ColumnDefinition column)
-    {
-        super(location);
-        this.name = requireNonNull(name, "table is null");
-        this.column = requireNonNull(column, "column is null");
-    }
+  public AddColumn(NodeLocation location, QualifiedName name, ColumnDefinition column) {
+    this(Optional.of(location), name, column);
+  }
 
-    public QualifiedName getName()
-    {
-        return name;
-    }
+  private AddColumn(Optional<NodeLocation> location, QualifiedName name, ColumnDefinition column) {
+    super(location);
+    this.name = requireNonNull(name, "table is null");
+    this.column = requireNonNull(column, "column is null");
+  }
 
-    public ColumnDefinition getColumn()
-    {
-        return column;
-    }
+  public QualifiedName getName() {
+    return name;
+  }
 
-    @Override
-    public <R, C> R accept(AstVisitor<R, C> visitor, C context)
-    {
-        return visitor.visitAddColumn(this, context);
-    }
+  public ColumnDefinition getColumn() {
+    return column;
+  }
 
-    @Override
-    public List<Node> getChildren()
-    {
-        return ImmutableList.of(column);
-    }
+  @Override
+  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+    return visitor.visitAddColumn(this, context);
+  }
 
-    @Override
-    public int hashCode()
-    {
-        return Objects.hash(name, column);
-    }
+  @Override
+  public List<Node> getChildren() {
+    return ImmutableList.of(column);
+  }
 
-    @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if ((obj == null) || (getClass() != obj.getClass())) {
-            return false;
-        }
-        AddColumn o = (AddColumn) obj;
-        return Objects.equals(name, o.name) &&
-                Objects.equals(column, o.column);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(name, column);
+  }
 
-    @Override
-    public String toString()
-    {
-        return toStringHelper(this)
-                .add("name", name)
-                .add("column", column)
-                .toString();
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
     }
+    if ((obj == null) || (getClass() != obj.getClass())) {
+      return false;
+    }
+    AddColumn o = (AddColumn) obj;
+    return Objects.equals(name, o.name) &&
+        Objects.equals(column, o.column);
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this)
+        .add("name", name)
+        .add("column", column)
+        .toString();
+  }
 }
