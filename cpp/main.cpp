@@ -4,7 +4,9 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <bitset>
 
+#include <roaring.hh>
 #include "compare_by.h"
 #include "io_util.h"
 #include "sql-parser/src/SQLParser.h"
@@ -23,6 +25,7 @@ using std::min;
 using std::string;
 using std::tuple;
 using std::vector;
+using std::bitset;
 
 void diff(hsql::DiffDefinition* diff, const vector<Row>& input,
           const map<string, uint32_t>& input_schema, vector<Row>& output,
@@ -151,6 +154,7 @@ void select(const hsql::SelectStatement* stmt, const vector<Row>& input,
 void count_diff_stats(const vector<Row>& input, map<Row, uint32_t>& counts,
                       const vector<uint32_t>& attr_indices,
                       const uint32_t max_combo) {
+  bench_timer_t start = time_start();
   const uint32_t num_rows = input.size();
   const uint32_t num_compare_attrs = attr_indices.size();
 
@@ -188,6 +192,59 @@ void count_diff_stats(const vector<Row>& input, map<Row, uint32_t>& counts,
       }
     }
   }
+  cout << time_stop(start) << endl;
+}
+
+void count_diff_stats_by_col(const vector<Row>& input, map<Row, uint32_t>& counts,
+                      const vector<uint32_t>& attr_indices,
+                      const uint32_t max_combo) {
+    bench_timer_t start = time_start();
+    const uint32_t num_rows = input.size();
+    const uint32_t num_compare_attrs = attr_indices.size();
+
+    vector<map<string, Roaring> > bitmaps(num_compare_attrs);
+    for (auto i = 0u; i < num_rows; ++i) {
+        const Row input_row = input[i];
+
+        for (auto j = 0u; j < num_compare_attrs; ++j) {
+            const uint32_t attr_index = attr_indices[j];
+            const string attr = input_row[attr_index];
+            Row order_one_attr_key(num_compare_attrs, "null");
+            order_one_attr_key[j] = attr;
+            counts[order_one_attr_key] += 1;
+            bitmaps[j][attr].add(i);
+        }
+    }
+
+    if (max_combo > 1) {
+        for (auto i = 0u; i < num_compare_attrs; ++i) {
+            for (auto& entry1 : bitmaps[i]) {
+                for (auto j = i + 1; j < num_compare_attrs; ++j) {
+                    for (auto& entry2 : bitmaps[j]) {
+                        Roaring intersection = entry1.second & entry2.second;
+                        int order_two_cnt = intersection.cardinality();
+                        Row order_two_attr_key(num_compare_attrs, "null");
+                        order_two_attr_key[i] = entry1.first;
+                        order_two_attr_key[j] = entry2.first;
+                        counts[order_two_attr_key] = order_two_cnt;
+
+                        if (max_combo > 2) {
+                            for (auto k = j + 1; k < num_compare_attrs; ++k) {
+                                for (auto& entry3 : bitmaps[k]) {
+                                    intersection &= entry3.second;
+                                    int order_three_cnt = intersection.cardinality();
+                                    Row order_three_attr_key(order_two_attr_key);
+                                    order_three_attr_key[k] = entry3.first;
+                                    counts[order_three_attr_key] = order_three_cnt;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout << time_stop(start) << endl;
 }
 
 vector<uint32_t> get_attribute_indices(
@@ -242,10 +299,27 @@ void diff(hsql::DiffDefinition* diff, const vector<Row>& input,
   const uint32_t total_count = inlier_count + outlier_count;
 
   map<Row, uint32_t> outlier_counts;
-  count_diff_stats(outliers, outlier_counts, attr_indices, max_combo);
+#ifdef OUTLIER_BY_COL
+  cout << "worked outlier" << endl;
+  count_diff_stats_by_col(outliers, outlier_counts, attr_indices, max_combo);
+#endif
 
   map<Row, uint32_t> inlier_counts;
+#ifdef INLIER_BY_COL
+  cout << "worked inlier" << endl;
+  count_diff_stats_by_col(inliers, inlier_counts, attr_indices, max_combo);
+#endif
+
+#ifdef OUTLIER_BY_ROW
+  cout << "row outlier worked" << endl;
+  count_diff_stats(outliers, outlier_counts, attr_indices, max_combo);
+#endif
+
+#ifdef INLIER_BY_ROW
+  cout << "row inlier worked" << endl;
   count_diff_stats(inliers, inlier_counts, attr_indices, max_combo);
+#endif
+
 
 #ifdef DEBUG
   cout << "Total outlier count: " << outlier_count << endl;
