@@ -12,6 +12,17 @@ port = None
 if(len(sys.argv) > 2):
     port = sys.argv[2]
 
+user = "postgres"
+password = "mamikonyan"
+if(len(sys.argv) > 3):
+    user = sys.argv[3]
+    password = sys.argv[4]
+
+host = "localhost"
+if (len(sys.argv) > 4):
+    host = sys.argv[5]
+
+
 # TODO: These can be made configurable later
 NUM_ATTRIBUTES = 4
 NUM_METRICS = 5
@@ -24,7 +35,12 @@ attributes = [
   ["CA", "MA", "NY", "WY", "AR", "NV", "PA", "WA", "WI"]
 ]
 
-conn = psycopg2.connect("dbname='postgres' host='localhost'" + " port="+port if port else "" + " user=postgres password=mamikonyan")
+conn = psycopg2.connect("dbname='postgres'" +
+                         (" host='" + host + "'") +
+                         (" port="+port if port else "") +
+                         (" user="+user if user else "") +
+                         (" password="+password if password else ""))
+
 cur = conn.cursor()
 
 print "Creating table..."
