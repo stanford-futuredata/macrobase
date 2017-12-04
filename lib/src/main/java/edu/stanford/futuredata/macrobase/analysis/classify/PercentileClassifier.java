@@ -40,7 +40,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
                 resultColumn[i] = 1.0;
             }
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
     @Override

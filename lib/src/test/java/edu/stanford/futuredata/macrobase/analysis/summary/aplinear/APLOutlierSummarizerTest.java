@@ -56,11 +56,11 @@ public class APLOutlierSummarizerTest {
         String[] col3 = {"c1", "c1", "c1", "c2"};
         double[] counts = {100, 300, 400, 500};
         double[] oCounts = {30, 5, 5, 7};
-        df.addStringColumn("col1", col1);
-        df.addStringColumn("col2", col2);
-        df.addStringColumn("col3", col3);
-        df.addDoubleColumn("counts", counts);
-        df.addDoubleColumn("oCounts", oCounts);
+        df.addColumn("col1", col1);
+        df.addColumn("col2", col2);
+        df.addColumn("col3", col3);
+        df.addColumn("counts", counts);
+        df.addColumn("oCounts", oCounts);
 
         List<String> explanationAttributes = Arrays.asList(
                 "col1",
