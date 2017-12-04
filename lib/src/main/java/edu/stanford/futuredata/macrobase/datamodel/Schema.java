@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.datamodel;
 
-import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

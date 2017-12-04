@@ -3,16 +3,14 @@ package edu.stanford.futuredata.macrobase.ingest;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-
 import java.util.ArrayList;
 import java.util.Map;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 public class CSVDataFrameParser implements DataFrameLoader {
     private CSVParser parser;
     private Map<String, Schema.ColType> columnTypes;
-    private int numBadRecords = 0;
 
     public CSVDataFrameParser(CSVParser parser) {
         this.parser = parser;
@@ -44,7 +42,6 @@ public class CSVDataFrameParser implements DataFrameLoader {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
         }
 
-        this.numBadRecords = 0;
         ArrayList<Row> rows = new ArrayList<>();
         for (CSVRecord record : parser) {
             ArrayList<Object> rowFields = new ArrayList<>(numColumns);
@@ -66,11 +63,6 @@ public class CSVDataFrameParser implements DataFrameLoader {
             rows.add(new Row(rowFields));
         }
 
-        DataFrame df = new DataFrame(schema, rows);
-        return df;
-    }
-
-    public int getNumBadRecords() {
-        return numBadRecords;
+        return new DataFrame(schema, rows);
     }
 }

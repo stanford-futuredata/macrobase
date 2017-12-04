@@ -1,26 +1,20 @@
 package edu.stanford.futuredata.macrobase.ingest;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 
 public class CSVDataFrameLoader implements DataFrameLoader {
-    private String fileName;
+
     private CSVDataFrameParser parserWrapper;
 
-    public CSVDataFrameLoader(String fileName) throws IOException {
-        this.fileName = fileName;
-        File csvFile = new File(fileName);
+    public CSVDataFrameLoader(String filename) throws IOException {
+        File csvFile = new File(filename);
         CSVParser csvParser = CSVParser.parse(
                 csvFile,
                 Charset.defaultCharset(),
@@ -37,9 +31,5 @@ public class CSVDataFrameLoader implements DataFrameLoader {
     @Override
     public DataFrame load() throws Exception {
         return parserWrapper.load();
-    }
-
-    public int getBadRecords() {
-        return parserWrapper.getNumBadRecords();
     }
 }
