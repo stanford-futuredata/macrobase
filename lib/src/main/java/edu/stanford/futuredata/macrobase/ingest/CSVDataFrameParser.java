@@ -1,18 +1,22 @@
 package edu.stanford.futuredata.macrobase.ingest;
 
+import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import com.univocity.parsers.csv.CsvParser;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
 
 public class CSVDataFrameParser implements DataFrameLoader {
     private Logger log = LoggerFactory.getLogger(CSVDataFrameParser.class);
