@@ -33,11 +33,9 @@ public class MacrobaseSQLRepl {
    * @throws IOException if unable to instantiate ConsoleReader
    */
   private MacrobaseSQLRepl() throws IOException {
+    // Initialize console reader and writer
     reader = new ConsoleReader();
-    reader.setHistoryEnabled(true);
-    CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
-    handler.setStripAnsi(true);
-    reader.setCompletionHandler(handler);
+    reader.setCompletionHandler(new CandidateListCompletionHandler());
     reader.addCompleter(new FileNameCompleter());
     out = new PrintWriter(reader.getOutput());
 
@@ -55,12 +53,14 @@ public class MacrobaseSQLRepl {
   private void executeQueries(final String queries, final boolean print) {
     StatementSplitter splitter = new StatementSplitter(queries);
     for (StatementSplitter.Statement s : splitter.getCompleteStatements()) {
+      final String statementStr = s.statement();
       if (print) {
-        out.println(s.statement());
+        out.println(statementStr);
         out.println();
         out.flush();
       }
-      Statement stmt = parser.createStatement(s.statement());
+      reader.getHistory().add(statementStr);
+      Statement stmt = parser.createStatement(statementStr);
       log.debug(stmt.toString());
       try {
         if (stmt instanceof ImportCsv) {
