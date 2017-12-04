@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.base.Joiner;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
