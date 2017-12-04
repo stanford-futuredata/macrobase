@@ -82,7 +82,7 @@ public class MetricBucketTransformer implements Transformer {
                 }
                 transformedColValues[i] = bucketNames[searchIdx];
             }
-            transformedDF.addStringColumn(
+            transformedDF.addColumn(
                     transformedColumnNames.get(colIdx),
                     transformedColValues
             );

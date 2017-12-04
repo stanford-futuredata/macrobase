@@ -25,8 +25,8 @@ public class MovingAverageTest {
             vals[i] = 1.0;
         }
         DataFrame data = new DataFrame();
-        data.addDoubleColumn("time", times);
-        data.addDoubleColumn("val", vals);
+        data.addColumn("time", times);
+        data.addColumn("val", vals);
 
         return data;
     }

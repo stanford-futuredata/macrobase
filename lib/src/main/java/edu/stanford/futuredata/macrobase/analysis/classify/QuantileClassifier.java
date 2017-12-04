@@ -86,7 +86,7 @@ public class QuantileClassifier extends CubeClassifier implements ThresholdClass
             }
             resultColumn[i] = numOutliers;
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
     @Override

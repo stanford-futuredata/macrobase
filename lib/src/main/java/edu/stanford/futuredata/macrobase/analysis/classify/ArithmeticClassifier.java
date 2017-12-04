@@ -68,7 +68,7 @@ public class ArithmeticClassifier extends CubeClassifier implements ThresholdCla
             }
             resultColumn[i] = numOutliers;
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
     @Override

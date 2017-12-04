@@ -36,7 +36,7 @@ statement
         (WITH properties)?                                             #createSchema
     | DROP SCHEMA (IF EXISTS)? qualifiedName (CASCADE | RESTRICT)?     #dropSchema
     | ALTER SCHEMA qualifiedName RENAME TO identifier                  #renameSchema
-    | CREATE TABLE (IF NOT EXISTS)? qualifiedName columnAliases?
+    | CREATE TABLE (IF NOT EXISTS)? qualifiedName ('(' columnAliases ')')?
         (COMMENT string)?
         (WITH properties)? AS (query | '('query')')
         (WITH (NO)? DATA)?                                             #createTableAsSelect
@@ -45,7 +45,7 @@ statement
          (COMMENT string)?
          (WITH properties)?                                            #createTable
     | DROP TABLE (IF EXISTS)? qualifiedName                            #dropTable
-    | INSERT INTO qualifiedName columnAliases? query                   #insertInto
+    | INSERT INTO qualifiedName ('(' columnAliases ')')? query         #insertInto
     | DELETE FROM qualifiedName (WHERE booleanExpression)?             #delete
     | ALTER TABLE from=qualifiedName RENAME TO to=qualifiedName        #renameTable
     | ALTER TABLE tableName=qualifiedName
@@ -95,6 +95,8 @@ statement
     | EXECUTE identifier (USING expression (',' expression)*)?         #execute
     | DESCRIBE INPUT identifier                                        #describeInput
     | DESCRIBE OUTPUT identifier                                       #describeOutput
+    | IMPORT FROM CSV FILE STRING INTO qualifiedName
+        ('(' columnDefinition (',' columnDefinition)* ')')?            #importCsv
     ;
 
 query
@@ -140,6 +142,7 @@ queryTerm
 
 queryPrimary
     : querySpecification                   #queryPrimaryDefault
+    | diffQuerySpecification               #diffQuery
     | TABLE qualifiedName                  #table
     | VALUES expression (',' expression)*  #inlineTable
     | '(' queryNoWith  ')'                 #subquery
@@ -155,6 +158,35 @@ querySpecification
       (WHERE where=booleanExpression)?
       (GROUP BY groupBy)?
       (HAVING having=booleanExpression)?
+    ;
+
+diffQuerySpecification
+    : SELECT setQuantifier? selectItem (',' selectItem)*
+      FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
+      ON columnAliases
+      COMPARE BY ratioMetricExpression
+      (MAX COMBO integer)? // TODO: switch to max_combo token
+      (WHERE where=booleanExpression)?
+    ;
+
+integer
+    : INTEGER_VALUE
+    ;
+
+ratioMetricExpression
+    : identifier '(' aggregateExpression ')'
+    ;
+
+aggregateExpression
+    : aggregate '(' ASTERISK ')'
+    // | aggregate '(' (setQuantifier? expression (',' expression)*)? ')'
+    ;
+
+aggregate
+    : COUNT
+    | MIN
+    | MAX
+    | SUM
     ;
 
 groupBy
@@ -179,7 +211,7 @@ groupingSet
     ;
 
 namedQuery
-    : name=identifier (columnAliases)? AS '(' query ')'
+    : name=identifier ('(' columnAliases ')')? AS '(' query ')'
     ;
 
 setQuantifier
@@ -226,11 +258,11 @@ sampleType
     ;
 
 aliasedRelation
-    : relationPrimary (AS? identifier columnAliases?)?
+    : relationPrimary (AS? identifier ('(' columnAliases ')')?)?
     ;
 
 columnAliases
-    : '(' identifier (',' identifier)* ')'
+    : identifier (',' identifier)*
     ;
 
 relationPrimary
@@ -435,7 +467,6 @@ qualifiedName
 
 identifier
     : IDENTIFIER             #unquotedIdentifier
-    | QUOTED_IDENTIFIER      #quotedIdentifier
     | nonReserved            #unquotedIdentifier
     | BACKQUOTED_IDENTIFIER  #backQuotedIdentifier
     | DIGIT_IDENTIFIER       #digitIdentifier
@@ -500,7 +531,9 @@ COMMIT: 'COMMIT';
 COMMITTED: 'COMMITTED';
 COMPARE: 'COMPARE';
 CONSTRAINT: 'CONSTRAINT';
+COUNT: 'COUNT';
 CREATE: 'CREATE';
+CSV: 'CSV';
 CROSS: 'CROSS';
 CUBE: 'CUBE';
 CURRENT: 'CURRENT';
@@ -528,6 +561,7 @@ EXISTS: 'EXISTS';
 EXPLAIN: 'EXPLAIN';
 EXTRACT: 'EXTRACT';
 FALSE: 'FALSE';
+FILE: 'FILE';
 FILTER: 'FILTER';
 FIRST: 'FIRST';
 FOLLOWING: 'FOLLOWING';
@@ -544,6 +578,7 @@ GROUPING: 'GROUPING';
 HAVING: 'HAVING';
 HOUR: 'HOUR';
 IF: 'IF';
+IMPORT: 'IMPORT';
 IN: 'IN';
 INCLUDING: 'INCLUDING';
 INNER: 'INNER';
@@ -567,6 +602,7 @@ LOCALTIMESTAMP: 'LOCALTIMESTAMP';
 LOGICAL: 'LOGICAL';
 MAP: 'MAP';
 MAX: 'MAX';
+MIN: 'MIN';
 MINUTE: 'MINUTE';
 MONTH: 'MONTH';
 NATURAL: 'NATURAL';
@@ -625,6 +661,7 @@ SOME: 'SOME';
 START: 'START';
 STATS: 'STATS';
 SUBSTRING: 'SUBSTRING';
+SUM: 'SUM';
 SYSTEM: 'SYSTEM';
 TABLE: 'TABLE';
 TABLES: 'TABLES';
@@ -674,6 +711,7 @@ CONCAT: '||';
 
 STRING
     : '\'' ( ~'\'' | '\'\'' )* '\''
+    | '"' ( ~'"' | '""' )* '"'
     ;
 
 UNICODE_STRING

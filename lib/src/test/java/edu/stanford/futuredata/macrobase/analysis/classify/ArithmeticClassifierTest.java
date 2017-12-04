@@ -22,9 +22,9 @@ public class ArithmeticClassifierTest {
             means[i] = i;
             stds[i] = 10;
         }
-        df.addDoubleColumn("count", counts);
-        df.addDoubleColumn("mean", means);
-        df.addDoubleColumn("std", stds);
+        df.addColumn("count", counts);
+        df.addColumn("mean", means);
+        df.addColumn("std", stds);
     }
 
     @Test

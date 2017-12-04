@@ -17,7 +17,7 @@ public class PercentileClassifierTest {
         for (int i = 0; i < vals.length; i++) {
             vals[i] = i;
         }
-        df.addDoubleColumn("val", vals);
+        df.addColumn("val", vals);
     }
 
     @Test
