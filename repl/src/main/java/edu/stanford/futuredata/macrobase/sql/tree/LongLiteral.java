@@ -41,7 +41,7 @@ public class LongLiteral
     }
   }
 
-  public long getValue() {
+  public Long getValue() {
     return value;
   }
 

@@ -71,11 +71,11 @@ public class StreamingSummarizationTest {
         }
 
         DataFrame df = new DataFrame();
-        df.addDoubleColumn("time", time);
+        df.addColumn("time", time);
         for (int j = 0; j < d; j++) {
-            df.addStringColumn("a" + j, attrs[j]);
+            df.addColumn("a" + j, attrs[j]);
         }
-        df.addDoubleColumn("outlier", isOutlier);
+        df.addColumn("outlier", isOutlier);
         return df;
     }
 

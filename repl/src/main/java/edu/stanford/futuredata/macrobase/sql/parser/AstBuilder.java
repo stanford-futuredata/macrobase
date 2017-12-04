@@ -25,6 +25,8 @@ import edu.stanford.futuredata.macrobase.SqlBaseBaseVisitor;
 import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
 import edu.stanford.futuredata.macrobase.sql.tree.AddColumn;
+import edu.stanford.futuredata.macrobase.sql.tree.Aggregate;
+import edu.stanford.futuredata.macrobase.sql.tree.AggregateExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
 import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticBinaryExpression;
@@ -56,6 +58,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.Delete;
 import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DescribeInput;
 import edu.stanford.futuredata.macrobase.sql.tree.DescribeOutput;
+import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.DropColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.DropSchema;
@@ -80,6 +83,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.GroupingOperation;
 import edu.stanford.futuredata.macrobase.sql.tree.GroupingSets;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.IfExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.InListExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.InPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Insert;
@@ -114,6 +118,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.QuantifiedComparisonExpression
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
+import edu.stanford.futuredata.macrobase.sql.tree.RatioMetricExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
 import edu.stanford.futuredata.macrobase.sql.tree.RenameColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.RenameSchema;
@@ -514,6 +519,25 @@ class AstBuilder
               getTextIfPresent(context.limit)),
           Optional.empty(),
           Optional.empty());
+    } else if (term instanceof DiffQuerySpecification) {
+
+      DiffQuerySpecification diffQuery = (DiffQuerySpecification) term;
+      return new Query(
+          getLocation(context),
+          Optional.empty(),
+          new DiffQuerySpecification(
+              getLocation(context),
+              diffQuery.getSelect(),
+              diffQuery.getFirst(),
+              diffQuery.getSecond(),
+              diffQuery.getAttributeCols(),
+              diffQuery.getRatioMetricExpr(),
+              diffQuery.getMaxCombo(),
+              diffQuery.getWhere(),
+              orderBy,
+              getTextIfPresent(context.limit)),
+          Optional.empty(),
+          Optional.empty());
     }
 
     return new Query(
@@ -522,6 +546,75 @@ class AstBuilder
         term,
         orderBy,
         getTextIfPresent(context.limit));
+  }
+
+  @Override
+  public Node visitImportCsv(SqlBaseParser.ImportCsvContext context) {
+    String filename = context.STRING().getText().substring(1);
+    filename = filename.substring(0, filename.length() - 1);
+    // Remove single quotes from beginning and end of filename
+    final List<ColumnDefinition> columns = visit(context.columnDefinition(),
+        ColumnDefinition.class);
+    return new ImportCsv(
+        getLocation(context),
+        filename,
+        getQualifiedName(context.qualifiedName()),
+        columns
+    );
+  }
+
+  @Override
+  public Node visitAggregate(SqlBaseParser.AggregateContext context) {
+    return new Aggregate(getLocation(context), context.getText());
+  }
+
+  @Override
+  public Node visitAggregateExpression(SqlBaseParser.AggregateExpressionContext context) {
+    return new AggregateExpression(getLocation(context), (Aggregate) visit(context.aggregate()));
+  }
+
+  @Override
+  public Node visitRatioMetricExpression(SqlBaseParser.RatioMetricExpressionContext context) {
+    return new RatioMetricExpression(getLocation(context), (Identifier) visit(context.identifier()),
+        (AggregateExpression) visit(context.aggregateExpression()));
+  }
+
+  @Override
+  public Node visitDiffQuerySpecification(SqlBaseParser.DiffQuerySpecificationContext context) {
+    Optional<Query> first;
+    Optional<Query> second = Optional.empty();
+    List<SelectItem> selectItems = visit(context.selectItem(), SelectItem.class);
+
+    List<Query> subqueries = visit(context.queryNoWith(), Query.class);
+    check(subqueries.size() > 0 && subqueries.size() <= 2,
+        "At most two relations required for diff query", context);
+
+    first = Optional.of(subqueries.get(0));
+    check(first.isPresent(), "At least one relation required for diff query", context);
+    if (subqueries.size() == 2) {
+      second = Optional.of(subqueries.get(1));
+    }
+//    List<QualifiedName> subqueryAliases = context.qualifiedName().stream()
+//        .map(this::getQualifiedName).collect(toList());
+
+    RatioMetricExpression ratioMetricExpr = (RatioMetricExpression) visit(
+        context.ratioMetricExpression());
+    List<Identifier> attributeCols = visit(context.columnAliases().identifier(), Identifier.class);
+    check(attributeCols.size() > 0, "At least one attribute must be specified", context);
+
+    Optional<LongLiteral> maxCombo = visitIfPresent(context.integer(), LongLiteral.class);
+
+    return new DiffQuerySpecification(
+        getLocation(context),
+        new Select(getLocation(context.SELECT()), isDistinct(context.setQuantifier()), selectItems),
+        first,
+        second,
+        attributeCols,
+        ratioMetricExpr,
+        maxCombo,
+        visitIfPresent(context.where, Expression.class),
+        Optional.empty(),
+        Optional.empty());
   }
 
   @Override
@@ -1410,14 +1503,14 @@ class AstBuilder
     return new Identifier(getLocation(context), context.getText(), false);
   }
 
-  @Override
-  public Node visitQuotedIdentifier(SqlBaseParser.QuotedIdentifierContext context) {
-    String token = context.getText();
-    String identifier = token.substring(1, token.length() - 1)
-        .replace("\"\"", "\"");
-
-    return new Identifier(getLocation(context), identifier, true);
-  }
+//  @Override
+//  public Node visitQuotedIdentifier(SqlBaseParser.QuotedIdentifierContext context) {
+//    String token = context.getText();
+//    String identifier = token.substring(1, token.length() - 1)
+//        .replace("\"\"", "\"");
+//
+//    return new Identifier(getLocation(context), identifier, true);
+//  }
 
   // ************** literals **************
 
@@ -1476,6 +1569,11 @@ class AstBuilder
   @Override
   public Node visitDecimalLiteral(SqlBaseParser.DecimalLiteralContext context) {
     return new DoubleLiteral(getLocation(context), context.getText());
+  }
+
+  @Override
+  public Node visitInteger(SqlBaseParser.IntegerContext context) {
+    return new LongLiteral(getLocation(context), context.getText());
   }
 
   @Override
@@ -1639,7 +1737,7 @@ class AstBuilder
 
   private static String unquote(String value) {
     return value.substring(1, value.length() - 1)
-        .replace("''", "'");
+        .replace("''", "'").replace("\"\"", "\"");
   }
 
   private static LikeClause.PropertiesOption getPropertiesOption(Token token) {

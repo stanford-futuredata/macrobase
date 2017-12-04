@@ -71,6 +71,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.Parameter;
 import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.QuantifiedComparisonExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.RatioMetricExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Rollup;
 import edu.stanford.futuredata.macrobase.sql.tree.Row;
 import edu.stanford.futuredata.macrobase.sql.tree.SearchedCaseExpression;
@@ -597,6 +598,10 @@ public final class ExpressionFormatter {
 
     public String visitGroupingOperation(GroupingOperation node, Void context) {
       return "GROUPING (" + joinExpressions(node.getGroupingColumns()) + ")";
+    }
+
+    public String visitRatioMetricExpression(RatioMetricExpression node, Void context) {
+      return node.getFuncName() + "(" + node.getAggExpr() + "(*))";
     }
 
     private String formatBinaryExpression(String operator, Expression left, Expression right) {

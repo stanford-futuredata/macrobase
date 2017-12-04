@@ -19,12 +19,12 @@ public class APLMeanSummarizerTest {
         double[] counts = {100, 300, 400, 500};
         double[] means = {200.0, 20.0, 30.0, 25.0};
         double[] stdDevs = {15.0, 14.0, 13.0, 12.0};
-        df.addStringColumn("col1", col1);
-        df.addStringColumn("col2", col2);
-        df.addStringColumn("col3", col3);
-        df.addDoubleColumn("counts", counts);
-        df.addDoubleColumn("means", means);
-        df.addDoubleColumn("stdDevs", stdDevs);
+        df.addColumn("col1", col1);
+        df.addColumn("col2", col2);
+        df.addColumn("col3", col3);
+        df.addColumn("counts", counts);
+        df.addColumn("means", means);
+        df.addColumn("stdDevs", stdDevs);
 
         List<String> explanationAttributes = Arrays.asList(
                 "col1",

@@ -16,7 +16,7 @@ public class MetricBucketTransformerTest {
         for (int i = 0; i < n; i++) {
             values[i] = i;
         }
-        df.addDoubleColumn("values", values);
+        df.addColumn("values", values);
 
         MetricBucketTransformer t = new MetricBucketTransformer("values");
         t.process(df);
@@ -53,7 +53,7 @@ public class MetricBucketTransformerTest {
             }
             String curColumnName = "m"+j;
             metricColumns.add(curColumnName);
-            df.addDoubleColumn(curColumnName, values);
+            df.addColumn(curColumnName, values);
         }
 
         MetricBucketTransformer t = new MetricBucketTransformer(metricColumns);
