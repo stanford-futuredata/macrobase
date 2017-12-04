@@ -1,11 +1,17 @@
 package edu.stanford.futuredata.macrobase.datamodel;
 
+import static java.util.stream.Collectors.toList;
+
+import com.google.common.base.Joiner;
+import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Column-based DataFrame object.
@@ -13,8 +19,8 @@ import java.util.function.Predicate;
  * preserving column names and types. Complex processing should be done by
  * extracting columns as arrays and operating on arrays directly.
  *
- * The addColumn methods are the primary means of mutating a dataframe and are
- * especially useful during dataframe construction. DataFrames can also be
+ * The addColumn methods are the primary means of mutating a DataFrame and are
+ * especially useful during DataFrame construction. DataFrames can also be
  * initialized from a schema and a set of rows.
  */
 public class DataFrame {
@@ -38,8 +44,8 @@ public class DataFrame {
     }
 
     /**
-     * Creates a dataframe from a list of rows
-     * Slower than creating a dataframe column by column using addXColumn methods.
+     * Creates a DataFrame from a list of rows
+     * Slower than creating a DataFrame column by column using addXColumn methods.
      * @param schema Schema to use
      * @param rows Data to load
      */
@@ -47,21 +53,23 @@ public class DataFrame {
         this();
         this.schema = schema;
         this.numRows = rows.size();
-        int d = schema.getNumColumns();
-        for (int c = 0; c < d; c++) {
+        final int numColumns = schema.getNumColumns();
+        for (int c = 0; c < numColumns; c++) {
             Schema.ColType t = schema.getColumnType(c);
             if (t == Schema.ColType.STRING) {
                 String[] colValues = new String[numRows];
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = rows.get(i).<String>getAs(c);
                 }
-                addStringColumnInternal(colValues);
+                stringCols.add(colValues);
+                indexToTypeIndex.add(stringCols.size()-1);
             } else if (t == Schema.ColType.DOUBLE) {
                 double[] colValues = new double[numRows];
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = rows.get(i).<Double>getAs(c);
                 }
-                addDoubleColumnInternal(colValues);
+                doubleCols.add(colValues);
+                indexToTypeIndex.add(doubleCols.size()-1);
             } else {
                 throw new MacrobaseInternalError("Invalid ColType");
             }
@@ -69,7 +77,7 @@ public class DataFrame {
     }
 
     /**
-     * Shallow copy of the dataframe: the schema is recreated but the arrays backing the
+     * Shallow copy of the DataFrame: the schema is recreated but the arrays backing the
      * columns are reused.
      * @return shallow DataFrame copy
      */
@@ -92,29 +100,75 @@ public class DataFrame {
         return getRows().toString();
     }
 
-    // Fast Column-based methods
-    private void addDoubleColumnInternal(double[] colValues) {
-        doubleCols.add(colValues);
-        indexToTypeIndex.add(doubleCols.size()-1);
+    /**
+     * Pretty print contents of the DataFrame to STDOUT. Example output:
+     * ------------------------------------------
+     * |   col_1  |   col_2  |  ...  |   col_n  |
+     * ------------------------------------------
+     * |  val_11  |  val_12  |  ...  |  val_1n  |
+     * ...
+     * |  val_m1  |  val_m2  |  ...  |  val_mn  |
+     * ------------------------------------------
+     * @param maxNumToPrint maximum number of rows from the DataFrame to print
+     */
+    public void prettyPrint(final int maxNumToPrint) {
+        System.out.println(numRows + " rows");
+
+        final int maxColNameLength = schema.getColumnNames().stream()
+            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 2; // extra space on both sides
+        final String schemaStr = "|" + Joiner.on("|").join(schema.getColumnNames().stream()
+            .map((x) -> StringUtils.center(String.valueOf(x), maxColNameLength)).collect(toList())) + "|";
+        final String dashes = Joiner.on("").join(Collections.nCopies(schemaStr.length(), "-"));
+        System.out.println(dashes);
+        System.out.println(schemaStr);
+        System.out.println(dashes);
+
+        final List<Row> rows = getRows();
+        if (numRows > maxNumToPrint) {
+            final int numToPrint = maxNumToPrint / 2;
+            for (Row r : rows.subList(0, numToPrint))  {
+                r.prettyPrint(maxColNameLength);
+            }
+            System.out.println("...");
+            for (Row r : rows.subList(numRows - numToPrint, numRows))  {
+                r.prettyPrint(maxColNameLength);
+            }
+        } else {
+            for (Row r : rows)  {
+                r.prettyPrint(maxColNameLength);
+            }
+        }
+        System.out.println(dashes);
+        System.out.println();
     }
-    public DataFrame addDoubleColumn(String colName, double[] colValues) {
+
+    /**
+     * {@link #prettyPrint(int)} with default <tt>maxNumToPrint</tt> set to 10
+     */
+    public void prettyPrint() {
+        prettyPrint(10);
+    }
+
+    // Fast Column-based methods
+    public DataFrame addColumn(String colName, String[] colValues) {
         if (numRows == 0) {
             numRows = colValues.length;
         }
-        schema.addColumn(Schema.ColType.DOUBLE, colName);
-        addDoubleColumnInternal(colValues);
-        return this;
-    }
-    private void addStringColumnInternal(String[] colValues) {
+
+        schema.addColumn(Schema.ColType.STRING, colName);
         stringCols.add(colValues);
         indexToTypeIndex.add(stringCols.size()-1);
+        return this;
     }
-    public DataFrame addStringColumn(String colName, String[] colValues) {
+
+    public DataFrame addColumn(String colName, double[] colValues) {
         if (numRows == 0) {
             numRows = colValues.length;
         }
-        schema.addColumn(Schema.ColType.STRING, colName);
-        addStringColumnInternal(colValues);
+
+        schema.addColumn(ColType.DOUBLE, colName);
+        doubleCols.add(colValues);
+        indexToTypeIndex.add(doubleCols.size()-1);
         return this;
     }
 
@@ -164,7 +218,7 @@ public class DataFrame {
 
     /**
      * @param others Dataframes to combine
-     * @return new dataframe with copied rows
+     * @return new DataFrame with copied rows
      */
     public static DataFrame unionAll(List<DataFrame> others) {
         int k = others.size();
@@ -216,38 +270,32 @@ public class DataFrame {
     }
 
     /**
-     * @param columns column indices to project
-     * @return new dataframe with subset of columns
+     * @param projectionCols The columns that should be included in the returned DataFrame. Projections
+     * that aren't in the columns of the current DataFrame will be ignored
+     * @return return a new DataFrame that includes only the columns specified by @projections.
      */
-    public DataFrame select(List<Integer> columns) {
-        DataFrame other = new DataFrame();
-        for (int c : columns) {
-            String columnName = schema.getColumnName(c);
-            Schema.ColType t = schema.getColumnType(c);
-            if (t == Schema.ColType.STRING) {
-                other.addStringColumn(columnName, getStringColumn(c));
-            } else if (t == Schema.ColType.DOUBLE) {
-                other.addDoubleColumn(columnName, getDoubleColumn(c));
-            } else {
-                throw new MacrobaseInternalError("Bad Column Type");
+    // TODO: write test for this method
+    public DataFrame project(List<String> projectionCols) {
+        final DataFrame other = new DataFrame();
+        for (String col : projectionCols) {
+            if (!schema.hasColumn(col)) {
+                continue;
+            }
+            final ColType type = schema.getColumnTypeByName(col);
+            if (type == ColType.DOUBLE) {
+                other.addColumn(col, getDoubleColumnByName(col));
+            } else if (type == ColType.STRING) {
+                other.addColumn(col, getStringColumnByName(col));
             }
         }
         return other;
     }
 
     /**
-     * @param columns column names to project
-     * @return new dataframe with subset of columns
-     */
-    public DataFrame selectByName(List<String> columns) {
-        return select(this.schema.getColumnIndices(columns));
-    }
-
-    /**
      * @param mask rows to select
-     * @return new dataframe with subset of rows
+     * @return new DataFrame with subset of rows
      */
-    protected DataFrame filter(boolean[] mask) {
+    public DataFrame filter(boolean[] mask) {
         DataFrame other = new DataFrame();
 
         int d = schema.getNumColumns();
@@ -270,7 +318,7 @@ public class DataFrame {
                         j++;
                     }
                 }
-                other.addStringColumn(columnName, newColumn);
+                other.addColumn(columnName, newColumn);
             } else if (t == Schema.ColType.DOUBLE) {
                 double[] oldColumn = getDoubleColumn(c);
                 double[] newColumn = new double[numTrue];
@@ -281,13 +329,14 @@ public class DataFrame {
                         j++;
                     }
                 }
-                other.addDoubleColumn(columnName, newColumn);
+                other.addColumn(columnName, newColumn);
             } else {
                 throw new MacrobaseInternalError("Bad Column Type");
             }
         }
         return other;
     }
+
     public DataFrame filter(int columnIdx, Predicate<Object> filter) {
         String[] filterColumn = getStringColumn(columnIdx);
         boolean[] mask = new boolean[numRows];
@@ -303,7 +352,7 @@ public class DataFrame {
     /**
      * @param columnIdx column index to filter by
      * @param filter predicate to test each column value
-     * @return new dataframe with subset of rows
+     * @return new DataFrame with subset of rows
      */
     public DataFrame filter(int columnIdx, DoublePredicate filter) {
         double[] filterColumn = getDoubleColumn(columnIdx);
@@ -317,7 +366,7 @@ public class DataFrame {
     /**
      * @param columnName column name to filter by
      * @param filter predicate to test each column value
-     * @return new dataframe with subset of rows
+     * @return new DataFrame with subset of rows
      */
     public DataFrame filter(String columnName, DoublePredicate filter) {
         return filter(schema.getColumnIndex(columnName), filter);

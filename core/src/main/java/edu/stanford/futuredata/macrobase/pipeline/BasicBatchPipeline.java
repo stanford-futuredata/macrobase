@@ -96,27 +96,13 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
-    public ExplanationMetric getRatioMetric() throws MacrobaseException {
-        switch (ratioMetric.toLowerCase()) {
-            case "globalratio": {
-                return new GlobalRatioMetric();
-            }
-            case "riskratio": {
-                return new RiskRatioMetric();
-            }
-            default: {
-                throw new MacrobaseException("Bad Ratio Metric");
-            }
-        }
-    }
-
     public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
         switch (summarizerType.toLowerCase()) {
             case "apriori": {
                 APrioriSummarizer summarizer = new APrioriSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
-                summarizer.setRatioMetric(getRatioMetric());
+                summarizer.setRatioMetric(ExplanationMetric.getMetricFn(ratioMetric));
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
                 return summarizer;

@@ -1,14 +1,15 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
+import static org.junit.Assert.assertEquals;
+
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.*;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class QuantileClassifierTest {
     private int length = 100;
@@ -59,10 +60,10 @@ public class QuantileClassifierTest {
                 quantileColumns.get(j)[i] = i + (quantiles[j] - 0.5) * 100;
             }
         }
-        df.addDoubleColumn("count", counts);
-        df.addDoubleColumn("mean", means);
+        df.addColumn("count", counts);
+        df.addColumn("mean", means);
         for (int i = 0; i < quantiles.length; i++) {
-            df.addDoubleColumn(quantileColumnNames.get(i), quantileColumns.get(i));
+            df.addColumn(quantileColumnNames.get(i), quantileColumns.get(i));
         }
     }
 

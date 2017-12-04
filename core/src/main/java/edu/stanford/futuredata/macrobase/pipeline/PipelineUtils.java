@@ -26,12 +26,11 @@ public class PipelineUtils {
             Map<String, Object> jsonBody,
             boolean usePost
     ) throws Exception {
-        if(inputURI.substring(0, 3).equals("csv")) {
-            CSVDataFrameLoader loader = new CSVDataFrameLoader(inputURI.substring(6));
-            loader.setColumnTypes(colTypes);
-            DataFrame df = loader.load();
+        if(inputURI.startsWith("csv")) {
+            CSVDataFrameLoader loader = new CSVDataFrameLoader(inputURI.substring(6)); // length of "csv://"
+            DataFrame df = loader.setColumnTypes(colTypes).load();
             return df;
-        } else if (inputURI.substring(0, 4).equals("http")){
+        } else if (inputURI.startsWith("http")){
             ObjectMapper mapper = new ObjectMapper();
             String bodyString = mapper.writeValueAsString(jsonBody);
 

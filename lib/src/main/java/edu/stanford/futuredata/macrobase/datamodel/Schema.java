@@ -1,6 +1,8 @@
 package edu.stanford.futuredata.macrobase.datamodel;
 
+import com.google.common.base.Joiner;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -39,10 +41,17 @@ public class Schema {
     }
 
     public boolean hasColumn(String columnName) { return columnNames.contains(columnName); }
+    public boolean hasColumns(Collection<String> columnNames) {
+        return this.columnNames.containsAll(columnNames);
+    }
+
     public int getNumColumns() {
         return columnNames.size();
     }
     public int getColumnIndex(String s) {
+        if (!columnIndices.containsKey(s)) {
+            throw new UnsupportedOperationException("Column " + s + " not present in the schema");
+        }
         return columnIndices.get(s);
     }
     public ArrayList<Integer> getColumnIndices(List<String> columns) {

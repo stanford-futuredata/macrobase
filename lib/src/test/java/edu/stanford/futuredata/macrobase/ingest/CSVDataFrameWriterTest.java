@@ -12,8 +12,8 @@ public class CSVDataFrameWriterTest {
         DataFrame df = new DataFrame();
         String[] col1 = {"a", "b"};
         double[] col2 = {1.0, 2.0};
-        df.addStringColumn("col1", col1);
-        df.addDoubleColumn("col2", col2);
+        df.addColumn("col1", col1);
+        df.addColumn("col2", col2);
 
         CSVDataFrameWriter writer = new CSVDataFrameWriter();
         writer.writeToStream(df, sb);

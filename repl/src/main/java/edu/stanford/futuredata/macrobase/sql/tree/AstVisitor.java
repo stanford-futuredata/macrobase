@@ -189,6 +189,10 @@ public abstract class AstVisitor<R, C> {
     return visitQueryBody(node, context);
   }
 
+  public R visitDiffQuerySpecification(DiffQuerySpecification node, C context) {
+    return visitQueryBody(node, context);
+  }
+
   protected R visitSetOperation(SetOperation node, C context) {
     return visitQueryBody(node, context);
   }
@@ -563,5 +567,21 @@ public abstract class AstVisitor<R, C> {
 
   protected R visitGroupingOperation(GroupingOperation node, C context) {
     return visitExpression(node, context);
+  }
+
+  public R visitAggregate(Aggregate node, C context) {
+    return visitNode(node, context);
+  }
+
+  public R visitAggregateExpression(AggregateExpression node, C context) {
+    return visitNode(node, context);
+  }
+
+  public R visitRatioMetricExpression(RatioMetricExpression node, C context) {
+    return visitExpression(node, context);
+  }
+
+  public R visitImportCsv(ImportCsv node, C context) {
+    return visitStatement(node, context);
   }
 }

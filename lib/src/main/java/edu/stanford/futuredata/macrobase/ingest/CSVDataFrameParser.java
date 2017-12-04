@@ -18,6 +18,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
         this.parser = parser;
     }
 
+    // TODO: merge this into the constructor; no need for it to be separate
     @Override
     public DataFrameLoader setColumnTypes(Map<String, Schema.ColType> types) {
         this.columnTypes = types;
