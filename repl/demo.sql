@@ -7,7 +7,7 @@ SELECT * FROM
   ON
     location, version
   COMPARE BY
-    risk_ratio(COUNT(*));
+    risk_ratio(COUNT(*)) ORDER BY support;
 
 SELECT * FROM
   DIFF
@@ -16,4 +16,4 @@ SELECT * FROM
   ON
     location, version
   COMPARE BY
-    risk_ratio(COUNT(*)) WHERE risk_ratio > 1.0;
+    global_ratio(COUNT(*)) WHERE global_ratio > 10.0;
