@@ -36,4 +36,24 @@ public abstract class SetOperation
   }
 
   public abstract List<Relation> getRelations();
+
+  @Override
+  public Select getSelect() {
+    return SELECT_ALL;
+  }
+
+  @Override
+  public Optional<Expression> getWhere() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<OrderBy> getOrderBy() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getLimit() {
+    return Optional.empty();
+  }
 }
