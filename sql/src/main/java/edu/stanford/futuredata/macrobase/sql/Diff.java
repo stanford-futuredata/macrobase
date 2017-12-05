@@ -34,7 +34,7 @@ public class Diff {
     summarizer.setAttributes(cols);
     summarizer.setRatioMetric(ExplanationMetric.getMetricFn(ratioMetricStr));
     summarizer.setMinSupport(0.2); // TODO:
-    summarizer.setMinRatioMetric(2.0); //  TODO:
+    summarizer.setMinRatioMetric(1.5); // TODO:
 
     summarizer.process(combined);
     final APExplanation explanations = summarizer.getResults();
