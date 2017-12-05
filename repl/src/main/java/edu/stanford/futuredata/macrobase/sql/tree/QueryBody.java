@@ -13,10 +13,15 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
+import com.google.common.collect.Lists;
 import java.util.Optional;
 
 public abstract class QueryBody
     extends Relation {
+
+  // subclasses can use this to return nothing for getSelect()
+  protected static final Select SELECT_ALL = new Select(false,
+      Lists.newArrayList(new SingleColumn(new StringLiteral("*"))));
 
   protected QueryBody(Optional<NodeLocation> location) {
     super(location);
@@ -26,4 +31,12 @@ public abstract class QueryBody
   public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
     return visitor.visitQueryBody(this, context);
   }
+
+  public abstract Select getSelect();
+
+  public abstract Optional<Expression> getWhere();
+
+  public abstract Optional<OrderBy> getOrderBy();
+
+  public abstract Optional<String> getLimit();
 }

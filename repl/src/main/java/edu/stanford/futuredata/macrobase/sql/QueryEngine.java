@@ -3,7 +3,6 @@ package edu.stanford.futuredata.macrobase.sql;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Joiner;
-import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
@@ -15,11 +14,14 @@ import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Literal;
+import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
+import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
+import edu.stanford.futuredata.macrobase.sql.tree.SortItem.Ordering;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
@@ -61,34 +63,6 @@ public class QueryEngine {
     }
   }
 
-  private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
-      throws MacrobaseException {
-    assert (diffQuery.getSecond().isPresent()); // TODO: support single DataFrame queries
-    // Extract parameters for Diff query
-    final Query first = diffQuery.getFirst().get();
-    final Query second = diffQuery.getSecond().get();
-    final List<String> explainCols = diffQuery.getAttributeCols().stream().map(Identifier::toString)
-        .collect(toImmutableList());
-    final String ratioMetricStr = diffQuery.getRatioMetricExpr().getFuncName().toString();
-    final long order = diffQuery.getMaxCombo().get().getValue();
-
-    // execute subqueries
-    final DataFrame firstDf = executeQuery(((TableSubquery) first.getQueryBody()).getQuery());
-    final DataFrame secondDf = executeQuery(((TableSubquery) second.getQueryBody()).getQuery());
-    if (!firstDf.getSchema().hasColumns(explainCols) || !secondDf.getSchema().hasColumns(explainCols)) {
-      throw new MacrobaseSQLException("ON " + Joiner.on(", ").join(explainCols) + " not present in either"
-          + " outlier or inlier subquery");
-    }
-    // execute diff
-    DataFrame resultDf = Diff.diff(firstDf, secondDf, explainCols, ratioMetricStr, (int) order);
-
-    // filter diff with specified projections and selections
-    if (diffQuery.getWhere().isPresent()) {
-      resultDf = evaluateWhereClause(resultDf, diffQuery.getWhere());
-    }
-    return evaluateSelectClause(resultDf, diffQuery.getSelect());
-  }
-
   public DataFrame executeQuery(Query query) throws MacrobaseException {
     QueryBody qBody = query.getQueryBody();
     if (qBody instanceof QuerySpecification) {
@@ -105,21 +79,131 @@ public class QueryEngine {
     }
   }
 
-  private DataFrame diff(final DataFrame outliers, final DataFrame inliers,
-      final List<String> attrs,
-      final ExplanationMetric metricFn, final int order) {
-    return new DataFrame();
+  private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
+      throws MacrobaseException {
+    assert (diffQuery.getSecond().isPresent()); // TODO: support single DataFrame queries
+    // Extract parameters for Diff query
+    final Query first = diffQuery.getFirst().get();
+    final Query second = diffQuery.getSecond().get();
+    final List<String> explainCols = diffQuery.getAttributeCols().stream().map(Identifier::toString)
+        .collect(toImmutableList());
+    final String ratioMetricStr = diffQuery.getRatioMetricExpr().getFuncName().toString();
+    final long order = diffQuery.getMaxCombo().get().getValue();
+
+    // execute subqueries
+    final DataFrame firstDf = executeQuery(((TableSubquery) first.getQueryBody()).getQuery());
+    final DataFrame secondDf = executeQuery(((TableSubquery) second.getQueryBody()).getQuery());
+    if (!firstDf.getSchema().hasColumns(explainCols) || !secondDf.getSchema()
+        .hasColumns(explainCols)) {
+      throw new MacrobaseSQLException(
+          "ON " + Joiner.on(", ").join(explainCols) + " not present in either"
+              + " outlier or inlier subquery");
+    }
+    // execute diff
+    DataFrame df = Diff.diff(firstDf, secondDf, explainCols, ratioMetricStr, (int) order);
+    return evaluateSQLClauses(diffQuery, df);
   }
 
   /**
-   * Evaluate Where Clause of SQL query
+   * Evaluate standard SQL clauses: SELECT, WHERE, ORDER BY, and LIMIT. TODO: support GROUP BY and
+   * HAVING clauses
+   *
+   * @param query the query that contains the clauses
+   * @param df the DataFrame to apply these clauses to
+   * @return a new DataFrame, the result of applying all these clauses
+   */
+  private DataFrame evaluateSQLClauses(final QueryBody query, final DataFrame df)
+      throws MacrobaseSQLException {
+    // TODO: we need to figure out a smarter ordering of these. For example,
+    // if we have an ORDER BY, we don't need to sort columns that are never going to be in the
+    // final output (i.e. the ones not in the SELECT). Basically, we need to do two passes of
+    // SELECTs: one with all original projections + the columns in the WHERE clauses and ORDER BY
+    // clauses, and then a second with just the original projections. That should be correct
+    // and give us better performance.
+    DataFrame resultDf = evaluateWhereClause(df, query.getWhere());
+    resultDf = evaluateOrderByClause(resultDf, query.getOrderBy());
+    resultDf = evaluateLimitClause(resultDf, query.getLimit());
+    return evaluateSelectClause(resultDf, query.getSelect());
+  }
+
+  /**
+   * Evaluate ORDER BY clause. For now, we only support sorting by a single column.
+   */
+  private DataFrame evaluateOrderByClause(DataFrame df, Optional<OrderBy> orderByOpt) {
+    if (!orderByOpt.isPresent()) {
+      return df;
+    }
+    final OrderBy orderBy = orderByOpt.get();
+    // For now, we only support sorting by a single column
+    // TODO: support multi-column sort
+    final SortItem sortItem = orderBy.getSortItems().get(0);
+    final String sortCol = ((Identifier) sortItem.getSortKey()).getValue();
+    return df.orderBy(sortCol, sortItem.getOrdering() == Ordering.ASCENDING);
+  }
+
+  /**
+   * Execute a standard SQL query. For now, we ignore GROUP BY, HAVING, and JOIN clauses
+   *
+   * @param query The QuerySpecification object for the SQL query
+   * @return A DataFrame containing the results of the SQL query
+   */
+  private DataFrame executeQuerySpec(final QuerySpecification query) throws MacrobaseSQLException {
+    Table table = (Table) query.getFrom().get();
+    final String tableName = table.getName().toString();
+    if (!tablesInMemory.containsKey(tableName)) {
+      throw new MacrobaseSQLException("Table " + tableName + " does not exist");
+    }
+    final DataFrame df = tablesInMemory.get(tableName);
+    return evaluateSQLClauses(query, df);
+  }
+
+  /**
+   * Evaluate Select clause of SQL query. If the clause is 'SELECT *' the same DataFrame is returned
+   * unchanged. TODO: add support for DISTINCT queries
+   *
+   * @param df The DataFrame to apply the Select clause on
+   * @param select The Select clause to evaluate
+   * @return A new DataFrame with the result of the Select clause applied
+   */
+  private DataFrame evaluateSelectClause(DataFrame df, Select select) {
+    final List<String> projections = select.getSelectItems().stream()
+        .map(SelectItem::toString)
+        .collect(toImmutableList());
+    if (projections.size() == 1 && projections.get(0).equalsIgnoreCase("*")) {
+      return df; // SELECT * -> relation is unchanged
+    }
+    return df.project(projections);
+  }
+
+  /**
+   * Evaluate LIMIT clause of SQL query, return the top n rows of the DataFrame, where `n' is
+   * specified in "LIMIT n"
+   *
+   * @param df The DataFrame to apply the LIMIT clause on
+   * @param limitStr The number of rows (either an integer or "ALL") as a String in the LIMIT
+   * clause
+   * @return A new DataFrame with the result of the LIMIT clause applied
+   */
+  private DataFrame evaluateLimitClause(final DataFrame df, final Optional<String> limitStr) {
+    if (limitStr.isPresent()) {
+      try {
+        return df.limit(Integer.parseInt(limitStr.get()));
+      } catch (NumberFormatException e) {
+        // LIMIT ALL, catch NumberFormatException and do nothing
+        return df;
+      }
+    }
+    return df;
+  }
+
+  /**
+   * Evaluate Where clause of SQL query
    *
    * @param df the DataFrame to filter
-   * @param whereClauseOpt An Optional Where Clause (of type Expression) to evaluate for each row
-   * in
+   * @param whereClauseOpt An Optional Where clause (of type Expression) to evaluate for each row
+   * in <tt>df</tt>
    * @return A new DataFrame that contains the rows for which @whereClause evaluates to true. If
-   * @df
-   * @whereClauseOpt is not Present, we return @df
+   * <tt>whereClauseOpt</tt> is not Present, we return <tt>df</tt>
    */
   private DataFrame evaluateWhereClause(final DataFrame df,
       final Optional<Expression> whereClauseOpt) throws MacrobaseSQLException {
@@ -149,6 +233,7 @@ public class QueryEngine {
     return df;
   }
 
+  // Helper methods for evaluating Where clauses
   private DataFrame evaluatePredicate(final DataFrame df, final Literal literal,
       final Identifier identifier,
       final ComparisonExpressionType compExprType) throws MacrobaseSQLException {
@@ -215,43 +300,5 @@ public class QueryEngine {
       default:
         throw new MacrobaseSQLException(compareExprType + " is not supported");
     }
-  }
-
-
-  /**
-   * Evaluate Select clause of SQL query. If the clause is 'SELECT *' the same DataFrame is returned
-   * unchanged.
-   *
-   * @param df The DataFrame to apply the Select clause on
-   * @param select The Select clause to evaluate
-   * @return A new DataFrame with the result of the Select clause applied
-   */
-  private DataFrame evaluateSelectClause(DataFrame df, Select select) {
-    final List<String> projections = select.getSelectItems().stream()
-        .map(SelectItem::toString)
-        .collect(toImmutableList());
-    if (projections.size() == 1 && projections.get(0).equalsIgnoreCase("*")) {
-      return df; // SELECT * -> relation is unchanged
-    }
-    return df.project(projections);
-  }
-
-  /**
-   * Execute a standard SQL query. For now, we only examine the SELECT, FROM, and WHERE clauses; we
-   * ignore GROUP BYs, HAVINGs, ORDER BYs, and LIMITs
-   *
-   * @param query The QuerySpecification object for the SQL query
-   * @return A DataFrame containing the results of the SQL query
-   */
-  private DataFrame executeQuerySpec(final QuerySpecification query) throws MacrobaseSQLException {
-    // TODO: implement query.getGroupBy(), query.getOrderBy() query.getLimit() query.getHaving()
-    Table table = (Table) query.getFrom().get();
-    final String tableName = table.getName().toString();
-    if (!tablesInMemory.containsKey(tableName)) {
-      throw new MacrobaseSQLException("Table " + tableName + " does not exist");
-    }
-    final DataFrame df = tablesInMemory.get(tableName);
-    DataFrame resultDf = evaluateWhereClause(df, query.getWhere());
-    return evaluateSelectClause(resultDf, query.getSelect());
   }
 }

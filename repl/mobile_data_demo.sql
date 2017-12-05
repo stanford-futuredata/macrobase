@@ -7,6 +7,6 @@ SELECT * FROM DIFF
   (SELECT * FROM mobile_data WHERE battery_drain > 0.45) outliers,
   (SELECT * FROM mobile_data WHERE battery_drain < 0.45) inliers
   ON state, hw_make, hw_model, firmware_version, app_version
-  COMPARE BY risk_ratio(COUNT(*));
+  COMPARE BY risk_ratio(COUNT(*)) ORDER BY support;
 
 

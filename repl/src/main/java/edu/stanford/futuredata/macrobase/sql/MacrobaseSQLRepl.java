@@ -1,12 +1,12 @@
 package edu.stanford.futuredata.macrobase.sql;
 
+import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
-import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,7 +35,9 @@ public class MacrobaseSQLRepl {
   private MacrobaseSQLRepl() throws IOException {
     // Initialize console reader and writer
     reader = new ConsoleReader();
-    reader.setCompletionHandler(new CandidateListCompletionHandler());
+    final CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
+    handler.setStripAnsi(true);
+    reader.setCompletionHandler(handler);
     reader.addCompleter(new FileNameCompleter());
     out = new PrintWriter(reader.getOutput());
 
@@ -55,14 +57,15 @@ public class MacrobaseSQLRepl {
     for (StatementSplitter.Statement s : splitter.getCompleteStatements()) {
       final String statementStr = s.statement();
       if (print) {
-        out.println(statementStr);
+        out.println(statementStr + ";");
         out.println();
         out.flush();
       }
-      reader.getHistory().add(statementStr);
-      Statement stmt = parser.createStatement(statementStr);
-      log.debug(stmt.toString());
+      // Remove newlines and add delimiter when updating console history
+      reader.getHistory().add(statementStr.replace('\n', ' ') + ";");
       try {
+        Statement stmt = parser.createStatement(statementStr);
+        log.debug(stmt.toString());
         if (stmt instanceof ImportCsv) {
           ImportCsv importStatement = (ImportCsv) stmt;
           queryEngine.importTableFromCsv(importStatement).prettyPrint();
@@ -70,11 +73,8 @@ public class MacrobaseSQLRepl {
           Query q = (Query) stmt;
           queryEngine.executeQuery(q).prettyPrint();
         }
-      } catch (MacrobaseSQLException e) {
-        e.printStackTrace();
-      } catch (MacrobaseException e) {
-        // TODO: should we handle these differently than MacrobaseSQLExceptions?
-        e.printStackTrace();
+      } catch (ParsingException | MacrobaseException e) {
+        System.err.println(e.getMessage());
       }
     }
   }
@@ -86,6 +86,7 @@ public class MacrobaseSQLRepl {
    * @param queries A single String which contains the queries to execute. Each query in the String
    * should be delimited by ';' and optional whitespace.
    */
+
   private void executeQueries(final String queries) {
     executeQueries(queries, false);
   }
