@@ -109,7 +109,7 @@ public class MacrobaseSQLRepl {
   }
 
   private String readConsoleInput() throws IOException {
-    reader.setPrompt("macrodiff> ");
+    reader.setPrompt("macrobase-sql> ");
     String line = reader.readLine();
     if (line == null || line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
       return "";
@@ -127,7 +127,7 @@ public class MacrobaseSQLRepl {
       commandBuilder.append("\n");
       commandBuilder.append(line);
     }
-    reader.setPrompt("macrodiff> ");
+    reader.setPrompt("macrobase-sql> ");
     return commandBuilder.toString();
   }
 
