@@ -50,6 +50,26 @@ public final class Values
   }
 
   @Override
+  public Select getSelect() {
+    return SELECT_ALL;
+  }
+
+  @Override
+  public Optional<Expression> getWhere() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<OrderBy> getOrderBy() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getLimit() {
+    return Optional.empty();
+  }
+
+  @Override
   public List<? extends Node> getChildren() {
     return rows;
   }

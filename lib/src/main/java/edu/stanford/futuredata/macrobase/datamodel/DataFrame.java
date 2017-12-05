@@ -7,9 +7,11 @@ import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -44,7 +46,8 @@ public class DataFrame {
 
     /**
      * Creates a DataFrame from a list of rows
-     * Slower than creating a DataFrame column by column using addXColumn methods.
+     * Slower than creating a DataFrame column by column using {@link #addColumn(String, double[])}
+     * or {@link #addColumn(String, String[])}
      * @param schema Schema to use
      * @param rows Data to load
      */
@@ -111,7 +114,7 @@ public class DataFrame {
      * @param maxNumToPrint maximum number of rows from the DataFrame to print
      */
     public void prettyPrint(final int maxNumToPrint) {
-        System.out.println(numRows + " rows");
+        System.out.println(numRows +  (numRows == 1 ? "row" : " rows"));
 
         final int maxColNameLength = schema.getColumnNames().stream()
             .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 2; // extra space on both sides
@@ -122,18 +125,17 @@ public class DataFrame {
         System.out.println(schemaStr);
         System.out.println(dashes);
 
-        final List<Row> rows = getRows();
         if (numRows > maxNumToPrint) {
             final int numToPrint = maxNumToPrint / 2;
-            for (Row r : rows.subList(0, numToPrint))  {
+            for (Row r : getRows(0, numToPrint))  {
                 r.prettyPrint(maxColNameLength);
             }
             System.out.println("...");
-            for (Row r : rows.subList(numRows - numToPrint, numRows))  {
+            for (Row r : getRows(numRows - numToPrint, numRows))  {
                 r.prettyPrint(maxColNameLength);
             }
         } else {
-            for (Row r : rows)  {
+            for (Row r : getRows())  {
                 r.prettyPrint(maxColNameLength);
             }
         }
@@ -371,6 +373,51 @@ public class DataFrame {
         return filter(schema.getColumnIndex(columnName), filter);
     }
 
+    /**
+     * {@link #limit(int)} with default <tt>numRows</tt> set to -1 (i.e., LIMIT ALL)
+     * @return this DataFrame, unchanged
+     */
+    public DataFrame limit() {
+        return limit(-1);
+    }
+
+    /**
+     * Execute the LIMIT clause of a SQL query, i.e., take the first n rows of the DataFrame
+     * @param numRows Number of rows to include the new DataFrame. If -1, return the original
+     * DataFrame
+     * @return the new DataFrame with only the first <tt>numRows</tt> rows.
+     */
+    public DataFrame limit(final int numRows) {
+      if (numRows < 0 || numRows >= this.numRows) {
+          return this;
+      }
+      final DataFrame result = new DataFrame();
+      result.schema = this.schema.copy();
+      result.indexToTypeIndex = new ArrayList<>(this.indexToTypeIndex);
+      result.numRows = numRows;
+      final int numColumns = this.schema.getNumColumns();
+
+      for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+          Schema.ColType t = result.schema.getColumnType(colIdx);
+          if (t == Schema.ColType.STRING) {
+              final String[] col = this.getStringColumn(colIdx);
+              final String[] newCol = new String[numRows];
+              for (int i = 0; i < numRows; ++i) {
+                  newCol[i] = col[i];
+              }
+              result.stringCols.add(newCol);
+          } else if (t == Schema.ColType.DOUBLE) {
+              final double[] col = this.getDoubleColumn(colIdx);
+              final double[] newCol = new double[numRows];
+              for (int i = 0; i < numRows; ++i) {
+                  newCol[i] = col[i];
+              }
+              result.doubleCols.add(newCol);
+          }
+      }
+      return result;
+    }
+
     public Row getRow(int rowIdx) {
         int d = schema.getNumColumns();
         ArrayList<Object> rowValues = new ArrayList<>(d);
@@ -388,15 +435,17 @@ public class DataFrame {
         Row r = new Row(schema, rowValues);
         return r;
     }
+
     public List<Row> getRows() {
-        return getRows(numRows);
+        return getRows(0, numRows);
     }
-    public List<Row> getRows(int numRowsToGet) {
+
+    private List<Row> getRows(final int startIndex, int numRowsToGet) {
         if (numRowsToGet > numRows) {
             numRowsToGet = numRows;
         }
         List<Row> rows = new ArrayList<>();
-        for (int rowIdx = 0; rowIdx < numRowsToGet; rowIdx++) {
+        for (int rowIdx = startIndex; rowIdx < numRowsToGet; rowIdx++) {
             rows.add(getRow(rowIdx));
         }
         return rows;
@@ -437,5 +486,79 @@ public class DataFrame {
     }
     public ArrayList<String[]> getStringRowsByName(List<String> columns) {
         return getStringRows(this.schema.getColumnIndices(columns));
+    }
+
+    /**
+     * Sort DataFrame rows by a single column.
+     * @param sortCol The column to sort by
+     * @param sortAsc True => sort ascending, False => sort descending
+     * @return A new DataFrame with the correct sorted order. If <tt>col</tt> is
+     * not in the DataFrame's schema, return the same DataFrame, unchanged
+     */
+    public DataFrame orderBy(final String sortCol, final boolean sortAsc) {
+      // If column is not present in DataFrame, return as is
+      if (!this.schema.hasColumn(sortCol)) {
+          return this;
+      }
+
+      final DataFrame sortedDf = new DataFrame();
+      final ColType sortColType = this.schema.getColumnTypeByName(sortCol);
+      final int numColumns = this.schema.getNumColumns();
+
+      if (sortColType == ColType.DOUBLE) {
+          sortColumns(sortedDf, numColumns, getDoubleColumnByName(sortCol), sortAsc);
+      } else {
+          sortColumns(sortedDf, numColumns, getStringColumnByName(sortCol), sortAsc);
+      }
+      return sortedDf;
+    }
+
+    // TODO: this code duplication is awful, gotta think of a better way of doing this
+    private void sortColumns(final DataFrame sortedDf, final int numColumns,
+        final double[] sortColumn, final boolean sortAsc) {
+        Comparator<Integer> comparator = Comparator.comparing(i -> sortColumn[i]);
+        if (!sortAsc) {
+            comparator = comparator.reversed();
+        }
+        for (int c = 0; c < numColumns; ++c) {
+            if (this.schema.getColumnType(c) == ColType.DOUBLE) {
+                final double[] origCol = this.getDoubleColumn(c);
+                final double[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator)
+                    .mapToDouble(i -> origCol[i]).toArray();
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            } else {
+                // ColType.STRING
+                final String[] origCol = this.getStringColumn(c);
+                final String[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator).map(i -> origCol[i])
+                    .toArray(String[]::new);
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            }
+        }
+    }
+
+    private void sortColumns(final DataFrame sortedDf, final int numColumns,
+        final String[] sortColumn, final boolean sortAsc) {
+        Comparator<Integer> comparator = Comparator.comparing(i -> sortColumn[i]);
+        if (!sortAsc) {
+            comparator = comparator.reversed();
+        }
+        for (int c = 0; c < numColumns; ++c) {
+            if (this.schema.getColumnType(c) == ColType.DOUBLE) {
+                final double[] origCol = this.getDoubleColumn(c);
+                final double[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator)
+                    .mapToDouble(i -> origCol[i]).toArray();
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            } else {
+                // ColType.STRING
+                final String[] origCol = this.getStringColumn(c);
+                final String[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator).map(i -> origCol[i])
+                    .toArray(String[]::new);
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            }
+        }
     }
 }
