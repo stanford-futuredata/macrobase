@@ -3,10 +3,40 @@ IMPORT FROM CSV FILE 'core/demo/mobile_data.csv' INTO mobile_data(record_id
   firmware_version string, app_version string, avg_temp double, battery_drain
   double, trip_time double);
 
-SELECT * FROM DIFF
-  (SELECT * FROM mobile_data WHERE battery_drain > 0.45) outliers,
-  (SELECT * FROM mobile_data WHERE battery_drain < 0.45) inliers
-  ON state, hw_make, hw_model, firmware_version, app_version
-  COMPARE BY risk_ratio(COUNT(*)) ORDER BY support;
+SELECT battery_drain FROM mobile_data;
 
+SELECT battery_drain FROM mobile_data ORDER BY battery_drain;
+
+SELECT battery_drain FROM mobile_data WHERE battery_drain > 0.90;
+
+SELECT battery_drain FROM mobile_data WHERE battery_drain <= 0.90;
+
+SELECT * FROM DIFF
+  (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
+  (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
+  ON state, hw_make, hw_model, firmware_version, app_version
+  COMPARE BY risk_ratio(COUNT(*));
+
+SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count FROM DIFF
+  (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
+  (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
+  ON state, hw_make, hw_model, firmware_version, app_version
+  COMPARE BY global_ratio(COUNT(*))
+  ORDER BY global_ratio;
+
+SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count FROM DIFF
+  (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
+  (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
+  ON state, hw_make, hw_model, firmware_version, app_version
+  COMPARE BY global_ratio(COUNT(*))
+  MAX COMBO 1
+  ORDER BY global_ratio;
+
+SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count FROM DIFF
+  (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
+  (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
+  ON state, hw_make, hw_model, firmware_version, app_version
+  COMPARE BY global_ratio(COUNT(*))
+  MAX COMBO 2
+  ORDER BY global_ratio;
 
