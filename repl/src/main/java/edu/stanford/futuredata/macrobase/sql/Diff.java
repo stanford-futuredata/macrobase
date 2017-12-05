@@ -18,9 +18,6 @@ public class Diff {
       final List<String> cols,
       final String ratioMetricStr, final int order) throws MacrobaseException {
 
-    // return at the end
-    final DataFrame resultDf = new DataFrame();
-
     final ExplanationMetric metricFn = ExplanationMetric.getMetricFn(ratioMetricStr);
     // global stats to pass to metricFn.calc whenever we compute ratio
     final int outlierCount = outliers.getNumRows();
@@ -153,6 +150,8 @@ public class Diff {
     }
 
     // Generate DataFrame with results
+    final DataFrame resultDf = new DataFrame();
+
     for (String attr : colResultsMap.keySet()) {
       List<String> attrResultVals = colResultsMap.get(attr);
       resultDf.addColumn(attr, attrResultVals.toArray(new String[0]));
