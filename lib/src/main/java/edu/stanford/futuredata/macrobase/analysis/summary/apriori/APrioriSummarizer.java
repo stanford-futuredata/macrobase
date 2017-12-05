@@ -44,6 +44,8 @@ public class APrioriSummarizer extends BatchSummarizer {
     HashMap<Integer, int[]> setOCounts;
 
     long[] timings = new long[4];
+    // TODO: set default better
+    private int maxOrder = 3;
 
     public APrioriSummarizer() {
         setIdxMapping = new HashMap<>();
@@ -54,7 +56,7 @@ public class APrioriSummarizer extends BatchSummarizer {
     }
 
     @Override
-    public void process(DataFrame input) throws Exception {
+    public void process(DataFrame input) {
         numRows = input.getNumRows();
 
         // Marking Outliers
@@ -78,11 +80,12 @@ public class APrioriSummarizer extends BatchSummarizer {
         numOutliers = (long) numOutliersExact;
         baseRate = numOutliersExact*1.0/numEvents;
         suppCount = (int) (minOutlierSupport * numOutliers);
-        log.info("Outliers: {}", numOutliers);
-        log.info("Outlier Rate of: {}", baseRate);
-        log.info("Min Support Count: {}", suppCount);
-        log.info("Min Ratio Metric: {}", minRatioMetric);
-        log.info("Using Ratio of: {}", ratioMetric.getClass().toString());
+        // TODO: change back to info
+        log.debug("Outliers: {}", numOutliers);
+        log.debug("Outlier Rate of: {}", baseRate);
+        log.debug("Min Support Count: {}", suppCount);
+        log.debug("Min Ratio Metric: {}", minRatioMetric);
+        log.debug("Using Ratio of: {}", ratioMetric.getClass().getSimpleName());
 
         // Encoding
         encoder = new AttributeEncoder();
@@ -102,22 +105,29 @@ public class APrioriSummarizer extends BatchSummarizer {
                 outlierCol
         );
 
-        countSet(
+        // TODO: clean up
+        if (maxOrder >= 2) {
+            countSet(
                 encoded,
                 countCol,
                 outlierCol,
                 2
-        );
+            );
 
-        countSet(
-                encoded,
-                countCol,
-                outlierCol,
-                3
-        );
+            if (maxOrder >= 3) {
+                countSet(
+                    encoded,
+                    countCol,
+                    outlierCol,
+                    3
+                );
+            }
+        }
 
-        for (int o = 1; o <= 3; o++) {
-            log.info("Order {} Explanations: {}", o, setSaved.get(o).size());
+
+        for (int o = 1; o <= maxOrder; o++) {
+            // TODO: change back to info
+            log.debug("Order {} Explanations: {}", o, setSaved.get(o).size());
         }
 
     }
@@ -242,9 +252,8 @@ public class APrioriSummarizer extends BatchSummarizer {
                 double ratio = computeRatio(oCount, count);
                 if (ratio > minRatioMetric) {
                     saved.add(curSet);
-                } else {
-                    next.add(curSet);
                 }
+                next.add(curSet);
             }
         }
 
@@ -286,9 +295,8 @@ public class APrioriSummarizer extends BatchSummarizer {
                 double ratio = computeRatio(singleOCounts[i], singleCounts[i]);
                 if (ratio > minRatioMetric) {
                     singleSaved.add(i);
-                } else {
-                    singleNext.add(i);
                 }
+                singleNext.add(i);
             }
         }
         log.debug("Itemsets Saved: {}", singleSaved.size());
@@ -318,7 +326,7 @@ public class APrioriSummarizer extends BatchSummarizer {
     @Override
     public APExplanation getResults() {
         List<ExplanationResult> results = new ArrayList<>();
-        for (int o = 1; o <= 3; o++) {
+        for (int o = 1; o <= maxOrder; o++) {
             HashSet<IntSet> curResults = setSaved.get(o);
             HashMap<IntSet, Integer> idxMapping = setIdxMapping.get(o);
             int[] oCounts = setOCounts.get(o);
@@ -346,7 +354,7 @@ public class APrioriSummarizer extends BatchSummarizer {
                 minRatioMetric,
                 ratioMetric
         );
-        finalExplanation.sortBySupport();
+//        finalExplanation.sortBySupport();
         return finalExplanation;
     }
 
@@ -383,5 +391,10 @@ public class APrioriSummarizer extends BatchSummarizer {
     public BatchSummarizer setMinRatioMetric(double minRatio) {
         this.minRatioMetric = minRatio;
         return this;
+    }
+
+    // TODO: set default better
+    public void setMaxOrder(int maxOrder) {
+        this.maxOrder = Math.min(maxOrder, 3);
     }
 }

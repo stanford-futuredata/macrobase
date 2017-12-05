@@ -1,5 +1,8 @@
 package edu.stanford.futuredata.macrobase.datamodel;
 
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsLast;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
@@ -117,7 +120,7 @@ public class DataFrame {
         System.out.println(numRows +  (numRows == 1 ? "row" : " rows"));
 
         final int maxColNameLength = schema.getColumnNames().stream()
-            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 2; // extra space on both sides
+            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 4; // 2 extra spaces on both sides
         final String schemaStr = "|" + Joiner.on("|").join(schema.getColumnNames().stream()
             .map((x) -> StringUtils.center(String.valueOf(x), maxColNameLength)).collect(toList())) + "|";
         final String dashes = Joiner.on("").join(Collections.nCopies(schemaStr.length(), "-"));
@@ -144,10 +147,10 @@ public class DataFrame {
     }
 
     /**
-     * {@link #prettyPrint(int)} with default <tt>maxNumToPrint</tt> set to 10
+     * {@link #prettyPrint(int)} with default <tt>maxNumToPrint</tt> set to 15
      */
     public void prettyPrint() {
-        prettyPrint(10);
+        prettyPrint(15);
     }
 
     // Fast Column-based methods
@@ -490,6 +493,7 @@ public class DataFrame {
 
     /**
      * Sort DataFrame rows by a single column.
+     * // TODO: write test for OrderBy
      * @param sortCol The column to sort by
      * @param sortAsc True => sort ascending, False => sort descending
      * @return A new DataFrame with the correct sorted order. If <tt>col</tt> is
@@ -516,7 +520,8 @@ public class DataFrame {
     // TODO: this code duplication is awful, gotta think of a better way of doing this
     private void sortColumns(final DataFrame sortedDf, final int numColumns,
         final double[] sortColumn, final boolean sortAsc) {
-        Comparator<Integer> comparator = Comparator.comparing(i -> sortColumn[i]);
+        Comparator<Integer> comparator = comparing(i -> sortColumn[i], nullsLast(
+            naturalOrder()));
         if (!sortAsc) {
             comparator = comparator.reversed();
         }
@@ -540,7 +545,7 @@ public class DataFrame {
 
     private void sortColumns(final DataFrame sortedDf, final int numColumns,
         final String[] sortColumn, final boolean sortAsc) {
-        Comparator<Integer> comparator = Comparator.comparing(i -> sortColumn[i]);
+        Comparator<Integer> comparator = comparing(i -> sortColumn[i], nullsLast(naturalOrder()));
         if (!sortAsc) {
             comparator = comparator.reversed();
         }

@@ -1,27 +1,43 @@
 package edu.stanford.futuredata.macrobase.sql;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.ExplanationResult;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
-import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.DoubleStream;
 import org.roaringbitmap.RoaringBitmap;
 
 public class Diff {
-
 
   public static DataFrame diff(final DataFrame outliers, final DataFrame inliers,
       final List<String> cols,
       final String ratioMetricStr, final int order) throws MacrobaseException {
 
-    final ExplanationMetric metricFn = ExplanationMetric.getMetricFn(ratioMetricStr);
-    // global stats to pass to metricFn.calc whenever we compute ratio
-    final int outlierCount = outliers.getNumRows();
-    final int totalCount = outlierCount + inliers.getNumRows();
+    final String outlierColName = "outlier_col";
+    // Add column "outlier_col" to both outliers (all 1.0) and inliers (all 0.0)
+    outliers.addColumn(outlierColName,
+        DoubleStream.generate(() -> 1.0).limit(outliers.getNumRows()).toArray());
+    inliers.addColumn(outlierColName,
+        DoubleStream.generate(() -> 0.0).limit(outliers.getNumRows()).toArray());
+    DataFrame combined = DataFrame.unionAll(Lists.newArrayList(outliers, inliers));
+
+    APrioriSummarizer summarizer = new APrioriSummarizer();
+    summarizer.setMaxOrder(order);
+    summarizer.setOutlierColumn(outlierColName);
+    summarizer.setAttributes(cols);
+    summarizer.setRatioMetric(ExplanationMetric.getMetricFn(ratioMetricStr));
+    summarizer.setMinSupport(0.2); // TODO:
+    summarizer.setMinRatioMetric(2.0); //  TODO:
+
+    summarizer.process(combined);
+    final APExplanation explanations = summarizer.getResults();
 
     // double column values that will be added to resultDf
     final List<Double> ratios = new LinkedList<>();
@@ -34,135 +50,172 @@ public class Diff {
       colResultsMap.put(col, new LinkedList<>());
     }
 
-    final Map<String, Map<String, RoaringBitmap>> bitmapsForColsOutliers = new HashMap<>();
-    final Map<String, Map<String, RoaringBitmap>> bitmapsForColsInliers = new HashMap<>();
-
-    // Singleton combinations
-    for (String col : cols) {
-
-      final String[] colValsOutliers = outliers.getStringColumnByName(col);
-      final String[] colValsInliers = inliers.getStringColumnByName(col);
-
-      if (colValsOutliers == null || colValsInliers == null) {
-        throw new MacrobaseSQLException(
-            "Column " + col + " is not an attribute column, but a metric column");
-      }
-
-      final Map<String, RoaringBitmap> bitmapsForColOutliers = generateBitmapsForColumn(
-          colValsOutliers);
-      bitmapsForColsOutliers.put(col, bitmapsForColOutliers);
-      final Map<String, RoaringBitmap> bitmapsForColInliers = generateBitmapsForColumn(
-          colValsInliers);
-      bitmapsForColsInliers.put(col, bitmapsForColInliers);
-
-      for (String colVal : bitmapsForColOutliers.keySet()) {
-        if (!bitmapsForColInliers.containsKey(colVal)) {
-          continue;
-        }
-
-        final Map<String, String> resultColVals = ImmutableMap.of(col, colVal);
-
-        addColumnValuesToResultColumns(colResultsMap, resultColVals);
-
-        addRatioValuesToResultColumns(metricFn, outlierCount, totalCount, ratios, supports,
-            matchedOutlierCounts, bitmapsForColOutliers.get(colVal),
-            bitmapsForColInliers.get(colVal));
-      }
-    }
-
-    if (order >= 2) {
-      for (int i = 0; i < cols.size(); ++i) {
-        final String firstCol = cols.get(i);
-        final Map<String, RoaringBitmap> bitmapsForFirstColOutliers = bitmapsForColsOutliers
-            .get(firstCol);
-        final Map<String, RoaringBitmap> bitmapsForFirstColInliers = bitmapsForColsInliers
-            .get(firstCol);
-
-        for (int j = i + 1; j < cols.size(); ++j) {
-          final String secondCol = cols.get(j);
-          final Map<String, RoaringBitmap> bitmapsForSecondColOutliers = bitmapsForColsOutliers
-              .get(secondCol);
-          final Map<String, RoaringBitmap> bitmapsForSecondColInliers = bitmapsForColsInliers
-              .get(secondCol);
-
-          for (String firstColVal : bitmapsForFirstColOutliers.keySet()) {
-            if (!bitmapsForFirstColInliers.containsKey(firstColVal)) {
-              continue;
-            }
-
-            final RoaringBitmap bitmapForFirstColValOutliers = bitmapsForFirstColOutliers
-                .get(firstColVal);
-            final RoaringBitmap bitmapForFirstColValInliers = bitmapsForFirstColInliers
-                .get(firstColVal);
-
-            for (String secondColVal : bitmapsForSecondColOutliers.keySet()) {
-              if (!bitmapsForSecondColInliers.containsKey(secondColVal)) {
-                continue;
-              }
-
-              final Map<String, String> resultColVals = ImmutableMap
-                  .of(firstCol, firstColVal, secondCol, secondColVal);
-              addColumnValuesToResultColumns(colResultsMap, resultColVals);
-
-              final RoaringBitmap firstAndSecondColValsOutliers = RoaringBitmap
-                  .and(bitmapForFirstColValOutliers, bitmapsForSecondColOutliers
-                      .get(secondColVal));
-              final RoaringBitmap firstAndSecondColValsInliers = RoaringBitmap
-                  .and(bitmapForFirstColValInliers, bitmapsForSecondColInliers
-                      .get(secondColVal));
-              addRatioValuesToResultColumns(metricFn, outlierCount,
-                  totalCount, ratios, supports, matchedOutlierCounts,
-                  firstAndSecondColValsOutliers, firstAndSecondColValsInliers);
-
-              if (order >= 3) {
-                for (int k = j + 1; k < cols.size(); ++k) {
-                  final String thirdCol = cols.get(k);
-                  final Map<String, RoaringBitmap> bitmapsForThirdColOutliers = bitmapsForColsOutliers
-                      .get(thirdCol);
-                  final Map<String, RoaringBitmap> bitmapsForThirdColInliers = bitmapsForColsInliers
-                      .get(thirdCol);
-
-                  for (String thirdColVal : bitmapsForThirdColOutliers.keySet()) {
-                    if (!bitmapsForThirdColInliers.containsKey(thirdColVal)) {
-                      continue;
-                    }
-
-                    final Map<String, String> resultColValsAllThree = ImmutableMap
-                        .of(firstCol, firstColVal, secondCol, secondColVal, thirdCol, thirdColVal);
-                    addColumnValuesToResultColumns(colResultsMap, resultColValsAllThree);
-
-                    final RoaringBitmap allThreeColValsOutliers = RoaringBitmap
-                        .and(bitmapForFirstColValOutliers, bitmapsForSecondColOutliers
-                            .get(secondColVal));
-                    final RoaringBitmap allThreeColValsInliers = RoaringBitmap
-                        .and(bitmapForFirstColValInliers, bitmapsForSecondColInliers
-                            .get(secondColVal));
-                    addRatioValuesToResultColumns(metricFn, outlierCount,
-                        totalCount, ratios, supports, matchedOutlierCounts,
-                        allThreeColValsOutliers, allThreeColValsInliers);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
     // Generate DataFrame with results
-    final DataFrame resultDf = new DataFrame();
+    for (ExplanationResult result : explanations.getResults()) {
+      final Map<String, String> resultColVals = result.getMatcher();
+      addColumnValuesToResultColumns(colResultsMap, resultColVals);
+      matchedOutlierCounts.add(result.matchedOutlier());
+      ratios.add(result.ratio());
+      supports.add(result.support());
+    }
 
+    final DataFrame resultDf = new DataFrame();
     for (String attr : colResultsMap.keySet()) {
-      List<String> attrResultVals = colResultsMap.get(attr);
+      final List<String> attrResultVals = colResultsMap.get(attr);
       resultDf.addColumn(attr, attrResultVals.toArray(new String[0]));
     }
-
     resultDf.addColumn(ratioMetricStr, ratios.stream().mapToDouble(x -> x).toArray());
     resultDf.addColumn("support", supports.stream().mapToDouble(x -> x).toArray());
     resultDf
         .addColumn("outlier_count", matchedOutlierCounts.stream().mapToDouble(x -> x).toArray());
-
     return resultDf;
+
+
+//    final ExplanationMetric metricFn = ExplanationMetric.getMetricFn(ratioMetricStr);
+//    // global stats to pass to metricFn.calc whenever we compute ratio
+//    final int outlierCount = outliers.getNumRows();
+//    final int totalCount = outlierCount + inliers.getNumRows();
+//
+//    // double column values that will be added to resultDf
+//    final List<Double> ratios = new LinkedList<>();
+//    final List<Double> supports = new LinkedList<>();
+//    final List<Double> matchedOutlierCounts = new LinkedList<>();
+//
+//    // String column values that will be added to resultDf
+//    final Map<String, List<String>> colResultsMap = new HashMap<>();
+//    for (String col : cols) {
+//      colResultsMap.put(col, new LinkedList<>());
+//    }
+//
+//    final Map<String, Map<String, RoaringBitmap>> bitmapsForColsOutliers = new HashMap<>();
+//    final Map<String, Map<String, RoaringBitmap>> bitmapsForColsInliers = new HashMap<>();
+//
+//    // Singleton combinations
+//    for (String col : cols) {
+//
+//      final String[] colValsOutliers = outliers.getStringColumnByName(col);
+//      final String[] colValsInliers = inliers.getStringColumnByName(col);
+//
+//      if (colValsOutliers == null || colValsInliers == null) {
+//        throw new MacrobaseSQLException(
+//            "Column " + col + " is not an attribute column, but a metric column");
+//      }
+//
+//      final Map<String, RoaringBitmap> bitmapsForColOutliers = generateBitmapsForColumn(
+//          colValsOutliers);
+//      bitmapsForColsOutliers.put(col, bitmapsForColOutliers);
+//      final Map<String, RoaringBitmap> bitmapsForColInliers = generateBitmapsForColumn(
+//          colValsInliers);
+//      bitmapsForColsInliers.put(col, bitmapsForColInliers);
+//
+//      for (String colVal : bitmapsForColOutliers.keySet()) {
+//        if (!bitmapsForColInliers.containsKey(colVal)) {
+//          continue;
+//        }
+//
+//        final Map<String, String> resultColVals = ImmutableMap.of(col, colVal);
+//
+//        addColumnValuesToResultColumns(colResultsMap, resultColVals);
+//
+//        addRatioValuesToResultColumns(metricFn, outlierCount, totalCount, ratios, supports,
+//            matchedOutlierCounts, bitmapsForColOutliers.get(colVal),
+//            bitmapsForColInliers.get(colVal));
+//      }
+//    }
+//
+//    if (order >= 2) {
+//      for (int i = 0; i < cols.size(); ++i) {
+//        final String firstCol = cols.get(i);
+//        final Map<String, RoaringBitmap> bitmapsForFirstColOutliers = bitmapsForColsOutliers
+//            .get(firstCol);
+//        final Map<String, RoaringBitmap> bitmapsForFirstColInliers = bitmapsForColsInliers
+//            .get(firstCol);
+//
+//        for (int j = i + 1; j < cols.size(); ++j) {
+//          final String secondCol = cols.get(j);
+//          final Map<String, RoaringBitmap> bitmapsForSecondColOutliers = bitmapsForColsOutliers
+//              .get(secondCol);
+//          final Map<String, RoaringBitmap> bitmapsForSecondColInliers = bitmapsForColsInliers
+//              .get(secondCol);
+//
+//          for (String firstColVal : bitmapsForFirstColOutliers.keySet()) {
+//            if (!bitmapsForFirstColInliers.containsKey(firstColVal)) {
+//              continue;
+//            }
+//
+//            final RoaringBitmap bitmapForFirstColValOutliers = bitmapsForFirstColOutliers
+//                .get(firstColVal);
+//            final RoaringBitmap bitmapForFirstColValInliers = bitmapsForFirstColInliers
+//                .get(firstColVal);
+//
+//            for (String secondColVal : bitmapsForSecondColOutliers.keySet()) {
+//              if (!bitmapsForSecondColInliers.containsKey(secondColVal)) {
+//                continue;
+//              }
+//
+//              final Map<String, String> resultColVals = ImmutableMap
+//                  .of(firstCol, firstColVal, secondCol, secondColVal);
+//              addColumnValuesToResultColumns(colResultsMap, resultColVals);
+//
+//              final RoaringBitmap firstAndSecondColValsOutliers = RoaringBitmap
+//                  .and(bitmapForFirstColValOutliers, bitmapsForSecondColOutliers
+//                      .get(secondColVal));
+//              final RoaringBitmap firstAndSecondColValsInliers = RoaringBitmap
+//                  .and(bitmapForFirstColValInliers, bitmapsForSecondColInliers
+//                      .get(secondColVal));
+//              addRatioValuesToResultColumns(metricFn, outlierCount,
+//                  totalCount, ratios, supports, matchedOutlierCounts,
+//                  firstAndSecondColValsOutliers, firstAndSecondColValsInliers);
+//
+//              if (order >= 3) {
+//                for (int k = j + 1; k < cols.size(); ++k) {
+//                  final String thirdCol = cols.get(k);
+//                  final Map<String, RoaringBitmap> bitmapsForThirdColOutliers = bitmapsForColsOutliers
+//                      .get(thirdCol);
+//                  final Map<String, RoaringBitmap> bitmapsForThirdColInliers = bitmapsForColsInliers
+//                      .get(thirdCol);
+//
+//                  for (String thirdColVal : bitmapsForThirdColOutliers.keySet()) {
+//                    if (!bitmapsForThirdColInliers.containsKey(thirdColVal)) {
+//                      continue;
+//                    }
+//
+//                    final Map<String, String> resultColValsAllThree = ImmutableMap
+//                        .of(firstCol, firstColVal, secondCol, secondColVal, thirdCol, thirdColVal);
+//                    addColumnValuesToResultColumns(colResultsMap, resultColValsAllThree);
+//
+//                    final RoaringBitmap allThreeColValsOutliers = RoaringBitmap
+//                        .and(bitmapForFirstColValOutliers, bitmapsForSecondColOutliers
+//                            .get(secondColVal));
+//                    final RoaringBitmap allThreeColValsInliers = RoaringBitmap
+//                        .and(bitmapForFirstColValInliers, bitmapsForSecondColInliers
+//                            .get(secondColVal));
+//                    addRatioValuesToResultColumns(metricFn, outlierCount,
+//                        totalCount, ratios, supports, matchedOutlierCounts,
+//                        allThreeColValsOutliers, allThreeColValsInliers);
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//
+//    // Generate DataFrame with results
+//    final DataFrame resultDf = new DataFrame();
+//
+//    for (String attr : colResultsMap.keySet()) {
+//      List<String> attrResultVals = colResultsMap.get(attr);
+//      resultDf.addColumn(attr, attrResultVals.toArray(new String[0]));
+//    }
+//
+//    resultDf.addColumn(ratioMetricStr, ratios.stream().mapToDouble(x -> x).toArray());
+//    resultDf.addColumn("support", supports.stream().mapToDouble(x -> x).toArray());
+//    resultDf
+//        .addColumn("outlier_count", matchedOutlierCounts.stream().mapToDouble(x -> x).toArray());
+//
+//    return resultDf;
   }
 
   /**
