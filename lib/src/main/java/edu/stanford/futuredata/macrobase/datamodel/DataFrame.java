@@ -144,7 +144,7 @@ public class DataFrame {
      * @param maxNumToPrint maximum number of rows from the DataFrame to print
      */
     public void prettyPrint(final int maxNumToPrint) {
-        System.out.println(numRows +  (numRows == 1 ? "row" : " rows"));
+        System.out.println(numRows +  (numRows == 1 ? " row" : " rows"));
 
         final int maxColNameLength = schema.getColumnNames().stream()
             .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 4; // 2 extra spaces on both sides
