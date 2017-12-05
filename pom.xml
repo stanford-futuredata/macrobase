@@ -41,7 +41,7 @@
       <module>legacy</module>
       <module>frontend</module>
       <!-- <module>contrib</module> -->
-      <module>repl</module>
+      <module>sql</module>
       <module>lib</module>
       <module>core</module>
     </modules>
