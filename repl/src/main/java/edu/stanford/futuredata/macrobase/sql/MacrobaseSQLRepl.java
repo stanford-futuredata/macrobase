@@ -61,8 +61,8 @@ public class MacrobaseSQLRepl {
         out.println();
         out.flush();
       }
-      // Remove newlines and add delimiter when updating console history
-      reader.getHistory().add(statementStr.replace('\n', ' ') + ";");
+      // Remove extra whitespace and add delimiter before updating console history
+      reader.getHistory().add(statementStr.replaceAll("\\s+", " ") + ";");
       try {
         Statement stmt = parser.createStatement(statementStr);
         log.debug(stmt.toString());
@@ -79,13 +79,13 @@ public class MacrobaseSQLRepl {
     }
   }
 
-  /**
-   * Executes one or more SQL queries. Calls {@link #executeQueries(String, boolean)} with 2nd
-   * argument set to false.
-   *
-   * @param queries A single String which contains the queries to execute. Each query in the String
-   * should be delimited by ';' and optional whitespace.
-   */
+    /**
+     * Executes one or more SQL queries. Calls {@link #executeQueries(String, boolean)} with 2nd
+     * argument set to false.
+     *
+     * @param queries A single String which contains the queries to execute. Each query in the String
+     * should be delimited by ';' and optional whitespace.
+     */
 
   private void executeQueries(final String queries) {
     executeQueries(queries, false);
@@ -132,11 +132,9 @@ public class MacrobaseSQLRepl {
   }
 
   public static void main(String... args) throws IOException {
-    final String ascii_art = readResourcesFile(ASCII_ART_FILE);
-    System.out.println(ascii_art);
-
     final MacrobaseSQLRepl repl = new MacrobaseSQLRepl();
-
+    final String ascii_art = readResourcesFile(ASCII_ART_FILE);
+    boolean printedWelcome = false;
     if (args != null && args.length > 0) {
       switch (args[0].toLowerCase()) {
         case "-h":
@@ -146,11 +144,17 @@ public class MacrobaseSQLRepl {
         case "-f":
         case "--file":
           if (args.length > 1) {
+            System.out.println(ascii_art);
+            printedWelcome = true;
             final String queriesFromFile = readFile(new File(args[1]));
             repl.executeQueries(queriesFromFile, true);
           }
           break;
       }
+    }
+
+    if (!printedWelcome) {
+      System.out.println(ascii_art);
     }
 
     repl.runRepl();

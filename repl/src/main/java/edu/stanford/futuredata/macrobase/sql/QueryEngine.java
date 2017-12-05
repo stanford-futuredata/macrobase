@@ -14,6 +14,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Literal;
+import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
@@ -100,6 +101,7 @@ public class QueryEngine {
               + " outlier or inlier subquery");
     }
     // execute diff
+    // TODO: add support for "ON *"
     DataFrame df = Diff.diff(firstDf, secondDf, explainCols, ratioMetricStr, (int) order);
     return evaluateSQLClauses(diffQuery, df);
   }
@@ -252,14 +254,17 @@ public class QueryEngine {
           generateLambdaForPredicate(((DoubleLiteral) literal).getValue(), compExprType));
     } else {
       // colType == ColType.STRING
-      if (!(literal instanceof StringLiteral)) {
+      if (literal instanceof StringLiteral) {
+        return df.filter(colIndex,
+            generateLambdaForPredicate(((StringLiteral) literal).getValue(), compExprType));
+      } else if (literal instanceof NullLiteral) {
+        return df.filter(colIndex,
+            generateLambdaForPredicate(null, compExprType));
+      } else {
         throw new MacrobaseSQLException(
             "Column " + colName + " has type " + colType + ", but " + literal
                 + " is not StringLiteral");
       }
-
-      return df.filter(colIndex,
-          generateLambdaForPredicate(((StringLiteral) literal).getValue(), compExprType));
     }
   }
 
