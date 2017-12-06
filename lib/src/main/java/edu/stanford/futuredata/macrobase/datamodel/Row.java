@@ -60,7 +60,7 @@ public class Row {
 
     @Override
     public String toString() {
-        return Joiner.on(",").useForNull("NULL")
+        return Joiner.on(",")
             .join(vals.stream().map(this::formatVal).collect(toList()));
     }
 
@@ -88,10 +88,12 @@ public class Row {
 
     /**
      * @return If x is a double, return back a formatted String that prints at least 1 and up to 6
-     * decimal places of the double. Otherwise, return x unchanged (including if x is null).
+     * decimal places of the double. If x is null, return "-". Otherwise, return x unchanged.
      */
     private Object formatVal(Object x) {
-        if (x instanceof Double) {
+        if (x == null) {
+            return "-";
+        } else if (x instanceof Double) {
             return DOUBLE_FORMAT.format(x);
         } else {
             return x;
