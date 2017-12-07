@@ -157,8 +157,9 @@ public class MinCovDet extends BatchTrainScore {
     }
 
     @Override
-    public void train(List<Datum> data) {
+    public void train(List<Datum> input) {
         // for now, only handle multivariate case...
+        List<Datum> data = new ArrayList<>(input);
         assert (data.iterator().next().metrics().getDimension() == p);
         assert (p > 1);
 
