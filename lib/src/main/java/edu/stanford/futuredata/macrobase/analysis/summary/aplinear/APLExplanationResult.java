@@ -27,34 +27,32 @@ public class APLExplanationResult {
         this.metrics = metrics;
     }
 
-    private String prettyPrintMatch(AttributeEncoder encoder) {
+    private Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
         Set<Integer> values = matcher.getSet();
+        Map<String, String> match = new HashMap<>();
 
-        StringJoiner matchJoiner = new StringJoiner(", ");
         for (int k : values) {
-            matchJoiner.add(encoder.decodeColumnName(k)+"="+encoder.decodeValue(k));
+            match.put(encoder.decodeColumnName(k), encoder.decodeValue(k));
         }
-        return matchJoiner.toString();
+        return match;
     }
 
-    private String prettyPrintMetric() {
-        StringJoiner metricJoiner = new StringJoiner(", ");
+    private Map<String, String> prettyPrintMetric() {
+        Map<String, String> metric = new HashMap<>();
+
         for (int i = 0; i < metricTypes.length; i++) {
-            metricJoiner.add(
-                    String.format("%s: %.3f", metricTypes[i].name(), metrics[i])
-            );
+            metric.put(metricTypes[i].name(), String.format("%.3f", metrics[i]));
         }
-        return metricJoiner.toString();
+        return metric;
     }
 
-    private String prettyPrintAggregate(List<String> aggregateNames) {
-        StringJoiner aggregateJoiner = new StringJoiner(", ");
+    private Map<String, String> prettyPrintAggregate(List<String> aggregateNames) {
+        Map<String, String> aggregate = new HashMap<>();
+
         for (int i = 0; i < aggregates.length; i++) {
-            aggregateJoiner.add(
-                    String.format("%s: %.3f", aggregateNames.get(i), aggregates[i])
-            );
+            aggregate.put(aggregateNames.get(i), String.format("%.3f", aggregates[i]));
         }
-        return aggregateJoiner.toString();
+        return aggregate;
     }
 
     @Override
@@ -62,10 +60,10 @@ public class APLExplanationResult {
         return "a="+Arrays.toString(matcher.values)+":ag="+Arrays.toString(aggregates)+":mt="+Arrays.toString(metrics);
     }
 
-    public Map<String, String> jsonPrint(AttributeEncoder encoder,
+    public Map<String, Map<String, String>> jsonPrint(AttributeEncoder encoder,
                                   List<String> aggregateNames) {
-        return new HashMap<String, String>() {{
-            put("match", prettyPrintMatch(encoder));
+        return new HashMap<String, Map<String, String>>() {{
+            put("matcher", prettyPrintMatch(encoder));
             put("metric", prettyPrintMetric());
             put("aggregate", prettyPrintAggregate(aggregateNames));
 

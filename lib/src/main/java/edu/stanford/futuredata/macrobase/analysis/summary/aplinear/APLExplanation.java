@@ -39,8 +39,8 @@ public class APLExplanation implements Explanation {
     }
 
     @JsonProperty("results")
-    public List<Map<String, String>> results() {
-        List<Map<String, String>> r = new ArrayList<>();
+    public List<Map<String, Map<String, String>>> results() {
+        List<Map<String, Map<String, String>>> r = new ArrayList<>();
         for (APLExplanationResult is : results) {
             r.add(is.jsonPrint(encoder, aggregateNames));
         }
