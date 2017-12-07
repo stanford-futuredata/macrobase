@@ -30,16 +30,7 @@ public class APLOutlierSummarizer extends APLSummarizer {
     @Override
     public double[][] getAggregateColumns(DataFrame input) {
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
-        int numRows = outlierCol.length;
-        double[] countCol = null;
-        if (countColumn != null) {
-            countCol = input.getDoubleColumnByName(countColumn);
-        } else {
-            countCol = new double[numRows];
-            for (int i = 0; i < numRows; i++) {
-                countCol[i] = 1.0;
-            }
-        }
+        double[] countCol = processCountCol(input, countColumn,  outlierCol.length);
 
         double[][] aggregateColumns = new double[2][];
         aggregateColumns[0] = outlierCol;

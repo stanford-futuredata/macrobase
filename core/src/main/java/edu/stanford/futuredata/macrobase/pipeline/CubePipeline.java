@@ -5,7 +5,10 @@ import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -69,7 +72,7 @@ public class CubePipeline implements Pipeline {
         debugDump = conf.get("debugDump", false);
     }
 
-    public Explanation results() throws Exception {
+    public APLExplanation results() throws Exception {
         Map<String, Schema.ColType> colTypes = getColTypes();
         long startTime = System.currentTimeMillis();
         DataFrame df = PipelineUtils.loadDataFrame(
@@ -100,23 +103,20 @@ public class CubePipeline implements Pipeline {
             writer.writeToStream(df, out);
         }
 
-        APrioriSummarizer summarizer = new APrioriSummarizer();
-        summarizer.setOutlierColumn(classifier.getOutputColumnName());
-        summarizer.setCountColumn(classifier.getCountColumnName());
-        summarizer.setAttributes(attributes);
-        summarizer.setMinSupport(minSupport);
-        summarizer.setMinRatioMetric(minRatioMetric);
         startTime = System.currentTimeMillis();
+        APLSummarizer summarizer = getSummarizer(classifier);
         summarizer.process(df);
+        APLExplanation explanation = summarizer.getResults();
         elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {}", elapsed);
-        APExplanation output = summarizer.getResults();
-        return output;
+
+        return explanation;
     }
 
     private Map<String, Schema.ColType> getColTypes() throws MacrobaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         switch (classifierType) {
+            case "meanshift":
             case "arithmetic": {
                 colTypes.put(countColumn, Schema.ColType.DOUBLE);
                 colTypes.put(meanColumn, Schema.ColType.DOUBLE);
@@ -157,6 +157,7 @@ public class CubePipeline implements Pipeline {
                 classifier.setIncludeLow(includeLo);
                 return classifier;
             }
+            case "meanshift":
             case "raw": {
                 return new RawClassifier(
                         countColumn,
@@ -165,6 +166,30 @@ public class CubePipeline implements Pipeline {
             }
             default:
                 throw new MacrobaseException("Bad Classifier Name");
+        }
+    }
+
+    private APLSummarizer getSummarizer(CubeClassifier classifier) throws Exception {
+        switch (classifierType) {
+            case "meanshift": {
+                APLMeanSummarizer summarizer = new APLMeanSummarizer();
+                summarizer.setCountColumn(countColumn);
+                summarizer.setMeanColumn(meanColumn);
+                summarizer.setStdColumn(stdColumn);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinStdDev(minRatioMetric);
+                return summarizer;
+            }
+            default: {
+                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+                summarizer.setOutlierColumn(classifier.getOutputColumnName());
+                summarizer.setCountColumn(classifier.getCountColumnName());
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRatioMetric);
+                return summarizer;
+            }
         }
     }
 }

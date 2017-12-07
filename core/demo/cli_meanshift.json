@@ -1,0 +1,15 @@
+{
+"pipeline": "CubePipeline",
+
+"inputURI": "csv://core/demo/sample_cubed_meanshift.csv",
+"restHeader": {},
+"usePost": false,
+"classifier": "meanshift",
+"countColumn": "count",
+"meanColumn": "mean",
+"stdColumn": "std",
+
+"attributes": ["location", "version", "device"],
+"minSupport": 0.05,
+"minRatioMetric": 2.0
+}
