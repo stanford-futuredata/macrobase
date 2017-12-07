@@ -70,15 +70,24 @@ public class APLExplanationResult {
         }};
     }
 
+    private String removeBrackets(String str) {
+        int l = str.length();
+        return str.substring(1, l - 1);
+    }
+
     public String prettyPrint(
             AttributeEncoder encoder,
             List<String> aggregateNames
     ) {
+        String metricString = removeBrackets(prettyPrintMetric().toString());
+        String matchString = removeBrackets(prettyPrintMatch(encoder).toString());
+        String aggregateString = removeBrackets(prettyPrintAggregate(aggregateNames).toString());
+
         return String.format(
-                "%s\n%s\n%s\n",
-                prettyPrintMetric(),
-                prettyPrintMatch(encoder),
-                prettyPrintAggregate(aggregateNames)
+                "%s: %s\n%s: %s\n%s: %s\n",
+                "metrics", metricString,
+                "matches", matchString,
+                "aggregates", aggregateString
         );
     }
 }
