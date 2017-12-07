@@ -18,6 +18,7 @@
 "includeLo": true,
 "includeHi": false,
 
+"summarizer": "apriori",
 "attributes": ["location", "version"],
 "minSupport": 0.2,
 "minRatioMetric": 10.0
