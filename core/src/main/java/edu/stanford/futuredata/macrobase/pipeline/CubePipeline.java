@@ -5,7 +5,10 @@ import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -69,7 +72,7 @@ public class CubePipeline implements Pipeline {
         debugDump = conf.get("debugDump", false);
     }
 
-    public Explanation results() throws Exception {
+    public APLExplanation results() throws Exception {
         Map<String, Schema.ColType> colTypes = getColTypes();
         long startTime = System.currentTimeMillis();
         DataFrame df = PipelineUtils.loadDataFrame(
@@ -101,7 +104,9 @@ public class CubePipeline implements Pipeline {
         }
 
         startTime = System.currentTimeMillis();
-        Explanation explanation = getExplanation(classifier, df);
+        APLSummarizer summarizer = getSummarizer(classifier);
+        summarizer.process(df);
+        APLExplanation explanation = summarizer.getResults();
         elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {}", elapsed);
 
@@ -164,7 +169,7 @@ public class CubePipeline implements Pipeline {
         }
     }
 
-    private Explanation getExplanation(CubeClassifier classifier, DataFrame df) throws Exception {
+    private APLSummarizer getSummarizer(CubeClassifier classifier) throws Exception {
         switch (classifierType) {
             case "meanshift": {
                 APLMeanSummarizer summarizer = new APLMeanSummarizer();
@@ -174,18 +179,16 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);
-                summarizer.process(df);
-                return summarizer.getResults();
+                return summarizer;
             }
             default: {
-                APrioriSummarizer summarizer = new APrioriSummarizer();
+                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
                 summarizer.setOutlierColumn(classifier.getOutputColumnName());
                 summarizer.setCountColumn(classifier.getCountColumnName());
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRatioMetric);
-                summarizer.process(df);
-                return summarizer.getResults();
+                return summarizer;
             }
         }
     }
