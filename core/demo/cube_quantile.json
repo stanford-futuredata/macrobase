@@ -1,0 +1,23 @@
+{
+  "pipeline": "CubePipeline",
+  "inputURI": "csv://core/demo/sample_cubed_quantiles.csv",
+  "classifier": "quantile",
+  "countColumn": "count",
+  "meanColumn": "mean",
+  "quantileColumns": {
+    "min": 0.0,
+    "p10": 0.1,
+    "p50": 0.5,
+    "p90": 0.9,
+    "max": 1.0
+  },
+  "cutoff": 1.0,
+  "includeLo": true,
+  "includeHi": false,
+  "attributes": [
+    "location",
+    "version"
+  ],
+  "minSupport": 0.2,
+  "minRatioMetric": 10.0
+}

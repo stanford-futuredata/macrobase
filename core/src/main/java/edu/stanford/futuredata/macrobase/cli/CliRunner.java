@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  * New custom pipelines can be created by implementing the Pipeline interface and
  * adding a loader to the PipelineMapper.
  *
- * see demo/cli_conf.yaml
+ * see demo/batch.yaml
  */
 public class CliRunner {
 
