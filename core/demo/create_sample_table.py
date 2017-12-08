@@ -2,18 +2,20 @@ import pandas as pd
 import numpy as np
 import random
 
-NUMROWS = 1000000
-locationVal = ['USA', 'CAN', 'GRB', 'GER', 'CHN', 'JPN', 'MEX']
-versionVal = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6']
-nameVal = ['A', 'B', 'C', 'D', 'E']
+NUMROWS = 10000000
+cols = [str(i) for i in range(10)]
 
 usage = np.random.rand(NUMROWS)
 data = []
 for i in range(NUMROWS):
-    l = random.randint(0, len(locationVal) - 1)
-    v = random.randint(0, len(versionVal) - 1)
-    n = random.randint(0, len(nameVal) - 1)
-    data.append((usage[i], locationVal[l], versionVal[v], nameVal[n]))
+    a = random.randint(0, 10)
+    b = random.randint(0, 10)
+    c = random.randint(0, 10)
+    d = random.randint(0, 10)
+    e = random.randint(0, 10)
+    data.append((random.random(), a, b, c, d, e))
+    if i % 1000000 == 999999:
+        print i + 1
 
-df = pd.DataFrame(data=data, columns=['usage', 'location', 'version', 'name'])
+df = pd.DataFrame(data=data, columns=['usage', 'A', 'B', 'C', 'D', 'E'])
 df.to_csv('generated_sample.csv',index=False, header=True)
