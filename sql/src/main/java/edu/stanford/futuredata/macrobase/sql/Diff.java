@@ -18,7 +18,7 @@ public class Diff {
 
   public static DataFrame diff(final DataFrame outliers, final DataFrame inliers,
       final List<String> cols,
-      final String ratioMetricStr, final int order) throws MacrobaseException {
+      final ExplanationMetric ratioMetric, final int order) throws MacrobaseException {
 
     final String outlierColName = "outlier_col";
     // Add column "outlier_col" to both outliers (all 1.0) and inliers (all 0.0)
@@ -32,7 +32,7 @@ public class Diff {
     summarizer.setMaxOrder(order);
     summarizer.setOutlierColumn(outlierColName);
     summarizer.setAttributes(cols);
-    summarizer.setRatioMetric(ExplanationMetric.getMetricFn(ratioMetricStr));
+    summarizer.setRatioMetric(ratioMetric);
     summarizer.setMinSupport(0.2); // TODO:
     summarizer.setMinRatioMetric(1.5); // TODO:
 
@@ -64,7 +64,7 @@ public class Diff {
       final List<String> attrResultVals = colResultsMap.get(attr);
       resultDf.addColumn(attr, attrResultVals.toArray(new String[0]));
     }
-    resultDf.addColumn(ratioMetricStr, ratios.stream().mapToDouble(x -> x).toArray());
+    resultDf.addColumn(ratioMetric.name(), ratios.stream().mapToDouble(x -> x).toArray());
     resultDf.addColumn("support", supports.stream().mapToDouble(x -> x).toArray());
     resultDf
         .addColumn("outlier_count", matchedOutlierCounts.stream().mapToDouble(x -> x).toArray());

@@ -17,6 +17,6 @@ public class GlobalRatioMetric extends ExplanationMetric {
 
     @Override
     public String name() {
-        return "global ratio";
+        return "global_ratio";
     }
 }

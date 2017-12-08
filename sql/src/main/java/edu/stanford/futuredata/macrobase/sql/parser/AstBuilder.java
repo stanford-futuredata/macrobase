@@ -597,12 +597,12 @@ class AstBuilder
 //    List<QualifiedName> subqueryAliases = context.qualifiedName().stream()
 //        .map(this::getQualifiedName).collect(toList());
 
-    RatioMetricExpression ratioMetricExpr = (RatioMetricExpression) visit(
-        context.ratioMetricExpression());
+    Optional<RatioMetricExpression> ratioMetricExpr = visitIfPresent(
+        context.ratioMetricExpression(), RatioMetricExpression.class);
     List<Identifier> attributeCols = visit(context.columnAliases().identifier(), Identifier.class);
     check(attributeCols.size() > 0, "At least one attribute must be specified", context);
 
-    Optional<LongLiteral> maxCombo = visitIfPresent(context.integer(), LongLiteral.class);
+    Optional<LongLiteral> maxCombo = getTextIfPresent(context.maxCombo).map(LongLiteral::new);
 
     return new DiffQuerySpecification(
         getLocation(context),
@@ -1569,11 +1569,6 @@ class AstBuilder
   @Override
   public Node visitDecimalLiteral(SqlBaseParser.DecimalLiteralContext context) {
     return new DoubleLiteral(getLocation(context), context.getText());
-  }
-
-  @Override
-  public Node visitInteger(SqlBaseParser.IntegerContext context) {
-    return new LongLiteral(getLocation(context), context.getText());
   }
 
   @Override
