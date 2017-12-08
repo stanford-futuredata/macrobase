@@ -13,7 +13,7 @@ if(len(sys.argv) > 2):
     port = sys.argv[2]
 
 user = "postgres"
-password = "mamikonyan"
+password = "postgres"
 if(len(sys.argv) > 3):
     user = sys.argv[3]
     password = sys.argv[4]
