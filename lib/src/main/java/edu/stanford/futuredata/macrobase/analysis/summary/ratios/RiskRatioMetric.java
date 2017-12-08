@@ -28,6 +28,6 @@ public class RiskRatioMetric extends ExplanationMetric {
 
     @Override
     public String name() {
-        return "risk ratio";
+        return "risk_ratio";
     }
 }
