@@ -86,9 +86,9 @@ public class MBPredicate {
             case GREATER_THAN:
                 return (String x) -> x.compareTo(sentinel) > 0;
             case LEQ:
-                return (String x) -> (x.equals(sentinel) || x.compareTo(sentinel) < 0);
+                return (String x) -> x.compareTo(sentinel) <= 0;
             case GEQ:
-                return (String x) -> (x.equals(sentinel) || x.compareTo(sentinel) > 0);
+                return (String x) -> x.compareTo(sentinel) >= 0;
         }
     }
 }

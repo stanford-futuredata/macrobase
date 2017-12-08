@@ -29,7 +29,6 @@ public class BasicBatchPipeline implements Pipeline {
 
     private String classifierType;
     private String metric;
-    private Object rawCutoff;
     private double cutoff;
     private String strCutoff;
     private boolean isStrPredicate;
@@ -51,7 +50,7 @@ public class BasicBatchPipeline implements Pipeline {
         metric = conf.get("metric");
 
         if (classifierType.equals("predicate")) {
-            rawCutoff = conf.get("cutoff");
+            Object rawCutoff = conf.get("cutoff");
             isStrPredicate = rawCutoff instanceof String;
             if (isStrPredicate) {
                 strCutoff = (String) rawCutoff;
@@ -59,6 +58,7 @@ public class BasicBatchPipeline implements Pipeline {
                 cutoff = (double) rawCutoff;
             }
         } else {
+            isStrPredicate = false;
             cutoff = conf.get("cutoff", 1.0);
         }
 
@@ -138,9 +138,11 @@ public class BasicBatchPipeline implements Pipeline {
 
     public DataFrame loadData() throws Exception {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
-        colTypes.put(metric, Schema.ColType.DOUBLE);
         if (isStrPredicate) {
             colTypes.put(metric, Schema.ColType.STRING);
+        }
+        else{
+            colTypes.put(metric, Schema.ColType.DOUBLE);
         }
         return PipelineUtils.loadDataFrame(inputURI, colTypes);
     }

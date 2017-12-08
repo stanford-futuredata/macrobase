@@ -24,8 +24,6 @@ import java.util.Map;
 public class CubePipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger("CubePipeline");
 
-    private final PipelineConfig conf;
-
     // Ingest
     private String inputURI;
     private Map<String, String> restHeader;
@@ -35,7 +33,6 @@ public class CubePipeline implements Pipeline {
     // Classifiers
     private String classifierType;
     private String countColumn;
-    private Object rawCutoff;
     private double cutoff;
     private String strCutoff;
     private boolean isStrPredicate;
@@ -57,8 +54,6 @@ public class CubePipeline implements Pipeline {
     private boolean debugDump;
 
     public CubePipeline(PipelineConfig conf) {
-        this.conf = conf;
-
         inputURI = conf.get("inputURI");
         restHeader = conf.get("restHeader", null);
         jsonBody = conf.get("jsonBody", null);
@@ -68,7 +63,7 @@ public class CubePipeline implements Pipeline {
         countColumn = conf.get("countColumn", "count");
 
         if (classifierType.equals("predicate")) {
-            rawCutoff = conf.get("cutoff");
+            Object rawCutoff = conf.get("cutoff");
             isStrPredicate = rawCutoff instanceof String;
             if (isStrPredicate) {
                 strCutoff = (String) rawCutoff;
@@ -76,6 +71,7 @@ public class CubePipeline implements Pipeline {
                 cutoff = (double) rawCutoff;
             }
         } else {
+            isStrPredicate = false;
             cutoff = conf.get("cutoff", 1.0);
         }
 
