@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.GlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.MeanDevMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.SupportMetric;
@@ -37,15 +36,7 @@ public class APLMeanSummarizer extends APLSummarizer {
         double[] stdCol = input.getDoubleColumnByName(stdColumn);
 
         int numRows = meanCol.length;
-        double[] countCol = null;
-        if (countColumn != null) {
-            countCol = input.getDoubleColumnByName(countColumn);
-        } else {
-            countCol = new double[numRows];
-            for (int i = 0; i < numRows; i++) {
-                countCol[i] = 1.0;
-            }
-        }
+        double[] countCol = processCountCol(input, countColumn, meanCol.length);
 
         double[] m1Col = new double[numRows];
         double[] m2Col = new double[numRows];

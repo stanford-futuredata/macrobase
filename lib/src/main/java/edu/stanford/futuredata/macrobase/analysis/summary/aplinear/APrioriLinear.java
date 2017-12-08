@@ -118,9 +118,11 @@ public class APrioriLinear{
                     if (isPastThreshold) {
                         curOrderSaved.add(curCandidate);
                     }
-                    // otherwise if a set still has potentially good subsets,
-                    // save it for further examination
-                    curOrderNext.add(curCandidate);
+                    else {
+                        // otherwise if a set still has potentially good subsets,
+                        // save it for further examination
+                        curOrderNext.add(curCandidate);
+                    }
                 } else {
                     pruned++;
                 }

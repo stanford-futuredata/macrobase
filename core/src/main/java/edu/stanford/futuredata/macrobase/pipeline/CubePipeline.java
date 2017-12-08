@@ -1,12 +1,10 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APExplanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.classify.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
@@ -32,15 +30,23 @@ public class CubePipeline implements Pipeline {
     private Map<String, Object> jsonBody;
     private boolean usePost;
 
+    // Classifiers
     private String classifierType;
     private String countColumn;
+    private double cutoff;
+    private String strCutoff;
+    private boolean isStrPredicate;
+
+    private String predicateStr;
+    private String metric;
+
+    private boolean includeHi;
+    private boolean includeLo;
     private String meanColumn;
     private String stdColumn;
     private LinkedHashMap<String, Double> quantileColumns;
-    private double cutoff;
-    private boolean includeHi;
-    private boolean includeLo;
 
+    // Explanation
     private List<String> attributes;
     private double minSupport;
     private double minRatioMetric;
@@ -55,12 +61,28 @@ public class CubePipeline implements Pipeline {
 
         classifierType = conf.get("classifier", "arithmetic");
         countColumn = conf.get("countColumn", "count");
+
+        if (classifierType.equals("predicate")) {
+            Object rawCutoff = conf.get("cutoff");
+            isStrPredicate = rawCutoff instanceof String;
+            if (isStrPredicate) {
+                strCutoff = (String) rawCutoff;
+            } else {
+                cutoff = (double) rawCutoff;
+            }
+        } else {
+            isStrPredicate = false;
+            cutoff = conf.get("cutoff", 1.0);
+        }
+
+        predicateStr = conf.get("predicate", "==").trim();
+        metric = conf.get("metric", null);
+
+        includeHi = conf.get("includeHi", true);
+        includeLo = conf.get("includeLo", true);
         meanColumn = conf.get("meanColumn", "mean");
         stdColumn = conf.get("stdColumn", "std");
         quantileColumns = conf.get("quantileColumns", new LinkedHashMap<String, Double>());
-        cutoff = conf.get("cutoff", 1.0);
-        includeHi = conf.get("includeHi", true);
-        includeLo = conf.get("includeLo", true);
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport", 3.0);
@@ -69,7 +91,7 @@ public class CubePipeline implements Pipeline {
         debugDump = conf.get("debugDump", false);
     }
 
-    public Explanation results() throws Exception {
+    public APLExplanation results() throws Exception {
         Map<String, Schema.ColType> colTypes = getColTypes();
         long startTime = System.currentTimeMillis();
         DataFrame df = PipelineUtils.loadDataFrame(
@@ -89,10 +111,6 @@ public class CubePipeline implements Pipeline {
         classifier.process(df);
         elapsed = System.currentTimeMillis() - startTime;
         log.info("Classification time: {}", elapsed);
-        log.info("Outlier cutoffs: {} {}",
-                classifier.getLowCutoff(),
-                classifier.getHighCutoff()
-        );
         df = classifier.getResults();
         if (debugDump) {
             CSVDataFrameWriter writer = new CSVDataFrameWriter();
@@ -100,38 +118,41 @@ public class CubePipeline implements Pipeline {
             writer.writeToStream(df, out);
         }
 
-        APrioriSummarizer summarizer = new APrioriSummarizer();
-        summarizer.setOutlierColumn(classifier.getOutputColumnName());
-        summarizer.setCountColumn(classifier.getCountColumnName());
-        summarizer.setAttributes(attributes);
-        summarizer.setMinSupport(minSupport);
-        summarizer.setMinRatioMetric(minRatioMetric);
         startTime = System.currentTimeMillis();
+        APLSummarizer summarizer = getSummarizer(classifier);
         summarizer.process(df);
+        APLExplanation explanation = summarizer.getResults();
         elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {}", elapsed);
-        APExplanation output = summarizer.getResults();
-        return output;
+
+        return explanation;
     }
 
     private Map<String, Schema.ColType> getColTypes() throws MacrobaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
+        colTypes.put(countColumn, Schema.ColType.DOUBLE);
         switch (classifierType) {
+            case "meanshift":
             case "arithmetic": {
-                colTypes.put(countColumn, Schema.ColType.DOUBLE);
                 colTypes.put(meanColumn, Schema.ColType.DOUBLE);
                 colTypes.put(stdColumn, Schema.ColType.DOUBLE);
                 return colTypes;
             }
             case "quantile": {
-                colTypes.put(countColumn, Schema.ColType.DOUBLE);
                 for (String col : quantileColumns.keySet()) {
                     colTypes.put(col, Schema.ColType.DOUBLE);
                 }
                 return colTypes;
             }
+            case "predicate": {
+                if (isStrPredicate) {
+                    colTypes.put(metric, Schema.ColType.STRING);
+                } else {
+                    colTypes.put(metric, Schema.ColType.DOUBLE);
+                }
+                return colTypes;
+            }
             case "raw": {
-                colTypes.put(countColumn, Schema.ColType.DOUBLE);
                 colTypes.put(meanColumn, Schema.ColType.DOUBLE);
             }
             default:
@@ -157,6 +178,16 @@ public class CubePipeline implements Pipeline {
                 classifier.setIncludeLow(includeLo);
                 return classifier;
             }
+            case "predicate": {
+                if (isStrPredicate){
+                    PredicateCubeClassifier classifier = new PredicateCubeClassifier(countColumn, metric, predicateStr, strCutoff);
+                    return classifier;
+                }
+                PredicateCubeClassifier classifier = new PredicateCubeClassifier(countColumn, metric, predicateStr, cutoff);
+                return classifier;
+            }
+
+            case "meanshift":
             case "raw": {
                 return new RawClassifier(
                         countColumn,
@@ -165,6 +196,30 @@ public class CubePipeline implements Pipeline {
             }
             default:
                 throw new MacrobaseException("Bad Classifier Name");
+        }
+    }
+
+    private APLSummarizer getSummarizer(CubeClassifier classifier) throws Exception {
+        switch (classifierType) {
+            case "meanshift": {
+                APLMeanSummarizer summarizer = new APLMeanSummarizer();
+                summarizer.setCountColumn(countColumn);
+                summarizer.setMeanColumn(meanColumn);
+                summarizer.setStdColumn(stdColumn);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinStdDev(minRatioMetric);
+                return summarizer;
+            }
+            default: {
+                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+                summarizer.setOutlierColumn(classifier.getOutputColumnName());
+                summarizer.setCountColumn(classifier.getCountColumnName());
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRatioMetric);
+                return summarizer;
+            }
         }
     }
 }

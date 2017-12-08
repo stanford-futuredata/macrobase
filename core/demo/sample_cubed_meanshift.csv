@@ -1,0 +1,5 @@
+location,version,device,count,mean,std
+AUS,v1,apple,100,200,15
+CAN,v1,apple,300,20,14
+AUS,v2,apple,400,25,13
+AUS,v1,android,500,30,12

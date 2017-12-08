@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 public class PipelineConfigTest {
     @Test
     public void testLoadFile() throws Exception {
-        PipelineConfig c = PipelineConfig.fromYamlFile("demo/cli_conf.yaml");
+        PipelineConfig c = PipelineConfig.fromYamlFile("demo/batch.yaml");
         List<String> attributes = c.get("attributes");
         assertTrue(attributes.size() > 1);
         double pct = c.get("cutoff");

@@ -1,0 +1,17 @@
+{
+  "pipeline": "CubePipeline",
+  "inputURI": "csv://core/demo/sample_cubed.csv",
+  "classifier": "predicate",
+  "countColumn": "count",
+
+  "metric": "release",
+  "predicate": ">=",
+  "cutoff": "12-11-17",
+
+  "attributes": [
+    "location",
+    "version"
+  ],
+  "minSupport": 0.2,
+  "minRatioMetric": 2.0
+}

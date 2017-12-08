@@ -1,0 +1,17 @@
+{
+  "pipeline": "CubePipeline",
+  "inputURI": "csv://core/demo/sample_cubed.csv",
+  "classifier": "arithmetic",
+  "countColumn": "count",
+  "meanColumn": "mean",
+  "stdColumn": "std",
+  "cutoff": 1.0,
+  "includeLo": true,
+  "includeHi": false,
+  "attributes": [
+    "location",
+    "version"
+  ],
+  "minSupport": 0.2,
+  "minRatioMetric": 10.0
+}

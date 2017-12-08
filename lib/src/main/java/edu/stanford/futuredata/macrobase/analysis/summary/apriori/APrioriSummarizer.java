@@ -20,7 +20,6 @@ public class APrioriSummarizer extends BatchSummarizer {
     // Parameters
     String countColumn = null;
     ExplanationMetric ratioMetric = new GlobalRatioMetric();
-    double minRatioMetric = 3;
 
     // Calculated Values
     int numRows;
@@ -373,15 +372,5 @@ public class APrioriSummarizer extends BatchSummarizer {
      */
     public void setRatioMetric(ExplanationMetric ratioMetric) {
         this.ratioMetric = ratioMetric;
-    }
-
-    /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public BatchSummarizer setMinRatioMetric(double minRatio) {
-        this.minRatioMetric = minRatio;
-        return this;
     }
 }

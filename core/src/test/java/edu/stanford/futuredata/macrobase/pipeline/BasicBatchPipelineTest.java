@@ -15,5 +15,4 @@ public class BasicBatchPipelineTest {
         Explanation e = p.results();
         assertEquals(3.0, e.numTotal(), 1e-10);
     }
-
 }

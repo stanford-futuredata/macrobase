@@ -22,11 +22,29 @@ public abstract class APLSummarizer implements Operator<DataFrame, APLExplanatio
     APLExplanation explanation;
     APrioriLinear aplKernel;
 
+    protected long numEvents = 0;
+
     public abstract List<String> getAggregateNames();
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
 
+    protected double[] processCountCol(DataFrame input, String countColumn, int numRows) {
+        double[] countCol = null;
+        if (countColumn != null) {
+            countCol = input.getDoubleColumnByName(countColumn);
+            for (int i = 0; i < numRows; i++) {
+                numEvents += countCol[i];
+            }
+        } else {
+            countCol = new double[numRows];
+            for (int i = 0; i < numRows; i++) {
+                countCol[i] = 1.0;
+            }
+            numEvents = numRows;
+        }
+        return countCol;
+    }
     public void process(DataFrame input) throws Exception {
         encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
@@ -51,6 +69,7 @@ public abstract class APLSummarizer implements Operator<DataFrame, APLExplanatio
 
         explanation = new APLExplanation(
                 encoder,
+                numEvents,
                 aggregateNames,
                 qualityMetricList,
                 thresholds,
