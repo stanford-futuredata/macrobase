@@ -5,36 +5,6 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 public class RawClassifier extends CubeClassifier {
     protected DataFrame input;
 
-    @Override
-    public boolean isIncludeHigh() {
-        return false;
-    }
-
-    @Override
-    public ThresholdClassifier setIncludeHigh(boolean includeHigh) {
-        return null;
-    }
-
-    @Override
-    public boolean isIncludeLow() {
-        return false;
-    }
-
-    @Override
-    public ThresholdClassifier setIncludeLow(boolean includeLow) {
-        return null;
-    }
-
-    @Override
-    public double getLowCutoff() {
-        return 0;
-    }
-
-    @Override
-    public double getHighCutoff() {
-        return 0;
-    }
-
     public RawClassifier(
             String totalCountColumn,
             String outlierCountColumn
