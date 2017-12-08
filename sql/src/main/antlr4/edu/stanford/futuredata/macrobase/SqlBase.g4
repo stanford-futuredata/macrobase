@@ -164,13 +164,9 @@ diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
       FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
       ON columnAliases
-      COMPARE BY ratioMetricExpression
-      (MAX COMBO integer)? // TODO: switch to max_combo token
+      (COMPARE BY ratioMetricExpression)?
+      (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
-    ;
-
-integer
-    : INTEGER_VALUE
     ;
 
 ratioMetricExpression
