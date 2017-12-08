@@ -3,6 +3,8 @@ package edu.stanford.futuredata.macrobase.sql;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Joiner;
+import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
@@ -88,7 +90,8 @@ public class QueryEngine {
     final Query second = diffQuery.getSecond().get();
     final List<String> explainCols = diffQuery.getAttributeCols().stream().map(Identifier::toString)
         .collect(toImmutableList());
-    final String ratioMetricStr = diffQuery.getRatioMetricExpr().getFuncName().toString();
+    final ExplanationMetric ratioMetric = ExplanationMetric
+        .getMetricFn(diffQuery.getRatioMetricExpr().get().getFuncName().toString());
     final long order = diffQuery.getMaxCombo().get().getValue();
 
     // execute subqueries
@@ -102,7 +105,7 @@ public class QueryEngine {
     }
     // execute diff
     // TODO: add support for "ON *"
-    DataFrame df = Diff.diff(firstDf, secondDf, explainCols, ratioMetricStr, (int) order);
+    DataFrame df = Diff.diff(firstDf, secondDf, explainCols, ratioMetric, (int) order);
     return evaluateSQLClauses(diffQuery, df);
   }
 
@@ -202,8 +205,8 @@ public class QueryEngine {
    * Evaluate Where clause of SQL query
    *
    * @param df the DataFrame to filter
-   * @param whereClauseOpt An Optional Where clause (of type Expression) to evaluate for each row
-   * in <tt>df</tt>
+   * @param whereClauseOpt An Optional Where clause (of type Expression) to evaluate for each row in
+   * <tt>df</tt>
    * @return A new DataFrame that contains the rows for which @whereClause evaluates to true. If
    * <tt>whereClauseOpt</tt> is not Present, we return <tt>df</tt>
    */

@@ -15,20 +15,23 @@ public class DiffQuerySpecification
   private final Optional<Query> first;
   private final Optional<Query> second;
   private final List<Identifier> attributeCols;
-  private final RatioMetricExpression ratioMetricExpr;
+  private final Optional<RatioMetricExpression> ratioMetricExpr;
   private final Optional<LongLiteral> maxCombo;
   private final Optional<Expression> where;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
 
   private static final LongLiteral DEFAULT_MAX_COMBO = new LongLiteral("3");
+  private static final RatioMetricExpression DEFAULT_RATIO_METRIC_EXPRESSION =
+      new RatioMetricExpression(new Identifier("global_ratio"),
+          new AggregateExpression(new Aggregate("COUNT")));
 
   public DiffQuerySpecification(
       Select select,
       Optional<Query> first,
       Optional<Query> second,
       List<Identifier> attributeCols,
-      RatioMetricExpression ratioMetricExpr,
+      Optional<RatioMetricExpression> ratioMetricExpr,
       Optional<LongLiteral> maxCombo,
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
@@ -43,7 +46,7 @@ public class DiffQuerySpecification
       Optional<Query> first,
       Optional<Query> second,
       List<Identifier> attributeCols,
-      RatioMetricExpression ratioMetricExpr,
+      Optional<RatioMetricExpression> ratioMetricExpr,
       Optional<LongLiteral> maxCombo,
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
@@ -58,7 +61,7 @@ public class DiffQuerySpecification
       Optional<Query> first,
       Optional<Query> second,
       List<Identifier> attributeCols,
-      RatioMetricExpression ratioMetricExpr,
+      Optional<RatioMetricExpression> ratioMetricExpr,
       Optional<LongLiteral> maxCombo,
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
@@ -78,7 +81,7 @@ public class DiffQuerySpecification
     this.first = first;
     this.second = second;
     this.attributeCols = attributeCols;
-    this.ratioMetricExpr = ratioMetricExpr;
+    this.ratioMetricExpr = Optional.of(ratioMetricExpr.orElse(DEFAULT_RATIO_METRIC_EXPRESSION));
     this.maxCombo = Optional.of(maxCombo.orElse(DEFAULT_MAX_COMBO));
     this.where = where;
     this.orderBy = orderBy;
@@ -101,7 +104,7 @@ public class DiffQuerySpecification
     return attributeCols;
   }
 
-  public RatioMetricExpression getRatioMetricExpr() {
+  public Optional<RatioMetricExpression> getRatioMetricExpr() {
     return ratioMetricExpr;
   }
 
@@ -133,7 +136,7 @@ public class DiffQuerySpecification
     first.ifPresent(nodes::add);
     second.ifPresent(nodes::add);
     nodes.addAll(attributeCols);
-    nodes.add(ratioMetricExpr);
+    nodes.add(ratioMetricExpr.get());
     nodes.add(new LongLiteral("" + maxCombo));
     where.ifPresent(nodes::add);
     orderBy.ifPresent(nodes::add);
