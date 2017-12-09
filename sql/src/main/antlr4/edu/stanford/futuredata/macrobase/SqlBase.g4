@@ -100,7 +100,8 @@ statement
     ;
 
 query
-    :  with? queryNoWith
+    : (EXPORT TO FILE outFilename=STRING)?
+      with? queryNoWith
     ;
 
 with
@@ -555,6 +556,7 @@ EXCLUDING: 'EXCLUDING';
 EXECUTE: 'EXECUTE';
 EXISTS: 'EXISTS';
 EXPLAIN: 'EXPLAIN';
+EXPORT: 'EXPORT';
 EXTRACT: 'EXTRACT';
 FALSE: 'FALSE';
 FILE: 'FILE';

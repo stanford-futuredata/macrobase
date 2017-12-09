@@ -461,6 +461,7 @@ class AstBuilder
 
     return new Query(
         getLocation(context),
+        getTextIfPresent(context.outFilename),
         visitIfPresent(context.with(), With.class),
         body.getQueryBody(),
         body.getOrderBy(),
@@ -508,6 +509,7 @@ class AstBuilder
       return new Query(
           getLocation(context),
           Optional.empty(),
+          Optional.empty(),
           new QuerySpecification(
               getLocation(context),
               query.getSelect(),
@@ -524,6 +526,7 @@ class AstBuilder
       DiffQuerySpecification diffQuery = (DiffQuerySpecification) term;
       return new Query(
           getLocation(context),
+          Optional.empty(),
           Optional.empty(),
           new DiffQuerySpecification(
               getLocation(context),
@@ -543,6 +546,7 @@ class AstBuilder
     return new Query(
         getLocation(context),
         Optional.empty(),
+        Optional.empty(),
         term,
         orderBy,
         getTextIfPresent(context.limit));
@@ -550,8 +554,8 @@ class AstBuilder
 
   @Override
   public Node visitImportCsv(SqlBaseParser.ImportCsvContext context) {
-    String filename = context.STRING().getText().substring(1);
-    filename = filename.substring(0, filename.length() - 1);
+    String filename = context.STRING().getText();
+    filename = filename.substring(1, filename.length() - 1);
     // Remove single quotes from beginning and end of filename
     final List<ColumnDefinition> columns = visit(context.columnDefinition(),
         ColumnDefinition.class);
@@ -809,7 +813,8 @@ class AstBuilder
   public Node visitShowStatsForQuery(SqlBaseParser.ShowStatsForQueryContext context) {
     QuerySpecification specification = (QuerySpecification) visitQuerySpecification(
         context.querySpecification());
-    Query query = new Query(Optional.empty(), specification, Optional.empty(), Optional.empty());
+    Query query = new Query(Optional.empty(), Optional.empty(), specification, Optional.empty(),
+        Optional.empty());
     return new ShowStats(Optional.of(getLocation(context)), new TableSubquery(query));
   }
 
