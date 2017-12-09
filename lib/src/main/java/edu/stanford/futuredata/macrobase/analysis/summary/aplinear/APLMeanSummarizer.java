@@ -71,6 +71,25 @@ public class APLMeanSummarizer extends APLSummarizer {
     }
 
     @Override
+    public double getNumberOutliers(double[][] aggregates) {
+        int n = aggregates[0].length;
+        int k = aggregates.length;
+        QualityMetric meanDevMetric = qualityMetricList.get(1);
+        double meanDevThreshold = thresholds.get(1);
+        double[] curRow = new double[k];
+        double outlierCount = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < k; j++) {
+                curRow[j] = aggregates[j][i];
+            }
+            if (meanDevMetric.value(curRow) > meanDevThreshold) {
+                outlierCount += aggregates[0][i];
+            }
+        }
+        return outlierCount;
+    }
+
+    @Override
     public APLExplanation getResults() {
         return explanation;
     }

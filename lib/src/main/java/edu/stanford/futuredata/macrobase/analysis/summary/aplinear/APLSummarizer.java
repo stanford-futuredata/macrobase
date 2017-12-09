@@ -21,13 +21,17 @@ public abstract class APLSummarizer implements Operator<DataFrame, APLExplanatio
     AttributeEncoder encoder;
     APLExplanation explanation;
     APrioriLinear aplKernel;
+    List<QualityMetric> qualityMetricList;
+    List<Double> thresholds;
 
     protected long numEvents = 0;
+    protected long numOutliers = 0;
 
     public abstract List<String> getAggregateNames();
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
+    public abstract double getNumberOutliers(double[][] aggregates);
 
     protected double[] processCountCol(DataFrame input, String countColumn, int numRows) {
         double[] countCol = null;
@@ -56,8 +60,8 @@ public abstract class APLSummarizer implements Operator<DataFrame, APLExplanatio
         log.debug("Encoded in: {}", elapsed);
         log.debug("Encoded Categories: {}", encoder.getNextKey());
 
-        List<Double> thresholds = getThresholds();
-        List<QualityMetric> qualityMetricList = getQualityMetricList();
+        thresholds = getThresholds();
+        qualityMetricList = getQualityMetricList();
         aplKernel = new APrioriLinear(
                 qualityMetricList,
                 thresholds
@@ -66,10 +70,12 @@ public abstract class APLSummarizer implements Operator<DataFrame, APLExplanatio
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded, aggregateColumns);
+        numOutliers = (long)getNumberOutliers(aggregateColumns);
 
         explanation = new APLExplanation(
                 encoder,
                 numEvents,
+                numOutliers,
                 aggregateNames,
                 qualityMetricList,
                 thresholds,

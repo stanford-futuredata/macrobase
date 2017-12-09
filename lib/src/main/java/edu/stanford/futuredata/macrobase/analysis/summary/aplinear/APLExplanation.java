@@ -13,6 +13,7 @@ public class APLExplanation implements Explanation {
     private AttributeEncoder encoder;
     private List<String> aggregateNames;
     private long numTotal;
+    private long numOutliers;
 
     private ArrayList<QualityMetric> metrics;
     private List<Double> thresholds;
@@ -21,6 +22,7 @@ public class APLExplanation implements Explanation {
     public APLExplanation(
             AttributeEncoder encoder,
             long numTotal,
+            long numOutliers,
             List<String> aggregateNames,
             List<QualityMetric> metrics,
             List<Double> thresholds,
@@ -28,6 +30,7 @@ public class APLExplanation implements Explanation {
     ) {
         this.encoder = encoder;
         this.numTotal = numTotal;
+        this.numOutliers = numOutliers;
         this.aggregateNames = aggregateNames;
         this.metrics = new ArrayList<>(metrics);
         this.thresholds = new ArrayList<>(thresholds);
@@ -52,11 +55,17 @@ public class APLExplanation implements Explanation {
         return numTotal;
     }
 
+    @JsonProperty("outliers")
+    public double numOutliers() {
+        return numOutliers;
+    }
+
     @Override
     public String prettyPrint() {
         StringBuilder header = new StringBuilder(String.format(
                 "Outlier Explanation:\n"
         ));
+        header.append("Outliers: "+numOutliers+", Total: "+numTotal+"\n");
         for (APLExplanationResult is : results) {
             header.append(
                     "---\n"+is.prettyPrint(encoder, aggregateNames)

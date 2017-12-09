@@ -42,5 +42,6 @@ public class APLMeanSummarizerTest {
         APLExplanation e = summ.getResults();
         assertEquals(1, e.getResults().size());
         assertTrue(e.prettyPrint().contains("col1=a1"));
+        assertEquals(100.0, e.numOutliers(), 1e-10);
     }
 }
