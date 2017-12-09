@@ -3,6 +3,7 @@ package edu.stanford.futuredata.macrobase.datamodel;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -65,23 +66,44 @@ public class Row {
     }
 
     /**
-     * pretty print Row object to the console, using a default width of 15 characters per value.
-     * Example output:
+     * pretty print Row object to STDOUT or file (default: STDOUT), using a default width of 15
+     * characters per value. Example output:
      * |    val_1   |   val_2   | .... |   val_n   |
      */
     public void prettyPrint() {
-        prettyPrint(15);
+        prettyPrint(System.out, 15);
+    }
+
+    /**
+     * pretty print Row object to <tt>out</tt> using a default width of 15
+     * characters per value. Example output:
+     * |    val_1   |   val_2   | .... |   val_n   |
+     */
+    public void prettyPrint(final PrintStream out) {
+        prettyPrint(out, 15);
+    }
+
+    /**
+     * pretty print Row object to STDOUT
+     * Example output:
+     * |    val_1   |   val_2   | .... |   val_n   |
+     * @param width number of characters to or each value, with <tt>(width - length of value) / 2</tt> of
+     * whitespace on either side
+     */
+    public void prettyPrint(final int width) {
+        prettyPrint(System.out, width);
     }
 
     /**
      * pretty print Row object to the console.  Example output:
      * |    val_1   |   val_2   | .... |   val_n   |
      *
+     * @param out PrintStream to print Row to STDOUT or file (default: STDOUT)
      * @param width the number of characters to use for centering a single value. Increasing
      * <tt>width</tt> will increase the whitespace padding around each value.
      */
-    public void prettyPrint(final int width) {
-        System.out.println("|" + Joiner.on("|")
+    public void prettyPrint(final PrintStream out, final int width) {
+        out.println("|" + Joiner.on("|")
             .join(vals.stream().map((x) -> StringUtils.center(String.valueOf(formatVal(x)), width))
                 .collect(toList())) + "|");
     }

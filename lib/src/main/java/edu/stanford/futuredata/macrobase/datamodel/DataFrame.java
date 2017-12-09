@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.base.Joiner;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -142,43 +143,59 @@ public class DataFrame {
      * ...
      * |  val_m1  |  val_m2  |  ...  |  val_mn  |
      * ------------------------------------------
-     * @param maxNumToPrint maximum number of rows from the DataFrame to print
+     * @param out PrintStream to write to STDOUT or file (default: STDOUT)
+     * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: 15)
      */
-    public void prettyPrint(final int maxNumToPrint) {
-        System.out.println(numRows +  (numRows == 1 ? " row" : " rows"));
+    public void prettyPrint(final PrintStream out, final int maxNumToPrint) {
+        out.println(numRows +  (numRows == 1 ? " row" : " rows"));
 
         final int maxColNameLength = schema.getColumnNames().stream()
             .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 4; // 2 extra spaces on both sides
         final String schemaStr = "|" + Joiner.on("|").join(schema.getColumnNames().stream()
             .map((x) -> StringUtils.center(String.valueOf(x), maxColNameLength)).collect(toList())) + "|";
         final String dashes = Joiner.on("").join(Collections.nCopies(schemaStr.length(), "-"));
-        System.out.println(dashes);
-        System.out.println(schemaStr);
-        System.out.println(dashes);
+        out.println(dashes);
+        out.println(schemaStr);
+        out.println(dashes);
 
         if (numRows > maxNumToPrint) {
             final int numToPrint = maxNumToPrint / 2;
             for (Row r : getRows(0, numToPrint))  {
-                r.prettyPrint(maxColNameLength);
+                r.prettyPrint(out, maxColNameLength);
             }
-            System.out.println("...");
+            out.println("...");
             for (Row r : getRows(numRows - numToPrint, numRows))  {
-                r.prettyPrint(maxColNameLength);
+                r.prettyPrint(out, maxColNameLength);
             }
         } else {
             for (Row r : getRows())  {
-                r.prettyPrint(maxColNameLength);
+                r.prettyPrint(out, maxColNameLength);
             }
         }
-        System.out.println(dashes);
-        System.out.println();
+        out.println(dashes);
+        out.println();
     }
 
     /**
-     * {@link #prettyPrint(int)} with default <tt>maxNumToPrint</tt> set to 15
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
+     * and <tt>maxNumToPrint</tt> set to 15
      */
     public void prettyPrint() {
-        prettyPrint(15);
+        prettyPrint(System.out, 15);
+    }
+
+    /**
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 15
+     */
+    public void prettyPrint(final PrintStream out) {
+      prettyPrint(out, 15);
+    }
+
+    /**
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
+     */
+    public void prettyPrint(final int maxNumToPrint) {
+        prettyPrint(System.out, maxNumToPrint);
     }
 
     // Fast Column-based methods
@@ -620,4 +637,5 @@ public class DataFrame {
             }
         }
     }
+
 }

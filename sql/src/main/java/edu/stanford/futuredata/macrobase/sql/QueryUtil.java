@@ -204,6 +204,7 @@ public final class QueryUtil {
   public static Query query(QueryBody body) {
     return new Query(
         Optional.empty(),
+        Optional.empty(),
         body,
         Optional.empty(),
         Optional.empty());
