@@ -57,6 +57,16 @@ public class APLOutlierSummarizer extends APLSummarizer {
     }
 
     @Override
+    public double getNumberOutliers(double[][] aggregates) {
+        double count = 0.0;
+        double[] outlierCount = aggregates[0];
+        for (int i = 0; i < outlierCount.length; i++) {
+            count += outlierCount[i];
+        }
+        return count;
+    }
+
+    @Override
     public APLExplanation getResults() {
         return explanation;
     }
