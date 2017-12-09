@@ -2,10 +2,10 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>macrobase-repl</artifactId>
+  <artifactId>macrobase-sql</artifactId>
   <packaging>jar</packaging>
   <version>0.1-SNAPSHOT</version>
-  <name>macrobase-repl</name>
+  <name>macrobase-sql</name>
   <url>http://maven.apache.org</url>
   <parent>
     <groupId>edu.stanford.futuredata</groupId>
@@ -18,7 +18,6 @@
   </properties>
 
   <dependencies>
-
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
@@ -73,6 +72,7 @@
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
     </dependency>
+
     <dependency>
       <groupId>org.roaringbitmap</groupId>
       <artifactId>RoaringBitmap</artifactId>
