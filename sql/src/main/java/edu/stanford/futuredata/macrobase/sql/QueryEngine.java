@@ -3,7 +3,6 @@ package edu.stanford.futuredata.macrobase.sql;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Joiner;
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
@@ -16,6 +15,9 @@ import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Literal;
+import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
+import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
@@ -30,7 +32,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
-import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -216,7 +218,39 @@ public class QueryEngine {
       return df;
     }
     final Expression whereClause = whereClauseOpt.get();
-    if (whereClause instanceof ComparisonExpression) {
+    try {
+      final BitSet mask = getMask(df, whereClause);
+      return df.filter(mask);
+    } catch (MacrobaseSQLException e) {
+      throw e;
+    }
+  }
+
+  // Helper methods for evaluating Where clauses
+
+  // Recursive method that generates a boolean mask (a BitSet)
+  private BitSet getMask(DataFrame df, Expression whereClause) throws MacrobaseSQLException {
+    if (whereClause instanceof NotExpression) {
+      final NotExpression notExpr = (NotExpression) whereClause;
+      final BitSet mask = getMask(df, notExpr.getValue());
+      mask.flip(0, df.getNumRows());
+      return mask;
+
+    } else if (whereClause instanceof LogicalBinaryExpression) {
+      final LogicalBinaryExpression binaryExpr = (LogicalBinaryExpression) whereClause;
+      final BitSet leftMask = getMask(df, binaryExpr.getLeft());
+      final BitSet rightMask = getMask(df, binaryExpr.getRight());
+      if (binaryExpr.getType() == Type.AND) {
+        leftMask.and(rightMask);
+        return leftMask;
+      } else {
+        // Type.OR
+        leftMask.or(rightMask);
+        return leftMask;
+      }
+
+    } else if (whereClause instanceof ComparisonExpression) {
+      // base case
       final ComparisonExpression compareExpr = (ComparisonExpression) whereClause;
       final Expression left = compareExpr.getLeft();
       final Expression right = compareExpr.getRight();
@@ -224,22 +258,21 @@ public class QueryEngine {
 
       if (left instanceof Literal && right instanceof Literal) {
         final boolean val = left.equals(right);
-        final boolean[] mask = new boolean[df.getNumRows()];
-        Arrays.fill(mask, val);
-        return df.filter(mask);
+        final BitSet mask = new BitSet(df.getNumRows());
+        mask.set(0, df.getNumRows(), val);
+        return mask;
       } else if (left instanceof Literal && right instanceof Identifier) {
-        return evaluatePredicate(df, (Literal) left, (Identifier) right, type);
+        return maskForPredicate(df, (Literal) left, (Identifier) right, type);
       } else if (right instanceof Literal && left instanceof Identifier) {
-        return evaluatePredicate(df, (Literal) right, (Identifier) left, type);
+        return maskForPredicate(df, (Literal) right, (Identifier) left, type);
       }
-    } else {
-      throw new MacrobaseSQLException("Only comparison expressions are supported");
     }
-    return df;
+    // We only support comparison expressions, logical AND/OR combinations of comparison
+    // expressions, and NOT comparison expressions
+    throw new MacrobaseSQLException("Boolean expression not supported");
   }
 
-  // Helper methods for evaluating Where clauses
-  private DataFrame evaluatePredicate(final DataFrame df, final Literal literal,
+  private BitSet maskForPredicate(final DataFrame df, final Literal literal,
       final Identifier identifier,
       final ComparisonExpressionType compExprType) throws MacrobaseSQLException {
     final String colName = identifier.getValue();
@@ -253,15 +286,15 @@ public class QueryEngine {
                 + " is not a DoubleLiteral");
       }
 
-      return df.filter(colIndex,
+      return df.getMaskForFilter(colIndex,
           generateLambdaForPredicate(((DoubleLiteral) literal).getValue(), compExprType));
     } else {
       // colType == ColType.STRING
       if (literal instanceof StringLiteral) {
-        return df.filter(colIndex,
+        return df.getMaskForFilter(colIndex,
             generateLambdaForPredicate(((StringLiteral) literal).getValue(), compExprType));
       } else if (literal instanceof NullLiteral) {
-        return df.filter(colIndex,
+        return df.getMaskForFilter(colIndex,
             generateLambdaForPredicate(null, compExprType));
       } else {
         throw new MacrobaseSQLException(
