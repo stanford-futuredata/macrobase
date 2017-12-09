@@ -1,5 +1,9 @@
 package edu.stanford.futuredata.macrobase.sql;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
+import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
@@ -8,9 +12,9 @@ import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Scanner;
+import java.io.PrintStream;
 import jline.console.ConsoleReader;
 import jline.console.completer.CandidateListCompletionHandler;
 import jline.console.completer.FileNameCompleter;
@@ -23,7 +27,6 @@ public class MacrobaseSQLRepl {
   private static final Logger log = LoggerFactory.getLogger(MacrobaseSQLRepl.class);
 
   private final ConsoleReader reader;
-  private final PrintWriter out;
   private final SqlParser parser;
   private final QueryEngine queryEngine;
 
@@ -39,7 +42,6 @@ public class MacrobaseSQLRepl {
     handler.setStripAnsi(true);
     reader.setCompletionHandler(handler);
     reader.addCompleter(new FileNameCompleter());
-    out = new PrintWriter(reader.getOutput());
 
     parser = new SqlParser();
     queryEngine = new QueryEngine();
@@ -57,9 +59,9 @@ public class MacrobaseSQLRepl {
     for (StatementSplitter.Statement s : splitter.getCompleteStatements()) {
       final String statementStr = s.statement();
       if (print) {
-        out.println(statementStr + ";");
-        out.println();
-        out.flush();
+        System.out.println(statementStr + ";");
+        System.out.println();
+        System.out.flush();
       }
       // Remove extra whitespace and add delimiter before updating console history
       reader.getHistory().add(statementStr.replaceAll("\\s+", " ") + ";");
@@ -67,11 +69,23 @@ public class MacrobaseSQLRepl {
         Statement stmt = parser.createStatement(statementStr);
         log.debug(stmt.toString());
         if (stmt instanceof ImportCsv) {
-          ImportCsv importStatement = (ImportCsv) stmt;
+          final ImportCsv importStatement = (ImportCsv) stmt;
           queryEngine.importTableFromCsv(importStatement).prettyPrint();
         } else {
           Query q = (Query) stmt;
-          queryEngine.executeQuery(q).prettyPrint();
+          final DataFrame result = queryEngine.executeQuery(q);
+          result.prettyPrint();
+          q.getOutFilename().ifPresent((outFilename) -> {
+            // print result to file; if file already exists, append
+            try (PrintStream fout = new PrintStream(new FileOutputStream(outFilename, true))) {
+              fout.println(statementStr);
+              fout.println();
+              result.prettyPrint(fout, result.getNumRows());
+              fout.close();
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+          });
         }
       } catch (ParsingException | MacrobaseException e) {
         System.err.println(e.getMessage());
@@ -79,13 +93,13 @@ public class MacrobaseSQLRepl {
     }
   }
 
-    /**
-     * Executes one or more SQL queries. Calls {@link #executeQueries(String, boolean)} with 2nd
-     * argument set to false.
-     *
-     * @param queries A single String which contains the queries to execute. Each query in the String
-     * should be delimited by ';' and optional whitespace.
-     */
+  /**
+   * Executes one or more SQL queries. Calls {@link #executeQueries(String, boolean)} with 2nd
+   * argument set to false.
+   *
+   * @param queries A single String which contains the queries to execute. Each query in the String
+   * should be delimited by ';' and optional whitespace.
+   */
 
   private void executeQueries(final String queries) {
     executeQueries(queries, false);
@@ -133,7 +147,8 @@ public class MacrobaseSQLRepl {
 
   public static void main(String... args) throws IOException {
     final MacrobaseSQLRepl repl = new MacrobaseSQLRepl();
-    final String ascii_art = readResourcesFile(ASCII_ART_FILE);
+    final String asciiArt = Resources
+        .toString(Resources.getResource(ASCII_ART_FILE), Charsets.UTF_8);
     boolean printedWelcome = false;
     if (args != null && args.length > 0) {
       switch (args[0].toLowerCase()) {
@@ -144,9 +159,9 @@ public class MacrobaseSQLRepl {
         case "-f":
         case "--file":
           if (args.length > 1) {
-            System.out.println(ascii_art);
+            System.out.println(asciiArt);
             printedWelcome = true;
-            final String queriesFromFile = readFile(new File(args[1]));
+            final String queriesFromFile = Files.toString(new File(args[1]), Charsets.UTF_8);
             repl.executeQueries(queriesFromFile, true);
           }
           break;
@@ -154,36 +169,10 @@ public class MacrobaseSQLRepl {
     }
 
     if (!printedWelcome) {
-      System.out.println(ascii_art);
+      System.out.println(asciiArt);
     }
 
     repl.runRepl();
-  }
-
-  /**
-   * Read file from resources folder and return file contents as a single String
-   */
-  private static String readResourcesFile(final String filename) {
-    return readFile(
-        new File(MacrobaseSQLRepl.class.getClassLoader().getResource(filename).getFile()));
-  }
-
-  /**
-   * Read file and return file contents as a single String
-   */
-  private static String readFile(File file) {
-    StringBuilder result = new StringBuilder("");
-    try (Scanner scanner = new Scanner(file)) {
-      while (scanner.hasNextLine()) {
-        String line = scanner.nextLine();
-        result.append(line).append("\n");
-      }
-      scanner.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    return result.toString();
   }
 
   /**
@@ -192,4 +181,5 @@ public class MacrobaseSQLRepl {
   private static void usage() {
     System.out.println("Usage: java " + MacrobaseSQLRepl.class.getName());
   }
+
 }

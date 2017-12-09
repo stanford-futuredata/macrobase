@@ -20,48 +20,59 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.swing.text.html.Option;
 
 public class Query
     extends Statement {
 
+  private final Optional<String> outFilename;
   private final Optional<With> with;
   private final QueryBody queryBody;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
 
   public Query(
+      Optional<String> outFilename,
       Optional<With> with,
       QueryBody queryBody,
       Optional<OrderBy> orderBy,
       Optional<String> limit) {
-    this(Optional.empty(), with, queryBody, orderBy, limit);
+    this(Optional.empty(), outFilename, with, queryBody, orderBy, limit);
   }
 
   public Query(
       NodeLocation location,
+      Optional<String> outFilename,
       Optional<With> with,
       QueryBody queryBody,
       Optional<OrderBy> orderBy,
       Optional<String> limit) {
-    this(Optional.of(location), with, queryBody, orderBy, limit);
+    this(Optional.of(location), outFilename, with, queryBody, orderBy, limit);
   }
 
   private Query(
       Optional<NodeLocation> location,
+      Optional<String> outFilename,
       Optional<With> with,
       QueryBody queryBody,
       Optional<OrderBy> orderBy,
       Optional<String> limit) {
     super(location);
+    requireNonNull(outFilename, "outFilename is null");
     requireNonNull(with, "with is null");
     requireNonNull(queryBody, "queryBody is null");
     requireNonNull(orderBy, "orderBy is null");
     requireNonNull(limit, "limit is null");
 
+    this.outFilename = outFilename.map((x) -> x.substring(1, x.length() - 1));
     this.with = with;
     this.queryBody = queryBody;
     this.orderBy = orderBy;
     this.limit = limit;
+  }
+
+  public Optional<String> getOutFilename() {
+    return outFilename;
   }
 
   public Optional<With> getWith() {
@@ -97,6 +108,7 @@ public class Query
   @Override
   public String toString() {
     return toStringHelper(this)
+        .add("outFilename", outFilename.orElse(null))
         .add("with", with.orElse(null))
         .add("queryBody", queryBody)
         .add("orderBy", orderBy)
