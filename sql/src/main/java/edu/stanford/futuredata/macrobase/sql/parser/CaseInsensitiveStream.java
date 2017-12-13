@@ -17,12 +17,11 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.IntStream;
 import org.antlr.v4.runtime.misc.Interval;
 
-public class CaseInsensitiveStream
-    implements CharStream {
+public class CaseInsensitiveStream implements CharStream {
 
   private final CharStream stream;
 
-  public CaseInsensitiveStream(CharStream stream) {
+  CaseInsensitiveStream(CharStream stream) {
     this.stream = stream;
   }
 

@@ -21,10 +21,10 @@ import jline.console.completer.FileNameCompleter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MacrobaseSQLRepl {
+public class MacroBaseSQLRepl {
 
   private static final String ASCII_ART_FILE = "ascii_art.txt";
-  private static final Logger log = LoggerFactory.getLogger(MacrobaseSQLRepl.class);
+  private static final Logger log = LoggerFactory.getLogger(MacroBaseSQLRepl.class);
 
   private final ConsoleReader reader;
   private final SqlParser parser;
@@ -35,7 +35,7 @@ public class MacrobaseSQLRepl {
    *
    * @throws IOException if unable to instantiate ConsoleReader
    */
-  private MacrobaseSQLRepl() throws IOException {
+  private MacroBaseSQLRepl() throws IOException {
     // Initialize console reader and writer
     reader = new ConsoleReader();
     final CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
@@ -146,7 +146,7 @@ public class MacrobaseSQLRepl {
   }
 
   public static void main(String... args) throws IOException {
-    final MacrobaseSQLRepl repl = new MacrobaseSQLRepl();
+    final MacroBaseSQLRepl repl = new MacroBaseSQLRepl();
     final String asciiArt = Resources
         .toString(Resources.getResource(ASCII_ART_FILE), Charsets.UTF_8);
     boolean printedWelcome = false;
@@ -179,7 +179,7 @@ public class MacrobaseSQLRepl {
    * Print MacroBase SQL usage.
    */
   private static void usage() {
-    System.out.println("Usage: java " + MacrobaseSQLRepl.class.getName());
+    System.out.println("Usage: java " + MacroBaseSQLRepl.class.getName());
   }
 
 }
