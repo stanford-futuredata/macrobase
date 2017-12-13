@@ -3,6 +3,8 @@ package edu.stanford.futuredata.macrobase.sql;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
@@ -40,20 +42,21 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
+import java.util.stream.DoubleStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class QueryEngine {
+class QueryEngine {
 
-  private static final Logger log = LoggerFactory.getLogger(MacrobaseSQLRepl.class);
+  private static final Logger log = LoggerFactory.getLogger(MacroBaseSQLRepl.class);
 
   private final Map<String, DataFrame> tablesInMemory;
 
-  public QueryEngine() {
+  QueryEngine() {
     tablesInMemory = new HashMap<>();
   }
 
-  public DataFrame importTableFromCsv(ImportCsv importStatement) {
+  DataFrame importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
     final String filename = importStatement.getFilename();
     final String tableName = importStatement.getTableName().toString();
     final Map<String, ColType> schema = importStatement.getSchema();
@@ -62,13 +65,11 @@ public class QueryEngine {
       tablesInMemory.put(tableName, df);
       return df;
     } catch (Exception e) {
-      // TODO: better error message for when file is not found, and better alternative return value
-      e.printStackTrace();
-      return new DataFrame();
+      throw new MacrobaseSQLException(e.getMessage());
     }
   }
 
-  public DataFrame executeQuery(Query query) throws MacrobaseException {
+  DataFrame executeQuery(Query query) throws MacrobaseException {
     QueryBody qBody = query.getQueryBody();
     if (qBody instanceof QuerySpecification) {
       QuerySpecification querySpec = (QuerySpecification) qBody;
@@ -79,9 +80,9 @@ public class QueryEngine {
       DiffQuerySpecification diffQuery = (DiffQuerySpecification) qBody;
       log.debug(diffQuery.toString());
       return executeDiffQuerySpec(diffQuery);
-    } else {
-      return new DataFrame(); // TODO: think of better alternative
     }
+    throw new MacrobaseSQLException("query of type " + qBody.getClass().getSimpleName() + " not yet"
+        + "supported");
   }
 
   private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
@@ -107,8 +108,34 @@ public class QueryEngine {
     }
     // execute diff
     // TODO: add support for "ON *"
-    DataFrame df = Diff.diff(firstDf, secondDf, explainCols, ratioMetric, (int) order);
+    DataFrame df = diff(firstDf, secondDf, explainCols, ratioMetric, (int) order);
+
     return evaluateSQLClauses(diffQuery, df);
+  }
+
+  private DataFrame diff(final DataFrame outliers, final DataFrame inliers,
+      final List<String> cols,
+      final ExplanationMetric ratioMetric, final int order) throws MacrobaseException {
+
+    final String outlierColName = "outlier_col";
+    // Add column "outlier_col" to both outliers (all 1.0) and inliers (all 0.0)
+    outliers.addColumn(outlierColName,
+        DoubleStream.generate(() -> 1.0).limit(outliers.getNumRows()).toArray());
+    inliers.addColumn(outlierColName,
+        DoubleStream.generate(() -> 0.0).limit(outliers.getNumRows()).toArray());
+    DataFrame combined = DataFrame.unionAll(Lists.newArrayList(outliers, inliers));
+
+    final APrioriSummarizer summarizer = new APrioriSummarizer();
+    // TODO: figure out a better way to handle default minRatioMetric and minSupport
+    summarizer.setRatioMetric(ratioMetric)
+        .setMaxOrder(order)
+        .setMinRatioMetric(1.5)
+        .setMinSupport(0.2)
+        .setOutlierColumn(outlierColName)
+        .setAttributes(cols);
+
+    summarizer.process(combined);
+    return summarizer.getResults().toDataFrame(cols);
   }
 
   /**
@@ -117,7 +144,7 @@ public class QueryEngine {
    *
    * @param query the query that contains the clauses
    * @param df the DataFrame to apply these clauses to
-   * @return a new DataFrame, the result of applying all these clauses
+   * @return a new DataFrame, the result of applying all of these clauses
    */
   private DataFrame evaluateSQLClauses(final QueryBody query, final DataFrame df)
       throws MacrobaseSQLException {
@@ -218,17 +245,13 @@ public class QueryEngine {
       return df;
     }
     final Expression whereClause = whereClauseOpt.get();
-    try {
-      final BitSet mask = getMask(df, whereClause);
-      return df.filter(mask);
-    } catch (MacrobaseSQLException e) {
-      throw e;
-    }
+    final BitSet mask = getMask(df, whereClause);
+    return df.filter(mask);
   }
 
-  // Helper methods for evaluating Where clauses
+  // ********************* Helper methods for evaluating Where clauses **********************
 
-  // Recursive method that generates a boolean mask (a BitSet)
+  // Recursive method that generates a boolean mask (a BitSet) for a Where clause
   private BitSet getMask(DataFrame df, Expression whereClause) throws MacrobaseSQLException {
     if (whereClause instanceof NotExpression) {
       final NotExpression notExpr = (NotExpression) whereClause;

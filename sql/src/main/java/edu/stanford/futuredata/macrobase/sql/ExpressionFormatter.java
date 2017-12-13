@@ -81,7 +81,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.SubqueryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SubscriptExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.SymbolReference;
 import edu.stanford.futuredata.macrobase.sql.tree.TimeLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TimestampLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TryExpression;
@@ -279,11 +278,6 @@ public final class ExpressionFormatter {
     @Override
     protected String visitLambdaArgumentDeclaration(LambdaArgumentDeclaration node, Void context) {
       return formatExpression(node.getName(), parameters);
-    }
-
-    @Override
-    protected String visitSymbolReference(SymbolReference node, Void context) {
-      return formatIdentifier(node.getName());
     }
 
     @Override
