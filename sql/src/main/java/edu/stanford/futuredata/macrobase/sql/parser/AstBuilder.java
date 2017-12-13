@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.SqlBaseBaseVisitor;
 import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
-import edu.stanford.futuredata.macrobase.sql.tree.AddColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.Aggregate;
 import edu.stanford.futuredata.macrobase.sql.tree.AggregateExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
@@ -37,46 +36,25 @@ import edu.stanford.futuredata.macrobase.sql.tree.BetweenPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.BinaryLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.BindExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Call;
-import edu.stanford.futuredata.macrobase.sql.tree.CallArgument;
 import edu.stanford.futuredata.macrobase.sql.tree.Cast;
 import edu.stanford.futuredata.macrobase.sql.tree.CharLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.CoalesceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ColumnDefinition;
-import edu.stanford.futuredata.macrobase.sql.tree.Commit;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
-import edu.stanford.futuredata.macrobase.sql.tree.CreateSchema;
-import edu.stanford.futuredata.macrobase.sql.tree.CreateTable;
-import edu.stanford.futuredata.macrobase.sql.tree.CreateTableAsSelect;
-import edu.stanford.futuredata.macrobase.sql.tree.CreateView;
 import edu.stanford.futuredata.macrobase.sql.tree.Cube;
 import edu.stanford.futuredata.macrobase.sql.tree.CurrentTime;
-import edu.stanford.futuredata.macrobase.sql.tree.Deallocate;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Delete;
 import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.DescribeInput;
-import edu.stanford.futuredata.macrobase.sql.tree.DescribeOutput;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.DropColumn;
-import edu.stanford.futuredata.macrobase.sql.tree.DropSchema;
-import edu.stanford.futuredata.macrobase.sql.tree.DropTable;
-import edu.stanford.futuredata.macrobase.sql.tree.DropView;
 import edu.stanford.futuredata.macrobase.sql.tree.Except;
-import edu.stanford.futuredata.macrobase.sql.tree.Execute;
 import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
-import edu.stanford.futuredata.macrobase.sql.tree.Explain;
-import edu.stanford.futuredata.macrobase.sql.tree.ExplainFormat;
-import edu.stanford.futuredata.macrobase.sql.tree.ExplainOption;
-import edu.stanford.futuredata.macrobase.sql.tree.ExplainType;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Extract;
 import edu.stanford.futuredata.macrobase.sql.tree.FrameBound;
 import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.GenericLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Grant;
 import edu.stanford.futuredata.macrobase.sql.tree.GroupBy;
 import edu.stanford.futuredata.macrobase.sql.tree.GroupingElement;
 import edu.stanford.futuredata.macrobase.sql.tree.GroupingOperation;
@@ -86,12 +64,10 @@ import edu.stanford.futuredata.macrobase.sql.tree.IfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.InListExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.InPredicate;
-import edu.stanford.futuredata.macrobase.sql.tree.Insert;
 import edu.stanford.futuredata.macrobase.sql.tree.Intersect;
 import edu.stanford.futuredata.macrobase.sql.tree.IntervalLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
-import edu.stanford.futuredata.macrobase.sql.tree.Isolation;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinCriteria;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinOn;
@@ -99,7 +75,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.JoinUsing;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaArgumentDeclaration;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Lateral;
-import edu.stanford.futuredata.macrobase.sql.tree.LikeClause;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LongLiteral;
@@ -111,8 +86,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.NullIfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.Parameter;
-import edu.stanford.futuredata.macrobase.sql.tree.Prepare;
-import edu.stanford.futuredata.macrobase.sql.tree.Property;
 import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.QuantifiedComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
@@ -120,49 +93,26 @@ import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.RatioMetricExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.RenameColumn;
-import edu.stanford.futuredata.macrobase.sql.tree.RenameSchema;
-import edu.stanford.futuredata.macrobase.sql.tree.RenameTable;
-import edu.stanford.futuredata.macrobase.sql.tree.ResetSession;
-import edu.stanford.futuredata.macrobase.sql.tree.Revoke;
-import edu.stanford.futuredata.macrobase.sql.tree.Rollback;
 import edu.stanford.futuredata.macrobase.sql.tree.Rollup;
 import edu.stanford.futuredata.macrobase.sql.tree.Row;
 import edu.stanford.futuredata.macrobase.sql.tree.SampledRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.SearchedCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
-import edu.stanford.futuredata.macrobase.sql.tree.SetSession;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowCatalogs;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowColumns;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowCreate;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowFunctions;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowGrants;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowPartitions;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowSchemas;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowSession;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowStats;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowTables;
 import edu.stanford.futuredata.macrobase.sql.tree.SimpleCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SimpleGroupBy;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
-import edu.stanford.futuredata.macrobase.sql.tree.StartTransaction;
-import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.SubqueryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SubscriptExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
-import edu.stanford.futuredata.macrobase.sql.tree.TableElement;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.sql.tree.TimeLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TimestampLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.TransactionAccessMode;
-import edu.stanford.futuredata.macrobase.sql.tree.TransactionMode;
 import edu.stanford.futuredata.macrobase.sql.tree.TryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Union;
 import edu.stanford.futuredata.macrobase.sql.tree.Unnest;
-import edu.stanford.futuredata.macrobase.sql.tree.Use;
 import edu.stanford.futuredata.macrobase.sql.tree.Values;
 import edu.stanford.futuredata.macrobase.sql.tree.WhenClause;
 import edu.stanford.futuredata.macrobase.sql.tree.Window;
@@ -175,7 +125,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 class AstBuilder
@@ -191,266 +140,6 @@ class AstBuilder
   @Override
   public Node visitSingleExpression(SqlBaseParser.SingleExpressionContext context) {
     return visit(context.expression());
-  }
-
-  // ******************* statements **********************
-
-  @Override
-  public Node visitUse(SqlBaseParser.UseContext context) {
-    return new Use(
-        getLocation(context),
-        visitIfPresent(context.catalog, Identifier.class),
-        (Identifier) visit(context.schema));
-  }
-
-  @Override
-  public Node visitCreateSchema(SqlBaseParser.CreateSchemaContext context) {
-    List<Property> properties = ImmutableList.of();
-    if (context.properties() != null) {
-      properties = visit(context.properties().property(), Property.class);
-    }
-
-    return new CreateSchema(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        context.EXISTS() != null,
-        properties);
-  }
-
-  @Override
-  public Node visitDropSchema(SqlBaseParser.DropSchemaContext context) {
-    return new DropSchema(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        context.EXISTS() != null,
-        context.CASCADE() != null);
-  }
-
-  @Override
-  public Node visitRenameSchema(SqlBaseParser.RenameSchemaContext context) {
-    return new RenameSchema(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        (Identifier) visit(context.identifier()));
-  }
-
-  @Override
-  public Node visitCreateTableAsSelect(SqlBaseParser.CreateTableAsSelectContext context) {
-    Optional<String> comment = Optional.empty();
-    if (context.COMMENT() != null) {
-      comment = Optional.of(((StringLiteral) visit(context.string())).getValue());
-    }
-
-    Optional<List<Identifier>> columnAliases = Optional.empty();
-    if (context.columnAliases() != null) {
-      columnAliases = Optional.of(visit(context.columnAliases().identifier(), Identifier.class));
-    }
-
-    List<Property> properties = ImmutableList.of();
-    if (context.properties() != null) {
-      properties = visit(context.properties().property(), Property.class);
-    }
-
-    return new CreateTableAsSelect(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        (Query) visit(context.query()),
-        context.EXISTS() != null,
-        properties,
-        context.NO() == null,
-        columnAliases,
-        comment);
-  }
-
-  @Override
-  public Node visitCreateTable(SqlBaseParser.CreateTableContext context) {
-    Optional<String> comment = Optional.empty();
-    if (context.COMMENT() != null) {
-      comment = Optional.of(((StringLiteral) visit(context.string())).getValue());
-    }
-    List<Property> properties = ImmutableList.of();
-    if (context.properties() != null) {
-      properties = visit(context.properties().property(), Property.class);
-    }
-    return new CreateTable(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        visit(context.tableElement(), TableElement.class),
-        context.EXISTS() != null,
-        properties,
-        comment);
-  }
-
-  @Override
-  public Node visitShowCreateTable(SqlBaseParser.ShowCreateTableContext context) {
-    return new ShowCreate(getLocation(context), ShowCreate.Type.TABLE,
-        getQualifiedName(context.qualifiedName()));
-  }
-
-  @Override
-  public Node visitDropTable(SqlBaseParser.DropTableContext context) {
-    return new DropTable(getLocation(context), getQualifiedName(context.qualifiedName()),
-        context.EXISTS() != null);
-  }
-
-  @Override
-  public Node visitDropView(SqlBaseParser.DropViewContext context) {
-    return new DropView(getLocation(context), getQualifiedName(context.qualifiedName()),
-        context.EXISTS() != null);
-  }
-
-  @Override
-  public Node visitInsertInto(SqlBaseParser.InsertIntoContext context) {
-    Optional<List<Identifier>> columnAliases = Optional.empty();
-    if (context.columnAliases() != null) {
-      columnAliases = Optional.of(visit(context.columnAliases().identifier(), Identifier.class));
-    }
-
-    return new Insert(
-        getQualifiedName(context.qualifiedName()),
-        columnAliases,
-        (Query) visit(context.query()));
-  }
-
-  @Override
-  public Node visitDelete(SqlBaseParser.DeleteContext context) {
-    return new Delete(
-        getLocation(context),
-        new Table(getLocation(context), getQualifiedName(context.qualifiedName())),
-        visitIfPresent(context.booleanExpression(), Expression.class));
-  }
-
-  @Override
-  public Node visitRenameTable(SqlBaseParser.RenameTableContext context) {
-    return new RenameTable(getLocation(context), getQualifiedName(context.from),
-        getQualifiedName(context.to));
-  }
-
-  @Override
-  public Node visitRenameColumn(SqlBaseParser.RenameColumnContext context) {
-    return new RenameColumn(
-        getLocation(context),
-        getQualifiedName(context.tableName),
-        (Identifier) visit(context.from),
-        (Identifier) visit(context.to));
-  }
-
-  @Override
-  public Node visitAddColumn(SqlBaseParser.AddColumnContext context) {
-    return new AddColumn(getLocation(context), getQualifiedName(context.qualifiedName()),
-        (ColumnDefinition) visit(context.columnDefinition()));
-  }
-
-  @Override
-  public Node visitDropColumn(SqlBaseParser.DropColumnContext context) {
-    return new DropColumn(getLocation(context), getQualifiedName(context.tableName),
-        (Identifier) visit(context.column));
-  }
-
-  @Override
-  public Node visitCreateView(SqlBaseParser.CreateViewContext context) {
-    return new CreateView(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        (Query) visit(context.query()),
-        context.REPLACE() != null);
-  }
-
-  @Override
-  public Node visitStartTransaction(SqlBaseParser.StartTransactionContext context) {
-    return new StartTransaction(visit(context.transactionMode(), TransactionMode.class));
-  }
-
-  @Override
-  public Node visitCommit(SqlBaseParser.CommitContext context) {
-    return new Commit(getLocation(context));
-  }
-
-  @Override
-  public Node visitRollback(SqlBaseParser.RollbackContext context) {
-    return new Rollback(getLocation(context));
-  }
-
-  @Override
-  public Node visitTransactionAccessMode(SqlBaseParser.TransactionAccessModeContext context) {
-    return new TransactionAccessMode(getLocation(context),
-        context.accessMode.getType() == SqlBaseLexer.ONLY);
-  }
-
-  @Override
-  public Node visitIsolationLevel(SqlBaseParser.IsolationLevelContext context) {
-    return visit(context.levelOfIsolation());
-  }
-
-  @Override
-  public Node visitReadUncommitted(SqlBaseParser.ReadUncommittedContext context) {
-    return new Isolation(getLocation(context), Isolation.Level.READ_UNCOMMITTED);
-  }
-
-  @Override
-  public Node visitReadCommitted(SqlBaseParser.ReadCommittedContext context) {
-    return new Isolation(getLocation(context), Isolation.Level.READ_COMMITTED);
-  }
-
-  @Override
-  public Node visitRepeatableRead(SqlBaseParser.RepeatableReadContext context) {
-    return new Isolation(getLocation(context), Isolation.Level.REPEATABLE_READ);
-  }
-
-  @Override
-  public Node visitSerializable(SqlBaseParser.SerializableContext context) {
-    return new Isolation(getLocation(context), Isolation.Level.SERIALIZABLE);
-  }
-
-  @Override
-  public Node visitCall(SqlBaseParser.CallContext context) {
-    return new Call(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        visit(context.callArgument(), CallArgument.class));
-  }
-
-  @Override
-  public Node visitPrepare(SqlBaseParser.PrepareContext context) {
-    return new Prepare(
-        getLocation(context),
-        (Identifier) visit(context.identifier()),
-        (Statement) visit(context.statement()));
-  }
-
-  @Override
-  public Node visitDeallocate(SqlBaseParser.DeallocateContext context) {
-    return new Deallocate(
-        getLocation(context),
-        (Identifier) visit(context.identifier()));
-  }
-
-  @Override
-  public Node visitExecute(SqlBaseParser.ExecuteContext context) {
-    return new Execute(
-        getLocation(context),
-        (Identifier) visit(context.identifier()),
-        visit(context.expression(), Expression.class));
-  }
-
-  @Override
-  public Node visitDescribeOutput(SqlBaseParser.DescribeOutputContext context) {
-    return new DescribeOutput(
-        getLocation(context),
-        (Identifier) visit(context.identifier()));
-  }
-
-  @Override
-  public Node visitDescribeInput(SqlBaseParser.DescribeInputContext context) {
-    return new DescribeInput(
-        getLocation(context),
-        (Identifier) visit(context.identifier()));
-  }
-
-  @Override
-  public Node visitProperty(SqlBaseParser.PropertyContext context) {
-    return new Property(getLocation(context), (Identifier) visit(context.identifier()),
-        (Expression) visit(context.expression()));
   }
 
   // ********************** query expressions ********************
@@ -594,12 +283,10 @@ class AstBuilder
         "At most two relations required for diff query", context);
 
     first = Optional.of(subqueries.get(0));
-    check(first.isPresent(), "At least one relation required for diff query", context);
+    check(true, "At least one relation required for diff query", context);
     if (subqueries.size() == 2) {
       second = Optional.of(subqueries.get(1));
     }
-//    List<QualifiedName> subqueryAliases = context.qualifiedName().stream()
-//        .map(this::getQualifiedName).collect(toList());
 
     Optional<RatioMetricExpression> ratioMetricExpr = visitIfPresent(
         context.ratioMetricExpression(), RatioMetricExpression.class);
@@ -737,174 +424,6 @@ class AstBuilder
   @Override
   public Node visitInlineTable(SqlBaseParser.InlineTableContext context) {
     return new Values(getLocation(context), visit(context.expression(), Expression.class));
-  }
-
-  @Override
-  public Node visitExplain(SqlBaseParser.ExplainContext context) {
-    return new Explain(getLocation(context), context.ANALYZE() != null, context.VERBOSE() != null,
-        (Statement) visit(context.statement()),
-        visit(context.explainOption(), ExplainOption.class));
-  }
-
-  @Override
-  public Node visitExplainFormat(SqlBaseParser.ExplainFormatContext context) {
-    switch (context.value.getType()) {
-      case SqlBaseLexer.GRAPHVIZ:
-        return new ExplainFormat(getLocation(context), ExplainFormat.Type.GRAPHVIZ);
-      case SqlBaseLexer.TEXT:
-        return new ExplainFormat(getLocation(context), ExplainFormat.Type.TEXT);
-    }
-
-    throw new IllegalArgumentException("Unsupported EXPLAIN format: " + context.value.getText());
-  }
-
-  @Override
-  public Node visitExplainType(SqlBaseParser.ExplainTypeContext context) {
-    switch (context.value.getType()) {
-      case SqlBaseLexer.LOGICAL:
-        return new ExplainType(getLocation(context), ExplainType.Type.LOGICAL);
-      case SqlBaseLexer.DISTRIBUTED:
-        return new ExplainType(getLocation(context), ExplainType.Type.DISTRIBUTED);
-      case SqlBaseLexer.VALIDATE:
-        return new ExplainType(getLocation(context), ExplainType.Type.VALIDATE);
-    }
-
-    throw new IllegalArgumentException("Unsupported EXPLAIN type: " + context.value.getText());
-  }
-
-  @Override
-  public Node visitShowTables(SqlBaseParser.ShowTablesContext context) {
-    return new ShowTables(
-        getLocation(context),
-        Optional.ofNullable(context.qualifiedName())
-            .map(this::getQualifiedName),
-        getTextIfPresent(context.pattern)
-            .map(AstBuilder::unquote));
-  }
-
-  @Override
-  public Node visitShowSchemas(SqlBaseParser.ShowSchemasContext context) {
-    return new ShowSchemas(
-        getLocation(context),
-        visitIfPresent(context.identifier(), Identifier.class),
-        getTextIfPresent(context.pattern)
-            .map(AstBuilder::unquote));
-  }
-
-  @Override
-  public Node visitShowCatalogs(SqlBaseParser.ShowCatalogsContext context) {
-    return new ShowCatalogs(getLocation(context),
-        getTextIfPresent(context.pattern)
-            .map(AstBuilder::unquote));
-  }
-
-  @Override
-  public Node visitShowColumns(SqlBaseParser.ShowColumnsContext context) {
-    return new ShowColumns(getLocation(context), getQualifiedName(context.qualifiedName()));
-  }
-
-  @Override
-  public Node visitShowStats(SqlBaseParser.ShowStatsContext context) {
-    return new ShowStats(Optional.of(getLocation(context)),
-        new Table(getQualifiedName(context.qualifiedName())));
-  }
-
-  @Override
-  public Node visitShowStatsForQuery(SqlBaseParser.ShowStatsForQueryContext context) {
-    QuerySpecification specification = (QuerySpecification) visitQuerySpecification(
-        context.querySpecification());
-    Query query = new Query(Optional.empty(), Optional.empty(), specification, Optional.empty(),
-        Optional.empty());
-    return new ShowStats(Optional.of(getLocation(context)), new TableSubquery(query));
-  }
-
-  @Override
-  public Node visitShowPartitions(SqlBaseParser.ShowPartitionsContext context) {
-    return new ShowPartitions(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        visitIfPresent(context.booleanExpression(), Expression.class),
-        visit(context.sortItem(), SortItem.class),
-        getTextIfPresent(context.limit));
-  }
-
-  @Override
-  public Node visitShowCreateView(SqlBaseParser.ShowCreateViewContext context) {
-    return new ShowCreate(getLocation(context), ShowCreate.Type.VIEW,
-        getQualifiedName(context.qualifiedName()));
-  }
-
-  @Override
-  public Node visitShowFunctions(SqlBaseParser.ShowFunctionsContext context) {
-    return new ShowFunctions(getLocation(context));
-  }
-
-  @Override
-  public Node visitShowSession(SqlBaseParser.ShowSessionContext context) {
-    return new ShowSession(getLocation(context));
-  }
-
-  @Override
-  public Node visitSetSession(SqlBaseParser.SetSessionContext context) {
-    return new SetSession(getLocation(context), getQualifiedName(context.qualifiedName()),
-        (Expression) visit(context.expression()));
-  }
-
-  @Override
-  public Node visitResetSession(SqlBaseParser.ResetSessionContext context) {
-    return new ResetSession(getLocation(context), getQualifiedName(context.qualifiedName()));
-  }
-
-  @Override
-  public Node visitGrant(SqlBaseParser.GrantContext context) {
-    Optional<List<String>> privileges;
-    if (context.ALL() != null) {
-      privileges = Optional.empty();
-    } else {
-      privileges = Optional.of(context.privilege().stream()
-          .map(SqlBaseParser.PrivilegeContext::getText)
-          .collect(toList()));
-    }
-    return new Grant(
-        getLocation(context),
-        privileges,
-        context.TABLE() != null,
-        getQualifiedName(context.qualifiedName()),
-        (Identifier) visit(context.grantee),
-        context.OPTION() != null);
-  }
-
-  @Override
-  public Node visitRevoke(SqlBaseParser.RevokeContext context) {
-    Optional<List<String>> privileges;
-    if (context.ALL() != null) {
-      privileges = Optional.empty();
-    } else {
-      privileges = Optional.of(context.privilege().stream()
-          .map(SqlBaseParser.PrivilegeContext::getText)
-          .collect(toList()));
-    }
-    return new Revoke(
-        getLocation(context),
-        context.OPTION() != null,
-        privileges,
-        context.TABLE() != null,
-        getQualifiedName(context.qualifiedName()),
-        (Identifier) visit(context.grantee));
-  }
-
-  @Override
-  public Node visitShowGrants(SqlBaseParser.ShowGrantsContext context) {
-    Optional<QualifiedName> tableName = Optional.empty();
-
-    if (context.qualifiedName() != null) {
-      tableName = Optional.of(getQualifiedName(context.qualifiedName()));
-    }
-
-    return new ShowGrants(
-        getLocation(context),
-        context.TABLE() != null,
-        tableName);
   }
 
   // ***************** boolean expressions ******************
@@ -1448,15 +967,6 @@ class AstBuilder
   }
 
   @Override
-  public Node visitLikeClause(SqlBaseParser.LikeClauseContext context) {
-    return new LikeClause(
-        getLocation(context),
-        getQualifiedName(context.qualifiedName()),
-        Optional.ofNullable(context.optionType)
-            .map(AstBuilder::getPropertiesOption));
-  }
-
-  @Override
   public Node visitSortItem(SqlBaseParser.SortItemContext context) {
     return new SortItem(
         getLocation(context),
@@ -1603,19 +1113,6 @@ class AstBuilder
     return parameter;
   }
 
-  // ***************** arguments *****************
-
-  @Override
-  public Node visitPositionalArgument(SqlBaseParser.PositionalArgumentContext context) {
-    return new CallArgument(getLocation(context), (Expression) visit(context.expression()));
-  }
-
-  @Override
-  public Node visitNamedArgument(SqlBaseParser.NamedArgumentContext context) {
-    return new CallArgument(getLocation(context), context.identifier().getText(),
-        (Expression) visit(context.expression()));
-  }
-
   // ***************** helpers *****************
 
   @Override
@@ -1740,16 +1237,6 @@ class AstBuilder
         .replace("''", "'").replace("\"\"", "\"");
   }
 
-  private static LikeClause.PropertiesOption getPropertiesOption(Token token) {
-    switch (token.getType()) {
-      case SqlBaseLexer.INCLUDING:
-        return LikeClause.PropertiesOption.INCLUDING;
-      case SqlBaseLexer.EXCLUDING:
-        return LikeClause.PropertiesOption.EXCLUDING;
-    }
-    throw new IllegalArgumentException("Unsupported LIKE option type: " + token.getText());
-  }
-
   private QualifiedName getQualifiedName(SqlBaseParser.QualifiedNameContext context) {
     List<String> parts = visit(context.identifier(), Identifier.class).stream()
         .map(Identifier::getValue) // TODO: preserve quotedness
@@ -1770,11 +1257,6 @@ class AstBuilder
 
   private static boolean isValidUnicodeEscape(char c) {
     return c < 0x7F && c > 0x20 && !isHexDigit(c) && c != '"' && c != '+' && c != '\'';
-  }
-
-  private static Optional<String> getTextIfPresent(ParserRuleContext context) {
-    return Optional.ofNullable(context)
-        .map(ParseTree::getText);
   }
 
   private static Optional<String> getTextIfPresent(Token token) {
@@ -2014,17 +1496,17 @@ class AstBuilder
     }
   }
 
-  public static NodeLocation getLocation(TerminalNode terminalNode) {
+  private static NodeLocation getLocation(TerminalNode terminalNode) {
     requireNonNull(terminalNode, "terminalNode is null");
     return getLocation(terminalNode.getSymbol());
   }
 
-  public static NodeLocation getLocation(ParserRuleContext parserRuleContext) {
+  private static NodeLocation getLocation(ParserRuleContext parserRuleContext) {
     requireNonNull(parserRuleContext, "parserRuleContext is null");
     return getLocation(parserRuleContext.getStart());
   }
 
-  public static NodeLocation getLocation(Token token) {
+  private static NodeLocation getLocation(Token token) {
     requireNonNull(token, "token is null");
     return new NodeLocation(token.getLine(), token.getCharPositionInLine());
   }

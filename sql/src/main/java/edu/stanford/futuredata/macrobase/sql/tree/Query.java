@@ -64,7 +64,7 @@ public class Query
     requireNonNull(orderBy, "orderBy is null");
     requireNonNull(limit, "limit is null");
 
-    this.outFilename = outFilename.map((x) -> x.substring(1, x.length() - 1));
+    this.outFilename = outFilename.map((x) -> x.substring(/**/1, x.length() - 1));
     this.with = with;
     this.queryBody = queryBody;
     this.orderBy = orderBy;
