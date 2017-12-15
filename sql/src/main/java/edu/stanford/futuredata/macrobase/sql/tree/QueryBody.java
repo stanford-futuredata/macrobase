@@ -16,8 +16,7 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 import com.google.common.collect.Lists;
 import java.util.Optional;
 
-public abstract class QueryBody
-    extends Relation {
+public abstract class QueryBody extends Relation {
 
   // subclasses can use this to return nothing for getSelect()
   protected static final Select SELECT_ALL = new Select(false,
@@ -39,4 +38,6 @@ public abstract class QueryBody
   public abstract Optional<OrderBy> getOrderBy();
 
   public abstract Optional<String> getLimit();
+
+  public abstract Optional<ExportExpression> getExportExpr();
 }

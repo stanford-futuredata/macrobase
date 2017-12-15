@@ -11,7 +11,7 @@ import java.util.List;
 public class CSVDataFrameWriter {
     public void writeToStream(DataFrame df, Appendable out) throws IOException {
         String[] columnNames = df.getSchema().getColumnNames().toArray(new String[0]);
-        CSVPrinter printer = CSVFormat.DEFAULT.withHeader(columnNames).print(out);
+        CSVPrinter printer = CSVFormat.MYSQL.withHeader(columnNames).print(out);
 
         List<Row> rows = df.getRows();
         for (Row curRow : rows) {
