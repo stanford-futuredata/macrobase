@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Table
-    extends QueryBody {
+public class Table extends QueryBody {
 
   private final QualifiedName name;
 
@@ -64,6 +63,11 @@ public class Table
 
   @Override
   public Optional<String> getLimit() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<ExportExpression> getExportExpr() {
     return Optional.empty();
   }
 

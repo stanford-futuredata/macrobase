@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class QuerySpecification
-    extends QueryBody {
+public class QuerySpecification extends QueryBody {
 
   private final Select select;
   private final Optional<Relation> from;
@@ -31,6 +30,7 @@ public class QuerySpecification
   private final Optional<Expression> having;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
+  private final Optional<ExportExpression> exportExpr;
 
   public QuerySpecification(
       Select select,
@@ -39,8 +39,9 @@ public class QuerySpecification
       Optional<GroupBy> groupBy,
       Optional<Expression> having,
       Optional<OrderBy> orderBy,
-      Optional<String> limit) {
-    this(Optional.empty(), select, from, where, groupBy, having, orderBy, limit);
+      Optional<String> limit,
+      Optional<ExportExpression> exportExpr) {
+    this(Optional.empty(), select, from, where, groupBy, having, orderBy, limit, exportExpr);
   }
 
   public QuerySpecification(
@@ -51,8 +52,9 @@ public class QuerySpecification
       Optional<GroupBy> groupBy,
       Optional<Expression> having,
       Optional<OrderBy> orderBy,
-      Optional<String> limit) {
-    this(Optional.of(location), select, from, where, groupBy, having, orderBy, limit);
+      Optional<String> limit,
+      Optional<ExportExpression> exportExpr) {
+    this(Optional.of(location), select, from, where, groupBy, having, orderBy, limit, exportExpr);
   }
 
   private QuerySpecification(
@@ -63,7 +65,8 @@ public class QuerySpecification
       Optional<GroupBy> groupBy,
       Optional<Expression> having,
       Optional<OrderBy> orderBy,
-      Optional<String> limit) {
+      Optional<String> limit,
+      Optional<ExportExpression> exportExpr) {
     super(location);
     requireNonNull(select, "select is null");
     requireNonNull(from, "from is null");
@@ -72,6 +75,7 @@ public class QuerySpecification
     requireNonNull(having, "having is null");
     requireNonNull(orderBy, "orderBy is null");
     requireNonNull(limit, "limit is null");
+    requireNonNull(exportExpr, "exportExpr is null");
 
     this.select = select;
     this.from = from;
@@ -80,6 +84,7 @@ public class QuerySpecification
     this.having = having;
     this.orderBy = orderBy;
     this.limit = limit;
+    this.exportExpr = exportExpr;
   }
 
   public Select getSelect() {
@@ -110,6 +115,10 @@ public class QuerySpecification
     return limit;
   }
 
+  public Optional<ExportExpression> getExportExpr() {
+    return exportExpr;
+  }
+
   @Override
   public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
     return visitor.visitQuerySpecification(this, context);
@@ -124,6 +133,7 @@ public class QuerySpecification
     groupBy.ifPresent(nodes::add);
     having.ifPresent(nodes::add);
     orderBy.ifPresent(nodes::add);
+    exportExpr.ifPresent(nodes::add);
     return nodes.build();
   }
 
@@ -137,6 +147,7 @@ public class QuerySpecification
         .add("having", having.orElse(null))
         .add("orderBy", orderBy)
         .add("limit", limit.orElse(null))
+        .add("exportExpr", exportExpr.orElse(null))
         .toString();
   }
 
@@ -155,11 +166,12 @@ public class QuerySpecification
         Objects.equals(groupBy, o.groupBy) &&
         Objects.equals(having, o.having) &&
         Objects.equals(orderBy, o.orderBy) &&
-        Objects.equals(limit, o.limit);
+        Objects.equals(limit, o.limit) &&
+        Objects.equals(exportExpr, o.exportExpr);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(select, from, where, groupBy, having, orderBy, limit);
+    return Objects.hash(select, from, where, groupBy, having, orderBy, limit, exportExpr);
   }
 }

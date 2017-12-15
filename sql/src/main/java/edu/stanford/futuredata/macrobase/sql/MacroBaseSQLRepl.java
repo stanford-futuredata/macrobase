@@ -1,20 +1,26 @@
 package edu.stanford.futuredata.macrobase.sql;
 
+import static java.nio.file.Files.exists;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
+import edu.stanford.futuredata.macrobase.sql.tree.ExportExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
+import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import jline.console.ConsoleReader;
 import jline.console.completer.CandidateListCompletionHandler;
 import jline.console.completer.FileNameCompleter;
@@ -72,18 +78,20 @@ public class MacroBaseSQLRepl {
           final ImportCsv importStatement = (ImportCsv) stmt;
           queryEngine.importTableFromCsv(importStatement).prettyPrint();
         } else {
-          Query q = (Query) stmt;
+          QueryBody q = ((Query) stmt).getQueryBody();
           final DataFrame result = queryEngine.executeQuery(q);
           result.prettyPrint();
-          q.getOutFilename().ifPresent((outFilename) -> {
-            // print result to file; if file already exists, append
-            try (PrintStream fout = new PrintStream(new FileOutputStream(outFilename, true))) {
-              fout.println(statementStr);
-              fout.println();
-              result.prettyPrint(fout, result.getNumRows());
-              fout.close();
-            } catch (IOException e) {
-              e.printStackTrace();
+          q.getExportExpr().map(ExportExpression::getFilename).ifPresent((filename) -> {
+            // print result to file; if file already exists, do nothing and print error message
+            if (!exists(Paths.get(filename))) {
+              try (PrintStream outFile = new PrintStream(
+                  new FileOutputStream(filename))) {
+                new CSVDataFrameWriter().writeToStream(result, outFile);
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
+            } else {
+              System.err.println("File " + filename + " already exists.");
             }
           });
         }

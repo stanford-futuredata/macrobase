@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Union
-    extends SetOperation {
+public class Union extends SetOperation {
 
   private final List<Relation> relations;
 
@@ -48,6 +47,11 @@ public class Union
   @Override
   public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
     return visitor.visitUnion(this, context);
+  }
+
+  @Override
+  public Optional<ExportExpression> getExportExpr() {
+    return Optional.empty();
   }
 
   @Override

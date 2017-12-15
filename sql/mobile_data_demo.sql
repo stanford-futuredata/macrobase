@@ -43,11 +43,12 @@ FROM DIFF
   MAX COMBO 2
   ORDER BY global_ratio;
 
-EXPORT TO FILE 'mobile_data_outliers.txt'
 SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count
+INTO OUTFILE 'mobile_data_outliers.csv'
 FROM DIFF
   (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
   (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
   ON state, hw_make, hw_model, firmware_version, app_version
   ORDER BY global_ratio;
+
 
