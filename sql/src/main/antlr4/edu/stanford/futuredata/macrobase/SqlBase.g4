@@ -100,8 +100,7 @@ statement
 //    | DESCRIBE OUTPUT identifier                                       #describeOutput
 
 query
-    : (EXPORT TO FILE outFilename=STRING)?
-      with? queryNoWith
+    : with? queryNoWith
     ;
 
 with
@@ -131,8 +130,6 @@ columnDefinition
 
 queryNoWith:
       queryTerm
-      (ORDER BY sortItem (',' sortItem)*)?
-      (LIMIT limit=(INTEGER_VALUE | ALL))?
     ;
 
 queryTerm
@@ -155,19 +152,42 @@ sortItem
 
 querySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
+      exportExpression?
       (FROM relation (',' relation)*)?
       (WHERE where=booleanExpression)?
       (GROUP BY groupBy)?
       (HAVING having=booleanExpression)?
+      (ORDER BY sortItem (',' sortItem)*)?
+      (LIMIT limit=(INTEGER_VALUE | ALL))?
+    | SELECT setQuantifier? selectItem (',' selectItem)*
+      (FROM relation (',' relation)*)?
+      (WHERE where=booleanExpression)?
+      (GROUP BY groupBy)?
+      (HAVING having=booleanExpression)?
+      (ORDER BY sortItem (',' sortItem)*)?
+      (LIMIT limit=(INTEGER_VALUE | ALL))?
+      exportExpression?
     ;
 
 diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
+      exportExpression?
       FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
       ON columnAliases
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
+      (ORDER BY sortItem (',' sortItem)*)?
+      (LIMIT limit=(INTEGER_VALUE | ALL))?
+    | SELECT setQuantifier? selectItem (',' selectItem)*
+      FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
+      ON columnAliases
+      (COMPARE BY ratioMetricExpression)?
+      (MAX COMBO maxCombo=INTEGER_VALUE)?
+      (WHERE where=booleanExpression)?
+      (ORDER BY sortItem (',' sortItem)*)?
+      (LIMIT limit=(INTEGER_VALUE | ALL))?
+      exportExpression?
     ;
 
 ratioMetricExpression
@@ -221,6 +241,32 @@ selectItem
     | qualifiedName '.' ASTERISK    #selectAll
     | ASTERISK                      #selectAll
     ;
+
+exportExpression
+    : (
+        INTO OUTFILE filename=STRING
+        (
+          fieldsFormat=(FIELDS | COLUMNS)
+          selectFieldsInto+
+        )?
+        (
+          LINES selectLinesInto+
+        )?
+      )
+    ;
+
+
+selectFieldsInto
+    : TERMINATED BY terminationField=STRING
+    | OPTIONALLY? ENCLOSED BY enclosion=STRING
+    | ESCAPED BY escaping=STRING
+    ;
+
+selectLinesInto
+    : STARTING BY starting=STRING
+    | TERMINATED BY terminationLine=STRING
+    ;
+
 
 relation
     : left=relation
@@ -523,16 +569,18 @@ DISTINCT: 'DISTINCT';
 DISTRIBUTED: 'DISTRIBUTED';
 DROP: 'DROP';
 ELSE: 'ELSE';
+ENCLOSED: 'ENCLOSED';
 END: 'END';
 ESCAPE: 'ESCAPE';
+ESCAPED: 'ESCAPED';
 EXCEPT: 'EXCEPT';
 EXCLUDING: 'EXCLUDING';
 EXECUTE: 'EXECUTE';
 EXISTS: 'EXISTS';
 EXPLAIN: 'EXPLAIN';
-EXPORT: 'EXPORT';
 EXTRACT: 'EXTRACT';
 FALSE: 'FALSE';
+FIELDS: 'FIELDS';
 FILE: 'FILE';
 FILTER: 'FILTER';
 FIRST: 'FIRST';
@@ -569,6 +617,7 @@ LEFT: 'LEFT';
 LEVEL: 'LEVEL';
 LIKE: 'LIKE';
 LIMIT: 'LIMIT';
+LINES: 'LINES';
 LOCALTIME: 'LOCALTIME';
 LOCALTIMESTAMP: 'LOCALTIMESTAMP';
 LOGICAL: 'LOGICAL';
@@ -591,10 +640,12 @@ NULLS: 'NULLS';
 ON: 'ON';
 ONLY: 'ONLY';
 OPTION: 'OPTION';
+OPTIONALLY: 'OPTIONALLY';
 OR: 'OR';
 ORDER: 'ORDER';
 ORDINALITY: 'ORDINALITY';
 OUTER: 'OUTER';
+OUTFILE: 'OUTFILE';
 OUTPUT: 'OUTPUT';
 OVER: 'OVER';
 PARTITION: 'PARTITION';
@@ -630,6 +681,7 @@ SHOW: 'SHOW';
 SMALLINT: 'SMALLINT';
 SOME: 'SOME';
 START: 'START';
+STARTING: 'STARTING';
 STATS: 'STATS';
 SUBSTRING: 'SUBSTRING';
 SUM: 'SUM';
@@ -637,6 +689,7 @@ SYSTEM: 'SYSTEM';
 TABLE: 'TABLE';
 TABLES: 'TABLES';
 TABLESAMPLE: 'TABLESAMPLE';
+TERMINATED: 'TERMINATED';
 TEXT: 'TEXT';
 THEN: 'THEN';
 TIME: 'TIME';

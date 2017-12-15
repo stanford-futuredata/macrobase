@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class DiffQuerySpecification
-    extends QueryBody {
+public class DiffQuerySpecification extends QueryBody {
 
   private final Select select;
   private final Optional<Query> first;
@@ -20,6 +19,7 @@ public class DiffQuerySpecification
   private final Optional<Expression> where;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
+  private final Optional<ExportExpression> exportExpr;
 
   private static final LongLiteral DEFAULT_MAX_COMBO = new LongLiteral("3");
   private static final RatioMetricExpression DEFAULT_RATIO_METRIC_EXPRESSION =
@@ -35,9 +35,10 @@ public class DiffQuerySpecification
       Optional<LongLiteral> maxCombo,
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
-      Optional<String> limit) {
+      Optional<String> limit,
+      Optional<ExportExpression> exportExpr) {
     this(Optional.empty(), select, first, second, attributeCols, ratioMetricExpr, maxCombo, where,
-        orderBy, limit);
+        orderBy, limit, exportExpr);
   }
 
   public DiffQuerySpecification(
@@ -50,9 +51,10 @@ public class DiffQuerySpecification
       Optional<LongLiteral> maxCombo,
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
-      Optional<String> limit) {
+      Optional<String> limit,
+      Optional<ExportExpression> exportExpr) {
     this(Optional.of(location), select, first, second, attributeCols, ratioMetricExpr, maxCombo,
-        where, orderBy, limit);
+        where, orderBy, limit, exportExpr);
   }
 
   private DiffQuerySpecification(
@@ -65,7 +67,8 @@ public class DiffQuerySpecification
       Optional<LongLiteral> maxCombo,
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
-      Optional<String> limit) {
+      Optional<String> limit,
+      Optional<ExportExpression> exportExpr) {
     super(location);
     requireNonNull(select, "select is null");
     requireNonNull(first, "first is null");
@@ -76,6 +79,7 @@ public class DiffQuerySpecification
     requireNonNull(where, "where is null");
     requireNonNull(orderBy, "orderBy is null");
     requireNonNull(limit, "limit is null");
+    requireNonNull(exportExpr, "exportExpr is null");
 
     this.select = select;
     this.first = first;
@@ -86,6 +90,7 @@ public class DiffQuerySpecification
     this.where = where;
     this.orderBy = orderBy;
     this.limit = limit;
+    this.exportExpr = exportExpr;
   }
 
   public Select getSelect() {
@@ -124,6 +129,10 @@ public class DiffQuerySpecification
     return limit;
   }
 
+  public Optional<ExportExpression> getExportExpr() {
+    return exportExpr;
+  }
+
   @Override
   public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
     return visitor.visitDiffQuerySpecification(this, context);
@@ -140,6 +149,7 @@ public class DiffQuerySpecification
     nodes.add(new LongLiteral("" + maxCombo));
     where.ifPresent(nodes::add);
     orderBy.ifPresent(nodes::add);
+    exportExpr.ifPresent(nodes::add);
     return nodes.build();
   }
 
@@ -155,6 +165,7 @@ public class DiffQuerySpecification
         .add("where", where.orElse(null))
         .add("orderBy", orderBy)
         .add("limit", limit.orElse(null))
+        .add("exportExpr", exportExpr.orElse(null))
         .toString();
   }
 
@@ -175,13 +186,14 @@ public class DiffQuerySpecification
         Objects.equals(maxCombo, o.maxCombo) &&
         Objects.equals(where, o.where) &&
         Objects.equals(orderBy, o.orderBy) &&
-        Objects.equals(limit, o.limit);
+        Objects.equals(limit, o.limit) &&
+        Objects.equals(exportExpr, o.exportExpr);
   }
 
   @Override
   public int hashCode() {
     return Objects
         .hash(select, first, second, attributeCols, ratioMetricExpr, maxCombo, where, orderBy,
-            limit);
+            limit, exportExpr);
   }
 }

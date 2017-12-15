@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TableSubquery
-    extends QueryBody {
+public class TableSubquery extends QueryBody {
 
   private final Query query;
 
@@ -65,6 +64,11 @@ public class TableSubquery
 
   @Override
   public Optional<String> getLimit() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<ExportExpression> getExportExpr() {
     return Optional.empty();
   }
 
