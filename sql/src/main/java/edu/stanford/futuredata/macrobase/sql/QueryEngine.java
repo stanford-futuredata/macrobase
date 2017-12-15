@@ -69,19 +69,18 @@ class QueryEngine {
     }
   }
 
-  DataFrame executeQuery(Query query) throws MacrobaseException {
-    QueryBody qBody = query.getQueryBody();
-    if (qBody instanceof QuerySpecification) {
-      QuerySpecification querySpec = (QuerySpecification) qBody;
+  DataFrame executeQuery(QueryBody query) throws MacrobaseException {
+    if (query instanceof QuerySpecification) {
+      QuerySpecification querySpec = (QuerySpecification) query;
       log.debug(querySpec.toString());
       return executeQuerySpec(querySpec);
 
-    } else if (qBody instanceof DiffQuerySpecification) {
-      DiffQuerySpecification diffQuery = (DiffQuerySpecification) qBody;
+    } else if (query instanceof DiffQuerySpecification) {
+      DiffQuerySpecification diffQuery = (DiffQuerySpecification) query;
       log.debug(diffQuery.toString());
       return executeDiffQuerySpec(diffQuery);
     }
-    throw new MacrobaseSQLException("query of type " + qBody.getClass().getSimpleName() + " not yet"
+    throw new MacrobaseSQLException("query of type " + query.getClass().getSimpleName() + " not yet"
         + "supported");
   }
 
@@ -98,8 +97,10 @@ class QueryEngine {
     final long order = diffQuery.getMaxCombo().get().getValue();
 
     // execute subqueries
-    final DataFrame firstDf = executeQuery(((TableSubquery) first.getQueryBody()).getQuery());
-    final DataFrame secondDf = executeQuery(((TableSubquery) second.getQueryBody()).getQuery());
+    final DataFrame firstDf = executeQuery(
+        ((TableSubquery) first.getQueryBody()).getQuery().getQueryBody());
+    final DataFrame secondDf = executeQuery(
+        ((TableSubquery) second.getQueryBody()).getQuery().getQueryBody());
     if (!firstDf.getSchema().hasColumns(explainCols) || !secondDf.getSchema()
         .hasColumns(explainCols)) {
       throw new MacrobaseSQLException(

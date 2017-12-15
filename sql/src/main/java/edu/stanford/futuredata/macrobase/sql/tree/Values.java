@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class Values
-    extends QueryBody {
+public final class Values extends QueryBody {
 
   private final List<Expression> rows;
 
@@ -66,6 +65,11 @@ public final class Values
 
   @Override
   public Optional<String> getLimit() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<ExportExpression> getExportExpr() {
     return Optional.empty();
   }
 

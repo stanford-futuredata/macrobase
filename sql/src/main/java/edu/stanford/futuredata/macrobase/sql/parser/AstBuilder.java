@@ -50,6 +50,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Except;
 import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
+import edu.stanford.futuredata.macrobase.sql.tree.ExportExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Extract;
 import edu.stanford.futuredata.macrobase.sql.tree.FrameBound;
@@ -147,10 +148,10 @@ class AstBuilder
   @Override
   public Node visitQuery(SqlBaseParser.QueryContext context) {
     Query body = (Query) visit(context.queryNoWith());
+    // TODO: get rid of this
 
     return new Query(
         getLocation(context),
-        getTextIfPresent(context.outFilename),
         visitIfPresent(context.with(), With.class),
         body.getQueryBody(),
         body.getOrderBy(),
@@ -181,12 +182,6 @@ class AstBuilder
   public Node visitQueryNoWith(SqlBaseParser.QueryNoWithContext context) {
     QueryBody term = (QueryBody) visit(context.queryTerm());
 
-    Optional<OrderBy> orderBy = Optional.empty();
-    if (context.ORDER() != null) {
-      orderBy = Optional
-          .of(new OrderBy(getLocation(context.ORDER()), visit(context.sortItem(), SortItem.class)));
-    }
-
     if (term instanceof QuerySpecification) {
       // When we have a simple query specification
       // followed by order by limit, fold the order by and limit
@@ -198,7 +193,6 @@ class AstBuilder
       return new Query(
           getLocation(context),
           Optional.empty(),
-          Optional.empty(),
           new QuerySpecification(
               getLocation(context),
               query.getSelect(),
@@ -206,8 +200,9 @@ class AstBuilder
               query.getWhere(),
               query.getGroupBy(),
               query.getHaving(),
-              orderBy,
-              getTextIfPresent(context.limit)),
+              query.getOrderBy(),
+              query.getLimit(),
+              query.getExportExpr()),
           Optional.empty(),
           Optional.empty());
     } else if (term instanceof DiffQuerySpecification) {
@@ -215,7 +210,6 @@ class AstBuilder
       DiffQuerySpecification diffQuery = (DiffQuerySpecification) term;
       return new Query(
           getLocation(context),
-          Optional.empty(),
           Optional.empty(),
           new DiffQuerySpecification(
               getLocation(context),
@@ -226,8 +220,9 @@ class AstBuilder
               diffQuery.getRatioMetricExpr(),
               diffQuery.getMaxCombo(),
               diffQuery.getWhere(),
-              orderBy,
-              getTextIfPresent(context.limit)),
+              diffQuery.getOrderBy(),
+              diffQuery.getLimit(),
+              diffQuery.getExportExpr()),
           Optional.empty(),
           Optional.empty());
     }
@@ -235,10 +230,9 @@ class AstBuilder
     return new Query(
         getLocation(context),
         Optional.empty(),
-        Optional.empty(),
         term,
-        orderBy,
-        getTextIfPresent(context.limit));
+        Optional.empty(),
+        Optional.empty());
   }
 
   @Override
@@ -254,6 +248,14 @@ class AstBuilder
         getQualifiedName(context.qualifiedName()),
         columns
     );
+  }
+
+  @Override
+  public Node visitExportExpression(SqlBaseParser.ExportExpressionContext context) {
+    // TODO: here we call get on Optional<String>, because the String always exists, according to
+    // the parser. We need to standardize this across the codebase.
+    return new ExportExpression(getLocation(context),
+        unquote(getTextIfPresent(context.filename).get()));
   }
 
   @Override
@@ -295,6 +297,15 @@ class AstBuilder
 
     Optional<LongLiteral> maxCombo = getTextIfPresent(context.maxCombo).map(LongLiteral::new);
 
+    Optional<OrderBy> orderBy = Optional.empty();
+    if (context.ORDER() != null) {
+      orderBy = Optional
+          .of(new OrderBy(getLocation(context.ORDER()), visit(context.sortItem(), SortItem.class)));
+    }
+
+    Optional<ExportExpression> exportExpr = visitIfPresent(context.exportExpression(),
+        ExportExpression.class);
+
     return new DiffQuerySpecification(
         getLocation(context),
         new Select(getLocation(context.SELECT()), isDistinct(context.setQuantifier()), selectItems),
@@ -304,8 +315,9 @@ class AstBuilder
         ratioMetricExpr,
         maxCombo,
         visitIfPresent(context.where, Expression.class),
-        Optional.empty(),
-        Optional.empty());
+        orderBy,
+        getTextIfPresent(context.limit),
+        exportExpr);
   }
 
   @Override
@@ -327,6 +339,15 @@ class AstBuilder
       from = Optional.of(relation);
     }
 
+    Optional<OrderBy> orderBy = Optional.empty();
+    if (context.ORDER() != null) {
+      orderBy = Optional
+          .of(new OrderBy(getLocation(context.ORDER()), visit(context.sortItem(), SortItem.class)));
+    }
+
+    Optional<ExportExpression> exportExpr = visitIfPresent(context.exportExpression(),
+        ExportExpression.class);
+
     return new QuerySpecification(
         getLocation(context),
         new Select(getLocation(context.SELECT()), isDistinct(context.setQuantifier()), selectItems),
@@ -334,8 +355,9 @@ class AstBuilder
         visitIfPresent(context.where, Expression.class),
         visitIfPresent(context.groupBy(), GroupBy.class),
         visitIfPresent(context.having, Expression.class),
-        Optional.empty(),
-        Optional.empty());
+        orderBy,
+        getTextIfPresent(context.limit),
+        exportExpr);
   }
 
   @Override
@@ -1017,15 +1039,6 @@ class AstBuilder
   public Node visitUnquotedIdentifier(SqlBaseParser.UnquotedIdentifierContext context) {
     return new Identifier(getLocation(context), context.getText(), false);
   }
-
-//  @Override
-//  public Node visitQuotedIdentifier(SqlBaseParser.QuotedIdentifierContext context) {
-//    String token = context.getText();
-//    String identifier = token.substring(1, token.length() - 1)
-//        .replace("\"\"", "\"");
-//
-//    return new Identifier(getLocation(context), identifier, true);
-//  }
 
   // ************** literals **************
 

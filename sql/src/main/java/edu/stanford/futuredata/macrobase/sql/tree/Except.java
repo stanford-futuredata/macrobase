@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Except
-    extends SetOperation {
+public class Except extends SetOperation {
 
   private final Relation left;
   private final Relation right;
@@ -55,6 +54,11 @@ public class Except
   @Override
   public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
     return visitor.visitExcept(this, context);
+  }
+
+  @Override
+  public Optional<ExportExpression> getExportExpr() {
+    return Optional.empty();
   }
 
   @Override

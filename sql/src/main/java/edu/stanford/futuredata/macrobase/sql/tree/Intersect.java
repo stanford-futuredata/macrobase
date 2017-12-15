@@ -20,9 +20,9 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javax.swing.text.html.Option;
 
-public class Intersect
-    extends SetOperation {
+public class Intersect extends SetOperation {
 
   private final List<Relation> relations;
 
@@ -48,6 +48,11 @@ public class Intersect
   @Override
   public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
     return visitor.visitIntersect(this, context);
+  }
+
+  @Override
+  public Optional<ExportExpression> getExportExpr() {
+    return Optional.empty();
   }
 
   @Override
