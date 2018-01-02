@@ -154,7 +154,6 @@ void select(const hsql::SelectStatement* stmt, const vector<Row>& input,
 void count_diff_stats(const vector<Row>& input, map<Row, uint32_t>& counts,
                       const vector<uint32_t>& attr_indices, const uint32_t max_combo, 
                       map<int, set<string> >& prunedValues, set<Row>& candidates) {
-  bench_timer_t start = time_start();
   const uint32_t num_rows = input.size();
   const uint32_t num_compare_attrs = attr_indices.size();
 
@@ -183,6 +182,11 @@ void count_diff_stats(const vector<Row>& input, map<Row, uint32_t>& counts,
             continue;
           Row order_two_attr_key(order_one_attr_key);
           order_two_attr_key[k] = second_attr;
+
+          order_one_attr_key[j] = "null";
+          order_one_attr_key[k] = second_attr;
+          if (candidates.find(order_one_attr_key) == candidates.end())
+            continue;
           
           if (max_combo == 2) {
             counts[order_two_attr_key] += 1;
@@ -196,6 +200,20 @@ void count_diff_stats(const vector<Row>& input, map<Row, uint32_t>& counts,
                 continue;
               Row order_three_attr_key(order_two_attr_key);
               order_three_attr_key[l] = third_attr;
+
+              order_one_attr_key[k] = "null";
+              order_one_attr_key[l] = third_attr;
+              if (candidates.find(order_one_attr_key) == candidates.end())
+                continue;
+              order_two_attr_key[j] = "null";
+              order_two_attr_key[l] = third_attr;
+              if (candidates.find(order_two_attr_key) == candidates.end())
+                continue;
+              order_two_attr_key[k] = "null";
+              order_two_attr_key[j] = first_attr;
+              if (candidates.find(order_two_attr_key) == candidates.end())
+                continue;
+
               counts[order_three_attr_key] += 1;
             }
           }
@@ -203,59 +221,29 @@ void count_diff_stats(const vector<Row>& input, map<Row, uint32_t>& counts,
       }
     }
   }
-  cout << time_stop(start) << endl;
 }
 
-void count_diff_stats_by_col(const vector<Row>& input, map<Row, uint32_t>& counts,
-                      const vector<uint32_t>& attr_indices,
-                      const uint32_t max_combo) {
-    bench_timer_t start = time_start();
-    const uint32_t num_rows = input.size();
-    const uint32_t num_compare_attrs = attr_indices.size();
+void generate_bitmaps(const vector<Row>& input, map<Row, uint32_t>& counts,
+                      const vector<uint32_t>& attr_indices, map<int, set<string> >& prunedValues, vector<map<string, Roaring> >& bitmaps) {
+  const uint32_t num_rows = input.size();
+  const uint32_t num_compare_attrs = attr_indices.size();
+  bitmaps.resize(num_compare_attrs);
 
-    vector<map<string, Roaring> > bitmaps(num_compare_attrs);
-    for (auto i = 0u; i < num_rows; ++i) {
-        const Row input_row = input[i];
+  for (auto i = 0u; i < num_rows; ++i) {
+    const Row input_row = input[i];
 
-        for (auto j = 0u; j < num_compare_attrs; ++j) {
-            const uint32_t attr_index = attr_indices[j];
-            const string attr = input_row[attr_index];
-            Row order_one_attr_key(num_compare_attrs, "null");
-            order_one_attr_key[j] = attr;
-            counts[order_one_attr_key] += 1;
-            bitmaps[j][attr].add(i);
-        }
+    for (auto j = 0u; j < num_compare_attrs; ++j) {
+      const uint32_t attr_index = attr_indices[j];
+      const string attr = input_row[attr_index];
+      set<string>& first_vals = prunedValues[j];
+      if (first_vals.find(attr) != first_vals.end())
+        continue;
+      Row order_one_attr_key(num_compare_attrs, "null");
+      order_one_attr_key[j] = attr;
+      counts[order_one_attr_key] += 1;
+      bitmaps[j][attr].add(i);
     }
-
-    if (max_combo > 1) {
-        for (auto i = 0u; i < num_compare_attrs; ++i) {
-            for (auto& entry1 : bitmaps[i]) {
-                for (auto j = i + 1; j < num_compare_attrs; ++j) {
-                    for (auto& entry2 : bitmaps[j]) {
-                        Roaring intersection = entry1.second & entry2.second;
-                        int order_two_cnt = intersection.cardinality();
-                        Row order_two_attr_key(num_compare_attrs, "null");
-                        order_two_attr_key[i] = entry1.first;
-                        order_two_attr_key[j] = entry2.first;
-                        counts[order_two_attr_key] = order_two_cnt;
-
-                        if (max_combo > 2) {
-                            for (auto k = j + 1; k < num_compare_attrs; ++k) {
-                                for (auto& entry3 : bitmaps[k]) {
-                                    intersection &= entry3.second;
-                                    int order_three_cnt = intersection.cardinality();
-                                    Row order_three_attr_key(order_two_attr_key);
-                                    order_three_attr_key[k] = entry3.first;
-                                    counts[order_three_attr_key] = order_three_cnt;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    cout << time_stop(start) << endl;
+  }
 }
 
 const double minOutlierSupport = 0.0;
@@ -270,20 +258,34 @@ double computeRatio(int matchedOutliers, int unMatchedOutliers, int matchedTotal
     return 1.0*matchedOutliers*unMatchedTotal/matchedTotal/unMatchedOutliers;
 }
 
-void prune_row(const Row& r, map<int, set<string> >& prunedValues, vector<Row>& prunedRows) {
-    for (int i = 0; i < r.size(); i++) {
-        if (r[i] != "null") {
-            prunedValues[i].insert(r[i]);
-        }
-    }
-    prunedRows.push_back(r);
-}
-
 void prune_outliers(map<Row, uint32_t>& cur_outlier_counts, map<int, set<string> >& prunedValues, const uint32_t suppCount) {
     vector<Row> prunedRows;
     for (auto& entry : cur_outlier_counts) {
         if (entry.second < suppCount) {
-            prune_row(entry.first, prunedValues, prunedRows);
+            for (int i = 0; i < entry.first.size(); i++) {
+                if (entry.first[i] != "null") {
+                    prunedValues[i].insert(entry.first[i]);
+                }
+            }
+            prunedRows.push_back(entry.first);
+        }
+    }
+    for (Row& r : prunedRows) {
+        cur_outlier_counts.erase(r);
+    }
+}
+
+void prune_outliers(map<Row, uint32_t>& cur_outlier_counts, map<int, set<string> >& prunedValues, const uint32_t suppCount, vector<map<string, Roaring> >& bitmaps) {
+    vector<Row> prunedRows;
+    for (auto& entry : cur_outlier_counts) {
+        if (entry.second < suppCount) {
+            for (int i = 0; i < entry.first.size(); i++) {
+                if (entry.first[i] != "null") {
+                    prunedValues[i].insert(entry.first[i]);
+                    bitmaps[i].erase(entry.first[i]);
+                }
+            }
+            prunedRows.push_back(entry.first);
         }
     }
     for (Row& r : prunedRows) {
@@ -292,21 +294,19 @@ void prune_outliers(map<Row, uint32_t>& cur_outlier_counts, map<int, set<string>
 }
 
 void prune_inliers(map<Row, uint32_t>& cur_outlier_counts, map<Row, uint32_t>& cur_inlier_counts, 
-                   map<int, set<string> >& prunedValues, set<Row>& candidates, int outlierSize, int inlierSize,
-                   map<Row, uint32_t>& outlier_counts, map<Row, uint32_t>& inlier_counts) {
-    for (auto& entry : cur_inlier_counts) {
-        if (!cur_outlier_counts.count(entry.first)) {
-            continue;
-        }
-        int matchedOutliers = cur_outlier_counts[entry.first];
+                   map<Row, uint32_t>& outlier_counts, map<Row, uint32_t>& inlier_counts,
+                   set<Row>& candidates, int outlierSize, int inlierSize) {
+    for (auto& entry : cur_outlier_counts) {
+        int matchedOutliers = entry.second;
+        int matchedInliers = cur_inlier_counts.count(entry.first) ? cur_inlier_counts[entry.first] : 0;
         int unMatchedOutliers = outlierSize - matchedOutliers;
-        int matchedTotal = matchedOutliers + entry.second;
+        int matchedTotal = matchedOutliers + matchedInliers;
         int unMatchedTotal = outlierSize + inlierSize - matchedTotal; 
         
         double risk_ratio = computeRatio(matchedOutliers, unMatchedOutliers, matchedTotal, unMatchedTotal);
         if (risk_ratio > minRatioMetric) {
             outlier_counts[entry.first] = matchedOutliers;
-            inlier_counts[entry.first] = entry.second;
+            inlier_counts[entry.first] = matchedInliers;
         } else {
             candidates.insert(entry.first);
         }
@@ -316,7 +316,7 @@ void prune_inliers(map<Row, uint32_t>& cur_outlier_counts, map<Row, uint32_t>& c
 void count_diff_stats(const vector<Row>& outliers, const vector<Row>& inliers, 
                       const vector<uint32_t>& attr_indices, const uint32_t max_combo, 
                       map<Row, uint32_t>& outlier_counts, map<Row, uint32_t>& inlier_counts) {
-    
+    bench_timer_t start = time_start();
     map<int, set<string> > prunedValues;
     uint32_t suppCount = minOutlierSupport*outliers.size();
     set<Row> candidates;
@@ -326,10 +326,103 @@ void count_diff_stats(const vector<Row>& outliers, const vector<Row>& inliers,
         count_diff_stats(outliers, cur_outlier_counts, attr_indices, combo, prunedValues, candidates);
         prune_outliers(cur_outlier_counts, prunedValues, suppCount);
         count_diff_stats(inliers, cur_inlier_counts, attr_indices, combo, prunedValues, candidates);
-        prune_inliers(cur_outlier_counts, cur_inlier_counts, prunedValues, candidates, 
-                      outliers.size(), inliers.size(), outlier_counts, inlier_counts);
+        prune_inliers(cur_outlier_counts, cur_inlier_counts, outlier_counts, inlier_counts, candidates, outliers.size(), inliers.size());
+    }
+    cout << time_stop(start) << endl;
+}
+
+void merge_bitmaps(map<Row, uint32_t>& counts, const vector<uint32_t>& attr_indices, const uint32_t max_combo, 
+                   map<int, set<string> >& prunedValues, set<Row>& candidates, vector<map<string, Roaring> >& bitmaps) {
+    const uint32_t num_compare_attrs = attr_indices.size();
+    
+    for (auto i = 0u; i < num_compare_attrs; ++i) {
+        for (auto& entry1 : bitmaps[i]) {
+            set<string>& first_vals = prunedValues[i];
+            if (first_vals.find(entry1.first) != first_vals.end())
+                continue;
+            Row r1(num_compare_attrs, "null");
+            r1[i] = entry1.first;
+            if (candidates.find(r1) == candidates.end())
+                continue;
+
+            for (auto j = i + 1; j < num_compare_attrs; ++j) {
+                for (auto& entry2 : bitmaps[j]) {
+                    set<string>& second_vals = prunedValues[j];
+                    if (second_vals.find(entry2.first) != second_vals.end())
+                        continue;
+                    Row r2(num_compare_attrs, "null");
+                    r2[j] = entry2.first;
+                    if (candidates.find(r2) == candidates.end())
+                        continue;
+                    
+                    Row order_two_attr_key(num_compare_attrs, "null");
+                    order_two_attr_key[i] = entry1.first;
+                    order_two_attr_key[j] = entry2.first;
+                    Roaring intersection = entry1.second & entry2.second;
+
+                    if (max_combo == 2) {
+                        counts[order_two_attr_key] = intersection.cardinality();
+                    } else if (candidates.find(order_two_attr_key) != candidates.end()) {
+                        for (auto k = j + 1; k < num_compare_attrs; ++k) {
+                            for (auto& entry3 : bitmaps[k]) {
+                                set<string>& third_vals = prunedValues[k];
+                                if (third_vals.find(entry3.first) != third_vals.end())
+                                    continue;
+                                Row r3(num_compare_attrs, "null");
+                                r3[k] = entry2.first;
+                                if (candidates.find(r3) == candidates.end())
+                                    continue;
+
+                                Row order_three_attr_key(order_two_attr_key);
+                                order_three_attr_key[k] = entry3.first;
+                                intersection &= entry3.second;
+                                
+                                order_two_attr_key[i] = "null";
+                                order_two_attr_key[k] = entry3.first;
+                                if (candidates.find(order_two_attr_key) == candidates.end())
+                                    continue;
+                                order_two_attr_key[j] = "null";
+                                order_two_attr_key[i] = entry1.first;
+                                if (candidates.find(order_two_attr_key) == candidates.end())
+                                    continue;
+
+                                counts[order_three_attr_key] = intersection.cardinality();
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+void count_diff_stats_by_col(const vector<Row>& outliers, const vector<Row>& inliers, 
+                      const vector<uint32_t>& attr_indices, const uint32_t max_combo, 
+                      map<Row, uint32_t>& outlier_counts, map<Row, uint32_t>& inlier_counts) {
+    bench_timer_t start = time_start();
+    map<int, set<string> > prunedValues;
+    uint32_t suppCount = minOutlierSupport*outliers.size();
+    set<Row> candidates;
+    vector<map<string, Roaring> > outlier_bitmaps, inlier_bitmaps;
+
+    for (int combo = 1; combo <= max_combo; combo++) {
+        map<Row, uint32_t> cur_outlier_counts, cur_inlier_counts;
+        if (combo == 1) {
+            generate_bitmaps(outliers, cur_outlier_counts, attr_indices, prunedValues, outlier_bitmaps);
+            prune_outliers(cur_outlier_counts, prunedValues, suppCount, outlier_bitmaps);
+            generate_bitmaps(inliers, cur_inlier_counts, attr_indices, prunedValues, inlier_bitmaps);
+        }
+        else {
+            merge_bitmaps(cur_outlier_counts, attr_indices, combo, prunedValues, candidates, outlier_bitmaps);
+            prune_outliers(cur_outlier_counts, prunedValues, suppCount, outlier_bitmaps);
+            merge_bitmaps(cur_inlier_counts, attr_indices, combo, prunedValues, candidates, inlier_bitmaps);
+        }
+        prune_inliers(cur_outlier_counts, cur_inlier_counts, outlier_counts, inlier_counts, candidates, outliers.size(), inliers.size()); 
+    }
+    
+    cout << time_stop(start) << endl;
+}
+
 
 vector<uint32_t> get_attribute_indices(
     const std::vector<string>& attribute_cols,
@@ -385,13 +478,13 @@ void diff(hsql::DiffDefinition* diff, const vector<Row>& input,
   map<Row, uint32_t> outlier_counts;
   map<Row, uint32_t> inlier_counts;
 #ifdef OUTLIER_BY_ROW
+  cout << "processing by row\n";
   count_diff_stats(outliers, inliers, attr_indices, max_combo, outlier_counts, inlier_counts);
 #endif
 
 #ifdef OUTLIER_BY_COL
   cout << "processing by column\n";
-  count_diff_stats_by_col(outliers, outlier_counts, attr_indices, max_combo);
-  count_diff_stats_by_col(inliers, inlier_counts, attr_indices, max_combo);
+  count_diff_stats(outliers, inliers, attr_indices, max_combo, outlier_counts, inlier_counts);
 #endif
 
 #ifdef DEBUG
