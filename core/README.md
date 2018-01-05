@@ -26,7 +26,7 @@ mvn clean; mvn package
 From the macrobase root directory:
 
 ```
-./bin/cli.sh core/demo/cli_conf.yaml
+./bin/cli.sh core/demo/batch.json
 ```
 
 will attempt to summarize the outliers in `core/demo/sample.csv`
@@ -37,7 +37,7 @@ To run a pipeline over a sample data cube in `core/demo/sampled_cubed.csv`,
 replace the last line from above with:
 
 ```
-./bin/simple.sh core/demo/cli_cube.yaml
+./bin/cli.sh core/demo/cube.json
 ```
 
 #### Rest Server
@@ -56,5 +56,3 @@ sleep 5;
 #### Configuration
 
 Logging settings are stored in `config/logback.xml`
-
-CLI settings are configured in yaml, see `core/demo/cli_conf.yaml`
