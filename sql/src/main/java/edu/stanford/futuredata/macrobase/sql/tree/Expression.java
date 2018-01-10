@@ -16,8 +16,7 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 import edu.stanford.futuredata.macrobase.sql.ExpressionFormatter;
 import java.util.Optional;
 
-public abstract class Expression
-    extends Node {
+public abstract class Expression extends Node {
 
   protected Expression(Optional<NodeLocation> location) {
     super(location);

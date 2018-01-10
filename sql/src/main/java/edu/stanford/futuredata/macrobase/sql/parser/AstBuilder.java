@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.SqlBaseBaseVisitor;
 import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
+import edu.stanford.futuredata.macrobase.SqlBaseParser.MinRatioExpressionContext;
 import edu.stanford.futuredata.macrobase.sql.tree.Aggregate;
 import edu.stanford.futuredata.macrobase.sql.tree.AggregateExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
@@ -80,6 +81,8 @@ import edu.stanford.futuredata.macrobase.sql.tree.Lateral;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LongLiteral;
+import edu.stanford.futuredata.macrobase.sql.tree.MinRatioExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.MinSupportExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NaturalJoin;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
 import edu.stanford.futuredata.macrobase.sql.tree.NodeLocation;
@@ -218,6 +221,8 @@ class AstBuilder
               diffQuery.getFirst(),
               diffQuery.getSecond(),
               diffQuery.getAttributeCols(),
+              diffQuery.getMinRatioExpression(),
+              diffQuery.getMinSupportExpression(),
               diffQuery.getRatioMetricExpr(),
               diffQuery.getMaxCombo(),
               diffQuery.getWhere(),
@@ -277,6 +282,16 @@ class AstBuilder
   }
 
   @Override
+  public Node visitMinRatioExpression(SqlBaseParser.MinRatioExpressionContext context) {
+    return new MinRatioExpression(getLocation(context), new DecimalLiteral(context.minRatio.getText()));
+  }
+
+  @Override
+  public Node visitMinSupportExpression(SqlBaseParser.MinSupportExpressionContext context) {
+    return new MinSupportExpression(getLocation(context), new DecimalLiteral(context.minSupport.getText()));
+  }
+
+  @Override
   public Node visitRatioMetricExpression(SqlBaseParser.RatioMetricExpressionContext context) {
     return new RatioMetricExpression(getLocation(context), (Identifier) visit(context.identifier()),
         (AggregateExpression) visit(context.aggregateExpression()));
@@ -290,13 +305,17 @@ class AstBuilder
 
     List<Query> subqueries = visit(context.queryNoWith(), Query.class);
     check(subqueries.size() > 0 && subqueries.size() <= 2,
-        "At most two relations required for diff query", context);
+        "At least one and at most two relations required for diff query", context);
 
     first = Optional.of(subqueries.get(0));
-    check(true, "At least one relation required for diff query", context);
     if (subqueries.size() == 2) {
       second = Optional.of(subqueries.get(1));
     }
+
+    Optional<MinRatioExpression> minRatioExpr = visitIfPresent(context.minRatioExpression(),
+        MinRatioExpression.class);
+    Optional<MinSupportExpression> minSupportExpr = visitIfPresent(context.minSupportExpression(),
+        MinSupportExpression.class);
 
     Optional<RatioMetricExpression> ratioMetricExpr = visitIfPresent(
         context.ratioMetricExpression(), RatioMetricExpression.class);
@@ -320,6 +339,8 @@ class AstBuilder
         first,
         second,
         attributeCols,
+        minRatioExpr,
+        minSupportExpr,
         ratioMetricExpr,
         maxCombo,
         visitIfPresent(context.where, Expression.class),

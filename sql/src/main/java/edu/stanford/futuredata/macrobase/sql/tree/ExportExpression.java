@@ -37,6 +37,7 @@ public class ExportExpression extends Node {
     requireNonNull(filename, "filename is null");
 
     this.fieldDelimiter = fieldDelimiter.orElse(new DelimiterExpression(",")).toString();
+    // TODO: change this to throw a parseError
     if (this.fieldDelimiter.length() != 1) {
       throw new IllegalArgumentException("fieldDelimiter's length not equal to 1");
     }
