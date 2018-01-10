@@ -10,7 +10,6 @@ import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
-import edu.stanford.futuredata.macrobase.sql.tree.ExportExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
@@ -81,12 +80,14 @@ public class MacroBaseSQLRepl {
           QueryBody q = ((Query) stmt).getQueryBody();
           final DataFrame result = queryEngine.executeQuery(q);
           result.prettyPrint();
-          q.getExportExpr().map(ExportExpression::getFilename).ifPresent((filename) -> {
+          q.getExportExpr().ifPresent((exportExpr) -> {
             // print result to file; if file already exists, do nothing and print error message
+            final String filename = exportExpr.getFilename();
             if (!exists(Paths.get(filename))) {
               try (PrintStream outFile = new PrintStream(
                   new FileOutputStream(filename))) {
-                new CSVDataFrameWriter().writeToStream(result, outFile);
+                new CSVDataFrameWriter(exportExpr.getFieldDelimiter(),
+                    exportExpr.getLineDelimiter()).writeToStream(result, outFile);
               } catch (IOException e) {
                 e.printStackTrace();
               }
