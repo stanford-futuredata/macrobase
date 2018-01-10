@@ -468,4 +468,12 @@ public abstract class AstVisitor<R, C> {
   public R visitDelimiterExpression(DelimiterExpression node, C context) {
     return visitNode(node, context);
   }
+
+  public R visitMinRatioExpression(MinRatioExpression node, C context) {
+    return visitNode(node, context);
+  }
+
+  public R visitMinSupportExpression(MinSupportExpression node, C context) {
+    return visitNode(node, context);
+  }
 }
