@@ -86,7 +86,7 @@ public class PredicateClassifier extends Classifier {
                 resultColumn[i] = 0.0;
             }
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
 
@@ -103,7 +103,7 @@ public class PredicateClassifier extends Classifier {
                 resultColumn[i] = 0.0;
             }
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
 
