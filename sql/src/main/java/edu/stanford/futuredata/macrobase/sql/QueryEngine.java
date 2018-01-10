@@ -88,10 +88,13 @@ class QueryEngine {
       throws MacrobaseException {
     assert (diffQuery.getSecond().isPresent()); // TODO: support single DataFrame queries
     // Extract parameters for Diff query
+    // TODO: too many get's; too many fields are Optional that shouldn't be
     final Query first = diffQuery.getFirst().get();
     final Query second = diffQuery.getSecond().get();
     final List<String> explainCols = diffQuery.getAttributeCols().stream().map(Identifier::toString)
         .collect(toImmutableList());
+    final double minRatioMetric = diffQuery.getMinRatioExpression().get().getMinRatio();
+    final double minSupport = diffQuery.getMinSupportExpression().get().getMinSupport();
     final ExplanationMetric ratioMetric = ExplanationMetric
         .getMetricFn(diffQuery.getRatioMetricExpr().get().getFuncName().toString());
     final long order = diffQuery.getMaxCombo().get().getValue();
@@ -109,13 +112,14 @@ class QueryEngine {
     }
     // execute diff
     // TODO: add support for "ON *"
-    DataFrame df = diff(firstDf, secondDf, explainCols, ratioMetric, (int) order);
+    DataFrame df = diff(firstDf, secondDf, explainCols, minRatioMetric, minSupport, ratioMetric,
+        (int) order);
 
     return evaluateSQLClauses(diffQuery, df);
   }
 
   private DataFrame diff(final DataFrame outliers, final DataFrame inliers,
-      final List<String> cols,
+      final List<String> cols, final double minRatioMetric, final double minSupport,
       final ExplanationMetric ratioMetric, final int order) throws MacrobaseException {
 
     final String outlierColName = "outlier_col";
@@ -127,11 +131,10 @@ class QueryEngine {
     DataFrame combined = DataFrame.unionAll(Lists.newArrayList(outliers, inliers));
 
     final APrioriSummarizer summarizer = new APrioriSummarizer();
-    // TODO: figure out a better way to handle default minRatioMetric and minSupport
     summarizer.setRatioMetric(ratioMetric)
         .setMaxOrder(order)
-        .setMinRatioMetric(1.5)
-        .setMinSupport(0.2)
+        .setMinRatioMetric(minRatioMetric)
+        .setMinSupport(minSupport)
         .setOutlierColumn(outlierColName)
         .setAttributes(cols);
 

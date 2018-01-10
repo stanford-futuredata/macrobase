@@ -18,10 +18,9 @@ import static java.util.Objects.requireNonNull;
 import java.util.Objects;
 import java.util.Optional;
 
-public class DecimalLiteral
-    extends Literal {
+public class DecimalLiteral extends Literal {
 
-  private final String value;
+  private final double value;
 
   public DecimalLiteral(String value) {
     this(Optional.empty(), value);
@@ -33,10 +32,11 @@ public class DecimalLiteral
 
   public DecimalLiteral(Optional<NodeLocation> location, String value) {
     super(location);
-    this.value = requireNonNull(value, "value is null");
+    requireNonNull(value, "value is null");
+    this.value = Double.parseDouble(value);
   }
 
-  public String getValue() {
+  public double getValue() {
     return value;
   }
 

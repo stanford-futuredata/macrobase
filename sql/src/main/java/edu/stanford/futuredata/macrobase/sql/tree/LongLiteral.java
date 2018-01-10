@@ -18,8 +18,7 @@ import static java.util.Objects.requireNonNull;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import java.util.Optional;
 
-public class LongLiteral
-    extends Literal {
+public class LongLiteral extends Literal {
 
   private final long value;
 
