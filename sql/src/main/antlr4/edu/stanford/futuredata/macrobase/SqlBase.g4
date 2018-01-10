@@ -173,6 +173,7 @@ diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
       FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
       ON columnAliases
+      (WITH minRatioExpression? minSupportExpression?)?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
@@ -183,11 +184,20 @@ diffQuerySpecification
       exportExpression?
       FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
       ON columnAliases
+      (WITH minRatioExpression? minSupportExpression?)
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
+    ;
+
+minRatioExpression
+    : MIN RATIO minRatio=DECIMAL_VALUE
+    ;
+
+minSupportExpression
+    : MIN SUPPORT minSupport=DECIMAL_VALUE
     ;
 
 ratioMetricExpression
@@ -655,6 +665,7 @@ PRIVILEGES: 'PRIVILEGES';
 PROPERTIES: 'PROPERTIES';
 PUBLIC: 'PUBLIC';
 RANGE: 'RANGE';
+RATIO: 'RATIO';
 READ: 'READ';
 RECURSIVE: 'RECURSIVE';
 RENAME: 'RENAME';
@@ -683,6 +694,7 @@ STARTING: 'STARTING';
 STATS: 'STATS';
 SUBSTRING: 'SUBSTRING';
 SUM: 'SUM';
+// SUPPORT: 'SUPPORT'; TODO: figure out how to include this
 SYSTEM: 'SYSTEM';
 TABLE: 'TABLE';
 TABLES: 'TABLES';
