@@ -152,26 +152,25 @@ sortItem
 
 querySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
-      exportExpression?
       (FROM relation (',' relation)*)?
       (WHERE where=booleanExpression)?
       (GROUP BY groupBy)?
       (HAVING having=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
+      exportExpression?
     | SELECT setQuantifier? selectItem (',' selectItem)*
+      exportExpression?
       (FROM relation (',' relation)*)?
       (WHERE where=booleanExpression)?
       (GROUP BY groupBy)?
       (HAVING having=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
-      exportExpression?
     ;
 
 diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
-      exportExpression?
       FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
       ON columnAliases
       (COMPARE BY ratioMetricExpression)?
@@ -179,7 +178,9 @@ diffQuerySpecification
       (WHERE where=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
+      exportExpression?
     | SELECT setQuantifier? selectItem (',' selectItem)*
+      exportExpression?
       FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
       ON columnAliases
       (COMPARE BY ratioMetricExpression)?
@@ -187,7 +188,6 @@ diffQuerySpecification
       (WHERE where=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
-      exportExpression?
     ;
 
 ratioMetricExpression
@@ -247,26 +247,24 @@ exportExpression
         INTO OUTFILE filename=STRING
         (
           fieldsFormat=(FIELDS | COLUMNS)
-          selectFieldsInto+
+          delimiterExpression /*escapeExpression?*/
         )?
         (
-          LINES selectLinesInto+
+          LINES delimiterExpression
         )?
       )
     ;
 
 
-selectFieldsInto
-    : TERMINATED BY terminationField=STRING
-    | OPTIONALLY? ENCLOSED BY enclosion=STRING
-    | ESCAPED BY escaping=STRING
+delimiterExpression
+    : TERMINATED BY delimiter=STRING
+    // | OPTIONALLY? ENCLOSED BY enclosion=STRING
     ;
 
-selectLinesInto
-    : STARTING BY starting=STRING
-    | TERMINATED BY terminationLine=STRING
+// TODO: support
+escapeExpression
+    : ESCAPED BY escaping=STRING
     ;
-
 
 relation
     : left=relation
