@@ -3,18 +3,18 @@ package edu.stanford.futuredata.macrobase.ingest;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
+import com.univocity.parsers.csv.CsvParser;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 
 public class CSVDataFrameParser implements DataFrameLoader {
-    private CSVParser parser;
+    private CsvParser parser;
     private Map<String, Schema.ColType> columnTypes;
     private int numBadRecords = 0;
 
-    public CSVDataFrameParser(CSVParser parser) {
+    public CSVDataFrameParser(CsvParser parser) {
         this.parser = parser;
     }
 
@@ -26,7 +26,11 @@ public class CSVDataFrameParser implements DataFrameLoader {
 
     @Override
     public DataFrame load() throws Exception {
-        Map<String, Integer> headerMap = parser.getHeaderMap();
+        String[] header = parser.parseNext();
+        Map<String, Integer> headerMap = new HashMap<>();
+        for (int i = 0; i < header.length; i++) {
+            headerMap.put(header[i], i);
+        }
         int numColumns = headerMap.size();
 
         String[] columnNameList = new String[numColumns];
@@ -45,11 +49,12 @@ public class CSVDataFrameParser implements DataFrameLoader {
 
         this.numBadRecords = 0;
         ArrayList<Row> rows = new ArrayList<>();
-        for (CSVRecord record : parser) {
+        String[] row;
+        while ((row = parser.parseNext()) != null) {
             ArrayList<Object> rowFields = new ArrayList<>(numColumns);
             for (int c = 0; c < numColumns; c++) {
                 Schema.ColType t = columnTypeList[c];
-                String rowValue = record.get(c);
+                String rowValue = row[c];
                 if (t == Schema.ColType.STRING) {
                     rowFields.add(rowValue);
                 } else if (t == Schema.ColType.DOUBLE) {

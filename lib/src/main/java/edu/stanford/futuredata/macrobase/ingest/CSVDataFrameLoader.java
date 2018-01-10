@@ -1,17 +1,11 @@
 package edu.stanford.futuredata.macrobase.ingest;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVRecord;
+import com.univocity.parsers.csv.CsvParser;
+import com.univocity.parsers.csv.CsvParserSettings;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.*;
 import java.util.Map;
 
 public class CSVDataFrameLoader implements DataFrameLoader {
@@ -20,12 +14,10 @@ public class CSVDataFrameLoader implements DataFrameLoader {
 
     public CSVDataFrameLoader(String fileName) throws IOException {
         this.fileName = fileName;
-        File csvFile = new File(fileName);
-        CSVParser csvParser = CSVParser.parse(
-                csvFile,
-                Charset.defaultCharset(),
-                CSVFormat.DEFAULT.withHeader()
-        );
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        CsvParser csvParser = new CsvParser(settings);
+        csvParser.beginParsing(getReader(fileName));
         this.parserWrapper = new CSVDataFrameParser(csvParser);
     }
     @Override
@@ -37,6 +29,17 @@ public class CSVDataFrameLoader implements DataFrameLoader {
     @Override
     public DataFrame load() throws Exception {
         return parserWrapper.load();
+    }
+
+    private static Reader getReader(String path) {
+        try {
+            InputStream targetStream = new FileInputStream(path);
+            return new InputStreamReader(targetStream, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        }
     }
 
     public int getBadRecords() {
