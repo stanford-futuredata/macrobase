@@ -89,7 +89,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
                 resultColumn[i] = 0.0;
             }
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
 
@@ -107,7 +107,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
                 resultColumn[i] = 0.0;
             }
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
 
