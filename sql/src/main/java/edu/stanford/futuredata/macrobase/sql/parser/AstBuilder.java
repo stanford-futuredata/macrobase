@@ -45,6 +45,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
 import edu.stanford.futuredata.macrobase.sql.tree.Cube;
 import edu.stanford.futuredata.macrobase.sql.tree.CurrentTime;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
+import edu.stanford.futuredata.macrobase.sql.tree.DelimiterExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
@@ -250,12 +251,19 @@ class AstBuilder
     );
   }
 
+  // Exporting queries to CSVs
   @Override
   public Node visitExportExpression(SqlBaseParser.ExportExpressionContext context) {
-    // TODO: here we call get on Optional<String>, because the String always exists, according to
-    // the parser. We need to standardize this across the codebase.
+    // TODO: support custom escape character
     return new ExportExpression(getLocation(context),
+        visitIfPresent(context.delimiterExpression(0), DelimiterExpression.class),
+        visitIfPresent(context.delimiterExpression(1), DelimiterExpression.class),
         unquote(getTextIfPresent(context.filename).get()));
+  }
+
+  @Override
+  public Node visitDelimiterExpression(SqlBaseParser.DelimiterExpressionContext context) {
+    return new DelimiterExpression(getLocation(context), unquote(context.delimiter.getText()));
   }
 
   @Override
