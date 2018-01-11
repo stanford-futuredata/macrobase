@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.SqlBaseBaseVisitor;
 import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
-import edu.stanford.futuredata.macrobase.SqlBaseParser.MinRatioExpressionContext;
 import edu.stanford.futuredata.macrobase.sql.tree.Aggregate;
 import edu.stanford.futuredata.macrobase.sql.tree.AggregateExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
@@ -44,15 +43,14 @@ import edu.stanford.futuredata.macrobase.sql.tree.ColumnDefinition;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
 import edu.stanford.futuredata.macrobase.sql.tree.Cube;
-import edu.stanford.futuredata.macrobase.sql.tree.CurrentTime;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.DelimiterExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.DelimiterClause;
 import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Except;
 import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
-import edu.stanford.futuredata.macrobase.sql.tree.ExportExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.ExportClause;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Extract;
 import edu.stanford.futuredata.macrobase.sql.tree.FrameBound;
@@ -77,7 +75,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.JoinOn;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinUsing;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaArgumentDeclaration;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.Lateral;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LongLiteral;
@@ -117,13 +114,10 @@ import edu.stanford.futuredata.macrobase.sql.tree.TimeLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TimestampLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Union;
-import edu.stanford.futuredata.macrobase.sql.tree.Unnest;
 import edu.stanford.futuredata.macrobase.sql.tree.Values;
 import edu.stanford.futuredata.macrobase.sql.tree.WhenClause;
 import edu.stanford.futuredata.macrobase.sql.tree.Window;
 import edu.stanford.futuredata.macrobase.sql.tree.WindowFrame;
-import edu.stanford.futuredata.macrobase.sql.tree.With;
-import edu.stanford.futuredata.macrobase.sql.tree.WithQuery;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -151,39 +145,6 @@ class AstBuilder
 
   @Override
   public Node visitQuery(SqlBaseParser.QueryContext context) {
-    Query body = (Query) visit(context.queryNoWith());
-    // TODO: get rid of this
-
-    return new Query(
-        getLocation(context),
-        visitIfPresent(context.with(), With.class),
-        body.getQueryBody(),
-        body.getOrderBy(),
-        body.getLimit());
-  }
-
-  @Override
-  public Node visitWith(SqlBaseParser.WithContext context) {
-    return new With(getLocation(context), context.RECURSIVE() != null,
-        visit(context.namedQuery(), WithQuery.class));
-  }
-
-  @Override
-  public Node visitNamedQuery(SqlBaseParser.NamedQueryContext context) {
-    Optional<List<Identifier>> columns = Optional.empty();
-    if (context.columnAliases() != null) {
-      columns = Optional.of(visit(context.columnAliases().identifier(), Identifier.class));
-    }
-
-    return new WithQuery(
-        getLocation(context),
-        (Identifier) visit(context.name),
-        (Query) visit(context.query()),
-        columns);
-  }
-
-  @Override
-  public Node visitQueryNoWith(SqlBaseParser.QueryNoWithContext context) {
     QueryBody term = (QueryBody) visit(context.queryTerm());
 
     if (term instanceof QuerySpecification) {
@@ -196,7 +157,6 @@ class AstBuilder
 
       return new Query(
           getLocation(context),
-          Optional.empty(),
           new QuerySpecification(
               getLocation(context),
               query.getSelect(),
@@ -206,15 +166,12 @@ class AstBuilder
               query.getHaving(),
               query.getOrderBy(),
               query.getLimit(),
-              query.getExportExpr()),
-          Optional.empty(),
-          Optional.empty());
+              query.getExportExpr()));
     } else if (term instanceof DiffQuerySpecification) {
 
       DiffQuerySpecification diffQuery = (DiffQuerySpecification) term;
       return new Query(
           getLocation(context),
-          Optional.empty(),
           new DiffQuerySpecification(
               getLocation(context),
               diffQuery.getSelect(),
@@ -228,19 +185,15 @@ class AstBuilder
               diffQuery.getWhere(),
               diffQuery.getOrderBy(),
               diffQuery.getLimit(),
-              diffQuery.getExportExpr()),
-          Optional.empty(),
-          Optional.empty());
+              diffQuery.getExportExpr()));
     }
 
     return new Query(
         getLocation(context),
-        Optional.empty(),
-        term,
-        Optional.empty(),
-        Optional.empty());
+        term);
   }
 
+  // Import CSVs into SQL
   @Override
   public Node visitImportCsv(SqlBaseParser.ImportCsvContext context) {
     String filename = context.STRING().getText();
@@ -258,19 +211,20 @@ class AstBuilder
 
   // Exporting queries to CSVs
   @Override
-  public Node visitExportExpression(SqlBaseParser.ExportExpressionContext context) {
+  public Node visitExportClause(SqlBaseParser.ExportClauseContext context) {
     // TODO: support custom escape character
-    return new ExportExpression(getLocation(context),
-        visitIfPresent(context.delimiterExpression(0), DelimiterExpression.class),
-        visitIfPresent(context.delimiterExpression(1), DelimiterExpression.class),
+    return new ExportClause(getLocation(context),
+        visitIfPresent(context.delimiterClause(0), DelimiterClause.class),
+        visitIfPresent(context.delimiterClause(1), DelimiterClause.class),
         unquote(getTextIfPresent(context.filename).get()));
   }
 
   @Override
-  public Node visitDelimiterExpression(SqlBaseParser.DelimiterExpressionContext context) {
-    return new DelimiterExpression(getLocation(context), unquote(context.delimiter.getText()));
+  public Node visitDelimiterClause(SqlBaseParser.DelimiterClauseContext context) {
+    return new DelimiterClause(getLocation(context), unquote(context.delimiter.getText()));
   }
 
+  /***** Begin DIFF query ******/
   @Override
   public Node visitAggregate(SqlBaseParser.AggregateContext context) {
     return new Aggregate(getLocation(context), context.getText());
@@ -283,12 +237,14 @@ class AstBuilder
 
   @Override
   public Node visitMinRatioExpression(SqlBaseParser.MinRatioExpressionContext context) {
-    return new MinRatioExpression(getLocation(context), new DecimalLiteral(context.minRatio.getText()));
+    return new MinRatioExpression(getLocation(context),
+        new DecimalLiteral(context.minRatio.getText()));
   }
 
   @Override
   public Node visitMinSupportExpression(SqlBaseParser.MinSupportExpressionContext context) {
-    return new MinSupportExpression(getLocation(context), new DecimalLiteral(context.minSupport.getText()));
+    return new MinSupportExpression(getLocation(context),
+        new DecimalLiteral(context.minSupport.getText()));
   }
 
   @Override
@@ -299,11 +255,11 @@ class AstBuilder
 
   @Override
   public Node visitDiffQuerySpecification(SqlBaseParser.DiffQuerySpecificationContext context) {
-    Optional<Query> first;
-    Optional<Query> second = Optional.empty();
+    Optional<TableSubquery> first;
+    Optional<TableSubquery> second = Optional.empty();
     List<SelectItem> selectItems = visit(context.selectItem(), SelectItem.class);
 
-    List<Query> subqueries = visit(context.queryNoWith(), Query.class);
+    List<TableSubquery> subqueries = visit(context.queryTerm(), TableSubquery.class);
     check(subqueries.size() > 0 && subqueries.size() <= 2,
         "At least one and at most two relations required for diff query", context);
 
@@ -330,8 +286,8 @@ class AstBuilder
           .of(new OrderBy(getLocation(context.ORDER()), visit(context.sortItem(), SortItem.class)));
     }
 
-    Optional<ExportExpression> exportExpr = visitIfPresent(context.exportExpression(),
-        ExportExpression.class);
+    Optional<ExportClause> exportExpr = visitIfPresent(context.exportClause(),
+        ExportClause.class);
 
     return new DiffQuerySpecification(
         getLocation(context),
@@ -348,6 +304,8 @@ class AstBuilder
         getTextIfPresent(context.limit),
         exportExpr);
   }
+
+  /***** End DIFF query ******/
 
   @Override
   public Node visitQuerySpecification(SqlBaseParser.QuerySpecificationContext context) {
@@ -374,8 +332,8 @@ class AstBuilder
           .of(new OrderBy(getLocation(context.ORDER()), visit(context.sortItem(), SortItem.class)));
     }
 
-    Optional<ExportExpression> exportExpr = visitIfPresent(context.exportExpression(),
-        ExportExpression.class);
+    Optional<ExportClause> exportExpr = visitIfPresent(context.exportClause(),
+        ExportClause.class);
 
     return new QuerySpecification(
         getLocation(context),
@@ -469,7 +427,7 @@ class AstBuilder
 
   @Override
   public Node visitSubquery(SqlBaseParser.SubqueryContext context) {
-    return new TableSubquery(getLocation(context), (Query) visit(context.queryNoWith()));
+    return new TableSubquery(getLocation(context), (Query) visit(context.query()));
   }
 
   @Override
@@ -574,17 +532,6 @@ class AstBuilder
   @Override
   public Node visitSubqueryRelation(SqlBaseParser.SubqueryRelationContext context) {
     return new TableSubquery(getLocation(context), (Query) visit(context.query()));
-  }
-
-  @Override
-  public Node visitUnnest(SqlBaseParser.UnnestContext context) {
-    return new Unnest(getLocation(context), visit(context.expression(), Expression.class),
-        context.ORDINALITY() != null);
-  }
-
-  @Override
-  public Node visitLateral(SqlBaseParser.LateralContext context) {
-    return new Lateral(getLocation(context), (Query) visit(context.query()));
   }
 
   @Override
@@ -795,18 +742,6 @@ class AstBuilder
   }
 
   @Override
-  public Node visitSpecialDateTimeFunction(SqlBaseParser.SpecialDateTimeFunctionContext context) {
-    CurrentTime.Type type = getDateTimeFunctionType(context.name);
-
-    if (context.precision != null) {
-      return new CurrentTime(getLocation(context), type,
-          Integer.parseInt(context.precision.getText()));
-    }
-
-    return new CurrentTime(getLocation(context), type);
-  }
-
-  @Override
   public Node visitExtract(SqlBaseParser.ExtractContext context) {
     String fieldString = context.identifier().getText();
     Extract.Field field;
@@ -816,12 +751,6 @@ class AstBuilder
       throw parseError("Invalid EXTRACT field: " + fieldString, context);
     }
     return new Extract(getLocation(context), (Expression) visit(context.valueExpression()), field);
-  }
-
-  @Override
-  public Node visitSubstring(SqlBaseParser.SubstringContext context) {
-    return new FunctionCall(getLocation(context), QualifiedName.of("substr"),
-        visit(context.valueExpression(), Expression.class));
   }
 
   @Override
@@ -1340,23 +1269,6 @@ class AstBuilder
     }
 
     throw new IllegalArgumentException("Unsupported operator: " + symbol.getText());
-  }
-
-  private static CurrentTime.Type getDateTimeFunctionType(Token token) {
-    switch (token.getType()) {
-      case SqlBaseLexer.CURRENT_DATE:
-        return CurrentTime.Type.DATE;
-      case SqlBaseLexer.CURRENT_TIME:
-        return CurrentTime.Type.TIME;
-      case SqlBaseLexer.CURRENT_TIMESTAMP:
-        return CurrentTime.Type.TIMESTAMP;
-      case SqlBaseLexer.LOCALTIME:
-        return CurrentTime.Type.LOCALTIME;
-      case SqlBaseLexer.LOCALTIMESTAMP:
-        return CurrentTime.Type.LOCALTIMESTAMP;
-    }
-
-    throw new IllegalArgumentException("Unsupported special function: " + token.getText());
   }
 
   private static IntervalLiteral.IntervalField getIntervalFieldType(Token token) {

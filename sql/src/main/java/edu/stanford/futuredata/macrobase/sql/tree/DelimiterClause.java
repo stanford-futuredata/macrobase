@@ -7,27 +7,22 @@ import java.util.List;
 import java.util.Optional;
 import org.apache.commons.lang3.StringEscapeUtils;
 
-public class DelimiterExpression extends Node {
+public class DelimiterClause extends Node {
 
   private final String delimiter;
 
-  public DelimiterExpression(String delimiter) {
+  public DelimiterClause(String delimiter) {
     this(Optional.empty(), delimiter);
   }
 
-  public DelimiterExpression(NodeLocation location, String delimiter) {
+  public DelimiterClause(NodeLocation location, String delimiter) {
     this(Optional.of(location), delimiter);
   }
 
-  private DelimiterExpression(Optional<NodeLocation> location, String delimiter) {
+  private DelimiterClause(Optional<NodeLocation> location, String delimiter) {
     super(location);
     requireNonNull(delimiter, "delimiter is null");
     this.delimiter = StringEscapeUtils.unescapeJava(delimiter);
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitDelimiterExpression(this, context);
   }
 
   @Override
@@ -51,7 +46,7 @@ public class DelimiterExpression extends Node {
       return false;
     }
 
-    DelimiterExpression o = (DelimiterExpression) obj;
+    DelimiterClause o = (DelimiterClause) obj;
     return o.delimiter.equals(delimiter);
   }
 

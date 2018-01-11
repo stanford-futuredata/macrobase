@@ -25,11 +25,6 @@ public class MinRatioExpression extends Node {
   }
 
   @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitMinRatioExpression(this, context);
-  }
-
-  @Override
   public List<? extends Node> getChildren() {
     ImmutableList.Builder<Node> nodes = ImmutableList.builder();
     nodes.add(minRatio);

@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class ColumnDefinition
-    extends TableElement {
+public final class ColumnDefinition extends Node {
 
   private final Identifier name;
   private final String type;
