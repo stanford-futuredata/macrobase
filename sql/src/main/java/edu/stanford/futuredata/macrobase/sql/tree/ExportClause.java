@@ -8,40 +8,40 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ExportExpression extends Node {
+public class ExportClause extends Node {
 
   private final String fieldDelimiter;
   private final String lineDelimiter;
   private final String filename;
 
-  public ExportExpression(Optional<DelimiterExpression> fieldDelimiter,
-      Optional<DelimiterExpression> lineDelimiter,
+  public ExportClause(Optional<DelimiterClause> fieldDelimiter,
+      Optional<DelimiterClause> lineDelimiter,
       String filename) {
     this(Optional.empty(), fieldDelimiter, lineDelimiter, filename);
   }
 
-  public ExportExpression(
+  public ExportClause(
       NodeLocation location,
-      Optional<DelimiterExpression> fieldDelimiter, Optional<DelimiterExpression> lineDelimiter,
+      Optional<DelimiterClause> fieldDelimiter, Optional<DelimiterClause> lineDelimiter,
       String filename) {
     this(Optional.of(location), fieldDelimiter, lineDelimiter, filename);
   }
 
-  private ExportExpression(
+  private ExportClause(
       Optional<NodeLocation> location,
-      Optional<DelimiterExpression> fieldDelimiter, Optional<DelimiterExpression> lineDelimiter,
+      Optional<DelimiterClause> fieldDelimiter, Optional<DelimiterClause> lineDelimiter,
       String filename) {
     super(location);
     requireNonNull(fieldDelimiter, "fieldDelimiter is null");
     requireNonNull(lineDelimiter, "lineDelimiter is null");
     requireNonNull(filename, "filename is null");
 
-    this.fieldDelimiter = fieldDelimiter.orElse(new DelimiterExpression(",")).toString();
+    this.fieldDelimiter = fieldDelimiter.orElse(new DelimiterClause(",")).toString();
     // TODO: change this to throw a parseError
     if (this.fieldDelimiter.length() != 1) {
       throw new IllegalArgumentException("fieldDelimiter's length not equal to 1");
     }
-    this.lineDelimiter = lineDelimiter.orElse(new DelimiterExpression("\n")).toString();
+    this.lineDelimiter = lineDelimiter.orElse(new DelimiterClause("\n")).toString();
     this.filename = filename;
   }
 
@@ -60,8 +60,8 @@ public class ExportExpression extends Node {
   @Override
   public List<? extends Node> getChildren() {
     ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-    nodes.add(new DelimiterExpression(fieldDelimiter))
-        .add(new DelimiterExpression(lineDelimiter))
+    nodes.add(new DelimiterClause(fieldDelimiter))
+        .add(new DelimiterClause(lineDelimiter))
         .add(new StringLiteral(filename));
     return nodes.build();
   }
@@ -79,7 +79,7 @@ public class ExportExpression extends Node {
     if ((obj == null) || (getClass() != obj.getClass())) {
       return false;
     }
-    ExportExpression o = (ExportExpression) obj;
+    ExportClause o = (ExportClause) obj;
     return Objects.equals(fieldDelimiter, o.fieldDelimiter) &&
         Objects.equals(lineDelimiter, o.lineDelimiter) &&
         Objects.equals(filename, o.filename);

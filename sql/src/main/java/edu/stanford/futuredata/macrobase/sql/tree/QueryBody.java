@@ -39,5 +39,5 @@ public abstract class QueryBody extends Relation {
 
   public abstract Optional<String> getLimit();
 
-  public abstract Optional<ExportExpression> getExportExpr();
+  public abstract Optional<ExportClause> getExportExpr();
 }

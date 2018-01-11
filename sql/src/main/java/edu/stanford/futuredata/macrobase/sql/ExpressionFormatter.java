@@ -37,7 +37,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.CharLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.CoalesceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Cube;
-import edu.stanford.futuredata.macrobase.sql.tree.CurrentTime;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
@@ -138,21 +137,6 @@ public final class ExpressionFormatter {
           .append(process(node.getValue(), context))
           .append(" AT TIME ZONE ")
           .append(process(node.getTimeZone(), context)).toString();
-    }
-
-    @Override
-    protected String visitCurrentTime(CurrentTime node, Void context) {
-      StringBuilder builder = new StringBuilder();
-
-      builder.append(node.getType().getName());
-
-      if (node.getPrecision() != null) {
-        builder.append('(')
-            .append(node.getPrecision())
-            .append(')');
-      }
-
-      return builder.toString();
     }
 
     @Override

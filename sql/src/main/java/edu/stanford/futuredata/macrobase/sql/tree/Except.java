@@ -57,7 +57,7 @@ public class Except extends SetOperation {
   }
 
   @Override
-  public Optional<ExportExpression> getExportExpr() {
+  public Optional<ExportClause> getExportExpr() {
     return Optional.empty();
   }
 

@@ -30,7 +30,7 @@ public class QuerySpecification extends QueryBody {
   private final Optional<Expression> having;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
-  private final Optional<ExportExpression> exportExpr;
+  private final Optional<ExportClause> exportExpr;
 
   public QuerySpecification(
       Select select,
@@ -40,7 +40,7 @@ public class QuerySpecification extends QueryBody {
       Optional<Expression> having,
       Optional<OrderBy> orderBy,
       Optional<String> limit,
-      Optional<ExportExpression> exportExpr) {
+      Optional<ExportClause> exportExpr) {
     this(Optional.empty(), select, from, where, groupBy, having, orderBy, limit, exportExpr);
   }
 
@@ -53,7 +53,7 @@ public class QuerySpecification extends QueryBody {
       Optional<Expression> having,
       Optional<OrderBy> orderBy,
       Optional<String> limit,
-      Optional<ExportExpression> exportExpr) {
+      Optional<ExportClause> exportExpr) {
     this(Optional.of(location), select, from, where, groupBy, having, orderBy, limit, exportExpr);
   }
 
@@ -66,7 +66,7 @@ public class QuerySpecification extends QueryBody {
       Optional<Expression> having,
       Optional<OrderBy> orderBy,
       Optional<String> limit,
-      Optional<ExportExpression> exportExpr) {
+      Optional<ExportClause> exportExpr) {
     super(location);
     requireNonNull(select, "select is null");
     requireNonNull(from, "from is null");
@@ -115,7 +115,7 @@ public class QuerySpecification extends QueryBody {
     return limit;
   }
 
-  public Optional<ExportExpression> getExportExpr() {
+  public Optional<ExportClause> getExportExpr() {
     return exportExpr;
   }
 

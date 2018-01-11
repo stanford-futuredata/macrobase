@@ -68,7 +68,7 @@ public class TableSubquery extends QueryBody {
   }
 
   @Override
-  public Optional<ExportExpression> getExportExpr() {
+  public Optional<ExportClause> getExportExpr() {
     return Optional.empty();
   }
 

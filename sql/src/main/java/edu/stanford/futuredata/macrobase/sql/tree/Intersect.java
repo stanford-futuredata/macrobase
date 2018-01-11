@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.swing.text.html.Option;
 
 public class Intersect extends SetOperation {
 
@@ -51,7 +50,7 @@ public class Intersect extends SetOperation {
   }
 
   @Override
-  public Optional<ExportExpression> getExportExpr() {
+  public Optional<ExportClause> getExportExpr() {
     return Optional.empty();
   }
 

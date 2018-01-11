@@ -11,8 +11,8 @@ import java.util.Optional;
 public class DiffQuerySpecification extends QueryBody {
 
   private final Select select;
-  private final Optional<Query> first;
-  private final Optional<Query> second;
+  private final Optional<TableSubquery> first;
+  private final Optional<TableSubquery> second;
   private final List<Identifier> attributeCols;
   private final Optional<MinRatioExpression> minRatioExpr;
   private final Optional<MinSupportExpression> minSupportExpr;
@@ -21,7 +21,7 @@ public class DiffQuerySpecification extends QueryBody {
   private final Optional<Expression> where;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
-  private final Optional<ExportExpression> exportExpr;
+  private final Optional<ExportClause> exportExpr;
 
   private static final LongLiteral DEFAULT_MAX_COMBO = new LongLiteral("3");
   private static final MinRatioExpression DEFAULT_MIN_RATIO_EXPRESSION = new MinRatioExpression(
@@ -34,8 +34,8 @@ public class DiffQuerySpecification extends QueryBody {
 
   public DiffQuerySpecification(
       Select select,
-      Optional<Query> first,
-      Optional<Query> second,
+      Optional<TableSubquery> first,
+      Optional<TableSubquery> second,
       List<Identifier> attributeCols,
       Optional<MinRatioExpression> minRatioExpr,
       Optional<MinSupportExpression> minSupportExpr,
@@ -44,7 +44,7 @@ public class DiffQuerySpecification extends QueryBody {
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
       Optional<String> limit,
-      Optional<ExportExpression> exportExpr) {
+      Optional<ExportClause> exportExpr) {
     this(Optional.empty(), select, first, second, attributeCols, minRatioExpr, minSupportExpr,
         ratioMetricExpr, maxCombo, where,
         orderBy, limit, exportExpr);
@@ -53,8 +53,8 @@ public class DiffQuerySpecification extends QueryBody {
   public DiffQuerySpecification(
       NodeLocation location,
       Select select,
-      Optional<Query> first,
-      Optional<Query> second,
+      Optional<TableSubquery> first,
+      Optional<TableSubquery> second,
       List<Identifier> attributeCols,
       Optional<MinRatioExpression> minRatioExpr,
       Optional<MinSupportExpression> minSupportExpr,
@@ -63,7 +63,7 @@ public class DiffQuerySpecification extends QueryBody {
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
       Optional<String> limit,
-      Optional<ExportExpression> exportExpr) {
+      Optional<ExportClause> exportExpr) {
     this(Optional.of(location), select, first, second, attributeCols, minRatioExpr, minSupportExpr,
         ratioMetricExpr, maxCombo,
         where, orderBy, limit, exportExpr);
@@ -72,8 +72,8 @@ public class DiffQuerySpecification extends QueryBody {
   private DiffQuerySpecification(
       Optional<NodeLocation> location,
       Select select,
-      Optional<Query> first,
-      Optional<Query> second,
+      Optional<TableSubquery> first,
+      Optional<TableSubquery> second,
       List<Identifier> attributeCols,
       Optional<MinRatioExpression> minRatioExpr,
       Optional<MinSupportExpression> minSupportExpr,
@@ -82,7 +82,7 @@ public class DiffQuerySpecification extends QueryBody {
       Optional<Expression> where,
       Optional<OrderBy> orderBy,
       Optional<String> limit,
-      Optional<ExportExpression> exportExpr) {
+      Optional<ExportClause> exportExpr) {
     super(location);
     requireNonNull(select, "select is null");
     requireNonNull(first, "first is null");
@@ -115,11 +115,11 @@ public class DiffQuerySpecification extends QueryBody {
     return select;
   }
 
-  public Optional<Query> getFirst() {
+  public Optional<TableSubquery> getFirst() {
     return first;
   }
 
-  public Optional<Query> getSecond() {
+  public Optional<TableSubquery> getSecond() {
     return second;
   }
 
@@ -155,7 +155,7 @@ public class DiffQuerySpecification extends QueryBody {
     return limit;
   }
 
-  public Optional<ExportExpression> getExportExpr() {
+  public Optional<ExportClause> getExportExpr() {
     return exportExpr;
   }
 

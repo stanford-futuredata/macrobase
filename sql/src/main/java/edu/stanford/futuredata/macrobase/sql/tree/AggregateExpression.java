@@ -31,11 +31,6 @@ public class AggregateExpression extends Node {
   }
 
   @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitAggregateExpression(this, context);
-  }
-
-  @Override
   public List<Node> getChildren() {
     ImmutableList.Builder<Node> nodes = ImmutableList.builder();
     nodes.add(agg);
