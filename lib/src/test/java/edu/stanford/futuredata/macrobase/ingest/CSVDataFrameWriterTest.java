@@ -2,13 +2,14 @@ package edu.stanford.futuredata.macrobase.ingest;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
+import java.io.StringWriter;
 
 import static org.junit.Assert.*;
 
 public class CSVDataFrameWriterTest {
     @Test
     public void writeToStream() throws Exception {
-        StringBuilder sb = new StringBuilder();
+        StringWriter sb = new StringWriter();
         DataFrame df = new DataFrame();
         String[] col1 = {"a", "b"};
         double[] col2 = {1.0, 2.0};
