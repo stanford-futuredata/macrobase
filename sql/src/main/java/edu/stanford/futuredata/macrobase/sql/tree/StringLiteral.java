@@ -20,8 +20,7 @@ import io.airlift.slice.Slice;
 import java.util.Objects;
 import java.util.Optional;
 
-public class StringLiteral
-    extends Literal {
+public class StringLiteral extends Literal {
 
   private final String value;
   private final Slice slice;

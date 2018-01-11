@@ -33,103 +33,9 @@ statement
     | IMPORT FROM CSV FILE STRING INTO qualifiedName
         ('(' columnDefinition (',' columnDefinition)* ')')?            #importCsv
     ;
-//    | USE schema=identifier                                            #use
-//    | USE catalog=identifier '.' schema=identifier                     #use
-//    | CREATE SCHEMA (IF NOT EXISTS)? qualifiedName
-//        (WITH properties)?                                             #createSchema
-//    | DROP SCHEMA (IF EXISTS)? qualifiedName (CASCADE | RESTRICT)?     #dropSchema
-//    | ALTER SCHEMA qualifiedName RENAME TO identifier                  #renameSchema
-//    | CREATE TABLE (IF NOT EXISTS)? qualifiedName ('(' columnAliases ')')?
-//        (COMMENT string)?
-//        (WITH properties)? AS (query | '('query')')
-//        (WITH (NO)? DATA)?                                             #createTableAsSelect
-//    | CREATE TABLE (IF NOT EXISTS)? qualifiedName
-//        '(' tableElement (',' tableElement)* ')'
-//         (COMMENT string)?
-//         (WITH properties)?                                            #createTable
-//    | DROP TABLE (IF EXISTS)? qualifiedName                            #dropTable
-//    | INSERT INTO qualifiedName ('(' columnAliases ')')? query         #insertInto
-//    | DELETE FROM qualifiedName (WHERE booleanExpression)?             #delete
-//    | ALTER TABLE from=qualifiedName RENAME TO to=qualifiedName        #renameTable
-//    | ALTER TABLE tableName=qualifiedName
-//        RENAME COLUMN from=identifier TO to=identifier                 #renameColumn
-//    | ALTER TABLE tableName=qualifiedName
-//        DROP COLUMN column=qualifiedName                               #dropColumn
-//    | ALTER TABLE tableName=qualifiedName
-//        ADD COLUMN column=columnDefinition                             #addColumn
-//    | CREATE (OR REPLACE)? VIEW qualifiedName AS query                 #createView
-//    | DROP VIEW (IF EXISTS)? qualifiedName                             #dropView
-//    | CALL qualifiedName '(' (callArgument (',' callArgument)*)? ')'   #call
-//    | GRANT
-//        (privilege (',' privilege)* | ALL PRIVILEGES)
-//        ON TABLE? qualifiedName TO grantee=identifier
-//        (WITH GRANT OPTION)?                                           #grant
-//    | REVOKE
-//        (GRANT OPTION FOR)?
-//        (privilege (',' privilege)* | ALL PRIVILEGES)
-//        ON TABLE? qualifiedName FROM grantee=identifier                #revoke
-//    | SHOW GRANTS
-//        (ON TABLE? qualifiedName)?                                     #showGrants
-//    | EXPLAIN ANALYZE? VERBOSE?
-//        ('(' explainOption (',' explainOption)* ')')? statement        #explain
-//    | SHOW CREATE TABLE qualifiedName                                  #showCreateTable
-//    | SHOW CREATE VIEW qualifiedName                                   #showCreateView
-//    | SHOW TABLES ((FROM | IN) qualifiedName)? (LIKE pattern=string)?  #showTables
-//    | SHOW SCHEMAS ((FROM | IN) identifier)? (LIKE pattern=string)?    #showSchemas
-//    | SHOW CATALOGS (LIKE pattern=string)?                             #showCatalogs
-//    | SHOW COLUMNS (FROM | IN) qualifiedName                           #showColumns
-//    | SHOW STATS (FOR | ON) qualifiedName                              #showStats
-//    | SHOW STATS FOR '(' querySpecification ')'                        #showStatsForQuery
-//    | DESCRIBE qualifiedName                                           #showColumns
-//    | DESC qualifiedName                                               #showColumns
-//    | SHOW FUNCTIONS                                                   #showFunctions
-//    | SHOW SESSION                                                     #showSession
-//    | SET SESSION qualifiedName EQ expression                          #setSession
-//    | RESET SESSION qualifiedName                                      #resetSession
-//    | START TRANSACTION (transactionMode (',' transactionMode)*)?      #startTransaction
-//    | COMMIT WORK?                                                     #commit
-//    | ROLLBACK WORK?                                                   #rollback
-//    | SHOW PARTITIONS (FROM | IN) qualifiedName
-//        (WHERE booleanExpression)?
-//        (ORDER BY sortItem (',' sortItem)*)?
-//        (LIMIT limit=(INTEGER_VALUE | ALL))?                           #showPartitions
-//    | PREPARE identifier FROM statement                                #prepare
-//    | DEALLOCATE PREPARE identifier                                    #deallocate
-//    | EXECUTE identifier (USING expression (',' expression)*)?         #execute
-//    | DESCRIBE INPUT identifier                                        #describeInput
-//    | DESCRIBE OUTPUT identifier                                       #describeOutput
 
 query
-    : with? queryNoWith
-    ;
-
-with
-    : WITH RECURSIVE? namedQuery (',' namedQuery)*
-    ;
-
-//tableElement
-//    : columnDefinition
-//    | likeClause
-//    ;
-
-columnDefinition
-    : identifier type (COMMENT string)?
-    ;
-
-//likeClause
-//    : LIKE qualifiedName (optionType=(INCLUDING | EXCLUDING) PROPERTIES)?
-//    ;
-
-//properties
-//    : '(' property (',' property)* ')'
-//    ;
-
-//property
-//    : identifier EQ expression
-//    ;
-
-queryNoWith:
-      queryTerm
+    : queryTerm
     ;
 
 queryTerm
@@ -143,11 +49,7 @@ queryPrimary
     | diffQuerySpecification               #diffQuery
     | TABLE qualifiedName                  #table
     | VALUES expression (',' expression)*  #inlineTable
-    | '(' queryNoWith  ')'                 #subquery
-    ;
-
-sortItem
-    : expression ordering=(ASC | DESC)? (NULLS nullOrdering=(FIRST | LAST))?
+    | '(' query  ')'                       #subquery
     ;
 
 querySpecification
@@ -158,9 +60,9 @@ querySpecification
       (HAVING having=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
-      exportExpression?
+      exportClause?
     | SELECT setQuantifier? selectItem (',' selectItem)*
-      exportExpression?
+      exportClause?
       (FROM relation (',' relation)*)?
       (WHERE where=booleanExpression)?
       (GROUP BY groupBy)?
@@ -171,7 +73,7 @@ querySpecification
 
 diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
-      FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
+      FROM DIFF queryTerm qualifiedName? (',' queryTerm qualifiedName?)?
       ON columnAliases
       (WITH minRatioExpression? minSupportExpression?)?
       (COMPARE BY ratioMetricExpression)?
@@ -179,10 +81,10 @@ diffQuerySpecification
       (WHERE where=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
-      exportExpression?
+      exportClause?
     | SELECT setQuantifier? selectItem (',' selectItem)*
-      exportExpression?
-      FROM DIFF queryNoWith qualifiedName? (',' queryNoWith qualifiedName?)?
+      exportClause?
+      FROM DIFF queryTerm qualifiedName? (',' queryTerm qualifiedName?)?
       ON columnAliases
       (WITH minRatioExpression? minSupportExpression?)
       (COMPARE BY ratioMetricExpression)?
@@ -190,6 +92,14 @@ diffQuerySpecification
       (WHERE where=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
+    ;
+
+columnDefinition
+    : identifier type (COMMENT string)?
+    ;
+
+sortItem
+    : expression ordering=(ASC | DESC)? (NULLS nullOrdering=(FIRST | LAST))?
     ;
 
 minRatioExpression
@@ -237,10 +147,6 @@ groupingSet
     | qualifiedName
     ;
 
-namedQuery
-    : name=identifier ('(' columnAliases ')')? AS '(' query ')'
-    ;
-
 setQuantifier
     : DISTINCT
     | ALL
@@ -252,27 +158,27 @@ selectItem
     | ASTERISK                      #selectAll
     ;
 
-exportExpression
+exportClause
     : (
         INTO OUTFILE filename=STRING
         (
           fieldsFormat=(FIELDS | COLUMNS)
-          delimiterExpression /*escapeExpression?*/
+          delimiterClause /*escapeClause?*/
         )?
         (
-          LINES delimiterExpression
+          LINES delimiterClause
         )?
       )
     ;
 
 
-delimiterExpression
+delimiterClause
     : TERMINATED BY delimiter=STRING
     // | OPTIONALLY? ENCLOSED BY enclosion=STRING
     ;
 
-// TODO: support
-escapeExpression
+// TODO: add support for escaping
+escapeClause
     : ESCAPED BY escaping=STRING
     ;
 
@@ -319,8 +225,6 @@ columnAliases
 relationPrimary
     : qualifiedName                                                   #tableName
     | '(' query ')'                                                   #subqueryRelation
-    | UNNEST '(' expression (',' expression)* ')' (WITH ORDINALITY)?  #unnest
-    | LATERAL '(' query ')'                                           #lateral
     | '(' relation ')'                                                #parenthesizedRelation
     ;
 
@@ -390,12 +294,6 @@ primaryExpression
     | value=primaryExpression '[' index=valueExpression ']'                               #subscript
     | identifier                                                                          #columnReference
     | base=primaryExpression '.' fieldName=identifier                                     #dereference
-    | name=CURRENT_DATE                                                                   #specialDateTimeFunction
-    | name=CURRENT_TIME ('(' precision=INTEGER_VALUE ')')?                                #specialDateTimeFunction
-    | name=CURRENT_TIMESTAMP ('(' precision=INTEGER_VALUE ')')?                           #specialDateTimeFunction
-    | name=LOCALTIME ('(' precision=INTEGER_VALUE ')')?                                   #specialDateTimeFunction
-    | name=LOCALTIMESTAMP ('(' precision=INTEGER_VALUE ')')?                              #specialDateTimeFunction
-    | SUBSTRING '(' valueExpression FROM valueExpression (FOR valueExpression)? ')'       #substring
     | NORMALIZE '(' valueExpression (',' normalForm)? ')'                                 #normalize
     | EXTRACT '(' identifier FROM valueExpression ')'                                     #extract
     | '(' expression ')'                                                                  #parenthesizedExpression
@@ -562,9 +460,6 @@ CSV: 'CSV';
 CROSS: 'CROSS';
 CUBE: 'CUBE';
 CURRENT: 'CURRENT';
-CURRENT_DATE: 'CURRENT_DATE';
-CURRENT_TIME: 'CURRENT_TIME';
-CURRENT_TIMESTAMP: 'CURRENT_TIMESTAMP';
 DATA: 'DATA';
 DATE: 'DATE';
 DAY: 'DAY';
@@ -626,8 +521,6 @@ LEVEL: 'LEVEL';
 LIKE: 'LIKE';
 LIMIT: 'LIMIT';
 LINES: 'LINES';
-LOCALTIME: 'LOCALTIME';
-LOCALTIMESTAMP: 'LOCALTIMESTAMP';
 LOGICAL: 'LOGICAL';
 MAP: 'MAP';
 MAX: 'MAX';

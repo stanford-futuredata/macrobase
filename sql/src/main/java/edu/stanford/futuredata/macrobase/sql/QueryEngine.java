@@ -22,7 +22,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
 import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
-import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
@@ -80,8 +79,8 @@ class QueryEngine {
       log.debug(diffQuery.toString());
       return executeDiffQuerySpec(diffQuery);
     }
-    throw new MacrobaseSQLException("query of type " + query.getClass().getSimpleName() + " not yet"
-        + "supported");
+    throw new MacrobaseSQLException(
+        "query of type " + query.getClass().getSimpleName() + " not yet supported");
   }
 
   private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
@@ -89,8 +88,8 @@ class QueryEngine {
     assert (diffQuery.getSecond().isPresent()); // TODO: support single DataFrame queries
     // Extract parameters for Diff query
     // TODO: too many get's; too many fields are Optional that shouldn't be
-    final Query first = diffQuery.getFirst().get();
-    final Query second = diffQuery.getSecond().get();
+    final TableSubquery first = diffQuery.getFirst().get();
+    final TableSubquery second = diffQuery.getSecond().get();
     final List<String> explainCols = diffQuery.getAttributeCols().stream().map(Identifier::toString)
         .collect(toImmutableList());
     final double minRatioMetric = diffQuery.getMinRatioExpression().get().getMinRatio();
@@ -100,10 +99,8 @@ class QueryEngine {
     final long order = diffQuery.getMaxCombo().get().getValue();
 
     // execute subqueries
-    final DataFrame firstDf = executeQuery(
-        ((TableSubquery) first.getQueryBody()).getQuery().getQueryBody());
-    final DataFrame secondDf = executeQuery(
-        ((TableSubquery) second.getQueryBody()).getQuery().getQueryBody());
+    final DataFrame firstDf = executeQuery(first.getQuery().getQueryBody());
+    final DataFrame secondDf = executeQuery(second.getQuery().getQueryBody());
     if (!firstDf.getSchema().hasColumns(explainCols) || !secondDf.getSchema()
         .hasColumns(explainCols)) {
       throw new MacrobaseSQLException(

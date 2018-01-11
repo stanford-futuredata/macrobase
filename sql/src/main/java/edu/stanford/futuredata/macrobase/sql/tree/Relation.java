@@ -15,8 +15,7 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 
 import java.util.Optional;
 
-public abstract class Relation
-    extends Node {
+public abstract class Relation extends Node {
 
   protected Relation(Optional<NodeLocation> location) {
     super(location);
