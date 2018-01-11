@@ -20,65 +20,28 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.swing.text.html.Option;
 
-public class Query
-    extends Statement {
+public class Query extends Statement {
 
-  private final Optional<With> with;
   private final QueryBody queryBody;
-  private final Optional<OrderBy> orderBy;
-  private final Optional<String> limit;
 
-  public Query(
-      Optional<With> with,
-      QueryBody queryBody,
-      Optional<OrderBy> orderBy,
-      Optional<String> limit) {
-    this(Optional.empty(), with, queryBody, orderBy, limit);
+  public Query(QueryBody queryBody) {
+    this(Optional.empty(), queryBody);
   }
 
-  public Query(
-      NodeLocation location,
-      Optional<With> with,
-      QueryBody queryBody,
-      Optional<OrderBy> orderBy,
-      Optional<String> limit) {
-    this(Optional.of(location), with, queryBody, orderBy, limit);
+  public Query(NodeLocation location, QueryBody queryBody) {
+    this(Optional.of(location), queryBody);
   }
 
-  private Query(
-      Optional<NodeLocation> location,
-      Optional<With> with,
-      QueryBody queryBody,
-      Optional<OrderBy> orderBy,
-      Optional<String> limit) {
+  private Query(Optional<NodeLocation> location, QueryBody queryBody) {
     super(location);
-    requireNonNull(with, "with is null");
     requireNonNull(queryBody, "queryBody is null");
-    requireNonNull(orderBy, "orderBy is null");
-    requireNonNull(limit, "limit is null");
 
-    this.with = with;
     this.queryBody = queryBody;
-    this.orderBy = orderBy;
-    this.limit = limit;
-  }
-
-  public Optional<With> getWith() {
-    return with;
   }
 
   public QueryBody getQueryBody() {
     return queryBody;
-  }
-
-  public Optional<OrderBy> getOrderBy() {
-    return orderBy;
-  }
-
-  public Optional<String> getLimit() {
-    return limit;
   }
 
   @Override
@@ -89,19 +52,14 @@ public class Query
   @Override
   public List<Node> getChildren() {
     ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-    with.ifPresent(nodes::add);
     nodes.add(queryBody);
-    orderBy.ifPresent(nodes::add);
     return nodes.build();
   }
 
   @Override
   public String toString() {
     return toStringHelper(this)
-        .add("with", with.orElse(null))
         .add("queryBody", queryBody)
-        .add("orderBy", orderBy)
-        .add("limit", limit.orElse(null))
         .omitNullValues()
         .toString();
   }
@@ -115,14 +73,11 @@ public class Query
       return false;
     }
     Query o = (Query) obj;
-    return Objects.equals(with, o.with) &&
-        Objects.equals(queryBody, o.queryBody) &&
-        Objects.equals(orderBy, o.orderBy) &&
-        Objects.equals(limit, o.limit);
+    return Objects.equals(queryBody, o.queryBody);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(with, queryBody, orderBy, limit);
+    return Objects.hash(queryBody);
   }
 }

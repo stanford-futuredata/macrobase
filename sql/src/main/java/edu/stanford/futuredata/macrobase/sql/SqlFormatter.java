@@ -18,59 +18,37 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatExpression;
 import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatGroupBy;
 import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatOrderBy;
-import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatStringLiteral;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import edu.stanford.futuredata.macrobase.sql.tree.AddColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
 import edu.stanford.futuredata.macrobase.sql.tree.AstVisitor;
-import edu.stanford.futuredata.macrobase.sql.tree.ColumnDefinition;
-import edu.stanford.futuredata.macrobase.sql.tree.CreateTable;
-import edu.stanford.futuredata.macrobase.sql.tree.CreateTableAsSelect;
-import edu.stanford.futuredata.macrobase.sql.tree.Delete;
-import edu.stanford.futuredata.macrobase.sql.tree.DropColumn;
-import edu.stanford.futuredata.macrobase.sql.tree.DropTable;
 import edu.stanford.futuredata.macrobase.sql.tree.Except;
-import edu.stanford.futuredata.macrobase.sql.tree.Execute;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
-import edu.stanford.futuredata.macrobase.sql.tree.Insert;
 import edu.stanford.futuredata.macrobase.sql.tree.Intersect;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinCriteria;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinOn;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinUsing;
-import edu.stanford.futuredata.macrobase.sql.tree.Lateral;
-import edu.stanford.futuredata.macrobase.sql.tree.LikeClause;
 import edu.stanford.futuredata.macrobase.sql.tree.NaturalJoin;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
-import edu.stanford.futuredata.macrobase.sql.tree.Property;
 import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.RenameColumn;
-import edu.stanford.futuredata.macrobase.sql.tree.RenameSchema;
-import edu.stanford.futuredata.macrobase.sql.tree.RenameTable;
 import edu.stanford.futuredata.macrobase.sql.tree.Row;
 import edu.stanford.futuredata.macrobase.sql.tree.SampledRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowColumns;
-import edu.stanford.futuredata.macrobase.sql.tree.ShowTables;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.sql.tree.Union;
-import edu.stanford.futuredata.macrobase.sql.tree.Unnest;
 import edu.stanford.futuredata.macrobase.sql.tree.Values;
-import edu.stanford.futuredata.macrobase.sql.tree.With;
-import edu.stanford.futuredata.macrobase.sql.tree.WithQuery;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -115,71 +93,8 @@ final class SqlFormatter {
     }
 
     @Override
-    protected Void visitUnnest(Unnest node, Integer indent) {
-      builder.append("UNNEST(")
-          .append(node.getExpressions().stream()
-              .map(expression -> formatExpression(expression, parameters))
-              .collect(joining(", ")))
-          .append(")");
-      if (node.isWithOrdinality()) {
-        builder.append(" WITH ORDINALITY");
-      }
-      return null;
-    }
-
-    @Override
-    protected Void visitLateral(Lateral node, Integer indent) {
-      append(indent, "LATERAL (");
-      process(node.getQuery(), indent + 1);
-      append(indent, ")");
-      return null;
-    }
-
-    @Override
-    protected Void visitExecute(Execute node, Integer indent) {
-      append(indent, "EXECUTE ");
-      builder.append(node.getName());
-      List<Expression> parameters = node.getParameters();
-      if (!parameters.isEmpty()) {
-        builder.append(" USING ");
-        Joiner.on(", ").appendTo(builder, parameters);
-      }
-      return null;
-    }
-
-    @Override
     protected Void visitQuery(Query node, Integer indent) {
-      if (node.getWith().isPresent()) {
-        With with = node.getWith().get();
-        append(indent, "WITH");
-        if (with.isRecursive()) {
-          builder.append(" RECURSIVE");
-        }
-        builder.append("\n  ");
-        Iterator<WithQuery> queries = with.getQueries().iterator();
-        while (queries.hasNext()) {
-          WithQuery query = queries.next();
-          append(indent, formatExpression(query.getName(), parameters));
-          query.getColumnNames().ifPresent(columnNames -> appendAliasColumns(builder, columnNames));
-          builder.append(" AS ");
-          process(new TableSubquery(query.getQuery()), indent);
-          builder.append('\n');
-          if (queries.hasNext()) {
-            builder.append(", ");
-          }
-        }
-      }
-
       processRelation(node.getQueryBody(), indent);
-
-      if (node.getOrderBy().isPresent()) {
-        process(node.getOrderBy().get(), indent);
-      }
-
-      if (node.getLimit().isPresent()) {
-        append(indent, "LIMIT " + node.getLimit().get())
-            .append('\n');
-      }
 
       return null;
     }
@@ -430,142 +345,6 @@ final class SqlFormatter {
       return null;
     }
 
-    @Override
-    protected Void visitShowTables(ShowTables node, Integer context) {
-      builder.append("SHOW TABLES");
-
-      node.getSchema().ifPresent(value ->
-          builder.append(" FROM ")
-              .append(formatName(value)));
-
-      node.getLikePattern().ifPresent(value ->
-          builder.append(" LIKE ")
-              .append(formatStringLiteral(value)));
-
-      return null;
-    }
-
-    @Override
-    protected Void visitShowColumns(ShowColumns node, Integer context) {
-      builder.append("SHOW COLUMNS FROM ")
-          .append(formatName(node.getTable()));
-
-      return null;
-    }
-
-    @Override
-    protected Void visitDelete(Delete node, Integer context) {
-      builder.append("DELETE FROM ")
-          .append(formatName(node.getTable().getName()));
-
-      if (node.getWhere().isPresent()) {
-        builder.append(" WHERE ")
-            .append(formatExpression(node.getWhere().get(), parameters));
-      }
-
-      return null;
-    }
-
-    @Override
-    protected Void visitRenameSchema(RenameSchema node, Integer context) {
-      builder.append("ALTER SCHEMA ")
-          .append(formatName(node.getSource()))
-          .append(" RENAME TO ")
-          .append(formatExpression(node.getTarget(), parameters));
-
-      return null;
-    }
-
-    @Override
-    protected Void visitCreateTableAsSelect(CreateTableAsSelect node, Integer indent) {
-      builder.append("CREATE TABLE ");
-      if (node.isNotExists()) {
-        builder.append("IF NOT EXISTS ");
-      }
-      builder.append(formatName(node.getName()));
-
-      if (node.getColumnAliases().isPresent()) {
-        String columnList = node.getColumnAliases().get().stream()
-            .map(element -> formatExpression(element, parameters)).collect(joining(", "));
-        builder.append(format("( %s )", columnList));
-      }
-
-      if (node.getComment().isPresent()) {
-        builder.append("\nCOMMENT " + formatStringLiteral(node.getComment().get()));
-      }
-
-      builder.append(formatProperties(node.getProperties()));
-
-      builder.append(" AS ");
-      process(node.getQuery(), indent);
-
-      if (!node.isWithData()) {
-        builder.append(" WITH NO DATA");
-      }
-
-      return null;
-    }
-
-    @Override
-    protected Void visitCreateTable(CreateTable node, Integer indent) {
-      builder.append("CREATE TABLE ");
-      if (node.isNotExists()) {
-        builder.append("IF NOT EXISTS ");
-      }
-      String tableName = formatName(node.getName());
-      builder.append(tableName).append(" (\n");
-
-      String elementIndent = indentString(indent + 1);
-      String columnList = node.getElements().stream()
-          .map(element -> {
-            if (element instanceof ColumnDefinition) {
-              ColumnDefinition column = (ColumnDefinition) element;
-              return elementIndent + formatExpression(column.getName(), parameters) + " " + column
-                  .getType() +
-                  column.getComment()
-                      .map(comment -> " COMMENT " + formatStringLiteral(comment))
-                      .orElse("");
-            }
-            if (element instanceof LikeClause) {
-              LikeClause likeClause = (LikeClause) element;
-              StringBuilder builder = new StringBuilder(elementIndent);
-              builder.append("LIKE ")
-                  .append(formatName(likeClause.getTableName()));
-              if (likeClause.getPropertiesOption().isPresent()) {
-                builder.append(" ")
-                    .append(likeClause.getPropertiesOption().get().name())
-                    .append(" PROPERTIES");
-              }
-              return builder.toString();
-            }
-            throw new UnsupportedOperationException("unknown table element: " + element);
-          })
-          .collect(joining(",\n"));
-      builder.append(columnList);
-      builder.append("\n").append(")");
-
-      if (node.getComment().isPresent()) {
-        builder.append("\nCOMMENT " + formatStringLiteral(node.getComment().get()));
-      }
-
-      builder.append(formatProperties(node.getProperties()));
-
-      return null;
-    }
-
-    private String formatProperties(List<Property> properties) {
-      if (properties.isEmpty()) {
-        return "";
-      }
-      String propertyList = properties.stream()
-          .map(element -> INDENT +
-              formatExpression(element.getName(), parameters) + " = " +
-              formatExpression(element.getValue(), parameters))
-          .collect(joining(",\n"));
-
-      return "\nWITH (\n" + propertyList + "\n)";
-    }
-
     private static String formatName(String name) {
       if (NAME_PATTERN.matcher(name).matches()) {
         return name;
@@ -577,78 +356,6 @@ final class SqlFormatter {
       return name.getOriginalParts().stream()
           .map(Formatter::formatName)
           .collect(joining("."));
-    }
-
-    @Override
-    protected Void visitDropTable(DropTable node, Integer context) {
-      builder.append("DROP TABLE ");
-      if (node.isExists()) {
-        builder.append("IF EXISTS ");
-      }
-      builder.append(node.getTableName());
-
-      return null;
-    }
-
-    @Override
-    protected Void visitRenameTable(RenameTable node, Integer context) {
-      builder.append("ALTER TABLE ")
-          .append(node.getSource())
-          .append(" RENAME TO ")
-          .append(node.getTarget());
-
-      return null;
-    }
-
-    @Override
-    protected Void visitRenameColumn(RenameColumn node, Integer context) {
-      builder.append("ALTER TABLE ")
-          .append(node.getTable())
-          .append(" RENAME COLUMN ")
-          .append(node.getSource())
-          .append(" TO ")
-          .append(node.getTarget());
-
-      return null;
-    }
-
-    @Override
-    protected Void visitDropColumn(DropColumn node, Integer context) {
-      builder.append("ALTER TABLE ")
-          .append(formatName(node.getTable()))
-          .append(" DROP COLUMN ")
-          .append(formatExpression(node.getColumn(), parameters));
-
-      return null;
-    }
-
-    @Override
-    protected Void visitAddColumn(AddColumn node, Integer indent) {
-      builder.append("ALTER TABLE ")
-          .append(node.getName())
-          .append(" ADD COLUMN ")
-          .append(node.getColumn().getName())
-          .append(" ")
-          .append(node.getColumn().getType());
-
-      return null;
-    }
-
-    @Override
-    protected Void visitInsert(Insert node, Integer indent) {
-      builder.append("INSERT INTO ")
-          .append(node.getTarget())
-          .append(" ");
-
-      if (node.getColumns().isPresent()) {
-        builder.append("(")
-            .append(Joiner.on(", ").join(node.getColumns().get()))
-            .append(") ");
-      }
-
-      process(node.getQuery(), indent);
-
-      return null;
     }
 
     @Override

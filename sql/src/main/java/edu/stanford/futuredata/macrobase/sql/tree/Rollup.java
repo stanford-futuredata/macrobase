@@ -26,8 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-public final class Rollup
-    extends GroupingElement {
+public final class Rollup extends GroupingElement {
 
   private final List<QualifiedName> columns;
 

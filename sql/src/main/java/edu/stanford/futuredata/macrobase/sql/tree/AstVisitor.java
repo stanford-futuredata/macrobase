@@ -33,10 +33,6 @@ public abstract class AstVisitor<R, C> {
     return visitNode(node, context);
   }
 
-  protected R visitCurrentTime(CurrentTime node, C context) {
-    return visitExpression(node, context);
-  }
-
   protected R visitExtract(Extract node, C context) {
     return visitExpression(node, context);
   }
@@ -73,23 +69,7 @@ public abstract class AstVisitor<R, C> {
     return visitNode(node, context);
   }
 
-  protected R visitExecute(Execute node, C context) {
-    return visitStatement(node, context);
-  }
-
   protected R visitQuery(Query node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitShowTables(ShowTables node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitShowColumns(ShowColumns node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitUse(Use node, C context) {
     return visitStatement(node, context);
   }
 
@@ -99,14 +79,6 @@ public abstract class AstVisitor<R, C> {
 
   protected R visitTimeLiteral(TimeLiteral node, C context) {
     return visitLiteral(node, context);
-  }
-
-  protected R visitWith(With node, C context) {
-    return visitNode(node, context);
-  }
-
-  protected R visitWithQuery(WithQuery node, C context) {
-    return visitNode(node, context);
   }
 
   protected R visitSelect(Select node, C context) {
@@ -285,14 +257,6 @@ public abstract class AstVisitor<R, C> {
     return visitQueryBody(node, context);
   }
 
-  protected R visitUnnest(Unnest node, C context) {
-    return visitRelation(node, context);
-  }
-
-  protected R visitLateral(Lateral node, C context) {
-    return visitRelation(node, context);
-  }
-
   protected R visitValues(Values node, C context) {
     return visitQueryBody(node, context);
   }
@@ -345,64 +309,8 @@ public abstract class AstVisitor<R, C> {
     return visitNode(node, context);
   }
 
-  protected R visitTableElement(TableElement node, C context) {
-    return visitNode(node, context);
-  }
-
   protected R visitColumnDefinition(ColumnDefinition node, C context) {
-    return visitTableElement(node, context);
-  }
-
-  protected R visitLikeClause(LikeClause node, C context) {
-    return visitTableElement(node, context);
-  }
-
-  protected R visitCreateSchema(CreateSchema node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitRenameSchema(RenameSchema node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitCreateTable(CreateTable node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitCreateTableAsSelect(CreateTableAsSelect node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitProperty(Property node, C context) {
     return visitNode(node, context);
-  }
-
-  protected R visitDropTable(DropTable node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitRenameTable(RenameTable node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitRenameColumn(RenameColumn node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitDropColumn(DropColumn node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitAddColumn(AddColumn node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitInsert(Insert node, C context) {
-    return visitStatement(node, context);
-  }
-
-  protected R visitDelete(Delete node, C context) {
-    return visitStatement(node, context);
   }
 
   protected R visitAtTimeZone(AtTimeZone node, C context) {
@@ -449,31 +357,11 @@ public abstract class AstVisitor<R, C> {
     return visitExpression(node, context);
   }
 
-  public R visitAggregate(Aggregate node, C context) {
-    return visitNode(node, context);
-  }
-
-  public R visitAggregateExpression(AggregateExpression node, C context) {
-    return visitNode(node, context);
-  }
-
   public R visitRatioMetricExpression(RatioMetricExpression node, C context) {
     return visitExpression(node, context);
   }
 
   public R visitImportCsv(ImportCsv node, C context) {
     return visitStatement(node, context);
-  }
-
-  public R visitDelimiterExpression(DelimiterExpression node, C context) {
-    return visitNode(node, context);
-  }
-
-  public R visitMinRatioExpression(MinRatioExpression node, C context) {
-    return visitNode(node, context);
-  }
-
-  public R visitMinSupportExpression(MinSupportExpression node, C context) {
-    return visitNode(node, context);
   }
 }
