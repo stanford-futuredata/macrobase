@@ -3,11 +3,12 @@ package edu.stanford.futuredata.macrobase.ingest;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import okhttp3.*;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
+import com.univocity.parsers.csv.CsvParser;
+import com.univocity.parsers.csv.CsvParserSettings;
 
 import javax.net.ssl.*;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.util.Map;
@@ -138,10 +139,11 @@ public class RESTDataFrameLoader implements DataFrameLoader{
             response = getRequest();
         }
 
-        CSVParser csvParser = CSVParser.parse(
-                response,
-                CSVFormat.DEFAULT.withHeader()
-        );
+        CsvParserSettings settings = new CsvParserSettings();
+        CsvParser csvParser = new CsvParser(settings);
+        InputStream targetStream = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8.name()));
+        InputStreamReader targetReader = new InputStreamReader(targetStream, "UTF-8");
+        csvParser.beginParsing(targetReader);
         CSVDataFrameParser dfParser = new CSVDataFrameParser(csvParser);
         dfParser.setColumnTypes(types);
         return dfParser.load();
