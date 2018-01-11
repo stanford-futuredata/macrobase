@@ -26,14 +26,12 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
      * @param minSupport lowest outlier support of the results returned.
      * @return this
      */
-    public BatchSummarizer setMinSupport(double minSupport) {
+    public void setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
-        return this;
     }
 
-    public BatchSummarizer setAttributes(List<String> attributes) {
+    public void setAttributes(List<String> attributes) {
         this.attributes = attributes;
-        return this;
     }
 
     /**
@@ -41,18 +39,16 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
      * @param outlierColumn new outlier indicator column.
      * @return this
      */
-    public BatchSummarizer setOutlierColumn(String outlierColumn) {
+    public void setOutlierColumn(String outlierColumn) {
         this.outlierColumn = outlierColumn;
-        return this;
     }
     /**
      * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRatio lowest risk ratio to consider for meaningful explanations.
+     * @param minRatioMetric lowest risk ratio to consider for meaningful explanations.
      * @return this
      */
 
-    public BatchSummarizer setMinRatioMetric(double minRatio) {
-        this.minRatioMetric = minRatio;
-        return this;
+    public void setMinRatioMetric(double minRatioMetric) {
+        this.minRatioMetric = minRatioMetric;
     }
 }
