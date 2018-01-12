@@ -246,8 +246,8 @@ void generate_bitmaps(const vector<Row>& input, map<Row, uint32_t>& counts,
   }
 }
 
-const double minOutlierSupport = 0.0;
-const double minRatioMetric = 0.0;
+const double minOutlierSupport = 0.2;
+const double minRatioMetric = 0.3;
 const double INFTY = 1E30;
 
 double computeRatio(int matchedOutliers, int unMatchedOutliers, int matchedTotal, int unMatchedTotal) {
