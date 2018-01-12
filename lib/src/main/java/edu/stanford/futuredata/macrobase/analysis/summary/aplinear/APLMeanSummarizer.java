@@ -22,7 +22,6 @@ public class APLMeanSummarizer extends APLSummarizer {
     private String meanColumn = "mean";
     private String stdColumn = "std";
 
-    private double minSupport = 0.1;
     private double minStdDev = 3.0;
 
     @Override
@@ -67,7 +66,7 @@ public class APLMeanSummarizer extends APLSummarizer {
 
     @Override
     public List<Double> getThresholds() {
-        return Arrays.asList(minSupport, minStdDev);
+        return Arrays.asList(minOutlierSupport, minStdDev);
     }
 
     @Override
@@ -89,11 +88,6 @@ public class APLMeanSummarizer extends APLSummarizer {
         return outlierCount;
     }
 
-    @Override
-    public APLExplanation getResults() {
-        return explanation;
-    }
-
     public String getCountColumn() {
         return countColumn;
     }
@@ -107,10 +101,6 @@ public class APLMeanSummarizer extends APLSummarizer {
 
     public void setStdColumn(String stdColumn) {
         this.stdColumn = stdColumn;
-    }
-
-    public void setMinSupport(double minSupport) {
-        this.minSupport = minSupport;
     }
 
     public void setMinStdDev(double minStdDev) {

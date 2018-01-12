@@ -17,10 +17,7 @@ import java.util.List;
  */
 public class APLOutlierSummarizer extends APLSummarizer {
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizer");
-    private String outlierColumn = "_OUTLIER";
     private String countColumn = null;
-    private double minOutlierSupport = 0.1;
-    private double minRatioMetric = 2.0;
 
     @Override
     public List<String> getAggregateNames() {
@@ -66,11 +63,6 @@ public class APLOutlierSummarizer extends APLSummarizer {
         return count;
     }
 
-    @Override
-    public APLExplanation getResults() {
-        return explanation;
-    }
-
     public String getCountColumn() {
         return countColumn;
     }
@@ -79,14 +71,5 @@ public class APLOutlierSummarizer extends APLSummarizer {
     }
     public double getMinRatioMetric() {
         return minRatioMetric;
-    }
-    public void setMinRatioMetric(double minRatioMetric) {
-        this.minRatioMetric = minRatioMetric;
-    }
-    public void setMinSupport(double minSupport) {
-        this.minOutlierSupport = minSupport;
-    }
-    public void setOutlierColumn(String outlierColumn) {
-        this.outlierColumn = outlierColumn;
     }
 }
