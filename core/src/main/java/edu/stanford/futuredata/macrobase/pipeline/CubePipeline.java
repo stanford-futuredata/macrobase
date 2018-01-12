@@ -99,7 +99,8 @@ public class CubePipeline implements Pipeline {
                 colTypes,
                 restHeader,
                 jsonBody,
-                usePost
+                usePost,
+                null
         );
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);

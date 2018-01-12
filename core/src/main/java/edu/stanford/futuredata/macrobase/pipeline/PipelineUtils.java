@@ -8,14 +8,17 @@ import edu.stanford.futuredata.macrobase.ingest.RESTDataFrameLoader;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 
 import java.util.Map;
+import java.util.List;
 
 public class PipelineUtils {
     public static DataFrame loadDataFrame(
             String inputURI,
-            Map<String, Schema.ColType> colTypes
+            Map<String, Schema.ColType> colTypes,
+            List<String> requiredColumns
     ) throws Exception {
         return PipelineUtils.loadDataFrame(
-                inputURI, colTypes, null, null, false
+                inputURI, colTypes, null, null, false,
+                requiredColumns
         );
     }
 
@@ -24,10 +27,11 @@ public class PipelineUtils {
             Map<String, Schema.ColType> colTypes,
             Map<String, String> restHeader,
             Map<String, Object> jsonBody,
-            boolean usePost
+            boolean usePost,
+            List<String> requiredColumns
     ) throws Exception {
         if(inputURI.substring(0, 3).equals("csv")) {
-            CSVDataFrameLoader loader = new CSVDataFrameLoader(inputURI.substring(6));
+            CSVDataFrameLoader loader = new CSVDataFrameLoader(inputURI.substring(6), requiredColumns);
             loader.setColumnTypes(colTypes);
             DataFrame df = loader.load();
             return df;

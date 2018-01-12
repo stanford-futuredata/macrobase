@@ -144,7 +144,9 @@ public class BasicBatchPipeline implements Pipeline {
         else{
             colTypes.put(metric, Schema.ColType.DOUBLE);
         }
-        return PipelineUtils.loadDataFrame(inputURI, colTypes);
+        List<String> requiredColumns = new ArrayList<>(attributes);
+        requiredColumns.add(metric);
+        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
     }
 
     @Override

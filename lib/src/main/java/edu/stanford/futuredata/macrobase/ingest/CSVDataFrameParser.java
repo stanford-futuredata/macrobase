@@ -8,12 +8,19 @@ import com.univocity.parsers.csv.CsvParser;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Arrays;
 
 public class CSVDataFrameParser implements DataFrameLoader {
     private CsvParser parser;
+    private List<String> requiredColumns = null;
     private Map<String, Schema.ColType> columnTypes;
     private int numBadRecords = 0;
 
+    public CSVDataFrameParser(CsvParser parser, List<String> requiredColumns) {
+        this.parser = parser;
+        this.requiredColumns = requiredColumns;
+    }
     public CSVDataFrameParser(CsvParser parser) {
         this.parser = parser;
     }
@@ -26,6 +33,9 @@ public class CSVDataFrameParser implements DataFrameLoader {
 
     @Override
     public DataFrame load() throws Exception {
+        if (requiredColumns != null) {
+            System.out.println(Arrays.toString(requiredColumns.toArray()));
+        }
         String[] header = parser.parseNext();
         Map<String, Integer> headerMap = new HashMap<>();
         for (int i = 0; i < header.length; i++) {
