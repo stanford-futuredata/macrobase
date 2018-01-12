@@ -1,13 +1,14 @@
 package edu.stanford.futuredata.macrobase.ingest;
 
+import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import com.univocity.parsers.csv.CsvParser;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
 
@@ -15,14 +16,26 @@ public class CSVDataFrameParser implements DataFrameLoader {
     private CsvParser parser;
     private List<String> requiredColumns = null;
     private Map<String, Schema.ColType> columnTypes;
-    private int numBadRecords = 0;
 
-    public CSVDataFrameParser(CsvParser parser, List<String> requiredColumns) {
-        this.parser = parser;
-        this.requiredColumns = requiredColumns;
-    }
     public CSVDataFrameParser(CsvParser parser) {
         this.parser = parser;
+    }
+
+    public CSVDataFrameParser(String fileName) throws IOException {
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        CsvParser csvParser = new CsvParser(settings);
+        csvParser.beginParsing(getReader(fileName));
+        this.parser = csvParser;
+    }
+
+    public CSVDataFrameParser(String fileName, List<String> requiredColumns) throws IOException {
+        this.requiredColumns = requiredColumns;
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        CsvParser csvParser = new CsvParser(settings);
+        csvParser.beginParsing(getReader(fileName));
+        this.parser = csvParser;
     }
 
     @Override
@@ -61,7 +74,6 @@ public class CSVDataFrameParser implements DataFrameLoader {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
         }
 
-        this.numBadRecords = 0;
         ArrayList<Row> rows = new ArrayList<>();
         String[] row;
         while ((row = parser.parseNext()) != null) {
@@ -91,7 +103,14 @@ public class CSVDataFrameParser implements DataFrameLoader {
         return df;
     }
 
-    public int getNumBadRecords() {
-        return numBadRecords;
+    private static Reader getReader(String path) {
+        try {
+            InputStream targetStream = new FileInputStream(path);
+            return new InputStreamReader(targetStream, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        }
     }
 }
