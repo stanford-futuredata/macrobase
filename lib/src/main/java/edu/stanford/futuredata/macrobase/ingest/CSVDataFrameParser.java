@@ -33,27 +33,31 @@ public class CSVDataFrameParser implements DataFrameLoader {
 
     @Override
     public DataFrame load() throws Exception {
-        if (requiredColumns != null) {
-            System.out.println(Arrays.toString(requiredColumns.toArray()));
-        }
         String[] header = parser.parseNext();
-        Map<String, Integer> headerMap = new HashMap<>();
-        for (int i = 0; i < header.length; i++) {
-            headerMap.put(header[i], i);
-        }
-        int numColumns = headerMap.size();
 
-        String[] columnNameList = new String[numColumns];
-        Schema.ColType[] columnTypeList = new Schema.ColType[numColumns];
-        for (String columnName: headerMap.keySet()) {
-            int columnIndex = headerMap.get(columnName);
+        int numColumns = header.length;
+        int schemaLength = header.length;
+        if (requiredColumns != null) {
+            schemaLength = requiredColumns.size();
+        }
+        int schemaIndexMap[] = new int[numColumns];
+        Arrays.fill(schemaIndexMap, -1);
+
+        String[] columnNameList = new String[schemaLength];
+        Schema.ColType[] columnTypeList = new Schema.ColType[schemaLength];
+        for (int c = 0, schemaIndex = 0; c < numColumns; c++) {
+            String columnName = header[c];
             Schema.ColType t = columnTypes.getOrDefault(columnName, Schema.ColType.STRING);
-            columnNameList[columnIndex] = columnName;
-            columnTypeList[columnIndex] = t;
+            if (requiredColumns == null || requiredColumns.contains(columnName)) {
+                columnNameList[schemaIndex] = columnName;
+                columnTypeList[schemaIndex] = t;
+                schemaIndexMap[c] = schemaIndex;
+                schemaIndex++;
+            }
         }
         // Make sure to generate the schema in the right order
         Schema schema = new Schema();
-        for (int c = 0; c < numColumns; c++) {
+        for (int c = 0; c < schemaLength; c++) {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
         }
 
@@ -61,20 +65,23 @@ public class CSVDataFrameParser implements DataFrameLoader {
         ArrayList<Row> rows = new ArrayList<>();
         String[] row;
         while ((row = parser.parseNext()) != null) {
-            ArrayList<Object> rowFields = new ArrayList<>(numColumns);
+            ArrayList<Object> rowFields = new ArrayList<>(schemaLength);
             for (int c = 0; c < numColumns; c++) {
-                Schema.ColType t = columnTypeList[c];
-                String rowValue = row[c];
-                if (t == Schema.ColType.STRING) {
-                    rowFields.add(rowValue);
-                } else if (t == Schema.ColType.DOUBLE) {
-                    try {
-                        rowFields.add(Double.parseDouble(rowValue));
-                    } catch (NumberFormatException e) {
-                        rowFields.add(Double.NaN);
+                if (schemaIndexMap[c] >= 0) {
+                    int schemaIndex = schemaIndexMap[c];
+                    Schema.ColType t = columnTypeList[schemaIndex];
+                    String rowValue = row[c];
+                    if (t == Schema.ColType.STRING) {
+                        rowFields.add(rowValue);
+                    } else if (t == Schema.ColType.DOUBLE) {
+                        try {
+                            rowFields.add(Double.parseDouble(rowValue));
+                        } catch (NumberFormatException e) {
+                            rowFields.add(Double.NaN);
+                        }
+                    } else {
+                        throw new RuntimeException("Bad ColType");
                     }
-                } else {
-                    throw new RuntimeException("Bad ColType");
                 }
             }
             rows.add(new Row(rowFields));
