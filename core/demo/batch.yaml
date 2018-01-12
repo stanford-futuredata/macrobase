@@ -8,7 +8,7 @@ cutoff: 1.0
 includeHi: true
 includeLo: true
 
-summarizer: "apriori"
+summarizer: "aplinear"
 attributes:
   - "location"
   - "version"
