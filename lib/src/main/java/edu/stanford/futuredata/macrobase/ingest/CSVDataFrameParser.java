@@ -70,36 +70,51 @@ public class CSVDataFrameParser implements DataFrameLoader {
         }
         // Make sure to generate the schema in the right order
         Schema schema = new Schema();
+        int numStringColumns = 0;
+        int numDoubleColumns = 0;
         for (int c = 0; c < schemaLength; c++) {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
+            if (columnTypeList[c] == Schema.ColType.STRING) {
+                numStringColumns++;
+            } else if (columnTypeList[c] == Schema.ColType.DOUBLE) {
+                numDoubleColumns++;
+            } else {
+                throw new RuntimeException("Bad ColType");
+            }
         }
 
-        ArrayList<Row> rows = new ArrayList<>();
+        ArrayList<String>[] stringColumns = (ArrayList<String>[])new ArrayList[numStringColumns];
+        for (int i = 0; i < numStringColumns; i++) {
+            stringColumns[i] = new ArrayList<>();
+        }
+        ArrayList<Double>[] doubleColumns = (ArrayList<Double>[])new ArrayList[numDoubleColumns];
+        for (int i = 0; i < numDoubleColumns; i++) {
+            doubleColumns[i] = new ArrayList<>();
+        }
+
         String[] row;
         while ((row = parser.parseNext()) != null) {
-            ArrayList<Object> rowFields = new ArrayList<>(schemaLength);
-            for (int c = 0; c < numColumns; c++) {
+            for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
                 if (schemaIndexMap[c] >= 0) {
                     int schemaIndex = schemaIndexMap[c];
                     Schema.ColType t = columnTypeList[schemaIndex];
                     String rowValue = row[c];
                     if (t == Schema.ColType.STRING) {
-                        rowFields.add(rowValue);
+                        stringColumns[stringColNum++].add(rowValue);
                     } else if (t == Schema.ColType.DOUBLE) {
                         try {
-                            rowFields.add(Double.parseDouble(rowValue));
+                            doubleColumns[doubleColNum++].add(Double.parseDouble(rowValue));
                         } catch (NumberFormatException e) {
-                            rowFields.add(Double.NaN);
+                            doubleColumns[doubleColNum++].add(Double.NaN);
                         }
                     } else {
                         throw new RuntimeException("Bad ColType");
                     }
                 }
             }
-            rows.add(new Row(rowFields));
         }
 
-        DataFrame df = new DataFrame(schema, rows);
+        DataFrame df = new DataFrame(schema, stringColumns, doubleColumns);
         return df;
     }
 
