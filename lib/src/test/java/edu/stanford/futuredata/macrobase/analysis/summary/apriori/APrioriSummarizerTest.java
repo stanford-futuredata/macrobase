@@ -22,7 +22,8 @@ public class APrioriSummarizerTest {
         schema.put("location", Schema.ColType.STRING);
         schema.put("version", Schema.ColType.STRING);
         DataFrameLoader loader = new CSVDataFrameParser(
-                "src/test/resources/sample.csv"
+                "src/test/resources/sample.csv",
+                Arrays.asList("usage", "latency", "location", "version")
         ).setColumnTypes(schema);
         DataFrame df = loader.load();
 
@@ -62,7 +63,8 @@ public class APrioriSummarizerTest {
         schema.put("mean", Schema.ColType.DOUBLE);
         schema.put("std", Schema.ColType.DOUBLE);
         DataFrameLoader loader = new CSVDataFrameParser(
-                "src/test/resources/sample_cubed.csv"
+                "src/test/resources/sample_cubed.csv",
+                Arrays.asList("count", "mean", "location", "version", "std")
         ).setColumnTypes(schema);
         DataFrame df = loader.load();
 

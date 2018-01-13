@@ -13,10 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Default pipeline for cubed data: load, classify, and then explain
@@ -94,13 +91,15 @@ public class CubePipeline implements Pipeline {
     public APLExplanation results() throws Exception {
         Map<String, Schema.ColType> colTypes = getColTypes();
         long startTime = System.currentTimeMillis();
+        List<String> requiredColumns = new ArrayList<>(attributes);
+        requiredColumns.add(metric);
         DataFrame df = PipelineUtils.loadDataFrame(
                 inputURI,
                 colTypes,
                 restHeader,
                 jsonBody,
                 usePost,
-                null
+                requiredColumns
         );
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);

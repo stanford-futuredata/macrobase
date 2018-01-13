@@ -41,7 +41,8 @@ public class PipelineUtils {
 
             RESTDataFrameLoader loader = new RESTDataFrameLoader(
                     inputURI,
-                    restHeader
+                    restHeader,
+                    requiredColumns
             );
             loader.setUsePost(usePost);
             loader.setJsonBody(bodyString);

@@ -34,7 +34,8 @@ public class UnsupervisedCSVTest {
         schema.put("location", Schema.ColType.STRING);
         schema.put("version", Schema.ColType.STRING);
         DataFrameLoader loader = new CSVDataFrameParser(
-                "src/test/resources/sample.csv"
+                "src/test/resources/sample.csv",
+                Arrays.asList("usage", "latency", "location", "version")
         ).setColumnTypes(schema);
         df = loader.load();
     }

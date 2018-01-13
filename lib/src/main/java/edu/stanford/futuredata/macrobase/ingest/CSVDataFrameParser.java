@@ -14,19 +14,12 @@ import java.util.Arrays;
 
 public class CSVDataFrameParser implements DataFrameLoader {
     private CsvParser parser;
-    private List<String> requiredColumns = null;
+    private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
 
-    public CSVDataFrameParser(CsvParser parser) {
+    public CSVDataFrameParser(CsvParser parser, List<String> requiredColumns) {
+        this.requiredColumns = requiredColumns;
         this.parser = parser;
-    }
-
-    public CSVDataFrameParser(String fileName) throws IOException {
-        CsvParserSettings settings = new CsvParserSettings();
-        settings.getFormat().setLineSeparator("\n");
-        CsvParser csvParser = new CsvParser(settings);
-        csvParser.beginParsing(getReader(fileName));
-        this.parser = csvParser;
     }
 
     public CSVDataFrameParser(String fileName, List<String> requiredColumns) throws IOException {
@@ -49,10 +42,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
         String[] header = parser.parseNext();
 
         int numColumns = header.length;
-        int schemaLength = header.length;
-        if (requiredColumns != null) {
-            schemaLength = requiredColumns.size();
-        }
+        int schemaLength = requiredColumns.size();
         int schemaIndexMap[] = new int[numColumns];
         Arrays.fill(schemaIndexMap, -1);
 
@@ -61,7 +51,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
         for (int c = 0, schemaIndex = 0; c < numColumns; c++) {
             String columnName = header[c];
             Schema.ColType t = columnTypes.getOrDefault(columnName, Schema.ColType.STRING);
-            if (requiredColumns == null || requiredColumns.contains(columnName)) {
+            if (requiredColumns.contains(columnName)) {
                 columnNameList[schemaIndex] = columnName;
                 columnTypeList[schemaIndex] = t;
                 schemaIndexMap[c] = schemaIndex;
