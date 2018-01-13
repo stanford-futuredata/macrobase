@@ -1,6 +1,0 @@
-*.output
-conflict_test.cpp
-bison_parser.cpp
-bison_parser.h
-flex_lexer.cpp
-flex_lexer.h
