@@ -5,7 +5,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.ingest.DataFrameLoader;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,8 +33,9 @@ public class UnsupervisedCSVTest {
         schema.put("latency", Schema.ColType.DOUBLE);
         schema.put("location", Schema.ColType.STRING);
         schema.put("version", Schema.ColType.STRING);
-        DataFrameLoader loader = new CSVDataFrameLoader(
-                "src/test/resources/sample.csv"
+        DataFrameLoader loader = new CSVDataFrameParser(
+                "src/test/resources/sample.csv",
+                Arrays.asList("usage", "latency", "location", "version")
         ).setColumnTypes(schema);
         df = loader.load();
     }

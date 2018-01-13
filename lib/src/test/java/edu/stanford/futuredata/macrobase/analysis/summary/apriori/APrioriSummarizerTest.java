@@ -4,7 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.ingest.DataFrameLoader;
 import org.junit.Test;
 
@@ -21,8 +21,9 @@ public class APrioriSummarizerTest {
         schema.put("latency", Schema.ColType.DOUBLE);
         schema.put("location", Schema.ColType.STRING);
         schema.put("version", Schema.ColType.STRING);
-        DataFrameLoader loader = new CSVDataFrameLoader(
-                "src/test/resources/sample.csv"
+        DataFrameLoader loader = new CSVDataFrameParser(
+                "src/test/resources/sample.csv",
+                Arrays.asList("usage", "latency", "location", "version")
         ).setColumnTypes(schema);
         DataFrame df = loader.load();
 
@@ -61,8 +62,9 @@ public class APrioriSummarizerTest {
         schema.put("count", Schema.ColType.DOUBLE);
         schema.put("mean", Schema.ColType.DOUBLE);
         schema.put("std", Schema.ColType.DOUBLE);
-        DataFrameLoader loader = new CSVDataFrameLoader(
-                "src/test/resources/sample_cubed.csv"
+        DataFrameLoader loader = new CSVDataFrameParser(
+                "src/test/resources/sample_cubed.csv",
+                Arrays.asList("count", "mean", "location", "version", "std")
         ).setColumnTypes(schema);
         DataFrame df = loader.load();
 

@@ -68,6 +68,33 @@ public class DataFrame {
         }
     }
 
+    public DataFrame(Schema schema, ArrayList<String>[] stringColumns, ArrayList<Double>[] doubleColumns) {
+        this();
+        this.schema = schema;
+        if (stringColumns.length > 0)
+            numRows = stringColumns[0].size();
+        else
+            numRows = doubleColumns[0].size();
+        int numColumns = schema.getNumColumns();
+        for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
+            Schema.ColType t = schema.getColumnType(c);
+            if (t == Schema.ColType.STRING) {
+                String[] colValues = stringColumns[stringColNum].toArray(new String[numRows]);
+                addStringColumnInternal(colValues);
+                stringColNum++;
+            } else if (t == Schema.ColType.DOUBLE) {
+                double[] colValues = new double[numRows];
+                for (int i = 0; i < numRows; i++) {
+                    colValues[i] = doubleColumns[doubleColNum].get(i).doubleValue();
+                }
+                addDoubleColumnInternal(colValues);
+                doubleColNum++;
+            } else {
+                throw new MacrobaseInternalError("Invalid ColType");
+            }
+        }
+    }
+
     /**
      * Shallow copy of the dataframe: the schema is recreated but the arrays backing the
      * columns are reused.

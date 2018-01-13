@@ -11,6 +11,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.security.cert.CertificateException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -22,13 +23,16 @@ public class RESTDataFrameLoader implements DataFrameLoader{
     private String jsonBody;
     private Map<String, String> getParams;
     private Map<String, Schema.ColType> types;
+    private List<String> requiredColumns;
 
     private OkHttpClient client;
 
     public RESTDataFrameLoader(
             String url,
-            Map<String, String> headerParams
+            Map<String, String> headerParams,
+            List<String> requiredColumns
     ) {
+        this.requiredColumns= requiredColumns;
         this.baseURL = url;
         this.headerParams = headerParams;
 
@@ -144,7 +148,7 @@ public class RESTDataFrameLoader implements DataFrameLoader{
         InputStream targetStream = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8.name()));
         InputStreamReader targetReader = new InputStreamReader(targetStream, "UTF-8");
         csvParser.beginParsing(targetReader);
-        CSVDataFrameParser dfParser = new CSVDataFrameParser(csvParser);
+        CSVDataFrameParser dfParser = new CSVDataFrameParser(csvParser, requiredColumns);
         dfParser.setColumnTypes(types);
         return dfParser.load();
     }

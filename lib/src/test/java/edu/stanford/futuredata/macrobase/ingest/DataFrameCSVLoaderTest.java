@@ -5,6 +5,7 @@ import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +17,8 @@ public class DataFrameCSVLoaderTest {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put("usage", Schema.ColType.DOUBLE);
 
-        DataFrameLoader loader = new CSVDataFrameLoader("src/test/resources/tiny.csv")
+        DataFrameLoader loader = new CSVDataFrameParser("src/test/resources/tiny.csv",
+                Arrays.asList("usage", "location", "version"))
                 .setColumnTypes(colTypes);
         DataFrame df = loader.load();
 

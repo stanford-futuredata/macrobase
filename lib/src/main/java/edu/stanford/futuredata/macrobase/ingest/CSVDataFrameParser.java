@@ -1,21 +1,34 @@
 package edu.stanford.futuredata.macrobase.ingest;
 
+import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import com.univocity.parsers.csv.CsvParser;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Arrays;
 
 public class CSVDataFrameParser implements DataFrameLoader {
     private CsvParser parser;
+    private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
-    private int numBadRecords = 0;
 
-    public CSVDataFrameParser(CsvParser parser) {
+    public CSVDataFrameParser(CsvParser parser, List<String> requiredColumns) {
+        this.requiredColumns = requiredColumns;
         this.parser = parser;
+    }
+
+    public CSVDataFrameParser(String fileName, List<String> requiredColumns) throws IOException {
+        this.requiredColumns = requiredColumns;
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        CsvParser csvParser = new CsvParser(settings);
+        csvParser.beginParsing(getReader(fileName));
+        this.parser = csvParser;
     }
 
     @Override
@@ -27,54 +40,82 @@ public class CSVDataFrameParser implements DataFrameLoader {
     @Override
     public DataFrame load() throws Exception {
         String[] header = parser.parseNext();
-        Map<String, Integer> headerMap = new HashMap<>();
-        for (int i = 0; i < header.length; i++) {
-            headerMap.put(header[i], i);
-        }
-        int numColumns = headerMap.size();
 
-        String[] columnNameList = new String[numColumns];
-        Schema.ColType[] columnTypeList = new Schema.ColType[numColumns];
-        for (String columnName: headerMap.keySet()) {
-            int columnIndex = headerMap.get(columnName);
+        int numColumns = header.length;
+        int schemaLength = requiredColumns.size();
+        int schemaIndexMap[] = new int[numColumns];
+        Arrays.fill(schemaIndexMap, -1);
+
+        String[] columnNameList = new String[schemaLength];
+        Schema.ColType[] columnTypeList = new Schema.ColType[schemaLength];
+        for (int c = 0, schemaIndex = 0; c < numColumns; c++) {
+            String columnName = header[c];
             Schema.ColType t = columnTypes.getOrDefault(columnName, Schema.ColType.STRING);
-            columnNameList[columnIndex] = columnName;
-            columnTypeList[columnIndex] = t;
+            if (requiredColumns.contains(columnName)) {
+                columnNameList[schemaIndex] = columnName;
+                columnTypeList[schemaIndex] = t;
+                schemaIndexMap[c] = schemaIndex;
+                schemaIndex++;
+            }
         }
         // Make sure to generate the schema in the right order
         Schema schema = new Schema();
-        for (int c = 0; c < numColumns; c++) {
+        int numStringColumns = 0;
+        int numDoubleColumns = 0;
+        for (int c = 0; c < schemaLength; c++) {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
+            if (columnTypeList[c] == Schema.ColType.STRING) {
+                numStringColumns++;
+            } else if (columnTypeList[c] == Schema.ColType.DOUBLE) {
+                numDoubleColumns++;
+            } else {
+                throw new RuntimeException("Bad ColType");
+            }
         }
 
-        this.numBadRecords = 0;
-        ArrayList<Row> rows = new ArrayList<>();
+        ArrayList<String>[] stringColumns = (ArrayList<String>[])new ArrayList[numStringColumns];
+        for (int i = 0; i < numStringColumns; i++) {
+            stringColumns[i] = new ArrayList<>();
+        }
+        ArrayList<Double>[] doubleColumns = (ArrayList<Double>[])new ArrayList[numDoubleColumns];
+        for (int i = 0; i < numDoubleColumns; i++) {
+            doubleColumns[i] = new ArrayList<>();
+        }
+
         String[] row;
         while ((row = parser.parseNext()) != null) {
-            ArrayList<Object> rowFields = new ArrayList<>(numColumns);
-            for (int c = 0; c < numColumns; c++) {
-                Schema.ColType t = columnTypeList[c];
-                String rowValue = row[c];
-                if (t == Schema.ColType.STRING) {
-                    rowFields.add(rowValue);
-                } else if (t == Schema.ColType.DOUBLE) {
-                    try {
-                        rowFields.add(Double.parseDouble(rowValue));
-                    } catch (NumberFormatException e) {
-                        rowFields.add(Double.NaN);
+            for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
+                if (schemaIndexMap[c] >= 0) {
+                    int schemaIndex = schemaIndexMap[c];
+                    Schema.ColType t = columnTypeList[schemaIndex];
+                    String rowValue = row[c];
+                    if (t == Schema.ColType.STRING) {
+                        stringColumns[stringColNum++].add(rowValue);
+                    } else if (t == Schema.ColType.DOUBLE) {
+                        try {
+                            doubleColumns[doubleColNum++].add(Double.parseDouble(rowValue));
+                        } catch (NumberFormatException e) {
+                            doubleColumns[doubleColNum++].add(Double.NaN);
+                        }
+                    } else {
+                        throw new RuntimeException("Bad ColType");
                     }
-                } else {
-                    throw new RuntimeException("Bad ColType");
                 }
             }
-            rows.add(new Row(rowFields));
         }
 
-        DataFrame df = new DataFrame(schema, rows);
+        DataFrame df = new DataFrame(schema, stringColumns, doubleColumns);
         return df;
     }
 
-    public int getNumBadRecords() {
-        return numBadRecords;
+    private static Reader getReader(String path) {
+        try {
+            InputStream targetStream = new FileInputStream(path);
+            return new InputStreamReader(targetStream, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        } catch (FileNotFoundException e) {
+            throw new IllegalStateException("Unable to read input", e);
+        }
     }
 }
