@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -15,9 +16,8 @@ import java.util.List;
  * different quality metrics and input sources. Subclasses are responsible
  * for converting from user-provided columns to the internal linear aggregates.
  */
-public abstract class APLSummarizer implements Operator<DataFrame, APLExplanation> {
+public abstract class APLSummarizer extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APLSummarizer");
-    List<String> attributes = new ArrayList<>();
     AttributeEncoder encoder;
     APLExplanation explanation;
     APrioriLinear aplKernel;
@@ -87,7 +87,4 @@ public abstract class APLSummarizer implements Operator<DataFrame, APLExplanatio
         return explanation;
     }
 
-    public void setAttributes(List<String> attributes) {
-        this.attributes = attributes;
-    }
 }
