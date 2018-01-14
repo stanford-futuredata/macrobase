@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ArrayConstructor
-    extends Expression {
+public class ArrayConstructor extends Expression {
 
     public static final String ARRAY_CONSTRUCTOR = "ARRAY_CONSTRUCTOR";
     private final List<Expression> values;

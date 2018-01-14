@@ -22,8 +22,7 @@ import java.util.Optional;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
-public class Extract
-    extends Expression {
+public class Extract extends Expression {
 
     private final Expression expression;
     private final Field field;

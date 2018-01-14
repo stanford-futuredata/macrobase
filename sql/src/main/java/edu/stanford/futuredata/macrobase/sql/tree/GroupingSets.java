@@ -27,8 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class GroupingSets
-    extends GroupingElement {
+public final class GroupingSets extends GroupingElement {
 
     private final List<List<QualifiedName>> sets;
 

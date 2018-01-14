@@ -23,8 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public final class SimpleGroupBy
-    extends GroupingElement {
+public final class SimpleGroupBy extends GroupingElement {
 
     private final List<Expression> columns;
 

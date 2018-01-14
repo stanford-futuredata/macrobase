@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class AliasedRelation
-    extends Relation {
+public class AliasedRelation extends Relation {
 
     private final Relation relation;
     private final Identifier alias;

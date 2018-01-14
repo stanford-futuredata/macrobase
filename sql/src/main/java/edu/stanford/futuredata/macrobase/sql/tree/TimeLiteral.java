@@ -18,8 +18,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.Objects;
 import java.util.Optional;
 
-public class TimeLiteral
-    extends Literal {
+public class TimeLiteral extends Literal {
 
     private final String value;
 

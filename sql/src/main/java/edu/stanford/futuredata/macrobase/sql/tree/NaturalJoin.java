@@ -18,8 +18,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 
-public class NaturalJoin
-    extends JoinCriteria {
+public class NaturalJoin extends JoinCriteria {
 
     @Override
     public boolean equals(Object obj) {

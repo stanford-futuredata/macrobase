@@ -22,8 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class Join
-    extends Relation {
+public class Join extends Relation {
 
     public Join(Type type, Relation left, Relation right, Optional<JoinCriteria> criteria) {
         this(Optional.empty(), type, left, right, criteria);

@@ -17,8 +17,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Optional;
 
-public class DoubleLiteral
-    extends Literal {
+public class DoubleLiteral extends Literal {
 
     private final double value;
 

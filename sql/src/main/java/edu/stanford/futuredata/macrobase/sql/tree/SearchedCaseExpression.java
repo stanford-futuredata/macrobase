@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SearchedCaseExpression
-    extends Expression {
+public class SearchedCaseExpression extends Expression {
 
     private final List<WhenClause> whenClauses;
     private final Optional<Expression> defaultValue;

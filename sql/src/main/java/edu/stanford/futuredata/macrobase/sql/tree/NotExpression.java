@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class NotExpression
-    extends Expression {
+public class NotExpression extends Expression {
 
     private final Expression value;
 

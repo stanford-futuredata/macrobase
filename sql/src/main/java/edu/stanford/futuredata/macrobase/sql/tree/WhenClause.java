@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class WhenClause
-    extends Expression {
+public class WhenClause extends Expression {
 
     private final Expression operand;
     private final Expression result;

@@ -40,7 +40,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.Row;
 import edu.stanford.futuredata.macrobase.sql.tree.SampledRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
@@ -358,21 +357,6 @@ final class SqlFormatter {
             return name.getOriginalParts().stream()
                 .map(Formatter::formatName)
                 .collect(joining("."));
-        }
-
-        @Override
-        protected Void visitRow(Row node, Integer indent) {
-            builder.append("ROW(");
-            boolean firstItem = true;
-            for (Expression item : node.getItems()) {
-                if (!firstItem) {
-                    builder.append(", ");
-                }
-                process(item, indent);
-                firstItem = false;
-            }
-            builder.append(")");
-            return null;
         }
 
         private void processRelation(Relation relation, Integer indent) {

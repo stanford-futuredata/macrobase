@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class QuantifiedComparisonExpression
-    extends Expression {
+public class QuantifiedComparisonExpression extends Expression {
 
     public enum Quantifier {
         ALL,

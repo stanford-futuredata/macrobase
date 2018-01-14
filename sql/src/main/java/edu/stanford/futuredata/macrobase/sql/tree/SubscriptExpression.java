@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SubscriptExpression
-    extends Expression {
+public class SubscriptExpression extends Expression {
 
     private final Expression base;
     private final Expression index;

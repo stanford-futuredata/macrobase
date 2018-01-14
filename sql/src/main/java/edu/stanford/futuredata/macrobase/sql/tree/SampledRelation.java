@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SampledRelation
-    extends Relation {
+public class SampledRelation extends Relation {
 
     public enum Type {
         BERNOULLI,

@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ArithmeticBinaryExpression
-    extends Expression {
+public class ArithmeticBinaryExpression extends Expression {
 
     public enum Type {
         ADD("+"),
