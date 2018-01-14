@@ -19,8 +19,7 @@ import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class GenericLiteral
-    extends Literal {
+public final class GenericLiteral extends Literal {
 
     private final String type;
     private final String value;

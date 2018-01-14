@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class InPredicate
-    extends Expression {
+public class InPredicate extends Expression {
 
     private final Expression value;
     private final Expression valueList;

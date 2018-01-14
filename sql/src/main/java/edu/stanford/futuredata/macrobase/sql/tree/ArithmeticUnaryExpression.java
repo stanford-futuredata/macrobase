@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ArithmeticUnaryExpression
-    extends Expression {
+public class ArithmeticUnaryExpression extends Expression {
 
     public enum Sign {
         PLUS,

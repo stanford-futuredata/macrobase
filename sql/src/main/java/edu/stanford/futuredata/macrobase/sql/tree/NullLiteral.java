@@ -15,8 +15,7 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 
 import java.util.Optional;
 
-public class NullLiteral
-    extends Literal {
+public class NullLiteral extends Literal {
 
     public NullLiteral() {
         super(Optional.empty());

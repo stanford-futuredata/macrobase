@@ -19,8 +19,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 
-public class FieldReference
-    extends Expression {
+public class FieldReference extends Expression {
 
     private final int fieldIndex;
 

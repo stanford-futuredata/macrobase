@@ -21,8 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class Identifier
-    extends Expression {
+public class Identifier extends Expression {
 
     private static final Pattern NAME_PATTERN = Pattern.compile("[a-zA-Z_]([a-zA-Z0-9_:@])*");
 

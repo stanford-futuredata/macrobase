@@ -17,7 +17,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static edu.stanford.futuredata.macrobase.sql.SqlFormatter.formatSql;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +26,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticUnaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ArrayConstructor;
 import edu.stanford.futuredata.macrobase.sql.tree.AstVisitor;
-import edu.stanford.futuredata.macrobase.sql.tree.AtTimeZone;
 import edu.stanford.futuredata.macrobase.sql.tree.BetweenPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.BinaryLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.BindExpression;
@@ -44,7 +42,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Extract;
 import edu.stanford.futuredata.macrobase.sql.tree.FieldReference;
-import edu.stanford.futuredata.macrobase.sql.tree.FrameBound;
 import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.GenericLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.GroupingElement;
@@ -54,25 +51,22 @@ import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.IfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.InListExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.InPredicate;
-import edu.stanford.futuredata.macrobase.sql.tree.IntervalLiteral;
+import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaArgumentDeclaration;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
 import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullIfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
-import edu.stanford.futuredata.macrobase.sql.tree.Parameter;
 import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.QuantifiedComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.RatioMetricExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Rollup;
-import edu.stanford.futuredata.macrobase.sql.tree.Row;
 import edu.stanford.futuredata.macrobase.sql.tree.SearchedCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SimpleCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SimpleGroupBy;
@@ -84,8 +78,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.TimeLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TimestampLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.TryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.WhenClause;
-import edu.stanford.futuredata.macrobase.sql.tree.Window;
-import edu.stanford.futuredata.macrobase.sql.tree.WindowFrame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -118,25 +110,10 @@ public final class ExpressionFormatter {
         }
 
         @Override
-        protected String visitRow(Row node, Void context) {
-            return "ROW (" + Joiner.on(", ").join(node.getItems().stream()
-                .map((child) -> process(child, context))
-                .collect(toList())) + ")";
-        }
-
-        @Override
         protected String visitExpression(Expression node, Void context) {
             throw new UnsupportedOperationException(
                 format("not yet implemented: %s.visit%s", getClass().getName(),
                     node.getClass().getSimpleName()));
-        }
-
-        @Override
-        protected String visitAtTimeZone(AtTimeZone node, Void context) {
-            return new StringBuilder()
-                .append(process(node.getValue(), context))
-                .append(" AT TIME ZONE ")
-                .append(process(node.getTimeZone(), context)).toString();
         }
 
         @Override
@@ -163,17 +140,6 @@ public final class ExpressionFormatter {
         @Override
         protected String visitBinaryLiteral(BinaryLiteral node, Void context) {
             return "X'" + node.toHexString() + "'";
-        }
-
-        @Override
-        protected String visitParameter(Parameter node, Void context) {
-            if (parameters.isPresent()) {
-                checkArgument(node.getPosition() < parameters.get().size(),
-                    "Invalid parameter number %s.  Max value is %s", node.getPosition(),
-                    parameters.get().size() - 1);
-                return process(parameters.get().get(node.getPosition()), context);
-            }
-            return "?";
         }
 
         @Override
@@ -225,21 +191,6 @@ public final class ExpressionFormatter {
         @Override
         protected String visitNullLiteral(NullLiteral node, Void context) {
             return "null";
-        }
-
-        @Override
-        protected String visitIntervalLiteral(IntervalLiteral node, Void context) {
-            String sign = (node.getSign() == IntervalLiteral.Sign.NEGATIVE) ? "- " : "";
-            StringBuilder builder = new StringBuilder()
-                .append("INTERVAL ")
-                .append(sign)
-                .append(" '").append(node.getValue()).append("' ")
-                .append(node.getStartField());
-
-            if (node.getEndField().isPresent()) {
-                builder.append(" TO ").append(node.getEndField().get());
-            }
-            return builder.toString();
         }
 
         @Override
@@ -305,10 +256,6 @@ public final class ExpressionFormatter {
 
             if (node.getFilter().isPresent()) {
                 builder.append(" FILTER ").append(visitFilter(node.getFilter().get(), context));
-            }
-
-            if (node.getWindow().isPresent()) {
-                builder.append(" OVER ").append(visitWindow(node.getWindow().get(), context));
             }
 
             return builder.toString();
@@ -512,58 +459,6 @@ public final class ExpressionFormatter {
 
         private String visitFilter(Expression node, Void context) {
             return "(WHERE " + process(node, context) + ')';
-        }
-
-        @Override
-        public String visitWindow(Window node, Void context) {
-            List<String> parts = new ArrayList<>();
-
-            if (!node.getPartitionBy().isEmpty()) {
-                parts.add("PARTITION BY " + joinExpressions(node.getPartitionBy()));
-            }
-            if (node.getOrderBy().isPresent()) {
-                parts.add(formatOrderBy(node.getOrderBy().get(), parameters));
-            }
-            if (node.getFrame().isPresent()) {
-                parts.add(process(node.getFrame().get(), context));
-            }
-
-            return '(' + Joiner.on(' ').join(parts) + ')';
-        }
-
-        @Override
-        public String visitWindowFrame(WindowFrame node, Void context) {
-            StringBuilder builder = new StringBuilder();
-
-            builder.append(node.getType().toString()).append(' ');
-
-            if (node.getEnd().isPresent()) {
-                builder.append("BETWEEN ")
-                    .append(process(node.getStart(), context))
-                    .append(" AND ")
-                    .append(process(node.getEnd().get(), context));
-            } else {
-                builder.append(process(node.getStart(), context));
-            }
-
-            return builder.toString();
-        }
-
-        @Override
-        public String visitFrameBound(FrameBound node, Void context) {
-            switch (node.getType()) {
-                case UNBOUNDED_PRECEDING:
-                    return "UNBOUNDED PRECEDING";
-                case PRECEDING:
-                    return process(node.getValue().get(), context) + " PRECEDING";
-                case CURRENT_ROW:
-                    return "CURRENT ROW";
-                case FOLLOWING:
-                    return process(node.getValue().get(), context) + " FOLLOWING";
-                case UNBOUNDED_FOLLOWING:
-                    return "UNBOUNDED FOLLOWING";
-            }
-            throw new IllegalArgumentException("unhandled type: " + node.getType());
         }
 
         @Override

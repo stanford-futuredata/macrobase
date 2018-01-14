@@ -31,8 +31,7 @@ import java.util.Optional;
  * Y => (X2, X3, X4) -> Y <li>... </ul> <p> Lambda capturing is implemented through desugaring in
  * Presto. This expression facilitates desugaring.
  */
-public class BindExpression
-    extends Expression {
+public class BindExpression extends Expression {
 
     private final List<Expression> values;
     // Function expression must be of function type.

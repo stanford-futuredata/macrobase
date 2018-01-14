@@ -20,7 +20,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.SqlBaseBaseVisitor;
 import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
@@ -31,7 +30,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
 import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticUnaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ArrayConstructor;
-import edu.stanford.futuredata.macrobase.sql.tree.AtTimeZone;
 import edu.stanford.futuredata.macrobase.sql.tree.BetweenPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.BinaryLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.BindExpression;
@@ -53,7 +51,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.ExportClause;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Extract;
-import edu.stanford.futuredata.macrobase.sql.tree.FrameBound;
 import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.GenericLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.GroupBy;
@@ -67,7 +64,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.InListExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.InPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Intersect;
-import edu.stanford.futuredata.macrobase.sql.tree.IntervalLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
@@ -87,7 +83,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullIfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
-import edu.stanford.futuredata.macrobase.sql.tree.Parameter;
 import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.QuantifiedComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
@@ -96,7 +91,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.RatioMetricExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
 import edu.stanford.futuredata.macrobase.sql.tree.Rollup;
-import edu.stanford.futuredata.macrobase.sql.tree.Row;
 import edu.stanford.futuredata.macrobase.sql.tree.SampledRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.SearchedCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
@@ -117,8 +111,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.TryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Union;
 import edu.stanford.futuredata.macrobase.sql.tree.Values;
 import edu.stanford.futuredata.macrobase.sql.tree.WhenClause;
-import edu.stanford.futuredata.macrobase.sql.tree.Window;
-import edu.stanford.futuredata.macrobase.sql.tree.WindowFrame;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -733,34 +725,11 @@ class AstBuilder
             (Expression) visit(context.right)));
     }
 
-    @Override
-    public Node visitAtTimeZone(SqlBaseParser.AtTimeZoneContext context) {
-        return new AtTimeZone(
-            getLocation(context.AT()),
-            (Expression) visit(context.valueExpression()),
-            (Expression) visit(context.timeZoneSpecifier()));
-    }
-
-    @Override
-    public Node visitTimeZoneInterval(SqlBaseParser.TimeZoneIntervalContext context) {
-        return visit(context.interval());
-    }
-
-    @Override
-    public Node visitTimeZoneString(SqlBaseParser.TimeZoneStringContext context) {
-        return visit(context.string());
-    }
-
     // ********************* primary expressions **********************
 
     @Override
     public Node visitParenthesizedExpression(SqlBaseParser.ParenthesizedExpressionContext context) {
         return visit(context.expression());
-    }
-
-    @Override
-    public Node visitRowConstructor(SqlBaseParser.RowConstructorContext context) {
-        return new Row(getLocation(context), visit(context.expression(), Expression.class));
     }
 
     @Override
@@ -787,23 +756,6 @@ class AstBuilder
         }
         return new Extract(getLocation(context), (Expression) visit(context.valueExpression()),
             field);
-    }
-
-    @Override
-    public Node visitPosition(SqlBaseParser.PositionContext context) {
-        List<Expression> arguments = Lists
-            .reverse(visit(context.valueExpression(), Expression.class));
-        return new FunctionCall(getLocation(context), QualifiedName.of("strpos"), arguments);
-    }
-
-    @Override
-    public Node visitNormalize(SqlBaseParser.NormalizeContext context) {
-        Expression str = (Expression) visit(context.valueExpression());
-        String normalForm = Optional.ofNullable(context.normalForm())
-            .map(ParserRuleContext::getText)
-            .orElse("NFC");
-        return new FunctionCall(getLocation(context), QualifiedName.of("normalize"),
-            ImmutableList.of(str, new StringLiteral(getLocation(context), normalForm)));
     }
 
     @Override
@@ -856,7 +808,6 @@ class AstBuilder
     @Override
     public Node visitFunctionCall(SqlBaseParser.FunctionCallContext context) {
         Optional<Expression> filter = visitIfPresent(context.filter(), Expression.class);
-        Optional<Window> window = visitIfPresent(context.over(), Window.class);
 
         QualifiedName name = getQualifiedName(context.qualifiedName());
 
@@ -865,7 +816,6 @@ class AstBuilder
         if (name.toString().equalsIgnoreCase("if")) {
             check(context.expression().size() == 2 || context.expression().size() == 3,
                 "Invalid number of arguments for 'if' function", context);
-            check(!window.isPresent(), "OVER clause not valid for 'if' function", context);
             check(!distinct, "DISTINCT not valid for 'if' function", context);
 
             Expression elseExpression = null;
@@ -884,7 +834,6 @@ class AstBuilder
             check(context.expression().size() == 2,
                 "Invalid number of arguments for 'nullif' function",
                 context);
-            check(!window.isPresent(), "OVER clause not valid for 'nullif' function", context);
             check(!distinct, "DISTINCT not valid for 'nullif' function", context);
 
             return new NullIfExpression(
@@ -896,7 +845,6 @@ class AstBuilder
         if (name.toString().equalsIgnoreCase("coalesce")) {
             check(context.expression().size() >= 2,
                 "The 'coalesce' function must have at least two arguments", context);
-            check(!window.isPresent(), "OVER clause not valid for 'coalesce' function", context);
             check(!distinct, "DISTINCT not valid for 'coalesce' function", context);
 
             return new CoalesceExpression(getLocation(context),
@@ -907,7 +855,6 @@ class AstBuilder
             check(context.expression().size() == 1,
                 "The 'try' function must have exactly one argument",
                 context);
-            check(!window.isPresent(), "OVER clause not valid for 'try' function", context);
             check(!distinct, "DISTINCT not valid for 'try' function", context);
 
             return new TryExpression(getLocation(context),
@@ -917,8 +864,6 @@ class AstBuilder
         if (name.toString().equalsIgnoreCase("$internal$bind")) {
             check(context.expression().size() >= 1,
                 "The '$internal$bind' function must have at least one arguments", context);
-            check(!window.isPresent(), "OVER clause not valid for '$internal$bind' function",
-                context);
             check(!distinct, "DISTINCT not valid for '$internal$bind' function", context);
 
             int numValues = context.expression().size() - 1;
@@ -936,7 +881,6 @@ class AstBuilder
         return new FunctionCall(
             getLocation(context),
             getQualifiedName(context.qualifiedName()),
-            window,
             filter,
             distinct,
             visit(context.expression(), Expression.class));
@@ -957,22 +901,6 @@ class AstBuilder
     @Override
     public Node visitFilter(SqlBaseParser.FilterContext context) {
         return visit(context.booleanExpression());
-    }
-
-    @Override
-    public Node visitOver(SqlBaseParser.OverContext context) {
-        Optional<OrderBy> orderBy = Optional.empty();
-        if (context.ORDER() != null) {
-            orderBy = Optional
-                .of(new OrderBy(getLocation(context.ORDER()),
-                    visit(context.sortItem(), SortItem.class)));
-        }
-
-        return new Window(
-            getLocation(context),
-            visit(context.partition, Expression.class),
-            orderBy,
-            visitIfPresent(context.windowFrame(), WindowFrame.class));
     }
 
     @Override
@@ -999,31 +927,6 @@ class AstBuilder
             Optional.ofNullable(context.nullOrdering)
                 .map(AstBuilder::getNullOrderingType)
                 .orElse(SortItem.NullOrdering.UNDEFINED));
-    }
-
-    @Override
-    public Node visitWindowFrame(SqlBaseParser.WindowFrameContext context) {
-        return new WindowFrame(
-            getLocation(context),
-            getFrameType(context.frameType),
-            (FrameBound) visit(context.start),
-            visitIfPresent(context.end, FrameBound.class));
-    }
-
-    @Override
-    public Node visitUnboundedFrame(SqlBaseParser.UnboundedFrameContext context) {
-        return new FrameBound(getLocation(context), getUnboundedFrameBoundType(context.boundType));
-    }
-
-    @Override
-    public Node visitBoundedFrame(SqlBaseParser.BoundedFrameContext context) {
-        return new FrameBound(getLocation(context), getBoundedFrameBoundType(context.boundType),
-            (Expression) visit(context.expression()));
-    }
-
-    @Override
-    public Node visitCurrentRowBound(SqlBaseParser.CurrentRowBoundContext context) {
-        return new FrameBound(getLocation(context), FrameBound.Type.CURRENT_ROW);
     }
 
     @Override
@@ -1102,28 +1005,6 @@ class AstBuilder
     @Override
     public Node visitBooleanValue(SqlBaseParser.BooleanValueContext context) {
         return new BooleanLiteral(getLocation(context), context.getText());
-    }
-
-    @Override
-    public Node visitInterval(SqlBaseParser.IntervalContext context) {
-        return new IntervalLiteral(
-            getLocation(context),
-            ((StringLiteral) visit(context.string())).getValue(),
-            Optional.ofNullable(context.sign)
-                .map(AstBuilder::getIntervalSign)
-                .orElse(IntervalLiteral.Sign.POSITIVE),
-            getIntervalFieldType((Token) context.from.getChild(0).getPayload()),
-            Optional.ofNullable(context.to)
-                .map((x) -> x.getChild(0).getPayload())
-                .map(Token.class::cast)
-                .map(AstBuilder::getIntervalFieldType));
-    }
-
-    @Override
-    public Node visitParameter(SqlBaseParser.ParameterContext context) {
-        Parameter parameter = new Parameter(getLocation(context), parameterPosition);
-        parameterPosition++;
-        return parameter;
     }
 
     // ***************** helpers *****************
@@ -1313,69 +1194,6 @@ class AstBuilder
         }
 
         throw new IllegalArgumentException("Unsupported operator: " + symbol.getText());
-    }
-
-    private static IntervalLiteral.IntervalField getIntervalFieldType(Token token) {
-        switch (token.getType()) {
-            case SqlBaseLexer.YEAR:
-                return IntervalLiteral.IntervalField.YEAR;
-            case SqlBaseLexer.MONTH:
-                return IntervalLiteral.IntervalField.MONTH;
-            case SqlBaseLexer.DAY:
-                return IntervalLiteral.IntervalField.DAY;
-            case SqlBaseLexer.HOUR:
-                return IntervalLiteral.IntervalField.HOUR;
-            case SqlBaseLexer.MINUTE:
-                return IntervalLiteral.IntervalField.MINUTE;
-            case SqlBaseLexer.SECOND:
-                return IntervalLiteral.IntervalField.SECOND;
-        }
-
-        throw new IllegalArgumentException("Unsupported interval field: " + token.getText());
-    }
-
-    private static IntervalLiteral.Sign getIntervalSign(Token token) {
-        switch (token.getType()) {
-            case SqlBaseLexer.MINUS:
-                return IntervalLiteral.Sign.NEGATIVE;
-            case SqlBaseLexer.PLUS:
-                return IntervalLiteral.Sign.POSITIVE;
-        }
-
-        throw new IllegalArgumentException("Unsupported sign: " + token.getText());
-    }
-
-    private static WindowFrame.Type getFrameType(Token type) {
-        switch (type.getType()) {
-            case SqlBaseLexer.RANGE:
-                return WindowFrame.Type.RANGE;
-            case SqlBaseLexer.ROWS:
-                return WindowFrame.Type.ROWS;
-        }
-
-        throw new IllegalArgumentException("Unsupported frame type: " + type.getText());
-    }
-
-    private static FrameBound.Type getBoundedFrameBoundType(Token token) {
-        switch (token.getType()) {
-            case SqlBaseLexer.PRECEDING:
-                return FrameBound.Type.PRECEDING;
-            case SqlBaseLexer.FOLLOWING:
-                return FrameBound.Type.FOLLOWING;
-        }
-
-        throw new IllegalArgumentException("Unsupported bound type: " + token.getText());
-    }
-
-    private static FrameBound.Type getUnboundedFrameBoundType(Token token) {
-        switch (token.getType()) {
-            case SqlBaseLexer.PRECEDING:
-                return FrameBound.Type.UNBOUNDED_PRECEDING;
-            case SqlBaseLexer.FOLLOWING:
-                return FrameBound.Type.UNBOUNDED_FOLLOWING;
-        }
-
-        throw new IllegalArgumentException("Unsupported bound type: " + token.getText());
     }
 
     private static SampledRelation.Type getSamplingMethod(Token token) {

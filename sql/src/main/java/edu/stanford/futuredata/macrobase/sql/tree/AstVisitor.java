@@ -129,10 +129,6 @@ public abstract class AstVisitor<R, C> {
         return visitExpression(node, context);
     }
 
-    protected R visitIntervalLiteral(IntervalLiteral node, C context) {
-        return visitLiteral(node, context);
-    }
-
     protected R visitInPredicate(InPredicate node, C context) {
         return visitExpression(node, context);
     }
@@ -237,10 +233,6 @@ public abstract class AstVisitor<R, C> {
         return visitLiteral(node, context);
     }
 
-    protected R visitParameter(Parameter node, C context) {
-        return visitExpression(node, context);
-    }
-
     protected R visitLogicalBinaryExpression(LogicalBinaryExpression node, C context) {
         return visitExpression(node, context);
     }
@@ -259,10 +251,6 @@ public abstract class AstVisitor<R, C> {
 
     protected R visitValues(Values node, C context) {
         return visitQueryBody(node, context);
-    }
-
-    protected R visitRow(Row node, C context) {
-        return visitNode(node, context);
     }
 
     protected R visitTableSubquery(TableSubquery node, C context) {
@@ -297,24 +285,8 @@ public abstract class AstVisitor<R, C> {
         return visitExpression(node, context);
     }
 
-    protected R visitWindow(Window node, C context) {
-        return visitNode(node, context);
-    }
-
-    protected R visitWindowFrame(WindowFrame node, C context) {
-        return visitNode(node, context);
-    }
-
-    protected R visitFrameBound(FrameBound node, C context) {
-        return visitNode(node, context);
-    }
-
     protected R visitColumnDefinition(ColumnDefinition node, C context) {
         return visitNode(node, context);
-    }
-
-    protected R visitAtTimeZone(AtTimeZone node, C context) {
-        return visitExpression(node, context);
     }
 
     protected R visitGroupBy(GroupBy node, C context) {

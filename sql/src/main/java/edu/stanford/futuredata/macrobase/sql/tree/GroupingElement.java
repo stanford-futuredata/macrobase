@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class GroupingElement
-    extends Node {
+public abstract class GroupingElement extends Node {
 
     protected GroupingElement(Optional<NodeLocation> location) {
         super(location);

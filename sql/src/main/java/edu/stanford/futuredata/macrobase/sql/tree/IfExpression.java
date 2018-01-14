@@ -23,8 +23,7 @@ import java.util.Optional;
 /**
  * IF(v1,v2[,v3]): CASE WHEN v1 THEN v2 [ELSE v3] END
  */
-public class IfExpression
-    extends Expression {
+public class IfExpression extends Expression {
 
     private final Expression condition;
     private final Expression trueValue;
