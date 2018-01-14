@@ -23,65 +23,65 @@ import java.util.Optional;
 
 public class Intersect extends SetOperation {
 
-  private final List<Relation> relations;
+    private final List<Relation> relations;
 
-  public Intersect(List<Relation> relations, boolean distinct) {
-    this(Optional.empty(), relations, distinct);
-  }
-
-  public Intersect(NodeLocation location, List<Relation> relations, boolean distinct) {
-    this(Optional.of(location), relations, distinct);
-  }
-
-  private Intersect(Optional<NodeLocation> location, List<Relation> relations, boolean distinct) {
-    super(location, distinct);
-    requireNonNull(relations, "relations is null");
-
-    this.relations = ImmutableList.copyOf(relations);
-  }
-
-  public List<Relation> getRelations() {
-    return relations;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitIntersect(this, context);
-  }
-
-  @Override
-  public Optional<ExportClause> getExportExpr() {
-    return Optional.empty();
-  }
-
-  @Override
-  public List<? extends Node> getChildren() {
-    return relations;
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("relations", relations)
-        .add("distinct", isDistinct())
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
+    public Intersect(List<Relation> relations, boolean distinct) {
+        this(Optional.empty(), relations, distinct);
     }
-    if ((obj == null) || (getClass() != obj.getClass())) {
-      return false;
-    }
-    Intersect o = (Intersect) obj;
-    return Objects.equals(relations, o.relations) &&
-        Objects.equals(isDistinct(), o.isDistinct());
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(relations, isDistinct());
-  }
+    public Intersect(NodeLocation location, List<Relation> relations, boolean distinct) {
+        this(Optional.of(location), relations, distinct);
+    }
+
+    private Intersect(Optional<NodeLocation> location, List<Relation> relations, boolean distinct) {
+        super(location, distinct);
+        requireNonNull(relations, "relations is null");
+
+        this.relations = ImmutableList.copyOf(relations);
+    }
+
+    public List<Relation> getRelations() {
+        return relations;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitIntersect(this, context);
+    }
+
+    @Override
+    public Optional<ExportClause> getExportExpr() {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<? extends Node> getChildren() {
+        return relations;
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("relations", relations)
+            .add("distinct", isDistinct())
+            .toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        Intersect o = (Intersect) obj;
+        return Objects.equals(relations, o.relations) &&
+            Objects.equals(isDistinct(), o.isDistinct());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(relations, isDistinct());
+    }
 }

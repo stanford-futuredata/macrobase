@@ -30,67 +30,67 @@ import java.util.stream.Collectors;
 public final class GroupingSets
     extends GroupingElement {
 
-  private final List<List<QualifiedName>> sets;
+    private final List<List<QualifiedName>> sets;
 
-  public GroupingSets(List<List<QualifiedName>> groupingSetList) {
-    this(Optional.empty(), groupingSetList);
-  }
-
-  public GroupingSets(NodeLocation location, List<List<QualifiedName>> sets) {
-    this(Optional.of(location), sets);
-  }
-
-  private GroupingSets(Optional<NodeLocation> location, List<List<QualifiedName>> sets) {
-    super(location);
-    requireNonNull(sets, "sets is null");
-    checkArgument(!sets.isEmpty(), "grouping sets cannot be empty");
-    this.sets = sets.stream().map(ImmutableList::copyOf).collect(toImmutableList());
-  }
-
-  public List<List<QualifiedName>> getSets() {
-    return sets;
-  }
-
-  @Override
-  public List<Set<Expression>> enumerateGroupingSets() {
-    return sets.stream()
-        .map(groupingSet -> groupingSet.stream()
-            .map(DereferenceExpression::from)
-            .collect(Collectors.toSet()))
-        .collect(collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
-  }
-
-  @Override
-  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitGroupingSets(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public GroupingSets(List<List<QualifiedName>> groupingSetList) {
+        this(Optional.empty(), groupingSetList);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+
+    public GroupingSets(NodeLocation location, List<List<QualifiedName>> sets) {
+        this(Optional.of(location), sets);
     }
-    GroupingSets groupingSets = (GroupingSets) o;
-    return Objects.equals(sets, groupingSets.sets);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(sets);
-  }
+    private GroupingSets(Optional<NodeLocation> location, List<List<QualifiedName>> sets) {
+        super(location);
+        requireNonNull(sets, "sets is null");
+        checkArgument(!sets.isEmpty(), "grouping sets cannot be empty");
+        this.sets = sets.stream().map(ImmutableList::copyOf).collect(toImmutableList());
+    }
 
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("sets", sets)
-        .toString();
-  }
+    public List<List<QualifiedName>> getSets() {
+        return sets;
+    }
+
+    @Override
+    public List<Set<Expression>> enumerateGroupingSets() {
+        return sets.stream()
+            .map(groupingSet -> groupingSet.stream()
+                .map(DereferenceExpression::from)
+                .collect(Collectors.toSet()))
+            .collect(collectingAndThen(Collectors.toList(), Collections::unmodifiableList));
+    }
+
+    @Override
+    protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitGroupingSets(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        GroupingSets groupingSets = (GroupingSets) o;
+        return Objects.equals(sets, groupingSets.sets);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sets);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("sets", sets)
+            .toString();
+    }
 }

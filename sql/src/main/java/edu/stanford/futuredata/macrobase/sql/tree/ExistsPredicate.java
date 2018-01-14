@@ -23,51 +23,51 @@ import java.util.Optional;
 public class ExistsPredicate
     extends Expression {
 
-  private final Expression subquery;
+    private final Expression subquery;
 
-  public ExistsPredicate(Expression subquery) {
-    this(Optional.empty(), subquery);
-  }
-
-  public ExistsPredicate(NodeLocation location, Expression subquery) {
-    this(Optional.of(location), subquery);
-  }
-
-  private ExistsPredicate(Optional<NodeLocation> location, Expression subquery) {
-    super(location);
-    requireNonNull(subquery, "subquery is null");
-    this.subquery = subquery;
-  }
-
-  public Node getSubquery() {
-    return subquery;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitExists(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of(subquery);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    public ExistsPredicate(Expression subquery) {
+        this(Optional.empty(), subquery);
     }
 
-    ExistsPredicate that = (ExistsPredicate) o;
-    return Objects.equals(subquery, that.subquery);
-  }
+    public ExistsPredicate(NodeLocation location, Expression subquery) {
+        this(Optional.of(location), subquery);
+    }
 
-  @Override
-  public int hashCode() {
-    return subquery.hashCode();
-  }
+    private ExistsPredicate(Optional<NodeLocation> location, Expression subquery) {
+        super(location);
+        requireNonNull(subquery, "subquery is null");
+        this.subquery = subquery;
+    }
+
+    public Node getSubquery() {
+        return subquery;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitExists(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of(subquery);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ExistsPredicate that = (ExistsPredicate) o;
+        return Objects.equals(subquery, that.subquery);
+    }
+
+    @Override
+    public int hashCode() {
+        return subquery.hashCode();
+    }
 }

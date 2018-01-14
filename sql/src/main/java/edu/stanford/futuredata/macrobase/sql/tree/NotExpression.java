@@ -23,51 +23,51 @@ import java.util.Optional;
 public class NotExpression
     extends Expression {
 
-  private final Expression value;
+    private final Expression value;
 
-  public NotExpression(Expression value) {
-    this(Optional.empty(), value);
-  }
-
-  public NotExpression(NodeLocation location, Expression value) {
-    this(Optional.of(location), value);
-  }
-
-  private NotExpression(Optional<NodeLocation> location, Expression value) {
-    super(location);
-    requireNonNull(value, "value is null");
-    this.value = value;
-  }
-
-  public Expression getValue() {
-    return value;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitNotExpression(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of(value);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    public NotExpression(Expression value) {
+        this(Optional.empty(), value);
     }
 
-    NotExpression that = (NotExpression) o;
-    return Objects.equals(value, that.value);
-  }
+    public NotExpression(NodeLocation location, Expression value) {
+        this(Optional.of(location), value);
+    }
 
-  @Override
-  public int hashCode() {
-    return value.hashCode();
-  }
+    private NotExpression(Optional<NodeLocation> location, Expression value) {
+        super(location);
+        requireNonNull(value, "value is null");
+        this.value = value;
+    }
+
+    public Expression getValue() {
+        return value;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitNotExpression(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        NotExpression that = (NotExpression) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
 }

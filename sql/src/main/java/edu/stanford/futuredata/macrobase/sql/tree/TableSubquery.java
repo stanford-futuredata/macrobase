@@ -22,83 +22,83 @@ import java.util.Optional;
 
 public class TableSubquery extends QueryBody {
 
-  private final Query query;
+    private final Query query;
 
-  public TableSubquery(Query query) {
-    this(Optional.empty(), query);
-  }
-
-  public TableSubquery(NodeLocation location, Query query) {
-    this(Optional.of(location), query);
-  }
-
-  private TableSubquery(Optional<NodeLocation> location, Query query) {
-    super(location);
-    this.query = query;
-  }
-
-  public Query getQuery() {
-    return query;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitTableSubquery(this, context);
-  }
-
-  @Override
-  public Select getSelect() {
-    return SELECT_ALL;
-  }
-
-  @Override
-  public Optional<Expression> getWhere() {
-    return Optional.empty();
-
-  }
-
-  @Override
-  public Optional<OrderBy> getOrderBy() {
-    return Optional.empty();
-  }
-
-  @Override
-  public Optional<String> getLimit() {
-    return Optional.empty();
-  }
-
-  @Override
-  public Optional<ExportClause> getExportExpr() {
-    return Optional.empty();
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of(query);
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .addValue(query)
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    public TableSubquery(Query query) {
+        this(Optional.empty(), query);
     }
 
-    TableSubquery tableSubquery = (TableSubquery) o;
-    return Objects.equals(query, tableSubquery.query);
-  }
+    public TableSubquery(NodeLocation location, Query query) {
+        this(Optional.of(location), query);
+    }
 
-  @Override
-  public int hashCode() {
-    return query.hashCode();
-  }
+    private TableSubquery(Optional<NodeLocation> location, Query query) {
+        super(location);
+        this.query = query;
+    }
+
+    public Query getQuery() {
+        return query;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitTableSubquery(this, context);
+    }
+
+    @Override
+    public Select getSelect() {
+        return SELECT_ALL;
+    }
+
+    @Override
+    public Optional<Expression> getWhere() {
+        return Optional.empty();
+
+    }
+
+    @Override
+    public Optional<OrderBy> getOrderBy() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<String> getLimit() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<ExportClause> getExportExpr() {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of(query);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .addValue(query)
+            .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        TableSubquery tableSubquery = (TableSubquery) o;
+        return Objects.equals(query, tableSubquery.query);
+    }
+
+    @Override
+    public int hashCode() {
+        return query.hashCode();
+    }
 }

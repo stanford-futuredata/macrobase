@@ -24,51 +24,51 @@ import java.util.Optional;
 public class CharLiteral
     extends Literal {
 
-  private final String value;
-  private final Slice slice;
+    private final String value;
+    private final Slice slice;
 
-  public CharLiteral(String value) {
-    this(Optional.empty(), value);
-  }
-
-  public CharLiteral(NodeLocation location, String value) {
-    this(Optional.of(location), value);
-  }
-
-  public CharLiteral(Optional<NodeLocation> location, String value) {
-    super(location);
-    requireNonNull(value, "value is null");
-    this.value = value;
-    this.slice = utf8Slice(CharMatcher.is(' ').trimTrailingFrom(value));
-  }
-
-  public String getValue() {
-    return value;
-  }
-
-  public Slice getSlice() {
-    return slice;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitCharLiteral(this, context);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public CharLiteral(String value) {
+        this(Optional.empty(), value);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    CharLiteral that = (CharLiteral) o;
-    return Objects.equals(value, that.value);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(value);
-  }
+    public CharLiteral(NodeLocation location, String value) {
+        this(Optional.of(location), value);
+    }
+
+    public CharLiteral(Optional<NodeLocation> location, String value) {
+        super(location);
+        requireNonNull(value, "value is null");
+        this.value = value;
+        this.slice = utf8Slice(CharMatcher.is(' ').trimTrailingFrom(value));
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public Slice getSlice() {
+        return slice;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitCharLiteral(this, context);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CharLiteral that = (CharLiteral) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
 }

@@ -28,86 +28,86 @@ import java.util.Optional;
 
 public class QualifiedName {
 
-  private final List<String> parts;
-  private final List<String> originalParts;
+    private final List<String> parts;
+    private final List<String> originalParts;
 
-  public static QualifiedName of(String first, String... rest) {
-    requireNonNull(first, "first is null");
-    return of(ImmutableList.copyOf(Lists.asList(first, rest)));
-  }
-
-  public static QualifiedName of(String name) {
-    requireNonNull(name, "name is null");
-    return of(ImmutableList.of(name));
-  }
-
-  public static QualifiedName of(Iterable<String> originalParts) {
-    requireNonNull(originalParts, "originalParts is null");
-    checkArgument(!isEmpty(originalParts), "originalParts is empty");
-    List<String> parts = ImmutableList
-        .copyOf(transform(originalParts, part -> part.toLowerCase(ENGLISH)));
-
-    return new QualifiedName(ImmutableList.copyOf(originalParts), parts);
-  }
-
-  private QualifiedName(List<String> originalParts, List<String> parts) {
-    this.originalParts = originalParts;
-    this.parts = parts;
-  }
-
-  public List<String> getParts() {
-    return parts;
-  }
-
-  public List<String> getOriginalParts() {
-    return originalParts;
-  }
-
-  @Override
-  public String toString() {
-    return Joiner.on('.').join(parts);
-  }
-
-  /**
-   * For an identifier of the form "a.b.c.d", returns "a.b.c" For an identifier of the form "a",
-   * returns absent
-   */
-  public Optional<QualifiedName> getPrefix() {
-    if (parts.size() == 1) {
-      return Optional.empty();
+    public static QualifiedName of(String first, String... rest) {
+        requireNonNull(first, "first is null");
+        return of(ImmutableList.copyOf(Lists.asList(first, rest)));
     }
 
-    List<String> subList = parts.subList(0, parts.size() - 1);
-    return Optional.of(new QualifiedName(subList, subList));
-  }
-
-  public boolean hasSuffix(QualifiedName suffix) {
-    if (parts.size() < suffix.getParts().size()) {
-      return false;
+    public static QualifiedName of(String name) {
+        requireNonNull(name, "name is null");
+        return of(ImmutableList.of(name));
     }
 
-    int start = parts.size() - suffix.getParts().size();
+    public static QualifiedName of(Iterable<String> originalParts) {
+        requireNonNull(originalParts, "originalParts is null");
+        checkArgument(!isEmpty(originalParts), "originalParts is empty");
+        List<String> parts = ImmutableList
+            .copyOf(transform(originalParts, part -> part.toLowerCase(ENGLISH)));
 
-    return parts.subList(start, parts.size()).equals(suffix.getParts());
-  }
-
-  public String getSuffix() {
-    return Iterables.getLast(parts);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+        return new QualifiedName(ImmutableList.copyOf(originalParts), parts);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    return parts.equals(((QualifiedName) o).parts);
-  }
 
-  @Override
-  public int hashCode() {
-    return parts.hashCode();
-  }
+    private QualifiedName(List<String> originalParts, List<String> parts) {
+        this.originalParts = originalParts;
+        this.parts = parts;
+    }
+
+    public List<String> getParts() {
+        return parts;
+    }
+
+    public List<String> getOriginalParts() {
+        return originalParts;
+    }
+
+    @Override
+    public String toString() {
+        return Joiner.on('.').join(parts);
+    }
+
+    /**
+     * For an identifier of the form "a.b.c.d", returns "a.b.c" For an identifier of the form "a",
+     * returns absent
+     */
+    public Optional<QualifiedName> getPrefix() {
+        if (parts.size() == 1) {
+            return Optional.empty();
+        }
+
+        List<String> subList = parts.subList(0, parts.size() - 1);
+        return Optional.of(new QualifiedName(subList, subList));
+    }
+
+    public boolean hasSuffix(QualifiedName suffix) {
+        if (parts.size() < suffix.getParts().size()) {
+            return false;
+        }
+
+        int start = parts.size() - suffix.getParts().size();
+
+        return parts.subList(start, parts.size()).equals(suffix.getParts());
+    }
+
+    public String getSuffix() {
+        return Iterables.getLast(parts);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        return parts.equals(((QualifiedName) o).parts);
+    }
+
+    @Override
+    public int hashCode() {
+        return parts.hashCode();
+    }
 }

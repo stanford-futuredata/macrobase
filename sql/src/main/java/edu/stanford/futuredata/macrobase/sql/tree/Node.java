@@ -20,32 +20,32 @@ import java.util.Optional;
 
 public abstract class Node {
 
-  private final Optional<NodeLocation> location;
+    private final Optional<NodeLocation> location;
 
-  protected Node(Optional<NodeLocation> location) {
-    this.location = requireNonNull(location, "location is null");
-  }
+    protected Node(Optional<NodeLocation> location) {
+        this.location = requireNonNull(location, "location is null");
+    }
 
-  /**
-   * Accessible for {@link AstVisitor}, use {@link AstVisitor#process(Node, Object)} instead.
-   */
-  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitNode(this, context);
-  }
+    /**
+     * Accessible for {@link AstVisitor}, use {@link AstVisitor#process(Node, Object)} instead.
+     */
+    protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitNode(this, context);
+    }
 
-  public Optional<NodeLocation> getLocation() {
-    return location;
-  }
+    public Optional<NodeLocation> getLocation() {
+        return location;
+    }
 
-  public abstract List<? extends Node> getChildren();
+    public abstract List<? extends Node> getChildren();
 
-  // Force subclasses to have a proper equals and hashcode implementation
-  @Override
-  public abstract int hashCode();
+    // Force subclasses to have a proper equals and hashcode implementation
+    @Override
+    public abstract int hashCode();
 
-  @Override
-  public abstract boolean equals(Object obj);
+    @Override
+    public abstract boolean equals(Object obj);
 
-  @Override
-  public abstract String toString();
+    @Override
+    public abstract String toString();
 }

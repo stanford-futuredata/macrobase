@@ -20,51 +20,51 @@ import java.util.Optional;
 
 public class LongLiteral extends Literal {
 
-  private final long value;
+    private final long value;
 
-  public LongLiteral(String value) {
-    this(Optional.empty(), value);
-  }
-
-  public LongLiteral(NodeLocation location, String value) {
-    this(Optional.of(location), value);
-  }
-
-  private LongLiteral(Optional<NodeLocation> location, String value) {
-    super(location);
-    requireNonNull(value, "value is null");
-    try {
-      this.value = Long.parseLong(value);
-    } catch (NumberFormatException e) {
-      throw new ParsingException("Invalid numeric literal: " + value);
-    }
-  }
-
-  public Long getValue() {
-    return value;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitLongLiteral(this, context);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    public LongLiteral(String value) {
+        this(Optional.empty(), value);
     }
 
-    LongLiteral that = (LongLiteral) o;
+    public LongLiteral(NodeLocation location, String value) {
+        this(Optional.of(location), value);
+    }
 
-    return value == that.value;
-  }
+    private LongLiteral(Optional<NodeLocation> location, String value) {
+        super(location);
+        requireNonNull(value, "value is null");
+        try {
+            this.value = Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new ParsingException("Invalid numeric literal: " + value);
+        }
+    }
 
-  @Override
-  public int hashCode() {
-    return (int) (value ^ (value >>> 32));
-  }
+    public Long getValue() {
+        return value;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitLongLiteral(this, context);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        LongLiteral that = (LongLiteral) o;
+
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (value ^ (value >>> 32));
+    }
 }

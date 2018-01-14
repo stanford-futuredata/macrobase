@@ -25,45 +25,45 @@ import java.util.Optional;
 public class GroupingOperation
     extends Expression {
 
-  private final List<Expression> groupingColumns;
+    private final List<Expression> groupingColumns;
 
-  public GroupingOperation(Optional<NodeLocation> location, List<QualifiedName> groupingColumns) {
-    super(location);
-    requireNonNull(groupingColumns);
-    checkArgument(!groupingColumns.isEmpty(), "grouping operation columns cannot be empty");
-    this.groupingColumns = groupingColumns.stream()
-        .map(DereferenceExpression::from)
-        .collect(toImmutableList());
-  }
-
-  public List<Expression> getGroupingColumns() {
-    return groupingColumns;
-  }
-
-  @Override
-  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitGroupingOperation(this, context);
-  }
-
-  @Override
-  public List<? extends Node> getChildren() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public GroupingOperation(Optional<NodeLocation> location, List<QualifiedName> groupingColumns) {
+        super(location);
+        requireNonNull(groupingColumns);
+        checkArgument(!groupingColumns.isEmpty(), "grouping operation columns cannot be empty");
+        this.groupingColumns = groupingColumns.stream()
+            .map(DereferenceExpression::from)
+            .collect(toImmutableList());
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    GroupingOperation other = (GroupingOperation) o;
-    return Objects.equals(groupingColumns, other.groupingColumns);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(groupingColumns);
-  }
+    public List<Expression> getGroupingColumns() {
+        return groupingColumns;
+    }
+
+    @Override
+    protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitGroupingOperation(this, context);
+    }
+
+    @Override
+    public List<? extends Node> getChildren() {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        GroupingOperation other = (GroupingOperation) o;
+        return Objects.equals(groupingColumns, other.groupingColumns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(groupingColumns);
+    }
 }
