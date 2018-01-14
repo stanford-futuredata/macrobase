@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class AllColumns
-    extends SelectItem {
+public class AllColumns extends SelectItem {
 
     private final Optional<QualifiedName> prefix;
 

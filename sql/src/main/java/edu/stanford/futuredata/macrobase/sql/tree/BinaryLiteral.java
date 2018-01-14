@@ -23,8 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class BinaryLiteral
-    extends Literal {
+public class BinaryLiteral extends Literal {
 
     // the grammar could possibly include whitespace in the value it passes to us
     private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[ \\r\\n\\t]");

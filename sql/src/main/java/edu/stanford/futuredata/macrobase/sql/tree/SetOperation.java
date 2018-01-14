@@ -16,8 +16,7 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class SetOperation
-    extends QueryBody {
+public abstract class SetOperation extends QueryBody {
 
     private final boolean distinct;
 

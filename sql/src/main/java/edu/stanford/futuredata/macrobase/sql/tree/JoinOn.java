@@ -20,8 +20,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 
-public class JoinOn
-    extends JoinCriteria {
+public class JoinOn extends JoinCriteria {
 
     private final Expression expression;
 

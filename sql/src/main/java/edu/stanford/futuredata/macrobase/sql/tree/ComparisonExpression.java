@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ComparisonExpression
-    extends Expression {
+public class ComparisonExpression extends Expression {
 
     private final ComparisonExpressionType type;
     private final Expression left;

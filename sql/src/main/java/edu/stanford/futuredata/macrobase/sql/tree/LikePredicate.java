@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class LikePredicate
-    extends Expression {
+public class LikePredicate extends Expression {
 
     private final Expression value;
     private final Expression pattern;

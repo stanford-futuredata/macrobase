@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class GroupBy
-    extends Node {
+public class GroupBy extends Node {
 
     private final boolean isDistinct;
     private final List<GroupingElement> groupingElements;

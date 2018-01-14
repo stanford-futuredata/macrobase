@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class SortItem
-    extends Node {
+public class SortItem extends Node {
 
     public enum Ordering {
         ASCENDING, DESCENDING

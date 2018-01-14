@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class CoalesceExpression
-    extends Expression {
+public class CoalesceExpression extends Expression {
 
     private final List<Expression> operands;
 

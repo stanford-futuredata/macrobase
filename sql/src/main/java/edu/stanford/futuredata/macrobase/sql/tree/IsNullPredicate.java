@@ -20,8 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class IsNullPredicate
-    extends Expression {
+public class IsNullPredicate extends Expression {
 
     private final Expression value;
 

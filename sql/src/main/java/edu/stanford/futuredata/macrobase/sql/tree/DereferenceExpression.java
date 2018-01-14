@@ -22,8 +22,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
-public class DereferenceExpression
-    extends Expression {
+public class DereferenceExpression extends Expression {
 
     private final Expression base;
     private final Identifier field;

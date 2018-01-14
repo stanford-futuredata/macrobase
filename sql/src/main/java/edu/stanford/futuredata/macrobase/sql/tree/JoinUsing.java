@@ -21,8 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 
-public class JoinUsing
-    extends JoinCriteria {
+public class JoinUsing extends JoinCriteria {
 
     private final List<Identifier> columns;
 

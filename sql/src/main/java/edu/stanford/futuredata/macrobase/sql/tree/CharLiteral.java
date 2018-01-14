@@ -21,8 +21,7 @@ import io.airlift.slice.Slice;
 import java.util.Objects;
 import java.util.Optional;
 
-public class CharLiteral
-    extends Literal {
+public class CharLiteral extends Literal {
 
     private final String value;
     private final Slice slice;

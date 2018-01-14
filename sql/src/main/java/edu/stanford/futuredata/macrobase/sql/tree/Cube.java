@@ -24,8 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public final class Cube
-    extends GroupingElement {
+public final class Cube extends GroupingElement {
 
     private final List<QualifiedName> columns;
 

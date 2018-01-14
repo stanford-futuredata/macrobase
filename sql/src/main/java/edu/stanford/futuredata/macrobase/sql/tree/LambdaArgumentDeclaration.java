@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class LambdaArgumentDeclaration
-    extends Expression {
+public class LambdaArgumentDeclaration extends Expression {
 
     private final Identifier name;
 

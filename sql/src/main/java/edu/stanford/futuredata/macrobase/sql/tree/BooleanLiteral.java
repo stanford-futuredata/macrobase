@@ -20,8 +20,7 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 import java.util.Optional;
 
-public class BooleanLiteral
-    extends Literal {
+public class BooleanLiteral extends Literal {
 
     public static final BooleanLiteral TRUE_LITERAL = new BooleanLiteral(Optional.empty(), "true");
     public static final BooleanLiteral FALSE_LITERAL = new BooleanLiteral(Optional.empty(),
