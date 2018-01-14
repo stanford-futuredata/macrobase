@@ -23,50 +23,50 @@ import java.util.Optional;
 public final class Row
     extends Expression {
 
-  private final List<Expression> items;
+    private final List<Expression> items;
 
-  public Row(List<Expression> items) {
-    this(Optional.empty(), items);
-  }
-
-  public Row(NodeLocation location, List<Expression> items) {
-    this(Optional.of(location), items);
-  }
-
-  private Row(Optional<NodeLocation> location, List<Expression> items) {
-    super(location);
-    requireNonNull(items, "items is null");
-    this.items = ImmutableList.copyOf(items);
-  }
-
-  public List<Expression> getItems() {
-    return items;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitRow(this, context);
-  }
-
-  @Override
-  public List<? extends Node> getChildren() {
-    return items;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(items);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
+    public Row(List<Expression> items) {
+        this(Optional.empty(), items);
     }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
+
+    public Row(NodeLocation location, List<Expression> items) {
+        this(Optional.of(location), items);
     }
-    Row other = (Row) obj;
-    return Objects.equals(this.items, other.items);
-  }
+
+    private Row(Optional<NodeLocation> location, List<Expression> items) {
+        super(location);
+        requireNonNull(items, "items is null");
+        this.items = ImmutableList.copyOf(items);
+    }
+
+    public List<Expression> getItems() {
+        return items;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitRow(this, context);
+    }
+
+    @Override
+    public List<? extends Node> getChildren() {
+        return items;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(items);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        Row other = (Row) obj;
+        return Objects.equals(this.items, other.items);
+    }
 }

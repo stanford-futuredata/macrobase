@@ -19,41 +19,41 @@ import java.util.Optional;
 public abstract class SetOperation
     extends QueryBody {
 
-  private final boolean distinct;
+    private final boolean distinct;
 
-  protected SetOperation(Optional<NodeLocation> location, boolean distinct) {
-    super(location);
-    this.distinct = distinct;
-  }
+    protected SetOperation(Optional<NodeLocation> location, boolean distinct) {
+        super(location);
+        this.distinct = distinct;
+    }
 
-  public boolean isDistinct() {
-    return distinct;
-  }
+    public boolean isDistinct() {
+        return distinct;
+    }
 
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitSetOperation(this, context);
-  }
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitSetOperation(this, context);
+    }
 
-  public abstract List<Relation> getRelations();
+    public abstract List<Relation> getRelations();
 
-  @Override
-  public Select getSelect() {
-    return SELECT_ALL;
-  }
+    @Override
+    public Select getSelect() {
+        return SELECT_ALL;
+    }
 
-  @Override
-  public Optional<Expression> getWhere() {
-    return Optional.empty();
-  }
+    @Override
+    public Optional<Expression> getWhere() {
+        return Optional.empty();
+    }
 
-  @Override
-  public Optional<OrderBy> getOrderBy() {
-    return Optional.empty();
-  }
+    @Override
+    public Optional<OrderBy> getOrderBy() {
+        return Optional.empty();
+    }
 
-  @Override
-  public Optional<String> getLimit() {
-    return Optional.empty();
-  }
+    @Override
+    public Optional<String> getLimit() {
+        return Optional.empty();
+    }
 }

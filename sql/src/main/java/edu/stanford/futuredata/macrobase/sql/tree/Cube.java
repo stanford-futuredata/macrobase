@@ -27,63 +27,63 @@ import java.util.Set;
 public final class Cube
     extends GroupingElement {
 
-  private final List<QualifiedName> columns;
+    private final List<QualifiedName> columns;
 
-  public Cube(List<QualifiedName> columns) {
-    this(Optional.empty(), columns);
-  }
-
-  public Cube(NodeLocation location, List<QualifiedName> columns) {
-    this(Optional.of(location), columns);
-  }
-
-  private Cube(Optional<NodeLocation> location, List<QualifiedName> columns) {
-    super(location);
-    this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
-  }
-
-  public List<QualifiedName> getColumns() {
-    return columns;
-  }
-
-  @Override
-  public List<Set<Expression>> enumerateGroupingSets() {
-    return ImmutableList.copyOf(Sets.powerSet(columns.stream()
-        .map(DereferenceExpression::from)
-        .collect(toSet())));
-  }
-
-  @Override
-  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitCube(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public Cube(List<QualifiedName> columns) {
+        this(Optional.empty(), columns);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+
+    public Cube(NodeLocation location, List<QualifiedName> columns) {
+        this(Optional.of(location), columns);
     }
-    Cube cube = (Cube) o;
-    return Objects.equals(columns, cube.columns);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(columns);
-  }
+    private Cube(Optional<NodeLocation> location, List<QualifiedName> columns) {
+        super(location);
+        this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
+    }
 
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("columns", columns)
-        .toString();
-  }
+    public List<QualifiedName> getColumns() {
+        return columns;
+    }
+
+    @Override
+    public List<Set<Expression>> enumerateGroupingSets() {
+        return ImmutableList.copyOf(Sets.powerSet(columns.stream()
+            .map(DereferenceExpression::from)
+            .collect(toSet())));
+    }
+
+    @Override
+    protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitCube(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Cube cube = (Cube) o;
+        return Objects.equals(columns, cube.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(columns);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("columns", columns)
+            .toString();
+    }
 }

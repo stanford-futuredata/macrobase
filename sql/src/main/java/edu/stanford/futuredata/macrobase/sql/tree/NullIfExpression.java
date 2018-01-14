@@ -24,57 +24,57 @@ import java.util.Optional;
 public class NullIfExpression
     extends Expression {
 
-  private final Expression first;
-  private final Expression second;
+    private final Expression first;
+    private final Expression second;
 
-  public NullIfExpression(Expression first, Expression second) {
-    this(Optional.empty(), first, second);
-  }
-
-  public NullIfExpression(NodeLocation location, Expression first, Expression second) {
-    this(Optional.of(location), first, second);
-  }
-
-  private NullIfExpression(Optional<NodeLocation> location, Expression first, Expression second) {
-    super(location);
-    this.first = first;
-    this.second = second;
-  }
-
-  public Expression getFirst() {
-    return first;
-  }
-
-  public Expression getSecond() {
-    return second;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitNullIfExpression(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of(first, second);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    public NullIfExpression(Expression first, Expression second) {
+        this(Optional.empty(), first, second);
     }
 
-    NullIfExpression that = (NullIfExpression) o;
-    return Objects.equals(first, that.first) &&
-        Objects.equals(second, that.second);
-  }
+    public NullIfExpression(NodeLocation location, Expression first, Expression second) {
+        this(Optional.of(location), first, second);
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(first, second);
-  }
+    private NullIfExpression(Optional<NodeLocation> location, Expression first, Expression second) {
+        super(location);
+        this.first = first;
+        this.second = second;
+    }
+
+    public Expression getFirst() {
+        return first;
+    }
+
+    public Expression getSecond() {
+        return second;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitNullIfExpression(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of(first, second);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        NullIfExpression that = (NullIfExpression) o;
+        return Objects.equals(first, that.first) &&
+            Objects.equals(second, that.second);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(first, second);
+    }
 }

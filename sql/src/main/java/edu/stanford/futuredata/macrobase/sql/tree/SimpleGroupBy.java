@@ -26,63 +26,63 @@ import java.util.Set;
 public final class SimpleGroupBy
     extends GroupingElement {
 
-  private final List<Expression> columns;
+    private final List<Expression> columns;
 
-  public SimpleGroupBy(List<Expression> simpleGroupByExpressions) {
-    this(Optional.empty(), simpleGroupByExpressions);
-  }
-
-  public SimpleGroupBy(NodeLocation location, List<Expression> simpleGroupByExpressions) {
-    this(Optional.of(location), simpleGroupByExpressions);
-  }
-
-  private SimpleGroupBy(Optional<NodeLocation> location,
-      List<Expression> simpleGroupByExpressions) {
-    super(location);
-    this.columns = ImmutableList
-        .copyOf(requireNonNull(simpleGroupByExpressions, "simpleGroupByExpressions is null"));
-  }
-
-  public List<Expression> getColumnExpressions() {
-    return columns;
-  }
-
-  @Override
-  public List<Set<Expression>> enumerateGroupingSets() {
-    return ImmutableList.of(ImmutableSet.copyOf(columns));
-  }
-
-  @Override
-  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitSimpleGroupBy(this, context);
-  }
-
-  @Override
-  public List<? extends Node> getChildren() {
-    return columns;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public SimpleGroupBy(List<Expression> simpleGroupByExpressions) {
+        this(Optional.empty(), simpleGroupByExpressions);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+
+    public SimpleGroupBy(NodeLocation location, List<Expression> simpleGroupByExpressions) {
+        this(Optional.of(location), simpleGroupByExpressions);
     }
-    SimpleGroupBy that = (SimpleGroupBy) o;
-    return Objects.equals(columns, that.columns);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(columns);
-  }
+    private SimpleGroupBy(Optional<NodeLocation> location,
+        List<Expression> simpleGroupByExpressions) {
+        super(location);
+        this.columns = ImmutableList
+            .copyOf(requireNonNull(simpleGroupByExpressions, "simpleGroupByExpressions is null"));
+    }
 
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("columns", columns)
-        .toString();
-  }
+    public List<Expression> getColumnExpressions() {
+        return columns;
+    }
+
+    @Override
+    public List<Set<Expression>> enumerateGroupingSets() {
+        return ImmutableList.of(ImmutableSet.copyOf(columns));
+    }
+
+    @Override
+    protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitSimpleGroupBy(this, context);
+    }
+
+    @Override
+    public List<? extends Node> getChildren() {
+        return columns;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SimpleGroupBy that = (SimpleGroupBy) o;
+        return Objects.equals(columns, that.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(columns);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("columns", columns)
+            .toString();
+    }
 }
