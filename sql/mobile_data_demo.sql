@@ -108,11 +108,19 @@ FROM DIFF
   ON state, hw_make, hw_model, app_version
   ORDER BY global_ratio;
 
-
 -- Should be same as the original double-table query above
 SELECT app_version, hw_make, hw_model, global_ratio
 FROM DIFF
   (SPLIT ON PREDICATE(battery_drain, ">", 0.9) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Demonstrate subquerying within SPLIT ON
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PREDICATE(battery_drain, ">", 0.9) FROM (
+      SELECT * FROM mobile_data where battery_drain > 0.25
+  ))
   ON state, hw_make, hw_model, app_version
   ORDER BY global_ratio;
 

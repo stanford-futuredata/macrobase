@@ -18,29 +18,29 @@ import static java.util.Objects.requireNonNull;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import java.util.Optional;
 
-public class LongLiteral extends Literal {
+public class IntLiteral extends Literal {
 
-    private final long value;
+    private final int value;
 
-    public LongLiteral(String value) {
+    public IntLiteral(String value) {
         this(Optional.empty(), value);
     }
 
-    public LongLiteral(NodeLocation location, String value) {
+    public IntLiteral(NodeLocation location, String value) {
         this(Optional.of(location), value);
     }
 
-    private LongLiteral(Optional<NodeLocation> location, String value) {
+    private IntLiteral(Optional<NodeLocation> location, String value) {
         super(location);
         requireNonNull(value, "value is null");
         try {
-            this.value = Long.parseLong(value);
+            this.value = Integer.parseInt(value);
         } catch (NumberFormatException e) {
             throw new ParsingException("Invalid numeric literal: " + value);
         }
     }
 
-    public Long getValue() {
+    public int getValue() {
         return value;
     }
 
@@ -58,7 +58,7 @@ public class LongLiteral extends Literal {
             return false;
         }
 
-        LongLiteral that = (LongLiteral) o;
+        IntLiteral that = (IntLiteral) o;
 
         return value == that.value;
     }
