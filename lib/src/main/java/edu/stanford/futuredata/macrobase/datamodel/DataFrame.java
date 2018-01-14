@@ -68,15 +68,13 @@ public class DataFrame {
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = rows.get(i).<String>getAs(c);
                 }
-                stringCols.add(colValues);
-                indexToTypeIndex.add(stringCols.size()-1);
+                addStringColumnInternal(colValues);
             } else if (t == Schema.ColType.DOUBLE) {
                 double[] colValues = new double[numRows];
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = rows.get(i).<Double>getAs(c);
                 }
-                doubleCols.add(colValues);
-                indexToTypeIndex.add(doubleCols.size()-1);
+                addDoubleColumnInternal(colValues);
             } else {
                 throw new MacrobaseInternalError("Invalid ColType");
             }
@@ -205,8 +203,7 @@ public class DataFrame {
         }
 
         schema.addColumn(Schema.ColType.STRING, colName);
-        stringCols.add(colValues);
-        indexToTypeIndex.add(stringCols.size()-1);
+        addStringColumnInternal(colValues);
         return this;
     }
 
@@ -216,9 +213,18 @@ public class DataFrame {
         }
 
         schema.addColumn(ColType.DOUBLE, colName);
+        addDoubleColumnInternal(colValues);
+        return this;
+    }
+
+    private void addStringColumnInternal(String[] colValues) {
+        stringCols.add(colValues);
+        indexToTypeIndex.add(stringCols.size()-1);
+    }
+
+    private void addDoubleColumnInternal(double[] colValues) {
         doubleCols.add(colValues);
         indexToTypeIndex.add(doubleCols.size()-1);
-        return this;
     }
 
     protected int[] getSubIndices(List<Integer> columns) {
