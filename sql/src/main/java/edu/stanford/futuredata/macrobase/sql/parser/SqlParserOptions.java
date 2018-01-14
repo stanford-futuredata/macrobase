@@ -20,22 +20,23 @@ import java.util.EnumSet;
 
 public class SqlParserOptions {
 
-  private final EnumSet<IdentifierSymbol> allowedIdentifierSymbols = EnumSet
-      .noneOf(IdentifierSymbol.class);
+    private final EnumSet<IdentifierSymbol> allowedIdentifierSymbols = EnumSet
+        .noneOf(IdentifierSymbol.class);
 
-  public SqlParserOptions allowIdentifierSymbol(Iterable<IdentifierSymbol> identifierSymbols) {
-    Iterables.addAll(allowedIdentifierSymbols, identifierSymbols);
-    return this;
-  }
-
-  public EnumSet<IdentifierSymbol> getAllowedIdentifierSymbols() {
-    return EnumSet.copyOf(allowedIdentifierSymbols);
-  }
-
-  public SqlParserOptions allowIdentifierSymbol(IdentifierSymbol... identifierSymbols) {
-    for (IdentifierSymbol identifierSymbol : identifierSymbols) {
-      allowedIdentifierSymbols.add(requireNonNull(identifierSymbol, "identifierSymbol is null"));
+    public SqlParserOptions allowIdentifierSymbol(Iterable<IdentifierSymbol> identifierSymbols) {
+        Iterables.addAll(allowedIdentifierSymbols, identifierSymbols);
+        return this;
     }
-    return this;
-  }
+
+    public EnumSet<IdentifierSymbol> getAllowedIdentifierSymbols() {
+        return EnumSet.copyOf(allowedIdentifierSymbols);
+    }
+
+    public SqlParserOptions allowIdentifierSymbol(IdentifierSymbol... identifierSymbols) {
+        for (IdentifierSymbol identifierSymbol : identifierSymbols) {
+            allowedIdentifierSymbols
+                .add(requireNonNull(identifierSymbol, "identifierSymbol is null"));
+        }
+        return this;
+    }
 }

@@ -21,41 +21,41 @@ import java.util.Optional;
 public class LambdaArgumentDeclaration
     extends Expression {
 
-  private final Identifier name;
+    private final Identifier name;
 
-  public LambdaArgumentDeclaration(Identifier name) {
-    super(Optional.empty());
-    this.name = name;
-  }
-
-  public Identifier getName() {
-    return name;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitLambdaArgumentDeclaration(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public LambdaArgumentDeclaration(Identifier name) {
+        super(Optional.empty());
+        this.name = name;
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    LambdaArgumentDeclaration that = (LambdaArgumentDeclaration) o;
-    return Objects.equals(name, that.name);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(name);
-  }
+    public Identifier getName() {
+        return name;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitLambdaArgumentDeclaration(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        LambdaArgumentDeclaration that = (LambdaArgumentDeclaration) o;
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
 }

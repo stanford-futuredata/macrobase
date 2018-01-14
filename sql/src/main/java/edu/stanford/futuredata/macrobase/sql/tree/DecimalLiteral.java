@@ -20,45 +20,45 @@ import java.util.Optional;
 
 public class DecimalLiteral extends Literal {
 
-  private final double value;
+    private final double value;
 
-  public DecimalLiteral(String value) {
-    this(Optional.empty(), value);
-  }
-
-  public DecimalLiteral(NodeLocation location, String value) {
-    this(Optional.of(location), value);
-  }
-
-  public DecimalLiteral(Optional<NodeLocation> location, String value) {
-    super(location);
-    requireNonNull(value, "value is null");
-    this.value = Double.parseDouble(value);
-  }
-
-  public double getValue() {
-    return value;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitDecimalLiteral(this, context);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public DecimalLiteral(String value) {
+        this(Optional.empty(), value);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    DecimalLiteral that = (DecimalLiteral) o;
-    return Objects.equals(value, that.value);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(value);
-  }
+    public DecimalLiteral(NodeLocation location, String value) {
+        this(Optional.of(location), value);
+    }
+
+    public DecimalLiteral(Optional<NodeLocation> location, String value) {
+        super(location);
+        requireNonNull(value, "value is null");
+        this.value = Double.parseDouble(value);
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitDecimalLiteral(this, context);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DecimalLiteral that = (DecimalLiteral) o;
+        return Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
 }

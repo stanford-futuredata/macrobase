@@ -18,26 +18,26 @@ import java.util.Optional;
 
 public abstract class QueryBody extends Relation {
 
-  // subclasses can use this to return nothing for getSelect()
-  protected static final Select SELECT_ALL = new Select(false,
-      Lists.newArrayList(new SingleColumn(new StringLiteral("*"))));
+    // subclasses can use this to return nothing for getSelect()
+    protected static final Select SELECT_ALL = new Select(false,
+        Lists.newArrayList(new SingleColumn(new StringLiteral("*"))));
 
-  protected QueryBody(Optional<NodeLocation> location) {
-    super(location);
-  }
+    protected QueryBody(Optional<NodeLocation> location) {
+        super(location);
+    }
 
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitQueryBody(this, context);
-  }
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitQueryBody(this, context);
+    }
 
-  public abstract Select getSelect();
+    public abstract Select getSelect();
 
-  public abstract Optional<Expression> getWhere();
+    public abstract Optional<Expression> getWhere();
 
-  public abstract Optional<OrderBy> getOrderBy();
+    public abstract Optional<OrderBy> getOrderBy();
 
-  public abstract Optional<String> getLimit();
+    public abstract Optional<String> getLimit();
 
-  public abstract Optional<ExportClause> getExportExpr();
+    public abstract Optional<ExportClause> getExportExpr();
 }

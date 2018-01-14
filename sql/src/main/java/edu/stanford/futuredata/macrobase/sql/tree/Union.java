@@ -23,65 +23,65 @@ import java.util.Optional;
 
 public class Union extends SetOperation {
 
-  private final List<Relation> relations;
+    private final List<Relation> relations;
 
-  public Union(List<Relation> relations, boolean distinct) {
-    this(Optional.empty(), relations, distinct);
-  }
-
-  public Union(NodeLocation location, List<Relation> relations, boolean distinct) {
-    this(Optional.of(location), relations, distinct);
-  }
-
-  private Union(Optional<NodeLocation> location, List<Relation> relations, boolean distinct) {
-    super(location, distinct);
-    requireNonNull(relations, "relations is null");
-
-    this.relations = ImmutableList.copyOf(relations);
-  }
-
-  public List<Relation> getRelations() {
-    return relations;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitUnion(this, context);
-  }
-
-  @Override
-  public Optional<ExportClause> getExportExpr() {
-    return Optional.empty();
-  }
-
-  @Override
-  public List<? extends Node> getChildren() {
-    return relations;
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("relations", relations)
-        .add("distinct", isDistinct())
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
+    public Union(List<Relation> relations, boolean distinct) {
+        this(Optional.empty(), relations, distinct);
     }
-    if ((obj == null) || (getClass() != obj.getClass())) {
-      return false;
-    }
-    Union o = (Union) obj;
-    return Objects.equals(relations, o.relations) &&
-        Objects.equals(isDistinct(), o.isDistinct());
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(relations, isDistinct());
-  }
+    public Union(NodeLocation location, List<Relation> relations, boolean distinct) {
+        this(Optional.of(location), relations, distinct);
+    }
+
+    private Union(Optional<NodeLocation> location, List<Relation> relations, boolean distinct) {
+        super(location, distinct);
+        requireNonNull(relations, "relations is null");
+
+        this.relations = ImmutableList.copyOf(relations);
+    }
+
+    public List<Relation> getRelations() {
+        return relations;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitUnion(this, context);
+    }
+
+    @Override
+    public Optional<ExportClause> getExportExpr() {
+        return Optional.empty();
+    }
+
+    @Override
+    public List<? extends Node> getChildren() {
+        return relations;
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("relations", relations)
+            .add("distinct", isDistinct())
+            .toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        Union o = (Union) obj;
+        return Objects.equals(relations, o.relations) &&
+            Objects.equals(isDistinct(), o.isDistinct());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(relations, isDistinct());
+    }
 }

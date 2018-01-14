@@ -23,61 +23,61 @@ import java.util.Optional;
 
 public class Query extends Statement {
 
-  private final QueryBody queryBody;
+    private final QueryBody queryBody;
 
-  public Query(QueryBody queryBody) {
-    this(Optional.empty(), queryBody);
-  }
-
-  public Query(NodeLocation location, QueryBody queryBody) {
-    this(Optional.of(location), queryBody);
-  }
-
-  private Query(Optional<NodeLocation> location, QueryBody queryBody) {
-    super(location);
-    requireNonNull(queryBody, "queryBody is null");
-
-    this.queryBody = queryBody;
-  }
-
-  public QueryBody getQueryBody() {
-    return queryBody;
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitQuery(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-    nodes.add(queryBody);
-    return nodes.build();
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("queryBody", queryBody)
-        .omitNullValues()
-        .toString();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
+    public Query(QueryBody queryBody) {
+        this(Optional.empty(), queryBody);
     }
-    if ((obj == null) || (getClass() != obj.getClass())) {
-      return false;
-    }
-    Query o = (Query) obj;
-    return Objects.equals(queryBody, o.queryBody);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(queryBody);
-  }
+    public Query(NodeLocation location, QueryBody queryBody) {
+        this(Optional.of(location), queryBody);
+    }
+
+    private Query(Optional<NodeLocation> location, QueryBody queryBody) {
+        super(location);
+        requireNonNull(queryBody, "queryBody is null");
+
+        this.queryBody = queryBody;
+    }
+
+    public QueryBody getQueryBody() {
+        return queryBody;
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitQuery(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        ImmutableList.Builder<Node> nodes = ImmutableList.builder();
+        nodes.add(queryBody);
+        return nodes.build();
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("queryBody", queryBody)
+            .omitNullValues()
+            .toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        Query o = (Query) obj;
+        return Objects.equals(queryBody, o.queryBody);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(queryBody);
+    }
 }
