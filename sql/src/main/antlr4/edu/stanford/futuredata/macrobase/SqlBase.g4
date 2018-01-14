@@ -86,7 +86,7 @@ diffQuerySpecification
       exportClause?
       FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON columnAliases
-      (WITH minRatioExpression? minSupportExpression?)
+      (WITH minRatioExpression? minSupportExpression?)?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
@@ -106,7 +106,7 @@ diffQuerySpecification
       exportClause?
       FROM DIFF '(' splitQuery ')'
       ON columnAliases
-      (WITH minRatioExpression? minSupportExpression?)
+      (WITH minRatioExpression? minSupportExpression?)?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
@@ -132,7 +132,7 @@ minRatioExpression
     ;
 
 minSupportExpression
-    : MIN SUPPORT minSupport=DECIMAL_VALUE
+    : MIN_SUPPORT minSupport=DECIMAL_VALUE
     ;
 
 ratioMetricExpression
@@ -550,6 +550,7 @@ LOGICAL: 'LOGICAL';
 MAP: 'MAP';
 MAX: 'MAX';
 MIN: 'MIN';
+MIN_SUPPORT: 'MIN SUPPORT';
 MINUTE: 'MINUTE';
 MONTH: 'MONTH';
 NATURAL: 'NATURAL';
@@ -613,7 +614,6 @@ STARTING: 'STARTING';
 STATS: 'STATS';
 SUBSTRING: 'SUBSTRING';
 SUM: 'SUM';
-// SUPPORT: 'SUPPORT'; TODO: figure out how to include this
 SYSTEM: 'SYSTEM';
 TABLE: 'TABLE';
 TABLES: 'TABLES';
