@@ -110,12 +110,16 @@ public class Row {
 
     /**
      * @return If x is a double, return back a formatted String that prints at least 1 and up to 6
-     * decimal places of the double. If x is null, return "-". Otherwise, return x unchanged.
+     * decimal places of the double. If x is null, return "-". Otherwise, return x unchanged (i.e.
+     * toString will be used)
      */
     private Object formatVal(Object x) {
         if (x == null) {
             return "-";
         } else if (x instanceof Double) {
+            if (Double.isNaN((Double) x)) {
+                return "NaN";
+            }
             return DOUBLE_FORMAT.format(x);
         } else {
             return x;
