@@ -16,11 +16,19 @@ SELECT * FROM DIFF
   (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
   ON state, hw_make, hw_model, firmware_version, app_version;
 
-SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count
+SELECT app_version, hw_make, hw_model, global_ratio, support, outlier_count
 FROM DIFF
   (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
   (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
   ON state, hw_make, hw_model, firmware_version, app_version
+  ORDER BY global_ratio;
+
+SELECT app_version, hw_make, hw_model, global_ratio, support, outlier_count
+FROM DIFF
+  (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
+  (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
+  ON state, hw_make, hw_model, firmware_version, app_version
+  WITH MIN RATIO 10.0 MIN SUPPORT 0.5
   ORDER BY global_ratio;
 
 SELECT hw_make, battery_drain FROM mobile_data WHERE battery_drain > 0.90 AND hw_make = 'Emdoor';
@@ -33,6 +41,14 @@ FROM DIFF
   (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
   ON state, hw_make, hw_model, firmware_version, app_version
   MAX COMBO 1
+  ORDER BY global_ratio;
+
+SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count
+FROM DIFF
+  (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
+  (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
+  ON state, hw_make, hw_model, firmware_version, app_version
+  MAX COMBO 2
   ORDER BY global_ratio;
 
 SELECT app_version, hw_make, hw_model, firmware_version, global_ratio, support, outlier_count
