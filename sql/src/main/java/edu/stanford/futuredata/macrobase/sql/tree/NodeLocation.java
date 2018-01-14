@@ -15,19 +15,19 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 
 public final class NodeLocation {
 
-  private final int line;
-  private final int charPositionInLine;
+    private final int line;
+    private final int charPositionInLine;
 
-  public NodeLocation(int line, int charPositionInLine) {
-    this.line = line;
-    this.charPositionInLine = charPositionInLine;
-  }
+    public NodeLocation(int line, int charPositionInLine) {
+        this.line = line;
+        this.charPositionInLine = charPositionInLine;
+    }
 
-  public int getLineNumber() {
-    return line;
-  }
+    public int getLineNumber() {
+        return line;
+    }
 
-  public int getColumnNumber() {
-    return charPositionInLine + 1;
-  }
+    public int getColumnNumber() {
+        return charPositionInLine + 1;
+    }
 }

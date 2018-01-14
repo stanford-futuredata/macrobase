@@ -28,71 +28,71 @@ import java.util.stream.IntStream;
 
 public final class Rollup extends GroupingElement {
 
-  private final List<QualifiedName> columns;
+    private final List<QualifiedName> columns;
 
-  public Rollup(List<QualifiedName> columns) {
-    this(Optional.empty(), columns);
-  }
-
-  public Rollup(NodeLocation location, List<QualifiedName> columns) {
-    this(Optional.of(location), columns);
-  }
-
-  private Rollup(Optional<NodeLocation> location, List<QualifiedName> columns) {
-    super(location);
-    this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
-  }
-
-  public List<QualifiedName> getColumns() {
-    return columns;
-  }
-
-  @Override
-  public List<Set<Expression>> enumerateGroupingSets() {
-    int numColumns = columns.size();
-    return ImmutableList.<Set<Expression>>builder()
-        .addAll(IntStream.range(0, numColumns)
-            .mapToObj(i -> columns.subList(0, numColumns - i)
-                .stream()
-                .map(DereferenceExpression::from)
-                .map(Expression.class::cast)
-                .collect(toSet()))
-            .collect(toList()))
-        .add(ImmutableSet.of())
-        .build();
-  }
-
-  @Override
-  protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitRollup(this, context);
-  }
-
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public Rollup(List<QualifiedName> columns) {
+        this(Optional.empty(), columns);
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+
+    public Rollup(NodeLocation location, List<QualifiedName> columns) {
+        this(Optional.of(location), columns);
     }
-    Rollup rollup = (Rollup) o;
-    return Objects.equals(columns, rollup.columns);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(columns);
-  }
+    private Rollup(Optional<NodeLocation> location, List<QualifiedName> columns) {
+        super(location);
+        this.columns = ImmutableList.copyOf(requireNonNull(columns, "columns is null"));
+    }
 
-  @Override
-  public String toString() {
-    return toStringHelper(this)
-        .add("columns", columns)
-        .toString();
-  }
+    public List<QualifiedName> getColumns() {
+        return columns;
+    }
+
+    @Override
+    public List<Set<Expression>> enumerateGroupingSets() {
+        int numColumns = columns.size();
+        return ImmutableList.<Set<Expression>>builder()
+            .addAll(IntStream.range(0, numColumns)
+                .mapToObj(i -> columns.subList(0, numColumns - i)
+                    .stream()
+                    .map(DereferenceExpression::from)
+                    .map(Expression.class::cast)
+                    .collect(toSet()))
+                .collect(toList()))
+            .add(ImmutableSet.of())
+            .build();
+    }
+
+    @Override
+    protected <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitRollup(this, context);
+    }
+
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Rollup rollup = (Rollup) o;
+        return Objects.equals(columns, rollup.columns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(columns);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(this)
+            .add("columns", columns)
+            .toString();
+    }
 }

@@ -18,29 +18,29 @@ import java.util.Optional;
 public class NullLiteral
     extends Literal {
 
-  public NullLiteral() {
-    super(Optional.empty());
-  }
-
-  public NullLiteral(NodeLocation location) {
-    super(Optional.of(location));
-  }
-
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitNullLiteral(this, context);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public NullLiteral() {
+        super(Optional.empty());
     }
-    return o != null && getClass() == o.getClass();
-  }
 
-  @Override
-  public int hashCode() {
-    return 0;
-  }
+    public NullLiteral(NodeLocation location) {
+        super(Optional.of(location));
+    }
+
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitNullLiteral(this, context);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        return o != null && getClass() == o.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
 }

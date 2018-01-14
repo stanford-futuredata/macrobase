@@ -14,16 +14,16 @@
 package edu.stanford.futuredata.macrobase.sql.parser;
 
 public enum IdentifierSymbol {
-  COLON(':'),
-  AT_SIGN('@');
+    COLON(':'),
+    AT_SIGN('@');
 
-  private final char symbol;
+    private final char symbol;
 
-  IdentifierSymbol(char symbol) {
-    this.symbol = symbol;
-  }
+    IdentifierSymbol(char symbol) {
+        this.symbol = symbol;
+    }
 
-  public char getSymbol() {
-    return symbol;
-  }
+    public char getSymbol() {
+        return symbol;
+    }
 }

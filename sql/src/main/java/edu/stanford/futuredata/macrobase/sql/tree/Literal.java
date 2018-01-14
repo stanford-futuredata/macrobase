@@ -19,17 +19,17 @@ import java.util.Optional;
 
 public abstract class Literal extends Expression {
 
-  protected Literal(Optional<NodeLocation> location) {
-    super(location);
-  }
+    protected Literal(Optional<NodeLocation> location) {
+        super(location);
+    }
 
-  @Override
-  public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
-    return visitor.visitLiteral(this, context);
-  }
+    @Override
+    public <R, C> R accept(AstVisitor<R, C> visitor, C context) {
+        return visitor.visitLiteral(this, context);
+    }
 
-  @Override
-  public List<Node> getChildren() {
-    return ImmutableList.of();
-  }
+    @Override
+    public List<Node> getChildren() {
+        return ImmutableList.of();
+    }
 }
