@@ -26,28 +26,32 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
      * @param minSupport lowest outlier support of the results returned.
      */
-    public void setMinSupport(double minSupport) {
+    public BatchSummarizer setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
+        return this;
     }
 
-    public void setAttributes(List<String> attributes) {
+    public BatchSummarizer setAttributes(List<String> attributes) {
         this.attributes = attributes;
+        return this;
     }
 
     /**
      * Set the column which indicates outlier status. "_OUTLIER" by default.
      * @param outlierColumn new outlier indicator column.
      */
-    public void setOutlierColumn(String outlierColumn) {
+    public BatchSummarizer setOutlierColumn(String outlierColumn) {
         this.outlierColumn = outlierColumn;
+        return this;
     }
     /**
      * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
      * @param minRatioMetric lowest risk ratio to consider for meaningful explanations.
      */
 
-    public void setMinRatioMetric(double minRatioMetric) {
+    public BatchSummarizer setMinRatioMetric(double minRatioMetric) {
         this.minRatioMetric = minRatioMetric;
+        return this;
     }
 
     /**

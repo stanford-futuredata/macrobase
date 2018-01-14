@@ -10,7 +10,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummari
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameLoader;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
@@ -37,6 +37,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +65,7 @@ class QueryEngine {
         final String tableName = importStatement.getTableName().toString();
         final Map<String, ColType> schema = importStatement.getSchema();
         try {
-            DataFrame df = new CSVDataFrameLoader(filename).setColumnTypes(schema).load();
+            DataFrame df = new CSVDataFrameParser(filename, new ArrayList<>(schema.keySet())).load();
             tablesInMemory.put(tableName, df);
             return df;
         } catch (Exception e) {
@@ -182,8 +183,8 @@ class QueryEngine {
         final APrioriSummarizer summarizer = new APrioriSummarizer();
         summarizer.setRatioMetric(ratioMetric)
             .setMaxOrder(order)
-            .setMinRatioMetric(minRatioMetric)
             .setMinSupport(minSupport)
+            .setMinRatioMetric(minRatioMetric)
             .setOutlierColumn(outlierColName)
             .setAttributes(cols);
 
