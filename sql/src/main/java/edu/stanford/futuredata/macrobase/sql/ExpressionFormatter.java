@@ -61,7 +61,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.LambdaArgumentDeclaration;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.LongLiteral;
+import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
 import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullIfExpression;
@@ -193,7 +193,7 @@ public final class ExpressionFormatter {
         }
 
         @Override
-        protected String visitLongLiteral(LongLiteral node, Void context) {
+        protected String visitLongLiteral(IntLiteral node, Void context) {
             return Long.toString(node.getValue());
         }
 

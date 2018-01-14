@@ -117,6 +117,8 @@ diffQuerySpecification
 splitQuery
     :  SPLIT ON identifier '(' (primaryExpression (',' primaryExpression)*)? ')'
        FROM relation
+    |  SPLIT ON identifier '(' (primaryExpression (',' primaryExpression)*)? ')'
+       FROM queryTerm
     ;
 
 columnDefinition

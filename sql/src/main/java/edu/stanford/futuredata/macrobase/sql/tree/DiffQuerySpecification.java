@@ -21,14 +21,14 @@ public class DiffQuerySpecification extends QueryBody {
     private final MinRatioExpression minRatioExpr;
     private final MinSupportExpression minSupportExpr;
     private final RatioMetricExpression ratioMetricExpr;
-    private final LongLiteral maxCombo;
+    private final IntLiteral maxCombo;
     // Optional
     private final Optional<Expression> where;
     private final Optional<OrderBy> orderBy;
     private final Optional<String> limit;
     private final Optional<ExportClause> exportExpr;
 
-    private static final LongLiteral DEFAULT_MAX_COMBO = new LongLiteral("3");
+    private static final IntLiteral DEFAULT_MAX_COMBO = new IntLiteral("3");
     private static final MinRatioExpression DEFAULT_MIN_RATIO_EXPRESSION = new MinRatioExpression(
         new DecimalLiteral("1.5"));
     private static final MinSupportExpression DEFAULT_MIN_SUPPORT_EXPRESSION = new MinSupportExpression(
@@ -46,7 +46,7 @@ public class DiffQuerySpecification extends QueryBody {
         Optional<MinRatioExpression> minRatioExpr,
         Optional<MinSupportExpression> minSupportExpr,
         Optional<RatioMetricExpression> ratioMetricExpr,
-        Optional<LongLiteral> maxCombo,
+        Optional<IntLiteral> maxCombo,
         Optional<Expression> where,
         Optional<OrderBy> orderBy,
         Optional<String> limit,
@@ -65,7 +65,7 @@ public class DiffQuerySpecification extends QueryBody {
         Optional<MinRatioExpression> minRatioExpr,
         Optional<MinSupportExpression> minSupportExpr,
         Optional<RatioMetricExpression> ratioMetricExpr,
-        Optional<LongLiteral> maxCombo,
+        Optional<IntLiteral> maxCombo,
         Optional<Expression> where,
         Optional<OrderBy> orderBy,
         Optional<String> limit,
@@ -84,7 +84,7 @@ public class DiffQuerySpecification extends QueryBody {
         Optional<MinRatioExpression> minRatioExpr,
         Optional<MinSupportExpression> minSupportExpr,
         Optional<RatioMetricExpression> ratioMetricExpr,
-        Optional<LongLiteral> maxCombo,
+        Optional<IntLiteral> maxCombo,
         Optional<Expression> where,
         Optional<OrderBy> orderBy,
         Optional<String> limit,
@@ -155,7 +155,7 @@ public class DiffQuerySpecification extends QueryBody {
         return ratioMetricExpr;
     }
 
-    public LongLiteral getMaxCombo() {
+    public IntLiteral getMaxCombo() {
         return maxCombo;
     }
 
@@ -190,7 +190,7 @@ public class DiffQuerySpecification extends QueryBody {
         nodes.add(minRatioExpr);
         nodes.add(minSupportExpr);
         nodes.add(ratioMetricExpr);
-        nodes.add(new LongLiteral("" + maxCombo));
+        nodes.add(new IntLiteral("" + maxCombo));
         where.ifPresent(nodes::add);
         orderBy.ifPresent(nodes::add);
         limit.ifPresent((str) -> nodes.add(new StringLiteral(str)));

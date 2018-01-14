@@ -26,6 +26,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
+import edu.stanford.futuredata.macrobase.sql.tree.Relation;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
@@ -94,7 +95,7 @@ class QueryEngine {
             .collect(toImmutableList());
 
         final String outlierColName = "outlier_col";
-        DataFrame dfToQuery = null;
+        DataFrame dfToExplain = null;
 
         if (diffQuery.hasTwoArgs()) {
             final TableSubquery first = diffQuery.getFirst().get();
@@ -111,19 +112,24 @@ class QueryEngine {
                     "ON " + Joiner.on(", ").join(explainCols) + " not present in either"
                         + " outlier or inlier subquery");
             }
-            dfToQuery = combineOutliersAndInliers(outlierColName, outliersDf, inliersDf);
+            dfToExplain = combineOutliersAndInliers(outlierColName, outliersDf, inliersDf);
 
         } else {
             // splitQuery
             final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
-            Table table = (Table) splitQuery.getRelation();
-            final String tableName = table.getName().toString();
-            DataFrame df = getTable(tableName);
+            DataFrame inputDf;
+            final Relation inputRelation = splitQuery.getInputRelation();
+            if (inputRelation instanceof TableSubquery) {
+                inputDf = executeQuery(((TableSubquery) inputRelation).getQuery().getQueryBody());
+            } else {
+                // instance of Table
+                inputDf = getTable(((Table) inputRelation).getName().toString());
+            }
 
-            if (!df.getSchema().hasColumns(explainCols)) {
+            if (!inputDf.getSchema().hasColumns(explainCols)) {
                 throw new MacrobaseSQLException(
                     "ON " + Joiner.on(", ").join(explainCols) + " not present in table "
-                        + tableName);
+                        + inputRelation);
             }
 
             final String classifierType = splitQuery.getClassifierName().getValue();
@@ -132,8 +138,8 @@ class QueryEngine {
                     .getClassifier(classifierType, splitQuery.getClassifierArgs().stream().map(
                         Expression::toString).collect(toList()));
                 classifier.setOutputColumnName(outlierColName);
-                classifier.process(df);
-                dfToQuery = classifier.getResults();
+                classifier.process(inputDf);
+                dfToExplain = classifier.getResults();
 
             } catch (MacrobaseException e) {
                 // this comes from instantiating the classifier; re-throw
@@ -144,17 +150,16 @@ class QueryEngine {
             }
         }
 
-        // TODO: too many get's; too many fields are Optional that shouldn't be
         final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
         final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
         final ExplanationMetric ratioMetric = ExplanationMetric
             .getMetricFn(diffQuery.getRatioMetricExpr().getFuncName().toString());
-        final long order = diffQuery.getMaxCombo().getValue();
+        final int order = diffQuery.getMaxCombo().getValue();
 
         // execute diff
         // TODO: add support for "ON *"
-        DataFrame df = diff(dfToQuery, outlierColName, explainCols, minRatioMetric, minSupport,
-            ratioMetric, (int) order);
+        DataFrame df = diff(dfToExplain, outlierColName, explainCols, minRatioMetric, minSupport,
+            ratioMetric, order);
 
         return evaluateSQLClauses(diffQuery, df);
     }
