@@ -18,7 +18,7 @@ import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.Paths;
 import jline.console.ConsoleReader;
 import jline.console.completer.CandidateListCompletionHandler;
@@ -84,10 +84,11 @@ public class MacroBaseSQLRepl {
                         // print result to file; if file already exists, do nothing and print error message
                         final String filename = exportExpr.getFilename();
                         if (!exists(Paths.get(filename))) {
-                            try (PrintStream outFile = new PrintStream(
+                            try (OutputStreamWriter outFile = new OutputStreamWriter(
                                 new FileOutputStream(filename))) {
-                                new CSVDataFrameWriter(exportExpr.getFieldDelimiter(),
-                                    exportExpr.getLineDelimiter()).writeToStream(result, outFile);
+//                                exportExpr.getFieldDelimiter(),
+//                                    exportExpr.getLineDelimiter()
+                                new CSVDataFrameWriter().writeToStream(result, outFile);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }

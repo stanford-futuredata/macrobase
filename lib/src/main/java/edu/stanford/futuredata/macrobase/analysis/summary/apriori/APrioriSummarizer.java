@@ -373,16 +373,6 @@ public class APrioriSummarizer extends BatchSummarizer {
     }
 
     /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public APrioriSummarizer setMinRatioMetric(double minRatio) {
-        this.minRatioMetric = minRatio;
-        return this;
-    }
-
-    /**
      * Set the maximum order of explanations found by the Summarizer. Can't be greater than 3
      * @param maxOrder
      * @return this
