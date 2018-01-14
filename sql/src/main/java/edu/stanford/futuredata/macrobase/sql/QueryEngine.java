@@ -1,9 +1,11 @@
 package edu.stanford.futuredata.macrobase.sql;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -28,6 +30,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem.Ordering;
+import edu.stanford.futuredata.macrobase.sql.tree.SplitQuery;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
@@ -85,47 +88,89 @@ class QueryEngine {
 
   private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
       throws MacrobaseException {
-    assert (diffQuery.getSecond().isPresent()); // TODO: support single DataFrame queries
-    // Extract parameters for Diff query
-    // TODO: too many get's; too many fields are Optional that shouldn't be
-    final TableSubquery first = diffQuery.getFirst().get();
-    final TableSubquery second = diffQuery.getSecond().get();
+    // TODO: if an attributeCol isn't in a select col, don't include it
     final List<String> explainCols = diffQuery.getAttributeCols().stream().map(Identifier::toString)
         .collect(toImmutableList());
-    final double minRatioMetric = diffQuery.getMinRatioExpression().get().getMinRatio();
-    final double minSupport = diffQuery.getMinSupportExpression().get().getMinSupport();
-    final ExplanationMetric ratioMetric = ExplanationMetric
-        .getMetricFn(diffQuery.getRatioMetricExpr().get().getFuncName().toString());
-    final long order = diffQuery.getMaxCombo().get().getValue();
 
-    // execute subqueries
-    final DataFrame firstDf = executeQuery(first.getQuery().getQueryBody());
-    final DataFrame secondDf = executeQuery(second.getQuery().getQueryBody());
-    if (!firstDf.getSchema().hasColumns(explainCols) || !secondDf.getSchema()
-        .hasColumns(explainCols)) {
-      throw new MacrobaseSQLException(
-          "ON " + Joiner.on(", ").join(explainCols) + " not present in either"
-              + " outlier or inlier subquery");
+    final String outlierColName = "outlier_col";
+    DataFrame dfToQuery = null;
+
+    if (diffQuery.hasTwoArgs()) {
+      final TableSubquery first = diffQuery.getFirst().get();
+      final TableSubquery second = diffQuery.getSecond().get();
+
+      // execute subqueries
+      final DataFrame outliersDf = executeQuery(first.getQuery().getQueryBody());
+      final DataFrame inliersDf = executeQuery(second.getQuery().getQueryBody());
+
+      // TODO: should be able to check this without having to execute the two subqueries
+      if (!outliersDf.getSchema().hasColumns(explainCols) || !inliersDf.getSchema()
+          .hasColumns(explainCols)) {
+        throw new MacrobaseSQLException(
+            "ON " + Joiner.on(", ").join(explainCols) + " not present in either"
+                + " outlier or inlier subquery");
+      }
+      dfToQuery = combineOutliersAndInliers(outlierColName, outliersDf, inliersDf);
+
+    } else {
+      // splitQuery
+      final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
+      Table table = (Table) splitQuery.getRelation();
+      final String tableName = table.getName().toString();
+      DataFrame df = getTable(tableName);
+
+      if (!df.getSchema().hasColumns(explainCols)) {
+        throw new MacrobaseSQLException(
+            "ON " + Joiner.on(", ").join(explainCols) + " not present in table " + tableName);
+      }
+
+      final String classifierType = splitQuery.getClassifierName().getValue();
+      try {
+        final Classifier classifier = Classifier
+            .getClassifier(classifierType, splitQuery.getClassifierArgs().stream().map(
+                Expression::toString).collect(toList()));
+        classifier.setOutputColumnName(outlierColName);
+        classifier.process(df);
+        dfToQuery = classifier.getResults();
+
+      } catch (MacrobaseException e) {
+        // this comes from instantiating the classifier; re-throw
+        throw e;
+      } catch (Exception e) {
+        e.printStackTrace();
+        // TODO: get rid of Exception thrown by classifier.process
+      }
     }
+
+    // TODO: too many get's; too many fields are Optional that shouldn't be
+    final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
+    final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
+    final ExplanationMetric ratioMetric = ExplanationMetric
+        .getMetricFn(diffQuery.getRatioMetricExpr().getFuncName().toString());
+    final long order = diffQuery.getMaxCombo().getValue();
+
     // execute diff
     // TODO: add support for "ON *"
-    DataFrame df = diff(firstDf, secondDf, explainCols, minRatioMetric, minSupport, ratioMetric,
-        (int) order);
+    DataFrame df = diff(dfToQuery, outlierColName, explainCols, minRatioMetric, minSupport,
+        ratioMetric, (int) order);
 
     return evaluateSQLClauses(diffQuery, df);
   }
 
-  private DataFrame diff(final DataFrame outliers, final DataFrame inliers,
+  private DataFrame combineOutliersAndInliers(final String outlierColName,
+      final DataFrame outliersDf, final DataFrame inliersDf) throws MacrobaseSQLException {
+
+    // Add column "outlier_col" to both outliers (all 1.0) and inliers (all 0.0)
+    outliersDf.addColumn(outlierColName,
+        DoubleStream.generate(() -> 1.0).limit(outliersDf.getNumRows()).toArray());
+    inliersDf.addColumn(outlierColName,
+        DoubleStream.generate(() -> 0.0).limit(outliersDf.getNumRows()).toArray());
+    return DataFrame.unionAll(Lists.newArrayList(outliersDf, inliersDf));
+  }
+
+  private DataFrame diff(final DataFrame combined, final String outlierColName,
       final List<String> cols, final double minRatioMetric, final double minSupport,
       final ExplanationMetric ratioMetric, final int order) throws MacrobaseException {
-
-    final String outlierColName = "outlier_col";
-    // Add column "outlier_col" to both outliers (all 1.0) and inliers (all 0.0)
-    outliers.addColumn(outlierColName,
-        DoubleStream.generate(() -> 1.0).limit(outliers.getNumRows()).toArray());
-    inliers.addColumn(outlierColName,
-        DoubleStream.generate(() -> 0.0).limit(outliers.getNumRows()).toArray());
-    DataFrame combined = DataFrame.unionAll(Lists.newArrayList(outliers, inliers));
 
     final APrioriSummarizer summarizer = new APrioriSummarizer();
     summarizer.setRatioMetric(ratioMetric)
@@ -185,11 +230,22 @@ class QueryEngine {
   private DataFrame executeQuerySpec(final QuerySpecification query) throws MacrobaseSQLException {
     Table table = (Table) query.getFrom().get();
     final String tableName = table.getName().toString();
+    final DataFrame df = getTable(tableName);
+    return evaluateSQLClauses(query, df);
+  }
+
+  /**
+   * Get table as DataFrame that has previously been loaded into memory
+   *
+   * @param tableName String that uniquely identifies table
+   * @return DataFrame for table
+   * @throws MacrobaseSQLException if the table has not been loaded into memory and does not exist
+   */
+  private DataFrame getTable(String tableName) throws MacrobaseSQLException {
     if (!tablesInMemory.containsKey(tableName)) {
       throw new MacrobaseSQLException("Table " + tableName + " does not exist");
     }
-    final DataFrame df = tablesInMemory.get(tableName);
-    return evaluateSQLClauses(query, df);
+    return tablesInMemory.get(tableName);
   }
 
   /**
