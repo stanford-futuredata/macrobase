@@ -65,6 +65,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.IfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.InListExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.InPredicate;
+import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Intersect;
 import edu.stanford.futuredata.macrobase.sql.tree.IntervalLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
@@ -77,7 +78,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.LambdaArgumentDeclaration;
 import edu.stanford.futuredata.macrobase.sql.tree.LambdaExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.LongLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.MinRatioExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.MinSupportExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NaturalJoin;
@@ -261,8 +261,11 @@ class AstBuilder
     public Node visitSplitQuery(SqlBaseParser.SplitQueryContext context) {
         Identifier classifierName = (Identifier) visit(context.identifier());
         List<Expression> classifierArgs = visit(context.primaryExpression(), Expression.class);
-        Relation relation = (Relation) visit(context.relation());
-        return new SplitQuery(classifierName, classifierArgs, relation);
+        Optional<Relation> relation = visitIfPresent(context.relation(), Relation.class);
+        Optional<TableSubquery> subquery = visitIfPresent(context.queryTerm(), TableSubquery.class);
+        check(relation.isPresent() || subquery.isPresent(),
+            "Either a relation or a subquery must be present in a SplitQuery", context);
+        return new SplitQuery(classifierName, classifierArgs, relation, subquery);
     }
 
     @Override
@@ -276,7 +279,7 @@ class AstBuilder
         check(subqueries.size() == 0 && splitQuery.isPresent()
                 || subqueries.size() == 2 && !splitQuery
                 .isPresent(),
-            "At least one and at most two relations required for diff query", context);
+            "At least one and at most two subqueries required for a DiffQuery", context);
 
         if (subqueries.size() == 2) {
             first = Optional.of(subqueries.get(0));
@@ -295,7 +298,7 @@ class AstBuilder
             Identifier.class);
         check(attributeCols.size() > 0, "At least one attribute must be specified", context);
 
-        Optional<LongLiteral> maxCombo = getTextIfPresent(context.maxCombo).map(LongLiteral::new);
+        Optional<IntLiteral> maxCombo = getTextIfPresent(context.maxCombo).map(IntLiteral::new);
 
         Optional<OrderBy> orderBy = Optional.empty();
         if (context.ORDER() != null) {
@@ -1088,7 +1091,7 @@ class AstBuilder
 
     @Override
     public Node visitIntegerLiteral(SqlBaseParser.IntegerLiteralContext context) {
-        return new LongLiteral(getLocation(context), context.getText());
+        return new IntLiteral(getLocation(context), context.getText());
     }
 
     @Override

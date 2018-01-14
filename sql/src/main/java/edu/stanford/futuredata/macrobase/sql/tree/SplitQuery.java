@@ -12,28 +12,33 @@ public class SplitQuery extends Node {
 
     private final Identifier classifierName;
     private final List<Expression> classifierArgs;
-    private final Relation relation;
+    private final Optional<Relation> relation;
+    private final Optional<TableSubquery> subquery;
 
     public SplitQuery(Identifier classifierName, List<Expression> classifierArgs,
-        Relation relation) {
-        this(Optional.empty(), classifierName, classifierArgs, relation);
+        Optional<Relation> relation, Optional<TableSubquery> subquery) {
+        this(Optional.empty(), classifierName, classifierArgs, relation, subquery);
     }
 
     public SplitQuery(NodeLocation location, Identifier classifierName,
-        List<Expression> classifierArgs, Relation relation) {
-        this(Optional.of(location), classifierName, classifierArgs, relation);
+        List<Expression> classifierArgs, Optional<Relation> relation,
+        Optional<TableSubquery> subquery) {
+        this(Optional.of(location), classifierName, classifierArgs, relation, subquery);
     }
 
     private SplitQuery(Optional<NodeLocation> location, Identifier classifierName,
-        List<Expression> classifierArgs, Relation relation) {
+        List<Expression> classifierArgs, Optional<Relation> relation,
+        Optional<TableSubquery> subquery) {
         super(location);
         requireNonNull(classifierName, "classifierName is null");
         requireNonNull(classifierArgs, "classifierArgs is null");
         requireNonNull(relation, "relation is null");
+        requireNonNull(subquery, "subquery is null");
 
         this.classifierName = classifierName;
         this.classifierArgs = classifierArgs;
         this.relation = relation;
+        this.subquery = subquery;
     }
 
     public Identifier getClassifierName() {
@@ -44,8 +49,8 @@ public class SplitQuery extends Node {
         return classifierArgs;
     }
 
-    public Relation getRelation() {
-        return relation;
+    public Relation getInputRelation() {
+        return relation.orElseGet(subquery::get);
     }
 
     @Override
@@ -53,7 +58,8 @@ public class SplitQuery extends Node {
         ImmutableList.Builder<Node> nodes = ImmutableList.builder();
         nodes.add(classifierName);
         nodes.addAll(classifierArgs);
-        nodes.add(relation);
+        relation.ifPresent(nodes::add);
+        subquery.ifPresent(nodes::add);
         return nodes.build();
     }
 
