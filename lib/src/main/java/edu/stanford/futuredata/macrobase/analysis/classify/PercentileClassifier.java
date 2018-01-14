@@ -1,14 +1,16 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import java.util.List;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 /**
- * Classify rows based on high / low values for a single column.
- * Returns a new dataframe with a column representation the classification status for
- * each row: 1.0 if outlier, 0.0 otherwise.
+ * Classify rows based on high / low values for a single column. Returns a new dataframe with a
+ * column representation the classification status for each row: 1.0 if outlier, 0.0 otherwise.
  */
 public class PercentileClassifier extends Classifier implements ThresholdClassifier {
+
     // Parameters
     private double percentile = 0.5;
     private boolean includeHigh = true;
@@ -23,6 +25,24 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
         super(columnName);
     }
 
+    /**
+     * Alternate constructor that takes in List of Strings; used to instantiate Classifier (via
+     * reflection) specified in MacroBase SQL query
+     *
+     * @param attrs by convention, should be a List that has 2-4 values: [outlier_col_name, cutoff,
+     * includeHigh (optional), includeLo (optional)]
+     */
+    public PercentileClassifier(List<String> attrs) throws MacrobaseException {
+        this(attrs.get(0));
+        percentile = Double.parseDouble(attrs.get(1));
+        includeHigh =
+            (attrs.size() <= 2) || Boolean
+                .parseBoolean(attrs.get(2)); // 3rd arg if present else true
+        includeLow =
+            (attrs.size() > 3) && Boolean
+                .parseBoolean(attrs.get(3)); // 4th arg if present else false
+    }
+
     @Override
     public void process(DataFrame input) {
         double[] metrics = input.getDoubleColumnByName(columnName);
@@ -35,8 +55,8 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
         for (int i = 0; i < len; i++) {
             double curVal = metrics[i];
             if ((curVal > highCutoff && includeHigh)
-                    || (curVal < lowCutoff && includeLow)
-                    ) {
+                || (curVal < lowCutoff && includeLow)
+                ) {
                 resultColumn[i] = 1.0;
             }
         }
@@ -74,6 +94,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
         this.includeHigh = includeHigh;
         return this;
     }
+
     public boolean isIncludeLow() {
         return includeLow;
     }
@@ -90,6 +111,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     public double getLowCutoff() {
         return lowCutoff;
     }
+
     public double getHighCutoff() {
         return highCutoff;
     }
