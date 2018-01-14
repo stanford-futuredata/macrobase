@@ -105,6 +105,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.SimpleCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SimpleGroupBy;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
+import edu.stanford.futuredata.macrobase.sql.tree.SplitQuery;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.SubqueryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.SubscriptExpression;
@@ -177,11 +178,12 @@ class AstBuilder
               diffQuery.getSelect(),
               diffQuery.getFirst(),
               diffQuery.getSecond(),
+              diffQuery.getSplitQuery(),
               diffQuery.getAttributeCols(),
-              diffQuery.getMinRatioExpression(),
-              diffQuery.getMinSupportExpression(),
-              diffQuery.getRatioMetricExpr(),
-              diffQuery.getMaxCombo(),
+              Optional.of(diffQuery.getMinRatioExpression()),
+              Optional.of(diffQuery.getMinSupportExpression()),
+              Optional.of(diffQuery.getRatioMetricExpr()),
+              Optional.of(diffQuery.getMaxCombo()),
               diffQuery.getWhere(),
               diffQuery.getOrderBy(),
               diffQuery.getLimit(),
@@ -254,17 +256,27 @@ class AstBuilder
   }
 
   @Override
+  public Node visitSplitQuery(SqlBaseParser.SplitQueryContext context) {
+    Identifier classifierName = (Identifier) visit(context.identifier());
+    List<Expression> classifierArgs = visit(context.primaryExpression(), Expression.class);
+    Relation relation = (Relation) visit(context.relation());
+    return new SplitQuery(classifierName, classifierArgs, relation);
+  }
+
+  @Override
   public Node visitDiffQuerySpecification(SqlBaseParser.DiffQuerySpecificationContext context) {
-    Optional<TableSubquery> first;
+    Optional<SplitQuery> splitQuery = visitIfPresent(context.splitQuery(), SplitQuery.class);
+    Optional<TableSubquery> first = Optional.empty();
     Optional<TableSubquery> second = Optional.empty();
     List<SelectItem> selectItems = visit(context.selectItem(), SelectItem.class);
 
     List<TableSubquery> subqueries = visit(context.queryTerm(), TableSubquery.class);
-    check(subqueries.size() > 0 && subqueries.size() <= 2,
+    check(subqueries.size() == 0 && splitQuery.isPresent() || subqueries.size() == 2 && !splitQuery
+            .isPresent(),
         "At least one and at most two relations required for diff query", context);
 
-    first = Optional.of(subqueries.get(0));
     if (subqueries.size() == 2) {
+      first = Optional.of(subqueries.get(0));
       second = Optional.of(subqueries.get(1));
     }
 
@@ -294,6 +306,7 @@ class AstBuilder
         new Select(getLocation(context.SELECT()), isDistinct(context.setQuantifier()), selectItems),
         first,
         second,
+        splitQuery,
         attributeCols,
         minRatioExpr,
         minSupportExpr,

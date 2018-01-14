@@ -11,13 +11,18 @@ import java.util.Optional;
 public class DiffQuerySpecification extends QueryBody {
 
   private final Select select;
+  // Either first and second are present, or splitQuery is
   private final Optional<TableSubquery> first;
   private final Optional<TableSubquery> second;
+  private final Optional<SplitQuery> splitQuery;
+  // Required
   private final List<Identifier> attributeCols;
-  private final Optional<MinRatioExpression> minRatioExpr;
-  private final Optional<MinSupportExpression> minSupportExpr;
-  private final Optional<RatioMetricExpression> ratioMetricExpr;
-  private final Optional<LongLiteral> maxCombo;
+  // Optional, with defaults
+  private final MinRatioExpression minRatioExpr;
+  private final MinSupportExpression minSupportExpr;
+  private final RatioMetricExpression ratioMetricExpr;
+  private final LongLiteral maxCombo;
+  // Optional
   private final Optional<Expression> where;
   private final Optional<OrderBy> orderBy;
   private final Optional<String> limit;
@@ -36,6 +41,7 @@ public class DiffQuerySpecification extends QueryBody {
       Select select,
       Optional<TableSubquery> first,
       Optional<TableSubquery> second,
+      Optional<SplitQuery> splitQuery,
       List<Identifier> attributeCols,
       Optional<MinRatioExpression> minRatioExpr,
       Optional<MinSupportExpression> minSupportExpr,
@@ -45,9 +51,8 @@ public class DiffQuerySpecification extends QueryBody {
       Optional<OrderBy> orderBy,
       Optional<String> limit,
       Optional<ExportClause> exportExpr) {
-    this(Optional.empty(), select, first, second, attributeCols, minRatioExpr, minSupportExpr,
-        ratioMetricExpr, maxCombo, where,
-        orderBy, limit, exportExpr);
+    this(Optional.empty(), select, first, second, splitQuery, attributeCols, minRatioExpr,
+        minSupportExpr, ratioMetricExpr, maxCombo, where, orderBy, limit, exportExpr);
   }
 
   public DiffQuerySpecification(
@@ -55,6 +60,7 @@ public class DiffQuerySpecification extends QueryBody {
       Select select,
       Optional<TableSubquery> first,
       Optional<TableSubquery> second,
+      Optional<SplitQuery> splitQuery,
       List<Identifier> attributeCols,
       Optional<MinRatioExpression> minRatioExpr,
       Optional<MinSupportExpression> minSupportExpr,
@@ -64,9 +70,8 @@ public class DiffQuerySpecification extends QueryBody {
       Optional<OrderBy> orderBy,
       Optional<String> limit,
       Optional<ExportClause> exportExpr) {
-    this(Optional.of(location), select, first, second, attributeCols, minRatioExpr, minSupportExpr,
-        ratioMetricExpr, maxCombo,
-        where, orderBy, limit, exportExpr);
+    this(Optional.of(location), select, first, second, splitQuery, attributeCols, minRatioExpr,
+        minSupportExpr, ratioMetricExpr, maxCombo, where, orderBy, limit, exportExpr);
   }
 
   private DiffQuerySpecification(
@@ -74,6 +79,7 @@ public class DiffQuerySpecification extends QueryBody {
       Select select,
       Optional<TableSubquery> first,
       Optional<TableSubquery> second,
+      Optional<SplitQuery> splitQuery,
       List<Identifier> attributeCols,
       Optional<MinRatioExpression> minRatioExpr,
       Optional<MinSupportExpression> minSupportExpr,
@@ -87,6 +93,7 @@ public class DiffQuerySpecification extends QueryBody {
     requireNonNull(select, "select is null");
     requireNonNull(first, "first is null");
     requireNonNull(second, "second is null");
+    requireNonNull(splitQuery, "splitQuery is null");
     requireNonNull(attributeCols, "attributeCols is null");
     requireNonNull(minRatioExpr, "minRatioExpr is null");
     requireNonNull(minSupportExpr, "minSupportExpr is null");
@@ -100,11 +107,12 @@ public class DiffQuerySpecification extends QueryBody {
     this.select = select;
     this.first = first;
     this.second = second;
+    this.splitQuery = splitQuery;
     this.attributeCols = attributeCols;
-    this.minRatioExpr = Optional.of(minRatioExpr.orElse(DEFAULT_MIN_RATIO_EXPRESSION));
-    this.minSupportExpr = Optional.of(minSupportExpr.orElse(DEFAULT_MIN_SUPPORT_EXPRESSION));
-    this.ratioMetricExpr = Optional.of(ratioMetricExpr.orElse(DEFAULT_RATIO_METRIC_EXPRESSION));
-    this.maxCombo = Optional.of(maxCombo.orElse(DEFAULT_MAX_COMBO));
+    this.minRatioExpr = minRatioExpr.orElse(DEFAULT_MIN_RATIO_EXPRESSION);
+    this.minSupportExpr = minSupportExpr.orElse(DEFAULT_MIN_SUPPORT_EXPRESSION);
+    this.ratioMetricExpr = ratioMetricExpr.orElse(DEFAULT_RATIO_METRIC_EXPRESSION);
+    this.maxCombo = maxCombo.orElse(DEFAULT_MAX_COMBO);
     this.where = where;
     this.orderBy = orderBy;
     this.limit = limit;
@@ -123,23 +131,31 @@ public class DiffQuerySpecification extends QueryBody {
     return second;
   }
 
+  public boolean hasTwoArgs() {
+    return first.isPresent() && second.isPresent();
+  }
+
+  public Optional<SplitQuery> getSplitQuery() {
+    return splitQuery;
+  }
+
   public List<Identifier> getAttributeCols() {
     return attributeCols;
   }
 
-  public Optional<MinRatioExpression> getMinRatioExpression() {
+  public MinRatioExpression getMinRatioExpression() {
     return minRatioExpr;
   }
 
-  public Optional<MinSupportExpression> getMinSupportExpression() {
+  public MinSupportExpression getMinSupportExpression() {
     return minSupportExpr;
   }
 
-  public Optional<RatioMetricExpression> getRatioMetricExpr() {
+  public RatioMetricExpression getRatioMetricExpr() {
     return ratioMetricExpr;
   }
 
-  public Optional<LongLiteral> getMaxCombo() {
+  public LongLiteral getMaxCombo() {
     return maxCombo;
   }
 
@@ -171,9 +187,9 @@ public class DiffQuerySpecification extends QueryBody {
     first.ifPresent(nodes::add);
     second.ifPresent(nodes::add);
     nodes.addAll(attributeCols);
-    nodes.add(minRatioExpr.get());
-    nodes.add(minSupportExpr.get());
-    nodes.add(ratioMetricExpr.get());
+    nodes.add(minRatioExpr);
+    nodes.add(minSupportExpr);
+    nodes.add(ratioMetricExpr);
     nodes.add(new LongLiteral("" + maxCombo));
     where.ifPresent(nodes::add);
     orderBy.ifPresent(nodes::add);

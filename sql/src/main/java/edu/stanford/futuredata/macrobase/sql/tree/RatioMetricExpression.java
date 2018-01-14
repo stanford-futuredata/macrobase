@@ -25,7 +25,7 @@ public class RatioMetricExpression extends Expression {
       AggregateExpression aggExpr) {
     super(location);
     requireNonNull(funcName, "funcName is null");
-    requireNonNull(aggExpr, "agg is null");
+    requireNonNull(aggExpr, "aggExpr is null");
 
     this.funcName = funcName;
     this.aggExpr = aggExpr;

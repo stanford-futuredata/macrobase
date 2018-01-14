@@ -73,7 +73,7 @@ querySpecification
 
 diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
-      FROM DIFF queryTerm qualifiedName? (',' queryTerm qualifiedName?)?
+      FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON columnAliases
       (WITH minRatioExpression? minSupportExpression?)?
       (COMPARE BY ratioMetricExpression)?
@@ -84,7 +84,7 @@ diffQuerySpecification
       exportClause?
     | SELECT setQuantifier? selectItem (',' selectItem)*
       exportClause?
-      FROM DIFF queryTerm qualifiedName? (',' queryTerm qualifiedName?)?
+      FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON columnAliases
       (WITH minRatioExpression? minSupportExpression?)
       (COMPARE BY ratioMetricExpression)?
@@ -92,6 +92,31 @@ diffQuerySpecification
       (WHERE where=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
+    | SELECT setQuantifier? selectItem (',' selectItem)*
+      FROM DIFF '(' splitQuery ')'
+      ON columnAliases
+      (WITH minRatioExpression? minSupportExpression?)?
+      (COMPARE BY ratioMetricExpression)?
+      (MAX COMBO maxCombo=INTEGER_VALUE)?
+      (WHERE where=booleanExpression)?
+      (ORDER BY sortItem (',' sortItem)*)?
+      (LIMIT limit=(INTEGER_VALUE | ALL))?
+      exportClause?
+    | SELECT setQuantifier? selectItem (',' selectItem)*
+      exportClause?
+      FROM DIFF '(' splitQuery ')'
+      ON columnAliases
+      (WITH minRatioExpression? minSupportExpression?)
+      (COMPARE BY ratioMetricExpression)?
+      (MAX COMBO maxCombo=INTEGER_VALUE)?
+      (WHERE where=booleanExpression)?
+      (ORDER BY sortItem (',' sortItem)*)?
+      (LIMIT limit=(INTEGER_VALUE | ALL))?
+    ;
+
+splitQuery
+    :  SPLIT ON identifier '(' (primaryExpression (',' primaryExpression)*)? ')'
+       FROM relation
     ;
 
 columnDefinition
@@ -582,6 +607,7 @@ SETS: 'SETS';
 SHOW: 'SHOW';
 SMALLINT: 'SMALLINT';
 SOME: 'SOME';
+SPLIT: 'SPLIT';
 START: 'START';
 STARTING: 'STARTING';
 STATS: 'STATS';

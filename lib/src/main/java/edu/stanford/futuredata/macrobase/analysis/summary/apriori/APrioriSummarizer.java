@@ -104,7 +104,6 @@ public class APrioriSummarizer extends BatchSummarizer {
                 outlierCol
         );
 
-        // TODO: clean up
         for (int order = 2; order <= maxOrder; ++order) {
             countSet(
                 encoded,

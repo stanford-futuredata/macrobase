@@ -601,7 +601,7 @@ public final class ExpressionFormatter {
   static String formatStringLiteral(String s) {
     s = s.replace("'", "''");
     if (isAsciiPrintable(s)) {
-      return "'" + s + "'";
+      return s;
     }
 
     StringBuilder builder = new StringBuilder();
