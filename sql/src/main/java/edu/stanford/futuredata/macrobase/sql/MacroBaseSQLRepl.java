@@ -93,11 +93,13 @@ public class MacroBaseSQLRepl {
               }
             } else {
               System.err.println("File " + filename + " already exists.");
+              System.err.println();
             }
           });
         }
       } catch (ParsingException | MacrobaseException e) {
         System.err.println(e.getMessage());
+        System.err.println();
       }
     }
   }

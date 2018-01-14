@@ -52,5 +52,79 @@ FROM DIFF
   INTO OUTFILE 'mobile_data_outliers.csv'
   FIELDS TERMINATED BY '\t';
 
+-- single-table queries
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PERCENTILE(battery_drain, 0.9) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
 
+-- This gives an OOM error, since includeHi and includeLo are both false
+--SELECT app_version, hw_make, hw_model, global_ratio
+--FROM DIFF
+--  (SPLIT ON PERCENTILE(battery_drain, 0.9, false) FROM mobile_data)
+--  ON state, hw_make, hw_model, app_version
+--  ORDER BY global_ratio;
+
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PERCENTILE(battery_drain, 0.9, false, true) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PERCENTILE(battery_drain, 0.9, true, true) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Should be an error
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PERCENTILE(battery_drain) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Should also be an error
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PERCENTILE(0.9) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+
+-- Should be same as the original double-table query above
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PREDICATE(battery_drain, ">", 0.9) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Should yield no results
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PREDICATE(battery_drain, "!=", 0.9) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Should be an error
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PREDICATE(battery_drain, ">") FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Should also be an error
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PREDICATE(battery_drain, 0.9) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
+
+-- Should also be an error
+SELECT app_version, hw_make, hw_model, global_ratio
+FROM DIFF
+  (SPLIT ON PREDICATE(battery_drain) FROM mobile_data)
+  ON state, hw_make, hw_model, app_version
+  ORDER BY global_ratio;
 
