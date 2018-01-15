@@ -86,9 +86,8 @@ public class MacroBaseSQLRepl {
                         if (!exists(Paths.get(filename))) {
                             try (OutputStreamWriter outFile = new OutputStreamWriter(
                                 new FileOutputStream(filename))) {
-//                                exportExpr.getFieldDelimiter(),
-//                                    exportExpr.getLineDelimiter()
-                                new CSVDataFrameWriter().writeToStream(result, outFile);
+                                new CSVDataFrameWriter(exportExpr.getFieldDelimiter(),
+                                    exportExpr.getLineDelimiter()).writeToStream(result, outFile);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
