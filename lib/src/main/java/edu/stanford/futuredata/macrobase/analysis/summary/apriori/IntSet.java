@@ -127,12 +127,7 @@ public class IntSet {
 
     @Override
     public int hashCode() {
-        // In the extremely common three-integer case, just roll a fast efficient "hash."
-        if (values.length == 3){
-            return (23 * values[0]) + (2161 * values[1]) + (29167 * values[2]);
-        } else {
             return Arrays.hashCode(values);
-        }
     }
 
     @Override
