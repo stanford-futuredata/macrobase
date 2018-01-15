@@ -87,7 +87,9 @@ public class APrioriLinear{
                         curRowAttributes,
                         precalculatedCandidates
                 );
-                for (IntSet curCandidate : candidates) {
+                int numCandidates = candidates.size();
+                for(int c = 0; c < numCandidates; c++) {
+                    IntSet curCandidate = candidates.get(c);
                     double[] candidateVal = setAggregates.get(curCandidate);
                     if (candidateVal == null) {
                         setAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
