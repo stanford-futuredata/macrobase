@@ -65,7 +65,7 @@ class QueryEngine {
         final String tableName = importStatement.getTableName().toString();
         final Map<String, ColType> schema = importStatement.getSchema();
         try {
-            DataFrame df = new CSVDataFrameParser(filename, new ArrayList<>(schema.keySet())).load();
+            DataFrame df = new CSVDataFrameParser(filename, schema).load();
             tablesInMemory.put(tableName, df);
             return df;
         } catch (Exception e) {

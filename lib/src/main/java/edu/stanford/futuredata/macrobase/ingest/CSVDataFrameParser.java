@@ -35,6 +35,16 @@ public class CSVDataFrameParser implements DataFrameLoader {
         this.parser = csvParser;
     }
 
+    public CSVDataFrameParser(String fileName, Map<String, Schema.ColType> types) throws IOException {
+        this.requiredColumns = new ArrayList<>(types.keySet());
+        this.columnTypes = types;
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        CsvParser csvParser = new CsvParser(settings);
+        csvParser.beginParsing(getReader(fileName));
+        this.parser = csvParser;
+    }
+
     @Override
     public DataFrameLoader setColumnTypes(Map<String, Schema.ColType> types) {
         this.columnTypes = types;
