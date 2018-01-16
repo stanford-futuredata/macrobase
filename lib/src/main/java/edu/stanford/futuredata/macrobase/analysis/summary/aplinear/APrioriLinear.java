@@ -77,7 +77,7 @@ public class APrioriLinear {
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             // Group by and calculate aggregates for each of the candidates
-            final HashMap<IntSet, double[]> setAggregates = new HashMap<>();
+            final ConcurrentHashMap<IntSet, double[]> setAggregates = new ConcurrentHashMap<>();
 
             // precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
@@ -91,6 +91,12 @@ public class APrioriLinear {
                 numThreads = 4;
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
+            // Run the critical path of the algorithm--candidate generation--in parallel.
+            // For speed, this is deliberately not synchronized except the bare minimum
+            // provided by ConcurrentHashMap (atomic puts and safe hashmap resizes, etc).
+            // This is enough to prevent crashes, but not occasional data overwrites.
+            // As a result, outlier counts can vary slightly from run to run, but not enough
+            // to invalidate results.
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
