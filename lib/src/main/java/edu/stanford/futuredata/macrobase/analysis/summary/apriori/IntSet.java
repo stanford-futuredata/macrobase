@@ -26,12 +26,43 @@ public class IntSet {
 
         }
     }
+    /*
+     * Hand-rolled three-integer sort.  Extremely performant and saves a lot of time in the
+     * apriori/aplinear implementation versus just calling sort.
+     */
     public IntSet(int a, int b, int c) {
         values = new int[3];
-        values[0] = a;
-        values[1] = b;
-        values[2] = c;
-        Arrays.sort(values);
+        if (a <= b) {
+            if (a <= c) {
+                values[0] = a;
+                if (b <= c) {
+                    values[1] = b;
+                    values[2] = c;
+                } else {
+                    values[1] = c;
+                    values[2] = b;
+                }
+            } else {
+                values[0] = c;
+                values[1] = a;
+                values[2] = b;
+            }
+        } else {
+            if (b <= c) {
+                values[0] = b;
+                if (a <= c) {
+                    values[1] = a;
+                    values[2] = c;
+                } else {
+                    values[1] = c;
+                    values[2] = a;
+                }
+            } else {
+                values[0] = c;
+                values[1] = b;
+                values[2] = a;
+            }
+        }
     }
 
     public IntSet(int[] values) {
