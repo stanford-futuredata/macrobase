@@ -127,7 +127,7 @@ public class IntSet {
 
     @Override
     public int hashCode() {
-            return Arrays.hashCode(values);
+        return Arrays.hashCode(values);
     }
 
     @Override
