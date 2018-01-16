@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
@@ -15,7 +18,7 @@ import java.util.*;
  * which can be combined additively. Then, we use APriori to find the subgroups which
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
-public class APrioriLinear{
+public class APrioriLinear {
     Logger log = LoggerFactory.getLogger("APLSummarizer");
 
     // **Parameters**
@@ -25,11 +28,11 @@ public class APrioriLinear{
     // **Cached values**
 
     // singleton viable sets for quick lookup
-    HashSet<Integer> singleNext;
+    private HashSet<Integer> singleNext;
     // sets that has high enough support but not high risk ratio, need to be explored
-    HashMap<Integer, HashSet<IntSet>> setNext;
+    private HashMap<Integer, HashSet<IntSet>> setNext;
     // aggregate values for all of the sets we saved
-    HashMap<Integer, HashMap<IntSet, double[]>> savedAggregates;
+    private HashMap<Integer, HashMap<IntSet, double[]>> savedAggregates;
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -45,11 +48,11 @@ public class APrioriLinear{
     }
 
     public List<APLExplanationResult> explain(
-            List<int[]> attributes,
+            final List<int[]> attributes,
             double[][] aggregateColumns
     ) {
-        int numAggregates = aggregateColumns.length;
-        int numRows = aggregateColumns[0].length;
+        final int numAggregates = aggregateColumns.length;
+        final int numRows = aggregateColumns[0].length;
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
@@ -66,7 +69,7 @@ public class APrioriLinear{
         }
 
         // row store for more convenient access
-        double[][] aRows = new double[numRows][numAggregates];
+        final double[][] aRows = new double[numRows][numAggregates];
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numAggregates; j++) {
                 aRows[i][j] = aggregateColumns[j][i];
@@ -74,32 +77,51 @@ public class APrioriLinear{
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             // Group by and calculate aggregates for each of the candidates
-            HashMap<IntSet, double[]> setAggregates = new HashMap<>();
+            final ConcurrentHashMap<IntSet, double[]> setAggregates = new ConcurrentHashMap<>();
 
             // precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
-            for (int i = 0; i < numRows; i++){
-                int[] curRowAttributes = attributes.get(i);
-                ArrayList<IntSet> candidates = getCandidates(
-                        curOrder,
-                        curRowAttributes,
-                        precalculatedCandidates
-                );
-                int numCandidates = candidates.size();
-                for(int c = 0; c < numCandidates; c++) {
-                    IntSet curCandidate = candidates.get(c);
-                    double[] candidateVal = setAggregates.get(curCandidate);
-                    if (candidateVal == null) {
-                        setAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
-                    } else {
-                        for (int a = 0; a < numAggregates; a++) {
-                            candidateVal[a] += aRows[i][a];
-                        }
-                   }
-                }
+            final HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
+            final int curOrderFinal = curOrder;
+            final int numThreads;
+            if (numRows < 100) {
+                numThreads = 1;
+            } else {
+                numThreads = 4;
             }
+            final CountDownLatch doneSignal = new CountDownLatch(numThreads);
+            for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+                final int startIndex = (numRows * threadNum) / numThreads;
+                final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+                Runnable APrioriLinearRunnable = () -> {
+                        for (int i = startIndex; i < endIndex; i++) {
+                            int[] curRowAttributes = attributes.get(i);
+                            ArrayList<IntSet> candidates = getCandidates(
+                                    curOrderFinal,
+                                    curRowAttributes,
+                                    precalculatedCandidates
+                            );
+                            int numCandidates = candidates.size();
+                            for (int c = 0; c < numCandidates; c++) {
+                                IntSet curCandidate = candidates.get(c);
+                                double[] candidateVal = setAggregates.putIfAbsent(curCandidate,
+                                        Arrays.copyOf(aRows[i], numAggregates));
+                                if (candidateVal != null) {
+                                    for (int a = 0; a < numAggregates; a++) {
+                                        candidateVal[a] += aRows[i][a];
+                                    }
+                                }
+                            }
+                        }
+                        doneSignal.countDown();
+                };
+                Thread APrioriLinearThread = new Thread(APrioriLinearRunnable);
+                APrioriLinearThread.start();
+            }
+            try {
+                doneSignal.await();
+            } catch (InterruptedException ex) {ex.printStackTrace();}
 
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
@@ -171,7 +193,6 @@ public class APrioriLinear{
             );
         }
     }
-
 
     /**
      * Returns all candidate subsets of a given set and order
