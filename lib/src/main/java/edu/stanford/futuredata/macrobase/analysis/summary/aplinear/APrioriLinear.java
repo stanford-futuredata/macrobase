@@ -77,7 +77,7 @@ public class APrioriLinear {
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             // Group by and calculate aggregates for each of the candidates
-            final ConcurrentHashMap<IntSet, double[]> setAggregates = new ConcurrentHashMap<>();
+            final HashMap<IntSet, double[]> setAggregates = new HashMap<>();
 
             // precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
@@ -105,9 +105,10 @@ public class APrioriLinear {
                             int numCandidates = candidates.size();
                             for (int c = 0; c < numCandidates; c++) {
                                 IntSet curCandidate = candidates.get(c);
-                                double[] candidateVal = setAggregates.putIfAbsent(curCandidate,
-                                        Arrays.copyOf(aRows[i], numAggregates));
-                                if (candidateVal != null) {
+                                double[] candidateVal = setAggregates.get(curCandidate);
+                                if (candidateVal == null) {
+                                    setAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
+                                } else {
                                     for (int a = 0; a < numAggregates; a++) {
                                         candidateVal[a] += aRows[i][a];
                                     }
