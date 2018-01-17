@@ -27,11 +27,11 @@ public class APrioriLinear {
 
     // **Cached values**
 
-    // singleton viable sets for quick lookup
+    // Singleton viable sets for quick lookup
     private HashSet<Integer> singleNext;
-    // sets that has high enough support but not high risk ratio, need to be explored
+    // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, HashSet<IntSet>> setNext;
-    // aggregate values for all of the sets we saved
+    // Aggregate values for all of the sets we saved
     private HashMap<Integer, HashMap<IntSet, double[]>> savedAggregates;
 
     public APrioriLinear(
@@ -68,7 +68,7 @@ public class APrioriLinear {
             q.initialize(globalAggregates);
         }
 
-        // row store for more convenient access
+        // Row store for more convenient access
         final double[][] aRows = new double[numRows][numAggregates];
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numAggregates; j++) {
@@ -76,29 +76,24 @@ public class APrioriLinear {
             }
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
-
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
             final HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
+            // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
-            final int numThreads;
-            if (numRows < 100) {
-                numThreads = 1;
-            } else {
-                numThreads = Runtime.getRuntime().availableProcessors();;
-            }
+            final int numThreads = Runtime.getRuntime().availableProcessors();
             // Group by and calculate aggregates for each of the candidates
             final ArrayList<HashMap<IntSet, double[]>> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
                 threadSetAggregates.add(new HashMap<>());
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
-            // Run the critical path of the algorithm--candidate generation--in parallel.
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
                 final HashMap<IntSet, double[]> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
+                // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                         for (int i = startIndex; i < endIndex; i++) {
                             int[] curRowAttributes = attributes.get(i);
@@ -122,6 +117,7 @@ public class APrioriLinear {
                         }
                         doneSignal.countDown();
                 };
+                // Run numThreads lambdas in separate threads
                 Thread APrioriLinearThread = new Thread(APrioriLinearRunnable);
                 APrioriLinearThread.start();
             }
