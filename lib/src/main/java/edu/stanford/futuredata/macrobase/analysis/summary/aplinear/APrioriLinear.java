@@ -76,10 +76,8 @@ public class APrioriLinear {
             }
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
-            // Group by and calculate aggregates for each of the candidates
-            final ConcurrentHashMap<IntSet, double[]> setAggregates = new ConcurrentHashMap<>();
 
-            // precalculate all possible candidate sets from "next" sets of
+            // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
             final HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
@@ -88,18 +86,19 @@ public class APrioriLinear {
             if (numRows < 100) {
                 numThreads = 1;
             } else {
-                numThreads = 4;
+                numThreads = Runtime.getRuntime().availableProcessors();;
+            }
+            // Group by and calculate aggregates for each of the candidates
+            final ArrayList<HashMap<IntSet, double[]>> threadSetAggregates = new ArrayList<>(numThreads);
+            for (int i = 0; i < numThreads; i++) {
+                threadSetAggregates.add(new HashMap<>());
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             // Run the critical path of the algorithm--candidate generation--in parallel.
-            // For speed, this is deliberately not synchronized except the bare minimum
-            // provided by ConcurrentHashMap (atomic puts and safe hashmap resizes, etc).
-            // This is enough to prevent crashes, but not occasional data overwrites.
-            // As a result, outlier counts can vary slightly from run to run, but not enough
-            // to invalidate results.
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+                final HashMap<IntSet, double[]> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 Runnable APrioriLinearRunnable = () -> {
                         for (int i = startIndex; i < endIndex; i++) {
                             int[] curRowAttributes = attributes.get(i);
@@ -111,9 +110,9 @@ public class APrioriLinear {
                             int numCandidates = candidates.size();
                             for (int c = 0; c < numCandidates; c++) {
                                 IntSet curCandidate = candidates.get(c);
-                                double[] candidateVal = setAggregates.get(curCandidate);
+                                double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
-                                    setAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
+                                    thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
                                 } else {
                                     for (int a = 0; a < numAggregates; a++) {
                                         candidateVal[a] += aRows[i][a];
@@ -129,6 +128,23 @@ public class APrioriLinear {
             try {
                 doneSignal.await();
             } catch (InterruptedException ex) {ex.printStackTrace();}
+
+            // Collect the threadSetAggregates into one big set of aggregates.
+            HashMap<IntSet, double[]> setAggregates = new HashMap<>();
+            for (HashMap<IntSet, double[]> set : threadSetAggregates) {
+                for (Map.Entry<IntSet, double[]> curCandidate : set.entrySet()) {
+                    IntSet curCandidateKey = curCandidate.getKey();
+                    double[] curCandidateValue = curCandidate.getValue();
+                    double[] candidateVal = setAggregates.get(curCandidateKey);
+                    if (candidateVal == null) {
+                        setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                    } else {
+                        for (int a = 0; a < numAggregates; a++) {
+                            candidateVal[a] += curCandidateValue[a];
+                        }
+                    }
+                }
+            }
 
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
