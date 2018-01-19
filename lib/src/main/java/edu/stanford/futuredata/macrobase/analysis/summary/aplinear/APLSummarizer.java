@@ -1,14 +1,12 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.operator.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

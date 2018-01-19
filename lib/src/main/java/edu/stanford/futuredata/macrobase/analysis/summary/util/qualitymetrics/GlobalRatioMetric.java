@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
  * Measures the relative outlier rate w.r.t. the global outlier rate

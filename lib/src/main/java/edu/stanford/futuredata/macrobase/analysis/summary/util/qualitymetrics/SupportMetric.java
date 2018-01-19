@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
  * Measures how large a subgroup is relative to a global count

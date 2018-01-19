@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
  * Measures how many standard deviations a subgroup is away from the global mean
