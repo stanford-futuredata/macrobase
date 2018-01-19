@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
@@ -15,7 +18,7 @@ import java.util.*;
  * which can be combined additively. Then, we use APriori to find the subgroups which
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
-public class APrioriLinear{
+public class APrioriLinear {
     Logger log = LoggerFactory.getLogger("APLSummarizer");
 
     // **Parameters**
@@ -24,12 +27,12 @@ public class APrioriLinear{
 
     // **Cached values**
 
-    // singleton viable sets for quick lookup
-    HashSet<Integer> singleNext;
-    // sets that has high enough support but not high risk ratio, need to be explored
-    HashMap<Integer, HashSet<IntSet>> setNext;
-    // aggregate values for all of the sets we saved
-    HashMap<Integer, HashMap<IntSet, double[]>> savedAggregates;
+    // Singleton viable sets for quick lookup
+    private HashSet<Integer> singleNext;
+    // Sets that has high enough support but not high risk ratio, need to be explored
+    private HashMap<Integer, HashSet<IntSet>> setNext;
+    // Aggregate values for all of the sets we saved
+    private HashMap<Integer, HashMap<IntSet, double[]>> savedAggregates;
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -45,19 +48,19 @@ public class APrioriLinear{
     }
 
     public List<APLExplanationResult> explain(
-            List<int[]> attributes,
+            final List<int[]> attributes,
             double[][] aggregateColumns
     ) {
-        int d = aggregateColumns.length;
-        int n = aggregateColumns[0].length;
+        final int numAggregates = aggregateColumns.length;
+        final int numRows = aggregateColumns[0].length;
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
-        double[] globalAggregates = new double[d];
-        for (int j = 0; j < d; j++) {
+        double[] globalAggregates = new double[numAggregates];
+        for (int j = 0; j < numAggregates; j++) {
             globalAggregates[j] = 0;
             double[] curColumn = aggregateColumns[j];
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < numRows; i++) {
                 globalAggregates[j] += curColumn[i];
             }
         }
@@ -65,37 +68,77 @@ public class APrioriLinear{
             q.initialize(globalAggregates);
         }
 
-        // row store for more convenient access
-        double[][] aRows = new double[n][d];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
+        // Row store for more convenient access
+        final double[][] aRows = new double[numRows][numAggregates];
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numAggregates; j++) {
                 aRows[i][j] = aggregateColumns[j][i];
             }
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
-            // Group by and calculate aggregates for each of the candidates
-            HashMap<IntSet, double[]> setAggregates = new HashMap<>();
-
-            // precalculate all possible candidate sets from "next" sets of
+            // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
-            for (int i = 0; i < n; i++){
-                int[] curRowAttributes = attributes.get(i);
-                ArrayList<IntSet> candidates = getCandidates(
-                        curOrder,
-                        curRowAttributes,
-                        precalculatedCandidates
-                );
-                for (IntSet curCandidate : candidates) {
-                    if (!setAggregates.containsKey(curCandidate)) {
-                        setAggregates.put(curCandidate, new double[d]);
+            final HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
+            // Run the critical path of the algorithm--candidate generation--in parallel.
+            final int curOrderFinal = curOrder;
+            final int numThreads = Runtime.getRuntime().availableProcessors();
+            // Group by and calculate aggregates for each of the candidates
+            final ArrayList<HashMap<IntSet, double[]>> threadSetAggregates = new ArrayList<>(numThreads);
+            for (int i = 0; i < numThreads; i++) {
+                threadSetAggregates.add(new HashMap<>());
+            }
+            final CountDownLatch doneSignal = new CountDownLatch(numThreads);
+            for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+                final int startIndex = (numRows * threadNum) / numThreads;
+                final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+                final HashMap<IntSet, double[]> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
+                // Do the critical path calculation in a lambda
+                Runnable APrioriLinearRunnable = () -> {
+                        for (int i = startIndex; i < endIndex; i++) {
+                            int[] curRowAttributes = attributes.get(i);
+                            ArrayList<IntSet> candidates = getCandidates(
+                                    curOrderFinal,
+                                    curRowAttributes,
+                                    precalculatedCandidates
+                            );
+                            int numCandidates = candidates.size();
+                            for (int c = 0; c < numCandidates; c++) {
+                                IntSet curCandidate = candidates.get(c);
+                                double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                if (candidateVal == null) {
+                                    thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
+                                } else {
+                                    for (int a = 0; a < numAggregates; a++) {
+                                        candidateVal[a] += aRows[i][a];
+                                    }
+                                }
+                            }
+                        }
+                        doneSignal.countDown();
+                };
+                // Run numThreads lambdas in separate threads
+                Thread APrioriLinearThread = new Thread(APrioriLinearRunnable);
+                APrioriLinearThread.start();
+            }
+            try {
+                doneSignal.await();
+            } catch (InterruptedException ex) {ex.printStackTrace();}
+
+            // Collect the threadSetAggregates into one big set of aggregates.
+            HashMap<IntSet, double[]> setAggregates = new HashMap<>();
+            for (HashMap<IntSet, double[]> set : threadSetAggregates) {
+                for (Map.Entry<IntSet, double[]> curCandidate : set.entrySet()) {
+                    IntSet curCandidateKey = curCandidate.getKey();
+                    double[] curCandidateValue = curCandidate.getValue();
+                    double[] candidateVal = setAggregates.get(curCandidateKey);
+                    if (candidateVal == null) {
+                        setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                    } else {
+                        for (int a = 0; a < numAggregates; a++) {
+                            candidateVal[a] += curCandidateValue[a];
+                        }
                     }
-                    setAggregates.merge(
-                            curCandidate,
-                            aRows[i],
-                            APrioriLinear::addToArray
-                    );
                 }
             }
 
@@ -159,13 +202,6 @@ public class APrioriLinear{
         return results;
     }
 
-    private static double[] addToArray(double[] a, double[] b) {
-        for (int i = 0; i < a.length; i++) {
-            a[i] += b[i];
-        }
-        return a;
-    }
-
     private HashSet<IntSet> precalculateCandidates(int curOrder) {
         if (curOrder < 3) {
             return null;
@@ -176,7 +212,6 @@ public class APrioriLinear{
             );
         }
     }
-
 
     /**
      * Returns all candidate subsets of a given set and order
@@ -200,25 +235,25 @@ public class APrioriLinear{
                     toExamine.add(v);
                 }
             }
-            int l = toExamine.size();
+            int numValidSingles = toExamine.size();
 
             if (order == 2) {
-                for (int p1 = 0; p1 < l; p1++) {
+                for (int p1 = 0; p1 < numValidSingles; p1++) {
                     int p1v = toExamine.get(p1);
-                    for (int p2 = p1 + 1; p2 < l; p2++) {
+                    for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
                         candidates.add(new IntSet(p1v, p2v));
                     }
                 }
             } else if (order == 3) {
                 HashSet<IntSet> pairNext = setNext.get(2);
-                for (int p1 = 0; p1 < l; p1++) {
+                for (int p1 = 0; p1 < numValidSingles; p1++) {
                     int p1v = toExamine.get(p1);
-                    for (int p2 = p1 + 1; p2 < l; p2++) {
+                    for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
                         IntSet pair1 = new IntSet(p1v, p2v);
                         if (pairNext.contains(pair1)) {
-                            for (int p3 = p2 + 1; p3 < l; p3++) {
+                            for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
                                 IntSet curSet = new IntSet(p1v, p2v, p3v);
                                 if (precalculatedCandidates.contains(curSet)) {
