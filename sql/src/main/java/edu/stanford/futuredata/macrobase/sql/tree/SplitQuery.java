@@ -10,43 +10,36 @@ import java.util.Optional;
 
 public class SplitQuery extends Node {
 
-    private final Identifier classifierName;
-    private final List<Expression> classifierArgs;
+    private final Expression whereClause;
     private final Optional<Relation> relation;
     private final Optional<TableSubquery> subquery;
 
-    public SplitQuery(Identifier classifierName, List<Expression> classifierArgs,
+    public SplitQuery(Expression whereClause,
         Optional<Relation> relation, Optional<TableSubquery> subquery) {
-        this(Optional.empty(), classifierName, classifierArgs, relation, subquery);
+        this(Optional.empty(), whereClause, relation, subquery);
     }
 
-    public SplitQuery(NodeLocation location, Identifier classifierName,
-        List<Expression> classifierArgs, Optional<Relation> relation,
+    public SplitQuery(NodeLocation location, Expression whereClause,
+        Optional<Relation> relation,
         Optional<TableSubquery> subquery) {
-        this(Optional.of(location), classifierName, classifierArgs, relation, subquery);
+        this(Optional.of(location), whereClause, relation, subquery);
     }
 
-    private SplitQuery(Optional<NodeLocation> location, Identifier classifierName,
-        List<Expression> classifierArgs, Optional<Relation> relation,
+    private SplitQuery(Optional<NodeLocation> location, Expression whereClause,
+        Optional<Relation> relation,
         Optional<TableSubquery> subquery) {
         super(location);
-        requireNonNull(classifierName, "classifierName is null");
-        requireNonNull(classifierArgs, "classifierArgs is null");
+        requireNonNull(whereClause, "whereClause is null");
         requireNonNull(relation, "relation is null");
         requireNonNull(subquery, "subquery is null");
 
-        this.classifierName = classifierName;
-        this.classifierArgs = classifierArgs;
+        this.whereClause = whereClause;
         this.relation = relation;
         this.subquery = subquery;
     }
 
-    public Identifier getClassifierName() {
-        return classifierName;
-    }
-
-    public List<Expression> getClassifierArgs() {
-        return classifierArgs;
+    public Expression getWhereClause() {
+        return whereClause;
     }
 
     public Relation getInputRelation() {
@@ -56,8 +49,7 @@ public class SplitQuery extends Node {
     @Override
     public List<Node> getChildren() {
         ImmutableList.Builder<Node> nodes = ImmutableList.builder();
-        nodes.add(classifierName);
-        nodes.addAll(classifierArgs);
+        nodes.add(whereClause);
         relation.ifPresent(nodes::add);
         subquery.ifPresent(nodes::add);
         return nodes.build();
@@ -72,22 +64,24 @@ public class SplitQuery extends Node {
             return false;
         }
         SplitQuery o = (SplitQuery) obj;
-        return Objects.equals(classifierName, o.classifierName) &&
-            Objects.equals(classifierArgs, o.classifierArgs) &&
-            Objects.equals(relation, o.relation);
+        return Objects.equals(whereClause, o.whereClause) &&
+            Objects.equals(relation, o.relation) &&
+            Objects.equals(subquery, o.subquery);
     }
 
     @Override
     public String toString() {
         return toStringHelper(this)
-            .add("classifierName", classifierName)
-            .add("classierArgs", classifierArgs)
+            .add("whereClause", whereClause)
             .add("relation", relation)
+            .add("subquery", subquery)
+            .omitNullValues()
             .toString();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(classifierName, classifierArgs, relation);
+        return Objects
+            .hash(whereClause, relation, subquery);
     }
 }

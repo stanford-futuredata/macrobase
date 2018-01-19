@@ -251,13 +251,13 @@ class AstBuilder
 
     @Override
     public Node visitSplitQuery(SqlBaseParser.SplitQueryContext context) {
-        Identifier classifierName = (Identifier) visit(context.identifier());
-        List<Expression> classifierArgs = visit(context.primaryExpression(), Expression.class);
-        Optional<Relation> relation = visitIfPresent(context.relation(), Relation.class);
-        Optional<TableSubquery> subquery = visitIfPresent(context.queryTerm(), TableSubquery.class);
+        final Expression expression = (Expression) visit(context.where);
+        final Optional<Relation> relation = visitIfPresent(context.relation(), Relation.class);
+        final Optional<TableSubquery> subquery = visitIfPresent(context.queryTerm(),
+            TableSubquery.class);
         check(relation.isPresent() || subquery.isPresent(),
             "Either a relation or a subquery must be present in a SplitQuery", context);
-        return new SplitQuery(classifierName, classifierArgs, relation, subquery);
+        return new SplitQuery(expression, relation, subquery);
     }
 
     @Override
@@ -808,9 +808,7 @@ class AstBuilder
     @Override
     public Node visitFunctionCall(SqlBaseParser.FunctionCallContext context) {
         Optional<Expression> filter = visitIfPresent(context.filter(), Expression.class);
-
         QualifiedName name = getQualifiedName(context.qualifiedName());
-
         boolean distinct = isDistinct(context.setQuantifier());
 
         if (name.toString().equalsIgnoreCase("if")) {

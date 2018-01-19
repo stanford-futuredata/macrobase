@@ -490,9 +490,8 @@ public final class ExpressionFormatter {
         }
 
         private String joinExpressions(List<Expression> expressions) {
-            return Joiner.on(", ").join((Iterable<?>) expressions.stream()
-                .map((e) -> process(e, null))
-                .iterator());
+            return Joiner.on(", ")
+                .join(expressions.stream().map((e) -> process(e, null)).iterator());
         }
 
         private static String formatIdentifier(String s) {
