@@ -40,10 +40,10 @@ public class FPGrowthEmerging {
             Double attrInlierCount = inlierCounts.get(item);
 
             boolean passThresholds = true;
+            double[] curAggregate = new double[]{
+                    attrOutlierCountEntry.getValue(),
+                    attrOutlierCountEntry.getValue() + attrInlierCount};
             for(int q = 0; q < qualityMetrics.size(); q++) {
-                double[] curAggregate = new double[]{
-                        attrOutlierCountEntry.getValue(),
-                        attrOutlierCountEntry.getValue() + attrInlierCount};
                 double metric = qualityMetrics.get(q).value(curAggregate);
                 if (!(metric > thresholds.get(q))) {
                     passThresholds = false;
@@ -66,6 +66,11 @@ public class FPGrowthEmerging {
         return ret;
     }
 
+    /**
+     * Run the FPGrowth algorithm on inliers and outliers to find all sets of attributes
+     * whose support is greater than minSupport.  Return only those sets of attributes
+     * whose qualityMetrics are all greater than their corresponding thresholds.
+     */
     public List<FPGItemsetResult> getEmergingItemsetsWithMinSupport(List<Set<Integer>> inliers,
                                                                     List<Set<Integer>> outliers,
                                                                     List<QualityMetric> qualityMetrics,
@@ -77,6 +82,7 @@ public class FPGrowthEmerging {
             q.initialize(globalAggregates);
         }
 
+        // If asked for or necessary, only compute singleton itemsets
         if (!combinationsEnabled || (inliers.size() > 0 && inliers.get(0).size() == 1)) {
             return getSingletonItemsets(inliers, outliers, qualityMetrics, thresholds, minSupport);
         }
@@ -92,10 +98,10 @@ public class FPGrowthEmerging {
             }
         }
 
+        // Calculate the set of all outlier transactions containing attributes
+        // that satisfy both  the support requirement and all qualityMetrics
         Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
-
         int supportCountRequired = (int) (outliers.size() * minSupport);
-
         for (Set<Integer> o: outliers) {
             Set<Integer> txn = null;
 
@@ -133,6 +139,8 @@ public class FPGrowthEmerging {
             }
         }
 
+        // Use the FPGrowth algorithm on the dataset.  Get a set of all sets of attributes
+        // that satisfy the support requirement.
         FPGrowth fpg = new FPGrowth();
         List<ItemsetWithCount> iwc = fpg.getItemsetsWithSupportCount(
                 outlierTransactions,
@@ -143,6 +151,8 @@ public class FPGrowthEmerging {
                 -Double.compare(x.getCount(), y.getCount()) :
                 -Double.compare(x.getItems().size(), y.getItems().size()));
 
+        // Use the result of the FPGrowth algorithm to find the unique ratio sets that
+        // satisfy the support requirement.
         Set<Integer> ratioItemsToCheck = new HashSet<>();
         List<ItemsetWithCount> ratioSetsToCheck = new ArrayList<>();
         List<FPGItemsetResult> ret = new ArrayList<>();
@@ -156,10 +166,11 @@ public class FPGrowthEmerging {
                 }
             }
 
-
             prevCount = i.getCount();
             prevSet = i.getItems();
 
+            // Thanks to the check we did earlier, we know that singletons satisfying
+            // the support requirement also pass all qualityMetrics
             if (i.getItems().size() == 1) {
                 Number inlierCount = inlierCounts.get(i.getItems().iterator().next());
 
@@ -178,13 +189,15 @@ public class FPGrowthEmerging {
             }
         }
 
-        // check the ratios of any itemsets we just marked
+        // Check the ratios of any itemsets we just marked
         FPGrowth inlierTree = new FPGrowth();
         List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inliers,
                                                                            inlierCounts,
                                                                            ratioItemsToCheck,
                                                                            ratioSetsToCheck);
 
+        // Determine which of the ratio sets which satisfied the support threshold
+        // also satisfy all qualityMetrics.
         assert (matchingInlierCounts.size() == ratioSetsToCheck.size());
         for (int i = 0; i < matchingInlierCounts.size(); ++i) {
             ItemsetWithCount ic = matchingInlierCounts.get(i);
@@ -217,7 +230,7 @@ public class FPGrowthEmerging {
         }
 
 
-        // finally sort one last time
+        // Finally sort one last time
         ret.sort((x, y) -> x.getNumRecords() != y.getNumRecords() ?
                 -Double.compare(x.getNumRecords(), y.getNumRecords()) :
                 -Double.compare(x.getItems().size(), y.getItems().size()));

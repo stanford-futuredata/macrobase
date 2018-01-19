@@ -48,6 +48,11 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         this.minRiskRatio = minRiskRatio;
     }
 
+    /**
+     * A qualityMetric for an attribute is a function which takes in the number of outliers
+     * and the total number of examples with that attribute and returns a value.  A
+     * qualityMetric is passed if that value is greater than a corresponding threshold.
+     */
     private List<QualityMetric> getQualityMetricList() {
         List<QualityMetric> qualityMetricList = new ArrayList<>();
         qualityMetricList.add(
@@ -56,6 +61,9 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         return qualityMetricList;
     }
 
+    /**
+     * Thresholds corresponding to the qualityMetrics.
+     */
     private List<Double> getThresholds() {
         return Arrays.asList(minRiskRatio);
     }

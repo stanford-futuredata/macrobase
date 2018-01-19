@@ -3,7 +3,9 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.RiskRatio;
 
 /**
- * Measures the relative outlier rate w.r.t. the global outlier rate
+ * Calculates the risk ratio of a particular attribute.  This is the ratio of
+ * the probability of being an outlier given the attribute to the probability
+ * of being an outlier when without the attribute.
  */
 public class RiskRatioMetric implements QualityMetric{
     private int outlierCountIdx;
