@@ -3,6 +3,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 import com.google.common.collect.Sets;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.ItemsetWithCount;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 
 import java.util.*;
 
@@ -19,8 +20,9 @@ public class FPGrowthEmerging {
 
     private List<FPGItemsetResult> getSingletonItemsets(List<Set<Integer>> inliers,
                                                         List<Set<Integer>> outliers,
-                                                        double minSupport,
-                                                        double minRatio) {
+                                                        List<QualityMetric> qualityMetrics,
+                                                        List<Double> thresholds,
+                                                        double minSupport) {
         int supportCountRequired = (int) (outliers.size() * minSupport);
 
         List<FPGItemsetResult> ret = new ArrayList<>();
@@ -36,16 +38,26 @@ public class FPGrowthEmerging {
             int item = attrOutlierCountEntry.getKey();
             Double attrInlierCount = inlierCounts.get(item);
 
-            double ratio = RiskRatio.compute(attrInlierCount,
-                                             attrOutlierCountEntry.getValue(),
-                                             inliers.size(),
-                                             outliers.size());
+            boolean passThresholds = true;
+            for(int q = 0; q < qualityMetrics.size(); q++) {
+                double ratio = RiskRatio.compute(attrInlierCount,
+                        attrOutlierCountEntry.getValue(),
+                        inliers.size(),
+                        outliers.size());
+                if (!(ratio > thresholds.get(q))) {
+                    passThresholds = false;
+                }
+            }
 
-            if (ratio > minRatio) {
+            if (passThresholds) {
+                double riskRatio = RiskRatio.compute(attrInlierCount,
+                        attrOutlierCountEntry.getValue(),
+                        inliers.size(),
+                        outliers.size());
                 ret.add(new FPGItemsetResult(
                         attrOutlierCountEntry.getValue() / outliers.size(),
                         attrOutlierCountEntry.getValue(),
-                        ratio,
+                        riskRatio,
                         Collections.singleton(item)
                 ));
             }
@@ -55,10 +67,11 @@ public class FPGrowthEmerging {
 
     public List<FPGItemsetResult> getEmergingItemsetsWithMinSupport(List<Set<Integer>> inliers,
                                                                     List<Set<Integer>> outliers,
-                                                                    double minSupport,
-                                                                    double minRatio) {
+                                                                    List<QualityMetric> qualityMetrics,
+                                                                    List<Double> thresholds,
+                                                                    double minSupport) {
         if (!combinationsEnabled || (inliers.size() > 0 && inliers.get(0).size() == 1)) {
-            return getSingletonItemsets(inliers, outliers, minSupport, minRatio);
+            return getSingletonItemsets(inliers, outliers, qualityMetrics, thresholds, minSupport);
         }
 
         ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
@@ -78,16 +91,21 @@ public class FPGrowthEmerging {
                 if (outlierCount >= supportCountRequired) {
                     Number inlierCount = inlierCounts.get(i);
 
-                    double outlierInlierRatio = RiskRatio.compute(inlierCount,
-                                                                  outlierCount,
-                                                                  inliers.size(),
-                                                                  outliers.size());
+                    boolean passThresholds = true;
+                    for(int q = 0; q < qualityMetrics.size(); q++) {
+                        double ratio = RiskRatio.compute(inlierCount,
+                                outlierCount,
+                                inliers.size(),
+                                outliers.size());
+                        if (!(ratio > thresholds.get(q))) {
+                            passThresholds = false;
+                        }
+                    }
 
-                    if (outlierInlierRatio > minRatio) {
+                    if (passThresholds) {
                         if (txn == null) {
                             txn = new HashSet<>();
                         }
-
                         if (!supportedOutlierCounts.containsKey(i)) {
                             supportedOutlierCounts.put(i, outlierCount);
                         }
@@ -159,16 +177,28 @@ public class FPGrowthEmerging {
             ItemsetWithCount ic = matchingInlierCounts.get(i);
             ItemsetWithCount oc = ratioSetsToCheck.get(i);
 
-            double ratio = RiskRatio.compute(ic.getCount(),
-                                             oc.getCount(),
-                                             inliers.size(),
-                                             outliers.size());
+            boolean passThresholds = true;
+            for(int q = 0; q < qualityMetrics.size(); q++) {
+                double ratio = RiskRatio.compute(ic.getCount(),
+                        oc.getCount(),
+                        inliers.size(),
+                        outliers.size());
+                if (!(ratio > thresholds.get(q))) {
+                    passThresholds = false;
+                }
+            }
 
-            if (ratio >= minRatio) {
-                ret.add(new FPGItemsetResult(oc.getCount() / (double) outliers.size(),
-                                          oc.getCount(),
-                                          ratio,
-                                          oc.getItems()));
+            if (passThresholds) {
+                double riskRatio = RiskRatio.compute(ic.getCount(),
+                        oc.getCount(),
+                        inliers.size(),
+                        outliers.size());
+                ret.add(new FPGItemsetResult(
+                        oc.getCount() / (double) outliers.size(),
+                        oc.getCount(),
+                        riskRatio,
+                        oc.getItems()
+                ));
             }
         }
 

@@ -4,10 +4,14 @@ import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -16,14 +20,12 @@ import java.util.Set;
  * string attribute columns. Each batch is considered as an independent unit.
  */
 public class FPGrowthSummarizer extends BatchSummarizer {
-    protected double minRiskRatio = 3;
+    private double minRiskRatio = 3;
     // Encoder
-    protected AttributeEncoder encoder = new AttributeEncoder();
-    private boolean useAttributeCombinations = true;
+    private AttributeEncoder encoder = new AttributeEncoder();
 
     // Output
     private FPGExplanation explanation = null;
-    private List<Set<Integer>> inlierItemsets, outlierItemsets;
     private FPGrowthEmerging fpg = new FPGrowthEmerging();
 
     public FPGrowthSummarizer() { }
@@ -32,12 +34,29 @@ public class FPGrowthSummarizer extends BatchSummarizer {
      * Whether or not to use combinations of attributes in explanation, or only
      * use simple single attribute explanations
      * @param useAttributeCombinations flag
-     * @return this
      */
-    public FPGrowthSummarizer setUseAttributeCombinations(boolean useAttributeCombinations) {
-        this.useAttributeCombinations = useAttributeCombinations;
+    public void setUseAttributeCombinations(boolean useAttributeCombinations) {
         fpg.setCombinationsEnabled(useAttributeCombinations);
-        return this;
+    }
+
+    /**
+     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
+     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
+     */
+    public void setMinRiskRatio(double minRiskRatio) {
+        this.minRiskRatio = minRiskRatio;
+    }
+
+    private List<QualityMetric> getQualityMetricList() {
+        List<QualityMetric> qualityMetricList = new ArrayList<>();
+        qualityMetricList.add(
+                new GlobalRatioMetric(0, 1)
+        );
+        return qualityMetricList;
+    }
+
+    private List<Double> getThresholds() {
+        return Arrays.asList(minRiskRatio);
     }
 
     @Override
@@ -45,6 +64,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         // Filter inliers and outliers
         DataFrame outlierDF = df.filter(outlierColumn, (double d) -> d > 0.0);
         DataFrame inlierDF = df.filter(outlierColumn, (double d) -> d == 0.0);
+        List<Set<Integer>> inlierItemsets, outlierItemsets;
 
         // Encode inlier and outlier attribute columns
         if (attributes.isEmpty()) {
@@ -61,8 +81,9 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         List<FPGItemsetResult> itemsetResults = fpg.getEmergingItemsetsWithMinSupport(
             inlierItemsets,
             outlierItemsets,
-            minOutlierSupport,
-            minRiskRatio);
+            getQualityMetricList(),
+            getThresholds(),
+            minOutlierSupport);
         // Decode results
         List<FPGAttributeSet> attributeSets = new ArrayList<>();
         itemsetResults.forEach(i -> attributeSets.add(new FPGAttributeSet(i, encoder)));
@@ -77,15 +98,5 @@ public class FPGrowthSummarizer extends BatchSummarizer {
     @Override
     public FPGExplanation getResults() {
         return explanation;
-    }
-
-    /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
-     * @return this
-     */
-    public BatchSummarizer setMinRiskRatio(double minRiskRatio) {
-        this.minRiskRatio = minRiskRatio;
-        return this;
     }
 }
