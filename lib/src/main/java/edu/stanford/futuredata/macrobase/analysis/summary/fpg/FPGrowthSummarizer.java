@@ -6,6 +6,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -50,7 +51,7 @@ public class FPGrowthSummarizer extends BatchSummarizer {
     private List<QualityMetric> getQualityMetricList() {
         List<QualityMetric> qualityMetricList = new ArrayList<>();
         qualityMetricList.add(
-                new GlobalRatioMetric(0, 1)
+                new RiskRatioMetric(0, 1)
         );
         return qualityMetricList;
     }

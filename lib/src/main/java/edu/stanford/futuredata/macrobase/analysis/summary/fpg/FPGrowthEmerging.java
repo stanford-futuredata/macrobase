@@ -27,6 +27,7 @@ public class FPGrowthEmerging {
 
         List<FPGItemsetResult> ret = new ArrayList<>();
 
+        // Count total occurences of each attribute in both inliers and outliers
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
 
@@ -40,11 +41,11 @@ public class FPGrowthEmerging {
 
             boolean passThresholds = true;
             for(int q = 0; q < qualityMetrics.size(); q++) {
-                double ratio = RiskRatio.compute(attrInlierCount,
+                double[] curAggregate = new double[]{
                         attrOutlierCountEntry.getValue(),
-                        inliers.size(),
-                        outliers.size());
-                if (!(ratio > thresholds.get(q))) {
+                        attrOutlierCountEntry.getValue() + attrInlierCount};
+                double metric = qualityMetrics.get(q).value(curAggregate);
+                if (!(metric > thresholds.get(q))) {
                     passThresholds = false;
                 }
             }
@@ -70,14 +71,26 @@ public class FPGrowthEmerging {
                                                                     List<QualityMetric> qualityMetrics,
                                                                     List<Double> thresholds,
                                                                     double minSupport) {
+        // Initialize the qualityMetrics with the total number of outliers and inliers
+        double[] globalAggregates = new double[]{outliers.size(), outliers.size() + inliers.size()};
+        for (QualityMetric q : qualityMetrics) {
+            q.initialize(globalAggregates);
+        }
+
         if (!combinationsEnabled || (inliers.size() > 0 && inliers.get(0).size() == 1)) {
             return getSingletonItemsets(inliers, outliers, qualityMetrics, thresholds, minSupport);
         }
 
         ArrayList<Set<Integer>> outlierTransactions = new ArrayList<>();
 
+        // Count total occurences of each attribute in both inliers and outliers
         Map<Integer, Double> inlierCounts = new ExactCount().count(inliers).getCounts();
         Map<Integer, Double> outlierCounts = new ExactCount().count(outliers).getCounts();
+        for (int key: outlierCounts.keySet()) {
+            if (!inlierCounts.containsKey(key)) {
+                inlierCounts.put(key, 0.0);
+            }
+        }
 
         Map<Integer, Double> supportedOutlierCounts = new HashMap<>();
 
@@ -89,15 +102,15 @@ public class FPGrowthEmerging {
             for (int i : o) {
                 double outlierCount = outlierCounts.get(i);
                 if (outlierCount >= supportCountRequired) {
-                    Number inlierCount = inlierCounts.get(i);
 
                     boolean passThresholds = true;
-                    for(int q = 0; q < qualityMetrics.size(); q++) {
-                        double ratio = RiskRatio.compute(inlierCount,
-                                outlierCount,
-                                inliers.size(),
-                                outliers.size());
-                        if (!(ratio > thresholds.get(q))) {
+                    double[] curAggregate = new double[]{
+                            outlierCount,
+                            outlierCount + inlierCounts.get(i)
+                    };
+                    for (int q = 0; q < qualityMetrics.size(); q++) {
+                        double metric = qualityMetrics.get(q).value(curAggregate);
+                        if (!(metric > thresholds.get(q))) {
                             passThresholds = false;
                         }
                     }
@@ -178,12 +191,13 @@ public class FPGrowthEmerging {
             ItemsetWithCount oc = ratioSetsToCheck.get(i);
 
             boolean passThresholds = true;
+            double[] curAggregate = new double[]{
+                    oc.getCount(),
+                    oc.getCount() + ic.getCount()
+            };
             for(int q = 0; q < qualityMetrics.size(); q++) {
-                double ratio = RiskRatio.compute(ic.getCount(),
-                        oc.getCount(),
-                        inliers.size(),
-                        outliers.size());
-                if (!(ratio > thresholds.get(q))) {
+                double metric = qualityMetrics.get(q).value(curAggregate);
+                if (!(metric > thresholds.get(q))) {
                     passThresholds = false;
                 }
             }
