@@ -1,8 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.MeanDevMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.MeanDevQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,10 +56,10 @@ public class APLMeanSummarizer extends APLSummarizer {
     public List<QualityMetric> getQualityMetricList() {
         List<QualityMetric> qualityMetricList = new ArrayList<>();
         qualityMetricList.add(
-                new SupportMetric(0)
+                new SupportQualityMetric(0)
         );
         qualityMetricList.add(
-                new MeanDevMetric(0, 1, 2)
+                new MeanDevQualityMetric(0, 1, 2)
         );
         return qualityMetricList;
     }

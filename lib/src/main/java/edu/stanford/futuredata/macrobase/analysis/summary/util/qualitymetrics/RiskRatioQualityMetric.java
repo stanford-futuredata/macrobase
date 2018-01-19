@@ -7,13 +7,13 @@ import edu.stanford.futuredata.macrobase.analysis.summary.fpg.RiskRatio;
  * the probability of being an outlier given the attribute to the probability
  * of being an outlier when without the attribute.
  */
-public class RiskRatioMetric implements QualityMetric{
+public class RiskRatioQualityMetric implements QualityMetric{
     private int outlierCountIdx;
     private int totalCountIdx;
     private double totalOutliers;
     private double totalInliers;
 
-    public RiskRatioMetric(int outlierCountIdx, int totalCountIdx) {
+    public RiskRatioQualityMetric(int outlierCountIdx, int totalCountIdx) {
         this.outlierCountIdx = outlierCountIdx;
         this.totalCountIdx = totalCountIdx;
     }

@@ -4,15 +4,12 @@ import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGItemsetResult;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -21,15 +18,32 @@ import java.util.Set;
  * string attribute columns. Each batch is considered as an independent unit.
  */
 public class FPGrowthSummarizer extends BatchSummarizer {
-    private double minRiskRatio = 3;
     // Encoder
     private AttributeEncoder encoder = new AttributeEncoder();
 
     // Output
     private FPGExplanation explanation = null;
     private FPGrowthEmerging fpg = new FPGrowthEmerging();
+    /**
+     * A qualityMetric for an attribute is a function which takes in the number of outliers
+     * and the total number of examples with that attribute and returns a value.  A
+     * qualityMetric is passed if that value is greater than a corresponding threshold.
+     */
+    private List<QualityMetric> qualityMetricList = new ArrayList<>();
+    /**
+     * Thresholds corresponding to the qualityMetrics.
+     */
+    private List<Double> thresholds = new ArrayList<>();
 
-    public FPGrowthSummarizer() { }
+    /**
+     * Default to a RiskRatioQualityMetric with a minRiskRatio of 3.
+     */
+    public FPGrowthSummarizer() {
+        qualityMetricList.add(
+                new RiskRatioQualityMetric(0, 1)
+        );
+        thresholds.add(3.0);
+    }
 
     /**
      * Whether or not to use combinations of attributes in explanation, or only
@@ -41,31 +55,14 @@ public class FPGrowthSummarizer extends BatchSummarizer {
     }
 
     /**
-     * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
-     * @param minRiskRatio lowest risk ratio to consider for meaningful explanations.
+     * Set the qualityMetrics to use and their corresponding thresholds.
+     * @param newQualityMetrics The new qualityMetrics.
+     * @param newThresholds The new thresholds.
      */
-    public void setMinRiskRatio(double minRiskRatio) {
-        this.minRiskRatio = minRiskRatio;
-    }
-
-    /**
-     * A qualityMetric for an attribute is a function which takes in the number of outliers
-     * and the total number of examples with that attribute and returns a value.  A
-     * qualityMetric is passed if that value is greater than a corresponding threshold.
-     */
-    private List<QualityMetric> getQualityMetricList() {
-        List<QualityMetric> qualityMetricList = new ArrayList<>();
-        qualityMetricList.add(
-                new RiskRatioMetric(0, 1)
-        );
-        return qualityMetricList;
-    }
-
-    /**
-     * Thresholds corresponding to the qualityMetrics.
-     */
-    private List<Double> getThresholds() {
-        return Arrays.asList(minRiskRatio);
+    public void setQualityMetrics(List<QualityMetric> newQualityMetrics,
+                                   List<Double> newThresholds) {
+        this.qualityMetricList = newQualityMetrics;
+        this.thresholds = newThresholds;
     }
 
     @Override
@@ -90,8 +87,8 @@ public class FPGrowthSummarizer extends BatchSummarizer {
         List<FPGItemsetResult> itemsetResults = fpg.getEmergingItemsetsWithMinSupport(
             inlierItemsets,
             outlierItemsets,
-            getQualityMetricList(),
-            getThresholds(),
+                qualityMetricList,
+                thresholds,
             minOutlierSupport);
         // Decode results
         List<FPGAttributeSet> attributeSets = new ArrayList<>();
