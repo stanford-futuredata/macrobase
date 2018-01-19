@@ -5,17 +5,19 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
+import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
+import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
+import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Literal;
@@ -29,6 +31,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
+import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem.Ordering;
 import edu.stanford.futuredata.macrobase.sql.tree.SplitQuery;
@@ -40,6 +43,7 @@ import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,6 +64,12 @@ class QueryEngine {
         tablesInMemory = new HashMap<>();
     }
 
+    /**
+     * Top-level method for importing tables from CSV files into MacroBase SQL
+     *
+     * @return A DataFrame that contains the data loaded from the CSV file
+     * @throws MacrobaseSQLException if there's an error parsing the CSV file
+     */
     DataFrame importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
         final String filename = importStatement.getFilename();
         final String tableName = importStatement.getTableName().toString();
@@ -73,6 +83,13 @@ class QueryEngine {
         }
     }
 
+    /**
+     * Top-level method for executing a SQL query in MacroBase SQL
+     *
+     * @return A DataFrame corresponding to the results of the query
+     * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
+     * query, an exception is thrown
+     */
     DataFrame executeQuery(QueryBody query) throws MacrobaseException {
         if (query instanceof QuerySpecification) {
             QuerySpecification querySpec = (QuerySpecification) query;
@@ -88,6 +105,14 @@ class QueryEngine {
             "query of type " + query.getClass().getSimpleName() + " not yet supported");
     }
 
+    /**
+     * Execute a DIFF query, a query that's specific to MacroBase SQL (i.e., a query that may
+     * contain DIFF and SPLIT operators).
+     *
+     * @return A DataFrame containing the results of the query
+     * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
+     * query, an exception is thrown
+     */
     private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
         throws MacrobaseException {
         // TODO: if an attributeCol isn't in a select col, don't include it
@@ -96,9 +121,10 @@ class QueryEngine {
             .collect(toImmutableList());
 
         final String outlierColName = "outlier_col";
-        DataFrame dfToExplain = null;
+        DataFrame dfToExplain;
 
         if (diffQuery.hasTwoArgs()) {
+            // case 1: two separate subqueries
             final TableSubquery first = diffQuery.getFirst().get();
             final TableSubquery second = diffQuery.getSecond().get();
 
@@ -113,42 +139,33 @@ class QueryEngine {
                     "ON " + Joiner.on(", ").join(explainCols) + " not present in either"
                         + " outlier or inlier subquery");
             }
-            dfToExplain = combineOutliersAndInliers(outlierColName, outliersDf, inliersDf);
 
+            dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
         } else {
-            // splitQuery
+            // case 2: single SPLIT (...) WHERE ... query
             final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
-            DataFrame inputDf;
             final Relation inputRelation = splitQuery.getInputRelation();
+
             if (inputRelation instanceof TableSubquery) {
-                inputDf = executeQuery(((TableSubquery) inputRelation).getQuery().getQueryBody());
+                final QueryBody subquery = ((TableSubquery) inputRelation).getQuery()
+                    .getQueryBody();
+                dfToExplain = executeQuery(subquery);
             } else {
                 // instance of Table
-                inputDf = getTable(((Table) inputRelation).getName().toString());
+                dfToExplain = getTable(((Table) inputRelation).getName().toString());
             }
 
-            if (!inputDf.getSchema().hasColumns(explainCols)) {
+            if (!dfToExplain.getSchema().hasColumns(explainCols)) {
                 throw new MacrobaseSQLException(
                     "ON " + Joiner.on(", ").join(explainCols) + " not present in table "
                         + inputRelation);
             }
 
-            final String classifierType = splitQuery.getClassifierName().getValue();
-            try {
-                final Classifier classifier = Classifier
-                    .getClassifier(classifierType, splitQuery.getClassifierArgs().stream().map(
-                        Expression::toString).collect(toList()));
-                classifier.setOutputColumnName(outlierColName);
-                classifier.process(inputDf);
-                dfToExplain = classifier.getResults();
-
-            } catch (MacrobaseException e) {
-                // this comes from instantiating the classifier; re-throw
-                throw e;
-            } catch (Exception e) {
-                e.printStackTrace();
-                // TODO: get rid of Exception thrown by classifier.process
-            }
+            // add outlier (binary) column by evaluating the WHERE clause
+            final BitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
+            final double[] outlierVals = new double[dfToExplain.getNumRows()];
+            mask.stream().forEach((i) -> outlierVals[i] = 1.0);
+            dfToExplain.addColumn(outlierColName, outlierVals);
         }
 
         final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
@@ -159,14 +176,57 @@ class QueryEngine {
 
         // execute diff
         // TODO: add support for "ON *"
-        DataFrame df = diff(dfToExplain, outlierColName, explainCols, minRatioMetric, minSupport,
-            ratioMetric, order);
+        final APrioriSummarizer summarizer = new APrioriSummarizer();
+        summarizer.setRatioMetric(ratioMetric)
+            .setMaxOrder(order)
+            .setMinSupport(minSupport)
+            .setMinRatioMetric(minRatioMetric)
+            .setOutlierColumn(outlierColName)
+            .setAttributes(explainCols);
 
-        return evaluateSQLClauses(diffQuery, df);
+        summarizer.process(dfToExplain);
+        final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
+
+        return evaluateSQLClauses(diffQuery, resultDf);
     }
 
-    private DataFrame combineOutliersAndInliers(final String outlierColName,
-        final DataFrame outliersDf, final DataFrame inliersDf) throws MacrobaseSQLException {
+    /**
+     * Removes all values in the SELECT clause of a given query that are {@link FunctionCall}
+     * objects, which are UDFs such as "percentile(column_name)".
+     *
+     * @param selectItems the values in the SELECT clause to be modified <b>in place</b>
+     * @return The values that were removed from `selectItems`, returned as a List of {@link
+     * SingleColumn}
+     */
+    private List<SingleColumn> removeUDFsInSelect(List<SelectItem> selectItems) {
+        final List<SingleColumn> functionCalls = new ArrayList<>();
+        Iterator<SelectItem> it = selectItems.iterator();
+        while (it.hasNext()) {
+            final SelectItem item = it.next();
+            if (item instanceof SingleColumn) {
+                final SingleColumn col = (SingleColumn) item;
+                if (col.getExpression() instanceof FunctionCall) {
+                    functionCalls.add(col);
+                    it.remove();
+                }
+            }
+        }
+        return functionCalls;
+    }
+
+    /**
+     * Concatenate two DataFrames -- outlier and inlier -- into a single DataFrame, with a new
+     * column that stores 1 if the row is originally from the outlier DF and 0 if it's from the
+     * inlier DF
+     *
+     * @param outlierColName The name of the binary column that denotes outlier/inlier
+     * @param outliersDf outlier DataFrame
+     * @param inliersDf inlier DataFrame
+     * @return new DataFrame that contains rows from both DataFrames, along with the extra binary
+     * column
+     */
+    private DataFrame concatOutliersAndInliers(final String outlierColName,
+        final DataFrame outliersDf, final DataFrame inliersDf) {
 
         // Add column "outlier_col" to both outliers (all 1.0) and inliers (all 0.0)
         outliersDf.addColumn(outlierColName,
@@ -174,22 +234,6 @@ class QueryEngine {
         inliersDf.addColumn(outlierColName,
             DoubleStream.generate(() -> 0.0).limit(outliersDf.getNumRows()).toArray());
         return DataFrame.unionAll(Lists.newArrayList(outliersDf, inliersDf));
-    }
-
-    private DataFrame diff(final DataFrame combined, final String outlierColName,
-        final List<String> cols, final double minRatioMetric, final double minSupport,
-        final ExplanationMetric ratioMetric, final int order) throws MacrobaseException {
-
-        final APrioriSummarizer summarizer = new APrioriSummarizer();
-        summarizer.setRatioMetric(ratioMetric)
-            .setMaxOrder(order)
-            .setMinSupport(minSupport)
-            .setMinRatioMetric(minRatioMetric)
-            .setOutlierColumn(outlierColName)
-            .setAttributes(cols);
-
-        summarizer.process(combined);
-        return summarizer.getResults().toDataFrame(cols);
     }
 
     /**
@@ -201,17 +245,18 @@ class QueryEngine {
      * @return a new DataFrame, the result of applying all of these clauses
      */
     private DataFrame evaluateSQLClauses(final QueryBody query, final DataFrame df)
-        throws MacrobaseSQLException {
+        throws MacrobaseException {
         // TODO: we need to figure out a smarter ordering of these. For example,
         // if we have an ORDER BY, we don't need to sort columns that are never going to be in the
         // final output (i.e. the ones not in the SELECT). Basically, we need to do two passes of
         // SELECTs: one with all original projections + the columns in the WHERE clauses and ORDER BY
         // clauses, and then a second with just the original projections. That should be correct
         // and give us better performance.
-        DataFrame resultDf = evaluateWhereClause(df, query.getWhere());
+
+        DataFrame resultDf = evaluateSelectClause(df, query.getSelect());
+        resultDf = evaluateWhereClause(resultDf, query.getWhere());
         resultDf = evaluateOrderByClause(resultDf, query.getOrderBy());
-        resultDf = evaluateLimitClause(resultDf, query.getLimit());
-        return evaluateSelectClause(resultDf, query.getSelect());
+        return evaluateLimitClause(resultDf, query.getLimit());
     }
 
     /**
@@ -230,16 +275,15 @@ class QueryEngine {
     }
 
     /**
-     * Execute a standard SQL query. For now, we ignore GROUP BY, HAVING, and JOIN clauses
+     * Execute a standard SQL query (i.e., a query that only contains ANSI SQL terms, and does not
+     * contain any DIFF or SPLIT operators). For now, we ignore GROUP BY, HAVING, and JOIN clauses
      *
-     * @param query The QuerySpecification object for the SQL query
      * @return A DataFrame containing the results of the SQL query
      */
     private DataFrame executeQuerySpec(final QuerySpecification query)
-        throws MacrobaseSQLException {
-        Table table = (Table) query.getFrom().get();
-        final String tableName = table.getName().toString();
-        final DataFrame df = getTable(tableName);
+        throws MacrobaseException {
+        final Table table = (Table) query.getFrom().get();
+        final DataFrame df = getTable(table.getName().toString());
         return evaluateSQLClauses(query, df);
     }
 
@@ -260,19 +304,57 @@ class QueryEngine {
 
     /**
      * Evaluate Select clause of SQL query. If the clause is 'SELECT *' the same DataFrame is
-     * returned unchanged. TODO: add support for DISTINCT queries
+     * returned unchanged. UDFs in the Select clause are also evaluated here. TODO: add support for
+     * DISTINCT queries
      *
-     * @param df The DataFrame to apply the Select clause on
+     * @param inputDf The DataFrame to apply the Select clause on
      * @param select The Select clause to evaluate
      * @return A new DataFrame with the result of the Select clause applied
      */
-    private DataFrame evaluateSelectClause(DataFrame df, Select select) {
-        final List<String> projections = select.getSelectItems().stream()
-            .map(SelectItem::toString)
-            .collect(toImmutableList());
-        if (projections.size() == 1 && projections.get(0).equalsIgnoreCase("*")) {
-            return df; // SELECT * -> relation is unchanged
+    private DataFrame evaluateSelectClause(final DataFrame inputDf, final Select select)
+        throws MacrobaseException {
+        List<SelectItem> items = Lists.newArrayList(select.getSelectItems());
+        List<SingleColumn> udfCols = removeUDFsInSelect(
+            items);
+        // items has now been modified so that it no longer has UDFs
+        final DataFrame dfWithNoUdfs = evaluateSelectWithNoUDFs(inputDf, items);
+        // create shallow copy, so modifications don't
+        final DataFrame resultDf = dfWithNoUdfs.copy();
+        for (SingleColumn udfCol : udfCols) {
+            final FunctionCall func = (FunctionCall) udfCol.getExpression();
+            // for now, if UDFs is a.b.c.d(), ignore "a.b.c."
+            final String funcName = func.getName().getSuffix();
+            // for now, assume func.getArguments returns at least 1 argument, always grab the first
+            final MBFunction mbFunction = MBFunction.getFunction(funcName,
+                func.getArguments().stream().map(Expression::toString).findFirst().get());
+
+            // column name for the UDF is either 1) the user-provided alias, or 2) the function name
+            // and arguments concatenated by "_"
+            final String colName = udfCol.getAlias().map(Identifier::toString).orElse(
+                funcName + "_" + Joiner.on("_")
+                    .join(
+                        func.getArguments().stream().map(Expression::toString).collect(toList())));
+            // modify resultDf in place, add column; mbFunction is evaluated on input DataFrame
+            resultDf.addColumn(colName, mbFunction.apply(inputDf));
         }
+        return resultDf;
+    }
+
+    /**
+     * Evaluate Select clause of SQL query, but only once all UDFs from the clause have been
+     * removed. If the clause is 'SELECT *' the same DataFrame is returned unchanged.
+     *
+     * @param df The DataFrame to apply the Select clause on
+     * @param items The list of individual columns included in the Select clause
+     * @return A new DataFrame with the result of the Select clause applied
+     */
+    private DataFrame evaluateSelectWithNoUDFs(DataFrame df, List<SelectItem> items) {
+        if (items.size() == 1 && items.get(0) instanceof AllColumns) {
+            // SELECT * -> relation is unchanged
+            return df;
+        }
+        final List<String> projections = items.stream().map(SelectItem::toString)
+            .collect(toImmutableList());
         return df.project(projections);
     }
 
@@ -318,7 +400,13 @@ class QueryEngine {
 
     // ********************* Helper methods for evaluating Where clauses **********************
 
-    // Recursive method that generates a boolean mask (a BitSet) for a Where clause
+    /**
+     * Recursive method that, given a Where clause, generates a boolean mask (a BitSet) applying the
+     * clause to a DataFrame
+     *
+     * @throws MacrobaseSQLException Only comparison expressions (e.g., WHERE x = 42) and logical
+     * AND/OR/NOT combinations of such expressions are supported; exception is thrown otherwise.
+     */
     private BitSet getMask(DataFrame df, Expression whereClause) throws MacrobaseSQLException {
         if (whereClause instanceof NotExpression) {
             final NotExpression notExpr = (NotExpression) whereClause;
@@ -357,16 +445,31 @@ class QueryEngine {
                 return maskForPredicate(df, (Literal) right, (Identifier) left, type);
             }
         }
-        // We only support comparison expressions, logical AND/OR combinations of comparison
-        // expressions, and NOT comparison expressions
         throw new MacrobaseSQLException("Boolean expression not supported");
     }
 
+
+    /**
+     * The base case for {@link QueryEngine#getMask(DataFrame, Expression)}; returns a boolean mask
+     * (as a BitSet) for a single comparision expression (e.g., WHERE x = 42)
+     *
+     * @param df The DataFrame on which to evaluate the comparison expression
+     * @param literal The constant argument in the expression (e.g., 42)
+     * @param identifier The column variable argument in the expression (e.g., x)
+     * @param compExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
+     * @throws MacrobaseSQLException if the literal's type doesn't match the type of the column
+     * variable, an exception is thrown
+     */
     private BitSet maskForPredicate(final DataFrame df, final Literal literal,
-        final Identifier identifier,
-        final ComparisonExpressionType compExprType) throws MacrobaseSQLException {
+        final Identifier identifier, final ComparisonExpressionType compExprType)
+        throws MacrobaseSQLException {
         final String colName = identifier.getValue();
-        final int colIndex = df.getSchema().getColumnIndex(colName);
+        final int colIndex;
+        try {
+            colIndex = df.getSchema().getColumnIndex(colName);
+        } catch (UnsupportedOperationException e) {
+            throw new MacrobaseSQLException(e.getMessage());
+        }
         final ColType colType = df.getSchema().getColumnType(colIndex);
 
         if (colType == ColType.DOUBLE) {
@@ -394,6 +497,17 @@ class QueryEngine {
         }
     }
 
+    /**
+     * Return a Java Predicate expression for a given comparison type and constant value of type
+     * double. (See {@link QueryEngine#generateLambdaForPredicate(String, ComparisonExpressionType)}
+     * for handling a String argument.)
+     *
+     * @param y The constant value
+     * @param compareExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
+     * @return A {@link DoublePredicate}, that wraps the constant y in a closure
+     * @throws MacrobaseSQLException If a comparsion type is passed in that is not supported, an
+     * exception is thrown
+     */
     private DoublePredicate generateLambdaForPredicate(double y,
         ComparisonExpressionType compareExprType) throws MacrobaseSQLException {
         switch (compareExprType) {
@@ -418,6 +532,19 @@ class QueryEngine {
         }
     }
 
+    /**
+     * Return a Java Predicate expression for a given comparison type and constant value of type
+     * String. (See {@link QueryEngine#generateLambdaForPredicate(double, ComparisonExpressionType)}
+     * for handling a double argument.)
+     *
+     * @param y The constant value
+     * @param compareExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
+     * @return A {@link Predicate<Object>}, that wraps the constant y in a closure. A
+     * Predicate<String> is not returned for compatibility with {@link DataFrame#filter(int,
+     * Predicate)}.
+     * @throws MacrobaseSQLException If a comparsion type is passed in that is not supported, an
+     * exception is thrown
+     */
     private Predicate<Object> generateLambdaForPredicate(final String y,
         final ComparisonExpressionType compareExprType) throws MacrobaseSQLException {
         switch (compareExprType) {
