@@ -4,6 +4,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
+import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,9 +38,8 @@ public class ExportClause extends Node {
         requireNonNull(filename, "filename is null");
 
         this.fieldDelimiter = fieldDelimiter.orElse(new DelimiterClause(",")).toString();
-        // TODO: change this to throw a parseError
         if (this.fieldDelimiter.length() != 1) {
-            throw new IllegalArgumentException("fieldDelimiter's length not equal to 1");
+            throw new ParsingException("FIELDS TERMINATED BY argument has length not equal to 1");
         }
         this.lineDelimiter = lineDelimiter.orElse(new DelimiterClause("\n")).toString();
         this.filename = filename;

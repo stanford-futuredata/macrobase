@@ -115,10 +115,8 @@ diffQuerySpecification
     ;
 
 splitQuery
-    :  SPLIT ON identifier '(' (primaryExpression (',' primaryExpression)*)? ')'
-       FROM relation
-    |  SPLIT ON identifier '(' (primaryExpression (',' primaryExpression)*)? ')'
-       FROM queryTerm
+    :  SPLIT relation WHERE where=booleanExpression
+    |  SPLIT queryTerm WHERE where=booleanExpression
     ;
 
 columnDefinition
@@ -514,7 +512,6 @@ NFD : 'NFD';
 NFKC : 'NFKC';
 NFKD : 'NFKD';
 NO: 'NO';
-NORMALIZE: 'NORMALIZE';
 NOT: 'NOT';
 NULL: 'NULL';
 NULLIF: 'NULLIF';
