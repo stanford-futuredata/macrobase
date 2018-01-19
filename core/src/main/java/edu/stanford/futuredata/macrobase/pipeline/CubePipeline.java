@@ -1,6 +1,10 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.*;
+import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.PredicateCubeClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
+import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
@@ -9,16 +13,21 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.PrintWriter;
-import java.util.*;
 
 /**
  * Default pipeline for cubed data: load, classify, and then explain
  */
 public class CubePipeline implements Pipeline {
+
     Logger log = LoggerFactory.getLogger("CubePipeline");
 
     // Ingest
@@ -35,12 +44,12 @@ public class CubePipeline implements Pipeline {
     private boolean isStrPredicate;
 
     private String predicateStr;
-    private String metric;
+    private Optional<String> metric;
 
     private boolean includeHi;
     private boolean includeLo;
-    private String meanColumn;
-    private String stdColumn;
+    private Optional<String> meanColumn;
+    private Optional<String> stdColumn;
     private LinkedHashMap<String, Double> quantileColumns;
 
     // Explanation
@@ -73,12 +82,12 @@ public class CubePipeline implements Pipeline {
         }
 
         predicateStr = conf.get("predicate", "==").trim();
-        metric = conf.get("metric", null);
+        metric = Optional.ofNullable(conf.get("metric"));
 
         includeHi = conf.get("includeHi", true);
         includeLo = conf.get("includeLo", true);
-        meanColumn = conf.get("meanColumn", "mean");
-        stdColumn = conf.get("stdColumn", "std");
+        meanColumn = Optional.ofNullable(conf.get("meanColumn"));
+        stdColumn = Optional.ofNullable(conf.get("stdColumn"));
         quantileColumns = conf.get("quantileColumns", new LinkedHashMap<String, Double>());
 
         attributes = conf.get("attributes");
@@ -91,15 +100,19 @@ public class CubePipeline implements Pipeline {
     public APLExplanation results() throws Exception {
         Map<String, Schema.ColType> colTypes = getColTypes();
         long startTime = System.currentTimeMillis();
-        List<String> requiredColumns = new ArrayList<>(attributes);
-        requiredColumns.add(metric);
+        final List<String> requiredColumns = new ArrayList<>(attributes);
+        requiredColumns.add(countColumn);
+        metric.ifPresent(requiredColumns::add);
+        meanColumn.ifPresent(requiredColumns::add);
+        stdColumn.ifPresent(requiredColumns::add);
+        requiredColumns.addAll(quantileColumns.keySet());
         DataFrame df = PipelineUtils.loadDataFrame(
-                inputURI,
-                colTypes,
-                restHeader,
-                jsonBody,
-                usePost,
-                requiredColumns
+            inputURI,
+            colTypes,
+            restHeader,
+            jsonBody,
+            usePost,
+            requiredColumns
         );
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Loading time: {}", elapsed);
@@ -134,8 +147,12 @@ public class CubePipeline implements Pipeline {
         switch (classifierType) {
             case "meanshift":
             case "arithmetic": {
-                colTypes.put(meanColumn, Schema.ColType.DOUBLE);
-                colTypes.put(stdColumn, Schema.ColType.DOUBLE);
+                colTypes.put(meanColumn
+                        .orElseThrow(() -> new MacrobaseException("mean column not present in config")),
+                    Schema.ColType.DOUBLE);
+                colTypes.put(stdColumn
+                        .orElseThrow(() -> new MacrobaseException("std column not present in config")),
+                    Schema.ColType.DOUBLE);
                 return colTypes;
             }
             case "quantile": {
@@ -146,14 +163,20 @@ public class CubePipeline implements Pipeline {
             }
             case "predicate": {
                 if (isStrPredicate) {
-                    colTypes.put(metric, Schema.ColType.STRING);
+                    colTypes.put(metric.orElseThrow(
+                        () -> new MacrobaseException("metric column not present in config")),
+                        Schema.ColType.STRING);
                 } else {
-                    colTypes.put(metric, Schema.ColType.DOUBLE);
+                    colTypes.put(metric.orElseThrow(
+                        () -> new MacrobaseException("metric column not present in config")),
+                        Schema.ColType.DOUBLE);
                 }
                 return colTypes;
             }
             case "raw": {
-                colTypes.put(meanColumn, Schema.ColType.DOUBLE);
+                colTypes.put(meanColumn.orElseThrow(
+                    () -> new MacrobaseException("mean column not present in config")),
+                    Schema.ColType.DOUBLE);
             }
             default:
                 throw new MacrobaseException("Bad Classifier Name");
@@ -164,7 +187,10 @@ public class CubePipeline implements Pipeline {
         switch (classifierType) {
             case "arithmetic": {
                 ArithmeticClassifier classifier =
-                        new ArithmeticClassifier(countColumn, meanColumn, stdColumn);
+                    new ArithmeticClassifier(countColumn, meanColumn.orElseThrow(
+                        () -> new MacrobaseException("mean column not present in config")),
+                        stdColumn.orElseThrow(
+                            () -> new MacrobaseException("std column not present in config")));
                 classifier.setPercentile(cutoff);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
@@ -172,26 +198,31 @@ public class CubePipeline implements Pipeline {
             }
             case "quantile": {
                 QuantileClassifier classifier =
-                        new QuantileClassifier(countColumn, quantileColumns);
+                    new QuantileClassifier(countColumn, quantileColumns);
                 classifier.setPercentile(cutoff);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
                 return classifier;
             }
             case "predicate": {
-                if (isStrPredicate){
-                    PredicateCubeClassifier classifier = new PredicateCubeClassifier(countColumn, metric, predicateStr, strCutoff);
-                    return classifier;
+                if (isStrPredicate) {
+                    return new PredicateCubeClassifier(countColumn,
+                        metric.orElseThrow(
+                            () -> new MacrobaseException("metric column not present in config")),
+                        predicateStr, strCutoff);
                 }
-                PredicateCubeClassifier classifier = new PredicateCubeClassifier(countColumn, metric, predicateStr, cutoff);
-                return classifier;
+                return new PredicateCubeClassifier(countColumn,
+                    metric.orElseThrow(
+                        () -> new MacrobaseException("metric column not present in config")),
+                    predicateStr, cutoff);
             }
 
             case "meanshift":
             case "raw": {
                 return new RawClassifier(
-                        countColumn,
-                        meanColumn
+                    countColumn,
+                    meanColumn.orElseThrow(
+                        () -> new MacrobaseException("mean column not present in config"))
                 );
             }
             default:
@@ -204,8 +235,10 @@ public class CubePipeline implements Pipeline {
             case "meanshift": {
                 APLMeanSummarizer summarizer = new APLMeanSummarizer();
                 summarizer.setCountColumn(countColumn);
-                summarizer.setMeanColumn(meanColumn);
-                summarizer.setStdColumn(stdColumn);
+                summarizer.setMeanColumn(meanColumn.orElseThrow(
+                        () -> new MacrobaseException("mean column not present in config")));
+                summarizer.setStdColumn(stdColumn.orElseThrow(
+                        () -> new MacrobaseException("std column not present in config")));
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);
