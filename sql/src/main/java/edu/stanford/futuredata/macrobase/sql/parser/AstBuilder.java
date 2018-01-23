@@ -20,6 +20,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import edu.stanford.futuredata.macrobase.SqlBaseBaseVisitor;
 import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
@@ -286,8 +287,18 @@ class AstBuilder
 
         Optional<RatioMetricExpression> ratioMetricExpr = visitIfPresent(
             context.ratioMetricExpression(), RatioMetricExpression.class);
-        List<Identifier> attributeCols = visit(context.columnAliases().identifier(),
-            Identifier.class);
+
+        List<Identifier> attributeCols;
+        if (context.ASTERISK() != null) {
+            // ON *
+            final Optional<String> asterisk = getTextIfPresent(context.ASTERISK().getSymbol());
+            final Builder<Identifier> builder = ImmutableList.builder();
+            asterisk.map(Identifier::new).ifPresent(builder::add);
+            attributeCols = builder.build();
+        } else {
+            // ON col1, col2, ..., col n
+            attributeCols = visit(context.columnAliases().identifier(), Identifier.class);
+        }
         check(attributeCols.size() > 0, "At least one attribute must be specified", context);
 
         Optional<IntLiteral> maxCombo = getTextIfPresent(context.maxCombo).map(IntLiteral::new);

@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.stream.DoubleStream;
 
 /**
  * MBFunction defines an interface for UDF-style functions that can be applied to a column of a
@@ -98,19 +99,23 @@ class NormalizeFunction extends MBFunction {
     /**
      * @param arg The column name
      */
-    private NormalizeFunction(final String arg) {
+    public NormalizeFunction(final String arg) {
         super(arg);
     }
 
     /**
-     * @param inputCol The column values to normalized, remains unmodified
-     * @param outputCol The new normalized values
+     * @param inputCol The column values to normalize, remains unmodified
+     * @param outputCol The new values, normalized between 0 and 1
      */
     @Override
     protected void applyFunction(final double[] inputCol, final double[] outputCol) {
         final double max = Arrays.stream(inputCol).max().getAsDouble();
+        // if negative values are in the array, shift everything so that it's positive
+        final double arrayMin = Arrays.stream(inputCol).min().getAsDouble();
+        final double offset = arrayMin > 0.0 ? 0.0 : -arrayMin;
+        final double norm = max + offset;
         for (int i = 0; i < inputCol.length; ++i) {
-            outputCol[i] = inputCol[i] / max;
+            outputCol[i] = (inputCol[i] + offset) / norm;
         }
     }
 }
