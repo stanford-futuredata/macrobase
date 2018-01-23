@@ -29,6 +29,6 @@ SELECT * FROM
     (SELECT * FROM sample WHERE usage > 1000.0) outliers,
     (SELECT * FROM sample WHERE usage < 1000.0) inliers
   ON *
-  WITH MIN RATIO 5.0 MIN SUPPORT 0.75
+  WITH MIN SUPPORT 0.75 MIN RATIO 5.0
   COMPARE BY
     risk_ratio(COUNT(*));

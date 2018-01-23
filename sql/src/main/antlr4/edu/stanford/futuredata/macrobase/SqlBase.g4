@@ -75,7 +75,7 @@ diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
       FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON (columnAliases | ASTERISK)
-      (WITH minRatioExpression? minSupportExpression?)?
+      (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
@@ -86,7 +86,7 @@ diffQuerySpecification
       exportClause?
       FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON (columnAliases | ASTERISK)
-      (WITH minRatioExpression? minSupportExpression?)?
+      (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
@@ -95,7 +95,7 @@ diffQuerySpecification
     | SELECT setQuantifier? selectItem (',' selectItem)*
       FROM DIFF '(' splitQuery ')'
       ON (columnAliases | ASTERISK)
-      (WITH minRatioExpression? minSupportExpression?)?
+      (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?
@@ -106,7 +106,7 @@ diffQuerySpecification
       exportClause?
       FROM DIFF '(' splitQuery ')'
       ON (columnAliases | ASTERISK)
-      (WITH minRatioExpression? minSupportExpression?)?
+      (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
       (MAX COMBO maxCombo=INTEGER_VALUE)?
       (WHERE where=booleanExpression)?

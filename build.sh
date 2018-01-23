@@ -1,1 +1,5 @@
-cd lib; mvn clean; mvn install; cd ../core ; mvn clean ; mvn package ; cd ../
+#! /usr/bin/env bash
+
+set -e
+
+cd lib && mvn clean && mvn install &&  cd ../sql && mvn clean && mvn package

@@ -7,7 +7,7 @@ IMPORT FROM CSV FILE 'core/demo/wikiticker.csv' INTO wiki(time string, channel
 
 SELECT normalize(delta) as norm FROM wiki;
 
-SELECT percentile(delta) as perecentile FROM wiki;
+SELECT percentile(delta) as percentile FROM wiki;
 
 SELECT * FROM DIFF (SPLIT (SELECT *, percentile(delta) as percentile FROM wiki) WHERE percentile > 0.95) ON *;
 
