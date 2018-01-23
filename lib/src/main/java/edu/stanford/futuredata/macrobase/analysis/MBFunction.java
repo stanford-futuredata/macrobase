@@ -4,7 +4,8 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
-import java.util.stream.DoubleStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * MBFunction defines an interface for UDF-style functions that can be applied to a column of a
@@ -78,6 +79,10 @@ public abstract class MBFunction {
                 clazz = NormalizeFunction.class;
                 break;
             }
+            case "percentile": {
+                clazz = PercentileFucntion.class;
+                break;
+            }
             default: {
                 throw new MacrobaseException("Bad MBFunction Type: " + funcName);
             }
@@ -116,6 +121,42 @@ class NormalizeFunction extends MBFunction {
         final double norm = max + offset;
         for (int i = 0; i < inputCol.length; ++i) {
             outputCol[i] = (inputCol[i] + offset) / norm;
+        }
+    }
+}
+
+
+/**
+ * An MBFunction that finds the percentile for each individual value in a given column. For example,
+ * for a column with values [0.1, 0.3, 0.2, 0.5, 0.4], applying the PercentileFunction would
+ * generate [0.2, 0.6, 0.4, 1.0, 0.8].
+ */
+class PercentileFucntion extends MBFunction {
+
+    /**
+     * @param arg The column name
+     */
+    public PercentileFucntion(final String arg) {
+        super(arg);
+    }
+
+    /**
+     * @param inputCol The column values to convert to percentiles, remains unmodified
+     * @param outputCol The percentile value that corresponds to the given column value
+     */
+    @Override
+    protected void applyFunction(final double[] inputCol, final double[] outputCol) {
+        // sort the column, and, for each value in the column, store the *min* position in the sorted array
+        final double[] sortedInputCol = Arrays.stream(inputCol).sorted().toArray();
+        Map<Double, Integer> map = new HashMap<>();
+        for (int i = sortedInputCol.length - 1; i >= 0; --i) {
+            // increment by one so that the max value has 100th percentile
+            map.put(sortedInputCol[i], i + 1);
+        }
+        // normalize the position for each value by the size of the column
+        final double norm = inputCol.length;
+        for (int i = 0; i < inputCol.length; ++i) {
+            outputCol[i] = map.get(inputCol[i]) / norm;
         }
     }
 }

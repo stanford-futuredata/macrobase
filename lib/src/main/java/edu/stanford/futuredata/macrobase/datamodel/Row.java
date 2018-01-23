@@ -104,16 +104,16 @@ public class Row {
      */
     public void prettyPrint(final PrintStream out, final int width) {
         out.println("|" + Joiner.on("|")
-            .join(vals.stream().map((x) -> StringUtils.center(String.valueOf(formatVal(x)), width))
+            .join(vals.stream().map((x) -> StringUtils.center(formatVal(x, width), width))
                 .collect(toList())) + "|");
     }
 
     /**
      * @return If x is a double, return back a formatted String that prints at least 1 and up to 6
      * decimal places of the double. If x is null, return "-". Otherwise, return x unchanged (i.e.
-     * toString will be used)
+     * toString will be used), but truncate it to @param length
      */
-    private Object formatVal(Object x) {
+    private String formatVal(Object x, final int width) {
         if (x == null) {
             return "-";
         } else if (x instanceof Double) {
@@ -122,8 +122,20 @@ public class Row {
             }
             return DOUBLE_FORMAT.format(x);
         } else {
-            return x;
+            final String str = String.valueOf(x);
+            if (str.length() > width) {
+                return str.substring(0, width - 3) + "...";
+            } else {
+                return str;
+            }
         }
+    }
+
+    /**
+     * @return format value for pretty-printing using default width of 15
+     */
+    private String formatVal(Object x) {
+        return formatVal(x, 15);
     }
 
 }
