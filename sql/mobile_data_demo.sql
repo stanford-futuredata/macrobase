@@ -14,7 +14,7 @@ SELECT battery_drain FROM mobile_data WHERE battery_drain <= 0.90;
 SELECT * FROM DIFF
   (SELECT * FROM mobile_data WHERE battery_drain > 0.90) outliers,
   (SELECT * FROM mobile_data WHERE battery_drain <= 0.90) inliers
-  ON state, hw_make, hw_model, firmware_version, app_version;
+  ON hw_make, hw_model, firmware_version, app_version;
 
 SELECT app_version, hw_make, hw_model, global_ratio, support, outlier_count
 FROM DIFF

@@ -82,6 +82,7 @@ public class APrioriSummarizer extends BatchSummarizer {
 
         log.info("Outliers: {}", numOutliers);
         log.info("Outlier Rate of: {}", baseRate);
+        log.info("Min Support Ratio: {}", minOutlierSupport);
         log.info("Min Support Count: {}", suppCount);
         log.info("Min Ratio Metric: {}", minRatioMetric);
         log.info("Using Ratio of: {}", ratioMetric.getClass().getSimpleName());

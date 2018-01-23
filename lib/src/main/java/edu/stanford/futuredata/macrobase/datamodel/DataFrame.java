@@ -176,17 +176,17 @@ public class DataFrame {
 
     /**
      * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
-     * and <tt>maxNumToPrint</tt> set to 15
+     * and <tt>maxNumToPrint</tt> set to 25
      */
     public void prettyPrint() {
-        prettyPrint(System.out, 15);
+        prettyPrint(System.out, 25);
     }
 
     /**
-     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 15
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 25
      */
     public void prettyPrint(final PrintStream out) {
-      prettyPrint(out, 15);
+      prettyPrint(out, 25);
     }
 
     /**

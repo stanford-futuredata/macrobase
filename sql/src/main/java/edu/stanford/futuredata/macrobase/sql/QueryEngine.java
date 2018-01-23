@@ -4,6 +4,8 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
@@ -41,13 +43,16 @@ import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.DoubleStream;
@@ -56,7 +61,7 @@ import org.slf4j.LoggerFactory;
 
 class QueryEngine {
 
-    private static final Logger log = LoggerFactory.getLogger(MacroBaseSQLRepl.class);
+    private static final Logger log = LoggerFactory.getLogger(QueryEngine.class.getSimpleName());
 
     private final Map<String, DataFrame> tablesInMemory;
 
@@ -115,11 +120,6 @@ class QueryEngine {
      */
     private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
         throws MacrobaseException {
-        // TODO: if an attributeCol isn't in a select col, don't include it
-        final List<String> explainCols = diffQuery.getAttributeCols().stream()
-            .map(Identifier::toString)
-            .collect(toImmutableList());
-
         final String outlierColName = "outlier_col";
         DataFrame dfToExplain;
 
@@ -131,14 +131,6 @@ class QueryEngine {
             // execute subqueries
             final DataFrame outliersDf = executeQuery(first.getQuery().getQueryBody());
             final DataFrame inliersDf = executeQuery(second.getQuery().getQueryBody());
-
-            // TODO: should be able to check this without having to execute the two subqueries
-            if (!outliersDf.getSchema().hasColumns(explainCols) || !inliersDf.getSchema()
-                .hasColumns(explainCols)) {
-                throw new MacrobaseSQLException(
-                    "ON " + Joiner.on(", ").join(explainCols) + " not present in either"
-                        + " outlier or inlier subquery");
-            }
 
             dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
         } else {
@@ -155,12 +147,6 @@ class QueryEngine {
                 dfToExplain = getTable(((Table) inputRelation).getName().toString());
             }
 
-            if (!dfToExplain.getSchema().hasColumns(explainCols)) {
-                throw new MacrobaseSQLException(
-                    "ON " + Joiner.on(", ").join(explainCols) + " not present in table "
-                        + inputRelation);
-            }
-
             // add outlier (binary) column by evaluating the WHERE clause
             final BitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
             final double[] outlierVals = new double[dfToExplain.getNumRows()];
@@ -168,6 +154,23 @@ class QueryEngine {
             dfToExplain.addColumn(outlierColName, outlierVals);
         }
 
+        List<String> explainCols = diffQuery.getAttributeCols().stream()
+            .map(Identifier::getValue)
+            .collect(toImmutableList());
+        if ((explainCols.size() == 1) && explainCols.get(0).equals("*")) {
+            // ON *, explore columns in DataFrame
+            explainCols = findExplanationColumns(dfToExplain);
+            log.info("Using " + Joiner.on(", ").join(explainCols)
+                + " as candidate attributes for explanation");
+        }
+
+        // TODO: should be able to check this without having to execute the two subqueries
+        if (!dfToExplain.getSchema().hasColumns(explainCols)) {
+            throw new MacrobaseSQLException(
+                "ON " + Joiner.on(", ").join(explainCols) + " not present in table");
+        }
+
+        // TODO: if an explainCol isn't in the SELECT clause, don't include it
         final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
         final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
         final ExplanationMetric ratioMetric = ExplanationMetric
@@ -175,7 +178,6 @@ class QueryEngine {
         final int order = diffQuery.getMaxCombo().getValue();
 
         // execute diff
-        // TODO: add support for "ON *"
         final APrioriSummarizer summarizer = new APrioriSummarizer();
         summarizer.setRatioMetric(ratioMetric)
             .setMaxOrder(order)
@@ -188,6 +190,30 @@ class QueryEngine {
         final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
 
         return evaluateSQLClauses(diffQuery, resultDf);
+    }
+
+    /**
+     * Find columns that should be included in the "ON col1, col2, ..., coln" clause
+     *
+     * @return List of columns (as Strings)
+     */
+    private List<String> findExplanationColumns(DataFrame dfToExplain) {
+        Builder<String> builder = ImmutableList.builder();
+        final int numRowsToSample =
+            dfToExplain.getNumRows() < 1000 ? dfToExplain.getNumRows() : 1000;
+        final List<String> stringCols = dfToExplain.getSchema()
+            .getColumnNamesByType(ColType.STRING);
+        for (String colName : stringCols) {
+            final String[] colValues = dfToExplain.getStringColumnByName(colName);
+            final Set<String> set = new HashSet<>();
+            set.addAll(Arrays.asList(colValues).subList(0, numRowsToSample));
+            if (set.size() < numRowsToSample / 4) {
+                // if number of distinct elements is less than 1/4 the number of sampled rows,
+                // include it
+                builder.add(colName);
+            }
+        }
+        return builder.build();
     }
 
     /**
