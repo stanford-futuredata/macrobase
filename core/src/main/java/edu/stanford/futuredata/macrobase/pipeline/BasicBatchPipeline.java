@@ -11,6 +11,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
@@ -127,7 +128,8 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
-                summarizer.setMinRiskRatio(minRiskRatio);
+                summarizer.setQualityMetrics(Collections.singletonList(new RiskRatioQualityMetric(0, 1)),
+                        Collections.singletonList(minRiskRatio));
                 summarizer.setUseAttributeCombinations(true);
                 return summarizer;
             }

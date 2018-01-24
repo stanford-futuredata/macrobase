@@ -1,13 +1,13 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
  * Measures how large a subgroup is relative to a global count
  */
-public class SupportMetric implements QualityMetric{
+public class SupportQualityMetric implements QualityMetric{
     private int countIdx;
     private double globalCount;
 
-    public SupportMetric(int countIdx) {
+    public SupportQualityMetric(int countIdx) {
         this.countIdx = countIdx;
     }
 

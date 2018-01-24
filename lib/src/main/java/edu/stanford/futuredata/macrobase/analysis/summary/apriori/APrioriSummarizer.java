@@ -368,7 +368,7 @@ public class APrioriSummarizer extends BatchSummarizer {
 
     /**
      * Configure what kind of ratio to use for measuring result severity
-     * @param ratioMetric configurable metric definition, e.g. RiskRatioMetric
+     * @param ratioMetric configurable metric definition, e.g. RiskRatioQualityMetric
      */
     public void setRatioMetric(ExplanationMetric ratioMetric) {
         this.ratioMetric = ratioMetric;
