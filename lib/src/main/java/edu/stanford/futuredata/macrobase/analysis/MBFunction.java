@@ -125,7 +125,6 @@ class NormalizeFunction extends MBFunction {
     }
 }
 
-
 /**
  * An MBFunction that finds the percentile for each individual value in a given column. For example,
  * for a column with values [0.1, 0.3, 0.2, 0.5, 0.4], applying the PercentileFunction would
@@ -148,7 +147,7 @@ class PercentileFucntion extends MBFunction {
     protected void applyFunction(final double[] inputCol, final double[] outputCol) {
         // sort the column, and, for each value in the column, store the *min* position in the sorted array
         final double[] sortedInputCol = Arrays.stream(inputCol).sorted().toArray();
-        Map<Double, Integer> map = new HashMap<>();
+        final Map<Double, Integer> map = new HashMap<>();
         for (int i = sortedInputCol.length - 1; i >= 0; --i) {
             // increment by one so that the max value has 100th percentile
             map.put(sortedInputCol[i], i + 1);
