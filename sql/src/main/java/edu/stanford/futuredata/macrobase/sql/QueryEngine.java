@@ -22,7 +22,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
-import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Literal;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
@@ -32,7 +31,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
@@ -234,7 +232,7 @@ class QueryEngine {
                 final SingleColumn col = (SingleColumn) item;
                 if (col.getExpression() instanceof FunctionCall) {
                     functionCalls.add(col);
-                    it.remove();
+                     it.remove();
                 }
             }
         }
@@ -280,8 +278,21 @@ class QueryEngine {
         // clauses, and then a second with just the original projections. That should be correct
         // and give us better performance.
 
-        DataFrame resultDf = evaluateSelectClause(df, query.getSelect());
-        resultDf = evaluateWhereClause(resultDf, query.getWhere());
+        final List<SelectItem> selectWithoutUdfs = Lists
+            .newArrayList(query.getSelect().getSelectItems());
+        final List<SingleColumn> udfCols = removeUDFsInSelect(selectWithoutUdfs);
+        // selectWithoutUdfs has now been modified so that it no longer has UDFs
+
+        // create shallow copy, so modifications don't persist on the original DataFrame
+        DataFrame resultDf = df.copy();
+        final Map<String, double[]> newColumns = evaluateUDFs(resultDf, udfCols);
+
+        resultDf = evaluateWhereClause(df, query.getWhere());
+        resultDf = evaluateSelectClause(resultDf, selectWithoutUdfs);
+        for (Map.Entry newColumn : newColumns.entrySet()) {
+            // add UDF columns to result
+            resultDf.addColumn((String) newColumn.getKey(), (double[]) newColumn.getValue());
+        }
         resultDf = evaluateOrderByClause(resultDf, query.getOrderBy());
         return evaluateLimitClause(resultDf, query.getLimit());
     }
@@ -330,52 +341,40 @@ class QueryEngine {
     }
 
     /**
-     * Evaluate Select clause of SQL query. If the clause is 'SELECT *' the same DataFrame is
-     * returned unchanged. UDFs in the Select clause are also evaluated here. TODO: add support for
-     * DISTINCT queries
+     * Evaluate only the UDFs of SQL query and return a Map of column names -> double arrays.
+     * If there are no UDFs (i.e. @param udfCols is empty), the Map is empty.
      *
-     * @param inputDf The DataFrame to apply the Select clause on
-     * @param select The Select clause to evaluate
-     * @return A new DataFrame with the result of the Select clause applied
+     * @param inputDf The DataFrame to evaluate the UDFs on
+     * @param udfCols The List of UDFs to evaluate
+     * @return The Map of new columns to be added
      */
-    private DataFrame evaluateSelectClause(final DataFrame inputDf, final Select select)
+    private Map<String, double[]> evaluateUDFs(final DataFrame inputDf, final List<SingleColumn> udfCols)
         throws MacrobaseException {
-        List<SelectItem> items = Lists.newArrayList(select.getSelectItems());
-        List<SingleColumn> udfCols = removeUDFsInSelect(
-            items);
-        // items has now been modified so that it no longer has UDFs
-        final DataFrame dfWithNoUdfs = evaluateSelectWithNoUDFs(inputDf, items);
-        // create shallow copy, so modifications don't
-        final DataFrame resultDf = dfWithNoUdfs.copy();
+        final Map<String, double[]> newColumns = new HashMap<>();
         for (SingleColumn udfCol : udfCols) {
             final FunctionCall func = (FunctionCall) udfCol.getExpression();
-            // for now, if UDFs is a.b.c.d(), ignore "a.b.c."
+            // for now, if UDF is a.b.c.d(), ignore "a.b.c."
             final String funcName = func.getName().getSuffix();
             // for now, assume func.getArguments returns at least 1 argument, always grab the first
             final MBFunction mbFunction = MBFunction.getFunction(funcName,
                 func.getArguments().stream().map(Expression::toString).findFirst().get());
 
-            // column name for the UDF is either 1) the user-provided alias, or 2) the function name
-            // and arguments concatenated by "_"
-            final String colName = udfCol.getAlias().map(Identifier::toString).orElse(
-                funcName + "_" + Joiner.on("_")
-                    .join(
-                        func.getArguments().stream().map(Expression::toString).collect(toList())));
             // modify resultDf in place, add column; mbFunction is evaluated on input DataFrame
-            resultDf.addColumn(colName, mbFunction.apply(inputDf));
+            newColumns.put(udfCol.toString(), mbFunction.apply(inputDf));
         }
-        return resultDf;
+        return newColumns;
     }
 
     /**
      * Evaluate Select clause of SQL query, but only once all UDFs from the clause have been
-     * removed. If the clause is 'SELECT *' the same DataFrame is returned unchanged.
+     * removed. If the clause is 'SELECT *' the same DataFrame is returned unchanged. TODO: add
+     * support for DISTINCT queries
      *
      * @param df The DataFrame to apply the Select clause on
      * @param items The list of individual columns included in the Select clause
      * @return A new DataFrame with the result of the Select clause applied
      */
-    private DataFrame evaluateSelectWithNoUDFs(DataFrame df, List<SelectItem> items) {
+    private DataFrame evaluateSelectClause(DataFrame df, List<SelectItem> items) {
         if (items.size() == 1 && items.get(0) instanceof AllColumns) {
             // SELECT * -> relation is unchanged
             return df;
