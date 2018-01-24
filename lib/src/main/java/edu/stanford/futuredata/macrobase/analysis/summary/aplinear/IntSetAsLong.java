@@ -3,9 +3,19 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Sets of two or three integers of at most 20 bits each, stored as a long.
+ * Extremely fast, but the integer size is capped and the integer must be nonzero.
+ */
 public class IntSetAsLong {
     private static long mask = 0xfffff;
 
+    /**
+     * Pack two twenty-bit nonzero integers into a long.
+     * @param a  First integer
+     * @param b  Second integer
+     * @return  A long containing both integers in the lowest 40 bits.
+     */
     public static long twoIntToLong(long a, long b) {
         if (a < b)
             return (a << 20) + b;
@@ -13,6 +23,13 @@ public class IntSetAsLong {
             return (b << 20) + a;
     }
 
+    /**
+     * Pack three twenty-bit nonzero integers into a long.
+     * @param a  First integer
+     * @param b  Second integer
+     * @param c  Third integer
+     * @return  A long containing all integers in the lowest 60 bits.
+     */
     public static long threeIntToLong(long a, long b, long c) {
         long result = 0;
         if (a <= b) {
@@ -41,6 +58,12 @@ public class IntSetAsLong {
         return result;
     }
 
+    /**
+     * Check if setLong contains queryLong
+     * @param setLong A long containing packed 20-bit nonzero integers
+     * @param queryLong A 20-bit integer
+     * @return Does setLong contain querylong?
+     */
     public static boolean contains(long setLong, long queryLong) {
         if ((setLong & mask) == queryLong)
             return true;
@@ -52,18 +75,38 @@ public class IntSetAsLong {
             return false;
     }
 
+    /**
+     * Return the integer stored in the lowest 20 bits of newLong
+     * @param newLong A long containing packed 20-bit nonzero integers
+     * @return The 20-bit integer stored in newLong's lowest 20 bits, 0 if none.
+     */
     public static long getFirst(long newLong) {
         return (newLong & mask);
     }
 
+    /**
+     * Return the integer stored in the next-lowest 20 bits of newLong
+     * @param newLong A long containing packed 20-bit nonzero integers
+     * @return The 20-bit integer stored in newLong's next 20 bits, 0 if none.
+     */
     public static long getSecond(long newLong) {
         return ((newLong >>> 20) & mask);
     }
 
+    /**
+     * Return the integer stored in the next-lowest 20 bits of newLong
+     * @param newLong A long containing packed 20-bit nonzero integers
+     * @return The 20-bit integer stored in newLong's next 20 bits, 0 if none.
+     */
     public static long getThird(long newLong) {
         return ((newLong >>> 40) & mask);
     }
 
+    /**
+     * Return the nonzero integers stored in newLong
+     * @param setLong A long containing packed 20-bit nonzero integers
+     * @return A set of at most three integers stored in setLong.
+     */
     public static Set<Integer> getSet(long setLong) {
         HashSet<Integer> retSet = new HashSet(3);
         int first = Math.toIntExact(getFirst(setLong));

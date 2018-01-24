@@ -106,7 +106,7 @@ public class APrioriLinear {
                             );
                             int numCandidates = candidates.size();
                             for (int c = 0; c < numCandidates; c++) {
-                                long curCandidate = candidates.get(c).longValue();
+                                long curCandidate = candidates.get(c);
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
@@ -128,7 +128,7 @@ public class APrioriLinear {
             } catch (InterruptedException ex) {ex.printStackTrace();}
 
             // Collect the threadSetAggregates into one big set of aggregates.
-            Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap();
+            Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
             for (Long2ObjectOpenHashMap<double []> set : threadSetAggregates) {
                 for (long curCandidateKey : set.keySet()) {
                     double[] curCandidateValue = set.get(curCandidateKey);
