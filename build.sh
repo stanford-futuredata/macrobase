@@ -2,4 +2,4 @@
 
 set -e
 
-cd lib && mvn clean && mvn install &&  cd ../sql && mvn clean && mvn package
+cd lib && mvn clean && mvn install &&  cd ../sql && mvn clean && mvn package -DskipTests
