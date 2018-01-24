@@ -161,7 +161,9 @@ public class DataFrame {
             for (Row r : getRows(0, numToPrint))  {
                 r.prettyPrint(out, maxColNameLength);
             }
+            out.println();
             out.println("...");
+            out.println();
             for (Row r : getRows(numRows - numToPrint, numRows))  {
                 r.prettyPrint(out, maxColNameLength);
             }
@@ -176,17 +178,17 @@ public class DataFrame {
 
     /**
      * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
-     * and <tt>maxNumToPrint</tt> set to 25
+     * and <tt>maxNumToPrint</tt> set to 15
      */
     public void prettyPrint() {
-        prettyPrint(System.out, 25);
+        prettyPrint(System.out, 15);
     }
 
     /**
-     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 25
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 15
      */
     public void prettyPrint(final PrintStream out) {
-      prettyPrint(out, 25);
+      prettyPrint(out, 15);
     }
 
     /**
