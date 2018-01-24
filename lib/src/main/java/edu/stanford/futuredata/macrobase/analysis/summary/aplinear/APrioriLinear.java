@@ -1,11 +1,14 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.IntSetAsLong.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -26,11 +29,11 @@ public class APrioriLinear {
     // **Cached values**
 
     // Singleton viable sets for quick lookup
-    private HashSet<Integer> singleNext;
+    private LongOpenHashSet singleNext;
     // Sets that has high enough support but not high risk ratio, need to be explored
-    private HashMap<Integer, HashSet<IntSet>> setNext;
+    private HashMap<Integer, LongOpenHashSet> setNext;
     // Aggregate values for all of the sets we saved
-    private HashMap<Integer, HashMap<IntSet, double[]>> savedAggregates;
+    private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -78,32 +81,32 @@ public class APrioriLinear {
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            final HashSet<IntSet> precalculatedCandidates = precalculateCandidates(curOrder);
+            final LongOpenHashSet precalculatedCandidates = precalculateCandidates(curOrder);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
             final int numThreads = Runtime.getRuntime().availableProcessors();
             // Group by and calculate aggregates for each of the candidates
-            final ArrayList<HashMap<IntSet, double[]>> threadSetAggregates = new ArrayList<>(numThreads);
+            final ArrayList<Long2ObjectOpenHashMap<double []>> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new HashMap<>());
+                threadSetAggregates.add(new Long2ObjectOpenHashMap<>());
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-                final HashMap<IntSet, double[]> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
+                final Long2ObjectOpenHashMap<double []> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                         for (int i = startIndex; i < endIndex; i++) {
                             int[] curRowAttributes = attributes[i];
-                            ArrayList<IntSet> candidates = getCandidates(
+                            ArrayList<Long> candidates = getCandidates(
                                     curOrderFinal,
                                     curRowAttributes,
                                     precalculatedCandidates
                             );
                             int numCandidates = candidates.size();
                             for (int c = 0; c < numCandidates; c++) {
-                                IntSet curCandidate = candidates.get(c);
+                                long curCandidate = candidates.get(c).longValue();
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
@@ -125,11 +128,10 @@ public class APrioriLinear {
             } catch (InterruptedException ex) {ex.printStackTrace();}
 
             // Collect the threadSetAggregates into one big set of aggregates.
-            HashMap<IntSet, double[]> setAggregates = new HashMap<>();
-            for (HashMap<IntSet, double[]> set : threadSetAggregates) {
-                for (Map.Entry<IntSet, double[]> curCandidate : set.entrySet()) {
-                    IntSet curCandidateKey = curCandidate.getKey();
-                    double[] curCandidateValue = curCandidate.getValue();
+            Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap();
+            for (Long2ObjectOpenHashMap<double []> set : threadSetAggregates) {
+                for (long curCandidateKey : set.keySet()) {
+                    double[] curCandidateValue = set.get(curCandidateKey);
                     double[] candidateVal = setAggregates.get(curCandidateKey);
                     if (candidateVal == null) {
                         setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
@@ -141,10 +143,10 @@ public class APrioriLinear {
                 }
             }
 
-            HashSet<IntSet> curOrderNext = new HashSet<>();
-            HashSet<IntSet> curOrderSaved = new HashSet<>();
+            LongOpenHashSet curOrderNext = new LongOpenHashSet();
+            LongOpenHashSet curOrderSaved = new LongOpenHashSet();
             int pruned = 0;
-            for (IntSet curCandidate: setAggregates.keySet()) {
+            for (long curCandidate: setAggregates.keySet()) {
                 double[] curAggregates = setAggregates.get(curCandidate);
                 boolean canPassThreshold = true;
                 boolean isPastThreshold = true;
@@ -170,16 +172,16 @@ public class APrioriLinear {
                 }
             }
 
-            HashMap<IntSet, double[]> curSavedAggregates = new HashMap<>(curOrderSaved.size());
-            for (IntSet curSaved : curOrderSaved) {
+            Long2ObjectOpenHashMap<double []> curSavedAggregates = new Long2ObjectOpenHashMap(curOrderSaved.size());
+            for (long curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
             }
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
-                singleNext = new HashSet<>(curOrderNext.size());
-                for (IntSet i : curOrderNext) {
-                    singleNext.add(i.get(0));
+                singleNext = new LongOpenHashSet(curOrderNext.size());
+                for (long i : curOrderNext) {
+                    singleNext.add(i);
                 }
             }
             log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
@@ -187,8 +189,8 @@ public class APrioriLinear {
 
         List<APLExplanationResult> results = new ArrayList<>();
         for (int curOrder: savedAggregates.keySet()) {
-            HashMap<IntSet, double[]> curOrderSavedAggregates = savedAggregates.get(curOrder);
-            for (IntSet curSet : curOrderSavedAggregates.keySet()) {
+            Long2ObjectOpenHashMap<double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
+            for (long curSet : curOrderSavedAggregates.keySet()) {
                 double[] aggregates = curOrderSavedAggregates.get(curSet);
                 double[] metrics = new double[qualityMetrics.length];
                 for (int i = 0; i < metrics.length; i++) {
@@ -202,15 +204,47 @@ public class APrioriLinear {
         return results;
     }
 
-    private HashSet<IntSet> precalculateCandidates(int curOrder) {
+    private LongOpenHashSet precalculateCandidates(int curOrder) {
         if (curOrder < 3) {
             return null;
         } else {
-            return APrioriSummarizer.getOrder3Candidates(
+            return getOrder3Candidates(
                     setNext.get(2),
                     singleNext
             );
         }
+    }
+
+    public static LongOpenHashSet getOrder3Candidates(
+            LongOpenHashSet o2Candidates,
+            LongOpenHashSet singleCandidates
+    ) {
+        LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
+        for (long pCandidate : o2Candidates) {
+            for (long sCandidate : singleCandidates) {
+                if (!IntSetAsLong.contains(pCandidate, sCandidate)) {
+                    long nCandidate = IntSetAsLong.threeIntToLong(IntSetAsLong.getFirst(pCandidate), IntSetAsLong.getSecond(pCandidate), sCandidate);
+                    candidates.add(nCandidate);
+                }
+            }
+        }
+
+        LongOpenHashSet finalCandidates = new LongOpenHashSet(candidates.size());
+        long subPair;
+        for (long curCandidate : candidates) {
+            subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate), IntSetAsLong.getSecond(curCandidate));
+            if (o2Candidates.contains(subPair)) {
+                subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getSecond(curCandidate), IntSetAsLong.getThird(curCandidate));
+                if (o2Candidates.contains(subPair)) {
+                    subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate), IntSetAsLong.getThird(curCandidate));
+                    if (o2Candidates.contains(subPair)) {
+                        finalCandidates.add(curCandidate);
+                    }
+                }
+            }
+        }
+
+        return finalCandidates;
     }
 
     /**
@@ -218,15 +252,15 @@ public class APrioriLinear {
      * @param order size of the subsets
      * @return all subsets that can be built from smaller subsets in setNext
      */
-    private ArrayList<IntSet> getCandidates(
+    private ArrayList<Long> getCandidates(
             int order,
             int[] set,
-            HashSet<IntSet> precalculatedCandidates
+            LongOpenHashSet precalculatedCandidates
     ) {
-        ArrayList<IntSet> candidates = new ArrayList<>();
+        ArrayList<Long> candidates = new ArrayList<>();
         if (order == 1) {
-            for (int i : set) {
-                candidates.add(new IntSet(i));
+            for (long i : set) {
+                candidates.add(i);
             }
         } else {
             ArrayList<Integer> toExamine = new ArrayList<>();
@@ -242,20 +276,20 @@ public class APrioriLinear {
                     int p1v = toExamine.get(p1);
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
-                        candidates.add(new IntSet(p1v, p2v));
+                        candidates.add(IntSetAsLong.twoIntToLong(p1v, p2v));
                     }
                 }
             } else if (order == 3) {
-                HashSet<IntSet> pairNext = setNext.get(2);
+                LongOpenHashSet pairNext = setNext.get(2);
                 for (int p1 = 0; p1 < numValidSingles; p1++) {
                     int p1v = toExamine.get(p1);
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
-                        IntSet pair1 = new IntSet(p1v, p2v);
+                        long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v);
                         if (pairNext.contains(pair1)) {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
-                                IntSet curSet = new IntSet(p1v, p2v, p3v);
+                                long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v);
                                 if (precalculatedCandidates.contains(curSet)) {
                                     candidates.add(curSet);
                                 }

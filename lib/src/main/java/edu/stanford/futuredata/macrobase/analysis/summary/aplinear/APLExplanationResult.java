@@ -11,13 +11,13 @@ import java.util.*;
  */
 public class APLExplanationResult {
     private QualityMetric[] metricTypes;
-    private IntSet matcher;
+    private long matcher;
     private double[] aggregates;
     private double[] metrics;
 
     public APLExplanationResult(
             QualityMetric[] metricTypes,
-            IntSet matcher,
+            long matcher,
             double[] aggregates,
             double[] metrics
     ) {
@@ -28,7 +28,7 @@ public class APLExplanationResult {
     }
 
     private Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
-        Set<Integer> values = matcher.getSet();
+        Set<Integer> values = IntSetAsLong.getSet(matcher);
         Map<String, String> match = new HashMap<>();
 
         for (int k : values) {
@@ -53,11 +53,6 @@ public class APLExplanationResult {
             aggregate.put(aggregateNames.get(i), String.format("%.3f", aggregates[i]));
         }
         return aggregate;
-    }
-
-    @Override
-    public String toString() {
-        return "a="+Arrays.toString(matcher.values)+":ag="+Arrays.toString(aggregates)+":mt="+Arrays.toString(metrics);
     }
 
     public Map<String, Map<String, String>> jsonPrint(AttributeEncoder encoder,

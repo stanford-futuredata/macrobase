@@ -18,7 +18,7 @@ public class AttributeEncoder {
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
-        nextKey = 0;
+        nextKey = 1;
         valueDecoder = new HashMap<>();
         columnDecoder = new HashMap<>();
     }
