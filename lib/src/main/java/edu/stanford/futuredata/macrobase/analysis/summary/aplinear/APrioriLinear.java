@@ -46,7 +46,7 @@ public class APrioriLinear {
     }
 
     public List<APLExplanationResult> explain(
-            final List<int[]> attributes,
+            final int[][] attributes,
             double[][] aggregateColumns
     ) {
         final int numAggregates = aggregateColumns.length;
@@ -74,6 +74,7 @@ public class APrioriLinear {
             }
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
+            long startTime = System.currentTimeMillis();
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
@@ -94,7 +95,7 @@ public class APrioriLinear {
                 // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                         for (int i = startIndex; i < endIndex; i++) {
-                            int[] curRowAttributes = attributes.get(i);
+                            int[] curRowAttributes = attributes[i];
                             ArrayList<IntSet> candidates = getCandidates(
                                     curOrderFinal,
                                     curRowAttributes,
@@ -181,6 +182,7 @@ public class APrioriLinear {
                     singleNext.add(i.get(0));
                 }
             }
+            log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();

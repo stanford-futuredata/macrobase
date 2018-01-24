@@ -30,26 +30,23 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
 
-    public List<int[]> encodeAttributes(List<String[]> columns) {
+    public int[][] encodeAttributesAsArray(List<String[]> columns) {
         if (columns.isEmpty()) {
-            return new ArrayList<>();
+            return new int[0][0];
         }
 
-        int d = columns.size();
+        int numColumns = columns.size();
         int numRows = columns.get(0).length;
 
-        for (int i = 0; i < d; i++) {
+        for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
                 encoder.put(i, new HashMap<>());
             }
         }
 
-        ArrayList<int[]> encodedAttributes = new ArrayList<>(numRows);
-        for (int i = 0; i < numRows; i++) {
-            encodedAttributes.add(new int[d]);
-        }
+        int[][] encodedAttributes = new int[numRows][numColumns];
 
-        for (int colIdx = 0; colIdx < d; colIdx++) {
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
@@ -61,8 +58,24 @@ public class AttributeEncoder {
                     nextKey++;
                 }
                 int curKey = curColEncoder.get(colVal);
-                encodedAttributes.get(rowIdx)[colIdx] = curKey;
+                encodedAttributes[rowIdx][colIdx] = curKey;
             }
+        }
+
+        return encodedAttributes;
+    }
+
+    public List<int[]> encodeAttributes(List<String[]> columns) {
+        if (columns.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        int[][] encodedArray = encodeAttributesAsArray(columns);
+        int numRows = columns.get(0).length;
+
+        ArrayList<int[]> encodedAttributes = new ArrayList<>(numRows);
+        for (int i = 0; i < numRows; i++) {
+            encodedAttributes.add(encodedArray[i]);
         }
 
         return encodedAttributes;
