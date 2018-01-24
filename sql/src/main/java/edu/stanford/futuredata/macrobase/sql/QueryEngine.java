@@ -1,7 +1,6 @@
 package edu.stanford.futuredata.macrobase.sql;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -232,7 +231,7 @@ class QueryEngine {
                 final SingleColumn col = (SingleColumn) item;
                 if (col.getExpression() instanceof FunctionCall) {
                     functionCalls.add(col);
-                     it.remove();
+                    it.remove();
                 }
             }
         }
@@ -341,14 +340,15 @@ class QueryEngine {
     }
 
     /**
-     * Evaluate only the UDFs of SQL query and return a Map of column names -> double arrays.
-     * If there are no UDFs (i.e. @param udfCols is empty), the Map is empty.
+     * Evaluate only the UDFs of SQL query and return a Map of column names -> double arrays. If
+     * there are no UDFs (i.e. @param udfCols is empty), an empty Map is returned.
      *
      * @param inputDf The DataFrame to evaluate the UDFs on
      * @param udfCols The List of UDFs to evaluate
      * @return The Map of new columns to be added
      */
-    private Map<String, double[]> evaluateUDFs(final DataFrame inputDf, final List<SingleColumn> udfCols)
+    private Map<String, double[]> evaluateUDFs(final DataFrame inputDf,
+        final List<SingleColumn> udfCols)
         throws MacrobaseException {
         final Map<String, double[]> newColumns = new HashMap<>();
         for (SingleColumn udfCol : udfCols) {

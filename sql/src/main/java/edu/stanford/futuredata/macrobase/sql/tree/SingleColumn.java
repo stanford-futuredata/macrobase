@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collector;
 
 public class SingleColumn extends SelectItem {
 
@@ -87,8 +86,8 @@ public class SingleColumn extends SelectItem {
     }
 
     /**
-     * @return If the Expression is a Function Call (e.g., a UDF), concatenate the function name
-     * and the arguments with "_". Otherwise, return the output of toString()
+     * @return If the Expression is a Function Call (e.g., a UDF), concatenate the function name and
+     * the arguments with "_". Otherwise, return the output of toString()
      */
     private String formatForCol(final Expression expr) {
         if (expr instanceof FunctionCall) {

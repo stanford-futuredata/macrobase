@@ -108,8 +108,8 @@ public class CSVDataFrameParser implements DataFrameLoader {
                     } else if (t == Schema.ColType.DOUBLE) {
                         try {
                             doubleColumns[doubleColNum++].add(Double.parseDouble(rowValue));
-                        } catch (NumberFormatException e) {
-                            doubleColumns[doubleColNum++].add(Double.NaN);
+                        } catch (NumberFormatException | NullPointerException e) {
+                            doubleColumns[doubleColNum].add(Double.NaN);
                         }
                     } else {
                         throw new RuntimeException("Bad ColType");
