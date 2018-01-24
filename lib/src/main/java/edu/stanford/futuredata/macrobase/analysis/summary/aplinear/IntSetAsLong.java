@@ -11,7 +11,7 @@ public class IntSetAsLong {
     private static long mask = 0xfffff;
 
     /**
-     * Pack two twenty-bit nonzero integers into a long.
+     * Pack two twenty-bit nonzero integers into a long in sorted order.
      * @param a  First integer
      * @param b  Second integer
      * @return  A long containing both integers in the lowest 40 bits.
@@ -24,7 +24,7 @@ public class IntSetAsLong {
     }
 
     /**
-     * Pack three twenty-bit nonzero integers into a long.
+     * Pack three twenty-bit nonzero integers into a long in sorted order.
      * @param a  First integer
      * @param b  Second integer
      * @param c  Third integer
@@ -32,6 +32,7 @@ public class IntSetAsLong {
      */
     public static long threeIntToLong(long a, long b, long c) {
         long result = 0;
+        // Fast three-integer sort
         if (a <= b) {
             if (a <= c) {
                 result += a << 40;
