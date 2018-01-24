@@ -22,6 +22,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
+import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Literal;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
