@@ -18,22 +18,19 @@ import static java.util.Objects.requireNonNull;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
-public class IsNotNullPredicate extends Expression {
+public class IsNotNullPredicate extends ComparisonExpression {
 
     private final Expression value;
 
     public IsNotNullPredicate(Expression value) {
-        this(Optional.empty(), value);
+        super(ComparisonExpressionType.NOT_EQUAL, value, new NullLiteral());
+        requireNonNull(value, "value is null");
+        this.value = value;
     }
 
     public IsNotNullPredicate(NodeLocation location, Expression value) {
-        this(Optional.of(location), value);
-    }
-
-    private IsNotNullPredicate(Optional<NodeLocation> location, Expression value) {
-        super(location);
+        super(location, ComparisonExpressionType.NOT_EQUAL, value, new NullLiteral(location));
         requireNonNull(value, "value is null");
         this.value = value;
     }
