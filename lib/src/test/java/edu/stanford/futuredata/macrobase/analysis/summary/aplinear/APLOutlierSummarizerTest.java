@@ -39,6 +39,7 @@ public class APLOutlierSummarizerTest {
         summ.process(df);
         APLExplanation e = summ.getResults();
         assertEquals(1, e.getResults().size());
+        System.out.println(e.prettyPrint());
         assertTrue(e.prettyPrint().contains("col1=a1"));
         assertEquals(47.0, e.numOutliers(), 1e-10);
     }

@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
@@ -145,6 +146,9 @@ public class APrioriLinear {
             LongOpenHashSet curOrderSaved = new LongOpenHashSet();
             int pruned = 0;
             for (long curCandidate: setAggregates.keySet()) {
+                if (curOrder == 1 && curCandidate == AttributeEncoder.noSupport) {
+                    continue;
+                }
                 double[] curAggregates = setAggregates.get(curCandidate);
                 boolean canPassThreshold = true;
                 boolean isPastThreshold = true;
