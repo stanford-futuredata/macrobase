@@ -73,7 +73,7 @@ query = open(args.query_filename, 'w')
 query.write("IMPORT FROM CSV FILE '%s' INTO %s(%s);\n" % (args.input_csv, args.query_table, ", ".join(["%s %s" % (col, coltypes[col]) for col in coltypes])))
 
 try:
-    os.remove(args.results_filename)
+    os.remove(args.csv_output)
 except OSError:
     pass
 
