@@ -90,7 +90,7 @@ public class APrioriLinear {
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            final LongOpenHashSet precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
+            final boolean[] precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
             final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
@@ -223,7 +223,7 @@ public class APrioriLinear {
         return results;
     }
 
-    private LongOpenHashSet precalculateCandidates(int curOrder, long logCardinality) {
+    private boolean[] precalculateCandidates(int curOrder, long logCardinality) {
         if (curOrder < 3) {
             return null;
         } else {
@@ -235,11 +235,12 @@ public class APrioriLinear {
         }
     }
 
-    public static LongOpenHashSet getOrder3Candidates(
+    private boolean[] getOrder3Candidates(
             LongOpenHashSet o2Candidates,
             LongOpenHashSet singleCandidates,
             long logCardinality
     ) {
+        final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
         LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
         for (long pCandidate : o2Candidates) {
             for (long sCandidate : singleCandidates) {
@@ -252,7 +253,7 @@ public class APrioriLinear {
             }
         }
 
-        LongOpenHashSet finalCandidates = new LongOpenHashSet(candidates.size());
+        boolean[] finalCandidates = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
         long subPair;
         for (long curCandidate : candidates) {
             subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
@@ -267,7 +268,7 @@ public class APrioriLinear {
                             IntSetAsLong.getThird(curCandidate, logCardinality),
                             logCardinality);
                     if (o2Candidates.contains(subPair)) {
-                        finalCandidates.add(curCandidate);
+                        finalCandidates[(int) curCandidate] = true;
                     }
                 }
             }
@@ -284,7 +285,7 @@ public class APrioriLinear {
     private ArrayList<Long> getCandidates(
             int order,
             int[] set,
-            LongOpenHashSet precalculatedCandidates,
+            boolean[] precalculatedCandidates,
             long logCardinality
     ) {
         ArrayList<Long> candidates = new ArrayList<>();
@@ -319,7 +320,7 @@ public class APrioriLinear {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
                                 long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v, logCardinality);
-                                if (precalculatedCandidates.contains(curSet)) {
+                                if (precalculatedCandidates[(int) curSet]) {
                                     candidates.add(curSet);
                                 }
                             }
