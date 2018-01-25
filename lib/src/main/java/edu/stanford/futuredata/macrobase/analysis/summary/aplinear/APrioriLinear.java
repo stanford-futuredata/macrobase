@@ -104,9 +104,7 @@ public class APrioriLinear {
                                     curRowAttributes,
                                     precalculatedCandidates
                             );
-                            int numCandidates = candidates.size();
-                            for (int c = 0; c < numCandidates; c++) {
-                                long curCandidate = candidates.get(c);
+                            for (long curCandidate: candidates) {
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
@@ -172,7 +170,7 @@ public class APrioriLinear {
                 }
             }
 
-            Long2ObjectOpenHashMap<double []> curSavedAggregates = new Long2ObjectOpenHashMap(curOrderSaved.size());
+            Long2ObjectOpenHashMap<double []> curSavedAggregates = new Long2ObjectOpenHashMap<>(curOrderSaved.size());
             for (long curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
             }

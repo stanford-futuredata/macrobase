@@ -25,6 +25,11 @@ public class APLOutlierSummarizer extends APLSummarizer {
     }
 
     @Override
+    public int[][] getEncoded(List<String[]> columns, DataFrame input) {
+        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn));
+    }
+
+    @Override
     public double[][] getAggregateColumns(DataFrame input) {
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
         double[] countCol = processCountCol(input, countColumn,  outlierCol.length);

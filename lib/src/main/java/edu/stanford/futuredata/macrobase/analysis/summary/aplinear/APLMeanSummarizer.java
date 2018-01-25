@@ -30,6 +30,11 @@ public class APLMeanSummarizer extends APLSummarizer {
     }
 
     @Override
+    public int[][] getEncoded(List<String[]> columns, DataFrame input) {
+        return encoder.encodeAttributesAsArray(columns);
+    }
+
+    @Override
     public double[][] getAggregateColumns(DataFrame input) {
         double[] meanCol = input.getDoubleColumnByName(meanColumn);
         double[] stdCol = input.getDoubleColumnByName(stdColumn);

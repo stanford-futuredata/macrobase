@@ -29,6 +29,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
+    public abstract int[][] getEncoded(List<String[]> columns, DataFrame input);
     public abstract double getNumberOutliers(double[][] aggregates);
 
     protected double[] processCountCol(DataFrame input, String countColumn, int numRows) {
@@ -51,9 +52,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        int[][] encoded = encoder.encodeAttributesAsArray(
-                input.getStringColsByName(attributes)
-        );
+        int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey());
@@ -68,6 +67,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded, aggregateColumns);
+        log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
         explanation = new APLExplanation(
