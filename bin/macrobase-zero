@@ -18,6 +18,9 @@ parser.add_argument("--sql_path",
 parser.add_argument("--json_output",
                     default="output.json",
                     help="Path to JSON output")
+parser.add_argument("--csv_output",
+                    default="output.csv",
+                    help="Path to CSV output")
 parser.add_argument("--html_output",
                     default="output.html",
                     help="Path to HTML output")
@@ -32,9 +35,6 @@ parser.add_argument("--max_results",
 parser.add_argument("--query_table",
                     default="query_table",
                     help="Query table name in MacroBase-SQL")
-parser.add_argument("--results_filename",
-                    default="results.csv",
-                    help="MacroBase-SQL output CSV filename")
 parser.add_argument("--query_filename",
                     default="query.mbsql",
                     help="MacroBase-SQL query file")
@@ -82,7 +82,7 @@ query.write('''SELECT * FROM DIFF
   (SPLIT (
     SELECT *, percentile(%s) as percentile FROM %s)
   WHERE percentile > %s)
-ON * INTO OUTFILE '%s' FIELDS TERMINATED BY ',';\n\n''' % (args.metric_column, args.query_table, args.percentile, args.results_filename))
+ON * INTO OUTFILE '%s' FIELDS TERMINATED BY ',';\n\n''' % (args.metric_column, args.query_table, args.percentile, args.csv_output))
 
 query.close()
 
@@ -96,7 +96,7 @@ def filter_dict(df, dic):
 
 # read in input and then write out JSON and HTML
 
-mb_df = pd.read_csv(args.results_filename)
+mb_df = pd.read_csv(args.csv_output)
 
 overall_metrics = df[args.metric_column].tolist()
 reference_hist, reference_bins = np.histogram(overall_metrics, bins=args.hist_plot_bins, normed=True)
@@ -136,7 +136,7 @@ for index, row in mb_df.head(n=args.max_results).iterrows():
       <img width=400 src="output/%s.png" />
     </div>
     <hr />
-    ''' % (explanation_name, support, count, ratio, index)
+    ''' % (explanation_name, ratio, support, count, index)
 
     plt.clf()
 
