@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -23,5 +22,9 @@ public class IntSetAsLongTest {
         long p1 = IntSetAsLong.twoIntToLong(5234, 2342);
         long p2 = IntSetAsLong.twoIntToLong(2342, 5234);
         assertEquals(p1, p2);
+        long oneOneOne = IntSetAsLong.threeIntToLong(1, 1, 1);
+        assertEquals(IntSetAsLong.hash(oneOneOne, 1), 7);
+        long oneOne = IntSetAsLong.twoIntToLong(1, 1);
+        assertEquals(IntSetAsLong.hash(oneOne, 1), 3);
     }
 }

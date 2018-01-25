@@ -31,8 +31,11 @@ public class APrioriLinear {
 
     // Singleton viable sets for quick lookup
     private LongOpenHashSet singleNext;
+    private boolean[] singleNextArray;
     // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
+    // An array of pairs for quick lookup
+    private boolean[] pairNextArray;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
 
@@ -51,10 +54,15 @@ public class APrioriLinear {
 
     public List<APLExplanationResult> explain(
             final int[][] attributes,
-            double[][] aggregateColumns
+            double[][] aggregateColumns,
+            int cardinality
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
+        // The smallest integer x such that 2**x > cardinality
+        final long logCardinality = Math.round(Math.ceil(0.01 + Math.log(cardinality)/Math.log(2.0)));
+        // Defined as 2 ** logCardinality
+        final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
@@ -103,7 +111,8 @@ public class APrioriLinear {
                             ArrayList<Long> candidates = getCandidates(
                                     curOrderFinal,
                                     curRowAttributes,
-                                    precalculatedCandidates
+                                    precalculatedCandidates,
+                                    logCardinality
                             );
                             for (long curCandidate: candidates) {
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
@@ -182,8 +191,16 @@ public class APrioriLinear {
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
                 singleNext = new LongOpenHashSet(curOrderNext.size());
+                singleNextArray = new boolean[cardinality];
                 for (long i : curOrderNext) {
                     singleNext.add(i);
+                    // No need to hash because only one int in the long
+                    singleNextArray[(int) i] = true;
+                }
+            } else if (curOrder == 2) {
+                pairNextArray = new boolean[ceilCardinality * ceilCardinality];
+                for (long i : curOrderNext) {
+                    pairNextArray[IntSetAsLong.hash(i, logCardinality)] = true;
                 }
             }
             log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
@@ -257,7 +274,8 @@ public class APrioriLinear {
     private ArrayList<Long> getCandidates(
             int order,
             int[] set,
-            LongOpenHashSet precalculatedCandidates
+            LongOpenHashSet precalculatedCandidates,
+            long logCardinality
     ) {
         ArrayList<Long> candidates = new ArrayList<>();
         if (order == 1) {
@@ -267,7 +285,7 @@ public class APrioriLinear {
         } else {
             ArrayList<Integer> toExamine = new ArrayList<>();
             for (int v : set) {
-                if (singleNext.contains(v)) {
+                if (v != AttributeEncoder.noSupport && singleNextArray[v]) {
                     toExamine.add(v);
                 }
             }
@@ -282,13 +300,12 @@ public class APrioriLinear {
                     }
                 }
             } else if (order == 3) {
-                LongOpenHashSet pairNext = setNext.get(2);
                 for (int p1 = 0; p1 < numValidSingles; p1++) {
                     int p1v = toExamine.get(p1);
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
                         long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v);
-                        if (pairNext.contains(pair1)) {
+                        if (pairNextArray[IntSetAsLong.hash(pair1, logCardinality)]) {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
                                 long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v);

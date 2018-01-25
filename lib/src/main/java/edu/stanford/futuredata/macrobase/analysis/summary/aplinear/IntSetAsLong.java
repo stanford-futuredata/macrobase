@@ -121,4 +121,15 @@ public class IntSetAsLong {
         return retSet;
     }
 
+    /**
+     * Compacts setLong into the lowest-order bytes possible to create the smallest possible representation
+     * of the numbers stored within.
+     * @param setLong A long containing packed 20-bit nonzero integers.
+     * @param exponent The smallest x such that 2**x is greater than any of the numbers stored in setLong.
+     * @return A "packed" long with the integers stored in the lowest-order exponent*3 bits.
+     */
+    public static int hash(long setLong, long exponent) {
+        return (int) (getFirst(setLong) + (getSecond(setLong) << exponent) + (getThird(setLong) << (exponent * 2)));
+    }
+
 }

@@ -66,7 +66,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
-        List<APLExplanationResult> aplResults = aplKernel.explain(encoded, aggregateColumns);
+        List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
+                aggregateColumns,
+                encoder.getNextKey()
+        );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
