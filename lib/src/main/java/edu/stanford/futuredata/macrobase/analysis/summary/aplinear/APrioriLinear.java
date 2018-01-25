@@ -90,10 +90,10 @@ public class APrioriLinear {
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            final LongOpenHashSet precalculatedCandidates = precalculateCandidates(curOrder);
+            final LongOpenHashSet precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
-            final int numThreads = Runtime.getRuntime().availableProcessors();
+            final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
             // Group by and calculate aggregates for each of the candidates
             final ArrayList<Long2ObjectOpenHashMap<double []>> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
@@ -200,7 +200,7 @@ public class APrioriLinear {
             } else if (curOrder == 2) {
                 pairNextArray = new boolean[ceilCardinality * ceilCardinality];
                 for (long i : curOrderNext) {
-                    pairNextArray[IntSetAsLong.hash(i, logCardinality)] = true;
+                    pairNextArray[(int) i] = true;
                 }
             }
             log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
@@ -216,33 +216,37 @@ public class APrioriLinear {
                     metrics[i] = qualityMetrics[i].value(aggregates);
                 }
                 results.add(
-                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics, logCardinality)
                 );
             }
         }
         return results;
     }
 
-    private LongOpenHashSet precalculateCandidates(int curOrder) {
+    private LongOpenHashSet precalculateCandidates(int curOrder, long logCardinality) {
         if (curOrder < 3) {
             return null;
         } else {
             return getOrder3Candidates(
                     setNext.get(2),
-                    singleNext
+                    singleNext,
+                    logCardinality
             );
         }
     }
 
     public static LongOpenHashSet getOrder3Candidates(
             LongOpenHashSet o2Candidates,
-            LongOpenHashSet singleCandidates
+            LongOpenHashSet singleCandidates,
+            long logCardinality
     ) {
         LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
         for (long pCandidate : o2Candidates) {
             for (long sCandidate : singleCandidates) {
-                if (!IntSetAsLong.contains(pCandidate, sCandidate)) {
-                    long nCandidate = IntSetAsLong.threeIntToLong(IntSetAsLong.getFirst(pCandidate), IntSetAsLong.getSecond(pCandidate), sCandidate);
+                if (!IntSetAsLong.contains(pCandidate, sCandidate, logCardinality)) {
+                    long nCandidate = IntSetAsLong.threeIntToLong(IntSetAsLong.getFirst(pCandidate,
+                            logCardinality), IntSetAsLong.getSecond(pCandidate, logCardinality),
+                            sCandidate, logCardinality);
                     candidates.add(nCandidate);
                 }
             }
@@ -251,11 +255,17 @@ public class APrioriLinear {
         LongOpenHashSet finalCandidates = new LongOpenHashSet(candidates.size());
         long subPair;
         for (long curCandidate : candidates) {
-            subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate), IntSetAsLong.getSecond(curCandidate));
+            subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
+                    IntSetAsLong.getSecond(curCandidate, logCardinality),
+                    logCardinality);
             if (o2Candidates.contains(subPair)) {
-                subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getSecond(curCandidate), IntSetAsLong.getThird(curCandidate));
+                subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getSecond(curCandidate, logCardinality),
+                        IntSetAsLong.getThird(curCandidate, logCardinality),
+                        logCardinality);
                 if (o2Candidates.contains(subPair)) {
-                    subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate), IntSetAsLong.getThird(curCandidate));
+                    subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
+                            IntSetAsLong.getThird(curCandidate, logCardinality),
+                            logCardinality);
                     if (o2Candidates.contains(subPair)) {
                         finalCandidates.add(curCandidate);
                     }
@@ -296,7 +306,7 @@ public class APrioriLinear {
                     int p1v = toExamine.get(p1);
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
-                        candidates.add(IntSetAsLong.twoIntToLong(p1v, p2v));
+                        candidates.add(IntSetAsLong.twoIntToLong(p1v, p2v, logCardinality));
                     }
                 }
             } else if (order == 3) {
@@ -304,11 +314,11 @@ public class APrioriLinear {
                     int p1v = toExamine.get(p1);
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
-                        long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v);
-                        if (pairNextArray[IntSetAsLong.hash(pair1, logCardinality)]) {
+                        long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v, logCardinality);
+                        if (pairNextArray[(int) pair1]) {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
-                                long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v);
+                                long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v, logCardinality);
                                 if (precalculatedCandidates.contains(curSet)) {
                                     candidates.add(curSet);
                                 }

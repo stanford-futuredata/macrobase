@@ -14,21 +14,24 @@ public class APLExplanationResult {
     private long matcher;
     private double[] aggregates;
     private double[] metrics;
+    private long logCardinality;
 
     public APLExplanationResult(
             QualityMetric[] metricTypes,
             long matcher,
             double[] aggregates,
-            double[] metrics
+            double[] metrics,
+            long logCardinality
     ) {
         this.metricTypes = metricTypes;
         this.matcher = matcher;
         this.aggregates = aggregates;
         this.metrics = metrics;
+        this.logCardinality = logCardinality;
     }
 
     private Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
-        Set<Integer> values = IntSetAsLong.getSet(matcher);
+        Set<Integer> values = IntSetAsLong.getSet(matcher, logCardinality);
         Map<String, String> match = new HashMap<>();
 
         for (int k : values) {
