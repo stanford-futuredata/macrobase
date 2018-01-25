@@ -87,7 +87,16 @@ public class APrioriLinear {
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
-            int curOrderCardinality = Math.toIntExact(Math.round(Math.pow(ceilCardinality, curOrder)));
+            // Ceiling on attribute values that will be perfect-hashed instead of mapped.
+            int perfectHashingThresholdExponent = 5;
+            // Equal to 2**perfectHashingThresholdExponent
+            int perfectHashingThreshold = Math.toIntExact(Math.round(Math.pow(2, perfectHashingThresholdExponent)));
+            // The maximum size of the perfect hash array implied by perfectHashingThreshold
+            int maxPerfectHashArraySize = Math.toIntExact(Math.round(Math.pow(perfectHashingThreshold, curOrder)));
+            // The size of the perfect hash array implied by the cardinality of the input
+            int cardPerfectHashArraySize = Math.toIntExact(Math.round(Math.pow(ceilCardinality, curOrder)));
+            // The size of the perfect hash array, threadSetAggregatesArray, capped by maxPerfectHashArraySize
+            int perfectHashArraySize = Math.min(maxPerfectHashArraySize, cardPerfectHashArraySize);
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
@@ -96,11 +105,16 @@ public class APrioriLinear {
             final int curOrderFinal = curOrder;
             final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
             // Group by and calculate aggregates for each of the candidates
-            final double [][] threadSetAggregates = new double[curOrderCardinality][numAggregates];
+            final double [][] threadSetAggregatesArray = new double[perfectHashArraySize][numAggregates];
+            final ArrayList<Long2ObjectOpenHashMap<double []>> threadSetAggregates = new ArrayList<>(numThreads);
+            for (int i = 0; i < numThreads; i++) {
+                threadSetAggregates.add(new Long2ObjectOpenHashMap<>());
+            }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+                final Long2ObjectOpenHashMap<double []> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                         for (int i = startIndex; i < endIndex; i++) {
@@ -112,8 +126,23 @@ public class APrioriLinear {
                                     logCardinality
                             );
                             for (long curCandidate: candidates) {
-                                for (int a = 0; a < numAggregates; a++) {
-                                    threadSetAggregates[(int) curCandidate][a] += aRows[i][a];
+                                if(IntSetAsLong.checkLessThan(curCandidate, perfectHashingThreshold, logCardinality)) {
+                                     if (maxPerfectHashArraySize < cardPerfectHashArraySize) {
+                                        curCandidate = IntSetAsLong.changePacking(curCandidate,
+                                                        perfectHashingThresholdExponent, logCardinality);
+                                    }
+                                    for (int a = 0; a < numAggregates; a++) {
+                                        threadSetAggregatesArray[(int) curCandidate][a] += aRows[i][a];
+                                    }
+                                } else {
+                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                    if (candidateVal == null) {
+                                        thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
+                                    } else {
+                                        for (int a = 0; a < numAggregates; a++) {
+                                            candidateVal[a] += aRows[i][a];
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -127,17 +156,36 @@ public class APrioriLinear {
                 doneSignal.await();
             } catch (InterruptedException ex) {ex.printStackTrace();}
 
-            // Collect the threadSetAggregates into a HashMap for simplicity
+            // Collect the threadSetAggregatesArray into a HashMap for simplicity
             Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
-            for (int curCandidateKey = 0;  curCandidateKey < curOrderCardinality; curCandidateKey++) {
-                if (threadSetAggregates[curCandidateKey][0] == 0 && threadSetAggregates[curCandidateKey][1] == 0) continue;
-                double[] curCandidateValue = threadSetAggregates[curCandidateKey];
-                double[] candidateVal = setAggregates.get(curCandidateKey);
+            for (int curCandidateKey = 0;  curCandidateKey < perfectHashArraySize; curCandidateKey++) {
+                if (threadSetAggregatesArray[curCandidateKey][0] == 0 && threadSetAggregatesArray[curCandidateKey][1] == 0) continue;
+                double[] curCandidateValue = threadSetAggregatesArray[curCandidateKey];
+                int newCurCandidateKey = curCandidateKey;
+                if (maxPerfectHashArraySize < cardPerfectHashArraySize) {
+                    newCurCandidateKey = (int) IntSetAsLong.changePacking(curCandidateKey,
+                            logCardinality, perfectHashingThresholdExponent);
+                }
+                double[] candidateVal = setAggregates.get(newCurCandidateKey);
                 if (candidateVal == null) {
-                    setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                    setAggregates.put(newCurCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
                 } else {
                     for (int a = 0; a < numAggregates; a++) {
                         candidateVal[a] += curCandidateValue[a];
+                    }
+                }
+            }
+            
+            for (Long2ObjectOpenHashMap<double []> set : threadSetAggregates) {
+                for (long curCandidateKey : set.keySet()) {
+                    double[] curCandidateValue = set.get(curCandidateKey);
+                    double[] candidateVal = setAggregates.get(curCandidateKey);
+                    if (candidateVal == null) {
+                        setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                    } else {
+                        for (int a = 0; a < numAggregates; a++) {
+                            candidateVal[a] += curCandidateValue[a];
+                        }
                     }
                 }
             }
@@ -173,6 +221,8 @@ public class APrioriLinear {
                     pruned++;
                 }
             }
+
+            System.out.printf("Order: %d setAggregates: %d curOrderNext: %d\n", curOrder, setAggregates.keySet().size(), curOrderNext.size());
 
             Long2ObjectOpenHashMap<double []> curSavedAggregates = new Long2ObjectOpenHashMap<>(curOrderSaved.size());
             for (long curSaved : curOrderSaved) {

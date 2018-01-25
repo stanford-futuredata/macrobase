@@ -68,7 +68,7 @@ public class IntSetAsLong {
      * @return The exponent-bit integer stored in newLong's lowest exponent bits, 0 if none.
      */
     public static long getFirst(long newLong, long exponent) {
-        return ((newLong << (64 - exponent))) >>> (64 - exponent);
+        return (newLong << (64 - exponent)) >>> (64 - exponent);
     }
 
     /**
@@ -78,7 +78,7 @@ public class IntSetAsLong {
      * @return The exponent-bit integer stored in newLong's next exponent bits, 0 if none.
      */
     public static long getSecond(long newLong, long exponent) {
-        return (((newLong >>> exponent) << (64 - exponent))) >>> (64 - exponent);
+        return ((newLong >>> exponent) << (64 - exponent)) >>> (64 - exponent);
     }
 
     /**
@@ -88,7 +88,7 @@ public class IntSetAsLong {
      * @return The exponent-bit integer stored in newLong's next exponent bits, 0 if none.
      */
     public static long getThird(long newLong, long exponent) {
-        return ((newLong >>> exponent * 2));
+        return newLong >>> (exponent * 2);
     }
 
     /**
@@ -103,6 +103,18 @@ public class IntSetAsLong {
                 || getSecond(setLong, exponent) == queryLong
                 || getThird(setLong, exponent) == queryLong;
     }
+    /**
+     * Check if all ints in setLong are less than queryLong
+     * @param setLong A long containing packed exponent-bit nonzero integers
+     * @param queryLong A exponent-bit integer
+     * @param exponent Number of bits in the integer
+     * @return Are all ints in setLong less than queryLong?
+     */
+    public static boolean checkLessThan(long setLong, long queryLong, long exponent) {
+        return (getFirst(setLong, exponent) < queryLong)
+                && (getSecond(setLong, exponent) < queryLong)
+                && (getThird(setLong, exponent) < queryLong);
+    }
 
     /**
      * Return the nonzero integers stored in newLong
@@ -111,7 +123,7 @@ public class IntSetAsLong {
      * @return A set of at most three integers stored in setLong.
      */
     public static Set<Integer> getSet(long setLong, long exponent) {
-        HashSet<Integer> retSet = new HashSet(3);
+        HashSet<Integer> retSet = new HashSet<>(3);
         int first = Math.toIntExact(getFirst(setLong, exponent));
         retSet.add(first);
         int second = Math.toIntExact(getSecond(setLong, exponent));
@@ -121,6 +133,17 @@ public class IntSetAsLong {
         if (third != 0)
             retSet.add(third);
         return retSet;
+    }
+
+    /**
+     * Change the packing of setLong from oldExponent to newExponent.
+     * @param setLong A long containing packed 20-bit nonzero integers.
+     * @param newExponent The smallest x such that 2**x is greater than any of the numbers stored in setLong.
+     * @param oldExponent Exponent used in original packing
+     * @return A long with the new packing exponent
+     */
+    public static long changePacking(long setLong, long newExponent, long oldExponent) {
+        return getFirst(setLong, oldExponent) + (getSecond(setLong, oldExponent) << newExponent) + (getThird(setLong, oldExponent) << (newExponent * 2));
     }
 
 }
