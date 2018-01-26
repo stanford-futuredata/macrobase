@@ -30,12 +30,14 @@ public class IntSetAsLongTest {
         assertEquals(5, IntSetAsLong.getFirst(underPacked, 6));
         assertEquals(2, IntSetAsLong.getSecond(underPacked, 6));
         assertEquals(1, IntSetAsLong.getThird(underPacked, 6));
-        assertTrue(IntSetAsLong.checkLessThan(underPacked, 8, 6));
         long rePack = IntSetAsLong.changePacking(underPacked, 3, 6);
         assertEquals(5, IntSetAsLong.getFirst(rePack, 3));
         assertEquals(2, IntSetAsLong.getSecond(rePack, 3));
         assertEquals(1, IntSetAsLong.getThird(rePack, 3));
         long reRePack = IntSetAsLong.changePacking(rePack, 6, 3);
         assertEquals(underPacked, reRePack);
+        long mask = IntSetAsLong.checkLessThanMaskCreate(8, 6);
+        assertTrue(IntSetAsLong.checkLessThanMask(underPacked, mask));
+
     }
 }

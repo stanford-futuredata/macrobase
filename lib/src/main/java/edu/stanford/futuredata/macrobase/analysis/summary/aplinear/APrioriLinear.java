@@ -98,6 +98,12 @@ public class APrioriLinear {
             int cardPerfectHashArraySize = Math.toIntExact(Math.round(Math.pow(ceilCardinality, curOrder)));
             // The size of the perfect hash array, threadSetAggregatesArray, capped by maxPerfectHashArraySize
             int perfectHashArraySize = Math.min(maxPerfectHashArraySize, cardPerfectHashArraySize);
+            // A mask used to quickly determine if a candidate should be perfect-hashed.
+            long mask;
+            if (maxPerfectHashArraySize < cardPerfectHashArraySize)
+                mask = IntSetAsLong.checkLessThanMaskCreate(perfectHashingThreshold, logCardinality);
+            else // In this case, the mask is unnecessary as everything is perfect-hashed.
+                mask = 0;
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
@@ -134,7 +140,7 @@ public class APrioriLinear {
                             for (long curCandidate: candidates) {
                                 // If all components of a candidate are in the perfectHashingThreshold most common,
                                 // store it in the perfect hash table.
-                                if(IntSetAsLong.checkLessThan(curCandidate, perfectHashingThreshold, logCardinality)) {
+                                if(IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
                                      if (maxPerfectHashArraySize < cardPerfectHashArraySize) {
                                         curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                         perfectHashingThresholdExponent, logCardinality);
@@ -142,7 +148,7 @@ public class APrioriLinear {
                                     for (int a = 0; a < numAggregates; a++) {
                                         threadSetAggregatesArray[(int) curCandidate][a] += aRows[i][a];
                                     }
-                                    // Otherwise, store it in a hashmap.
+                                // Otherwise, store it in a hashmap.
                                 } else {
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
