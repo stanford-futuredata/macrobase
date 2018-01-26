@@ -128,8 +128,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
-                summarizer.setQualityMetrics(Collections.singletonList(new RiskRatioQualityMetric(0, 1)),
-                        Collections.singletonList(minRiskRatio));
+                summarizer.setMinRiskRatio(minRiskRatio);
                 summarizer.setUseAttributeCombinations(true);
                 return summarizer;
             }

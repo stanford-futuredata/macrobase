@@ -4,12 +4,14 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.transform.MetricBucketTransformer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,8 +77,7 @@ public class MetricAsExplanationTest {
         bs.setOutlierColumn(c.getOutputColumnName());
         bs.setUseAttributeCombinations(true);
         bs.setAttributes(bucketExplanationColumns);
-        bs.setQualityMetrics(Collections.singletonList(new RiskRatioQualityMetric(0, 1)),
-                Collections.singletonList(2.0));
+        bs.setMinRiskRatio(2.0);
         bs.setMinSupport(.3);
         bs.process(tcdf);
         FPGExplanation e = bs.getResults();

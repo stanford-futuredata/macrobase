@@ -3,7 +3,6 @@ package edu.stanford.futuredata.macrobase;
 import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
@@ -11,7 +10,10 @@ import edu.stanford.futuredata.macrobase.ingest.DataFrameLoader;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -70,8 +72,7 @@ public class UnsupervisedCSVTest {
         // Increase risk ratio
         FPGrowthSummarizer summ = new FPGrowthSummarizer();
         summ.setAttributes(explanationAttributes);
-        summ.setQualityMetrics(Collections.singletonList(new RiskRatioQualityMetric(0, 1)),
-                Collections.singletonList(5.0));
+        summ.setMinRiskRatio(5.0);
         summ.process(df_classified);
         FPGExplanation results = summ.getResults();
         assertEquals(1, results.getItemsets().size());

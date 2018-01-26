@@ -5,8 +5,6 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Qu
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.IntSetAsLong.*;
-import org.roaringbitmap.longlong.LongBitmapDataProvider;
-import org.roaringbitmap.longlong.Roaring64NavigableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +35,7 @@ public class APrioriLinear {
     // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
     // An array of pairs for quick lookup
-    private LongBitmapDataProvider pairNextArray;
+    private boolean[] pairNextArray;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
 
@@ -109,7 +107,7 @@ public class APrioriLinear {
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            final LongBitmapDataProvider precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
+            final boolean[] precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
             final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
@@ -262,9 +260,9 @@ public class APrioriLinear {
                     singleNextArray[(int) i] = true;
                 }
             } else if (curOrder == 2) {
-                pairNextArray = new Roaring64NavigableMap();
+                pairNextArray = new boolean[ceilCardinality * ceilCardinality];
                 for (long i : curOrderNext) {
-                    pairNextArray.addLong(i);
+                    pairNextArray[(int) i] = true;
                 }
             }
             log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
@@ -287,7 +285,7 @@ public class APrioriLinear {
         return results;
     }
 
-    private LongBitmapDataProvider precalculateCandidates(int curOrder, long logCardinality) {
+    private boolean[] precalculateCandidates(int curOrder, long logCardinality) {
         if (curOrder < 3) {
             return null;
         } else {
@@ -299,7 +297,7 @@ public class APrioriLinear {
         }
     }
 
-    private LongBitmapDataProvider getOrder3Candidates(
+    private boolean[] getOrder3Candidates(
             LongOpenHashSet o2Candidates,
             LongOpenHashSet singleCandidates,
             long logCardinality
@@ -317,7 +315,7 @@ public class APrioriLinear {
             }
         }
 
-        LongBitmapDataProvider finalCandidates = new Roaring64NavigableMap();
+        boolean[] finalCandidates = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
         long subPair;
         for (long curCandidate : candidates) {
             subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
@@ -332,7 +330,7 @@ public class APrioriLinear {
                             IntSetAsLong.getThird(curCandidate, logCardinality),
                             logCardinality);
                     if (o2Candidates.contains(subPair)) {
-                        finalCandidates.addLong(curCandidate);
+                        finalCandidates[(int) curCandidate] = true;
                     }
                 }
             }
@@ -349,7 +347,7 @@ public class APrioriLinear {
     private ArrayList<Long> getCandidates(
             int order,
             int[] set,
-            LongBitmapDataProvider precalculatedCandidates,
+            boolean[] precalculatedCandidates,
             long logCardinality
     ) {
         ArrayList<Long> candidates = new ArrayList<>();
@@ -381,11 +379,11 @@ public class APrioriLinear {
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
                         long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v, logCardinality);
-                        if (pairNextArray.contains(pair1)) {
+                        if (pairNextArray[(int) pair1]) {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
                                 long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v, logCardinality);
-                                if (precalculatedCandidates.contains(curSet)) {
+                                if (precalculatedCandidates[(int) curSet]) {
                                     candidates.add(curSet);
                                 }
                             }
