@@ -105,6 +105,19 @@ public class IntSetAsLong {
     }
 
     /**
+     * Check if all ints in setLong are less than queryLong
+     * @param setLong A long containing packed exponent-bit nonzero integers
+     * @param queryLong A exponent-bit integer
+     * @param exponent Number of bits in the integer
+     * @return Are all ints in setLong less than queryLong?
+     */
+    public static boolean checkLessThan(long setLong, long queryLong, long exponent) {
+        return (getFirst(setLong, exponent) < queryLong)
+                && (getSecond(setLong, exponent) < queryLong)
+                && (getThird(setLong, exponent) < queryLong);
+    }
+
+    /**
      * Check if all ints in setLong are less than the power of 2 used to create mask
      * @param setLong A long containing packed exponent-bit nonzero integers
      * @param mask A mask created by checkLessThanMaskCreate

@@ -2,9 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.IntSetAsLong.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +19,7 @@ import java.util.concurrent.CountDownLatch;
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
 public class APrioriLinear {
-    Logger log = LoggerFactory.getLogger("APLSummarizer");
+    private Logger log = LoggerFactory.getLogger("APLSummarizer");
 
     // **Parameters**
     private QualityMetric[] qualityMetrics;
@@ -34,10 +32,17 @@ public class APrioriLinear {
     private boolean[] singleNextArray;
     // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
-    // An array of pairs for quick lookup
+    // A perfect-hashed array of pairs for quick lookup
     private boolean[] pairNextArray;
+    // A perfect-hashed array of triples for quick lookup
+    private boolean[] precalculatedTriplesArray;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
+    // Ceiling on attribute values that will be perfect-hashed instead of mapped.  Cannot be greater than
+    // 32/curOrder or indices will not fit in an int.
+    private final int perfectHashingThresholdExponent = 8;
+    // Equal to 2**perfectHashingThresholdExponent
+    private final int perfectHashingThreshold = Math.toIntExact(Math.round(Math.pow(2, perfectHashingThresholdExponent)));
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -87,11 +92,6 @@ public class APrioriLinear {
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
-            // Ceiling on attribute values that will be perfect-hashed instead of mapped.  Cannot be greater than
-            // 32/curOrder or indices will not fit in an int.
-            int perfectHashingThresholdExponent = 8;
-            // Equal to 2**perfectHashingThresholdExponent
-            int perfectHashingThreshold = Math.toIntExact(Math.round(Math.pow(2, perfectHashingThresholdExponent)));
             // The maximum size of the perfect hash array implied by perfectHashingThreshold
             int maxPerfectHashArraySize = Math.toIntExact(Math.round(Math.pow(perfectHashingThreshold, curOrder)));
             // The size of the perfect hash array implied by the cardinality of the input
@@ -100,14 +100,14 @@ public class APrioriLinear {
             int perfectHashArraySize = Math.min(maxPerfectHashArraySize, cardPerfectHashArraySize);
             // A mask used to quickly determine if a candidate should be perfect-hashed.
             long mask;
-            if (maxPerfectHashArraySize < cardPerfectHashArraySize)
+            if (perfectHashingThresholdExponent < logCardinality)
                 mask = IntSetAsLong.checkLessThanMaskCreate(perfectHashingThreshold, logCardinality);
             else // In this case, the mask is unnecessary as everything is perfect-hashed.
                 mask = 0;
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
-            final boolean[] precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
+            final LongOpenHashSet  precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
             final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
@@ -133,7 +133,8 @@ public class APrioriLinear {
                                     curOrderFinal,
                                     curRowAttributes,
                                     precalculatedCandidates,
-                                    logCardinality
+                                    logCardinality,
+                                    mask
                             );
                             // Next, aggregate candidates.  This loop uses a hybrid system where common candidates are
                             // perfect-hashed for speed while less common ones are stored in a hash table.
@@ -141,7 +142,7 @@ public class APrioriLinear {
                                 // If all components of a candidate are in the perfectHashingThreshold most common,
                                 // store it in the perfect hash table.
                                 if(IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
-                                     if (maxPerfectHashArraySize < cardPerfectHashArraySize) {
+                                     if (perfectHashingThresholdExponent < logCardinality) {
                                         curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                         perfectHashingThresholdExponent, logCardinality);
                                     }
@@ -181,7 +182,7 @@ public class APrioriLinear {
                 if (empty) continue;
                 double[] curCandidateValue = threadSetAggregatesArray[curCandidateKey];
                 int newCurCandidateKey = curCandidateKey;
-                if (maxPerfectHashArraySize < cardPerfectHashArraySize) {
+                if (perfectHashingThresholdExponent < logCardinality) {
                     newCurCandidateKey = (int) IntSetAsLong.changePacking(curCandidateKey,
                             logCardinality, perfectHashingThresholdExponent);
                 }
@@ -285,7 +286,7 @@ public class APrioriLinear {
         return results;
     }
 
-    private boolean[] precalculateCandidates(int curOrder, long logCardinality) {
+    private LongOpenHashSet  precalculateCandidates(int curOrder, long logCardinality) {
         if (curOrder < 3) {
             return null;
         } else {
@@ -297,7 +298,7 @@ public class APrioriLinear {
         }
     }
 
-    private boolean[] getOrder3Candidates(
+    private LongOpenHashSet  getOrder3Candidates(
             LongOpenHashSet o2Candidates,
             LongOpenHashSet singleCandidates,
             long logCardinality
@@ -314,8 +315,8 @@ public class APrioriLinear {
                 }
             }
         }
-
-        boolean[] finalCandidates = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
+        LongOpenHashSet finalCandidates = new LongOpenHashSet(candidates.size());
+        precalculatedTriplesArray = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
         long subPair;
         for (long curCandidate : candidates) {
             subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
@@ -330,7 +331,15 @@ public class APrioriLinear {
                             IntSetAsLong.getThird(curCandidate, logCardinality),
                             logCardinality);
                     if (o2Candidates.contains(subPair)) {
-                        finalCandidates[(int) curCandidate] = true;
+                        if (IntSetAsLong.checkLessThan(curCandidate, perfectHashingThreshold, logCardinality)) {
+                            if (perfectHashingThresholdExponent < logCardinality) {
+                                curCandidate = IntSetAsLong.changePacking(curCandidate,
+                                        perfectHashingThresholdExponent, logCardinality);
+                            }
+                            precalculatedTriplesArray[(int) curCandidate] = true;
+                        } else {
+                            finalCandidates.add(curCandidate);
+                        }
                     }
                 }
             }
@@ -347,8 +356,9 @@ public class APrioriLinear {
     private ArrayList<Long> getCandidates(
             int order,
             int[] set,
-            boolean[] precalculatedCandidates,
-            long logCardinality
+            LongOpenHashSet  precalculatedCandidates,
+            long logCardinality,
+            long mask
     ) {
         ArrayList<Long> candidates = new ArrayList<>();
         if (order == 1) {
@@ -383,7 +393,16 @@ public class APrioriLinear {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
                                 long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v, logCardinality);
-                                if (precalculatedCandidates[(int) curSet]) {
+                                if (IntSetAsLong.checkLessThanMask(curSet, mask)) {
+                                    long newCurSet = curSet;
+                                    if (perfectHashingThresholdExponent < logCardinality) {
+                                        newCurSet = IntSetAsLong.changePacking(curSet,
+                                                perfectHashingThresholdExponent, logCardinality);
+                                    }
+                                    if (precalculatedTriplesArray[(int) newCurSet]) {
+                                        candidates.add(curSet);
+                                    }
+                                } else if (precalculatedCandidates.contains(curSet)) {
                                     candidates.add(curSet);
                                 }
                             }
