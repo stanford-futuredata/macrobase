@@ -37,7 +37,7 @@ public class APrioriLinear {
     // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
     // An array of pairs for quick lookup
-    private boolean[] pairNextArray;
+    private LongBitmapDataProvider pairNextArray;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
 
@@ -262,9 +262,9 @@ public class APrioriLinear {
                     singleNextArray[(int) i] = true;
                 }
             } else if (curOrder == 2) {
-                pairNextArray = new boolean[ceilCardinality * ceilCardinality];
+                pairNextArray = new Roaring64NavigableMap();
                 for (long i : curOrderNext) {
-                    pairNextArray[(int) i] = true;
+                    pairNextArray.addLong(i);
                 }
             }
             log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
@@ -381,7 +381,7 @@ public class APrioriLinear {
                     for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
                         int p2v = toExamine.get(p2);
                         long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v, logCardinality);
-                        if (pairNextArray[(int) pair1]) {
+                        if (pairNextArray.contains(pair1)) {
                             for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
                                 int p3v = toExamine.get(p3);
                                 long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v, logCardinality);
