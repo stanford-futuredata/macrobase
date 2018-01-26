@@ -174,7 +174,11 @@ public class APrioriLinear {
             // Collect the aggregates stored in the perfect hash table.
             Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
             for (int curCandidateKey = 0;  curCandidateKey < perfectHashArraySize; curCandidateKey++) {
-                if (threadSetAggregatesArray[curCandidateKey][0] == 0 && threadSetAggregatesArray[curCandidateKey][1] == 0) continue;
+                boolean empty = true;
+                for (int i = 0; i < numAggregates; i++) {
+                    if (threadSetAggregatesArray[curCandidateKey][i] != 0) empty = false;
+                }
+                if (empty) continue;
                 double[] curCandidateValue = threadSetAggregatesArray[curCandidateKey];
                 int newCurCandidateKey = curCandidateKey;
                 if (maxPerfectHashArraySize < cardPerfectHashArraySize) {
