@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import org.w3c.dom.Attr;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -73,11 +72,15 @@ public class APrioriLinear {
         // Defined as 2 ** logCardinality
         final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
 
-        final int[][] attributesTranspose = new int[numColumns][numRows];
-        for(int i = 0; i < numColumns; i++)
-            for(int j = 0; j < numRows; j++)
-                attributesTranspose[i][j] = attributes[j][i];
-
+        final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
+        for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+            final int startIndex = (numRows * threadNum) / numThreads;
+            final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+            for(int i = 0; i < numColumns; i++)
+                for(int j = startIndex; j < endIndex; j++) {
+                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
+                }
+        }
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
@@ -130,6 +133,7 @@ public class APrioriLinear {
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             // Shard the dataset by row into threads.
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
+                final int curThreadNum = threadNum;
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
                 final Long2ObjectOpenHashMap<double []> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
@@ -137,11 +141,11 @@ public class APrioriLinear {
                 Runnable APrioriLinearRunnable = () -> {
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
-                            int[] curColumnAttributes = attributesTranspose[colNum];
+                            int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
                             // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                             // perfect-hashed for speed while less common ones are stored in a hash table.
-                            for (int rowNum = 0; rowNum < numRows; rowNum++) {
-                                long curCandidate = curColumnAttributes[rowNum];
+                            for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
+                                long curCandidate = curColumnAttributes[rowNum - startIndex];
                                 if (curCandidate == AttributeEncoder.noSupport)
                                     continue;
                                 // If all components of a candidate are in the perfectHashingThreshold most common,
@@ -169,16 +173,17 @@ public class APrioriLinear {
                         }
                     } else if (curOrderFinal == 2) {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = attributesTranspose[colNumOne];
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = attributesTranspose[colNumTwo];
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
                                 // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                                 // perfect-hashed for speed while less common ones are stored in a hash table.
-                                for (int rowNum = 0; rowNum < numRows; rowNum++) {
-                                    if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
-                                            || !singleNextArray[curColumnOneAttributes[rowNum]] || !singleNextArray[curColumnTwoAttributes[rowNum]])
+                                for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
+                                    int rowNumInCol = rowNum - startIndex;
+                                    if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                            || !singleNextArray[curColumnOneAttributes[rowNumInCol]] || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                         continue;
-                                    long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNum], curColumnTwoAttributes[rowNum], logCardinality);
+                                    long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol], curColumnTwoAttributes[rowNumInCol], logCardinality);
                                     // If all components of a candidate are in the perfectHashingThreshold most common,
                                     // store it in the perfect hash table.
                                     if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
@@ -205,21 +210,32 @@ public class APrioriLinear {
                         }
                     } else {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = attributesTranspose[colNumOne];
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = attributesTranspose[colNumTwo];
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
                                 for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    int[] curColumnThreeAttributes = attributesTranspose[colnumThree];
+                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree];
                                     // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                                     // perfect-hashed for speed while less common ones are stored in a hash table.
-                                    for (int rowNum = 0; rowNum < numRows; rowNum++) {
-                                        if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
-                                                || curColumnThreeAttributes[rowNum] == AttributeEncoder.noSupport || !singleNextArray[curColumnThreeAttributes[rowNum]]
-                                                || !singleNextArray[curColumnOneAttributes[rowNum]] || !singleNextArray[curColumnTwoAttributes[rowNum]])
+                                    for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
+                                        int rowNumInCol = rowNum - startIndex;
+                                        if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                                || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnThreeAttributes[rowNumInCol]]
+                                                || !singleNextArray[curColumnOneAttributes[rowNumInCol]] || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                             continue;
-                                        long curCandidate = IntSetAsLong.threeIntToLong(curColumnOneAttributes[rowNum], curColumnTwoAttributes[rowNum], curColumnThreeAttributes[rowNum], logCardinality);
-                                        if (!precalculatedTriplesArray[(int) curCandidate])
+                                        long curCandidate = IntSetAsLong.threeIntToLong(curColumnOneAttributes[rowNumInCol], curColumnTwoAttributes[rowNumInCol], curColumnThreeAttributes[rowNumInCol], logCardinality);
+                                        if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                            long newCurSet = curCandidate;
+                                            if (perfectHashingThresholdExponent < logCardinality) {
+                                                newCurSet = IntSetAsLong.changePacking(curCandidate,
+                                                        perfectHashingThresholdExponent, logCardinality);
+                                            }
+                                            if (!precalculatedTriplesArray[(int) newCurSet]) {
+                                                continue;
+                                            }
+                                        } else if (!precalculatedCandidates.contains(curCandidate)) {
                                             continue;
+                                        }
                                         // If all components of a candidate are in the perfectHashingThreshold most common,
                                         // store it in the perfect hash table.
                                         if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
