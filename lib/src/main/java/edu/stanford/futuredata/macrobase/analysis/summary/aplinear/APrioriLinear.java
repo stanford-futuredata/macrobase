@@ -204,37 +204,42 @@ public class APrioriLinear {
                             }
                         }
                     } else {
-                        for (int i = startIndex; i < endIndex; i++) {
-                            int[] curRowAttributes = attributes[i];
-                            // First, generate the candidates
-                            ArrayList<Long> candidates = getCandidates(
-                                    curOrderFinal,
-                                    curRowAttributes,
-                                    precalculatedCandidates,
-                                    logCardinality,
-                                    mask
-                            );
-                            // Next, aggregate candidates.  This loop uses a hybrid system where common candidates are
-                            // perfect-hashed for speed while less common ones are stored in a hash table.
-                            for (long curCandidate : candidates) {
-                                // If all components of a candidate are in the perfectHashingThreshold most common,
-                                // store it in the perfect hash table.
-                                if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
-                                    if (perfectHashingThresholdExponent < logCardinality) {
-                                        curCandidate = IntSetAsLong.changePacking(curCandidate,
-                                                perfectHashingThresholdExponent, logCardinality);
-                                    }
-                                    for (int a = 0; a < numAggregates; a++) {
-                                        threadSetAggregatesArray[(int) curCandidate][a] += aRows[i][a];
-                                    }
-                                    // Otherwise, store it in a hashmap.
-                                } else {
-                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                    if (candidateVal == null) {
-                                        thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
-                                    } else {
-                                        for (int a = 0; a < numAggregates; a++) {
-                                            candidateVal[a] += aRows[i][a];
+                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
+                            int[] curColumnOneAttributes = attributesTranspose[colNumOne];
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                                int[] curColumnTwoAttributes = attributesTranspose[colNumTwo];
+                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
+                                    int[] curColumnThreeAttributes = attributesTranspose[colnumThree];
+                                    // Aggregate candidates.  This loop uses a hybrid system where common candidates are
+                                    // perfect-hashed for speed while less common ones are stored in a hash table.
+                                    for (int rowNum = 0; rowNum < numRows; rowNum++) {
+                                        if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
+                                                || curColumnThreeAttributes[rowNum] == AttributeEncoder.noSupport || !singleNextArray[curColumnThreeAttributes[rowNum]]
+                                                || !singleNextArray[curColumnOneAttributes[rowNum]] || !singleNextArray[curColumnTwoAttributes[rowNum]])
+                                            continue;
+                                        long curCandidate = IntSetAsLong.threeIntToLong(curColumnOneAttributes[rowNum], curColumnTwoAttributes[rowNum], curColumnThreeAttributes[rowNum], logCardinality);
+                                        if (!precalculatedTriplesArray[(int) curCandidate])
+                                            continue;
+                                        // If all components of a candidate are in the perfectHashingThreshold most common,
+                                        // store it in the perfect hash table.
+                                        if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                            if (perfectHashingThresholdExponent < logCardinality) {
+                                                curCandidate = IntSetAsLong.changePacking(curCandidate,
+                                                        perfectHashingThresholdExponent, logCardinality);
+                                            }
+                                            for (int a = 0; a < numAggregates; a++) {
+                                                threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
+                                            }
+                                            // Otherwise, store it in a hashmap.
+                                        } else {
+                                            double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                            if (candidateVal == null) {
+                                                thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[rowNum], numAggregates));
+                                            } else {
+                                                for (int a = 0; a < numAggregates; a++) {
+                                                    candidateVal[a] += aRows[rowNum][a];
+                                                }
+                                            }
                                         }
                                     }
                                 }
