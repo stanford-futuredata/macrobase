@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import org.w3c.dom.Attr;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -62,12 +63,21 @@ public class APrioriLinear {
             double[][] aggregateColumns,
             int cardinality
     ) {
+        // Number of threads in the parallelized sections of this function
+        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
+        final int numColumns = attributes[0].length;
         // The smallest integer x such that 2**x > cardinality
         final long logCardinality = Math.round(Math.ceil(0.01 + Math.log(cardinality)/Math.log(2.0)));
         // Defined as 2 ** logCardinality
         final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
+
+        final int[][] attributesTranspose = new int[numColumns][numRows];
+        for(int i = 0; i < numColumns; i++)
+            for(int j = 0; j < numRows; j++)
+                attributesTranspose[i][j] = attributes[j][i];
+
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
@@ -110,7 +120,6 @@ public class APrioriLinear {
             final LongOpenHashSet  precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
-            final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
             // The perfect hash-table.  This is not synchronized, so all values in it are approximate.
             final double [][] threadSetAggregatesArray = new double[perfectHashArraySize][numAggregates];
             // The per-thread hashmaps.  These store less-common values.
@@ -126,6 +135,39 @@ public class APrioriLinear {
                 final Long2ObjectOpenHashMap<double []> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
+                    if (curOrderFinal == 1) {
+                        for (int colNum = 0; colNum < numColumns; colNum++) {
+                            int[] curColumnAttributes = attributesTranspose[colNum];
+                            // Aggregate candidates.  This loop uses a hybrid system where common candidates are
+                            // perfect-hashed for speed while less common ones are stored in a hash table.
+                            for (int rowNum = 0; rowNum < numRows; rowNum++) {
+                                long curCandidate = curColumnAttributes[rowNum];
+                                if (curCandidate == AttributeEncoder.noSupport)
+                                    continue;
+                                // If all components of a candidate are in the perfectHashingThreshold most common,
+                                // store it in the perfect hash table.
+                                if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                    if (perfectHashingThresholdExponent < logCardinality) {
+                                        curCandidate = IntSetAsLong.changePacking(curCandidate,
+                                                perfectHashingThresholdExponent, logCardinality);
+                                    }
+                                    for (int a = 0; a < numAggregates; a++) {
+                                        threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
+                                    }
+                                    // Otherwise, store it in a hashmap.
+                                } else {
+                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                    if (candidateVal == null) {
+                                        thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[rowNum], numAggregates));
+                                    } else {
+                                        for (int a = 0; a < numAggregates; a++) {
+                                            candidateVal[a] += aRows[rowNum][a];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
                         for (int i = startIndex; i < endIndex; i++) {
                             int[] curRowAttributes = attributes[i];
                             // First, generate the candidates
@@ -138,18 +180,18 @@ public class APrioriLinear {
                             );
                             // Next, aggregate candidates.  This loop uses a hybrid system where common candidates are
                             // perfect-hashed for speed while less common ones are stored in a hash table.
-                            for (long curCandidate: candidates) {
+                            for (long curCandidate : candidates) {
                                 // If all components of a candidate are in the perfectHashingThreshold most common,
                                 // store it in the perfect hash table.
-                                if(IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
-                                     if (perfectHashingThresholdExponent < logCardinality) {
+                                if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                    if (perfectHashingThresholdExponent < logCardinality) {
                                         curCandidate = IntSetAsLong.changePacking(curCandidate,
-                                                        perfectHashingThresholdExponent, logCardinality);
+                                                perfectHashingThresholdExponent, logCardinality);
                                     }
                                     for (int a = 0; a < numAggregates; a++) {
                                         threadSetAggregatesArray[(int) curCandidate][a] += aRows[i][a];
                                     }
-                                // Otherwise, store it in a hashmap.
+                                    // Otherwise, store it in a hashmap.
                                 } else {
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
@@ -162,7 +204,8 @@ public class APrioriLinear {
                                 }
                             }
                         }
-                        doneSignal.countDown();
+                    }
+                    doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
                 Thread APrioriLinearThread = new Thread(APrioriLinearRunnable);
