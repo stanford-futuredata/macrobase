@@ -32,8 +32,6 @@ public class APrioriLinear {
     private boolean[] singleNextArray;
     // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
-    // A perfect-hashed array of pairs for quick lookup
-    private boolean[] pairNextArray;
     // A perfect-hashed array of triples for quick lookup
     private boolean[] precalculatedTriplesArray;
     // Aggregate values for all of the sets we saved
@@ -63,7 +61,7 @@ public class APrioriLinear {
             int cardinality
     ) {
         // Number of threads in the parallelized sections of this function
-        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
+        final int numThreads = Runtime.getRuntime().availableProcessors();
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
@@ -72,6 +70,7 @@ public class APrioriLinear {
         // Defined as 2 ** logCardinality
         final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
 
+        // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             final int startIndex = (numRows * threadNum) / numThreads;
@@ -158,11 +157,12 @@ public class APrioriLinear {
                                     for (int a = 0; a < numAggregates; a++) {
                                         threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
                                     }
-                                    // Otherwise, store it in a hashmap.
+                                // Otherwise, store it in a hashmap.
                                 } else {
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
-                                        thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[rowNum], numAggregates));
+                                        thisThreadSetAggregates.put(curCandidate,
+                                                Arrays.copyOf(aRows[rowNum], numAggregates));
                                     } else {
                                         for (int a = 0; a < numAggregates; a++) {
                                             candidateVal[a] += aRows[rowNum][a];
@@ -180,10 +180,15 @@ public class APrioriLinear {
                                 // perfect-hashed for speed while less common ones are stored in a hash table.
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     int rowNumInCol = rowNum - startIndex;
-                                    if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                            || !singleNextArray[curColumnOneAttributes[rowNumInCol]] || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+                                    // Only examine a pair if both its members have minimum support.
+                                    if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                            || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                            || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
+                                            || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                         continue;
-                                    long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol], curColumnTwoAttributes[rowNumInCol], logCardinality);
+                                    long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
+                                            curColumnTwoAttributes[rowNumInCol],
+                                            logCardinality);
                                     // If all components of a candidate are in the perfectHashingThreshold most common,
                                     // store it in the perfect hash table.
                                     if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
@@ -194,11 +199,12 @@ public class APrioriLinear {
                                         for (int a = 0; a < numAggregates; a++) {
                                             threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
                                         }
-                                        // Otherwise, store it in a hashmap.
+                                    // Otherwise, store it in a hashmap.
                                     } else {
                                         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                         if (candidateVal == null) {
-                                            thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[rowNum], numAggregates));
+                                            thisThreadSetAggregates.put(curCandidate,
+                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
                                         } else {
                                             for (int a = 0; a < numAggregates; a++) {
                                                 candidateVal[a] += aRows[rowNum][a];
@@ -208,7 +214,7 @@ public class APrioriLinear {
                                 }
                             }
                         }
-                    } else {
+                    } else if (curOrderFinal == 3) {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
@@ -219,11 +225,23 @@ public class APrioriLinear {
                                     // perfect-hashed for speed while less common ones are stored in a hash table.
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                         int rowNumInCol = rowNum - startIndex;
-                                        if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnThreeAttributes[rowNumInCol]]
-                                                || !singleNextArray[curColumnOneAttributes[rowNumInCol]] || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+                                        // Only construct a triple if all its singleton members have minimum support.
+                                        if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                                || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                                || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport
+                                                || !singleNextArray[curColumnThreeAttributes[rowNumInCol]]
+                                                || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
+                                                || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                             continue;
-                                        long curCandidate = IntSetAsLong.threeIntToLong(curColumnOneAttributes[rowNumInCol], curColumnTwoAttributes[rowNumInCol], curColumnThreeAttributes[rowNumInCol], logCardinality);
+                                        long curCandidate = IntSetAsLong.threeIntToLong(
+                                                curColumnOneAttributes[rowNumInCol],
+                                                curColumnTwoAttributes[rowNumInCol],
+                                                curColumnThreeAttributes[rowNumInCol],
+                                                logCardinality);
+                                        // Only examine a triple if all its subsets, both singletons and pairs,
+                                        // have minimum support.  Use a hybrid system to check this where
+                                        // common triples are perect-hashed and less common ones are looked
+                                        // up in a hashmap.
                                         if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
                                             long newCurSet = curCandidate;
                                             if (perfectHashingThresholdExponent < logCardinality) {
@@ -236,8 +254,9 @@ public class APrioriLinear {
                                         } else if (!precalculatedCandidates.contains(curCandidate)) {
                                             continue;
                                         }
-                                        // If all components of a candidate are in the perfectHashingThreshold most common,
-                                        // store it in the perfect hash table.
+                                        // If the candidate passes screening and all components are in the
+                                        // perfectHashingThreshold most common then store it in the
+                                        // perfect hash table.
                                         if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
                                             if (perfectHashingThresholdExponent < logCardinality) {
                                                 curCandidate = IntSetAsLong.changePacking(curCandidate,
@@ -246,11 +265,12 @@ public class APrioriLinear {
                                             for (int a = 0; a < numAggregates; a++) {
                                                 threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
                                             }
-                                            // Otherwise, store it in a hashmap.
+                                        // Otherwise, store it in a hashmap.
                                         } else {
                                             double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                             if (candidateVal == null) {
-                                                thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[rowNum], numAggregates));
+                                                thisThreadSetAggregates.put(curCandidate,
+                                                        Arrays.copyOf(aRows[rowNum], numAggregates));
                                             } else {
                                                 for (int a = 0; a < numAggregates; a++) {
                                                     candidateVal[a] += aRows[rowNum][a];
@@ -261,6 +281,8 @@ public class APrioriLinear {
                                 }
                             }
                         }
+                    } else {
+                        throw new MacrobaseInternalError("High Order not supported");
                     }
                     doneSignal.countDown();
                 };
@@ -268,6 +290,7 @@ public class APrioriLinear {
                 Thread APrioriLinearThread = new Thread(APrioriLinearRunnable);
                 APrioriLinearThread.start();
             }
+            // Wait for all threads to finish running.
             try {
                 doneSignal.await();
             } catch (InterruptedException ex) {ex.printStackTrace();}
@@ -360,11 +383,6 @@ public class APrioriLinear {
                     // No need to hash because only one int in the long
                     singleNextArray[(int) i] = true;
                 }
-            } else if (curOrder == 2) {
-                pairNextArray = new boolean[ceilCardinality * ceilCardinality];
-                for (long i : curOrderNext) {
-                    pairNextArray[(int) i] = true;
-                }
             }
             log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
         }
@@ -446,73 +464,5 @@ public class APrioriLinear {
         }
 
         return finalCandidates;
-    }
-
-    /**
-     * Returns all candidate subsets of a given set and order
-     * @param order size of the subsets
-     * @return all subsets that can be built from smaller subsets in setNext
-     */
-    private ArrayList<Long> getCandidates(
-            int order,
-            int[] set,
-            LongOpenHashSet  precalculatedCandidates,
-            long logCardinality,
-            long mask
-    ) {
-        ArrayList<Long> candidates = new ArrayList<>();
-        if (order == 1) {
-            for (long i : set) {
-                if (i != AttributeEncoder.noSupport)
-                    candidates.add(i);
-            }
-        } else {
-            ArrayList<Integer> toExamine = new ArrayList<>();
-            for (int v : set) {
-                if (v != AttributeEncoder.noSupport && singleNextArray[v]) {
-                    toExamine.add(v);
-                }
-            }
-            int numValidSingles = toExamine.size();
-
-            if (order == 2) {
-                for (int p1 = 0; p1 < numValidSingles; p1++) {
-                    int p1v = toExamine.get(p1);
-                    for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
-                        int p2v = toExamine.get(p2);
-                        candidates.add(IntSetAsLong.twoIntToLong(p1v, p2v, logCardinality));
-                    }
-                }
-            } else if (order == 3) {
-                for (int p1 = 0; p1 < numValidSingles; p1++) {
-                    int p1v = toExamine.get(p1);
-                    for (int p2 = p1 + 1; p2 < numValidSingles; p2++) {
-                        int p2v = toExamine.get(p2);
-                        long pair1 = IntSetAsLong.twoIntToLong(p1v, p2v, logCardinality);
-                        if (pairNextArray[(int) pair1]) {
-                            for (int p3 = p2 + 1; p3 < numValidSingles; p3++) {
-                                int p3v = toExamine.get(p3);
-                                long curSet = IntSetAsLong.threeIntToLong(p1v, p2v, p3v, logCardinality);
-                                if (IntSetAsLong.checkLessThanMask(curSet, mask)) {
-                                    long newCurSet = curSet;
-                                    if (perfectHashingThresholdExponent < logCardinality) {
-                                        newCurSet = IntSetAsLong.changePacking(curSet,
-                                                perfectHashingThresholdExponent, logCardinality);
-                                    }
-                                    if (precalculatedTriplesArray[(int) newCurSet]) {
-                                        candidates.add(curSet);
-                                    }
-                                } else if (precalculatedCandidates.contains(curSet)) {
-                                    candidates.add(curSet);
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                throw new MacrobaseInternalError("High Order not supported");
-            }
-        }
-        return candidates;
     }
 }
