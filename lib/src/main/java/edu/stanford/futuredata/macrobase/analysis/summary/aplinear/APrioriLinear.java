@@ -139,8 +139,8 @@ public class APrioriLinear {
                 // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                     if (curOrderFinal == 1) {
-                        for (int colNum = 0; colNum < numColumns; colNum++) {
-                            int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
+                        for (int colNum = curThreadNum; colNum < numColumns + curThreadNum; colNum++) {
+                            int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum % numColumns];
                             // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                             // perfect-hashed for speed while less common ones are stored in a hash table.
                             for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
@@ -172,10 +172,10 @@ public class APrioriLinear {
                             }
                         }
                     } else if (curOrderFinal == 2) {
-                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
+                        for (int colNumOne = curThreadNum; colNumOne < numColumns + curThreadNum; colNumOne++) {
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns + curThreadNum; colNumTwo++) {
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
                                 // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                                 // perfect-hashed for speed while less common ones are stored in a hash table.
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
@@ -215,12 +215,12 @@ public class APrioriLinear {
                             }
                         }
                     } else if (curOrderFinal == 3) {
-                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
-                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree];
+                        for (int colNumOne = curThreadNum; colNumOne < numColumns + curThreadNum; colNumOne++) {
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns + curThreadNum; colNumTwo++) {
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
+                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns + curThreadNum; colnumThree++) {
+                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree % numColumns];
                                     // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                                     // perfect-hashed for speed while less common ones are stored in a hash table.
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
