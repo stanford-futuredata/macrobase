@@ -58,7 +58,8 @@ public class APrioriLinear {
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
-            int cardinality
+            int cardinality,
+            HashMap<Integer, Integer> columnDecoder
     ) {
         // Number of threads in the parallelized sections of this function
         final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
@@ -120,7 +121,8 @@ public class APrioriLinear {
             // previous orders. We will focus on aggregating results for these sets.
             final LongOpenHashSet precalculatedCandidates;
             if (curOrder == 3) {
-                precalculatedCandidates = precalculateCandidates(setNext.get(2), singleNext, logCardinality);
+                precalculatedCandidates = precalculateCandidates(columnDecoder, setNext.get(2),
+                        singleNext, logCardinality);
             } else {
                 precalculatedCandidates = null;
             }
@@ -219,11 +221,11 @@ public class APrioriLinear {
                             }
                         }
                     } else if (curOrderFinal == 3) {
-                        for (int colNumOne = curThreadNum; colNumOne < numColumns + curThreadNum; colNumOne++) {
+                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns + curThreadNum; colNumTwo++) {
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
-                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns + curThreadNum; colnumThree++) {
+                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree % numColumns];
                                     // Aggregate candidates.  This loop uses a hybrid system where common candidates are
                                     // perfect-hashed for speed while less common ones are stored in a hash table.
@@ -416,16 +418,18 @@ public class APrioriLinear {
      * @param logCardinality Number of bits in IntSetAsLong representations.
      * @return Possible candidates of order 3.
      */
-    private LongOpenHashSet  precalculateCandidates(LongOpenHashSet o2Candidates, LongOpenHashSet singleCandidates,
+    private LongOpenHashSet  precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
+                                                    LongOpenHashSet o2Candidates,
+                                                    LongOpenHashSet singleCandidates,
                                                     long logCardinality) {
         final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
         LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
         for (long pCandidate : o2Candidates) {
             for (long sCandidate : singleCandidates) {
                 if (!IntSetAsLong.contains(pCandidate, sCandidate, logCardinality)) {
-                    long nCandidate = IntSetAsLong.threeIntToLong(IntSetAsLong.getFirst(pCandidate,
+                    long nCandidate = IntSetAsLong.threeIntToLongSorted(IntSetAsLong.getFirst(pCandidate,
                             logCardinality), IntSetAsLong.getSecond(pCandidate, logCardinality),
-                            sCandidate, logCardinality);
+                            sCandidate, logCardinality, columnDecoder);
                     candidates.add(nCandidate);
                 }
             }

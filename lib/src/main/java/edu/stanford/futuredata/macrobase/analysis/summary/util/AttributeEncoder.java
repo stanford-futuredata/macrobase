@@ -35,6 +35,7 @@ public class AttributeEncoder {
     public int decodeColumn(int i) {return columnDecoder.get(i);}
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
+    public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key

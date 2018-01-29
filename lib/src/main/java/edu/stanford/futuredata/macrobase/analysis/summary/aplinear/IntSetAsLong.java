@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,16 +30,20 @@ public class IntSetAsLong {
      * @param b  Second integer
      * @param c  Third integer
      * @param exponent Number of bits in the integers
+     * @param sortValues values to sort by
      * @return  A long containing all integers in the lowest exponent * 3 bits.
      */
-    public static long threeIntToLong(long a, long b, long c, long exponent) {
+    public static long threeIntToLongSorted(long a, long b, long c, long exponent, HashMap<Integer, Integer> sortValues) {
+        Integer keyA = sortValues.get(Math.toIntExact(a));
+        Integer keyB = sortValues.get(Math.toIntExact(b));
+        Integer keyC = sortValues.get(Math.toIntExact(c));
         long result = 0;
         long doubleExponent = exponent * 2;
         // Fast three-integer sort
-        if (a <= b) {
-            if (a <= c) {
+        if (keyA <= keyB) {
+            if (keyA <= keyC) {
                 result += a << doubleExponent;
-                if (b <= c) {
+                if (keyB <= keyC) {
                     result += (b << exponent) + c;
                 } else {
                     result += (c << exponent) + b;
@@ -47,9 +52,9 @@ public class IntSetAsLong {
                 result = (c << doubleExponent) + (a << exponent) + b;
             }
         } else {
-            if (b <= c) {
+            if (keyB <= keyC) {
                 result += b << doubleExponent;
-                if (a <= c) {
+                if (keyA <= keyC) {
                     result += (a << exponent) + c;
                 } else {
                     result += (c << exponent) + a;
@@ -59,6 +64,18 @@ public class IntSetAsLong {
             }
         }
         return result;
+    }
+
+    /**
+     * Pack three exponent-bit nonzero integers into a long.
+     * @param a  First integer
+     * @param b  Second integer
+     * @param c  Third integer
+     * @param exponent Number of bits in the integers
+     * @return  A long containing all integers in the lowest exponent * 3 bits.
+     */
+    public static long threeIntToLong(long a, long b, long c, long exponent) {
+        return (a << (exponent * 2)) + (b << exponent) + c;
     }
 
     /**

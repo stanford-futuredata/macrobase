@@ -8,11 +8,7 @@ import static org.junit.Assert.assertTrue;
 public class IntSetAsLongTest {
     @Test
     public void testSimple() {
-        long s1 = IntSetAsLong.threeIntToLong(1, 20, 3, 5);
-        long s2 = IntSetAsLong.threeIntToLong(3, 20, 1, 5);
-        long s3 = IntSetAsLong.threeIntToLong(3, 1, 20, 5);
-        assertEquals(s1, s2);
-        assertEquals(s1, s3);
+        long s1 = IntSetAsLong.threeIntToLong(1, 3, 20, 5);
         assertTrue(IntSetAsLong.contains(s1, 1, 5));
         assertTrue(IntSetAsLong.contains(s1, 20, 5));
         assertTrue(IntSetAsLong.contains(s1, 3, 5));
@@ -26,7 +22,7 @@ public class IntSetAsLongTest {
         assertEquals(oneOneOne, 7);
         long oneOne = IntSetAsLong.twoIntToLong(1, 1, 1);
         assertEquals(oneOne, 3);
-        long underPacked = IntSetAsLong.threeIntToLong(1, 5, 2, 6);
+        long underPacked = IntSetAsLong.threeIntToLong(1, 2, 5, 6);
         assertEquals(5, IntSetAsLong.getFirst(underPacked, 6));
         assertEquals(2, IntSetAsLong.getSecond(underPacked, 6));
         assertEquals(1, IntSetAsLong.getThird(underPacked, 6));
