@@ -61,7 +61,7 @@ public class APrioriLinear {
             int cardinality
     ) {
         // Number of threads in the parallelized sections of this function
-        final int numThreads = Runtime.getRuntime().availableProcessors();
+        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
@@ -191,7 +191,7 @@ public class APrioriLinear {
                                             logCardinality);
                                     // If all components of a candidate are in the perfectHashingThreshold most common,
                                     // store it in the perfect hash table.
-                                    if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                    if ((curCandidate & mask) == 0) {
                                         if (perfectHashingThresholdExponent < logCardinality) {
                                             curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                     perfectHashingThresholdExponent, logCardinality);
@@ -242,7 +242,7 @@ public class APrioriLinear {
                                         // have minimum support.  Use a hybrid system to check this where
                                         // common triples are perect-hashed and less common ones are looked
                                         // up in a hashmap.
-                                        if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                        if ((curCandidate & mask) == 0) {
                                             long newCurSet = curCandidate;
                                             if (perfectHashingThresholdExponent < logCardinality) {
                                                 newCurSet = IntSetAsLong.changePacking(curCandidate,
@@ -257,7 +257,7 @@ public class APrioriLinear {
                                         // If the candidate passes screening and all components are in the
                                         // perfectHashingThreshold most common then store it in the
                                         // perfect hash table.
-                                        if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                        if ((curCandidate & mask) == 0) {
                                             if (perfectHashingThresholdExponent < logCardinality) {
                                                 curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                         perfectHashingThresholdExponent, logCardinality);
