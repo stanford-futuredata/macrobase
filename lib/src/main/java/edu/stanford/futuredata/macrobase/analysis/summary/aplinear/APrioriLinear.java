@@ -111,11 +111,11 @@ public class APrioriLinear {
             // The size of the perfect hash array, threadSetAggregatesArray, capped by maxPerfectHashArraySize
             int perfectHashArraySize = Math.min(maxPerfectHashArraySize, cardPerfectHashArraySize);
             // A mask used to quickly determine if a candidate should be perfect-hashed.
-            long mask;
+            long canPerfectHashMask;
             if (perfectHashingThresholdExponent < logCardinality)
-                mask = IntSetAsLong.checkLessThanMaskCreate(perfectHashingThreshold, logCardinality);
+                canPerfectHashMask = IntSetAsLong.checkLessThanMaskCreate(perfectHashingThreshold, logCardinality);
             else // In this case, the mask is unnecessary as everything is perfect-hashed.
-                mask = 0;
+                canPerfectHashMask = 0;
             // Precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
@@ -149,7 +149,7 @@ public class APrioriLinear {
                                     continue;
                                 // If all components of a candidate are in the perfectHashingThreshold most common,
                                 // store it in the perfect hash table.
-                                if (IntSetAsLong.checkLessThanMask(curCandidate, mask)) {
+                                if (IntSetAsLong.checkLessThanMask(curCandidate, canPerfectHashMask)) {
                                     if (perfectHashingThresholdExponent < logCardinality) {
                                         curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                 perfectHashingThresholdExponent, logCardinality);
@@ -191,7 +191,7 @@ public class APrioriLinear {
                                             logCardinality);
                                     // If all components of a candidate are in the perfectHashingThreshold most common,
                                     // store it in the perfect hash table.
-                                    if ((curCandidate & mask) == 0) {
+                                    if ((curCandidate & canPerfectHashMask) == 0) {
                                         if (perfectHashingThresholdExponent < logCardinality) {
                                             curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                     perfectHashingThresholdExponent, logCardinality);
@@ -240,9 +240,9 @@ public class APrioriLinear {
                                                 logCardinality);
                                         // Only examine a triple if all its subsets, both singletons and pairs,
                                         // have minimum support.  Use a hybrid system to check this where
-                                        // common triples are perect-hashed and less common ones are looked
+                                        // common triples are perfect-hashed and less common ones are looked
                                         // up in a hashmap.
-                                        if ((curCandidate & mask) == 0) {
+                                        if ((curCandidate & canPerfectHashMask) == 0) {
                                             long newCurSet = curCandidate;
                                             if (perfectHashingThresholdExponent < logCardinality) {
                                                 newCurSet = IntSetAsLong.changePacking(curCandidate,
@@ -257,7 +257,7 @@ public class APrioriLinear {
                                         // If the candidate passes screening and all components are in the
                                         // perfectHashingThreshold most common then store it in the
                                         // perfect hash table.
-                                        if ((curCandidate & mask) == 0) {
+                                        if ((curCandidate & canPerfectHashMask) == 0) {
                                             if (perfectHashingThresholdExponent < logCardinality) {
                                                 curCandidate = IntSetAsLong.changePacking(curCandidate,
                                                         perfectHashingThresholdExponent, logCardinality);
