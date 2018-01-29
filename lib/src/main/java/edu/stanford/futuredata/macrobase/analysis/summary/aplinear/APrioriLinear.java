@@ -116,10 +116,14 @@ public class APrioriLinear {
                 canPerfectHashMask = IntSetAsLong.checkLessThanMaskCreate(perfectHashingThreshold, logCardinality);
             else // In this case, the mask is unnecessary as everything is perfect-hashed.
                 canPerfectHashMask = 0;
-            // Precalculate all possible candidate sets from "next" sets of
-            // previous orders. We will focus on aggregating results for these
-            // sets.
-            final LongOpenHashSet  precalculatedCandidates = precalculateCandidates(curOrder, logCardinality);
+            // For order 3, pre-calculate all possible candidate sets from "next" sets of
+            // previous orders. We will focus on aggregating results for these sets.
+            final LongOpenHashSet precalculatedCandidates;
+            if (curOrder == 3) {
+                precalculatedCandidates = precalculateCandidates(setNext.get(2), singleNext, logCardinality);
+            } else {
+                precalculatedCandidates = null;
+            }
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
             // The perfect hash-table.  This is not synchronized, so all values in it are approximate.
@@ -404,23 +408,16 @@ public class APrioriLinear {
         return results;
     }
 
-    private LongOpenHashSet  precalculateCandidates(int curOrder, long logCardinality) {
-        if (curOrder < 3) {
-            return null;
-        } else {
-            return getOrder3Candidates(
-                    setNext.get(2),
-                    singleNext,
-                    logCardinality
-            );
-        }
-    }
-
-    private LongOpenHashSet  getOrder3Candidates(
-            LongOpenHashSet o2Candidates,
-            LongOpenHashSet singleCandidates,
-            long logCardinality
-    ) {
+    /**
+     * Precalculate all possible candidates of order 3 to speed up candidate
+     * generation.
+     * @param o2Candidates All candidates of order 2 with minimum support.
+     * @param singleCandidates All singleton candidates with minimum support.
+     * @param logCardinality Number of bits in IntSetAsLong representations.
+     * @return Possible candidates of order 3.
+     */
+    private LongOpenHashSet  precalculateCandidates(LongOpenHashSet o2Candidates, LongOpenHashSet singleCandidates,
+                                                    long logCardinality) {
         final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
         LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
         for (long pCandidate : o2Candidates) {
@@ -433,6 +430,8 @@ public class APrioriLinear {
                 }
             }
         }
+        // Hybrid system places extremely common potential candidates in perfect hash array for quick access
+        // while returning the rest in a hashmap.
         LongOpenHashSet finalCandidates = new LongOpenHashSet(candidates.size());
         precalculatedTriplesArray = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
         long subPair;
@@ -462,7 +461,6 @@ public class APrioriLinear {
                 }
             }
         }
-
         return finalCandidates;
     }
 }
