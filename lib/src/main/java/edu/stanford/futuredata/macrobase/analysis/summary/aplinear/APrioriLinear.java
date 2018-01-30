@@ -1,6 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import org.slf4j.Logger;
@@ -38,7 +40,7 @@ public class APrioriLinear {
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
     // Ceiling on attribute values that will be perfect-hashed instead of mapped.  Cannot be greater than
     // 32/curOrder or indices will not fit in an int.
-    private final int perfectHashingThresholdExponent = 8;
+    private final int perfectHashingThresholdExponent = 0;
     // Equal to 2**perfectHashingThresholdExponent
     private final int perfectHashingThreshold = Math.toIntExact(Math.round(Math.pow(2, perfectHashingThresholdExponent)));
 
@@ -119,7 +121,7 @@ public class APrioriLinear {
                 canPerfectHashMask = 0;
             // For order 3, pre-calculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these sets.
-            final LongOpenHashSet precalculatedCandidates;
+            final FastFixedHashSet precalculatedCandidates;
             if (curOrder == 3) {
                 precalculatedCandidates = precalculateCandidates(columnDecoder, setNext.get(2),
                         singleNext, logCardinality);
@@ -131,9 +133,9 @@ public class APrioriLinear {
             // The perfect hash-table.  This is not synchronized, so all values in it are approximate.
             final double [][] threadSetAggregatesArray = new double[perfectHashArraySize][numAggregates];
             // The per-thread hashmaps.  These store less-common values.
-            final ArrayList<Long2ObjectOpenHashMap<double []>> threadSetAggregates = new ArrayList<>(numThreads);
+            final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new Long2ObjectOpenHashMap<>());
+                threadSetAggregates.add(new FastFixedHashTable(100000, numAggregates));
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             // Shard the dataset by row into threads.
@@ -141,7 +143,7 @@ public class APrioriLinear {
                 final int curThreadNum = threadNum;
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-                final Long2ObjectOpenHashMap<double []> thisThreadSetAggregates = threadSetAggregates.get(threadNum);
+                final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 // Do the critical path calculation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                     if (curOrderFinal == 1) {
@@ -326,7 +328,7 @@ public class APrioriLinear {
             }
 
             // Collect the aggregates stored in the per-thread hashmaps.
-            for (Long2ObjectOpenHashMap<double []> set : threadSetAggregates) {
+            for (FastFixedHashTable set : threadSetAggregates) {
                 for (long curCandidateKey : set.keySet()) {
                     double[] curCandidateValue = set.get(curCandidateKey);
                     double[] candidateVal = setAggregates.get(curCandidateKey);
@@ -418,7 +420,7 @@ public class APrioriLinear {
      * @param logCardinality Number of bits in IntSetAsLong representations.
      * @return Possible candidates of order 3.
      */
-    private LongOpenHashSet  precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
+    private FastFixedHashSet  precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
                                                     LongOpenHashSet o2Candidates,
                                                     LongOpenHashSet singleCandidates,
                                                     long logCardinality) {
@@ -436,7 +438,7 @@ public class APrioriLinear {
         }
         // Hybrid system places extremely common potential candidates in perfect hash array for quick access
         // while returning the rest in a hashmap.
-        LongOpenHashSet finalCandidates = new LongOpenHashSet(candidates.size());
+        FastFixedHashSet finalCandidates = new FastFixedHashSet(100000);
         precalculatedTriplesArray = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
         long subPair;
         for (long curCandidate : candidates) {
