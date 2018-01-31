@@ -1,5 +1,9 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
+/**
+ * A HashSet for IntSetAsLongs.  Requires that all keys be nonzero.
+ * Does not resize.
+ */
 public class FastFixedHashSet {
     private long hashSet[];
     private int mask;
@@ -16,7 +20,8 @@ public class FastFixedHashSet {
     }
 
     public void add(long entry) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31) + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
+        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
+                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
         int index = ((int) hashed) & mask;
         while(hashSet[index] != 0) {
             index = (index + 1) & mask;
@@ -25,7 +30,8 @@ public class FastFixedHashSet {
     }
 
     public boolean contains (long entry) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31) + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
+        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
+                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
         int index = ((int) hashed) & mask;
         while(hashSet[index] != 0 && hashSet[index] != entry) {
             index = (index + 1) & mask;

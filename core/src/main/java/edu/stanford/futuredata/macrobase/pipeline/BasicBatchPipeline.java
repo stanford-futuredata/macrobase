@@ -121,14 +121,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setUseAttributeCombinations(true);
                 return summarizer;
             }
-            case "aplinear": {
-                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
-                summarizer.setOutlierColumn(outlierColumnName);
-                summarizer.setAttributes(attributes);
-                summarizer.setMinSupport(minSupport);
-                summarizer.setMinRatioMetric(minRiskRatio);
-                return summarizer;
-            }
+            case "aplinear":
             case "apriori": {
                 APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);

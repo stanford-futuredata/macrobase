@@ -28,11 +28,10 @@ public class APrioriLinear {
     private double[] thresholds;
 
     // **Cached values**
-
     // Singleton viable sets for quick lookup
     private LongOpenHashSet singleNext;
     private boolean[] singleNextArray;
-    // Sets that has high enough support but not high risk ratio, need to be explored
+    // Sets that have high enough support but not high qualityMetrics, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
@@ -56,22 +55,23 @@ public class APrioriLinear {
             int cardinality,
             HashMap<Integer, Integer> columnDecoder
     ) {
-        // Number of threads in the parallelized sections of this function
-        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
+        // Number of threads in the parallelized sections of this function
+        final int numThreads = Runtime.getRuntime().availableProcessors();
 
+        // Maximum order of explanations.
         int maxOrder = 3;
-        // 2097151 is 2^21 - 1, the largest value that can fit in a threeIntAsLong.
-        // If the cardinality is greater than that, only compute second-order
-        // explanations.
+        // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
+        // If the cardinality is greater than that, only compute second-order explanations.
         if (cardinality >= 2097151) {
             maxOrder = 2;
         }
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
-        final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
+        final int[][][] byThreadAttributesTranspose =
+                new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             final int startIndex = (numRows * threadNum) / numThreads;
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
@@ -103,7 +103,7 @@ public class APrioriLinear {
             }
         }
         for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
-            long startTime = System.currentTimeMillis();
+            final int curOrderFinal = curOrder;
             // For order 3, pre-calculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these sets.
             final FastFixedHashSet precalculatedCandidates;
@@ -113,9 +113,7 @@ public class APrioriLinear {
             } else {
                 precalculatedCandidates = null;
             }
-            // Run the critical path of the algorithm--candidate generation--in parallel.
-            final int curOrderFinal = curOrder;
-            // The per-thread hashmaps.  These store less-common values.
+            // Initialize per-thread hashmaps
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             int hashTableSize;
             if (curOrder == 1)
@@ -133,22 +131,21 @@ public class APrioriLinear {
             for (int i = 0; i < numThreads; i++) {
                 threadSetAggregates.add(new FastFixedHashTable(hashTableSize, numAggregates));
             }
+            // Shard the dataset by row into threads and generate candidates.
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
-            // Shard the dataset by row into threads.
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int curThreadNum = threadNum;
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
                 final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
-                // Do the critical path calculation in a lambda
+                // Do candidate generation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                     if (curOrderFinal == 1) {
                         for (int colNum = curThreadNum; colNum < numColumns + curThreadNum; colNum++) {
                             int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum % numColumns];
-                            // Aggregate candidates.  This loop uses a hybrid system where common candidates are
-                            // perfect-hashed for speed while less common ones are stored in a hash table.
                             for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                 long curCandidate = curColumnAttributes[rowNum - startIndex];
+                                // Require that all order-one candidates have minimum support.
                                 if (curCandidate == AttributeEncoder.noSupport)
                                     continue;
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
@@ -167,8 +164,6 @@ public class APrioriLinear {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns + curThreadNum; colNumTwo++) {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
-                                // Aggregate candidates.  This loop uses a hybrid system where common candidates are
-                                // perfect-hashed for speed while less common ones are stored in a hash table.
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     int rowNumInCol = rowNum - startIndex;
                                     // Only examine a pair if both its members have minimum support.
@@ -198,8 +193,6 @@ public class APrioriLinear {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
                                 for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree % numColumns];
-                                    // Aggregate candidates.  This loop uses a hybrid system where common candidates are
-                                    // perfect-hashed for speed while less common ones are stored in a hash table.
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                         int rowNumInCol = rowNum - startIndex;
                                         // Only construct a triple if all its singleton members have minimum support.
@@ -214,6 +207,7 @@ public class APrioriLinear {
                                                 curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol],
                                                 curColumnThreeAttributes[rowNumInCol]);
+                                        // Require that all order-two subsets of a candidate have minimum support.
                                         if (!precalculatedCandidates.contains(curCandidate)) {
                                             continue;
                                         }
@@ -246,7 +240,7 @@ public class APrioriLinear {
 
 
             Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
-            // Collect the aggregates stored in the per-thread hashmaps.
+            // Collect the aggregates stored in the per-thread HashMaps.
             for (FastFixedHashTable set : threadSetAggregates) {
                 for (long curCandidateKey : set.keySet()) {
                     double[] curCandidateValue = set.get(curCandidateKey);
@@ -264,7 +258,6 @@ public class APrioriLinear {
             // Prune all the collected aggregates
             LongOpenHashSet curOrderNext = new LongOpenHashSet();
             LongOpenHashSet curOrderSaved = new LongOpenHashSet();
-            int pruned = 0;
             for (long curCandidate: setAggregates.keySet()) {
                 if (curOrder == 1 && curCandidate == AttributeEncoder.noSupport) {
                     continue;
@@ -289,13 +282,11 @@ public class APrioriLinear {
                         // save it for further examination
                         curOrderNext.add(curCandidate);
                     }
-                } else {
-                    pruned++;
                 }
             }
 
-            System.out.printf("Order: %d setAggregates: %d curOrderNext: %d\n", curOrder, setAggregates.keySet().size(), curOrderNext.size());
-
+            // Save aggregates that pass all qualityMetrics to return later, store aggregates
+            // that have minimum support for higher-order exploration.
             Long2ObjectOpenHashMap<double []> curSavedAggregates = new Long2ObjectOpenHashMap<>(curOrderSaved.size());
             for (long curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
@@ -307,11 +298,9 @@ public class APrioriLinear {
                 singleNextArray = new boolean[cardinality];
                 for (long i : curOrderNext) {
                     singleNext.add(i);
-                    // No need to hash because only one int in the long
                     singleNextArray[(int) i] = true;
                 }
             }
-            log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
@@ -354,8 +343,6 @@ public class APrioriLinear {
                 }
             }
         }
-        // Hybrid system places extremely common potential candidates in perfect hash array for quick access
-        // while returning the rest in a hashmap.
         List<Long> finalCandidatesList = new ArrayList<>();
         long subPair;
         for (long curCandidate : candidates) {

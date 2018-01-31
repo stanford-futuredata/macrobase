@@ -3,6 +3,10 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A HashTable from IntSetAsLongs to arrays of doubles.  Requires that all keys
+ * be nonzero.  Does not resize.
+ */
 public class FastFixedHashTable {
     private double hashTable[][];
     private long existsTable[];

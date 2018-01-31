@@ -5,15 +5,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Sets of two or three integers of at most 20 bits each, stored as a long.
+ * Sets of two or three integers of at most 31 or 21 bits each, stored as a long.
  * Extremely fast, but the integer size is capped and the integer must be nonzero.
  */
 public class IntSetAsLong {
 
     /**
      * Pack two 31-bit nonzero integers into a long in sorted order.
-     * @param a  First integer
-     * @param b  Second integer
+     * @param a  First integer.
+     * @param b  Second integer.
      * @return  A long containing both integers in the lowest 62 bits.
      */
     public static long twoIntToLong(long a, long b) {
@@ -25,10 +25,10 @@ public class IntSetAsLong {
 
     /**
      * Pack three 21-bit nonzero integers into a long in sorted order.
-     * @param a  First integer
-     * @param b  Second integer
-     * @param c  Third integer
-     * @param sortValues values to sort by
+     * @param a  First integer.
+     * @param b  Second integer.
+     * @param c  Third integer.
+     * @param sortValues Values by which to sort.
      * @return  A long containing all integers in the lowest 63 bits.
      */
     public static long threeIntToLongSorted(long a, long b, long c, HashMap<Integer, Integer> sortValues) {
@@ -65,9 +65,9 @@ public class IntSetAsLong {
 
     /**
      * Pack three 21-bit nonzero integers into a long.
-     * @param a  First integer
-     * @param b  Second integer
-     * @param c  Third integer
+     * @param a  First integer.
+     * @param b  Second integer.
+     * @param c  Third integer.
      * @return  A long containing all integers in the lowest  63 bits.
      */
     public static long threeIntToLong(long a, long b, long c) {
@@ -75,8 +75,8 @@ public class IntSetAsLong {
     }
 
     /**
-     * Return the integer stored in the lowest bits of newLong
-     * @param newLong A long containing packed nonzero integers
+     * Return the integer stored in the lowest bits of newLong.
+     * @param newLong A long containing packed nonzero integers.
      * @return The integer stored in newLong's least-significant bits.
      */
     public static long getFirst(long newLong) {
@@ -87,8 +87,8 @@ public class IntSetAsLong {
     }
 
     /**
-     * Return the integer stored in the next-lowest bits of newLong
-     * @param newLong A long containing packed nonzero integers
+     * Return the integer stored in the next-lowest bits of newLong.
+     * @param newLong A long containing packed nonzero integers.
      * @return The integer stored in newLong's next least-significant bits.
      */
     public static long getSecond(long newLong) {
@@ -99,8 +99,8 @@ public class IntSetAsLong {
     }
 
     /**
-     * Return the integer stored in the next-lowest bits of newLong
-     * @param newLong A long containing packed nonzero integers
+     * Return the integer stored in the next-lowest bits of newLong.
+     * @param newLong A long containing packed nonzero integers.
      * @return The integer stored in newLong's most significant bits, 0 if none.
      */
     public static long getThird(long newLong) {
@@ -111,9 +111,9 @@ public class IntSetAsLong {
     }
 
     /**
-     * Check if setLong contains queryLong
-     * @param setLong A long containing packed nonzero integers
-     * @param queryLong An integer
+     * Check if setLong contains queryLong.
+     * @param setLong A long containing packed nonzero integers.
+     * @param queryLong An integer.
      * @return Does setLong contain querylong?
      */
     public static boolean contains(long setLong, long queryLong) {
@@ -123,8 +123,8 @@ public class IntSetAsLong {
     }
 
     /**
-     * Return the nonzero integers stored in newLong
-     * @param setLong A long containing packed nonzero integers
+     * Return the nonzero integers stored in newLong.
+     * @param setLong A long containing packed nonzero integers.
      * @return A set of at most three integers stored in setLong.
      */
     public static Set<Integer> getSet(long setLong) {
