@@ -61,8 +61,6 @@ public class APrioriLinear {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
-        // The smallest integer x such that 2**x > cardinality
-        final long logCardinality = 21;
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
@@ -103,7 +101,7 @@ public class APrioriLinear {
             final FastFixedHashSet precalculatedCandidates;
             if (curOrder == 3) {
                 precalculatedCandidates = precalculateCandidates(columnDecoder, setNext.get(2),
-                        singleNext, logCardinality);
+                        singleNext);
             } else {
                 precalculatedCandidates = null;
             }
@@ -159,8 +157,7 @@ public class APrioriLinear {
                                             || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                         continue;
                                     long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
-                                            curColumnTwoAttributes[rowNumInCol],
-                                            logCardinality);
+                                            curColumnTwoAttributes[rowNumInCol]);
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
                                         thisThreadSetAggregates.put(curCandidate,
@@ -195,8 +192,7 @@ public class APrioriLinear {
                                         long curCandidate = IntSetAsLong.threeIntToLong(
                                                 curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol],
-                                                curColumnThreeAttributes[rowNumInCol],
-                                                logCardinality);
+                                                curColumnThreeAttributes[rowNumInCol]);
                                         if (!precalculatedCandidates.contains(curCandidate)) {
                                             continue;
                                         }
@@ -307,7 +303,7 @@ public class APrioriLinear {
                     metrics[i] = qualityMetrics[i].value(aggregates);
                 }
                 results.add(
-                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics, logCardinality)
+                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
                 );
             }
         }
@@ -319,20 +315,20 @@ public class APrioriLinear {
      * generation.
      * @param o2Candidates All candidates of order 2 with minimum support.
      * @param singleCandidates All singleton candidates with minimum support.
-     * @param logCardinality Number of bits in IntSetAsLong representations.
      * @return Possible candidates of order 3.
      */
     private FastFixedHashSet  precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
                                                     LongOpenHashSet o2Candidates,
-                                                    LongOpenHashSet singleCandidates,
-                                                    long logCardinality) {
+                                                    LongOpenHashSet singleCandidates) {
         LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
         for (long pCandidate : o2Candidates) {
             for (long sCandidate : singleCandidates) {
-                if (!IntSetAsLong.contains(pCandidate, sCandidate, logCardinality)) {
-                    long nCandidate = IntSetAsLong.threeIntToLongSorted(IntSetAsLong.getFirst(pCandidate,
-                            logCardinality), IntSetAsLong.getSecond(pCandidate, logCardinality),
-                            sCandidate, logCardinality, columnDecoder);
+                if (!IntSetAsLong.contains(pCandidate, sCandidate)) {
+                    long nCandidate = IntSetAsLong.threeIntToLongSorted(
+                            IntSetAsLong.getFirst(pCandidate),
+                            IntSetAsLong.getSecond(pCandidate),
+                            sCandidate,
+                            columnDecoder);
                     candidates.add(nCandidate);
                 }
             }
@@ -342,17 +338,17 @@ public class APrioriLinear {
         FastFixedHashSet finalCandidates = new FastFixedHashSet(100000);
         long subPair;
         for (long curCandidate : candidates) {
-            subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
-                    IntSetAsLong.getSecond(curCandidate, logCardinality),
-                    logCardinality);
+            subPair = IntSetAsLong.twoIntToLong(
+                    IntSetAsLong.getFirst(curCandidate),
+                    IntSetAsLong.getSecond(curCandidate));
             if (o2Candidates.contains(subPair)) {
-                subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getSecond(curCandidate, logCardinality),
-                        IntSetAsLong.getThird(curCandidate, logCardinality),
-                        logCardinality);
+                subPair = IntSetAsLong.twoIntToLong(
+                        IntSetAsLong.getSecond(curCandidate),
+                        IntSetAsLong.getThird(curCandidate));
                 if (o2Candidates.contains(subPair)) {
-                    subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
-                            IntSetAsLong.getThird(curCandidate, logCardinality),
-                            logCardinality);
+                    subPair = IntSetAsLong.twoIntToLong(
+                            IntSetAsLong.getFirst(curCandidate),
+                            IntSetAsLong.getThird(curCandidate));
                     if (o2Candidates.contains(subPair)) {
                         finalCandidates.add(curCandidate);
 
