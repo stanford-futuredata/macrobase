@@ -62,7 +62,7 @@ public class APrioriLinear {
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
         // The smallest integer x such that 2**x > cardinality
-        final long logCardinality = Math.round(Math.ceil(0.01 + Math.log(cardinality)/Math.log(2.0)));
+        final long logCardinality = 21;
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
