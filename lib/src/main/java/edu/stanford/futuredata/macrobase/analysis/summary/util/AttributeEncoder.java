@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
  */
 public class AttributeEncoder {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
-    // This value is equal to 2^21, the largest that can fit into an IntSetAsLong.
-    public static int noSupport = 2097152;
+    public static int noSupport = Integer.MAX_VALUE;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;

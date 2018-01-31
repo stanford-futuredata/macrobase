@@ -11,16 +11,16 @@ import java.util.Set;
 public class IntSetAsLong {
 
     /**
-     * Pack two 21-bit nonzero integers into a long in sorted order.
+     * Pack two 31-bit nonzero integers into a long in sorted order.
      * @param a  First integer
      * @param b  Second integer
-     * @return  A long containing both integers in the lowest 42 bits.
+     * @return  A long containing both integers in the lowest 62 bits.
      */
     public static long twoIntToLong(long a, long b) {
         if (a < b)
-            return (a << 21) + b;
+            return ((long) 1 << 62)  + (a << 31) + b;
         else
-            return (b << 21) + a;
+            return ((long) 1 << 62)  + (b << 31) + a;
     }
 
     /**
@@ -75,36 +75,45 @@ public class IntSetAsLong {
     }
 
     /**
-     * Return the integer stored in the lowest 21 bits of newLong
-     * @param newLong A long containing packed 21-bit nonzero integers
-     * @return The 21-bit integer stored in newLong's lowest exponent bits, 0 if none.
+     * Return the integer stored in the lowest bits of newLong
+     * @param newLong A long containing packed nonzero integers
+     * @return The integer stored in newLong's least-significant bits.
      */
     public static long getFirst(long newLong) {
-        return (newLong << (64 - 21)) >>> (64 - 21);
+        if (newLong >>> 62 == 1)
+            return (newLong << (64 - 31)) >>> (64 - 31);
+        else
+            return (newLong << (64 - 21)) >>> (64 - 21);
     }
 
     /**
-     * Return the integer stored in the next-lowest 21 bits of newLong
-     * @param newLong A long containing packed 21-bit nonzero integers
-     * @return The 21-bit integer stored in newLong's next exponent bits, 0 if none.
+     * Return the integer stored in the next-lowest bits of newLong
+     * @param newLong A long containing packed nonzero integers
+     * @return The integer stored in newLong's next least-significant bits.
      */
     public static long getSecond(long newLong) {
-        return ((newLong >>> 21) << (64 - 21)) >>> (64 - 21);
+        if (newLong >>> 62 == 1)
+            return ((newLong >>> 31) << (64 - 31)) >>> (64 - 31);
+        else
+            return ((newLong >>> 21) << (64 - 21)) >>> (64 - 21);
     }
 
     /**
-     * Return the integer stored in the next-lowest 21 bits of newLong
-     * @param newLong A long containing packed 21-bit nonzero integers
-     * @return The 21-bit integer stored in newLong's next exponent bits, 0 if none.
+     * Return the integer stored in the next-lowest bits of newLong
+     * @param newLong A long containing packed nonzero integers
+     * @return The integer stored in newLong's most significant bits, 0 if none.
      */
     public static long getThird(long newLong) {
-        return newLong >>> 42;
+        if (newLong >>> 62 == 1)
+            return 0;
+        else
+            return newLong >>> 42;
     }
 
     /**
      * Check if setLong contains queryLong
-     * @param setLong A long containing packed 21-bit nonzero integers
-     * @param queryLong A 21-bit integer
+     * @param setLong A long containing packed nonzero integers
+     * @param queryLong An integer
      * @return Does setLong contain querylong?
      */
     public static boolean contains(long setLong, long queryLong) {
@@ -115,7 +124,7 @@ public class IntSetAsLong {
 
     /**
      * Return the nonzero integers stored in newLong
-     * @param setLong A long containing packed 21-bit nonzero integers
+     * @param setLong A long containing packed nonzero integers
      * @return A set of at most three integers stored in setLong.
      */
     public static Set<Integer> getSet(long setLong) {

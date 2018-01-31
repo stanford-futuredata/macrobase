@@ -62,6 +62,14 @@ public class APrioriLinear {
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
 
+        int maxOrder = 3;
+        // 2097151 is 2^21 - 1, the largest value that can fit in a threeIntAsLong.
+        // If the cardinality is greater than that, only compute second-order
+        // explanations.
+        if (cardinality >= 2097151) {
+            maxOrder = 2;
+        }
+
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
@@ -94,7 +102,7 @@ public class APrioriLinear {
                 aRows[i][j] = aggregateColumns[j][i];
             }
         }
-        for (int curOrder = 1; curOrder <= 3; curOrder++) {
+        for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
             long startTime = System.currentTimeMillis();
             // For order 3, pre-calculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these sets.

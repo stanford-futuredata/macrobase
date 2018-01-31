@@ -18,5 +18,8 @@ public class IntSetAsLongTest {
         long p1 = IntSetAsLong.twoIntToLong(5234, 2342);
         long p2 = IntSetAsLong.twoIntToLong(2342, 5234);
         assertEquals(p1, p2);
+        assertEquals(IntSetAsLong.getFirst(p1), 5234);
+        assertEquals(IntSetAsLong.getSecond(p1), 2342);
+        assertEquals(IntSetAsLong.getThird(p1), 0);
     }
 }
