@@ -23,6 +23,7 @@ public class FastFixedHashTableTest {
         table.put(18, putArrayFour);
         table.put(4, putArrayFive);
         table.put(19, putArraySix);
+        assertEquals(16, table.getCapacity());
         assertEquals(1.0, table.get(1)[0], 0.01);
         assertEquals(2.0, table.get(2)[0], 0.01);
         assertEquals(3.0, table.get(3)[0], 0.01);

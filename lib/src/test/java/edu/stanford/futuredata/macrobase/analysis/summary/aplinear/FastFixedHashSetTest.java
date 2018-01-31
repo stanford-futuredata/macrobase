@@ -3,6 +3,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashSet;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 public class FastFixedHashSetTest {
@@ -21,5 +22,6 @@ public class FastFixedHashSetTest {
         assertTrue(set.contains((long) 18));
         assertTrue(set.contains((long) 4));
         assertTrue(set.contains((long) 19));
+        assertEquals(16, set.getCapacity());
     }
 }

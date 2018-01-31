@@ -16,7 +16,7 @@ public class FastFixedHashSet {
     }
 
     public void add(long entry) {
-        long hashed = entry + (entry >>> 11)  + (entry >>> 22) + (entry >>> 31) + (entry >>> 45) + (entry >>> 7) + (entry >>> 37);
+        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31) + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
         int index = ((int) hashed) & mask;
         while(hashSet[index] != 0) {
             index = (index + 1) & mask;
@@ -25,11 +25,15 @@ public class FastFixedHashSet {
     }
 
     public boolean contains (long entry) {
-        long hashed = entry + (entry >>> 11)  + (entry >>> 22) + (entry >>> 31) + (entry >>> 45) + (entry >>> 7) + (entry >>> 37);
+        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31) + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
         int index = ((int) hashed) & mask;
         while(hashSet[index] != 0 && hashSet[index] != entry) {
             index = (index + 1) & mask;
         }
         return (hashSet[index] != 0);
+    }
+
+    public int getCapacity() {
+        return capacity;
     }
 }

@@ -117,8 +117,21 @@ public class APrioriLinear {
             final int curOrderFinal = curOrder;
             // The per-thread hashmaps.  These store less-common values.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
+            int hashTableSize;
+            if (curOrder == 1)
+                hashTableSize = cardinality * 10;
+            else if (curOrder == 2) {
+                try {
+                    hashTableSize = Math.multiplyExact(cardinality, cardinality);
+                    hashTableSize = Math.multiplyExact(10, hashTableSize);
+                } catch (ArithmeticException e) {
+                    hashTableSize = Integer.MAX_VALUE;
+                }
+            }
+            else
+                hashTableSize = precalculatedCandidates.getCapacity();
             for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new FastFixedHashTable(100000, numAggregates));
+                threadSetAggregates.add(new FastFixedHashTable(hashTableSize, numAggregates));
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             // Shard the dataset by row into threads.
@@ -343,7 +356,7 @@ public class APrioriLinear {
         }
         // Hybrid system places extremely common potential candidates in perfect hash array for quick access
         // while returning the rest in a hashmap.
-        FastFixedHashSet finalCandidates = new FastFixedHashSet(100000);
+        List<Long> finalCandidatesList = new ArrayList<>();
         long subPair;
         for (long curCandidate : candidates) {
             subPair = IntSetAsLong.twoIntToLong(
@@ -358,12 +371,14 @@ public class APrioriLinear {
                             IntSetAsLong.getFirst(curCandidate),
                             IntSetAsLong.getThird(curCandidate));
                     if (o2Candidates.contains(subPair)) {
-                        finalCandidates.add(curCandidate);
-
+                        finalCandidatesList.add(curCandidate);
                     }
                 }
             }
         }
+        FastFixedHashSet finalCandidates = new FastFixedHashSet(finalCandidatesList.size() * 10);
+        for (long candidate: finalCandidatesList)
+            finalCandidates.add(candidate);
         return finalCandidates;
     }
 }
