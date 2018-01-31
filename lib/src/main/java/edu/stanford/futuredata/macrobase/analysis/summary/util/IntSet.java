@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
+package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.Arrays;
 import java.util.HashSet;

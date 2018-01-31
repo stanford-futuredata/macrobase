@@ -1,5 +1,6 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
+package edu.stanford.futuredata.macrobase.analysis.summary;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
 import org.junit.Test;
 
 import java.util.HashSet;

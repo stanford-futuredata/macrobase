@@ -5,13 +5,11 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
@@ -114,15 +112,6 @@ public class BasicBatchPipeline implements Pipeline {
 
     public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
         switch (summarizerType.toLowerCase()) {
-            case "apriori": {
-                APrioriSummarizer summarizer = new APrioriSummarizer();
-                summarizer.setOutlierColumn(outlierColumnName);
-                summarizer.setAttributes(attributes);
-                summarizer.setRatioMetric(getRatioMetric());
-                summarizer.setMinSupport(minSupport);
-                summarizer.setMinRatioMetric(minRiskRatio);
-                return summarizer;
-            }
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);
@@ -133,6 +122,14 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "aplinear": {
+                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+                summarizer.setOutlierColumn(outlierColumnName);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRiskRatio);
+                return summarizer;
+            }
+            case "apriori": {
                 APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
