@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.junit.Test;
 
@@ -39,7 +38,6 @@ public class APLOutlierSummarizerTest {
         summ.process(df);
         APLExplanation e = summ.getResults();
         assertEquals(1, e.getResults().size());
-        System.out.println(e.prettyPrint());
         assertTrue(e.prettyPrint().contains("col1=a1"));
         assertEquals(47.0, e.numOutliers(), 1e-10);
     }

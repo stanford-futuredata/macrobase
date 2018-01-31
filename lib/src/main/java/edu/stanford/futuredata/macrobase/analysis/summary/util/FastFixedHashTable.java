@@ -27,7 +27,8 @@ public class FastFixedHashTable {
     }
 
     public void put(long entry, double[] aggregates) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31) + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
+        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
+                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
         int index = ((int) hashed) & mask;
         while(existsTable[index] != 0) {
             index = (index + 1) & mask;
@@ -39,7 +40,8 @@ public class FastFixedHashTable {
     }
 
     public double[] get(long entry) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31) + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
+        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
+                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
         int index = ((int) hashed) & mask;
         while(existsTable[index] != 0 && existsTable[index] != entry) {
             index = (index + 1) & mask;
