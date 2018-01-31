@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
  * Measures how interesting a subgroup is as a function of its linear aggregates.

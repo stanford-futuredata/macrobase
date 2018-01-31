@@ -37,9 +37,9 @@ public class FPGrowthEmerging {
             Double attrInlierCount = inlierCounts.get(item);
 
             double ratio = RiskRatio.compute(attrInlierCount,
-                                             attrOutlierCountEntry.getValue(),
-                                             inliers.size(),
-                                             outliers.size());
+                    attrOutlierCountEntry.getValue(),
+                    inliers.size(),
+                    outliers.size());
 
             if (ratio > minRatio) {
                 ret.add(new FPGItemsetResult(
@@ -79,9 +79,9 @@ public class FPGrowthEmerging {
                     Number inlierCount = inlierCounts.get(i);
 
                     double outlierInlierRatio = RiskRatio.compute(inlierCount,
-                                                                  outlierCount,
-                                                                  inliers.size(),
-                                                                  outliers.size());
+                            outlierCount,
+                            inliers.size(),
+                            outliers.size());
 
                     if (outlierInlierRatio > minRatio) {
                         if (txn == null) {
@@ -133,14 +133,14 @@ public class FPGrowthEmerging {
                 Number inlierCount = inlierCounts.get(i.getItems().iterator().next());
 
                 double ratio = RiskRatio.compute(inlierCount,
-                                          i.getCount(),
-                                          inliers.size(),
-                                          outliers.size());
+                        i.getCount(),
+                        inliers.size(),
+                        outliers.size());
 
                 ret.add(new FPGItemsetResult(i.getCount() / (double) outliers.size(),
-                                          i.getCount(),
-                                          ratio,
-                                          i.getItems()));
+                        i.getCount(),
+                        ratio,
+                        i.getItems()));
             } else {
                 ratioItemsToCheck.addAll(i.getItems());
                 ratioSetsToCheck.add(i);
@@ -150,9 +150,9 @@ public class FPGrowthEmerging {
         // check the ratios of any itemsets we just marked
         FPGrowth inlierTree = new FPGrowth();
         List<ItemsetWithCount> matchingInlierCounts = inlierTree.getCounts(inliers,
-                                                                           inlierCounts,
-                                                                           ratioItemsToCheck,
-                                                                           ratioSetsToCheck);
+                inlierCounts,
+                ratioItemsToCheck,
+                ratioSetsToCheck);
 
         assert (matchingInlierCounts.size() == ratioSetsToCheck.size());
         for (int i = 0; i < matchingInlierCounts.size(); ++i) {
@@ -160,15 +160,15 @@ public class FPGrowthEmerging {
             ItemsetWithCount oc = ratioSetsToCheck.get(i);
 
             double ratio = RiskRatio.compute(ic.getCount(),
-                                             oc.getCount(),
-                                             inliers.size(),
-                                             outliers.size());
+                    oc.getCount(),
+                    inliers.size(),
+                    outliers.size());
 
             if (ratio >= minRatio) {
                 ret.add(new FPGItemsetResult(oc.getCount() / (double) outliers.size(),
-                                          oc.getCount(),
-                                          ratio,
-                                          oc.getItems()));
+                        oc.getCount(),
+                        ratio,
+                        oc.getItems()));
             }
         }
 

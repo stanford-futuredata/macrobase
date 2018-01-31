@@ -1,15 +1,15 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
  * Measures how many standard deviations a subgroup is away from the global mean
  */
-public class MeanDevMetric implements QualityMetric {
+public class MeanDevQualityMetric implements QualityMetric {
     private double globalMean;
     private double globalStdDev;
 
     private int countIdx, m1Idx, m2Idx;
 
-    public MeanDevMetric(
+    public MeanDevQualityMetric(
             int countIdx,
             int m1Idx,
             int m2Idx

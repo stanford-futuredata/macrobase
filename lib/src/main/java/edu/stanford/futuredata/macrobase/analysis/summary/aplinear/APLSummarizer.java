@@ -1,14 +1,12 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.operator.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,6 +29,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
+    public abstract int[][] getEncoded(List<String[]> columns, DataFrame input);
     public abstract double getNumberOutliers(double[][] aggregates);
 
     protected double[] processCountCol(DataFrame input, String countColumn, int numRows) {
@@ -53,12 +52,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
         encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        List<int[]> encoded = encoder.encodeAttributes(
-                input.getStringColsByName(attributes)
-        );
+        int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
         long elapsed = System.currentTimeMillis() - startTime;
-        log.debug("Encoded in: {}", elapsed);
-        log.debug("Encoded Categories: {}", encoder.getNextKey());
+        log.info("Encoded in: {}", elapsed);
+        log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
 
         thresholds = getThresholds();
         qualityMetricList = getQualityMetricList();
@@ -69,7 +66,12 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
-        List<APLExplanationResult> aplResults = aplKernel.explain(encoded, aggregateColumns);
+        List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
+                aggregateColumns,
+                encoder.getNextKey(),
+                encoder.getColumnDecoder()
+        );
+        log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
         explanation = new APLExplanation(

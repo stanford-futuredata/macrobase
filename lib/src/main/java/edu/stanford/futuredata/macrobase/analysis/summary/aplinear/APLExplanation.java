@@ -2,7 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 
 import java.util.ArrayList;
