@@ -34,15 +34,8 @@ public class APrioriLinear {
     private boolean[] singleNextArray;
     // Sets that has high enough support but not high risk ratio, need to be explored
     private HashMap<Integer, LongOpenHashSet> setNext;
-    // A perfect-hashed array of triples for quick lookup
-    private boolean[] precalculatedTriplesArray;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
-    // Ceiling on attribute values that will be perfect-hashed instead of mapped.  Cannot be greater than
-    // 32/curOrder or indices will not fit in an int.
-    private final int perfectHashingThresholdExponent = 0;
-    // Equal to 2**perfectHashingThresholdExponent
-    private final int perfectHashingThreshold = Math.toIntExact(Math.round(Math.pow(2, perfectHashingThresholdExponent)));
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -70,8 +63,6 @@ public class APrioriLinear {
         final int numColumns = attributes[0].length;
         // The smallest integer x such that 2**x > cardinality
         final long logCardinality = Math.round(Math.ceil(0.01 + Math.log(cardinality)/Math.log(2.0)));
-        // Defined as 2 ** logCardinality
-        final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose = new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
@@ -107,18 +98,6 @@ public class APrioriLinear {
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
-            // The maximum size of the perfect hash array implied by perfectHashingThreshold
-            int maxPerfectHashArraySize = Math.toIntExact(Math.round(Math.pow(perfectHashingThreshold, curOrder)));
-            // The size of the perfect hash array implied by the cardinality of the input
-            int cardPerfectHashArraySize = Math.toIntExact(Math.round(Math.pow(ceilCardinality, curOrder)));
-            // The size of the perfect hash array, threadSetAggregatesArray, capped by maxPerfectHashArraySize
-            int perfectHashArraySize = Math.min(maxPerfectHashArraySize, cardPerfectHashArraySize);
-            // A mask used to quickly determine if a candidate should be perfect-hashed.
-            long canPerfectHashMask;
-            if (perfectHashingThresholdExponent < logCardinality)
-                canPerfectHashMask = IntSetAsLong.checkLessThanMaskCreate(perfectHashingThreshold, logCardinality);
-            else // In this case, the mask is unnecessary as everything is perfect-hashed.
-                canPerfectHashMask = 0;
             // For order 3, pre-calculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these sets.
             final FastFixedHashSet precalculatedCandidates;
@@ -130,8 +109,6 @@ public class APrioriLinear {
             }
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
-            // The perfect hash-table.  This is not synchronized, so all values in it are approximate.
-            final double [][] threadSetAggregatesArray = new double[perfectHashArraySize][numAggregates];
             // The per-thread hashmaps.  These store less-common values.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
@@ -155,26 +132,13 @@ public class APrioriLinear {
                                 long curCandidate = curColumnAttributes[rowNum - startIndex];
                                 if (curCandidate == AttributeEncoder.noSupport)
                                     continue;
-                                // If all components of a candidate are in the perfectHashingThreshold most common,
-                                // store it in the perfect hash table.
-                                if (IntSetAsLong.checkLessThanMask(curCandidate, canPerfectHashMask)) {
-                                    if (perfectHashingThresholdExponent < logCardinality) {
-                                        curCandidate = IntSetAsLong.changePacking(curCandidate,
-                                                perfectHashingThresholdExponent, logCardinality);
-                                    }
-                                    for (int a = 0; a < numAggregates; a++) {
-                                        threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
-                                    }
-                                // Otherwise, store it in a hashmap.
+                                double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                if (candidateVal == null) {
+                                    thisThreadSetAggregates.put(curCandidate,
+                                            Arrays.copyOf(aRows[rowNum], numAggregates));
                                 } else {
-                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                    if (candidateVal == null) {
-                                        thisThreadSetAggregates.put(curCandidate,
-                                                Arrays.copyOf(aRows[rowNum], numAggregates));
-                                    } else {
-                                        for (int a = 0; a < numAggregates; a++) {
-                                            candidateVal[a] += aRows[rowNum][a];
-                                        }
+                                    for (int a = 0; a < numAggregates; a++) {
+                                        candidateVal[a] += aRows[rowNum][a];
                                     }
                                 }
                             }
@@ -197,26 +161,13 @@ public class APrioriLinear {
                                     long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
                                             curColumnTwoAttributes[rowNumInCol],
                                             logCardinality);
-                                    // If all components of a candidate are in the perfectHashingThreshold most common,
-                                    // store it in the perfect hash table.
-                                    if ((curCandidate & canPerfectHashMask) == 0) {
-                                        if (perfectHashingThresholdExponent < logCardinality) {
-                                            curCandidate = IntSetAsLong.changePacking(curCandidate,
-                                                    perfectHashingThresholdExponent, logCardinality);
-                                        }
-                                        for (int a = 0; a < numAggregates; a++) {
-                                            threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
-                                        }
-                                    // Otherwise, store it in a hashmap.
+                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                    if (candidateVal == null) {
+                                        thisThreadSetAggregates.put(curCandidate,
+                                                Arrays.copyOf(aRows[rowNum], numAggregates));
                                     } else {
-                                        double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                        if (candidateVal == null) {
-                                            thisThreadSetAggregates.put(curCandidate,
-                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
-                                        } else {
-                                            for (int a = 0; a < numAggregates; a++) {
-                                                candidateVal[a] += aRows[rowNum][a];
-                                            }
+                                        for (int a = 0; a < numAggregates; a++) {
+                                            candidateVal[a] += aRows[rowNum][a];
                                         }
                                     }
                                 }
@@ -246,43 +197,16 @@ public class APrioriLinear {
                                                 curColumnTwoAttributes[rowNumInCol],
                                                 curColumnThreeAttributes[rowNumInCol],
                                                 logCardinality);
-                                        // Only examine a triple if all its subsets, both singletons and pairs,
-                                        // have minimum support.  Use a hybrid system to check this where
-                                        // common triples are perfect-hashed and less common ones are looked
-                                        // up in a hashmap.
-                                        if ((curCandidate & canPerfectHashMask) == 0) {
-                                            long newCurSet = curCandidate;
-                                            if (perfectHashingThresholdExponent < logCardinality) {
-                                                newCurSet = IntSetAsLong.changePacking(curCandidate,
-                                                        perfectHashingThresholdExponent, logCardinality);
-                                            }
-                                            if (!precalculatedTriplesArray[(int) newCurSet]) {
-                                                continue;
-                                            }
-                                        } else if (!precalculatedCandidates.contains(curCandidate)) {
+                                        if (!precalculatedCandidates.contains(curCandidate)) {
                                             continue;
                                         }
-                                        // If the candidate passes screening and all components are in the
-                                        // perfectHashingThreshold most common then store it in the
-                                        // perfect hash table.
-                                        if ((curCandidate & canPerfectHashMask) == 0) {
-                                            if (perfectHashingThresholdExponent < logCardinality) {
-                                                curCandidate = IntSetAsLong.changePacking(curCandidate,
-                                                        perfectHashingThresholdExponent, logCardinality);
-                                            }
-                                            for (int a = 0; a < numAggregates; a++) {
-                                                threadSetAggregatesArray[(int) curCandidate][a] += aRows[rowNum][a];
-                                            }
-                                        // Otherwise, store it in a hashmap.
+                                        double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                        if (candidateVal == null) {
+                                            thisThreadSetAggregates.put(curCandidate,
+                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
                                         } else {
-                                            double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                            if (candidateVal == null) {
-                                                thisThreadSetAggregates.put(curCandidate,
-                                                        Arrays.copyOf(aRows[rowNum], numAggregates));
-                                            } else {
-                                                for (int a = 0; a < numAggregates; a++) {
-                                                    candidateVal[a] += aRows[rowNum][a];
-                                                }
+                                            for (int a = 0; a < numAggregates; a++) {
+                                                candidateVal[a] += aRows[rowNum][a];
                                             }
                                         }
                                     }
@@ -303,30 +227,8 @@ public class APrioriLinear {
                 doneSignal.await();
             } catch (InterruptedException ex) {ex.printStackTrace();}
 
-            // Collect the aggregates stored in the perfect hash table.
-            Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
-            for (int curCandidateKey = 0;  curCandidateKey < perfectHashArraySize; curCandidateKey++) {
-                boolean empty = true;
-                for (int i = 0; i < numAggregates; i++) {
-                    if (threadSetAggregatesArray[curCandidateKey][i] != 0) empty = false;
-                }
-                if (empty) continue;
-                double[] curCandidateValue = threadSetAggregatesArray[curCandidateKey];
-                int newCurCandidateKey = curCandidateKey;
-                if (perfectHashingThresholdExponent < logCardinality) {
-                    newCurCandidateKey = (int) IntSetAsLong.changePacking(curCandidateKey,
-                            logCardinality, perfectHashingThresholdExponent);
-                }
-                double[] candidateVal = setAggregates.get(newCurCandidateKey);
-                if (candidateVal == null) {
-                    setAggregates.put(newCurCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
-                } else {
-                    for (int a = 0; a < numAggregates; a++) {
-                        candidateVal[a] += curCandidateValue[a];
-                    }
-                }
-            }
 
+            Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
             // Collect the aggregates stored in the per-thread hashmaps.
             for (FastFixedHashTable set : threadSetAggregates) {
                 for (long curCandidateKey : set.keySet()) {
@@ -424,7 +326,6 @@ public class APrioriLinear {
                                                     LongOpenHashSet o2Candidates,
                                                     LongOpenHashSet singleCandidates,
                                                     long logCardinality) {
-        final int ceilCardinality = Math.toIntExact(Math.round(Math.pow(2, logCardinality)));
         LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
         for (long pCandidate : o2Candidates) {
             for (long sCandidate : singleCandidates) {
@@ -439,7 +340,6 @@ public class APrioriLinear {
         // Hybrid system places extremely common potential candidates in perfect hash array for quick access
         // while returning the rest in a hashmap.
         FastFixedHashSet finalCandidates = new FastFixedHashSet(100000);
-        precalculatedTriplesArray = new boolean[ceilCardinality * ceilCardinality * ceilCardinality];
         long subPair;
         for (long curCandidate : candidates) {
             subPair = IntSetAsLong.twoIntToLong(IntSetAsLong.getFirst(curCandidate, logCardinality),
@@ -454,15 +354,8 @@ public class APrioriLinear {
                             IntSetAsLong.getThird(curCandidate, logCardinality),
                             logCardinality);
                     if (o2Candidates.contains(subPair)) {
-                        if (IntSetAsLong.checkLessThan(curCandidate, perfectHashingThreshold, logCardinality)) {
-                            if (perfectHashingThresholdExponent < logCardinality) {
-                                curCandidate = IntSetAsLong.changePacking(curCandidate,
-                                        perfectHashingThresholdExponent, logCardinality);
-                            }
-                            precalculatedTriplesArray[(int) curCandidate] = true;
-                        } else {
-                            finalCandidates.add(curCandidate);
-                        }
+                        finalCandidates.add(curCandidate);
+
                     }
                 }
             }
