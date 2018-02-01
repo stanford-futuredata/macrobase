@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,13 +9,14 @@ import java.util.Set;
  * Small sets of integers. Fast to construct and compare equality, but does not
  * support checking for membership.
  */
-public class IntSetAsArray {
+public class IntSetAsArray implements IntSet {
     public int[] values;
 
     public IntSetAsArray(int a) {
         values = new int[1];
         values[0] = a;
     }
+
     public IntSetAsArray(int a, int b) {
         values = new int[2];
         if (a <= b) {
@@ -26,16 +28,27 @@ public class IntSetAsArray {
 
         }
     }
+
+    public IntSetAsArray(int a, int b, int c) {
+        values = new int[3];
+        values[0] = a;
+        values[1] = b;
+        values[2] = c;
+    }
+
     /*
      * Hand-rolled three-integer sort.  Extremely performant and saves a lot of time in the
      * apriori/aplinear implementation versus just calling sort.
      */
-    public IntSetAsArray(int a, int b, int c) {
+    public IntSetAsArray(int a, int b, int c, HashMap<Integer, Integer> sortValues) {
+        Integer keyA = sortValues.get(a);
+        Integer keyB = sortValues.get(b);
+        Integer keyC = sortValues.get(c);
         values = new int[3];
-        if (a <= b) {
-            if (a <= c) {
+        if (keyA <= keyB) {
+            if (keyA <= keyC) {
                 values[0] = a;
-                if (b <= c) {
+                if (keyB <= keyC) {
                     values[1] = b;
                     values[2] = c;
                 } else {
@@ -48,9 +61,9 @@ public class IntSetAsArray {
                 values[2] = b;
             }
         } else {
-            if (b <= c) {
+            if (keyB <= keyC) {
                 values[0] = b;
-                if (a <= c) {
+                if (keyA <= keyC) {
                     values[1] = a;
                     values[2] = c;
                 } else {
@@ -65,17 +78,16 @@ public class IntSetAsArray {
         }
     }
 
-    public IntSetAsArray(int[] values) {
-        this.values = values.clone();
-        Arrays.sort(this.values);
+    public int getFirst() {
+        return values[0];
     }
 
-    public int get(int idx) {
-        return values[idx];
+    public int getSecond() {
+        return values[1];
     }
 
-    public int size() {
-        return values.length;
+    public int getThird() {
+        return values[2];
     }
 
     public Set<Integer> getSet() {
@@ -101,18 +113,6 @@ public class IntSetAsArray {
                 return Arrays.binarySearch(values, i) >= 0;
             }
         }
-    }
-
-    public boolean contains(IntSetAsArray other) {
-        int startIdx = 0;
-        int n = values.length;
-        for (int i : other.values) {
-            startIdx = Arrays.binarySearch(values, startIdx, n, i);
-            if (startIdx < 0) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override

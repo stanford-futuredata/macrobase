@@ -16,7 +16,6 @@ public class IntSetAsArrayTest {
         s2.add(1);
         s2.add(2);
         assertEquals(s2, s1.getSet());
-        assertEquals(2, s1.size());
         assertEquals(s1, s1);
         assertTrue(s1.toString().length() > 0);
     }
@@ -27,8 +26,9 @@ public class IntSetAsArrayTest {
         assertTrue(s1.contains(1));
         assertTrue(s1.contains(2));
         IntSetAsArray s2 = new IntSetAsArray(1,2,3);
-        assertTrue(s2.contains(s1));
+        assertTrue(s2.contains(3));
         IntSetAsArray s3 = new IntSetAsArray(1,4);
-        assertFalse(s3.contains(s1));
+        assertFalse(s3.contains(2));
+        assertTrue(s3.contains(4));
     }
 }
