@@ -11,7 +11,7 @@ public class FastFixedHashTableTest {
 
     @Test
     public void testSimple() {
-        FastFixedHashTable table = new FastFixedHashTable(16, 1);
+        FastFixedHashTable table = new FastFixedHashTable(16, 1, true);
         double[] putArrayOne = {1.0};
         double[] putArrayTwo = {2.0};
         double[] putArrayThree = {3.0};
@@ -22,5 +22,13 @@ public class FastFixedHashTableTest {
         assertEquals(1.0, table.get(new IntSetAsLong(1))[0], 0.01);
         assertEquals(2.0, table.get(new IntSetAsLong(2))[0], 0.01);
         assertEquals(3.0, table.get(new IntSetAsLong(18))[0], 0.01);
+        FastFixedHashTable tableTwo = new FastFixedHashTable(16, 1, false);
+        tableTwo.put(1, putArrayOne);
+        tableTwo.put(2, putArrayTwo);
+        tableTwo.put(18, putArrayThree);
+        assertEquals(16, tableTwo.getCapacity());
+        assertEquals(1.0, tableTwo.get(1)[0], 0.01);
+        assertEquals(2.0, tableTwo.get(2)[0], 0.01);
+        assertEquals(3.0, tableTwo.get(18)[0], 0.01);
     }
 }

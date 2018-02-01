@@ -30,6 +30,13 @@ public class IntSetAsLong implements IntSet {
             this.value = ((long) 1 << 62)  + (b << 31) + a;
     }
 
+    public static long twoIntToLong(long a, long b) {
+        if (a < b)
+            return ((long) 1 << 62)  + (a << 31) + b;
+        else
+            return ((long) 1 << 62)  + (b << 31) + a;
+    }
+
     /**
      * Pack three 21-bit nonzero integers into a long in sorted order.
      * @param a  First integer.
@@ -79,6 +86,10 @@ public class IntSetAsLong implements IntSet {
      */
     public IntSetAsLong(long a, long b, long c) {
         this.value = (a << (42)) + (b << 21) + c;
+    }
+
+    public static long threeIntToLong(long a, long b, long c) {
+        return (a << (42)) + (b << 21) + c;
     }
 
     /**
@@ -140,6 +151,10 @@ public class IntSetAsLong implements IntSet {
         if (third != 0)
             retSet.add(third);
         return retSet;
+    }
+
+    public long toLong() {
+        return this.value;
     }
 
     @Override

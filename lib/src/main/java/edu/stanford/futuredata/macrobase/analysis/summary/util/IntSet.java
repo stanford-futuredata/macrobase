@@ -8,4 +8,5 @@ public interface IntSet {
     int getThird();
     boolean contains(int query);
     Set<Integer> getSet();
+    long toLong();
 }
