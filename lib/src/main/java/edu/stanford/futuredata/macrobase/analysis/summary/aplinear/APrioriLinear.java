@@ -142,8 +142,8 @@ public class APrioriLinear {
                 // Do candidate generation in a lambda
                 Runnable APrioriLinearRunnable = () -> {
                     if (curOrderFinal == 1) {
-                        for (int colNum = curThreadNum; colNum < numColumns + curThreadNum; colNum++) {
-                            int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum % numColumns];
+                        for (int colNum = 0; colNum < numColumns; colNum++) {
+                            int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
                             for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                 // Require that all order-one candidates have minimum support.
                                 if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
@@ -174,10 +174,10 @@ public class APrioriLinear {
                             }
                         }
                     } else if (curOrderFinal == 2) {
-                        for (int colNumOne = curThreadNum; colNumOne < numColumns + curThreadNum; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns + curThreadNum; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
+                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     int rowNumInCol = rowNum - startIndex;
                                     // Only examine a pair if both its members have minimum support.
