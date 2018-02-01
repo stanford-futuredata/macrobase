@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class FastFixedHashTable {
     private double hashTable[][];
-    private long existsTable[];
+    private IntSet existsTable[];
     private int numAggregates;
     private int mask;
     private int capacity;
@@ -23,14 +23,13 @@ public class FastFixedHashTable {
         this.mask = realSize - 1;
         this.numAggregates = numAggregates;
         hashTable = new double[realSize][numAggregates];
-        existsTable = new long[realSize];
+        existsTable = new IntSet[realSize];
     }
 
-    public void put(long entry, double[] aggregates) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
-                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
-        int index = ((int) hashed) & mask;
-        while(existsTable[index] != 0) {
+    public void put(IntSet entry, double[] aggregates) {
+        int hashed = entry.hashCode();
+        int index = (hashed) & mask;
+        while(existsTable[index] != null) {
             index = (index + 1) & mask;
         }
         existsTable[index] = entry;
@@ -39,14 +38,13 @@ public class FastFixedHashTable {
         }
     }
 
-    public double[] get(long entry) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
-                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
-        int index = ((int) hashed) & mask;
-        while(existsTable[index] != 0 && existsTable[index] != entry) {
+    public double[] get(IntSet entry) {
+        int hashed = entry.hashCode();
+        int index = (hashed) & mask;
+        while(existsTable[index] != null && !(existsTable[index].equals(entry))) {
             index = (index + 1) & mask;
         }
-        if(existsTable[index] == 0) {
+        if(existsTable[index] == null) {
             return null;
         }
         else {
@@ -54,10 +52,10 @@ public class FastFixedHashTable {
         }
     }
 
-    public List<Long> keySet() {
-        ArrayList<Long> retList = new ArrayList<>();
+    public List<IntSet> keySet() {
+        ArrayList<IntSet> retList = new ArrayList<>();
         for(int i = 0; i < capacity; i++) {
-            if (existsTable[i] != 0)
+            if (existsTable[i] != null)
                 retList.add(existsTable[i]);
         }
         return retList;

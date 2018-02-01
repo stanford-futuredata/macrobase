@@ -10,7 +10,7 @@ import java.util.Set;
  * support checking for membership.
  */
 public class IntSetAsArray implements IntSet {
-    public int[] values;
+    private int[] values;
 
     public IntSetAsArray(int a) {
         values = new int[1];

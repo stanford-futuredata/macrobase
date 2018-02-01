@@ -1,9 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import org.slf4j.Logger;
@@ -30,12 +27,12 @@ public class APrioriLinear {
 
     // **Cached values**
     // Singleton viable sets for quick lookup
-    private LongOpenHashSet singleNext;
+    private HashSet<Integer> singleNext;
     private boolean[] singleNextArray;
     // Sets that have high enough support but not high qualityMetrics, need to be explored
-    private HashMap<Integer, LongOpenHashSet> setNext;
+    private HashMap<Integer, HashSet<IntSet>> setNext;
     // Aggregate values for all of the sets we saved
-    private HashMap<Integer, Long2ObjectOpenHashMap<double []>> savedAggregates;
+    private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -60,7 +57,7 @@ public class APrioriLinear {
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
         // Number of threads in the parallelized sections of this function
-        final int numThreads = Runtime.getRuntime().availableProcessors();
+        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
 
         // Maximum order of explanations.
         int maxOrder = 3;
@@ -104,6 +101,7 @@ public class APrioriLinear {
             }
         }
         for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
+            long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // For order 3, pre-calculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these sets.
@@ -145,10 +143,10 @@ public class APrioriLinear {
                         for (int colNum = curThreadNum; colNum < numColumns + curThreadNum; colNum++) {
                             int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum % numColumns];
                             for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
-                                long curCandidate = curColumnAttributes[rowNum - startIndex];
                                 // Require that all order-one candidates have minimum support.
-                                if (curCandidate == AttributeEncoder.noSupport)
+                                if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
                                     continue;
+                                IntSetAsLong curCandidate = new IntSetAsLong(curColumnAttributes[rowNum - startIndex]);
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate,
@@ -173,7 +171,7 @@ public class APrioriLinear {
                                             || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
                                             || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                         continue;
-                                    long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
+                                    IntSet curCandidate = new IntSetAsLong(curColumnOneAttributes[rowNumInCol],
                                             curColumnTwoAttributes[rowNumInCol]);
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
@@ -204,7 +202,7 @@ public class APrioriLinear {
                                                 || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
                                                 || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                             continue;
-                                        long curCandidate = IntSetAsLong.threeIntToLong(
+                                        IntSet curCandidate = new IntSetAsLong(
                                                 curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol],
                                                 curColumnThreeAttributes[rowNumInCol]);
@@ -240,10 +238,10 @@ public class APrioriLinear {
             } catch (InterruptedException ex) {ex.printStackTrace();}
 
 
-            Long2ObjectOpenHashMap<double []> setAggregates = new Long2ObjectOpenHashMap<>();
+            Map<IntSet, double []> setAggregates = new HashMap<>();
             // Collect the aggregates stored in the per-thread HashMaps.
             for (FastFixedHashTable set : threadSetAggregates) {
-                for (long curCandidateKey : set.keySet()) {
+                for (IntSet curCandidateKey : set.keySet()) {
                     double[] curCandidateValue = set.get(curCandidateKey);
                     double[] candidateVal = setAggregates.get(curCandidateKey);
                     if (candidateVal == null) {
@@ -257,10 +255,10 @@ public class APrioriLinear {
             }
 
             // Prune all the collected aggregates
-            LongOpenHashSet curOrderNext = new LongOpenHashSet();
-            LongOpenHashSet curOrderSaved = new LongOpenHashSet();
-            for (long curCandidate: setAggregates.keySet()) {
-                if (curOrder == 1 && curCandidate == AttributeEncoder.noSupport) {
+            HashSet<IntSet> curOrderNext = new HashSet<>();
+            HashSet<IntSet> curOrderSaved = new HashSet<>();
+            for (IntSet curCandidate: setAggregates.keySet()) {
+                if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
                     continue;
                 }
                 double[] curAggregates = setAggregates.get(curCandidate);
@@ -288,26 +286,27 @@ public class APrioriLinear {
 
             // Save aggregates that pass all qualityMetrics to return later, store aggregates
             // that have minimum support for higher-order exploration.
-            Long2ObjectOpenHashMap<double []> curSavedAggregates = new Long2ObjectOpenHashMap<>(curOrderSaved.size());
-            for (long curSaved : curOrderSaved) {
+            Map<IntSet, double []> curSavedAggregates = new HashMap<>(curOrderSaved.size());
+            for (IntSet curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
             }
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
-                singleNext = new LongOpenHashSet(curOrderNext.size());
+                singleNext = new HashSet<>(curOrderNext.size());
                 singleNextArray = new boolean[cardinality];
-                for (long i : curOrderNext) {
-                    singleNext.add(i);
-                    singleNextArray[(int) i] = true;
+                for (IntSet i : curOrderNext) {
+                    singleNext.add(i.getFirst());
+                    singleNextArray[i.getFirst()] = true;
                 }
             }
+            log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
         for (int curOrder: savedAggregates.keySet()) {
-            Long2ObjectOpenHashMap<double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
-            for (long curSet : curOrderSavedAggregates.keySet()) {
+            Map<IntSet, double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
+            for (IntSet curSet : curOrderSavedAggregates.keySet()) {
                 double[] aggregates = curOrderSavedAggregates.get(curSet);
                 double[] metrics = new double[qualityMetrics.length];
                 for (int i = 0; i < metrics.length; i++) {
@@ -329,35 +328,35 @@ public class APrioriLinear {
      * @return Possible candidates of order 3.
      */
     private FastFixedHashSet  precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
-                                                    LongOpenHashSet o2Candidates,
-                                                    LongOpenHashSet singleCandidates) {
-        LongOpenHashSet candidates = new LongOpenHashSet(o2Candidates.size() * singleCandidates.size() / 2);
-        for (long pCandidate : o2Candidates) {
-            for (long sCandidate : singleCandidates) {
-                if (!IntSetAsLong.contains(pCandidate, sCandidate)) {
-                    long nCandidate = IntSetAsLong.threeIntToLongSorted(
-                            IntSetAsLong.getFirst(pCandidate),
-                            IntSetAsLong.getSecond(pCandidate),
+                                                    HashSet<IntSet> o2Candidates,
+                                                    HashSet<Integer> singleCandidates) {
+        HashSet<IntSet> candidates = new HashSet<>(o2Candidates.size() * singleCandidates.size() / 2);
+        for (IntSet pCandidate : o2Candidates) {
+            for (Integer sCandidate : singleCandidates) {
+                if (!pCandidate.contains(sCandidate)) {
+                    IntSet nCandidate = new IntSetAsLong(
+                            pCandidate.getFirst(),
+                            pCandidate.getSecond(),
                             sCandidate,
                             columnDecoder);
                     candidates.add(nCandidate);
                 }
             }
         }
-        List<Long> finalCandidatesList = new ArrayList<>();
-        long subPair;
-        for (long curCandidate : candidates) {
-            subPair = IntSetAsLong.twoIntToLong(
-                    IntSetAsLong.getFirst(curCandidate),
-                    IntSetAsLong.getSecond(curCandidate));
+        List<IntSet> finalCandidatesList = new ArrayList<>();
+        IntSet subPair;
+        for (IntSet curCandidate : candidates) {
+            subPair = new IntSetAsLong(
+                    curCandidate.getFirst(),
+                    curCandidate.getSecond());
             if (o2Candidates.contains(subPair)) {
-                subPair = IntSetAsLong.twoIntToLong(
-                        IntSetAsLong.getSecond(curCandidate),
-                        IntSetAsLong.getThird(curCandidate));
+                subPair = new IntSetAsLong(
+                        curCandidate.getSecond(),
+                        curCandidate.getThird());
                 if (o2Candidates.contains(subPair)) {
-                    subPair = IntSetAsLong.twoIntToLong(
-                            IntSetAsLong.getFirst(curCandidate),
-                            IntSetAsLong.getThird(curCandidate));
+                    subPair = new IntSetAsLong(
+                            curCandidate.getFirst(),
+                            curCandidate.getThird());
                     if (o2Candidates.contains(subPair)) {
                         finalCandidatesList.add(curCandidate);
                     }
@@ -365,7 +364,7 @@ public class APrioriLinear {
             }
         }
         FastFixedHashSet finalCandidates = new FastFixedHashSet(finalCandidatesList.size() * 10);
-        for (long candidate: finalCandidatesList)
+        for (IntSet candidate: finalCandidatesList)
             finalCandidates.add(candidate);
         return finalCandidates;
     }

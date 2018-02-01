@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -8,7 +9,13 @@ import java.util.Set;
  * Sets of two or three integers of at most 31 or 21 bits each, stored as a long.
  * Extremely fast, but the integer size is capped and the integer must be nonzero.
  */
-public class IntSetAsLong {
+public class IntSetAsLong implements IntSet {
+
+    public long value;
+
+    public IntSetAsLong(long a) {
+        this.value = a;
+    }
 
     /**
      * Pack two 31-bit nonzero integers into a long in sorted order.
@@ -16,11 +23,11 @@ public class IntSetAsLong {
      * @param b  Second integer.
      * @return  A long containing both integers in the lowest 62 bits.
      */
-    public static long twoIntToLong(long a, long b) {
+    public IntSetAsLong(long a, long b) {
         if (a < b)
-            return ((long) 1 << 62)  + (a << 31) + b;
+            this.value = ((long) 1 << 62)  + (a << 31) + b;
         else
-            return ((long) 1 << 62)  + (b << 31) + a;
+            this.value = ((long) 1 << 62)  + (b << 31) + a;
     }
 
     /**
@@ -31,7 +38,7 @@ public class IntSetAsLong {
      * @param sortValues Values by which to sort.
      * @return  A long containing all integers in the lowest 63 bits.
      */
-    public static long threeIntToLongSorted(long a, long b, long c, HashMap<Integer, Integer> sortValues) {
+    public IntSetAsLong(long a, long b, long c, HashMap<Integer, Integer> sortValues) {
         Integer keyA = sortValues.get(Math.toIntExact(a));
         Integer keyB = sortValues.get(Math.toIntExact(b));
         Integer keyC = sortValues.get(Math.toIntExact(c));
@@ -60,7 +67,7 @@ public class IntSetAsLong {
                 result = (c << 42) + (b << 21) + a;
             }
         }
-        return result;
+        this.value = result;
     }
 
     /**
@@ -70,74 +77,80 @@ public class IntSetAsLong {
      * @param c  Third integer.
      * @return  A long containing all integers in the lowest  63 bits.
      */
-    public static long threeIntToLong(long a, long b, long c) {
-        return (a << (42)) + (b << 21) + c;
+    public IntSetAsLong(long a, long b, long c) {
+        this.value = (a << (42)) + (b << 21) + c;
     }
 
     /**
      * Return the integer stored in the lowest bits of newLong.
-     * @param newLong A long containing packed nonzero integers.
      * @return The integer stored in newLong's least-significant bits.
      */
-    public static long getFirst(long newLong) {
-        if (newLong >>> 62 == 1)
-            return (newLong << (64 - 31)) >>> (64 - 31);
+    public int getFirst() {
+        if (this.value >>> 62 == 1)
+            return Math.toIntExact((this.value << (64 - 31)) >>> (64 - 31));
         else
-            return (newLong << (64 - 21)) >>> (64 - 21);
+            return Math.toIntExact((this.value << (64 - 21)) >>> (64 - 21));
     }
 
     /**
      * Return the integer stored in the next-lowest bits of newLong.
-     * @param newLong A long containing packed nonzero integers.
      * @return The integer stored in newLong's next least-significant bits.
      */
-    public static long getSecond(long newLong) {
-        if (newLong >>> 62 == 1)
-            return ((newLong >>> 31) << (64 - 31)) >>> (64 - 31);
+    public int getSecond() {
+        if (this.value >>> 62 == 1)
+            return Math.toIntExact(((this.value >>> 31) << (64 - 31)) >>> (64 - 31));
         else
-            return ((newLong >>> 21) << (64 - 21)) >>> (64 - 21);
+            return Math.toIntExact(((this.value >>> 21) << (64 - 21)) >>> (64 - 21));
     }
 
     /**
      * Return the integer stored in the next-lowest bits of newLong.
-     * @param newLong A long containing packed nonzero integers.
      * @return The integer stored in newLong's most significant bits, 0 if none.
      */
-    public static long getThird(long newLong) {
-        if (newLong >>> 62 == 1)
+    public int getThird() {
+        if (this.value >>> 62 == 1)
             return 0;
         else
-            return newLong >>> 42;
+            return Math.toIntExact((this.value >>> 42));
     }
 
     /**
      * Check if setLong contains queryLong.
-     * @param setLong A long containing packed nonzero integers.
-     * @param queryLong An integer.
+     * @param query An integer.
      * @return Does setLong contain querylong?
      */
-    public static boolean contains(long setLong, long queryLong) {
-        return getFirst(setLong) == queryLong
-                || getSecond(setLong) == queryLong
-                || getThird(setLong) == queryLong;
+    public boolean contains(int query) {
+        return this.getFirst() == query
+                || this.getSecond() == query
+                || this.getThird() == query;
     }
 
     /**
      * Return the nonzero integers stored in newLong.
-     * @param setLong A long containing packed nonzero integers.
      * @return A set of at most three integers stored in setLong.
      */
-    public static Set<Integer> getSet(long setLong) {
+    public Set<Integer> getSet() {
         HashSet<Integer> retSet = new HashSet<>(3);
-        int first = Math.toIntExact(getFirst(setLong));
+        int first = this.getFirst();
         retSet.add(first);
-        int second = Math.toIntExact(getSecond(setLong));
-        int third = Math.toIntExact(getThird(setLong));
+        int second = this.getSecond();
+        int third = this.getThird();
         if (second != 0)
             retSet.add(second);
         if (third != 0)
             retSet.add(third);
         return retSet;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return ((IntSetAsLong) o).value == this.value;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (this.value + 31 * (this.value >>> 11)  + 31 * (this.value >>> 22) + 7 * (this.value >>> 31)
+                + (this.value >>> 45) + 31 * (this.value >>> 7) + 7 * (this.value >>> 37));
     }
 
 }

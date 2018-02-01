@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
@@ -11,13 +12,13 @@ import java.util.*;
  */
 public class APLExplanationResult {
     private QualityMetric[] metricTypes;
-    private long matcher;
+    private IntSet matcher;
     private double[] aggregates;
     private double[] metrics;
 
     public APLExplanationResult(
             QualityMetric[] metricTypes,
-            long matcher,
+            IntSet matcher,
             double[] aggregates,
             double[] metrics
     ) {
@@ -28,7 +29,7 @@ public class APLExplanationResult {
     }
 
     private Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
-        Set<Integer> values = IntSetAsLong.getSet(matcher);
+        Set<Integer> values = matcher.getSet();
         Map<String, String> match = new HashMap<>();
 
         for (int k : values) {

@@ -5,7 +5,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util;
  * Does not resize.
  */
 public class FastFixedHashSet {
-    private long hashSet[];
+    private IntSet hashSet[];
     private int mask;
     private int capacity;
 
@@ -16,27 +16,25 @@ public class FastFixedHashSet {
         }
         this.capacity = realSize;
         this.mask = realSize - 1;
-        hashSet = new long[realSize];
+        hashSet = new IntSet[realSize];
     }
 
-    public void add(long entry) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
-                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
-        int index = ((int) hashed) & mask;
-        while(hashSet[index] != 0) {
+    public void add(IntSet entry) {
+        int hashed = entry.hashCode();
+        int index = (hashed) & mask;
+        while(hashSet[index] != null) {
             index = (index + 1) & mask;
         }
         hashSet[index] = entry;
     }
 
-    public boolean contains (long entry) {
-        long hashed = entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
-                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37);
-        int index = ((int) hashed) & mask;
-        while(hashSet[index] != 0 && hashSet[index] != entry) {
+    public boolean contains (IntSet entry) {
+        int hashed = entry.hashCode();
+        int index = (hashed) & mask;
+        while(hashSet[index] != null && !(hashSet[index].equals(entry))) {
             index = (index + 1) & mask;
         }
-        return (hashSet[index] != 0);
+        return (hashSet[index] != null);
     }
 
     public int getCapacity() {
