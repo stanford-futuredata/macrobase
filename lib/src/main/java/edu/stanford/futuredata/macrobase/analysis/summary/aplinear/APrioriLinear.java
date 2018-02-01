@@ -57,13 +57,14 @@ public class APrioriLinear {
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
         // Number of threads in the parallelized sections of this function
-        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
+        final int numThreads = Runtime.getRuntime().availableProcessors();
 
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
         // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
         // If the cardinality is greater than that, don't use them.
         if (cardinality >= 2097151) {
+            log.warn("Cardinality is extremely high.  Candidate generation will be slow.");
             useIntSetAsArray = true;
         } else{
             useIntSetAsArray = false;
@@ -114,7 +115,7 @@ public class APrioriLinear {
             } else {
                 precalculatedCandidates = null;
             }
-            // Initialize per-thread hashmaps
+            // Initialize per-thread hashmaps.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             int hashTableSize;
             if (curOrder == 1)
@@ -139,7 +140,7 @@ public class APrioriLinear {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
                 final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
-                // Do candidate generation in a lambda
+                // Do candidate generation in a lambda.
                 Runnable APrioriLinearRunnable = () -> {
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
@@ -148,6 +149,7 @@ public class APrioriLinear {
                                 // Require that all order-one candidates have minimum support.
                                 if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
                                     continue;
+                                // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                 if (useIntSetAsArray) {
                                     IntSet curCandidate = new IntSetAsArray(curColumnAttributes[rowNum - startIndex]);
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
@@ -186,6 +188,7 @@ public class APrioriLinear {
                                             || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
                                             || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                         continue;
+                                    // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
                                         IntSet curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol]);
@@ -231,6 +234,7 @@ public class APrioriLinear {
                                                 || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
                                                 || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                                             continue;
+                                        // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                         if (useIntSetAsArray) {
                                             IntSet curCandidate = new IntSetAsArray(
                                                     curColumnOneAttributes[rowNumInCol],
@@ -365,7 +369,6 @@ public class APrioriLinear {
                     singleNextArray[i.getFirst()] = true;
                 }
             }
-            log.info("Time spent in order {}: {}", curOrder, System.currentTimeMillis() - startTime);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
