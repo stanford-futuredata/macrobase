@@ -17,6 +17,25 @@ public class IntSetAsArray implements IntSet {
         values[0] = a;
     }
 
+    public IntSetAsArray(IntSetAsLong newLong) {
+        int a = newLong.getFirst();
+        int b = newLong.getSecond();
+        int c = newLong.getThird();
+        if (b == 0) {
+            values = new int[1];
+            values[0] = a;
+        } else if (c == 0) {
+            values = new int[2];
+            values[0] = b;
+            values[1] = a;
+        } else {
+            values = new int[3];
+            values[0] = c;
+            values[1] = b;
+            values[2] = a;
+        }
+    }
+
     public IntSetAsArray(int a, int b) {
         values = new int[2];
         if (a <= b) {

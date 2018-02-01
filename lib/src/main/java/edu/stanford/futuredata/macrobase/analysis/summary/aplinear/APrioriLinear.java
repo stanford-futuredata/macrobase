@@ -60,11 +60,13 @@ public class APrioriLinear {
         final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
 
         // Maximum order of explanations.
-        int maxOrder = 3;
+        final boolean useIntSetAsArray;
         // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
-        // If the cardinality is greater than that, only compute second-order explanations.
+        // If the cardinality is greater than that, don't use them.
         if (cardinality >= 2097151) {
-            maxOrder = 2;
+            useIntSetAsArray = true;
+        } else{
+            useIntSetAsArray = false;
         }
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
@@ -100,7 +102,7 @@ public class APrioriLinear {
                 aRows[i][j] = aggregateColumns[j][i];
             }
         }
-        for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
+        for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // For order 3, pre-calculate all possible candidate sets from "next" sets of
@@ -249,7 +251,8 @@ public class APrioriLinear {
             // Collect the aggregates stored in the per-thread HashMaps.
             for (FastFixedHashTable set : threadSetAggregates) {
                 for (long curCandidateKeyLong : set.keySetLong()) {
-                    IntSet curCandidateKey = new IntSetAsLong(curCandidateKeyLong);
+                    IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
+                    IntSet curCandidateKey = new IntSetAsArray(curCandidateKeyIntSetAsLong);
                     double[] curCandidateValue = set.get(curCandidateKeyLong);
                     double[] candidateVal = setAggregates.get(curCandidateKey);
                     if (candidateVal == null) {
@@ -335,14 +338,14 @@ public class APrioriLinear {
      * @param singleCandidates All singleton candidates with minimum support.
      * @return Possible candidates of order 3.
      */
-    private FastFixedHashSet  precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
+    private FastFixedHashSet precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
                                                     HashSet<IntSet> o2Candidates,
                                                     HashSet<Integer> singleCandidates) {
         HashSet<IntSet> candidates = new HashSet<>(o2Candidates.size() * singleCandidates.size() / 2);
         for (IntSet pCandidate : o2Candidates) {
             for (Integer sCandidate : singleCandidates) {
                 if (!pCandidate.contains(sCandidate)) {
-                    IntSet nCandidate = new IntSetAsLong(
+                    IntSet nCandidate = new IntSetAsArray(
                             pCandidate.getFirst(),
                             pCandidate.getSecond(),
                             sCandidate,
@@ -354,15 +357,15 @@ public class APrioriLinear {
         List<IntSet> finalCandidatesList = new ArrayList<>();
         IntSet subPair;
         for (IntSet curCandidate : candidates) {
-            subPair = new IntSetAsLong(
+            subPair = new IntSetAsArray(
                     curCandidate.getFirst(),
                     curCandidate.getSecond());
             if (o2Candidates.contains(subPair)) {
-                subPair = new IntSetAsLong(
+                subPair = new IntSetAsArray(
                         curCandidate.getSecond(),
                         curCandidate.getThird());
                 if (o2Candidates.contains(subPair)) {
-                    subPair = new IntSetAsLong(
+                    subPair = new IntSetAsArray(
                             curCandidate.getFirst(),
                             curCandidate.getThird());
                     if (o2Candidates.contains(subPair)) {
