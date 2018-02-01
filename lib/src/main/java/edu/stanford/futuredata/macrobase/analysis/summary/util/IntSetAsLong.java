@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
+package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.HashMap;
 import java.util.HashSet;

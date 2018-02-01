@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

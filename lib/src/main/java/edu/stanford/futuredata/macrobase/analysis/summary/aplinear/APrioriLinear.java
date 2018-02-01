@@ -3,6 +3,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import org.slf4j.Logger;

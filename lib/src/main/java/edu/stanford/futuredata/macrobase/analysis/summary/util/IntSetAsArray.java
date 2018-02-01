@@ -8,14 +8,14 @@ import java.util.Set;
  * Small sets of integers. Fast to construct and compare equality, but does not
  * support checking for membership.
  */
-public class IntSet {
+public class IntSetAsArray {
     public int[] values;
 
-    public IntSet(int a) {
+    public IntSetAsArray(int a) {
         values = new int[1];
         values[0] = a;
     }
-    public IntSet(int a, int b) {
+    public IntSetAsArray(int a, int b) {
         values = new int[2];
         if (a <= b) {
             values[0] = a;
@@ -30,7 +30,7 @@ public class IntSet {
      * Hand-rolled three-integer sort.  Extremely performant and saves a lot of time in the
      * apriori/aplinear implementation versus just calling sort.
      */
-    public IntSet(int a, int b, int c) {
+    public IntSetAsArray(int a, int b, int c) {
         values = new int[3];
         if (a <= b) {
             if (a <= c) {
@@ -65,7 +65,7 @@ public class IntSet {
         }
     }
 
-    public IntSet(int[] values) {
+    public IntSetAsArray(int[] values) {
         this.values = values.clone();
         Arrays.sort(this.values);
     }
@@ -103,7 +103,7 @@ public class IntSet {
         }
     }
 
-    public boolean contains(IntSet other) {
+    public boolean contains(IntSetAsArray other) {
         int startIdx = 0;
         int n = values.length;
         for (int i : other.values) {
@@ -120,7 +120,7 @@ public class IntSet {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        IntSet that = (IntSet) o;
+        IntSetAsArray that = (IntSetAsArray) o;
 
         return Arrays.equals(values, that.values);
     }
@@ -132,7 +132,7 @@ public class IntSet {
 
     @Override
     public String toString() {
-        return "IntSet{" +
+        return "IntSetAsArray{" +
                 "values=" + Arrays.toString(values) +
                 '}';
     }
