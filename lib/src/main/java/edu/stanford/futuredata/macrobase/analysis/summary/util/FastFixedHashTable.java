@@ -14,9 +14,8 @@ public class FastFixedHashTable {
     private int numAggregates;
     private int mask;
     private int capacity;
-    private boolean useIntArraySets;
 
-    public FastFixedHashTable(int size, int numAggregates, boolean useIntArraySets) {
+    public FastFixedHashTable(int size, int numAggregates, boolean useIntSets) {
         int realSize = 1;
         while(realSize < size) {
             realSize *= 2;
@@ -25,63 +24,63 @@ public class FastFixedHashTable {
         this.mask = realSize - 1;
         this.numAggregates = numAggregates;
         hashTable = new double[realSize][numAggregates];
-        if (useIntArraySets)
+        if (useIntSets)
             existsTable = new IntSet[realSize];
         else
             existsLongTable = new long[realSize];
-        this.useIntArraySets = useIntArraySets;
     }
 
     public void put(IntSet entry, double[] aggregates) {
-        if (useIntArraySets) {
-            int hashed = entry.hashCode();
-            int index = (hashed) & mask;
-            while (existsTable[index] != null) {
-                index = (index + 1) & mask;
-            }
-            existsTable[index] = entry;
-            for (int i = 0; i < numAggregates; i++) {
-                hashTable[index][i] = aggregates[i];
-            }
-        } else {
-            long realEntry = ((IntSetAsLong) entry).value;
-            int hashed = entry.hashCode();
-            int index = (hashed) & mask;
-            while(existsLongTable[index] != 0) {
-                index = (index + 1) & mask;
-            }
-            existsLongTable[index] = realEntry;
-            for(int i = 0; i < numAggregates; i++) {
-                hashTable[index][i] = aggregates[i];
-            }
+        int hashed = entry.hashCode();
+        int index = (hashed) & mask;
+        while(existsTable[index] != null) {
+            index = (index + 1) & mask;
+        }
+        existsTable[index] = entry;
+        for(int i = 0; i < numAggregates; i++) {
+            hashTable[index][i] = aggregates[i];
+        }
+    }
+
+    public void put(long entry, double[] aggregates) {
+        int hashed = (int) ((entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
+                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37)));
+        int index = (hashed) & mask;
+        while(existsLongTable[index] != 0) {
+            index = (index + 1) & mask;
+        }
+        existsLongTable[index] = entry;
+        for(int i = 0; i < numAggregates; i++) {
+            hashTable[index][i] = aggregates[i];
         }
     }
 
     public double[] get(IntSet entry) {
-        if (useIntArraySets) {
-            int hashed = entry.hashCode();
-            int index = (hashed) & mask;
-            while (existsTable[index] != null && !(existsTable[index].equals(entry))) {
-                index = (index + 1) & mask;
-            }
-            if (existsTable[index] == null) {
-                return null;
-            } else {
-                return hashTable[index];
-            }
-        } else {
-            long realEntry = ((IntSetAsLong) entry).value;
-            int hashed = entry.hashCode();
-            int index = (hashed) & mask;
-            while(existsLongTable[index] != 0 && !(existsLongTable[index] == realEntry)) {
-                index = (index + 1) & mask;
-            }
-            if(existsLongTable[index] == 0) {
-                return null;
-            }
-            else {
-                return hashTable[index];
-            }
+        int hashed = entry.hashCode();
+        int index = (hashed) & mask;
+        while(existsTable[index] != null && !(existsTable[index].equals(entry))) {
+            index = (index + 1) & mask;
+        }
+        if(existsTable[index] == null) {
+            return null;
+        }
+        else {
+            return hashTable[index];
+        }
+    }
+
+    public double[] get(long entry) {
+        int hashed = (int) ((entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
+                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37)));
+        int index = (hashed) & mask;
+        while(existsLongTable[index] != 0 && !(existsLongTable[index] == entry)) {
+            index = (index + 1) & mask;
+        }
+        if(existsLongTable[index] == 0) {
+            return null;
+        }
+        else {
+            return hashTable[index];
         }
     }
 
