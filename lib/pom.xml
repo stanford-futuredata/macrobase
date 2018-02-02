@@ -86,6 +86,11 @@
             <artifactId>fastutil</artifactId>
             <version>8.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+            <version>0.7.0</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>

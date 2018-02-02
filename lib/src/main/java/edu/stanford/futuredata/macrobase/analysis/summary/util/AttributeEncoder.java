@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * Encode every combination of attribute names and values into a distinct integer.
@@ -19,6 +20,7 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
+    private HashMap<Integer, RoaringBitmap>[][] bitmap;
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -35,6 +37,7 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
+    public HashMap<Integer, RoaringBitmap>[][] getBitMap() {return bitmap;}
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key
@@ -96,21 +99,40 @@ public class AttributeEncoder {
 
         // Encode the strings that have support with a key equal to their rank.
         int[][] encodedAttributes = new int[numRows][numColumns];
+        bitmap = new HashMap[numColumns][2];
+        for (int i = 0; i < numColumns; ++i) {
+            for (int j = 0; j < 2; j++)
+                bitmap[i][j] = new HashMap<>();
+        }
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 String colVal = curCol[rowIdx];
                 String colNumAndVal = Integer.toString(colIdx) + colVal;
+                int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                 if (!curColEncoder.containsKey(colVal)) {
                     if (stringToRank.containsKey(colNumAndVal)) {
                         int newKey = stringToRank.get(colNumAndVal);
                         curColEncoder.put(colVal, newKey);
                         valueDecoder.put(newKey, colVal);
                         columnDecoder.put(newKey, colIdx);
+                        bitmap[colIdx][oidx].put(newKey, RoaringBitmap.bitmapOf(rowIdx));
                         nextKey++;
                     } else {
                         curColEncoder.put(colVal, noSupport);
+                    }
+                } else {
+                    int val = curColEncoder.get(colVal);
+                    if (val != noSupport) {
+                        //System.out.println("got: " + curColEncoder.get(colVal));
+                        //System.out.println("has " + colIdx + " " + oidx + ": " + bitmap[colIdx][oidx].get(curColEncoder.get(colVal)));
+                        if (bitmap[colIdx][oidx].containsKey(val)) {
+                            RoaringBitmap rr = bitmap[colIdx][oidx].get(val);
+                            rr.add(rowIdx);
+                        } else {
+                            bitmap[colIdx][oidx].put(val, RoaringBitmap.bitmapOf(rowIdx));
+                        }
                     }
                 }
                 int curKey = curColEncoder.get(colVal);
