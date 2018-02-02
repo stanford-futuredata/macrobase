@@ -9,18 +9,20 @@ public class FastFixedHashSet {
     private long hashLongSet[];
     private int mask;
     private int capacity;
+    private boolean useIntArraySets;
 
-    public FastFixedHashSet(int size, boolean useIntSet) {
+    public FastFixedHashSet(int size, boolean useIntArraySets) {
         int realSize = 1;
         while(realSize < size) {
             realSize *= 2;
         }
         this.capacity = realSize;
         this.mask = realSize - 1;
-        if (useIntSet)
+        if (useIntArraySets)
             hashSet = new IntSet[realSize];
         else
             hashLongSet = new long[realSize];
+        this.useIntArraySets = useIntArraySets;
     }
 
     public void add(IntSet entry) {
@@ -43,22 +45,22 @@ public class FastFixedHashSet {
     }
 
     public boolean contains (IntSet entry) {
-        int hashed = entry.hashCode();
-        int index = (hashed) & mask;
-        while(hashSet[index] != null && !(hashSet[index].equals(entry))) {
-            index = (index + 1) & mask;
+        if (useIntArraySets) {
+            int hashed = entry.hashCode();
+            int index = (hashed) & mask;
+            while (hashSet[index] != null && !(hashSet[index].equals(entry))) {
+                index = (index + 1) & mask;
+            }
+            return (hashSet[index] != null);
+        } else {
+            long realEntry = ((IntSetAsLong) entry).value;
+            int hashed = entry.hashCode();
+            int index = (hashed) & mask;
+            while (hashLongSet[index] != 0 && !(hashLongSet[index] == realEntry)) {
+                index = (index + 1) & mask;
+            }
+            return (hashLongSet[index] != 0);
         }
-        return (hashSet[index] != null);
-    }
-
-    public boolean contains (long entry) {
-        int hashed = (int) ((entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
-                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37)));
-        int index = (hashed) & mask;
-        while(hashLongSet[index] != 0 && !(hashLongSet[index] == entry)) {
-            index = (index + 1) & mask;
-        }
-        return (hashLongSet[index] != 0);
     }
 
     public int getCapacity() {

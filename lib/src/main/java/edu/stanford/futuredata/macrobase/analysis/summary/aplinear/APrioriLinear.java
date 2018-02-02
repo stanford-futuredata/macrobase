@@ -139,6 +139,11 @@ public class APrioriLinear {
                 final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 // Do candidate generation in a lambda.
                 Runnable APrioriLinearRunnable = () -> {
+                    IntSet curCandidate;
+                    if (!useIntSetAsArray)
+                        curCandidate = new IntSetAsLong(0);
+                    else
+                        curCandidate = new IntSetAsArray(0);
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
                             int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
@@ -148,26 +153,17 @@ public class APrioriLinear {
                                     continue;
                                 // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                 if (useIntSetAsArray) {
-                                    IntSet curCandidate = new IntSetAsArray(curColumnAttributes[rowNum - startIndex]);
-                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                        if (candidateVal == null) {
-                                            thisThreadSetAggregates.put(curCandidate,
-                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
-                                        } else {
-                                            for (int a = 0; a < numAggregates; a++) {
-                                                candidateVal[a] += aRows[rowNum][a];
-                                            }
-                                        }
+                                    curCandidate = new IntSetAsArray(curColumnAttributes[rowNum - startIndex]);
                                 } else {
-                                    long curCandidate = curColumnAttributes[rowNum - startIndex];
-                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                    if (candidateVal == null) {
-                                        thisThreadSetAggregates.put(curCandidate,
-                                                Arrays.copyOf(aRows[rowNum], numAggregates));
-                                    } else {
-                                        for (int a = 0; a < numAggregates; a++) {
-                                            candidateVal[a] += aRows[rowNum][a];
-                                        }
+                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum - startIndex];
+                                }
+                                double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                if (candidateVal == null) {
+                                    thisThreadSetAggregates.put(curCandidate,
+                                            Arrays.copyOf(aRows[rowNum], numAggregates));
+                                } else {
+                                    for (int a = 0; a < numAggregates; a++) {
+                                        candidateVal[a] += aRows[rowNum][a];
                                     }
                                 }
                             }
@@ -187,28 +183,19 @@ public class APrioriLinear {
                                         continue;
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
-                                        IntSet curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNumInCol],
+                                        curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol]);
-                                            double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                            if (candidateVal == null) {
-                                                thisThreadSetAggregates.put(curCandidate,
-                                                        Arrays.copyOf(aRows[rowNum], numAggregates));
-                                            } else {
-                                                for (int a = 0; a < numAggregates; a++) {
-                                                    candidateVal[a] += aRows[rowNum][a];
-                                                }
-                                            }
                                     } else {
-                                        long curCandidate = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
+                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol]);
-                                        double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                        if (candidateVal == null) {
-                                            thisThreadSetAggregates.put(curCandidate,
-                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
-                                        } else {
-                                            for (int a = 0; a < numAggregates; a++) {
-                                                candidateVal[a] += aRows[rowNum][a];
-                                            }
+                                    }
+                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                    if (candidateVal == null) {
+                                        thisThreadSetAggregates.put(curCandidate,
+                                                Arrays.copyOf(aRows[rowNum], numAggregates));
+                                    } else {
+                                        for (int a = 0; a < numAggregates; a++) {
+                                            candidateVal[a] += aRows[rowNum][a];
                                         }
                                     }
                                 }
@@ -233,40 +220,26 @@ public class APrioriLinear {
                                             continue;
                                         // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                         if (useIntSetAsArray) {
-                                            IntSet curCandidate = new IntSetAsArray(
+                                            curCandidate = new IntSetAsArray(
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
-                                                // Require that all order-two subsets of a candidate have minimum support.
-                                                if (!precalculatedCandidates.contains(curCandidate)) {
-                                                    continue;
-                                                }
-                                                double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                                if (candidateVal == null) {
-                                                    thisThreadSetAggregates.put(curCandidate,
-                                                            Arrays.copyOf(aRows[rowNum], numAggregates));
-                                                } else {
-                                                    for (int a = 0; a < numAggregates; a++) {
-                                                        candidateVal[a] += aRows[rowNum][a];
-                                                    }
-                                                }
                                         } else {
-                                            long curCandidate = IntSetAsLong.threeIntToLong(
+                                            ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
-                                            // Require that all order-two subsets of a candidate have minimum support.
-                                            if (!precalculatedCandidates.contains(curCandidate)) {
-                                                continue;
-                                            }
-                                            double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                            if (candidateVal == null) {
-                                                thisThreadSetAggregates.put(curCandidate,
-                                                        Arrays.copyOf(aRows[rowNum], numAggregates));
-                                            } else {
-                                                for (int a = 0; a < numAggregates; a++) {
-                                                    candidateVal[a] += aRows[rowNum][a];
-                                                }
+                                        }
+                                        if (!precalculatedCandidates.contains(curCandidate)) {
+                                            continue;
+                                        }
+                                        double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                        if (candidateVal == null) {
+                                            thisThreadSetAggregates.put(curCandidate,
+                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
+                                        } else {
+                                            for (int a = 0; a < numAggregates; a++) {
+                                                candidateVal[a] += aRows[rowNum][a];
                                             }
                                         }
                                     }
@@ -307,7 +280,7 @@ public class APrioriLinear {
                     for (long curCandidateKeyLong : set.keySetLong()) {
                         IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
                         IntSet curCandidateKey = new IntSetAsArray(curCandidateKeyIntSetAsLong);
-                        double[] curCandidateValue = set.get(curCandidateKeyLong);
+                        double[] curCandidateValue = set.get(curCandidateKeyIntSetAsLong);
                         double[] candidateVal = setAggregates.get(curCandidateKey);
                         if (candidateVal == null) {
                             setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
