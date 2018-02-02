@@ -6,6 +6,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
@@ -117,6 +118,14 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
                 summarizer.setNumThreads(numThreads);
+                return summarizer;
+            }
+            case "aplineardistributed": {
+                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();
+                summarizer.setOutlierColumn(outlierColumnName);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRiskRatio);
                 return summarizer;
             }
             default: {
