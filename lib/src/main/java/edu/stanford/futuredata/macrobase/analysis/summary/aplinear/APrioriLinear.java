@@ -62,7 +62,7 @@ public class APrioriLinear {
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
         // Number of threads in the parallelized sections of this function
-        final int numThreads = Runtime.getRuntime().availableProcessors();
+        final int numThreads = 1;//Runtime.getRuntime().availableProcessors();
 
         // Maximum order of explanations.
         int maxOrder = 3;
