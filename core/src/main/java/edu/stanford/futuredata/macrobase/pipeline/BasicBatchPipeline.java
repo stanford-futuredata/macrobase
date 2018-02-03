@@ -11,8 +11,10 @@ import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 
@@ -21,7 +23,7 @@ import java.util.*;
  * Only supports operating over a single metric
  */
 public class BasicBatchPipeline implements Pipeline {
-    Logger log = LoggerFactory.getLogger(Pipeline.class);
+    private Logger log = LogManager.getLogger(Pipeline.class);
 
     private String inputURI = null;
 
@@ -137,7 +139,9 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "aplineardistributed": {
-                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();
+                SparkConf conf = new SparkConf().setAppName("MacroBase").setMaster("local");
+                JavaSparkContext sparkContext = new JavaSparkContext(conf);
+                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(sparkContext);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
