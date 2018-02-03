@@ -54,7 +54,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         long startTime = System.currentTimeMillis();
         int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
         long elapsed = System.currentTimeMillis() - startTime;
-        log.info("Encoded in: {}", elapsed);
+        log.info("Encoded in: {} ms", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
 
         thresholds = getThresholds();
@@ -70,8 +70,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 aggregateColumns,
                 encoder.getNextKey(),
                 encoder.getColumnDecoder(),
-                encoder.getBitMap(),
-                true
+                encoder.getBitMap()
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);

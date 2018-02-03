@@ -125,11 +125,8 @@ public class AttributeEncoder {
                 } else {
                     int val = curColEncoder.get(colVal);
                     if (val != noSupport) {
-                        //System.out.println("got: " + curColEncoder.get(colVal));
-                        //System.out.println("has " + colIdx + " " + oidx + ": " + bitmap[colIdx][oidx].get(curColEncoder.get(colVal)));
                         if (bitmap[colIdx][oidx].containsKey(val)) {
-                            RoaringBitmap rr = bitmap[colIdx][oidx].get(val);
-                            rr.add(rowIdx);
+                            bitmap[colIdx][oidx].get(val).add(rowIdx);
                         } else {
                             bitmap[colIdx][oidx].put(val, RoaringBitmap.bitmapOf(rowIdx));
                         }
