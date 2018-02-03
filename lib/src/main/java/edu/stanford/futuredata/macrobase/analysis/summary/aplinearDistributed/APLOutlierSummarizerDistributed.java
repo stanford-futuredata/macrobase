@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Gl
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,10 @@ import java.util.List;
 public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizerDistributed");
     private String countColumn = null;
+
+    public APLOutlierSummarizerDistributed(JavaSparkContext sparkContext) {
+        super(sparkContext);
+    }
 
     @Override
     public List<String> getAggregateNames() {
