@@ -2,6 +2,8 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -12,7 +14,7 @@ import static org.junit.Assert.assertTrue;
 
 public class APLinearOutlierSummarizerDistributedTest {
     @Test
-    public void testOrder3() throws Exception {
+    public void testDistribution() throws Exception {
         DataFrame df = new DataFrame();
         String[] col1 = {"a1", "a2", "a1", "a1"};
         String[] col2 = {"b1", "b1", "b2", "b1"};
@@ -30,7 +32,9 @@ public class APLinearOutlierSummarizerDistributedTest {
                 "col2",
                 "col3"
         );
-        APLOutlierSummarizerDistributed summ = new APLOutlierSummarizerDistributed();
+        SparkConf conf = new SparkConf().setAppName("MacroBaseTest").setMaster("local");
+        JavaSparkContext sparkContext = new JavaSparkContext(conf);
+        APLOutlierSummarizerDistributed summ = new APLOutlierSummarizerDistributed(sparkContext);
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
         summ.setMinSupport(.1);
