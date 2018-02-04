@@ -1,0 +1,13 @@
+{
+  "minSupport": 0.005,
+  "percentile": 1.0,
+  "outlierColumn": "outliers1",
+  "numWarmupTrials": 10,
+  "numTrials": 10,
+  "oracleCubeFilename": "src/test/resources/milan_oracle_cubed.csv",
+  "momentCubeFilename": "src/test/resources/milan_moments_cubed.csv",
+  "attributes": [
+    "Grid",
+    "Country"
+  ]
+}

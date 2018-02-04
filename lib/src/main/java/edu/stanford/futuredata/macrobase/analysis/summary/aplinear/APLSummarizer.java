@@ -9,7 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Generic summarizer superclass that can be customized with
@@ -21,7 +23,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
     AttributeEncoder encoder;
     APLExplanation explanation;
     APrioriLinear aplKernel;
-    List<QualityMetric> qualityMetricList;
+    boolean doContainment = true;
+    public List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
 
     protected long numEvents = 0;
@@ -66,10 +69,12 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 qualityMetricList,
                 thresholds
         );
+        aplKernel.setDoContainment(doContainment);
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
-        List<APLExplanationResult> aplResults = aplKernel.explain(encoded, aggregateColumns);
+        Map<String, int[]> aggregationOps = getAggregationOps();
+        List<APLExplanationResult> aplResults = aplKernel.explain(encoded, aggregateColumns, aggregationOps);
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
         explanation = new APLExplanation(
@@ -87,4 +92,9 @@ public abstract class APLSummarizer extends BatchSummarizer {
         return explanation;
     }
 
+    public Map<String, int[]> getAggregationOps() {
+        return null;
+    }
+
+    public void setDoContainment(boolean doContainment) { this.doContainment = doContainment; }
 }
