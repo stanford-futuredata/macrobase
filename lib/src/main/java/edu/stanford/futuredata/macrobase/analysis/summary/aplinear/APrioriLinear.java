@@ -224,18 +224,11 @@ public class APrioriLinear {
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
-                                            if (!precalculatedCandidates.contains(curCandidate)) {
-                                                continue;
-                                            }
                                         } else {
-                                            long candidateAsLong = IntSetAsLong.threeIntToLong(
+                                            ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
-                                            ((IntSetAsLong) curCandidate).value = candidateAsLong;
-                                            if (!precalculatedCandidates.contains(candidateAsLong)) {
-                                                continue;
-                                            }
                                         }
                                         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                         if (candidateVal == null) {
@@ -317,7 +310,7 @@ public class APrioriLinear {
                 if (canPassThreshold) {
                     // if a set is already past the threshold on all metrics,
                     // save it and no need for further exploration
-                    if (isPastThreshold) {
+                    if (isPastThreshold && !(curOrder == 3 && !precalculatedCandidates.contains(curCandidate))) {
                         curOrderSaved.add(curCandidate);
                     }
                     else {
@@ -407,13 +400,9 @@ public class APrioriLinear {
                 }
             }
         }
-        FastFixedHashSet finalCandidates = new FastFixedHashSet(finalCandidatesList.size() * 10, useIntSetAsArray);
+        FastFixedHashSet finalCandidates = new FastFixedHashSet(finalCandidatesList.size() * 10, true);
         for (IntSet candidate: finalCandidatesList) {
-            if (useIntSetAsArray) {
-                finalCandidates.add(candidate);
-            } else {
-                finalCandidates.add(candidate.toLong());
-            }
+            finalCandidates.add(candidate);
         }
         return finalCandidates;
     }

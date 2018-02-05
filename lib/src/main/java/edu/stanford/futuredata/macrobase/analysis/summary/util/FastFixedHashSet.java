@@ -63,16 +63,6 @@ public class FastFixedHashSet {
         }
     }
 
-    public boolean contains (long entry) {
-        int hashed = (int) ((entry + 31 * (entry >>> 11)  + 31 * (entry >>> 22) + 7 * (entry >>> 31)
-                + (entry >>> 45) + 31 * (entry >>> 7) + 7 * (entry >>> 37)));
-        int index = (hashed) & mask;
-        while(hashLongSet[index] != 0 && !(hashLongSet[index] == entry)) {
-            index = (index + 1) & mask;
-        }
-        return (hashLongSet[index] != 0);
-    }
-
     public int getCapacity() {
         return capacity;
     }
