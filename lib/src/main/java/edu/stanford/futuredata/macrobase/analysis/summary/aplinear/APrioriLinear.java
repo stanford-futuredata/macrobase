@@ -224,14 +224,18 @@ public class APrioriLinear {
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
+                                            if (!precalculatedCandidates.contains(curCandidate)) {
+                                                continue;
+                                            }
                                         } else {
-                                            ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
+                                            long candidateAsLong = IntSetAsLong.threeIntToLong(
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
-                                        }
-                                        if (!precalculatedCandidates.contains(curCandidate)) {
-                                            continue;
+                                            ((IntSetAsLong) curCandidate).value = candidateAsLong;
+                                            if (!precalculatedCandidates.contains(candidateAsLong)) {
+                                                continue;
+                                            }
                                         }
                                         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                         if (candidateVal == null) {
@@ -249,6 +253,7 @@ public class APrioriLinear {
                     } else {
                         throw new MacrobaseInternalError("High Order not supported");
                     }
+                    System.out.printf("Order: %d Time: %d\n", curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
