@@ -1,5 +1,5 @@
 {
-  "minSupport": 0.005,
+  "minSupport": 0.006,
   "percentile": 1.0,
   "outlierColumn": "outliers1",
   "numWarmupTrials": 10,
@@ -9,5 +9,7 @@
   "attributes": [
     "Grid",
     "Country"
-  ]
+  ],
+  "doContainment": true,
+  "verbose": true
 }

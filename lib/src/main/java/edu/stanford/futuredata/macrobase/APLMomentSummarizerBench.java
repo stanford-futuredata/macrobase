@@ -22,6 +22,7 @@ public class APLMomentSummarizerBench {
     String momentCubeFilename;
     boolean doContainment;
     List<String> attributes;
+    boolean verbose;
 
     public APLMomentSummarizerBench(String confFile) throws IOException {
         RunConfig conf = RunConfig.fromJsonFile(confFile);
@@ -35,6 +36,7 @@ public class APLMomentSummarizerBench {
         momentCubeFilename = conf.get("momentCubeFilename");
         doContainment = conf.get("doContainment", false);
         attributes = conf.get("attributes");
+        verbose = conf.get("verbose", false);
     }
 
     public static void main(String[] args) throws Exception {
@@ -52,8 +54,6 @@ public class APLMomentSummarizerBench {
 
     public void testOracleOrder3() throws Exception {
         List<String> requiredColumns = new ArrayList<>(attributes);
-//        requiredColumns.add("Grid");
-//        requiredColumns.add("Country");
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put("count", Schema.ColType.DOUBLE);
         colTypes.put(outlierColumn, Schema.ColType.DOUBLE);
@@ -69,6 +69,8 @@ public class APLMomentSummarizerBench {
         summ.setMinSupport(minSupport);
         summ.setMinRatioMetric(10.0);
         summ.setAttributes(attributes);
+        summ.setDoContainment(doContainment);
+        summ.onlyUseSupport(true);
         for (int i = 0; i < numWarmupTrials; i++) {
             summ.process(df);
         }
@@ -80,13 +82,13 @@ public class APLMomentSummarizerBench {
         System.out.format("Oracle time: %g\n", timeElapsed / (1.e9 * numTrials));
         APLExplanation e = summ.getResults();
         System.out.format("Num results: %d\n\n", e.getResults().size());
-//        System.out.println(e.prettyPrint());
+        if (verbose) {
+            System.out.println(e.prettyPrint());
+        }
     }
 
     public void testCubeOrder3(boolean useCascade) throws Exception {
         List<String> requiredColumns = new ArrayList<>(attributes);
-//        requiredColumns.add("Grid");
-//        requiredColumns.add("Country");
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         List<String> momentColumns = new ArrayList<>();
         for (int i = 0; i <= numMoments; i++) {
@@ -140,6 +142,8 @@ public class APLMomentSummarizerBench {
         }
         APLExplanation e = summ.getResults();
         System.out.format("Num results: %d\n\n", e.getResults().size());
-//        System.out.println(e.prettyPrint());
+        if (verbose) {
+            System.out.println(e.prettyPrint());
+        }
     }
 }

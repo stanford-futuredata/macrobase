@@ -72,18 +72,18 @@ public class EstimatedSupportMetric implements QualityMetric{
 
     private Action getActionCascade(double[] aggregates, double threshold) {
         numEnterCascade++;
+        double outlierRateNeeded = threshold * globalCount / aggregates[momentsBaseIdx];
 
         // Simple checks on min and max
         if (aggregates[maxIdx] < cutoff) {
             return Action.PRUNE;
         }
-        if (aggregates[minIdx] >= cutoff) {
+        if (aggregates[minIdx] >= cutoff && outlierRateNeeded <= 1.0) {
             return Action.KEEP;
         }
         numAfterNaiveCheck++;
 
         // Markov bounds
-        double outlierRateNeeded = threshold * globalCount / aggregates[momentsBaseIdx];
         double mean = aggregates[momentsBaseIdx+1] / aggregates[momentsBaseIdx];
         double min = aggregates[minIdx];
         double max = aggregates[maxIdx];
