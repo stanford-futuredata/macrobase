@@ -19,17 +19,17 @@ public class FastFixedHashTableTest {
         table.put(new IntSetAsArray(1), putArrayOne);
         table.put(new IntSetAsArray(2), putArrayTwo);
         table.put(new IntSetAsArray(18), putArrayThree);
-        assertEquals(16, table.getCapacity());
+        assertEquals(512, table.getCapacity());
         assertEquals(1.0, table.get(new IntSetAsArray(1))[0], 0.01);
         assertEquals(2.0, table.get(new IntSetAsArray(2))[0], 0.01);
         assertEquals(3.0, table.get(new IntSetAsArray(18))[0], 0.01);
         FastFixedHashTable tableTwo = new FastFixedHashTable(16, 1, false);
-        table.put(new IntSetAsLong(1), putArrayOne);
-        table.put(new IntSetAsLong(2), putArrayTwo);
-        table.put(new IntSetAsLong(18), putArrayThree);
-        assertEquals(16, tableTwo.getCapacity());
-        assertEquals(1.0, table.get(new IntSetAsLong(1))[0], 0.01);
-        assertEquals(2.0, table.get(new IntSetAsLong(2))[0], 0.01);
-        assertEquals(3.0, table.get(new IntSetAsLong(18))[0], 0.01);
+        tableTwo.put(new IntSetAsLong(1), putArrayOne);
+        tableTwo.put(new IntSetAsLong(2), putArrayTwo);
+        tableTwo.put(new IntSetAsLong(18), putArrayThree);
+        assertEquals(512, tableTwo.getCapacity());
+        assertEquals(1.0, tableTwo.get(new IntSetAsLong(1))[0], 0.01);
+        assertEquals(2.0, tableTwo.get(new IntSetAsLong(2))[0], 0.01);
+        assertEquals(3.0, tableTwo.get(new IntSetAsLong(18))[0], 0.01);
     }
 }

@@ -113,21 +113,8 @@ public class APrioriLinear {
             }
             // Initialize per-thread hashmaps.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
-            int hashTableSize;
-            if (curOrder == 1)
-                hashTableSize = cardinality * 10;
-            else if (curOrder == 2) {
-                try {
-                    hashTableSize = Math.multiplyExact(cardinality, cardinality);
-                    hashTableSize = Math.multiplyExact(10, hashTableSize);
-                } catch (ArithmeticException e) {
-                    hashTableSize = Integer.MAX_VALUE;
-                }
-            }
-            else
-                hashTableSize = precalculatedCandidates.getCapacity();
             for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new FastFixedHashTable(hashTableSize, numAggregates, useIntSetAsArray));
+                threadSetAggregates.add(new FastFixedHashTable(cardinality * 100, numAggregates, useIntSetAsArray));
             }
             // Shard the dataset by row into threads and generate candidates.
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
@@ -245,6 +232,8 @@ public class APrioriLinear {
                     } else {
                         throw new MacrobaseInternalError("High Order not supported");
                     }
+                    log.info("Time spent in Thread {} in order {}:  {}",
+                            curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
