@@ -20,11 +20,11 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     protected double minOutlierSupport = 0.1;
     protected double minRatioMetric = 3;
     protected List<String> attributes = new ArrayList<>();
+    protected int numThreads = Runtime.getRuntime().availableProcessors();
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
      * @param minSupport lowest outlier support of the results returned.
-     * @return this
      */
     public void setMinSupport(double minSupport) {
         this.minOutlierSupport = minSupport;
@@ -37,7 +37,6 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     /**
      * Set the column which indicates outlier status. "_OUTLIER" by default.
      * @param outlierColumn new outlier indicator column.
-     * @return this
      */
     public void setOutlierColumn(String outlierColumn) {
         this.outlierColumn = outlierColumn;
@@ -45,10 +44,15 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     /**
      * Adjust this to tune the severity (e.g. strength of correlation) of the results returned.
      * @param minRatioMetric lowest risk ratio to consider for meaningful explanations.
-     * @return this
      */
 
     public void setMinRatioMetric(double minRatioMetric) {
         this.minRatioMetric = minRatioMetric;
     }
+
+    /**
+     * The number of threads used in parallel summarizers.
+     * @param numThreads Number of threads to use.
+     */
+    public void setNumThreads(int numThreads) { this.numThreads = numThreads; }
 }

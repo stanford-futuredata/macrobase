@@ -42,6 +42,7 @@ public class CubePipeline implements Pipeline {
     private double cutoff;
     private String strCutoff;
     private boolean isStrPredicate;
+    private int numThreads;
 
     private String predicateStr;
     private Optional<String> metric;
@@ -93,6 +94,7 @@ public class CubePipeline implements Pipeline {
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport", 3.0);
         minRatioMetric = conf.get("minRatioMetric", 0.01);
+        numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
 
         debugDump = conf.get("debugDump", false);
     }
@@ -251,6 +253,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRatioMetric);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
         }

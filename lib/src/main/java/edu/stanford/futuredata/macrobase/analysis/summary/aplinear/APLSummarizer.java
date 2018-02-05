@@ -33,7 +33,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public abstract double getNumberOutliers(double[][] aggregates);
 
     protected double[] processCountCol(DataFrame input, String countColumn, int numRows) {
-        double[] countCol = null;
+        double[] countCol;
         if (countColumn != null) {
             countCol = input.getDoubleColumnByName(countColumn);
             for (int i = 0; i < numRows; i++) {
@@ -69,7 +69,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
                 encoder.getNextKey(),
-                encoder.getColumnDecoder()
+                encoder.getColumnDecoder(),
+                numThreads
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);

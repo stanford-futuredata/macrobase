@@ -48,13 +48,12 @@ public class APrioriLinear {
             final int[][] attributes,
             double[][] aggregateColumns,
             int cardinality,
-            HashMap<Integer, Integer> columnDecoder
+            HashMap<Integer, Integer> columnDecoder,
+            int numThreads
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
-        // Number of threads in the parallelized sections of this function
-        final int numThreads = Runtime.getRuntime().availableProcessors();
 
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
@@ -108,7 +107,7 @@ public class APrioriLinear {
             final FastFixedHashSet precalculatedCandidates;
             if (curOrder == 3) {
                 precalculatedCandidates = precalculateCandidates(columnDecoder, setNext.get(2),
-                        singleNext, useIntSetAsArray);
+                        singleNext);
             } else {
                 precalculatedCandidates = null;
             }
@@ -246,7 +245,6 @@ public class APrioriLinear {
                     } else {
                         throw new MacrobaseInternalError("High Order not supported");
                     }
-                    System.out.printf("Order: %d Time: %d\n", curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
@@ -365,8 +363,7 @@ public class APrioriLinear {
      */
     private FastFixedHashSet precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
                                                     HashSet<IntSet> o2Candidates,
-                                                    HashSet<Integer> singleCandidates,
-                                                    boolean useIntSetAsArray) {
+                                                    HashSet<Integer> singleCandidates) {
         HashSet<IntSet> candidates = new HashSet<>(o2Candidates.size() * singleCandidates.size() / 2);
         for (IntSet pCandidate : o2Candidates) {
             for (Integer sCandidate : singleCandidates) {
