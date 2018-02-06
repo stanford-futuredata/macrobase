@@ -70,15 +70,17 @@ public class APrioriLinearDistributed {
         }
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
-        final int[][][] byThreadAttributesTranspose =
-                new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
+        final List<int[][]> byThreadAttributesTranspose = new ArrayList<>(numThreads);
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             final int startIndex = (numRows * threadNum) / numThreads;
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-            for(int i = 0; i < numColumns; i++)
-                for(int j = startIndex; j < endIndex; j++) {
-                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
+            int[][] thisPartition = new int[numColumns][(numRows + numThreads)/numThreads];
+            for(int i = 0; i < numColumns; i++) {
+                for (int j = startIndex; j < endIndex; j++) {
+                    thisPartition[i][j - startIndex] = attributes[j][i];
                 }
+            }
+            byThreadAttributesTranspose.add(thisPartition);
         }
 
         // Quality metrics are initialized with global aggregates to
@@ -95,12 +97,18 @@ public class APrioriLinearDistributed {
             q.initialize(globalAggregates);
         }
 
-        // Row store for more convenient access
-        final double[][] aRows = new double[numRows][numAggregates];
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < numAggregates; j++) {
-                aRows[i][j] = aggregateColumns[j][i];
+        // Shared and row store for more convenient access
+        final List<double[][]> aRows = new ArrayList<>(numThreads);
+        for(int threadNum = 0; threadNum < numThreads; threadNum++) {
+            final int startIndex = (numRows * threadNum) / numThreads;
+            final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+            double[][] thisPartition = new double[endIndex - startIndex][numAggregates];
+            for (int i = startIndex; i < endIndex; i++) {
+                for (int j = 0; j < numAggregates; j++) {
+                    thisPartition[i - startIndex][j] = aggregateColumns[j][i];
+                }
             }
+            aRows.add(thisPartition);
         }
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
@@ -114,8 +122,6 @@ public class APrioriLinearDistributed {
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int curThreadNum = threadNum;
-                final int startIndex = (numRows * threadNum) / numThreads;
-                final int endIndex = (numRows * (threadNum + 1)) / numThreads;
                 final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
                 // Do candidate generation in a lambda.
                 Runnable APrioriLinearRunnable = () -> {
@@ -124,58 +130,58 @@ public class APrioriLinearDistributed {
                         curCandidate = new IntSetAsLong(0);
                     else
                         curCandidate = new IntSetAsArray(0);
+                    double[][] aRowsForThread = aRows.get(curThreadNum);
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
-                            int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
-                            for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
+                            int[] curColumnAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNum];
+                            for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
                                 // Require that all order-one candidates have minimum support.
-                                if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
+                                if (curColumnAttributes[rowNum] == AttributeEncoder.noSupport)
                                     continue;
                                 // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                 if (useIntSetAsArray) {
-                                    curCandidate = new IntSetAsArray(curColumnAttributes[rowNum - startIndex]);
+                                    curCandidate = new IntSetAsArray(curColumnAttributes[rowNum]);
                                 } else {
-                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum - startIndex];
+                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum];
                                 }
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate,
-                                            Arrays.copyOf(aRows[rowNum], numAggregates));
+                                            Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
                                 } else {
                                     for (int a = 0; a < numAggregates; a++) {
-                                        candidateVal[a] += aRows[rowNum][a];
+                                        candidateVal[a] += aRowsForThread[rowNum][a];
                                     }
                                 }
                             }
                         }
                     } else if (curOrderFinal == 2) {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
-                                for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
-                                    int rowNumInCol = rowNum - startIndex;
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumTwo];
+                                for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
                                     // Only examine a pair if both its members have minimum support.
-                                    if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                            || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                            || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
-                                            || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+                                    if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
+                                            || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
+                                            || !singleNextArray[curColumnOneAttributes[rowNum]]
+                                            || !singleNextArray[curColumnTwoAttributes[rowNum]])
                                         continue;
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
-                                        curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNumInCol],
-                                                curColumnTwoAttributes[rowNumInCol]);
+                                        curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNum],
+                                                curColumnTwoAttributes[rowNum]);
                                     } else {
-                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
-                                                curColumnTwoAttributes[rowNumInCol]);
+                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNum],
+                                                curColumnTwoAttributes[rowNum]);
                                     }
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
                                         thisThreadSetAggregates.put(curCandidate,
-                                                Arrays.copyOf(aRows[rowNum], numAggregates));
+                                                Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
                                     } else {
                                         for (int a = 0; a < numAggregates; a++) {
-                                            candidateVal[a] += aRows[rowNum][a];
+                                            candidateVal[a] += aRowsForThread[rowNum][a];
                                         }
                                     }
                                 }
@@ -183,40 +189,39 @@ public class APrioriLinearDistributed {
                         }
                     } else if (curOrderFinal == 3) {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumOne % numColumns];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumTwo % numColumns];
                                 for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree % numColumns];
-                                    for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
-                                        int rowNumInCol = rowNum - startIndex;
+                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose.get(curThreadNum)[colnumThree % numColumns];
+                                    for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
                                         // Only construct a triple if all its singleton members have minimum support.
-                                        if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || !singleNextArray[curColumnThreeAttributes[rowNumInCol]]
-                                                || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
-                                                || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+                                        if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
+                                                || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
+                                                || curColumnThreeAttributes[rowNum] == AttributeEncoder.noSupport
+                                                || !singleNextArray[curColumnThreeAttributes[rowNum]]
+                                                || !singleNextArray[curColumnOneAttributes[rowNum]]
+                                                || !singleNextArray[curColumnTwoAttributes[rowNum]])
                                             continue;
                                         // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                         if (useIntSetAsArray) {
                                             curCandidate = new IntSetAsArray(
-                                                    curColumnOneAttributes[rowNumInCol],
-                                                    curColumnTwoAttributes[rowNumInCol],
-                                                    curColumnThreeAttributes[rowNumInCol]);
+                                                    curColumnOneAttributes[rowNum],
+                                                    curColumnTwoAttributes[rowNum],
+                                                    curColumnThreeAttributes[rowNum]);
                                         } else {
                                             ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
-                                                    curColumnOneAttributes[rowNumInCol],
-                                                    curColumnTwoAttributes[rowNumInCol],
-                                                    curColumnThreeAttributes[rowNumInCol]);
+                                                    curColumnOneAttributes[rowNum],
+                                                    curColumnTwoAttributes[rowNum],
+                                                    curColumnThreeAttributes[rowNum]);
                                         }
                                         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                         if (candidateVal == null) {
                                             thisThreadSetAggregates.put(curCandidate,
-                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
+                                                    Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
                                         } else {
                                             for (int a = 0; a < numAggregates; a++) {
-                                                candidateVal[a] += aRows[rowNum][a];
+                                                candidateVal[a] += aRowsForThread[rowNum][a];
                                             }
                                         }
                                     }
