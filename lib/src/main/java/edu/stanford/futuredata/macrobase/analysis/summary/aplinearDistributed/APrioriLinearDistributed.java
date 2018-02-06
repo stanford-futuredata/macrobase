@@ -4,7 +4,6 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
-import org.apache.avro.generic.GenericData;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
@@ -20,41 +18,33 @@ import java.util.concurrent.CountDownLatch;
  * which can be combined additively. Then, we use APriori to find the subgroups which
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
-public class APrioriLinearDistributed implements Serializable{
-    private Logger log = LoggerFactory.getLogger("APLSummarizerDistributed");
+public class APrioriLinearDistributed {
 
-    // **Parameters**
-    private QualityMetric[] qualityMetrics;
-    private double[] thresholds;
-
-    // **Cached values**
-    // Singleton viable sets for quick lookup
-    private boolean[] singleNextArray;
-    // Sets that have high enough support but not high qualityMetrics, need to be explored
-    private HashMap<Integer, HashSet<IntSet>> setNext;
-    // Aggregate values for all of the sets we saved
-    private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
-
-    public APrioriLinearDistributed(
-            List<QualityMetric> qualityMetrics,
-            List<Double> thresholds
-    ) {
-        this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
-        this.thresholds = new double[thresholds.size()];
-        for (int i = 0; i < thresholds.size(); i++) {
-            this.thresholds[i] = thresholds.get(i);
-        }
-        this.setNext = new HashMap<>(3);
-        this.savedAggregates = new HashMap<>(3);
-    }
-
-    public List<APLExplanationResult> explain(
+    public static List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
             int cardinality,
             int numThreads,
+            List<QualityMetric> argQualityMetrics,
+            List<Double> argThresholds,
             JavaSparkContext sparkContext
     ) {
+
+        Logger log = LoggerFactory.getLogger("APLSummarizerDistributed");
+
+        // Quality metrics and thresholds for candidate pruning and selection.
+        QualityMetric[] qualityMetrics = argQualityMetrics.toArray(new QualityMetric[0]);
+        double[] thresholds = new double[argThresholds.size()];
+        for (int i = 0; i < argThresholds.size(); i++) {
+            thresholds[i] = argThresholds.get(i);
+        }
+        // Singleton viable sets for quick lookup
+        boolean[] singleNextArray = new boolean[cardinality];
+        // Sets that have high enough support but not high qualityMetrics, need to be explored
+        HashMap<Integer, HashSet<IntSet>> setNext = new HashMap<>(3);
+        // Aggregate values for all of the sets we saved
+        HashMap<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
+
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
@@ -276,7 +266,7 @@ public class APrioriLinearDistributed implements Serializable{
             );
 
             HashMap<IntSet, double[]> setAggregates = fastFixedSetAggregates.asHashMap();
-            
+
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
@@ -316,7 +306,6 @@ public class APrioriLinearDistributed implements Serializable{
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
-                singleNextArray = new boolean[cardinality];
                 for (IntSet i : curOrderNext) {
                     singleNextArray[i.getFirst()] = true;
                 }
@@ -346,7 +335,7 @@ public class APrioriLinearDistributed implements Serializable{
      * @param curCandidate An order-3 candidate
      * @return Boolean
      */
-    private boolean validateCandidate(IntSet curCandidate,
+    private static boolean validateCandidate(IntSet curCandidate,
                                       HashSet<IntSet> o2Candidates) {
         IntSet subPair;
         subPair = new IntSetAsArray(
