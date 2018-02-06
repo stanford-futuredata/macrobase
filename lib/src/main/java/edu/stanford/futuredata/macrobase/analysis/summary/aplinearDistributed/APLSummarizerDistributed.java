@@ -64,17 +64,15 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
 
         List<Double> thresholds = getThresholds();
         List<QualityMetric> qualityMetricList = getQualityMetricList();
-        APrioriLinearDistributed aplKernel = new APrioriLinearDistributed(
-                qualityMetricList,
-                thresholds
-        );
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
-        List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
+        List<APLExplanationResult> aplResults = APrioriLinearDistributed.explain(encoded,
                 aggregateColumns,
                 encoder.getNextKey(),
                 numThreads,
+                qualityMetricList,
+                thresholds,
                 sparkContext
         );
         log.info("Number of results: {}", aplResults.size());
