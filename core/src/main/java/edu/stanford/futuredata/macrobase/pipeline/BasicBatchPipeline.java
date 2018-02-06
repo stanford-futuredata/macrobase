@@ -139,13 +139,14 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "aplineardistributed": {
-                SparkConf conf = new SparkConf().setAppName("MacroBase").setMaster("local");
+                SparkConf conf = new SparkConf().setAppName("MacroBase").setMaster("local[" + numThreads + "]");
                 JavaSparkContext sparkContext = new JavaSparkContext(conf);
                 APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(sparkContext);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             default: {
