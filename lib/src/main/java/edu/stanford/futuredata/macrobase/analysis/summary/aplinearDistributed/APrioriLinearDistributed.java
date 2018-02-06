@@ -10,6 +10,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
@@ -19,13 +20,12 @@ import java.util.concurrent.CountDownLatch;
  * which can be combined additively. Then, we use APriori to find the subgroups which
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
-public class APrioriLinearDistributed {
+public class APrioriLinearDistributed implements Serializable{
     private Logger log = LoggerFactory.getLogger("APLSummarizerDistributed");
 
     // **Parameters**
     private QualityMetric[] qualityMetrics;
     private double[] thresholds;
-    JavaSparkContext sparkContext;
 
     // **Cached values**
     // Singleton viable sets for quick lookup
@@ -37,8 +37,7 @@ public class APrioriLinearDistributed {
 
     public APrioriLinearDistributed(
             List<QualityMetric> qualityMetrics,
-            List<Double> thresholds,
-            JavaSparkContext sparkContext
+            List<Double> thresholds
     ) {
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
         this.thresholds = new double[thresholds.size()];
@@ -47,14 +46,14 @@ public class APrioriLinearDistributed {
         }
         this.setNext = new HashMap<>(3);
         this.savedAggregates = new HashMap<>(3);
-        this.sparkContext = sparkContext;
     }
 
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
             int cardinality,
-            int numThreads
+            int numThreads,
+            JavaSparkContext sparkContext
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
@@ -122,36 +121,59 @@ public class APrioriLinearDistributed {
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
-            // Initialize per-thread hashmaps.
-            final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
-            for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray));
-            }
-            // Shard the dataset by row into threads and generate candidates.
-            final CountDownLatch doneSignal = new CountDownLatch(numThreads);
-            for (int threadNum = 0; threadNum < numThreads; threadNum++) {
-                final int curThreadNum = threadNum;
-                final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
-                // Do candidate generation in a lambda.
-                Runnable APrioriLinearRunnable = () -> {
-                    IntSet curCandidate;
-                    if (!useIntSetAsArray)
-                        curCandidate = new IntSetAsLong(0);
-                    else
-                        curCandidate = new IntSetAsArray(0);
-                    double[][] aRowsForThread = aRows.get(curThreadNum);
-                    if (curOrderFinal == 1) {
-                        for (int colNum = 0; colNum < numColumns; colNum++) {
-                            int[] curColumnAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNum];
+            // Do candidate generation in a lambda.
+            JavaRDD<FastFixedHashTable> hashTableSet = tupleRDD.map((TupleForSpark sparkTuple) -> {
+                FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                IntSet curCandidate;
+                if (!useIntSetAsArray)
+                    curCandidate = new IntSetAsLong(0);
+                else
+                    curCandidate = new IntSetAsArray(0);
+                double[][] aRowsForThread = sparkTuple.aRows;
+                int[][] attributesForThread = sparkTuple.attributes;
+                if (curOrderFinal == 1) {
+                    for (int colNum = 0; colNum < numColumns; colNum++) {
+                        int[] curColumnAttributes = attributesForThread[colNum];
+                        for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
+                            // Require that all order-one candidates have minimum support.
+                            if (curColumnAttributes[rowNum] == AttributeEncoder.noSupport)
+                                continue;
+                            // Cascade to arrays if necessary, but otherwise pack attributes into longs.
+                            if (useIntSetAsArray) {
+                                curCandidate = new IntSetAsArray(curColumnAttributes[rowNum]);
+                            } else {
+                                ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum];
+                            }
+                            double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                            if (candidateVal == null) {
+                                thisThreadSetAggregates.put(curCandidate,
+                                        Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
+                            } else {
+                                for (int a = 0; a < numAggregates; a++) {
+                                    candidateVal[a] += aRowsForThread[rowNum][a];
+                                }
+                            }
+                        }
+                    }
+                } else if (curOrderFinal == 2) {
+                    for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
+                        int[] curColumnOneAttributes = attributesForThread[colNumOne];
+                        for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                            int[] curColumnTwoAttributes = attributesForThread[colNumTwo];
                             for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
-                                // Require that all order-one candidates have minimum support.
-                                if (curColumnAttributes[rowNum] == AttributeEncoder.noSupport)
+                                // Only examine a pair if both its members have minimum support.
+                                if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
+                                        || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
+                                        || !singleNextArray[curColumnOneAttributes[rowNum]]
+                                        || !singleNextArray[curColumnTwoAttributes[rowNum]])
                                     continue;
                                 // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                 if (useIntSetAsArray) {
-                                    curCandidate = new IntSetAsArray(curColumnAttributes[rowNum]);
+                                    curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNum],
+                                            curColumnTwoAttributes[rowNum]);
                                 } else {
-                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum];
+                                    ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNum],
+                                            curColumnTwoAttributes[rowNum]);
                                 }
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
@@ -164,25 +186,34 @@ public class APrioriLinearDistributed {
                                 }
                             }
                         }
-                    } else if (curOrderFinal == 2) {
-                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumOne];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumTwo];
+                    }
+                } else if (curOrderFinal == 3) {
+                    for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
+                        int[] curColumnOneAttributes = attributesForThread[colNumOne % numColumns];
+                        for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                            int[] curColumnTwoAttributes = attributesForThread[colNumTwo % numColumns];
+                            for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
+                                int[] curColumnThreeAttributes = attributesForThread[colnumThree % numColumns];
                                 for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
-                                    // Only examine a pair if both its members have minimum support.
+                                    // Only construct a triple if all its singleton members have minimum support.
                                     if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
                                             || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
+                                            || curColumnThreeAttributes[rowNum] == AttributeEncoder.noSupport
+                                            || !singleNextArray[curColumnThreeAttributes[rowNum]]
                                             || !singleNextArray[curColumnOneAttributes[rowNum]]
                                             || !singleNextArray[curColumnTwoAttributes[rowNum]])
                                         continue;
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
-                                        curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNum],
-                                                curColumnTwoAttributes[rowNum]);
+                                        curCandidate = new IntSetAsArray(
+                                                curColumnOneAttributes[rowNum],
+                                                curColumnTwoAttributes[rowNum],
+                                                curColumnThreeAttributes[rowNum]);
                                     } else {
-                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNum],
-                                                curColumnTwoAttributes[rowNum]);
+                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
+                                                curColumnOneAttributes[rowNum],
+                                                curColumnTwoAttributes[rowNum],
+                                                curColumnThreeAttributes[rowNum]);
                                     }
                                     double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                     if (candidateVal == null) {
@@ -196,96 +227,56 @@ public class APrioriLinearDistributed {
                                 }
                             }
                         }
-                    } else if (curOrderFinal == 3) {
-                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumOne % numColumns];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose.get(curThreadNum)[colNumTwo % numColumns];
-                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose.get(curThreadNum)[colnumThree % numColumns];
-                                    for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
-                                        // Only construct a triple if all its singleton members have minimum support.
-                                        if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
-                                                || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
-                                                || curColumnThreeAttributes[rowNum] == AttributeEncoder.noSupport
-                                                || !singleNextArray[curColumnThreeAttributes[rowNum]]
-                                                || !singleNextArray[curColumnOneAttributes[rowNum]]
-                                                || !singleNextArray[curColumnTwoAttributes[rowNum]])
-                                            continue;
-                                        // Cascade to arrays if necessary, but otherwise pack attributes into longs.
-                                        if (useIntSetAsArray) {
-                                            curCandidate = new IntSetAsArray(
-                                                    curColumnOneAttributes[rowNum],
-                                                    curColumnTwoAttributes[rowNum],
-                                                    curColumnThreeAttributes[rowNum]);
-                                        } else {
-                                            ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
-                                                    curColumnOneAttributes[rowNum],
-                                                    curColumnTwoAttributes[rowNum],
-                                                    curColumnThreeAttributes[rowNum]);
+                    }
+                } else {
+                    throw new MacrobaseInternalError("High Order not supported");
+                }
+                log.info("Time spent in order {}:  {}",
+                        curOrderFinal, System.currentTimeMillis() - startTime);
+                return thisThreadSetAggregates;
+            });
+
+
+            FastFixedHashTable fastFixedSetAggregates =
+                    hashTableSet.reduce((FastFixedHashTable tableOne, FastFixedHashTable tableTwo) -> {
+                        List<FastFixedHashTable> tables = Arrays.asList(tableOne, tableTwo);
+                        FastFixedHashTable tableCombined = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                        if (useIntSetAsArray) {
+                            for (FastFixedHashTable table : tables) {
+                                for (IntSet curCandidateKey : table.keySet()) {
+                                    double[] curCandidateValue = table.get(curCandidateKey);
+                                    double[] candidateVal = tableCombined.get(curCandidateKey);
+                                    if (candidateVal == null) {
+                                        tableCombined.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                                    } else {
+                                        for (int a = 0; a < numAggregates; a++) {
+                                            candidateVal[a] += curCandidateValue[a];
                                         }
-                                        double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                        if (candidateVal == null) {
-                                            thisThreadSetAggregates.put(curCandidate,
-                                                    Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
-                                        } else {
-                                            for (int a = 0; a < numAggregates; a++) {
-                                                candidateVal[a] += aRowsForThread[rowNum][a];
-                                            }
+                                    }
+                                }
+                            }
+                        } else {
+                            for (FastFixedHashTable table : tables) {
+                                for (long curCandidateKeyLong : table.keySetLong()) {
+                                    IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
+                                    double[] curCandidateValue = table.get(curCandidateKeyIntSetAsLong);
+                                    double[] candidateVal = tableCombined.get(curCandidateKeyIntSetAsLong);
+                                    if (candidateVal == null) {
+                                        tableCombined.put(curCandidateKeyIntSetAsLong, Arrays.copyOf(curCandidateValue, numAggregates));
+                                    } else {
+                                        for (int a = 0; a < numAggregates; a++) {
+                                            candidateVal[a] += curCandidateValue[a];
                                         }
                                     }
                                 }
                             }
                         }
-                    } else {
-                        throw new MacrobaseInternalError("High Order not supported");
+                        return tableCombined;
                     }
-                    log.info("Time spent in Thread {} in order {}:  {}",
-                            curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
-                    doneSignal.countDown();
-                };
-                // Run numThreads lambdas in separate threads
-                Thread APrioriLinearThread = new Thread(APrioriLinearRunnable);
-                APrioriLinearThread.start();
-            }
-            // Wait for all threads to finish running.
-            try {
-                doneSignal.await();
-            } catch (InterruptedException ex) {ex.printStackTrace();}
+            );
 
-
-            Map<IntSet, double []> setAggregates = new HashMap<>();
-            // Collect the aggregates stored in the per-thread HashMaps.
-            for (FastFixedHashTable set : threadSetAggregates) {
-                if (useIntSetAsArray) {
-                    for (IntSet curCandidateKey : set.keySet()) {
-                        double[] curCandidateValue = set.get(curCandidateKey);
-                        double[] candidateVal = setAggregates.get(curCandidateKey);
-                        if (candidateVal == null) {
-                            setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
-                        } else {
-                            for (int a = 0; a < numAggregates; a++) {
-                                candidateVal[a] += curCandidateValue[a];
-                            }
-                        }
-                    }
-                } else {
-                    for (long curCandidateKeyLong : set.keySetLong()) {
-                        IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
-                        IntSet curCandidateKey = new IntSetAsArray(curCandidateKeyIntSetAsLong);
-                        double[] curCandidateValue = set.get(curCandidateKeyIntSetAsLong);
-                        double[] candidateVal = setAggregates.get(curCandidateKey);
-                        if (candidateVal == null) {
-                            setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
-                        } else {
-                            for (int a = 0; a < numAggregates; a++) {
-                                candidateVal[a] += curCandidateValue[a];
-                            }
-                        }
-                    }
-                }
-            }
-
+            HashMap<IntSet, double[]> setAggregates = fastFixedSetAggregates.asHashMap();
+            
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
@@ -378,7 +369,7 @@ public class APrioriLinearDistributed {
     }
 }
 
-class TupleForSpark {
+class TupleForSpark implements Serializable {
     public final int[][] attributes;
     public final double[][] aRows;
 

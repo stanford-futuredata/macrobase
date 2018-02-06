@@ -1,13 +1,15 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * A HashTable from IntSets to arrays of doubles.  Requires that all keys
  * be nonzero.
  */
-public class FastFixedHashTable {
+public class FastFixedHashTable implements Serializable{
     private double hashTable[][];
     private IntSet existsTable[];
     private long existsLongTable[];
@@ -152,6 +154,24 @@ public class FastFixedHashTable {
 
     public int getCapacity() {
         return capacity;
+    }
+
+    public HashMap<IntSet, double[]> asHashMap() {
+        HashMap<IntSet, double[]> ret = new HashMap<>();
+        if (useIntArraySets) {
+            for (IntSet curCandidateKey : keySet()) {
+                double[] curCandidateValue = get(curCandidateKey);
+                ret.put(curCandidateKey, curCandidateValue);
+            }
+        } else {
+            for (long curCandidateKeyLong : keySetLong()) {
+                IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
+                double[] curCandidateValue = get(curCandidateKeyIntSetAsLong);
+                ret.put(new IntSetAsArray(curCandidateKeyIntSetAsLong)
+                        , curCandidateValue);
+            }
+        }
+        return ret;
     }
 
 }
