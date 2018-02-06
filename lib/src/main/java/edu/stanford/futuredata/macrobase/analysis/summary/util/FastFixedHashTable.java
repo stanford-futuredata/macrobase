@@ -16,7 +16,7 @@ public class FastFixedHashTable {
     private int capacity;
     private boolean useIntArraySets;
     private int size = 0;
-    private final int ratio = 100;
+    private final int ratio = 10;
 
     public FastFixedHashTable(int size, int numAggregates, boolean useIntArraySets) {
         int realSize = 1;
