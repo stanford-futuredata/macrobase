@@ -38,6 +38,7 @@ public class FastFixedHashTable {
         this.size = 1;
         int oldCapacity = capacity;
         this.capacity = capacity * 2;
+        this.mask = capacity - 1;
         double [][] oldHashTable = this.hashTable;
         this.hashTable = new double[capacity][numAggregates];
         if (useIntArraySets) {
