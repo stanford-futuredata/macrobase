@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +23,10 @@ public class APrioriLinearDistributed {
     // **Parameters**
     private QualityMetric[] qualityMetrics;
     private double[] thresholds;
+    JavaSparkContext sparkContext;
 
     // **Cached values**
     // Singleton viable sets for quick lookup
-    private HashSet<Integer> singleNext;
     private boolean[] singleNextArray;
     // Sets that have high enough support but not high qualityMetrics, need to be explored
     private HashMap<Integer, HashSet<IntSet>> setNext;
@@ -34,7 +35,8 @@ public class APrioriLinearDistributed {
 
     public APrioriLinearDistributed(
             List<QualityMetric> qualityMetrics,
-            List<Double> thresholds
+            List<Double> thresholds,
+            JavaSparkContext sparkContext
     ) {
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
         this.thresholds = new double[thresholds.size()];
@@ -43,6 +45,7 @@ public class APrioriLinearDistributed {
         }
         this.setNext = new HashMap<>(3);
         this.savedAggregates = new HashMap<>(3);
+        this.sparkContext = sparkContext;
     }
 
     public List<APLExplanationResult> explain(
@@ -308,10 +311,8 @@ public class APrioriLinearDistributed {
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
-                singleNext = new HashSet<>(curOrderNext.size());
                 singleNextArray = new boolean[cardinality];
                 for (IntSet i : curOrderNext) {
-                    singleNext.add(i.getFirst());
                     singleNextArray[i.getFirst()] = true;
                 }
             }
