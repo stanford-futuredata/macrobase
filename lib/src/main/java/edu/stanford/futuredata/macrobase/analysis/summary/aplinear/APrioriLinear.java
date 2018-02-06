@@ -48,7 +48,6 @@ public class APrioriLinear {
             final int[][] attributes,
             double[][] aggregateColumns,
             int cardinality,
-            HashMap<Integer, Integer> columnDecoder,
             int numThreads
     ) {
         final int numAggregates = aggregateColumns.length;
@@ -102,15 +101,6 @@ public class APrioriLinear {
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
-            // For order 3, pre-calculate all possible candidate sets from "next" sets of
-            // previous orders. We will focus on aggregating results for these sets.
-            final FastFixedHashSet precalculatedCandidates;
-            if (curOrder == 3) {
-                precalculatedCandidates = precalculateCandidates(columnDecoder, setNext.get(2),
-                        singleNext);
-            } else {
-                precalculatedCandidates = null;
-            }
             // Initialize per-thread hashmaps.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
@@ -297,7 +287,7 @@ public class APrioriLinear {
                 if (canPassThreshold) {
                     // if a set is already past the threshold on all metrics,
                     // save it and no need for further exploration
-                    if (isPastThreshold && !(curOrder == 3 && !precalculatedCandidates.contains(curCandidate))) {
+                    if (isPastThreshold && !(curOrder == 3 && !validateCandidate(curCandidate, setNext.get(2)))) {
                         curOrderSaved.add(curCandidate);
                     }
                     else {
@@ -344,31 +334,14 @@ public class APrioriLinear {
     }
 
     /**
-     * Precalculate all possible candidates of order 3 to speed up candidate
-     * generation.
+     * Check if all subsets of an order-3 candidate are order-2 candidates.
      * @param o2Candidates All candidates of order 2 with minimum support.
-     * @param singleCandidates All singleton candidates with minimum support.
-     * @return Possible candidates of order 3.
+     * @param curCandidate An order-3 candidate
+     * @return Boolean
      */
-    private FastFixedHashSet precalculateCandidates(HashMap<Integer, Integer> columnDecoder,
-                                                    HashSet<IntSet> o2Candidates,
-                                                    HashSet<Integer> singleCandidates) {
-        HashSet<IntSet> candidates = new HashSet<>(o2Candidates.size() * singleCandidates.size() / 2);
-        for (IntSet pCandidate : o2Candidates) {
-            for (Integer sCandidate : singleCandidates) {
-                if (!pCandidate.contains(sCandidate)) {
-                    IntSet nCandidate = new IntSetAsArray(
-                            pCandidate.getFirst(),
-                            pCandidate.getSecond(),
-                            sCandidate,
-                            columnDecoder);
-                    candidates.add(nCandidate);
-                }
-            }
-        }
-        List<IntSet> finalCandidatesList = new ArrayList<>();
-        IntSet subPair;
-        for (IntSet curCandidate : candidates) {
+    private boolean validateCandidate(IntSet curCandidate,
+                                      HashSet<IntSet> o2Candidates) {
+            IntSet subPair;
             subPair = new IntSetAsArray(
                     curCandidate.getFirst(),
                     curCandidate.getSecond());
@@ -381,15 +354,10 @@ public class APrioriLinear {
                             curCandidate.getFirst(),
                             curCandidate.getThird());
                     if (o2Candidates.contains(subPair)) {
-                        finalCandidatesList.add(curCandidate);
+                        return true;
                     }
                 }
             }
-        }
-        FastFixedHashSet finalCandidates = new FastFixedHashSet(finalCandidatesList.size() * 10, true);
-        for (IntSet candidate: finalCandidatesList) {
-            finalCandidates.add(candidate);
-        }
-        return finalCandidates;
+        return false;
     }
 }
