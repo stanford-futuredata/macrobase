@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A HashTable from IntSetAsLongs to arrays of doubles.  Requires that all keys
- * be nonzero.  Does not resize.
+ * A HashTable from IntSets to arrays of doubles.  Requires that all keys
+ * be nonzero.
  */
 public class FastFixedHashTable {
     private double hashTable[][];

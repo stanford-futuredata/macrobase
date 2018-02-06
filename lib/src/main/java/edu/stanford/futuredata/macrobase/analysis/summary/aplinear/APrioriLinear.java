@@ -222,7 +222,7 @@ public class APrioriLinear {
                     } else {
                         throw new MacrobaseInternalError("High Order not supported");
                     }
-                    log.info("Time spent in Thread {} in order {}:  {}",
+                    log.debug("Time spent in Thread {} in order {}:  {}",
                             curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
