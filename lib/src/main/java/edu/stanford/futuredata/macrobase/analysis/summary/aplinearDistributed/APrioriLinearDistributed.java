@@ -4,6 +4,8 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
+import org.apache.avro.generic.GenericData;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,6 +112,13 @@ public class APrioriLinearDistributed {
             }
             aRows.add(thisPartition);
         }
+
+        final List<TupleForSpark> sparkTuples = new ArrayList<>(numThreads);
+        for(int i = 0; i < numThreads; i++) {
+            sparkTuples.add(new TupleForSpark(byThreadAttributesTranspose.get(i), aRows.get(i)));
+        }
+        JavaRDD<TupleForSpark> tupleRDD = sparkContext.parallelize(sparkTuples, numThreads);
+
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
@@ -366,5 +375,15 @@ public class APrioriLinearDistributed {
             }
         }
         return false;
+    }
+}
+
+class TupleForSpark {
+    public final int[][] attributes;
+    public final double[][] aRows;
+
+    TupleForSpark(int[][] attributes, double[][] aRows) {
+        this.attributes = attributes;
+        this.aRows = aRows;
     }
 }
