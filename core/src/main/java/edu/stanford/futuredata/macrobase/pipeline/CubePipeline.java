@@ -5,10 +5,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PredicateCubeClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
@@ -50,7 +47,10 @@ public class CubePipeline implements Pipeline {
     private boolean includeLo;
     private Optional<String> meanColumn;
     private Optional<String> stdColumn;
+    private Optional<String> minColumn;
+    private Optional<String> maxColumn;
     private LinkedHashMap<String, Double> quantileColumns;
+    private List<String> momentColumns;
 
     // Explanation
     private List<String> attributes;
@@ -88,7 +88,10 @@ public class CubePipeline implements Pipeline {
         includeLo = conf.get("includeLo", true);
         meanColumn = Optional.ofNullable(conf.get("meanColumn"));
         stdColumn = Optional.ofNullable(conf.get("stdColumn"));
+        minColumn = Optional.ofNullable(conf.get("minColumn"));
+        maxColumn = Optional.ofNullable(conf.get("maxColumn"));
         quantileColumns = conf.get("quantileColumns", new LinkedHashMap<String, Double>());
+        momentColumns = conf.get("momentColumns", new ArrayList<String>());
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport", 3.0);
@@ -173,6 +176,18 @@ public class CubePipeline implements Pipeline {
                 }
                 return colTypes;
             }
+            case "moment": {
+                for (String col : momentColumns) {
+                    colTypes.put(col, Schema.ColType.DOUBLE);
+                }
+                colTypes.put(minColumn
+                                .orElseThrow(() -> new MacrobaseException("min column not present in config")),
+                        Schema.ColType.DOUBLE);
+                colTypes.put(maxColumn
+                                .orElseThrow(() -> new MacrobaseException("max column not present in config")),
+                        Schema.ColType.DOUBLE);
+                return colTypes;
+            }
             case "raw": {
                 colTypes.put(meanColumn.orElseThrow(
                     () -> new MacrobaseException("mean column not present in config")),
@@ -216,6 +231,12 @@ public class CubePipeline implements Pipeline {
                         () -> new MacrobaseException("metric column not present in config")),
                     predicateStr, cutoff);
             }
+            case "moment": {
+                return new RawClassifier(
+                        countColumn,
+                        null
+                );
+            }
 
             case "meanshift":
             case "raw": {
@@ -242,6 +263,19 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);
+                return summarizer;
+            }
+            case "moment": {
+                APLMomentSummarizer summarizer = new APLMomentSummarizer();
+                summarizer.setMinColumn(minColumn.orElseThrow(
+                        () -> new MacrobaseException("min column not present in config")));
+                summarizer.setMaxColumn(maxColumn.orElseThrow(
+                        () -> new MacrobaseException("max column not present in config")));
+                summarizer.setMomentColumns(momentColumns);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRatioMetric);
+                summarizer.setPercentile(cutoff);
                 return summarizer;
             }
             default: {

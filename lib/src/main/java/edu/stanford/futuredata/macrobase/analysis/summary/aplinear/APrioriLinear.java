@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.EstimatedGlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
@@ -24,6 +25,7 @@ public class APrioriLinear {
     // **Parameters**
     private QualityMetric[] qualityMetrics;
     private double[] thresholds;
+    private boolean doContainment = true;
 
     // **Cached values**
 
@@ -51,17 +53,49 @@ public class APrioriLinear {
             final List<int[]> attributes,
             double[][] aggregateColumns
     ) {
+        return explain(attributes, aggregateColumns, null);
+    }
+
+    public List<APLExplanationResult> explain(
+            final List<int[]> attributes,
+            double[][] aggregateColumns,
+            Map<String, int[]> aggregationOps
+    ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
         double[] globalAggregates = new double[numAggregates];
-        for (int j = 0; j < numAggregates; j++) {
-            globalAggregates[j] = 0;
-            double[] curColumn = aggregateColumns[j];
-            for (int i = 0; i < numRows; i++) {
-                globalAggregates[j] += curColumn[i];
+        if (aggregationOps == null) {
+            for (int j = 0; j < numAggregates; j++) {
+                globalAggregates[j] = 0;
+                double[] curColumn = aggregateColumns[j];
+                for (int i = 0; i < numRows; i++) {
+                    globalAggregates[j] += curColumn[i];
+                }
+            }
+        } else {
+            for (int j : aggregationOps.getOrDefault("add", new int[0])) {
+                globalAggregates[j] = 0;
+                double[] curColumn = aggregateColumns[j];
+                for (int i = 0; i < numRows; i++) {
+                    globalAggregates[j] += curColumn[i];
+                }
+            }
+            for (int j : aggregationOps.getOrDefault("min", new int[0])) {
+                double[] curColumn = aggregateColumns[j];
+                globalAggregates[j] = curColumn[0];
+                for (int i = 0; i < numRows; i++) {
+                    globalAggregates[j] = Math.min(globalAggregates[j], curColumn[i]);
+                }
+            }
+            for (int j : aggregationOps.getOrDefault("max", new int[0])) {
+                double[] curColumn = aggregateColumns[j];
+                globalAggregates[j] = curColumn[0];
+                for (int i = 0; i < numRows; i++) {
+                    globalAggregates[j] = Math.max(globalAggregates[j], curColumn[i]);
+                }
             }
         }
         for (QualityMetric q : qualityMetrics) {
@@ -108,9 +142,19 @@ public class APrioriLinear {
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate, Arrays.copyOf(aRows[i], numAggregates));
-                                } else {
+                                } else if (aggregationOps == null) {
                                     for (int a = 0; a < numAggregates; a++) {
                                         candidateVal[a] += aRows[i][a];
+                                    }
+                                } else {
+                                    for (int a : aggregationOps.getOrDefault("add", new int[0])) {
+                                        candidateVal[a] += aRows[i][a];
+                                    }
+                                    for (int a : aggregationOps.getOrDefault("min", new int[0])) {
+                                        candidateVal[a] = Math.min(candidateVal[a], aRows[i][a]);
+                                    }
+                                    for (int a : aggregationOps.getOrDefault("max", new int[0])) {
+                                        candidateVal[a] = Math.max(candidateVal[a], aRows[i][a]);
                                     }
                                 }
                             }
@@ -134,9 +178,19 @@ public class APrioriLinear {
                     double[] candidateVal = setAggregates.get(curCandidateKey);
                     if (candidateVal == null) {
                         setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
-                    } else {
+                    } else if (aggregationOps == null) {
                         for (int a = 0; a < numAggregates; a++) {
                             candidateVal[a] += curCandidateValue[a];
+                        }
+                    } else {
+                        for (int a : aggregationOps.getOrDefault("add", new int[0])) {
+                            candidateVal[a] += curCandidateValue[a];
+                        }
+                        for (int a : aggregationOps.getOrDefault("min", new int[0])) {
+                            candidateVal[a] = Math.min(candidateVal[a], curCandidateValue[a]);
+                        }
+                        for (int a : aggregationOps.getOrDefault("max", new int[0])) {
+                            candidateVal[a] = Math.max(candidateVal[a], curCandidateValue[a]);
                         }
                     }
                 }
@@ -147,25 +201,23 @@ public class APrioriLinear {
             int pruned = 0;
             for (IntSet curCandidate: setAggregates.keySet()) {
                 double[] curAggregates = setAggregates.get(curCandidate);
-                boolean canPassThreshold = true;
-                boolean isPastThreshold = true;
+                QualityMetric.Action action = QualityMetric.Action.KEEP;
                 for (int i = 0; i < qualityMetrics.length; i++) {
                     QualityMetric q = qualityMetrics[i];
                     double t = thresholds[i];
-                    canPassThreshold &= q.maxSubgroupValue(curAggregates) >= t;
-                    isPastThreshold &= q.value(curAggregates) >= t;
+                    action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                 }
-                if (canPassThreshold) {
+                if (action == QualityMetric.Action.KEEP) {
                     // if a set is already past the threshold on all metrics,
-                    // save it and no need for further exploration
-                    if (isPastThreshold) {
-                        curOrderSaved.add(curCandidate);
-                    }
-                    else {
-                        // otherwise if a set still has potentially good subsets,
-                        // save it for further examination
+                    // save it and no need for further exploration if we do containment
+                    curOrderSaved.add(curCandidate);
+                    if (!doContainment) {
                         curOrderNext.add(curCandidate);
                     }
+                } else if (action == QualityMetric.Action.NEXT) {
+                    // otherwise if a set still has potentially good subsets,
+                    // save it for further examination
+                    curOrderNext.add(curCandidate);
                 } else {
                     pruned++;
                 }
@@ -269,4 +321,6 @@ public class APrioriLinear {
         }
         return candidates;
     }
+
+    public void setDoContainment(boolean doContainment) { this.doContainment = doContainment; }
 }

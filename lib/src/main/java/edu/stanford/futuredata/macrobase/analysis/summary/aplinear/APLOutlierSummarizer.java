@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,6 +19,7 @@ import java.util.List;
 public class APLOutlierSummarizer extends APLSummarizer {
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizer");
     private String countColumn = null;
+    private boolean onlyUseSupport = false;
 
     @Override
     public List<String> getAggregateNames() {
@@ -42,15 +44,21 @@ public class APLOutlierSummarizer extends APLSummarizer {
         qualityMetricList.add(
                 new SupportMetric(0)
         );
-        qualityMetricList.add(
-                new GlobalRatioMetric(0, 1)
-        );
+        if (!onlyUseSupport) {
+            qualityMetricList.add(
+                    new GlobalRatioMetric(0, 1)
+            );
+        }
         return qualityMetricList;
     }
 
     @Override
     public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minRatioMetric);
+        if (onlyUseSupport) {
+            return Collections.singletonList(minOutlierSupport);
+        } else {
+            return Arrays.asList(minOutlierSupport, minRatioMetric);
+        }
     }
 
     @Override
@@ -72,4 +80,5 @@ public class APLOutlierSummarizer extends APLSummarizer {
     public double getMinRatioMetric() {
         return minRatioMetric;
     }
+    public void onlyUseSupport(boolean onlyUseSupport) { this.onlyUseSupport = onlyUseSupport; }
 }
