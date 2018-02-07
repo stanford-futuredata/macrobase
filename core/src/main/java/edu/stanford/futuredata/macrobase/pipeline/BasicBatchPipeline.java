@@ -45,6 +45,8 @@ public class BasicBatchPipeline implements Pipeline {
 
     private boolean useFDs;
     private int[] functionalDependencies;
+    private String distributedMaster;
+    private int distributedNumPartitions;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
@@ -90,6 +92,8 @@ public class BasicBatchPipeline implements Pipeline {
                 }
             }
         }
+        distributedMaster = conf.get("distributedMaster", "local");
+        distributedNumPartitions = conf.get("distributedNumPartitions", 1);
     }
 
     public Classifier getClassifier() throws MacroBaseException {
@@ -139,14 +143,14 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "aplineardistributed": {
-                SparkConf conf = new SparkConf().setAppName("MacroBase").setMaster("local[" + numThreads + "]");
+                SparkConf conf = new SparkConf().setAppName("MacroBase").setMaster(distributedMaster);
                 JavaSparkContext sparkContext = new JavaSparkContext(conf);
                 APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(sparkContext);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
-                summarizer.setNumThreads(numThreads);
+                summarizer.setNumPartitions(distributedNumPartitions);
                 return summarizer;
             }
             default: {
