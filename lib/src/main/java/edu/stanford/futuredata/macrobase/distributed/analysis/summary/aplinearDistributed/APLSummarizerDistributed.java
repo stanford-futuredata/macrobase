@@ -22,6 +22,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
     AttributeEncoder encoder;
     private APLExplanation explanation;
     private JavaSparkContext sparkContext;
+    private int numPartitions = 1;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -70,7 +71,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         List<APLExplanationResult> aplResults = APrioriLinearDistributed.explain(encoded,
                 aggregateColumns,
                 encoder.getNextKey(),
-                numThreads,
+                numPartitions,
                 qualityMetricList,
                 thresholds,
                 sparkContext
@@ -92,5 +93,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
     public APLExplanation getResults() {
         return explanation;
     }
+
+    public void setNumPartitions(int numPartitions) {this.numPartitions = numPartitions;}
 
 }
