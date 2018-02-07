@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed;
+package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
