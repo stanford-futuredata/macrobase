@@ -6,7 +6,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
+import edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;

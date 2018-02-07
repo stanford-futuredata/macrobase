@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed;
+package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
@@ -221,8 +221,6 @@ public class APrioriLinearDistributed {
                 } else {
                     throw new MacrobaseInternalError("High Order not supported");
                 }
-                log.info("Time spent in order {}:  {}",
-                        curOrderFinal, System.currentTimeMillis() - startTime);
                 return thisThreadSetAggregates;
             });
 
@@ -310,6 +308,8 @@ public class APrioriLinearDistributed {
                     singleNextArray[i.getFirst()] = true;
                 }
             }
+            log.info("Time spent in order {}:  {}",
+                    curOrderFinal, System.currentTimeMillis() - startTime);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
