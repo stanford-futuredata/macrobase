@@ -93,10 +93,11 @@ public class CSVDataFrameParser implements DataFrameLoader {
                         stringColumns[stringColNum++].add(rowValue);
                     } else if (t == Schema.ColType.DOUBLE) {
                         try {
-                            doubleColumns[doubleColNum++].add(Double.parseDouble(rowValue));
+                            doubleColumns[doubleColNum].add(Double.parseDouble(rowValue));
                         } catch (NumberFormatException e) {
-                            doubleColumns[doubleColNum++].add(Double.NaN);
+                            doubleColumns[doubleColNum].add(Double.NaN);
                         }
+                        doubleColNum++;
                     } else {
                         throw new RuntimeException("Bad ColType");
                     }
