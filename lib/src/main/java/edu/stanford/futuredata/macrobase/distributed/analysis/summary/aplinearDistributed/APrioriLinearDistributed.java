@@ -24,7 +24,7 @@ public class APrioriLinearDistributed {
             final int[][] attributes,
             double[][] aggregateColumns,
             int cardinality,
-            int numThreads,
+            int numPartitions,
             List<QualityMetric> argQualityMetrics,
             List<Double> argThresholds,
             JavaSparkContext sparkContext
@@ -61,11 +61,11 @@ public class APrioriLinearDistributed {
         }
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
-        final List<int[][]> byThreadAttributesTranspose = new ArrayList<>(numThreads);
-        for (int threadNum = 0; threadNum < numThreads; threadNum++) {
-            final int startIndex = (numRows * threadNum) / numThreads;
-            final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-            int[][] thisPartition = new int[numColumns][(numRows + numThreads)/numThreads];
+        final List<int[][]> byThreadAttributesTranspose = new ArrayList<>(numPartitions);
+        for (int threadNum = 0; threadNum < numPartitions; threadNum++) {
+            final int startIndex = (numRows * threadNum) / numPartitions;
+            final int endIndex = (numRows * (threadNum + 1)) / numPartitions;
+            int[][] thisPartition = new int[numColumns][(numRows + numPartitions)/numPartitions];
             for(int i = 0; i < numColumns; i++) {
                 for (int j = startIndex; j < endIndex; j++) {
                     thisPartition[i][j - startIndex] = attributes[j][i];
@@ -89,10 +89,10 @@ public class APrioriLinearDistributed {
         }
 
         // Shared and row store for more convenient access
-        final List<double[][]> aRows = new ArrayList<>(numThreads);
-        for(int threadNum = 0; threadNum < numThreads; threadNum++) {
-            final int startIndex = (numRows * threadNum) / numThreads;
-            final int endIndex = (numRows * (threadNum + 1)) / numThreads;
+        final List<double[][]> aRows = new ArrayList<>(numPartitions);
+        for(int threadNum = 0; threadNum < numPartitions; threadNum++) {
+            final int startIndex = (numRows * threadNum) / numPartitions;
+            final int endIndex = (numRows * (threadNum + 1)) / numPartitions;
             double[][] thisPartition = new double[endIndex - startIndex][numAggregates];
             for (int i = startIndex; i < endIndex; i++) {
                 for (int j = 0; j < numAggregates; j++) {
@@ -102,11 +102,11 @@ public class APrioriLinearDistributed {
             aRows.add(thisPartition);
         }
 
-        final List<TupleForSpark> sparkTuples = new ArrayList<>(numThreads);
-        for(int i = 0; i < numThreads; i++) {
+        final List<TupleForSpark> sparkTuples = new ArrayList<>(numPartitions);
+        for(int i = 0; i < numPartitions; i++) {
             sparkTuples.add(new TupleForSpark(byThreadAttributesTranspose.get(i), aRows.get(i)));
         }
-        JavaRDD<TupleForSpark> tupleRDD = sparkContext.parallelize(sparkTuples, numThreads);
+        final JavaRDD<TupleForSpark> tupleRDD = sparkContext.parallelize(sparkTuples, numPartitions);
 
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
