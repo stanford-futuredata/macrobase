@@ -1,7 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 
 import java.util.*;
@@ -55,11 +56,6 @@ public class APLExplanationResult {
         return aggregate;
     }
 
-    @Override
-    public String toString() {
-        return "a="+Arrays.toString(matcher.values)+":ag="+Arrays.toString(aggregates)+":mt="+Arrays.toString(metrics);
-    }
-
     public Map<String, Map<String, String>> jsonPrint(AttributeEncoder encoder,
                                   List<String> aggregateNames) {
         return new HashMap<String, Map<String, String>>() {{
@@ -73,6 +69,10 @@ public class APLExplanationResult {
     private String removeBrackets(String str) {
         int l = str.length();
         return str.substring(1, l - 1);
+    }
+
+    public String toString() {
+        return "a="+matcher.toString()+":ag="+Arrays.toString(aggregates)+":mt="+Arrays.toString(metrics);
     }
 
     public String prettyPrint(

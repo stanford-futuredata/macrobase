@@ -1,16 +1,53 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
+import edu.stanford.futuredata.macrobase.ingest.DataFrameLoader;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.*;
 
 public class APLOutlierSummarizerTest {
+
+    @Test
+    public void testSimple() throws Exception {
+        Map<String, Schema.ColType> schema = new HashMap<>();
+        schema.put("usage", Schema.ColType.DOUBLE);
+        schema.put("latency", Schema.ColType.DOUBLE);
+        schema.put("location", Schema.ColType.STRING);
+        schema.put("version", Schema.ColType.STRING);
+        DataFrameLoader loader = new CSVDataFrameParser(
+                "src/test/resources/sample.csv",
+                Arrays.asList("usage", "latency", "location", "version")
+        ).setColumnTypes(schema);
+        DataFrame df = loader.load();
+
+        PercentileClassifier pc = new PercentileClassifier("usage")
+                .setPercentile(1.0);
+        pc.process(df);
+        DataFrame df_classified = pc.getResults();
+
+        List<String> explanationAttributes = Arrays.asList(
+                "location",
+                "version"
+        );
+        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        summ.setMinSupport(.01);
+        summ.setMinRatioMetric(10.0);
+        summ.setAttributes(explanationAttributes);
+        summ.process(df_classified);
+
+        APLExplanation e = summ.getResults();
+        List<APLExplanationResult> results = e.getResults();
+        assertEquals(20.0, e.numOutliers(), 1e-10);
+        assertEquals(1, results.size());
+    }
+
     @Test
     public void testOrder3() throws Exception {
         DataFrame df = new DataFrame();

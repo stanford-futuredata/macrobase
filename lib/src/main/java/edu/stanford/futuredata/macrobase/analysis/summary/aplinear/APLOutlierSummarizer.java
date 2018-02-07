@@ -1,8 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.GlobalRatioMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.SupportMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,11 @@ public class APLOutlierSummarizer extends APLSummarizer {
     }
 
     @Override
+    public int[][] getEncoded(List<String[]> columns, DataFrame input) {
+        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn));
+    }
+
+    @Override
     public double[][] getAggregateColumns(DataFrame input) {
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
         double[] countCol = processCountCol(input, countColumn,  outlierCol.length);
@@ -40,10 +45,10 @@ public class APLOutlierSummarizer extends APLSummarizer {
     public List<QualityMetric> getQualityMetricList() {
         List<QualityMetric> qualityMetricList = new ArrayList<>();
         qualityMetricList.add(
-                new SupportMetric(0)
+                new SupportQualityMetric(0)
         );
         qualityMetricList.add(
-                new GlobalRatioMetric(0, 1)
+                new GlobalRatioQualityMetric(0, 1)
         );
         return qualityMetricList;
     }

@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
+package edu.stanford.futuredata.macrobase.analysis.summary;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import org.junit.Test;
@@ -24,7 +24,7 @@ public class AttributeEncoderTest {
     }
 
     @Test
-    public void encodeColumns() throws Exception {
+    public void encodeColumns() {
         List<String[]> columns = new ArrayList<>();
         for (int j = 0; j < 2; j ++) {
             String[] curCol = new String[15];
@@ -42,6 +42,5 @@ public class AttributeEncoderTest {
             totalItems.addAll(itemset);
         }
         assertEquals(totalItems.size(), 5 + 3);
-        // printItemsets(results);
     }
 }

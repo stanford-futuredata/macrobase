@@ -5,7 +5,6 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
@@ -36,6 +35,7 @@ public class BasicBatchPipeline implements Pipeline {
     private boolean pctileHigh;
     private boolean pctileLow;
     private String predicateStr;
+    private int numThreads;
 
     private String summarizerType;
     private List<String> attributes;
@@ -72,6 +72,7 @@ public class BasicBatchPipeline implements Pipeline {
         ratioMetric = conf.get("ratioMetric", "globalRatio");
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
+        numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
     }
 
     public Classifier getClassifier() throws MacrobaseException {
@@ -113,15 +114,6 @@ public class BasicBatchPipeline implements Pipeline {
 
     public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
         switch (summarizerType.toLowerCase()) {
-            case "apriori": {
-                APrioriSummarizer summarizer = new APrioriSummarizer();
-                summarizer.setOutlierColumn(outlierColumnName);
-                summarizer.setAttributes(attributes);
-                summarizer.setRatioMetric(getRatioMetric());
-                summarizer.setMinSupport(minSupport);
-                summarizer.setMinRatioMetric(minRiskRatio);
-                return summarizer;
-            }
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);
@@ -131,12 +123,14 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setUseAttributeCombinations(true);
                 return summarizer;
             }
-            case "aplinear": {
+            case "aplinear":
+            case "apriori": {
                 APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             default: {
@@ -164,7 +158,7 @@ public class BasicBatchPipeline implements Pipeline {
         DataFrame df = loadData();
         long elapsed = System.currentTimeMillis() - startTime;
 
-        log.info("Loading time: {}", elapsed);
+        log.info("Loading time: {} ms", elapsed);
         log.info("{} rows", df.getNumRows());
         log.info("Metric: {}", metric);
         log.info("Attributes: {}", attributes);
@@ -178,7 +172,7 @@ public class BasicBatchPipeline implements Pipeline {
         startTime = System.currentTimeMillis();
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;
-        log.info("Summarization time: {}", elapsed);
+        log.info("Summarization time: {} ms", elapsed);
         Explanation output = summarizer.getResults();
 
         return output;

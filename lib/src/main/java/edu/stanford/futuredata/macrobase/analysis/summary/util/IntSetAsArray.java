@@ -1,6 +1,7 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.apriori;
+package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,14 +9,34 @@ import java.util.Set;
  * Small sets of integers. Fast to construct and compare equality, but does not
  * support checking for membership.
  */
-public class IntSet {
-    public int[] values;
+public class IntSetAsArray implements IntSet {
+    private int[] values;
 
-    public IntSet(int a) {
+    public IntSetAsArray(int a) {
         values = new int[1];
         values[0] = a;
     }
-    public IntSet(int a, int b) {
+
+    public IntSetAsArray(IntSetAsLong newLong) {
+        int a = newLong.getFirst();
+        int b = newLong.getSecond();
+        int c = newLong.getThird();
+        if (b == 0) {
+            values = new int[1];
+            values[0] = a;
+        } else if (c == 0) {
+            values = new int[2];
+            values[0] = b;
+            values[1] = a;
+        } else {
+            values = new int[3];
+            values[0] = c;
+            values[1] = b;
+            values[2] = a;
+        }
+    }
+
+    public IntSetAsArray(int a, int b) {
         values = new int[2];
         if (a <= b) {
             values[0] = a;
@@ -26,16 +47,27 @@ public class IntSet {
 
         }
     }
+
+    public IntSetAsArray(int a, int b, int c) {
+        values = new int[3];
+        values[0] = a;
+        values[1] = b;
+        values[2] = c;
+    }
+
     /*
      * Hand-rolled three-integer sort.  Extremely performant and saves a lot of time in the
      * apriori/aplinear implementation versus just calling sort.
      */
-    public IntSet(int a, int b, int c) {
+    public IntSetAsArray(int a, int b, int c, HashMap<Integer, Integer> sortValues) {
+        Integer keyA = sortValues.get(a);
+        Integer keyB = sortValues.get(b);
+        Integer keyC = sortValues.get(c);
         values = new int[3];
-        if (a <= b) {
-            if (a <= c) {
+        if (keyA <= keyB) {
+            if (keyA <= keyC) {
                 values[0] = a;
-                if (b <= c) {
+                if (keyB <= keyC) {
                     values[1] = b;
                     values[2] = c;
                 } else {
@@ -48,9 +80,9 @@ public class IntSet {
                 values[2] = b;
             }
         } else {
-            if (b <= c) {
+            if (keyB <= keyC) {
                 values[0] = b;
-                if (a <= c) {
+                if (keyA <= keyC) {
                     values[1] = a;
                     values[2] = c;
                 } else {
@@ -65,17 +97,16 @@ public class IntSet {
         }
     }
 
-    public IntSet(int[] values) {
-        this.values = values.clone();
-        Arrays.sort(this.values);
+    public int getFirst() {
+        return values[0];
     }
 
-    public int get(int idx) {
-        return values[idx];
+    public int getSecond() {
+        return values[1];
     }
 
-    public int size() {
-        return values.length;
+    public int getThird() {
+        return values[2];
     }
 
     public Set<Integer> getSet() {
@@ -103,24 +134,12 @@ public class IntSet {
         }
     }
 
-    public boolean contains(IntSet other) {
-        int startIdx = 0;
-        int n = values.length;
-        for (int i : other.values) {
-            startIdx = Arrays.binarySearch(values, startIdx, n, i);
-            if (startIdx < 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        IntSet that = (IntSet) o;
+        IntSetAsArray that = (IntSetAsArray) o;
 
         return Arrays.equals(values, that.values);
     }
@@ -132,7 +151,7 @@ public class IntSet {
 
     @Override
     public String toString() {
-        return "IntSet{" +
+        return "IntSetAsArray{" +
                 "values=" + Arrays.toString(values) +
                 '}';
     }
