@@ -5,6 +5,8 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import com.univocity.parsers.csv.CsvParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Arrays;
 
 public class CSVDataFrameParser implements DataFrameLoader {
+    private Logger log = LoggerFactory.getLogger(CSVDataFrameParser.class);
     private CsvParser parser;
     private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
@@ -83,6 +86,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
         }
 
         String[] row;
+        int doubleParseFailures = 0;
         while ((row = parser.parseNext()) != null) {
             for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
                 if (schemaIndexMap[c] >= 0) {
@@ -96,6 +100,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
                             doubleColumns[doubleColNum].add(Double.parseDouble(rowValue));
                         } catch (NumberFormatException e) {
                             doubleColumns[doubleColNum].add(Double.NaN);
+                            doubleParseFailures++;
                         }
                         doubleColNum++;
                     } else {
@@ -104,6 +109,8 @@ public class CSVDataFrameParser implements DataFrameLoader {
                 }
             }
         }
+        if (doubleParseFailures > 0)
+            log.warn("{} double values failed to parse", doubleParseFailures);
 
         DataFrame df = new DataFrame(schema, stringColumns, doubleColumns);
         return df;
