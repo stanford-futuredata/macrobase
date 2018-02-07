@@ -71,6 +71,10 @@ public class APLExplanationResult {
         return str.substring(1, l - 1);
     }
 
+    public String toString() {
+        return "a="+matcher.toString()+":ag="+Arrays.toString(aggregates)+":mt="+Arrays.toString(metrics);
+    }
+
     public String prettyPrint(
             AttributeEncoder encoder,
             List<String> aggregateNames

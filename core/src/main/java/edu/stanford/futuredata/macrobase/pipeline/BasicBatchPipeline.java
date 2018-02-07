@@ -158,7 +158,7 @@ public class BasicBatchPipeline implements Pipeline {
         DataFrame df = loadData();
         long elapsed = System.currentTimeMillis() - startTime;
 
-        log.info("Loading time: {}", elapsed);
+        log.info("Loading time: {} ms", elapsed);
         log.info("{} rows", df.getNumRows());
         log.info("Metric: {}", metric);
         log.info("Attributes: {}", attributes);
@@ -172,7 +172,7 @@ public class BasicBatchPipeline implements Pipeline {
         startTime = System.currentTimeMillis();
         summarizer.process(df);
         elapsed = System.currentTimeMillis() - startTime;
-        log.info("Summarization time: {}", elapsed);
+        log.info("Summarization time: {} ms", elapsed);
         Explanation output = summarizer.getResults();
 
         return output;

@@ -16,7 +16,7 @@ import java.util.concurrent.CountDownLatch;
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
 public class APrioriLinear {
-    private Logger log = LoggerFactory.getLogger("APLSummarizer");
+    private Logger log = LoggerFactory.getLogger("APrioriLinear");
 
     // **Parameters**
     private QualityMetric[] qualityMetrics;
@@ -24,7 +24,6 @@ public class APrioriLinear {
 
     // **Cached values**
     // Singleton viable sets for quick lookup
-    private HashSet<Integer> singleNext;
     private boolean[] singleNextArray;
     // Sets that have high enough support but not high qualityMetrics, need to be explored
     private HashMap<Integer, HashSet<IntSet>> setNext;
@@ -222,7 +221,7 @@ public class APrioriLinear {
                     } else {
                         throw new MacrobaseInternalError("High Order not supported");
                     }
-                    log.debug("Time spent in Thread {} in order {}:  {}",
+                    log.debug("Time spent in Thread {} in order {}:  {} ms",
                             curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
@@ -307,10 +306,8 @@ public class APrioriLinear {
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
-                singleNext = new HashSet<>(curOrderNext.size());
                 singleNextArray = new boolean[cardinality];
                 for (IntSet i : curOrderNext) {
-                    singleNext.add(i.getFirst());
                     singleNextArray[i.getFirst()] = true;
                 }
             }

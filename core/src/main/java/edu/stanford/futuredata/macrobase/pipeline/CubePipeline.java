@@ -117,7 +117,7 @@ public class CubePipeline implements Pipeline {
             requiredColumns
         );
         long elapsed = System.currentTimeMillis() - startTime;
-        log.info("Loading time: {}", elapsed);
+        log.info("Loading time: {} ms", elapsed);
         log.info("{} rows", df.getNumRows());
         log.info("Attributes: {}", attributes);
 
@@ -138,7 +138,7 @@ public class CubePipeline implements Pipeline {
         summarizer.process(df);
         APLExplanation explanation = summarizer.getResults();
         elapsed = System.currentTimeMillis() - startTime;
-        log.info("Summarization time: {}", elapsed);
+        log.info("Summarization time: {} ms", elapsed);
 
         return explanation;
     }
