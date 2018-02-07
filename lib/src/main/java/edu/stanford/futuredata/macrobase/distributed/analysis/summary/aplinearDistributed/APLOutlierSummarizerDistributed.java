@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed;
+package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;

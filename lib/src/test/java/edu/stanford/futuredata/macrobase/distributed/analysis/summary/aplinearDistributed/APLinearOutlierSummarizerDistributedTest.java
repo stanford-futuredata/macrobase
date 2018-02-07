@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.aplinearDistributed;
+package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
