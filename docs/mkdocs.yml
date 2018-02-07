@@ -7,6 +7,8 @@ pages:
     - 'Tutorial': 'user-guide/tutorial.md'
     - 'Common Parameters': 'user-guide/parameters.md'
     - 'Advanced Configuration': 'user-guide/advanced-configuration.md'
+    - 'MacroBase SQL': 'user-guide/sql.md'
+    - 'MacroBase SQL Workshop': 'user-guide/sql-workshop.md'
 
 theme:
   name: 'readthedocs'
