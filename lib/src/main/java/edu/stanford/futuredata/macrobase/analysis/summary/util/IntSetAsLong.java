@@ -153,10 +153,6 @@ public class IntSetAsLong implements IntSet {
         return retSet;
     }
 
-    public long toLong() {
-        return this.value;
-    }
-
     @Override
     public boolean equals(Object o) {
         return ((IntSetAsLong) o).value == this.value;

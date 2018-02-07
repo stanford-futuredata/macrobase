@@ -134,10 +134,6 @@ public class IntSetAsArray implements IntSet {
         }
     }
 
-    public long toLong() {
-        return IntSetAsLong.threeIntToLong(values[0], values[1], values[2]);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
