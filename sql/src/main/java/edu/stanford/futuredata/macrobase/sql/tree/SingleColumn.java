@@ -15,7 +15,6 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Objects;
@@ -80,22 +79,19 @@ public class SingleColumn extends SelectItem {
 
     @Override
     public String toString() {
-        // column name for the UDF is either 1) the user-provided alias, or 2) the function name
-        // and arguments concatenated by "_"
-        return alias.map(Identifier::toString).orElseGet(() -> formatForCol(expression));
+        // column name for the UDF is either 1) the user-provided alias, or
+        // 2) the function name and arguments
+        return alias.map(Identifier::toString).orElseGet(() -> formatForColName(expression));
     }
 
     /**
-     * @return If the Expression is a Function Call (e.g., a UDF), concatenate the function name and
-     * the arguments with "_". Otherwise, return the output of toString()
+     * @return If the Expression is a Function Call (e.g., a UDF), rewrite as "fn_name(arg1, arg2,…
+     * argn)". (By default, {@link FunctionCall#toString()} will include quotes around the function
+     * name.) Otherwise, return the output of toString()
      */
-    private String formatForCol(final Expression expr) {
+    private String formatForColName(final Expression expr) {
         if (expr instanceof FunctionCall) {
-            final FunctionCall func = (FunctionCall) expr;
-            // for now, if UDF is a.b.c.d(), ignore "a.b.c."
-            final String funcName = func.getName().getSuffix();
-            return funcName + "_" + Joiner.on("_")
-                .join(func.getArguments().stream().map(Expression::toString).iterator());
+            return expr.toString().replaceAll("\"", "");
         }
         return expr.toString();
 

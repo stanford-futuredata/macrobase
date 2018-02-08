@@ -48,6 +48,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
         }
         return countCol;
     }
+
+
     public void process(DataFrame input) throws Exception {
         encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
@@ -69,6 +71,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
                 encoder.getNextKey(),
+                maxOrder,
                 numThreads
         );
         log.info("Number of results: {}", aplResults.size());
@@ -80,7 +83,6 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 numOutliers,
                 aggregateNames,
                 qualityMetricList,
-                thresholds,
                 aplResults
         );
     }

@@ -47,6 +47,7 @@ public class APrioriLinear {
             final int[][] attributes,
             double[][] aggregateColumns,
             int cardinality,
+            final int maxOrder,
             int numThreads
     ) {
         final int numAggregates = aggregateColumns.length;
@@ -97,7 +98,7 @@ public class APrioriLinear {
                 aRows[i][j] = aggregateColumns[j][i];
             }
         }
-        for (int curOrder = 1; curOrder <= 3; curOrder++) {
+        for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Initialize per-thread hashmaps.
