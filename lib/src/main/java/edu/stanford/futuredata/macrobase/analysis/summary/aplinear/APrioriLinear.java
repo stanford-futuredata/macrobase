@@ -311,7 +311,7 @@ public class APrioriLinear {
                                         if (curCandidateTwo == AttributeEncoder.noSupport || !singleNextArray[curCandidateTwo])
                                             continue;
 
-                                        for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
+                                        for (int colNumThree = colNumTwo + 1; colNumThree < numColumns + curThreadNum; colNumThree++) {
                                             int modColNumThree = colNumThree % numColumns;
                                             for (Integer curCandidateThree : outlierList[modColNumThree]) {
                                                 if (curCandidateThree == AttributeEncoder.noSupport || !singleNextArray[curCandidateThree])
