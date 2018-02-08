@@ -21,6 +21,7 @@ public class AttributeEncoder {
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
     private HashMap<Integer, RoaringBitmap>[][] bitmap;
+    private ArrayList<Integer> outlierList[];
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -38,6 +39,7 @@ public class AttributeEncoder {
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
     public HashMap<Integer, RoaringBitmap>[][] getBitMap() {return bitmap;}
+    public ArrayList<Integer>[] getOutlierList() {return outlierList;}
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key
@@ -104,6 +106,10 @@ public class AttributeEncoder {
             for (int j = 0; j < 2; j++)
                 bitmap[i][j] = new HashMap<>();
         }
+        outlierList = new ArrayList[numColumns];
+        for (int i = 0; i < numColumns; i++)
+            outlierList[i] = new ArrayList<>();
+        HashSet<Integer> foundOutliers = new HashSet<>();
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
@@ -123,17 +129,21 @@ public class AttributeEncoder {
                         curColEncoder.put(colVal, noSupport);
                     }
                 } else {
-                    int val = curColEncoder.get(colVal);
-                    if (val != noSupport) {
-                        if (bitmap[colIdx][oidx].containsKey(val)) {
-                            bitmap[colIdx][oidx].get(val).add(rowIdx);
+                    int curKey = curColEncoder.get(colVal);
+                    if (curKey != noSupport) {
+                        if (bitmap[colIdx][oidx].containsKey(curKey)) {
+                            bitmap[colIdx][oidx].get(curKey).add(rowIdx);
                         } else {
-                            bitmap[colIdx][oidx].put(val, RoaringBitmap.bitmapOf(rowIdx));
+                            bitmap[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
                         }
                     }
                 }
                 int curKey = curColEncoder.get(colVal);
                 encodedAttributes[rowIdx][colIdx] = curKey;
+                if (oidx == 1 && !foundOutliers.contains(curKey)) {
+                    foundOutliers.add(curKey);
+                    outlierList[colIdx].add(curKey);
+                }
             }
         }
 
