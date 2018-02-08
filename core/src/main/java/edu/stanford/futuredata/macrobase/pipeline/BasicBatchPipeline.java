@@ -46,7 +46,6 @@ public class BasicBatchPipeline implements Pipeline {
     private double minSupport;
     private double minRiskRatio;
 
-    private String distributedMaster;
     private int distributedNumPartitions;
 
 
@@ -79,7 +78,6 @@ public class BasicBatchPipeline implements Pipeline {
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
-        distributedMaster = conf.get("distributedMaster", "local");
         distributedNumPartitions = conf.get("distributedNumPartitions", 1);
     }
 
@@ -128,7 +126,7 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "aplineardistributed": {
-                SparkConf conf = new SparkConf().setAppName("MacroBase").setMaster(distributedMaster);
+                SparkConf conf = new SparkConf().setAppName("MacroBase");
                 JavaSparkContext sparkContext = new JavaSparkContext(conf);
                 APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(sparkContext);
                 summarizer.setOutlierColumn(outlierColumnName);
