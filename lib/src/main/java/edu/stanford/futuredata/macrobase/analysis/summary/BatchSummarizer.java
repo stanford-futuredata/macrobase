@@ -21,8 +21,8 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     protected double minRatioMetric = 3;
     protected List<String> attributes = new ArrayList<>();
     protected int numThreads = Runtime.getRuntime().availableProcessors();
-    protected String ratioMetric;
-    protected int maxOrder;
+    protected String ratioMetric = "global_ratio";
+    protected int maxOrder = 3;
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
