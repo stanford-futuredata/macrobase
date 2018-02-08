@@ -322,7 +322,7 @@ public class APrioriLinear {
                                                     continue;
 
                                                 int outlierCount = 0, inlierCount = 0;
-                                                if (byThreadBitmap[curThreadNum][modColNumOne][0].containsKey(curCandidateOne) &&
+                                                if (byThreadBitmap[curThreadNum][modColNumOne][1].containsKey(curCandidateOne) &&
                                                     byThreadBitmap[curThreadNum][modColNumTwo][1].containsKey(curCandidateTwo) &&
                                                     byThreadBitmap[curThreadNum][modColNumThree][1].containsKey(curCandidateThree))
                                                     outlierCount = RoaringBitmap.andCardinality(
