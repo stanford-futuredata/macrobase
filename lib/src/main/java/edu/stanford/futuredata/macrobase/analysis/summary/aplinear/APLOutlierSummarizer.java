@@ -2,20 +2,20 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Summarizer that works over both cube and row-based labeled ratio-based
- * outlier summarization.
+ * Summarizer that works over both cube and row-based labeled ratio-based outlier summarization.
  */
 public class APLOutlierSummarizer extends APLSummarizer {
+
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizer");
     private String countColumn = null;
 
@@ -26,13 +26,14 @@ public class APLOutlierSummarizer extends APLSummarizer {
 
     @Override
     public int[][] getEncoded(List<String[]> columns, DataFrame input) {
-        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn));
+        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport,
+            input.getDoubleColumnByName(outlierColumn));
     }
 
     @Override
     public double[][] getAggregateColumns(DataFrame input) {
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
-        double[] countCol = processCountCol(input, countColumn,  outlierCol.length);
+        double[] countCol = processCountCol(input, countColumn, outlierCol.length);
 
         double[][] aggregateColumns = new double[2][];
         aggregateColumns[0] = outlierCol;
@@ -45,11 +46,20 @@ public class APLOutlierSummarizer extends APLSummarizer {
     public List<QualityMetric> getQualityMetricList() {
         List<QualityMetric> qualityMetricList = new ArrayList<>();
         qualityMetricList.add(
-                new SupportQualityMetric(0)
+            new SupportQualityMetric(0)
         );
-        qualityMetricList.add(
-                new GlobalRatioQualityMetric(0, 1)
-        );
+        switch (ratioMetric) {
+            case "risk_ratio":
+            case "riskratio":
+                qualityMetricList.add(
+                    new RiskRatioQualityMetric(0, 1));
+                break;
+            case "global_ratio":
+            case "globalratio":
+            default:
+                qualityMetricList.add(
+                    new GlobalRatioQualityMetric(0, 1));
+        }
         return qualityMetricList;
     }
 
@@ -71,9 +81,11 @@ public class APLOutlierSummarizer extends APLSummarizer {
     public String getCountColumn() {
         return countColumn;
     }
+
     public void setCountColumn(String countColumn) {
         this.countColumn = countColumn;
     }
+
     public double getMinRatioMetric() {
         return minRatioMetric;
     }

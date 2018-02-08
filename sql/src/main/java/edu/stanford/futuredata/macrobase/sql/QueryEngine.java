@@ -7,8 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
-import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
@@ -30,6 +29,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
+import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
@@ -45,7 +45,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -62,9 +61,11 @@ class QueryEngine {
     private static final Logger log = LoggerFactory.getLogger(QueryEngine.class.getSimpleName());
 
     private final Map<String, DataFrame> tablesInMemory;
+    private final int numThreads;
 
     QueryEngine() {
         tablesInMemory = new HashMap<>();
+        numThreads = 1; // TODO: add configuration parameter for numThreads
     }
 
     /**
@@ -171,20 +172,25 @@ class QueryEngine {
         // TODO: if an explainCol isn't in the SELECT clause, don't include it
         final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
         final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
-        final ExplanationMetric ratioMetric = ExplanationMetric
-            .getMetricFn(diffQuery.getRatioMetricExpr().getFuncName().toString());
+        final String ratioMetric = diffQuery.getRatioMetricExpr().getFuncName().toString();
         final int order = diffQuery.getMaxCombo().getValue();
 
         // execute diff
-        final APrioriSummarizer summarizer = new APrioriSummarizer();
+        final APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
         summarizer.setRatioMetric(ratioMetric)
             .setMaxOrder(order)
             .setMinSupport(minSupport)
             .setMinRatioMetric(minRatioMetric)
             .setOutlierColumn(outlierColName)
-            .setAttributes(explainCols);
+            .setAttributes(explainCols)
+            .setNumThreads(numThreads);
 
-        summarizer.process(dfToExplain);
+        try {
+            summarizer.process(dfToExplain);
+        } catch (Exception e) {
+            // TODO: get rid of this Exception
+            e.printStackTrace();
+        }
         final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
 
         return evaluateSQLClauses(diffQuery, resultDf);
@@ -215,23 +221,20 @@ class QueryEngine {
     }
 
     /**
-     * Removes all values in the SELECT clause of a given query that are {@link FunctionCall}
-     * objects, which are UDFs such as "percentile(column_name)".
+     * Returns all values in the SELECT clause of a given query that are {@link FunctionCall}
+     * objects, which are UDFs (e.g., "percentile(column_name)").
      *
-     * @param selectItems the values in the SELECT clause to be modified <b>in place</b>
-     * @return The values that were removed from `selectItems`, returned as a List of {@link
+     * @param select The Select clause
+     * @return The items in the Select clause that correspond to UDFs returned as a List of {@link
      * SingleColumn}
      */
-    private List<SingleColumn> removeUDFsInSelect(List<SelectItem> selectItems) {
+    private List<SingleColumn> getUDFsInSelect(final Select select) {
         final List<SingleColumn> functionCalls = new ArrayList<>();
-        Iterator<SelectItem> it = selectItems.iterator();
-        while (it.hasNext()) {
-            final SelectItem item = it.next();
+        for (SelectItem item : select.getSelectItems()) {
             if (item instanceof SingleColumn) {
                 final SingleColumn col = (SingleColumn) item;
                 if (col.getExpression() instanceof FunctionCall) {
                     functionCalls.add(col);
-                    it.remove();
                 }
             }
         }
@@ -270,28 +273,10 @@ class QueryEngine {
      */
     private DataFrame evaluateSQLClauses(final QueryBody query, final DataFrame df)
         throws MacrobaseException {
-        // TODO: we need to figure out a smarter ordering of these. For example,
-        // if we have an ORDER BY, we don't need to sort columns that are never going to be in the
-        // final output (i.e. the ones not in the SELECT). Basically, we need to do two passes of
-        // SELECTs: one with all original projections + the columns in the WHERE clauses and ORDER BY
-        // clauses, and then a second with just the original projections. That should be correct
-        // and give us better performance.
-
-        final List<SelectItem> selectWithoutUdfs = Lists
-            .newArrayList(query.getSelect().getSelectItems());
-        final List<SingleColumn> udfCols = removeUDFsInSelect(selectWithoutUdfs);
-        // selectWithoutUdfs has now been modified so that it no longer has UDFs
-
-        // create shallow copy, so modifications don't persist on the original DataFrame
-        DataFrame resultDf = df.copy();
-        final Map<String, double[]> newColumns = evaluateUDFs(resultDf, udfCols);
-
-        resultDf = evaluateWhereClause(df, query.getWhere());
-        resultDf = evaluateSelectClause(resultDf, selectWithoutUdfs);
-        for (Map.Entry newColumn : newColumns.entrySet()) {
-            // add UDF columns to result
-            resultDf.addColumn((String) newColumn.getKey(), (double[]) newColumn.getValue());
-        }
+        DataFrame resultDf = evaluateUDFs(df, getUDFsInSelect(query.getSelect()));
+        resultDf = evaluateWhereClause(resultDf, query.getWhere());
+        resultDf = evaluateSelectClause(resultDf, query.getSelect());
+        // TODO: what if you order by something that's not in the SELECT clause?
         resultDf = evaluateOrderByClause(resultDf, query.getOrderBy());
         return evaluateLimitClause(resultDf, query.getLimit());
     }
@@ -347,10 +332,11 @@ class QueryEngine {
      * @param udfCols The List of UDFs to evaluate
      * @return The Map of new columns to be added
      */
-    private Map<String, double[]> evaluateUDFs(final DataFrame inputDf,
-        final List<SingleColumn> udfCols)
+    private DataFrame evaluateUDFs(final DataFrame inputDf, final List<SingleColumn> udfCols)
         throws MacrobaseException {
-        final Map<String, double[]> newColumns = new HashMap<>();
+
+        // create shallow copy, so modifications don't persist on the original DataFrame
+        final DataFrame resultDf = inputDf.copy();
         for (SingleColumn udfCol : udfCols) {
             final FunctionCall func = (FunctionCall) udfCol.getExpression();
             // for now, if UDF is a.b.c.d(), ignore "a.b.c."
@@ -360,9 +346,9 @@ class QueryEngine {
                 func.getArguments().stream().map(Expression::toString).findFirst().get());
 
             // modify resultDf in place, add column; mbFunction is evaluated on input DataFrame
-            newColumns.put(udfCol.toString(), mbFunction.apply(inputDf));
+            resultDf.addColumn(udfCol.toString(), mbFunction.apply(inputDf));
         }
-        return newColumns;
+        return resultDf;
     }
 
     /**
@@ -371,13 +357,16 @@ class QueryEngine {
      * support for DISTINCT queries
      *
      * @param df The DataFrame to apply the Select clause on
-     * @param items The list of individual columns included in the Select clause
+     * @param select The Select clause
      * @return A new DataFrame with the result of the Select clause applied
      */
-    private DataFrame evaluateSelectClause(DataFrame df, List<SelectItem> items) {
-        if (items.size() == 1 && items.get(0) instanceof AllColumns) {
-            // SELECT * -> relation is unchanged
-            return df;
+    private DataFrame evaluateSelectClause(DataFrame df, final Select select) {
+        final List<SelectItem> items = select.getSelectItems();
+        for (SelectItem item : items) {
+            // If we find '*' -> relation is unchanged
+            if (item instanceof AllColumns) {
+                return df;
+            }
         }
         final List<String> projections = items.stream().map(SelectItem::toString)
             .collect(toImmutableList());
@@ -393,6 +382,7 @@ class QueryEngine {
      * clause
      * @return A new DataFrame with the result of the LIMIT clause applied
      */
+
     private DataFrame evaluateLimitClause(final DataFrame df, final Optional<String> limitStr) {
         if (limitStr.isPresent()) {
             try {
