@@ -86,4 +86,35 @@ public class APLOutlierSummarizerTest {
 //        assertTrue(values.contains("v3"));
         System.out.println(e.prettyPrint());
     }
+    @Test
+    public void testSimpleOrder3() throws Exception {
+        DataFrame df = new DataFrame();
+        String[] col1 = {"a1", "a2", "a1", "a1"};
+        String[] col2 = {"b1", "b1", "b2", "b1"};
+        String[] col3 = {"c1", "c1", "c1", "c2"};
+        double[] counts = {1, 1, 1, 1};
+        double[] oCounts = {1, 0, 0, 0};
+        df.addStringColumn("col1", col1);
+        df.addStringColumn("col2", col2);
+        df.addStringColumn("col3", col3);
+        df.addDoubleColumn("counts", counts);
+        df.addDoubleColumn("oCounts", oCounts);
+
+        List<String> explanationAttributes = Arrays.asList(
+                "col1",
+                "col2",
+                "col3"
+        );
+        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        summ.setCountColumn("counts");
+        summ.setOutlierColumn("oCounts");
+        summ.setMinSupport(.1);
+        summ.setMinRatioMetric(3.0);
+        summ.setAttributes(explanationAttributes);
+        summ.process(df);
+        APLExplanation e = summ.getResults();
+        assertEquals(1, e.getResults().size());
+        assertTrue(e.prettyPrint().contains("col1=a1"));
+        assertEquals(1, e.numOutliers(), 1e-10);
+    }
 }
