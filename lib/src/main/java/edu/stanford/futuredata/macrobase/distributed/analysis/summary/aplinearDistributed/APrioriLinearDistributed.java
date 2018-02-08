@@ -102,17 +102,17 @@ public class APrioriLinearDistributed {
             aRows.add(thisPartition);
         }
 
-        final List<TupleForSpark> sparkTuples = new ArrayList<>(numPartitions);
+        final List<AttributeAggregateTuple> sparkTuples = new ArrayList<>(numPartitions);
         for(int i = 0; i < numPartitions; i++) {
-            sparkTuples.add(new TupleForSpark(byThreadAttributesTranspose.get(i), aRows.get(i)));
+            sparkTuples.add(new AttributeAggregateTuple(byThreadAttributesTranspose.get(i), aRows.get(i)));
         }
-        final JavaRDD<TupleForSpark> tupleRDD = sparkContext.parallelize(sparkTuples, numPartitions);
+        final JavaRDD<AttributeAggregateTuple> tupleRDD = sparkContext.parallelize(sparkTuples, numPartitions);
 
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
-            JavaRDD<FastFixedHashTable> hashTableSet = tupleRDD.map((TupleForSpark sparkTuple) -> {
+            JavaRDD<FastFixedHashTable> hashTableSet = tupleRDD.map((AttributeAggregateTuple sparkTuple) -> {
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
@@ -358,11 +358,11 @@ public class APrioriLinearDistributed {
     }
 }
 
-class TupleForSpark implements Serializable {
+class AttributeAggregateTuple implements Serializable {
     public final int[][] attributes;
     public final double[][] aRows;
 
-    TupleForSpark(int[][] attributes, double[][] aRows) {
+    AttributeAggregateTuple(int[][] attributes, double[][] aRows) {
         this.attributes = attributes;
         this.aRows = aRows;
     }
