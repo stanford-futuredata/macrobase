@@ -113,13 +113,13 @@ public class APLExplanation implements Explanation {
             }
 
             final Map<String, Double> metricValsInRow = result.getMetricsAsMap();
-            for (String colName : doubleResultsByCol.keySet()) {
+            for (String colName : metricValsInRow.keySet()) {
                 doubleResultsByCol.get(colName)[i] = metricValsInRow.get(colName);
             }
 
             final Map<String, Double> aggregateValsInRow = result
                 .getAggregatesAsMap(aggregateNames);
-            for (String colName : doubleResultsByCol.keySet()) {
+            for (String colName : aggregateNames) {
                 doubleResultsByCol.get(colName)[i] = aggregateValsInRow.get(colName);
             }
             ++i;
@@ -127,11 +127,16 @@ public class APLExplanation implements Explanation {
 
         // Generate DataFrame with results
         final DataFrame df = new DataFrame();
-        for (String attr : stringResultsByCol.keySet()) {
-            df.addColumn(attr, stringResultsByCol.get(attr));
+        for (String colName : stringResultsByCol.keySet()) {
+            df.addColumn(colName, stringResultsByCol.get(colName));
         }
-        for (String attr : doubleResultsByCol.keySet()) {
-            df.addColumn(attr, doubleResultsByCol.get(attr));
+        // Add metrics first, then aggregates (otherwise, we'll get arbitrary orderings)
+        for (QualityMetric metric : metrics) {
+            df.addColumn(metric.name(), doubleResultsByCol.get(metric.name()));
+        }
+        for (String colName : aggregateNames) {
+            // Aggregates are capitalized for some reason
+            df.addColumn(colName.toLowerCase(), doubleResultsByCol.get(colName));
         }
         return df;
     }
