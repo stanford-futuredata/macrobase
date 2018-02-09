@@ -16,9 +16,11 @@ import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.nio.file.Paths;
 import jline.console.ConsoleReader;
 import jline.console.completer.CandidateListCompletionHandler;
@@ -57,13 +59,13 @@ public class MacroBaseSQLRepl {
      *
      * @param queries A single String which contains the queries to execute. Each query in the
      * String should be delimited by ';' and optional whitespace.
-     * @param print If True, print query to the console (useful when reading queries from file)
+     * @param fromFile If True, queries have been read from File
      */
-    private void executeQueries(final String queries, final boolean print) {
+    private void executeQueries(final String queries, final boolean fromFile) {
         StatementSplitter splitter = new StatementSplitter(queries);
         for (StatementSplitter.Statement s : splitter.getCompleteStatements()) {
             final String statementStr = s.statement();
-            if (print) {
+            if (fromFile) {
                 System.out.println(statementStr + ";");
                 System.out.println();
                 System.out.flush();
@@ -73,13 +75,26 @@ public class MacroBaseSQLRepl {
             try {
                 Statement stmt = parser.createStatement(statementStr);
                 log.debug(stmt.toString());
+                final DataFrame result;
                 if (stmt instanceof ImportCsv) {
                     final ImportCsv importStatement = (ImportCsv) stmt;
-                    queryEngine.importTableFromCsv(importStatement).prettyPrint();
+                    result = queryEngine.importTableFromCsv(importStatement);
                 } else {
-                    QueryBody q = ((Query) stmt).getQueryBody();
-                    final DataFrame result = queryEngine.executeQuery(q);
-                    result.prettyPrint();
+                    final QueryBody q = ((Query) stmt).getQueryBody();
+                    result = queryEngine.executeQuery(q);
+                }
+                try {
+                    final PrintStream ps = new PrintStream(new FileOutputStream("/tmp/mb-sql.output"));
+                    result.prettyPrint(ps, -1);
+                    ProcessBuilder pb = new ProcessBuilder("less", "/tmp/mb-sql.output");
+                    pb.inheritIO();
+                    Process p = pb.start();
+                    p.waitFor();
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+                if (stmt instanceof Query) {
+                    final QueryBody q = ((Query) stmt).getQueryBody();
                     q.getExportExpr().ifPresent((exportExpr) -> {
                         // print result to file; if file already exists, do nothing and print error message
                         final String filename = exportExpr.getFilename();
@@ -183,7 +198,6 @@ public class MacroBaseSQLRepl {
         if (!printedWelcome) {
             System.out.println(asciiArt);
         }
-
         repl.runRepl();
     }
 
