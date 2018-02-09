@@ -1,11 +1,34 @@
-## Download sample data
+## Running on AWS
 
-We've provided some sample data to get you started in MacroBase SQL -- you can download it here: 
+To get you started right away, we've set up a pre-installed and pre-configured
+version of MacroBase on two AWS machines. First, download the .pem key file,
+which you'll need to log into the machines: <https://www.dropbox.com/s/71iqc8rud17t1xn/macrobase-workshop.pem?dl=1>.
+(After downloading the key file, you may need to change its permissions -- i.e., run `chmod 400 macrobase-workshop.pem`.)
+
+Then, to log into the first machine, run:
+
+```
+ssh -i macrobase-workshop.pem ubuntu@ec2-13-57-19-183.us-west-1.compute.amazonaws.com
+```
+
+Or, for the second machine, run: 
+
+```
+ssh -i macrobase-workshop.pem ubuntu@ec2-52-53-204-13.us-west-1.compute.amazonaws.com
+```
+
+## Running on your local machine 
+
+If you want to run this workshop on your local machine, first complete the
+[setup instructions](/docs/sql/setup/) for MacroBase SQL.
+
+We've also provided some sample data to get you started in MacroBase SQL for this
+workshop -- you can download it here: 
 <https://www.dropbox.com/s/1w45erb4lotk5fs/wikiticker.csv?dl=1>
 
-Once downloaded, move 'wikiticker.csv' to the top-level MacroBase directory.
+Once downloaded, move 'wikiticker.csv' to the top-level MacroBase directory. After that, you're all set!
 
-## Analyzing Wikipedia Edits with MacroBase SQL
+# Analyzing Wikipedia Edits with MacroBase SQL
 
 In this workshop, we're going to analyze a sample of Wikipedia edits from
 September 12, 2015.  Using MacroBase parlance, we can classify the schema of
@@ -38,7 +61,7 @@ And here are the three metrics that are present:
 * deleted (number of lines deleted)
 * delta   (number of lines that changed)
 
-### Walkthrough
+### Getting Started
 
 From the top-level directory, run `bin/macrobase-sql` to start MacroBase
 SQL shell -- you should see this:
@@ -181,6 +204,12 @@ column:
 SELECT percentile(deleted) FROM wiki;
 SELECT deleted, percentile(deleted) as percentile FROM wiki;
 SELECT *, percentile(deleted) as percentile FROM wiki;
+```
+
+We can also execute UDFs in the `WHERE` clause to apply custom predicates to our data:
+
+```sql
+SELECT deleted, percentile(deleted) as pct FROM wiki WHERE pct > 0.95;
 ```
 
 In the `SPLIT` clause, you can treat the UDF column as any other column:
