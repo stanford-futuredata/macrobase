@@ -1,19 +1,9 @@
-## Setup
+## Download sample data
 
-### Installation Instructions
-
-To install MacroBase SQL, download the latest release found here: <https://github.com/stanford-futuredata/macrobase/releases>.
-
-### Build Instructions
-
-Simply run `./build.sh` in the top-level directory to build MacroBase SQL.
-
-### Download sample data
 We've provided some sample data to get you started in MacroBase SQL -- you can download it here: 
-https://www.dropbox.com/s/1w45erb4lotk5fs/wikiticker.csv?dl=0
+<https://www.dropbox.com/s/1w45erb4lotk5fs/wikiticker.csv?dl=1>
 
 Once downloaded, move 'wikiticker.csv' to the top-level MacroBase directory.
-
 
 ## Analyzing Wikipedia Edits with MacroBase SQL
 
@@ -50,8 +40,8 @@ And here are the three metrics that are present:
 
 ### Walkthrough
 
-From the top-level directory, run `bin/macrobase-sql` to start MacroBase SQL
-shell -- you should see this:
+From the top-level directory, run `bin/macrobase-sql` to start MacroBase
+SQL shell -- you should see this:
 
 ```
 Welcome to
@@ -85,8 +75,8 @@ SELECT comment, channel FROM wiki
   ORDER BY channel DESC LIMIT 15;
 ```
 
-To save the output of any query in MacroBase SQL to a file, use the `INTO OUTFILE` syntax found
-in MySQL
+To save the output of any query in MacroBase SQL to a file, use the `INTO
+OUTFILE` syntax found in MySQL
 
 ```sql
 SELECT comment, channel FROM wiki
@@ -147,14 +137,13 @@ to a `SPLIT` operator. This again yields the exact same result:
 SELECT * FROM DIFF (SPLIT (SELECT * FROM wiki) WHERE deleted > 0.0) ON *;
 ```
 
-Note: A `SPLIT` clause can't be the top-level query in MacroBase SQL; this
-yield a parsing error:
+Note: A `SPLIT` clause can't be the top-level query in MacroBase SQL; the query below, for example, will result in a parsing error:
 
 ```sql
 SPLIT wiki WHERE deleted > 0.0;
 ```
 
-Many of the columns in `ON *` didn't yeild any explanations (e.g.,
+Many of the columns in `ON *` didn't yield any explanations (e.g.,
 countryName, regionName); we can filter these out by modifying the ON
 clause to include only the columns we care about (which will also improve
 query performance).
@@ -206,9 +195,10 @@ SELECT * FROM DIFF
 
 ### Your turn
 
-There's plenty more to explore in this dataset!  metrics.  Try writing a few
-queries using the `DIFF` and `SPLIT` operators to analyze the "added" and "delta"
-columns; are there any interesting outliers that you can find?
+There's plenty more to explore in this dataset! For example, try writing a
+few queries using the `DIFF` and `SPLIT` operators to analyze the "added"
+and "delta" metrics, which we haven't done yet. Are there any interesting
+outliers that you can find?
 
 Here's a sample query to get you started:
 
