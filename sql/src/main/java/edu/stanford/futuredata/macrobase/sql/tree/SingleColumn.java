@@ -59,6 +59,10 @@ public class SingleColumn extends SelectItem {
         return expression;
     }
 
+    public boolean isUDF() {
+        return expression instanceof FunctionCall;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

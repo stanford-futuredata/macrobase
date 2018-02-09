@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import java.util.BitSet;
 import java.util.List;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
@@ -34,7 +35,8 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
      */
     public PercentileClassifier(List<String> attrs) throws MacrobaseException {
         this(attrs.get(0));
-        percentile = Double.parseDouble(attrs.get(1));
+        percentile = 100 * (1 - Double
+            .parseDouble(attrs.get(1))); // TODO: this is stupid -- we need to standardize this
         includeHigh =
             (attrs.size() <= 2) || Boolean
                 .parseBoolean(attrs.get(2)); // 3rd arg if present else true
@@ -61,6 +63,25 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
             }
         }
         output.addColumn(outputColumnName, resultColumn);
+    }
+
+    @Override
+    public BitSet getMask(DataFrame input) {
+        final double[] inputCol = input.getDoubleColumnByName(columnName);
+        final int numRows = inputCol.length;
+        lowCutoff = new Percentile().evaluate(inputCol, percentile);
+        highCutoff = new Percentile().evaluate(inputCol, 100.0 - percentile);
+        final BitSet mask = new BitSet(numRows);
+
+        for (int i = 0; i < numRows; i++) {
+            double curVal = inputCol[i];
+            if ((curVal > highCutoff && includeHigh)
+                || (curVal < lowCutoff && includeLow)
+                ) {
+                mask.set(i);
+            }
+        }
+        return mask;
     }
 
     @Override

@@ -30,8 +30,10 @@ import org.apache.commons.lang3.StringUtils;
  * initialized from a schema and a set of rows.
  */
 public class DataFrame {
-    private Schema schema;
 
+    private static final int MAX_COLS_FOR_TABULAR_PRINT = 10;
+
+    private Schema schema;
     private ArrayList<String[]> stringCols;
     private ArrayList<double[]> doubleCols;
     // external indices define a global ordering on columns, but internally each
@@ -142,38 +144,52 @@ public class DataFrame {
      * |  val_m1  |  val_m2  |  ...  |  val_mn  |
      * ------------------------------------------
      * @param out PrintStream to write to STDOUT or file (default: STDOUT)
-     * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: 15)
+     * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: -1, i.e.,
+     * all rows)
      */
     public void prettyPrint(final PrintStream out, final int maxNumToPrint) {
         out.println(numRows +  (numRows == 1 ? " row" : " rows"));
+        out.println();
 
         final int maxColNameLength = schema.getColumnNames().stream()
-            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length() + 4; // 2 extra spaces on both sides
-        final String schemaStr = "|" + Joiner.on("|").join(schema.getColumnNames().stream()
-            .map((x) -> StringUtils.center(String.valueOf(x), maxColNameLength)).collect(toList())) + "|";
-        final String dashes = Joiner.on("").join(Collections.nCopies(schemaStr.length(), "-"));
-        out.println(dashes);
-        out.println(schemaStr);
-        out.println(dashes);
+            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length();
 
-        if (numRows > maxNumToPrint) {
-            final int numToPrint = maxNumToPrint / 2;
-            for (Row r : getRows(0, numToPrint))  {
-                r.prettyPrint(out, maxColNameLength);
-            }
-            out.println();
-            out.println("...");
-            out.println();
-            for (Row r : getRows(numRows - numToPrint, numRows))  {
-                r.prettyPrint(out, maxColNameLength);
+        if (schema.getNumColumns() > MAX_COLS_FOR_TABULAR_PRINT) {
+            // print each row so that each value is on a separate line
+            for (Row r : getRows()) {
+                r.prettyPrintColumnWise(out, maxColNameLength);
             }
         } else {
-            for (Row r : getRows())  {
-                r.prettyPrint(out, maxColNameLength);
+            // print DataFrame as a table
+            final int tableWidth =
+                maxColNameLength + 4; // 2 extra spaces on both sides of each column name and value
+            final List<String> colStrs = schema.getColumnNames().stream()
+                .map((x) -> StringUtils.center(String.valueOf(x), tableWidth)).collect(toList());
+            final String schemaStr = "|" + Joiner.on("|").join(colStrs) + "|";
+            final String dashes = Joiner.on("").join(Collections.nCopies(schemaStr.length(), "-"));
+            out.println(dashes);
+            out.println(schemaStr);
+            out.println(dashes);
+
+            if (maxNumToPrint > 0 && numRows > maxNumToPrint) {
+                final int numToPrint = maxNumToPrint / 2;
+                for (Row r : getRows(0, numToPrint))  {
+                    r.prettyPrint(out, tableWidth);
+                }
+                out.println();
+                out.println("...");
+                out.println();
+                for (Row r : getRows(numRows - numToPrint, numRows))  {
+                    r.prettyPrint(out, tableWidth);
+                }
+            } else {
+                for (Row r : getRows())  {
+                    r.prettyPrint(out, tableWidth);
+                }
             }
+            out.println(dashes);
+            out.println();
         }
-        out.println(dashes);
-        out.println();
     }
 
     /**

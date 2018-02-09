@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
+import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
@@ -52,7 +53,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -229,16 +232,16 @@ class QueryEngine {
      * SingleColumn}
      */
     private List<SingleColumn> getUDFsInSelect(final Select select) {
-        final List<SingleColumn> functionCalls = new ArrayList<>();
+        final List<SingleColumn> udfs = new ArrayList<>();
         for (SelectItem item : select.getSelectItems()) {
             if (item instanceof SingleColumn) {
                 final SingleColumn col = (SingleColumn) item;
                 if (col.getExpression() instanceof FunctionCall) {
-                    functionCalls.add(col);
+                    udfs.add(col);
                 }
             }
         }
-        return functionCalls;
+        return udfs;
     }
 
     /**
@@ -313,7 +316,8 @@ class QueryEngine {
      * Get table as DataFrame that has previously been loaded into memory
      *
      * @param tableName String that uniquely identifies table
-     * @return DataFrame for table
+     * @return a shallow copy of the DataFrame for table; the original DataFrame is never returned,
+     * so that we keep it immutable
      * @throws MacrobaseSQLException if the table has not been loaded into memory and does not
      * exist
      */
@@ -321,16 +325,16 @@ class QueryEngine {
         if (!tablesInMemory.containsKey(tableName)) {
             throw new MacrobaseSQLException("Table " + tableName + " does not exist");
         }
-        return tablesInMemory.get(tableName);
+        return tablesInMemory.get(tableName).copy();
     }
 
     /**
-     * Evaluate only the UDFs of SQL query and return a Map of column names -> double arrays. If
-     * there are no UDFs (i.e. @param udfCols is empty), an empty Map is returned.
+     * Evaluate only the UDFs of SQL query and return a new DataFrame with the UDF-generated columns
+     * added to the input DataFrame. If there are no UDFs (i.e. @param udfCols is empty), the input
+     * DataFrame is returned as is.
      *
      * @param inputDf The DataFrame to evaluate the UDFs on
      * @param udfCols The List of UDFs to evaluate
-     * @return The Map of new columns to be added
      */
     private DataFrame evaluateUDFs(final DataFrame inputDf, final List<SingleColumn> udfCols)
         throws MacrobaseException {
@@ -405,7 +409,7 @@ class QueryEngine {
      * <tt>whereClauseOpt</tt> is not Present, we return <tt>df</tt>
      */
     private DataFrame evaluateWhereClause(final DataFrame df,
-        final Optional<Expression> whereClauseOpt) throws MacrobaseSQLException {
+        final Optional<Expression> whereClauseOpt) throws MacrobaseException {
         if (!whereClauseOpt.isPresent()) {
             return df;
         }
@@ -423,7 +427,7 @@ class QueryEngine {
      * @throws MacrobaseSQLException Only comparison expressions (e.g., WHERE x = 42) and logical
      * AND/OR/NOT combinations of such expressions are supported; exception is thrown otherwise.
      */
-    private BitSet getMask(DataFrame df, Expression whereClause) throws MacrobaseSQLException {
+    private BitSet getMask(DataFrame df, Expression whereClause) throws MacrobaseException {
         if (whereClause instanceof NotExpression) {
             final NotExpression notExpr = (NotExpression) whereClause;
             final BitSet mask = getMask(df, notExpr.getValue());
@@ -459,9 +463,22 @@ class QueryEngine {
                 return maskForPredicate(df, (Literal) left, (Identifier) right, type);
             } else if (right instanceof Literal && left instanceof Identifier) {
                 return maskForPredicate(df, (Literal) right, (Identifier) left, type);
+            } else if (left instanceof FunctionCall && right instanceof Literal) {
+                return maskForPredicate(df, (FunctionCall) left, (Literal) right);
+            } else if (right instanceof FunctionCall && left instanceof Literal) {
+                return maskForPredicate(df, (FunctionCall) right, (Literal) left);
             }
         }
         throw new MacrobaseSQLException("Boolean expression not supported");
+    }
+
+    private BitSet maskForPredicate(DataFrame df, FunctionCall func, Literal val)
+        throws MacrobaseException {
+        final String funcName = func.getName().getSuffix();
+        final Classifier classifier = Classifier.getClassifier(funcName,
+            Stream.concat(func.getArguments().stream().map(Expression::toString),
+                Stream.of(val.toString())).collect(Collectors.toList()));
+        return classifier.getMask(df);
     }
 
 
