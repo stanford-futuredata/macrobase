@@ -109,9 +109,9 @@ public class AttributeEncoder {
         outlierList = new ArrayList[numColumns];
         for (int i = 0; i < numColumns; i++)
             outlierList[i] = new ArrayList<>();
-        HashSet<Integer> foundOutliers = new HashSet<>();
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
+            HashSet<Integer> foundOutliers = new HashSet<>();
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 String colVal = curCol[rowIdx];

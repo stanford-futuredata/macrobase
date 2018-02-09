@@ -83,7 +83,6 @@ public class APrioriLinear {
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             final int startIndex = (numRows * threadNum) / numThreads;
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-            //System.out.println("threadNum: " + threadNum + ", " + startIndex + " - " + endIndex);
             for(int i = 0; i < numColumns; i++) {
                 for (int j = startIndex; j < endIndex; j++) {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
@@ -95,7 +94,6 @@ public class APrioriLinear {
                         rr.and(entry.getValue());
                         if (rr.getCardinality() > 0) {
                             byThreadBitmap[threadNum][i][j].put(entry.getKey(), rr);
-                            //System.out.println("threadNum: " + threadNum + ", col: " + i + ", outlier: " + j + ": " + rr);
                         }
                     }
                 }
@@ -194,7 +192,6 @@ public class APrioriLinear {
 
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
-                                    //System.out.println("put " + curCandidate + ": " + outlierCount + " " + (outlierCount + inlierCount));
                                     thisThreadSetAggregates.put(curCandidate,
                                             new double[]{outlierCount, outlierCount + inlierCount});
                                 } else {
@@ -255,8 +252,6 @@ public class APrioriLinear {
 
                                         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                         if (candidateVal == null) {
-                                            //System.out.println("from " + curCandidateOne + ", " + curCandidateTwo + " to: " + curCandidate);
-                                            //System.out.println("put " + curCandidate + ": " + outlierCount + " " + (outlierCount + inlierCount));
                                             thisThreadSetAggregates.put(curCandidate,
                                                     new double[]{outlierCount, outlierCount + inlierCount});
                                         } else {
@@ -305,39 +300,23 @@ public class APrioriLinear {
                                 }
                             }
                         }*/
-                        for (int colNumOne = curThreadNum; colNumOne < numColumns + curThreadNum; colNumOne++) {
+                        for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int modColNumOne = colNumOne % numColumns;
-
-                            /*if (curThreadNum == 1) {
-                                System.out.println("hi: " + curThreadNum + " " + modColNumOne);
-                                System.out.println("w: " + byThreadBitmap[curThreadNum][modColNumOne][1]);
-                            }*/
-
                             for (Integer curCandidateOne : outlierList[modColNumOne]) {
                                 if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                                     continue;
 
-                                for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns + curThreadNum; colNumTwo++) {
+                                for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                                     int modColNumTwo = colNumTwo % numColumns;
                                     for (Integer curCandidateTwo : outlierList[modColNumTwo]) {
                                         if (curCandidateTwo == AttributeEncoder.noSupport || !singleNextArray[curCandidateTwo])
                                             continue;
 
-                                        /*if (curThreadNum == 1) {
-                                            System.out.println("hi2: " + curThreadNum + " " + modColNumTwo);
-                                            System.out.println("w2: " + byThreadBitmap[curThreadNum][modColNumTwo][1]);
-                                        }*/
-
-                                        for (int colNumThree = colNumTwo + 1; colNumThree < numColumns + curThreadNum; colNumThree++) {
+                                        for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
                                             int modColNumThree = colNumThree % numColumns;
                                             for (Integer curCandidateThree : outlierList[modColNumThree]) {
                                                 if (curCandidateThree == AttributeEncoder.noSupport || !singleNextArray[curCandidateThree])
                                                     continue;
-
-                                                /*if (curThreadNum == 1) {
-                                                    System.out.println("hi3: " + curThreadNum + " " + modColNumThree);
-                                                    System.out.println("w3: " + byThreadBitmap[curThreadNum][modColNumThree][1]);
-                                                }*/
 
                                                 long curCandidate = IntSetAsLong.threeIntToLong(curCandidateOne, curCandidateTwo, curCandidateThree);
                                                 //if (!precalculatedCandidates.contains(curCandidate))
@@ -361,10 +340,6 @@ public class APrioriLinear {
 
                                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                                 if (candidateVal == null) {
-                                                    /*if (curThreadNum == 1) {
-                                                        System.out.println("from " + curCandidateOne + ", " + curCandidateTwo + "," + curCandidateThree + " to: " + curCandidate);
-                                                        System.out.println("put " + curCandidate + ": " + outlierCount + " " + (outlierCount + inlierCount));
-                                                    }*/
                                                     thisThreadSetAggregates.put(curCandidate,
                                                             new double[]{outlierCount, outlierCount + inlierCount});
                                                 } else {
@@ -412,7 +387,6 @@ public class APrioriLinear {
             LongOpenHashSet curOrderNext = new LongOpenHashSet();
             LongOpenHashSet curOrderSaved = new LongOpenHashSet();
             for (long curCandidate: setAggregates.keySet()) {
-                //System.out.println("found " + curCandidate + ": " + setAggregates.get(curCandidate)[0] + ", " + setAggregates.get(curCandidate)[1]);
                 if (curOrder == 1 && curCandidate == AttributeEncoder.noSupport) {
                     continue;
                 }
