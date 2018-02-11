@@ -1,40 +1,20 @@
-## Running on AWS
+## Setup
 
-To get you started right away, we've set up a pre-installed and pre-configured
-version of MacroBase on two AWS machines. First, download the .pem key file,
-which you'll need to log into the machines: <https://www.dropbox.com/s/71iqc8rud17t1xn/macrobase-workshop.pem?dl=1>.
-(After downloading the key file, you may need to change its permissions -- i.e., run `chmod 400 macrobase-workshop.pem`.)
-
-Then, to log into the first machine, run:
-
-```
-ssh -i macrobase-workshop.pem ubuntu@ec2-13-57-19-183.us-west-1.compute.amazonaws.com
-```
-
-Or, for the second machine, run: 
-
-```
-ssh -i macrobase-workshop.pem ubuntu@ec2-52-53-204-13.us-west-1.compute.amazonaws.com
-```
-
-## Running on your local machine 
-
-If you want to run this workshop on your local machine, first complete the
-[setup instructions](/docs/sql/setup/) for MacroBase SQL.
-
-We've also provided some sample data to get you started in MacroBase SQL for this
-workshop -- you can download it here: 
-<https://www.dropbox.com/s/1w45erb4lotk5fs/wikiticker.csv?dl=1>
-
-Once downloaded, move 'wikiticker.csv' to the top-level MacroBase directory. After that, you're all set!
+Before going through this tutorial, follow the [setup
+instructions](setup) to make sure MacroBase is correctly installed on
+your machine.
 
 # Analyzing Wikipedia Edits with MacroBase SQL
 
-In this workshop, we're going to analyze a sample of Wikipedia edits from
-September 12, 2015.  Using MacroBase parlance, we can classify the schema of
-this dataset into **metrics** (measurements in the dataset that capture user's
-interests) and **attributes** (dimensions that could possibly explain why a metric
-is behaving unusually).
+In this tutorial, we're going to analyze a sample of Wikipedia edits from
+September 12, 2015. You can download the sample data here:
+[wikiticker.csv](/wikiticker.csv). (Make sure to download the file to your
+top-level MacroBase directory.)
+
+Using MacroBase parlance, we can classify the schema of this dataset into
+**metrics** (measurements in the dataset that capture user's interests) and
+**attributes** (dimensions that could possibly explain why a metric is behaving
+unusually).
 
 Besides "time", here are the attributes present in the data:
 
@@ -167,7 +147,7 @@ SPLIT wiki WHERE deleted > 0.0;
 ```
 
 Many of the columns in `ON *` didn't yield any explanations (e.g.,
-countryName, regionName); we can filter these out by modifying the ON
+"countryName", "regionName"); we can filter these out by modifying the ON
 clause to include only the columns we care about (which will also improve
 query performance).
 
@@ -177,7 +157,7 @@ SELECT * FROM DIFF (SPLIT wiki WHERE deleted > 0.0)
 ```
 
 Maybe our original query (with `ON *`) didn't yield explanations in
-countryName and regionName because our minimum support or minimum ratio were
+"countryName" and "regionName" because our minimum support or minimum ratio were
 too high; we can tweak either using `WITH MIN RATIO` and/or `MIN SUPPORT`:
 
 ```sql
@@ -209,7 +189,7 @@ SELECT *, percentile(deleted) as percentile FROM wiki;
 We can also execute UDFs in the `WHERE` clause to apply custom predicates to our data:
 
 ```sql
-SELECT deleted, percentile(deleted) as pct FROM wiki WHERE pct > 0.95;
+SELECT deleted FROM wiki WHERE percentile(deleted) > 0.95;
 ```
 
 In the `SPLIT` clause, you can treat the UDF column as any other column:
@@ -222,7 +202,7 @@ SELECT * FROM DIFF
   WITH MIN SUPPORT 0.10;
 ```
 
-### Your turn
+### Your Turn
 
 There's plenty more to explore in this dataset! For example, try writing a
 few queries using the `DIFF` and `SPLIT` operators to analyze the "added"
@@ -234,7 +214,8 @@ Here's a sample query to get you started:
 ```sql
 SELECT * FROM DIFF
   (SPLIT (
-    SELECT *, percentile(delta) as percentile FROM wiki)
+    SELECT *, percentile(delta) as percentile FROM wiki
+    )
   WHERE percentile > 0.99)
 ON *;
 ```

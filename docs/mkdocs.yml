@@ -8,7 +8,7 @@ pages:
     - 'Setup': 'sql/setup.md'
     - 'Workshop': 'sql/workshop.md'
   - MacroBase GUI:
-    - 'Setup': 'gui/setup.md'
+    - 'Tutorial': 'gui/tutorial.md'
 
 theme:
   name: 'readthedocs'

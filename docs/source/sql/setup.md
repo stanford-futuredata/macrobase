@@ -1,16 +1,31 @@
-## Download Instructions
+## Installation Instructions
 
-You can download the latest release of MacroBase SQL from our GitHub page: <https://github.com/stanford-futuredata/macrobase/releases>.
+### Docker
 
-## Build Instructions
+The easiest way to install MacroBase SQL is by downloading our Docker image, which has everything properly configured for you out of the box. Simply run
+
+```
+docker pull macrobase/macrobase
+```
+
+to download the latest version. Then, you can run a new container by executing
+
+```
+docker run -i -t macrobase/macrobase /bin/bash
+```
+
+### Building from Source
+
+You can also download the latest release of MacroBase SQL from our GitHub page and install it from source: <https://github.com/stanford-futuredata/macrobase/releases>.
 
 Building MacroBase SQL requires [Apache Maven 3.3.9](https://maven.apache.org/)
 and Java 8+.  Once Maven and Java 8 are installed, simply run `./build.sh sql`
-in the top-level directory to build MacroBase SQL.
+in the top-level directory, and MacroBase SQL should successfully build.
 
 ## Running MacroBase SQL
 
-Once MacroBase SQL has been built, you can run it using `bin/macrobase-sql`. You should see this:
+Once you've installed MacroBase SQL, you can run it by executing `bin/macrobase-sql`.
+You should see this:
 
 ```
 Welcome to
@@ -25,7 +40,7 @@ macrobase-sql>
 
 You can also import a .sql file with pre-written SQL queries; just run `bin/macrobase-sql -f [path/to/file]`.
 
-## Simple Demo
+## Demo
 
 To make sure MacroBase SQL has been successfully built, we have a simple demo
 on sample data to get you started. If you run the `bin/macrobase-sql -f sql/demo.sql`, you should see the following output:
