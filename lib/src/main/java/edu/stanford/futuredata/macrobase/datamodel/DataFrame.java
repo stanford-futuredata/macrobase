@@ -14,6 +14,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -123,6 +124,56 @@ public class DataFrame {
         other.stringCols = new ArrayList<>(stringCols);
         other.doubleCols = new ArrayList<>(doubleCols);
         return other;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        final DataFrame o = (DataFrame) obj;
+        return Objects.equals(schema, o.schema) &&
+            Objects.equals(numRows, o.numRows) &&
+            Objects.equals(indexToTypeIndex, o.indexToTypeIndex) &&
+            compareStringCols(stringCols, o.stringCols) &&
+            compareDoubleCols(doubleCols, o.doubleCols);
+    }
+
+    /**
+     * @return true if all each String array in the first List contains the exact same values in the
+     * same order as the second List
+     */
+    private boolean compareStringCols(final List<String[]> first, final List<String[]> second) {
+        for (int i = 0; i < first.size(); ++i) {
+            final String[] arr1 = first.get(i);
+            final String[] arr2 = second.get(i);
+            for (int j = 0; j < arr1.length; ++j) {
+                if (!arr1[j].equals(arr2[j])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @return true if all each double array in the first List contains the exact same values in the
+     * same order as the second List
+     */
+    private boolean compareDoubleCols(final List<double[]> first, final List<double[]> second) {
+        for (int i = 0; i < first.size(); ++i) {
+            final double[] arr1 = first.get(i);
+            final double[] arr2 = second.get(i);
+            for (int j = 0; j < arr1.length; ++j) {
+                if (arr1[j] != arr2[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public Schema getSchema() {return this.schema;}

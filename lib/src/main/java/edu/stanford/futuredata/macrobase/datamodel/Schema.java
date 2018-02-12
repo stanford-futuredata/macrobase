@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Provides column names, types, and order
@@ -88,5 +89,19 @@ public class Schema {
         this.columnTypes.add(t);
         this.columnIndices.put(colName, nextIdx);
         return this;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        final Schema o = (Schema) obj;
+        return Objects.equals(columnTypes, o.columnTypes) &&
+            Objects.equals(columnTypes, o.columnTypes) &&
+            Objects.equals(columnIndices, o.columnIndices);
     }
 }

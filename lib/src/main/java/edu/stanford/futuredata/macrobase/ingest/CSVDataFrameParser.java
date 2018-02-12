@@ -135,9 +135,9 @@ public class CSVDataFrameParser implements DataFrameLoader {
             InputStream targetStream = new FileInputStream(path);
             return new InputStreamReader(targetStream, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unable to read input", e);
+            throw new IllegalStateException("File " + path + "is not encoded using UTF-8", e);
         } catch (FileNotFoundException e) {
-            throw new IllegalStateException("Unable to read input", e);
+            throw new IllegalStateException("File " + path + " cannot be found", e);
         }
     }
 }
