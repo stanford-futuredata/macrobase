@@ -38,31 +38,4 @@ public abstract class Classifier implements Transformer {
         this.outputColumnName = outputColumnName;
         return this;
     }
-
-    public abstract BitSet getMask(final DataFrame input);
-
-    public static Classifier getClassifier(String classifierType, List<String> args)
-        throws MacrobaseException {
-        Class<? extends Classifier> clazz;
-        switch (classifierType.toLowerCase()) {
-            case "percentile": {
-                clazz = PercentileClassifier.class;
-                break;
-            }
-            case "predicate": {
-                clazz = PredicateClassifier.class;
-                break;
-            }
-            default: {
-                throw new MacrobaseException("Bad Classifier Type: " + classifierType);
-            }
-        }
-        try {
-            return clazz.getConstructor(List.class).newInstance(args);
-        } catch (NoSuchMethodException | InstantiationException | InvocationTargetException | IllegalAccessException e) {
-            throw new MacrobaseException(
-                "Classifier Type " + classifierType + " incompatible with args (" + Joiner
-                    .on(", ").join(args) + ")");
-        }
-    }
 }

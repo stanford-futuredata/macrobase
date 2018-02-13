@@ -89,8 +89,9 @@ public class Row {
     }
 
     /**
-     * pretty print Row object to STDOUT Example output: |    val_1   |   val_2   | .... |   val_n
-     * |
+     * Pretty print Row object to STDOUT
+     * Example output:
+     * |    val_1   |   val_2   | .... |   val_n  |
      *
      * @param width number of characters to or each value, with <tt>(width - length of value) /
      * 2</tt> of whitespace on either side
@@ -100,8 +101,9 @@ public class Row {
     }
 
     /**
-     * pretty print Row object to the console.  Example output: |    val_1   |   val_2   | .... |
-     * val_n   |
+     * Pretty print Row object to the console.
+     * Example output:
+     * |    val_1   |   val_2   | .... | val_n   |
      *
      * @param out PrintStream to print Row to STDOUT or file (default: STDOUT)
      * @param width the number of characters to use for centering a single value. Increasing
@@ -113,18 +115,34 @@ public class Row {
                 .collect(toList())) + "|");
     }
 
-    public void prettyPrintColumnWise(final PrintStream out, final int maxColNameLength) {
+    /**
+     * Pretty print row in vertical, column-wise format. Example output:
+     *
+     * col_1    |  val_1
+     * col_2    |  val_2
+     * ...
+     * col_n    |  val_n
+     * -----------------------
+     *
+     * @param out PrintStream to print Row to STDOUT or file (default: STDOUT)
+     */
+    void prettyPrintColumnWise(final PrintStream out) {
+        final int maxColNameLength = schema.getColumnNames().stream()
+            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length();
+
         int maxLength = 0;
         for (int i = 0; i < schema.getNumColumns(); ++i) {
             final String colName = schema.getColumnName(i);
             final Object val = vals.get(i);
             final String strToPrint =
+                // truncate Strings longer than 40 chars
                 StringUtils.rightPad(colName, maxColNameLength) + "  |  " + formatVal(val, 40);
             if (strToPrint.length() > maxLength) {
                 maxLength = strToPrint.length();
             }
             out.println(strToPrint);
         }
+        // add 5 dashes to account for "  |  "
         final String dashes = Joiner.on("").join(Collections.nCopies(maxLength + 5, "-"));
         out.println(dashes);
     }

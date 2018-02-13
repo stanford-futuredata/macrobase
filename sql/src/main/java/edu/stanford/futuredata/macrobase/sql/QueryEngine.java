@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
-import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
@@ -53,9 +52,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -195,6 +192,8 @@ class QueryEngine {
             e.printStackTrace();
         }
         final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
+        resultDf.renameColumn("outliers", "outlier_count");
+        resultDf.renameColumn("count", "total_count");
 
         return evaluateSQLClauses(diffQuery, resultDf);
     }
@@ -464,21 +463,30 @@ class QueryEngine {
             } else if (right instanceof Literal && left instanceof Identifier) {
                 return maskForPredicate(df, (Literal) right, (Identifier) left, type);
             } else if (left instanceof FunctionCall && right instanceof Literal) {
-                return maskForPredicate(df, (FunctionCall) left, (Literal) right);
+                return maskForPredicate(df, (FunctionCall) left, (Literal) right, type);
             } else if (right instanceof FunctionCall && left instanceof Literal) {
-                return maskForPredicate(df, (FunctionCall) right, (Literal) left);
+                return maskForPredicate(df, (FunctionCall) right, (Literal) left, type);
             }
         }
         throw new MacrobaseSQLException("Boolean expression not supported");
     }
 
-    private BitSet maskForPredicate(DataFrame df, FunctionCall func, Literal val)
+    private BitSet maskForPredicate(DataFrame df, FunctionCall func, Literal val,
+        final ComparisonExpressionType type)
         throws MacrobaseException {
         final String funcName = func.getName().getSuffix();
-        final Classifier classifier = Classifier.getClassifier(funcName,
-            Stream.concat(func.getArguments().stream().map(Expression::toString),
-                Stream.of(val.toString())).collect(Collectors.toList()));
-        return classifier.getMask(df);
+        final MBFunction mbFunction = MBFunction.getFunction(funcName,
+            func.getArguments().stream().map(Expression::toString).findFirst().get());
+        final double[] col = mbFunction.apply(df);
+        final DoublePredicate predicate = generateLambdaForPredicate(
+            ((DoubleLiteral) val).getValue(), type);
+        final BitSet mask = new BitSet(col.length);
+        for (int i = 0; i < col.length; ++i) {
+            if (predicate.test(col[i])) {
+                mask.set(i);
+            }
+        }
+        return mask;
     }
 
 

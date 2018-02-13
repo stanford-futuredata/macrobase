@@ -3,8 +3,6 @@ package edu.stanford.futuredata.macrobase.analysis.classify;
 import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
-import java.util.BitSet;
-import java.util.List;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 
@@ -56,62 +54,6 @@ public class PredicateClassifier extends Classifier {
         super(columnName);
         this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinel);
         this.isStrPredicate = true;
-    }
-
-    /**
-     * Alternate constructor that takes in List of Strings; used to instantiate Classifier (via
-     * reflection) specified in MacroBase SQL query
-     *
-     * @param attrs by convention, should be a List that has 3 values: [outlier_col_name, predicate
-     * type ("==","!=", etc.), sentinel (either String or double)]
-     */
-    public PredicateClassifier(final List<String> attrs) throws MacrobaseException {
-        super(attrs.get(0));
-        final String predicateStr = attrs.get(1);
-        final String sentinelStr = attrs.get(2);
-        try {
-            final double sentinel = Double.parseDouble(sentinelStr);
-            this.predicate = MBPredicate.getDoublePredicate(predicateStr, sentinel);
-            this.isStrPredicate = false;
-        } catch (NumberFormatException e) {
-            this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinelStr);
-            this.isStrPredicate = true;
-        } catch (MacrobaseException e) {
-            throw e;
-        }
-    }
-
-    @Override
-    public BitSet getMask(final DataFrame input) {
-        if (isStrPredicate) {
-            final String[] metrics = input.getStringColumnByName(columnName);
-            return getMask(metrics, strPredicate);
-        } else {
-            final double[] metrics = input.getDoubleColumnByName(columnName);
-            return getMask(metrics, predicate);
-        }
-    }
-
-    private BitSet getMask(final double[] metrics, final DoublePredicate predicate) {
-        final int numRows = metrics.length;
-        final BitSet mask = new BitSet(numRows);
-        for (int i = 0; i < numRows; i++) {
-            if (predicate.test(metrics[i])) {
-                mask.set(i);
-            }
-        }
-        return mask;
-    }
-
-    private BitSet getMask(final String[] metrics, final Predicate<String> predicate) {
-        final int numRows = metrics.length;
-        final BitSet mask = new BitSet(numRows);
-        for (int i = 0; i < numRows; i++) {
-            if (predicate.test(metrics[i])) {
-                mask.set(i);
-            }
-        }
-        return mask;
     }
 
     /**

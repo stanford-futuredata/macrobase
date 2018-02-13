@@ -16,7 +16,6 @@ import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -25,6 +24,10 @@ import java.nio.file.Paths;
 import jline.console.ConsoleReader;
 import jline.console.completer.CandidateListCompletionHandler;
 import jline.console.completer.FileNameCompleter;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +39,16 @@ public class MacroBaseSQLRepl {
     private final ConsoleReader reader;
     private final SqlParser parser;
     private final QueryEngine queryEngine;
+    private final boolean paging;
 
     /**
      * Main entry point to the SQL CLI interface in MacroBase
      *
      * @throws IOException if unable to instantiate ConsoleReader
      */
-    private MacroBaseSQLRepl() throws IOException {
+    private MacroBaseSQLRepl(final boolean paging) throws IOException {
         // Initialize console reader and writer
+        this.paging = paging;
         reader = new ConsoleReader();
         final CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
         handler.setStripAnsi(true);
@@ -83,15 +88,20 @@ public class MacroBaseSQLRepl {
                     final QueryBody q = ((Query) stmt).getQueryBody();
                     result = queryEngine.executeQuery(q);
                 }
-                try {
-                    final PrintStream ps = new PrintStream(new FileOutputStream("/tmp/mb-sql.output"));
-                    result.prettyPrint(ps, -1);
-                    ProcessBuilder pb = new ProcessBuilder("less", "/tmp/mb-sql.output");
-                    pb.inheritIO();
-                    Process p = pb.start();
-                    p.waitFor();
-                } catch (InterruptedException | IOException e) {
-                    e.printStackTrace();
+                if (paging) {
+                    try {
+                        final PrintStream ps = new PrintStream(
+                            new FileOutputStream("/tmp/mb-sql.output"));
+                        result.prettyPrint(ps, -1);
+                        ProcessBuilder pb = new ProcessBuilder("less", "/tmp/mb-sql.output");
+                        pb.inheritIO();
+                        Process p = pb.start();
+                        p.waitFor();
+                    } catch (InterruptedException | IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    result.prettyPrint();
                 }
                 if (stmt instanceof Query) {
                     final QueryBody q = ((Query) stmt).getQueryBody();
@@ -172,40 +182,29 @@ public class MacroBaseSQLRepl {
     }
 
     public static void main(String... args) throws IOException {
-        final MacroBaseSQLRepl repl = new MacroBaseSQLRepl();
+        ArgumentParser parser = ArgumentParsers.newFor("MacroBase SQL").build()
+            .defaultHelp(true)
+            .description("Run MacroBase SQL.");
+        parser.addArgument("-f", "--file").help("Load file with SQL queries to execute");
+        parser.addArgument("-p", "--paging").type(Arguments.booleanType()).setDefault(true)
+            .help("Turn on paging of results for SQL queries");
+        final Namespace parsedArgs = parser.parseArgsOrFail(args);
+
+        final MacroBaseSQLRepl repl = new MacroBaseSQLRepl(parsedArgs.get("paging"));
         final String asciiArt = Resources
             .toString(Resources.getResource(ASCII_ART_FILE), Charsets.UTF_8);
-        boolean printedWelcome = false;
-        if (args != null && args.length > 0) {
-            switch (args[0].toLowerCase()) {
-                case "-h":
-                case "--help":
-                    usage();
-                    return;
-                case "-f":
-                case "--file":
-                    if (args.length > 1) {
-                        System.out.println(asciiArt);
-                        printedWelcome = true;
-                        final String queriesFromFile = Files
-                            .toString(new File(args[1]), Charsets.UTF_8);
-                        repl.executeQueries(queriesFromFile, true);
-                    }
-                    break;
-            }
-        }
 
+        boolean printedWelcome = false;
+        if (parsedArgs.get("file") != null) {
+            System.out.println(asciiArt);
+            printedWelcome = true;
+            final String queriesFromFile = Files
+                .toString(new File((String) parsedArgs.get("file")), Charsets.UTF_8);
+            repl.executeQueries(queriesFromFile, true);
+        }
         if (!printedWelcome) {
             System.out.println(asciiArt);
         }
         repl.runRepl();
     }
-
-    /**
-     * Print MacroBase SQL usage.
-     */
-    private static void usage() {
-        System.out.println("Usage: java " + MacroBaseSQLRepl.class.getName());
-    }
-
 }

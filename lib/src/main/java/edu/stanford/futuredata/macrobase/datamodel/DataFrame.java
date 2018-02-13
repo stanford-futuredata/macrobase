@@ -143,7 +143,7 @@ public class DataFrame {
     }
 
     /**
-     * @return true if all each String array in the first List contains the exact same values in the
+     * @return true if each String array in the first List contains the exact same values in the
      * same order as the second List
      */
     private boolean compareStringCols(final List<String[]> first, final List<String[]> second) {
@@ -151,7 +151,7 @@ public class DataFrame {
             final String[] arr1 = first.get(i);
             final String[] arr2 = second.get(i);
             for (int j = 0; j < arr1.length; ++j) {
-                if (!arr1[j].equals(arr2[j])) {
+                if (!Objects.equals(arr1[j], arr2[j])) {
                     return false;
                 }
             }
@@ -160,7 +160,7 @@ public class DataFrame {
     }
 
     /**
-     * @return true if all each double array in the first List contains the exact same values in the
+     * @return true if each double array in the first List contains the exact same values in the
      * same order as the second List
      */
     private boolean compareDoubleCols(final List<double[]> first, final List<double[]> second) {
@@ -186,7 +186,9 @@ public class DataFrame {
     }
 
     /**
-     * Pretty print contents of the DataFrame to STDOUT. Example output:
+     * Pretty print contents of the DataFrame to STDOUT. Example outputs:
+     * m rows
+     *
      * ------------------------------------------
      * |   col_1  |   col_2  |  ...  |   col_n  |
      * ------------------------------------------
@@ -194,24 +196,55 @@ public class DataFrame {
      * ...
      * |  val_m1  |  val_m2  |  ...  |  val_mn  |
      * ------------------------------------------
+     *
+     * or
+     *
+     * m rows
+     *
+     * col_1    |  val_11
+     * col_2    |  val_12
+     * ...
+     * col_n    |  val_1n
+     * -----------------------
+     * ...
+     * -----------------------
+     * col_1    |  val_m1
+     * col_2    |  val_m2
+     * ...
+     * col_n    |  val_mn
+     * -----------------------
+     *
      * @param out PrintStream to write to STDOUT or file (default: STDOUT)
-     * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: -1, i.e.,
-     * all rows)
+     * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: 20;
+     * -1 prints out all rows)
      */
     public void prettyPrint(final PrintStream out, final int maxNumToPrint) {
         out.println(numRows +  (numRows == 1 ? " row" : " rows"));
         out.println();
 
-        final int maxColNameLength = schema.getColumnNames().stream()
-            .reduce("", (x, y) -> x.length() > y.length() ? x : y).length();
-
         if (schema.getNumColumns() > MAX_COLS_FOR_TABULAR_PRINT) {
-            // print each row so that each value is on a separate line
-            for (Row r : getRows()) {
-                r.prettyPrintColumnWise(out, maxColNameLength);
+            // print each row so that each value is on a separate line, because the terminal isn't
+            // wide enough to display the entire table
+            if (maxNumToPrint > 0 && numRows > maxNumToPrint) {
+                final int numToPrint = maxNumToPrint / 2;
+                for (Row r : getRows(0, numToPrint))  {
+                    r.prettyPrintColumnWise(out);
+                }
+                out.println();
+                out.println("...");
+                out.println();
+                for (Row r : getRows(numRows - numToPrint, numRows))  {
+                    r.prettyPrintColumnWise(out);
+                }
+            } else {
+                for (Row r : getRows()) {
+                    r.prettyPrintColumnWise(out);
+                }
             }
         } else {
             // print DataFrame as a table
+            final int maxColNameLength = schema.getColumnNames().stream()
+                .reduce("", (x, y) -> x.length() > y.length() ? x : y).length();
             final int tableWidth =
                 maxColNameLength + 4; // 2 extra spaces on both sides of each column name and value
             final List<String> colStrs = schema.getColumnNames().stream()
@@ -245,17 +278,17 @@ public class DataFrame {
 
     /**
      * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
-     * and <tt>maxNumToPrint</tt> set to 15
+     * and <tt>maxNumToPrint</tt> set to 20
      */
     public void prettyPrint() {
-        prettyPrint(System.out, 15);
+        prettyPrint(System.out, 20);
     }
 
     /**
-     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 15
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 20
      */
     public void prettyPrint(final PrintStream out) {
-      prettyPrint(out, 15);
+      prettyPrint(out, 20);
     }
 
     /**
@@ -303,6 +336,18 @@ public class DataFrame {
             typeSubIndices[i] = indexToTypeIndex.get(columns.get(i));
         }
         return typeSubIndices;
+    }
+
+    /**
+     * Rename column in schema.
+     *
+     * @param oldColumnName The name of the column to be renamed. If it doesn't exist, nothing is
+     * changed
+     * @param newColumnName The new name for the column
+     * @return true if rename was successful, false otherwise
+     */
+    public boolean renameColumn(final String oldColumnName, final String newColumnName) {
+        return schema.renameColumn(oldColumnName, newColumnName);
     }
 
     public boolean hasColumn(String columnName) { return schema.hasColumn(columnName); }

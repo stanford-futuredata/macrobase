@@ -40,6 +40,31 @@ public class Schema {
         return pairs.toString();
     }
 
+    /**
+     * Rename column in schema.
+     *
+     * @param oldColumnName The name of the column to be renamed. If it doesn't exist, nothing is
+     * changed
+     * @param newColumnName The new name for the column
+     * @return true if rename was successful, false otherwise
+     */
+    boolean renameColumn(String oldColumnName, String newColumnName) {
+        if (!columnIndices.containsKey(oldColumnName)) {
+            return false;
+        }
+
+        for (int i = 0; i < columnNames.size(); ++i) {
+            if (columnNames.get(i).equals(oldColumnName)) {
+                columnNames.set(i, newColumnName);
+                final int index = columnIndices.remove(oldColumnName);
+                columnIndices.put(newColumnName, index);
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public boolean hasColumn(String columnName) { return columnNames.contains(columnName); }
     public boolean hasColumns(Collection<String> columnNames) {
         return this.columnNames.containsAll(columnNames);
