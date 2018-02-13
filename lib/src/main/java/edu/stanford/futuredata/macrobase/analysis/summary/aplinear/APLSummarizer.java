@@ -69,7 +69,9 @@ public abstract class APLSummarizer extends BatchSummarizer {
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
                 encoder.getNextKey(),
-                numThreads
+                numThreads,
+                encoder.getBitMap(),
+                encoder.getOutlierList()
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
