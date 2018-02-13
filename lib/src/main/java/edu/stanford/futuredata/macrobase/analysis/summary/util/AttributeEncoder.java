@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.roaringbitmap.RoaringBitmap;
 
 /**
  * Encode every combination of attribute names and values into a distinct integer.
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 public class AttributeEncoder {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
+    private static int cardinalityThreshold = 1000;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -19,6 +21,9 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
+    private HashMap<Integer, RoaringBitmap>[][] bitmap;
+    private ArrayList<Integer> outlierList[];
+    boolean isBitmapEncoded[];
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -35,6 +40,9 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
+    public HashMap<Integer, RoaringBitmap>[][] getBitMap() {return bitmap;}
+    public ArrayList<Integer>[] getOutlierList() {return outlierList;}
+    public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key
@@ -96,12 +104,24 @@ public class AttributeEncoder {
 
         // Encode the strings that have support with a key equal to their rank.
         int[][] encodedAttributes = new int[numRows][numColumns];
+        bitmap = new HashMap[numColumns][2];
+        for (int i = 0; i < numColumns; ++i) {
+            for (int j = 0; j < 2; j++)
+                bitmap[i][j] = new HashMap<>();
+        }
+        outlierList = new ArrayList[numColumns];
+        for (int i = 0; i < numColumns; i++)
+            outlierList[i] = new ArrayList<>();
+        isBitmapEncoded = new boolean[numColumns];
+
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
+            HashSet<Integer> foundOutliers = new HashSet<>();
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 String colVal = curCol[rowIdx];
                 String colNumAndVal = Integer.toString(colIdx) + colVal;
+                int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                 if (!curColEncoder.containsKey(colVal)) {
                     if (stringToRank.containsKey(colNumAndVal)) {
                         int newKey = stringToRank.get(colNumAndVal);
@@ -115,9 +135,29 @@ public class AttributeEncoder {
                 }
                 int curKey = curColEncoder.get(colVal);
                 encodedAttributes[rowIdx][colIdx] = curKey;
+                if (oidx == 1 && !foundOutliers.contains(curKey)) {
+                    foundOutliers.add(curKey);
+                    outlierList[colIdx].add(curKey);
+                }
+            }
+
+            if (curColEncoder.size() < cardinalityThreshold) {
+                isBitmapEncoded[colIdx] = true;
+                for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+                    String colVal = curCol[rowIdx];
+                    int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
+                    int curKey = curColEncoder.get(colVal);
+                    if (curKey != noSupport) {
+                        if (bitmap[colIdx][oidx].containsKey(curKey)) {
+                            bitmap[colIdx][oidx].get(curKey).add(rowIdx);
+                        } else {
+                            bitmap[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
+                        }
+                    }
+                }
             }
         }
-
+        System.out.println("isBitmapEncoded: " + Arrays.toString(isBitmapEncoded));
         return encodedAttributes;
     }
 
