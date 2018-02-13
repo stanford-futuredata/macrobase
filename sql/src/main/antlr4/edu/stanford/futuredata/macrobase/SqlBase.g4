@@ -40,15 +40,12 @@ query
 
 queryTerm
     : queryPrimary                                                             #queryTermDefault
-    | left=queryTerm operator=INTERSECT setQuantifier? right=queryTerm         #setOperation
-    | left=queryTerm operator=(UNION | EXCEPT) setQuantifier? right=queryTerm  #setOperation
     ;
 
 queryPrimary
     : querySpecification                   #queryPrimaryDefault
     | diffQuerySpecification               #diffQuery
     | TABLE qualifiedName                  #table
-    | VALUES expression (',' expression)*  #inlineTable
     | '(' query  ')'                       #subquery
     ;
 
@@ -56,8 +53,6 @@ querySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
       (FROM relation (',' relation)*)?
       (WHERE where=booleanExpression)?
-      (GROUP BY groupBy)?
-      (HAVING having=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
       exportClause?
@@ -65,8 +60,6 @@ querySpecification
       exportClause?
       (FROM relation (',' relation)*)?
       (WHERE where=booleanExpression)?
-      (GROUP BY groupBy)?
-      (HAVING having=booleanExpression)?
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
     ;
@@ -151,27 +144,6 @@ aggregate
     | SUM
     ;
 
-groupBy
-    : setQuantifier? groupingElement (',' groupingElement)*
-    ;
-
-groupingElement
-    : groupingExpressions                                               #singleGroupingSet
-    | ROLLUP '(' (qualifiedName (',' qualifiedName)*)? ')'              #rollup
-    | CUBE '(' (qualifiedName (',' qualifiedName)*)? ')'                #cube
-    | GROUPING SETS '(' groupingSet (',' groupingSet)* ')'              #multipleGroupingSets
-    ;
-
-groupingExpressions
-    : '(' (expression (',' expression)*)? ')'
-    | expression
-    ;
-
-groupingSet
-    : '(' (qualifiedName (',' qualifiedName)*)? ')'
-    | qualifiedName
-    ;
-
 setQuantifier
     : DISTINCT
     | ALL
@@ -208,12 +180,7 @@ escapeClause
     ;
 
 relation
-    : left=relation
-      ( CROSS JOIN right=sampledRelation
-      | joinType JOIN rightRelation=relation joinCriteria
-      | NATURAL joinType JOIN right=sampledRelation
-      )                                           #joinRelation
-    | sampledRelation                             #relationDefault
+    : aliasedRelation
     ;
 
 joinType
@@ -226,17 +193,6 @@ joinType
 joinCriteria
     : ON booleanExpression
     | USING '(' identifier (',' identifier)* ')'
-    ;
-
-sampledRelation
-    : aliasedRelation (
-        TABLESAMPLE sampleType '(' percentage=expression ')'
-      )?
-    ;
-
-sampleType
-    : BERNOULLI
-    | SYSTEM
     ;
 
 aliasedRelation
@@ -300,22 +256,12 @@ primaryExpression
     | BINARY_LITERAL                                                                      #binaryLiteral
     | qualifiedName '(' ASTERISK ')' filter?                                              #functionCall
     | qualifiedName '(' (setQuantifier? expression (',' expression)*)? ')' filter?        #functionCall
-    | identifier '->' expression                                                          #lambda
-    | '(' (identifier (',' identifier)*)? ')' '->' expression                             #lambda
     | '(' query ')'                                                                       #subqueryExpression
     // This is an extension to ANSI SQL, which considers EXISTS to be a <boolean expression>
     | EXISTS '(' query ')'                                                                #exists
-    | CASE valueExpression whenClause+ (ELSE elseExpression=expression)? END              #simpleCase
-    | CASE whenClause+ (ELSE elseExpression=expression)? END                              #searchedCase
-    | CAST '(' expression AS type ')'                                                     #cast
-    | TRY_CAST '(' expression AS type ')'                                                 #cast
-    | ARRAY '[' (expression (',' expression)*)? ']'                                       #arrayConstructor
-    | value=primaryExpression '[' index=valueExpression ']'                               #subscript
     | identifier                                                                          #columnReference
     | base=primaryExpression '.' fieldName=identifier                                     #dereference
-    | EXTRACT '(' identifier FROM valueExpression ')'                                     #extract
     | '(' expression ')'                                                                  #parenthesizedExpression
-    | GROUPING '(' (qualifiedName (',' qualifiedName)*)? ')'                              #groupingOperation
     ;
 
 string

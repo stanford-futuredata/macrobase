@@ -16,7 +16,6 @@ package edu.stanford.futuredata.macrobase.sql;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatExpression;
-import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatGroupBy;
 import static edu.stanford.futuredata.macrobase.sql.ExpressionFormatter.formatOrderBy;
 import static java.util.stream.Collectors.joining;
 
@@ -25,10 +24,8 @@ import com.google.common.base.Strings;
 import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
 import edu.stanford.futuredata.macrobase.sql.tree.AstVisitor;
-import edu.stanford.futuredata.macrobase.sql.tree.Except;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
-import edu.stanford.futuredata.macrobase.sql.tree.Intersect;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinCriteria;
 import edu.stanford.futuredata.macrobase.sql.tree.JoinOn;
@@ -40,15 +37,11 @@ import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.SampledRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
-import edu.stanford.futuredata.macrobase.sql.tree.Union;
-import edu.stanford.futuredata.macrobase.sql.tree.Values;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -113,18 +106,6 @@ final class SqlFormatter {
 
             if (node.getWhere().isPresent()) {
                 append(indent, "WHERE " + formatExpression(node.getWhere().get(), parameters))
-                    .append('\n');
-            }
-
-            if (node.getGroupBy().isPresent()) {
-                append(indent,
-                    "GROUP BY " + (node.getGroupBy().get().isDistinct() ? " DISTINCT " : "")
-                        + formatGroupBy(node.getGroupBy().get().getGroupingElements()))
-                    .append('\n');
-            }
-
-            if (node.getHaving().isPresent()) {
-                append(indent, "HAVING " + formatExpression(node.getHaving().get(), parameters))
                     .append('\n');
             }
 
@@ -254,37 +235,6 @@ final class SqlFormatter {
         }
 
         @Override
-        protected Void visitSampledRelation(SampledRelation node, Integer indent) {
-            process(node.getRelation(), indent);
-
-            builder.append(" TABLESAMPLE ")
-                .append(node.getType())
-                .append(" (")
-                .append(node.getSamplePercentage())
-                .append(')');
-
-            return null;
-        }
-
-        @Override
-        protected Void visitValues(Values node, Integer indent) {
-            builder.append(" VALUES ");
-
-            boolean first = true;
-            for (Expression row : node.getRows()) {
-                builder.append("\n")
-                    .append(indentString(indent))
-                    .append(first ? "  " : ", ");
-
-                builder.append(formatExpression(row, parameters));
-                first = false;
-            }
-            builder.append('\n');
-
-            return null;
-        }
-
-        @Override
         protected Void visitTableSubquery(TableSubquery node, Integer indent) {
             builder.append('(')
                 .append('\n');
@@ -292,56 +242,6 @@ final class SqlFormatter {
             process(node.getQuery(), indent + 1);
 
             append(indent, ") ");
-
-            return null;
-        }
-
-        @Override
-        protected Void visitUnion(Union node, Integer indent) {
-            Iterator<Relation> relations = node.getRelations().iterator();
-
-            while (relations.hasNext()) {
-                processRelation(relations.next(), indent);
-
-                if (relations.hasNext()) {
-                    builder.append("UNION ");
-                    if (!node.isDistinct()) {
-                        builder.append("ALL ");
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        @Override
-        protected Void visitExcept(Except node, Integer indent) {
-            processRelation(node.getLeft(), indent);
-
-            builder.append("EXCEPT ");
-            if (!node.isDistinct()) {
-                builder.append("ALL ");
-            }
-
-            processRelation(node.getRight(), indent);
-
-            return null;
-        }
-
-        @Override
-        protected Void visitIntersect(Intersect node, Integer indent) {
-            Iterator<Relation> relations = node.getRelations().iterator();
-
-            while (relations.hasNext()) {
-                processRelation(relations.next(), indent);
-
-                if (relations.hasNext()) {
-                    builder.append("INTERSECT ");
-                    if (!node.isDistinct()) {
-                        builder.append("ALL ");
-                    }
-                }
-            }
 
             return null;
         }

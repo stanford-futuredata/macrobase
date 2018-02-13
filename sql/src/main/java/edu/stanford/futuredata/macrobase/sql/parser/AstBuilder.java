@@ -13,8 +13,6 @@
  */
 package edu.stanford.futuredata.macrobase.sql.parser;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.Iterables.getOnlyElement;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
@@ -30,58 +28,34 @@ import edu.stanford.futuredata.macrobase.sql.tree.AliasedRelation;
 import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
 import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ArithmeticUnaryExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.ArrayConstructor;
-import edu.stanford.futuredata.macrobase.sql.tree.BetweenPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.BinaryLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.BindExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Cast;
 import edu.stanford.futuredata.macrobase.sql.tree.CharLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.CoalesceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ColumnDefinition;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
-import edu.stanford.futuredata.macrobase.sql.tree.Cube;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.DelimiterClause;
-import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Except;
 import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.ExportClause;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
-import edu.stanford.futuredata.macrobase.sql.tree.Extract;
 import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.GenericLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.GroupBy;
-import edu.stanford.futuredata.macrobase.sql.tree.GroupingElement;
-import edu.stanford.futuredata.macrobase.sql.tree.GroupingOperation;
-import edu.stanford.futuredata.macrobase.sql.tree.GroupingSets;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
-import edu.stanford.futuredata.macrobase.sql.tree.IfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
-import edu.stanford.futuredata.macrobase.sql.tree.InListExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.InPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Intersect;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
-import edu.stanford.futuredata.macrobase.sql.tree.JoinCriteria;
-import edu.stanford.futuredata.macrobase.sql.tree.JoinOn;
-import edu.stanford.futuredata.macrobase.sql.tree.JoinUsing;
-import edu.stanford.futuredata.macrobase.sql.tree.LambdaArgumentDeclaration;
-import edu.stanford.futuredata.macrobase.sql.tree.LambdaExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.MinRatioExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.MinSupportExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.NaturalJoin;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
 import edu.stanford.futuredata.macrobase.sql.tree.NodeLocation;
 import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.NullIfExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
 import edu.stanford.futuredata.macrobase.sql.tree.QualifiedName;
@@ -91,26 +65,15 @@ import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.RatioMetricExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.Rollup;
-import edu.stanford.futuredata.macrobase.sql.tree.SampledRelation;
-import edu.stanford.futuredata.macrobase.sql.tree.SearchedCaseExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Select;
 import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
-import edu.stanford.futuredata.macrobase.sql.tree.SimpleCaseExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.SimpleGroupBy;
 import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SplitQuery;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.SubqueryExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.SubscriptExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
-import edu.stanford.futuredata.macrobase.sql.tree.TimeLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.TimestampLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.TryExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.Union;
-import edu.stanford.futuredata.macrobase.sql.tree.Values;
 import edu.stanford.futuredata.macrobase.sql.tree.WhenClause;
 import java.util.Iterator;
 import java.util.List;
@@ -122,8 +85,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 class AstBuilder
     extends SqlBaseBaseVisitor<Node> {
-
-    private int parameterPosition = 0;
 
     @Override
     public Node visitSingleStatement(SqlBaseParser.SingleStatementContext context) {
@@ -156,8 +117,6 @@ class AstBuilder
                     query.getSelect(),
                     query.getFrom(),
                     query.getWhere(),
-                    query.getGroupBy(),
-                    query.getHaving(),
                     query.getOrderBy(),
                     query.getLimit(),
                     query.getExportExpr()));
@@ -363,76 +322,10 @@ class AstBuilder
         Optional<ExportClause> exportExpr = visitIfPresent(context.exportClause(),
             ExportClause.class);
 
-        return new QuerySpecification(
-            getLocation(context),
+        return new QuerySpecification(getLocation(context),
             new Select(getLocation(context.SELECT()), isDistinct(context.setQuantifier()),
-                selectItems),
-            from,
-            visitIfPresent(context.where, Expression.class),
-            visitIfPresent(context.groupBy(), GroupBy.class),
-            visitIfPresent(context.having, Expression.class),
-            orderBy,
-            getTextIfPresent(context.limit),
-            exportExpr);
-    }
-
-    @Override
-    public Node visitGroupBy(SqlBaseParser.GroupByContext context) {
-        return new GroupBy(getLocation(context), isDistinct(context.setQuantifier()),
-            visit(context.groupingElement(), GroupingElement.class));
-    }
-
-    @Override
-    public Node visitSingleGroupingSet(SqlBaseParser.SingleGroupingSetContext context) {
-        return new SimpleGroupBy(getLocation(context),
-            visit(context.groupingExpressions().expression(), Expression.class));
-    }
-
-    @Override
-    public Node visitRollup(SqlBaseParser.RollupContext context) {
-        return new Rollup(getLocation(context), context.qualifiedName().stream()
-            .map(this::getQualifiedName)
-            .collect(toList()));
-    }
-
-    @Override
-    public Node visitCube(SqlBaseParser.CubeContext context) {
-        return new Cube(getLocation(context), context.qualifiedName().stream()
-            .map(this::getQualifiedName)
-            .collect(toList()));
-    }
-
-    @Override
-    public Node visitMultipleGroupingSets(SqlBaseParser.MultipleGroupingSetsContext context) {
-        return new GroupingSets(getLocation(context), context.groupingSet().stream()
-            .map(groupingSet -> groupingSet.qualifiedName().stream()
-                .map(this::getQualifiedName)
-                .collect(toList()))
-            .collect(toList()));
-    }
-
-    @Override
-    public Node visitSetOperation(SqlBaseParser.SetOperationContext context) {
-        QueryBody left = (QueryBody) visit(context.left);
-        QueryBody right = (QueryBody) visit(context.right);
-
-        boolean distinct =
-            context.setQuantifier() == null || context.setQuantifier().DISTINCT() != null;
-
-        switch (context.operator.getType()) {
-            case SqlBaseLexer.UNION:
-                return new Union(getLocation(context.UNION()), ImmutableList.of(left, right),
-                    distinct);
-            case SqlBaseLexer.INTERSECT:
-                return new Intersect(getLocation(context.INTERSECT()),
-                    ImmutableList.of(left, right),
-                    distinct);
-            case SqlBaseLexer.EXCEPT:
-                return new Except(getLocation(context.EXCEPT()), left, right, distinct);
-        }
-
-        throw new IllegalArgumentException(
-            "Unsupported set operation: " + context.operator.getText());
+                selectItems), from, visitIfPresent(context.where, Expression.class), orderBy,
+            getTextIfPresent(context.limit), exportExpr);
     }
 
     @Override
@@ -462,11 +355,6 @@ class AstBuilder
         return new TableSubquery(getLocation(context), (Query) visit(context.query()));
     }
 
-    @Override
-    public Node visitInlineTable(SqlBaseParser.InlineTableContext context) {
-        return new Values(getLocation(context), visit(context.expression(), Expression.class));
-    }
-
     // ***************** boolean expressions ******************
 
     @Override
@@ -485,62 +373,6 @@ class AstBuilder
     }
 
     // *************** from clause *****************
-
-    @Override
-    public Node visitJoinRelation(SqlBaseParser.JoinRelationContext context) {
-        Relation left = (Relation) visit(context.left);
-        Relation right;
-
-        if (context.CROSS() != null) {
-            right = (Relation) visit(context.right);
-            return new Join(getLocation(context), Join.Type.CROSS, left, right, Optional.empty());
-        }
-
-        JoinCriteria criteria;
-        if (context.NATURAL() != null) {
-            right = (Relation) visit(context.right);
-            criteria = new NaturalJoin();
-        } else {
-            right = (Relation) visit(context.rightRelation);
-            if (context.joinCriteria().ON() != null) {
-                criteria = new JoinOn(
-                    (Expression) visit(context.joinCriteria().booleanExpression()));
-            } else if (context.joinCriteria().USING() != null) {
-                criteria = new JoinUsing(
-                    visit(context.joinCriteria().identifier(), Identifier.class));
-            } else {
-                throw new IllegalArgumentException("Unsupported join criteria");
-            }
-        }
-
-        Join.Type joinType;
-        if (context.joinType().LEFT() != null) {
-            joinType = Join.Type.LEFT;
-        } else if (context.joinType().RIGHT() != null) {
-            joinType = Join.Type.RIGHT;
-        } else if (context.joinType().FULL() != null) {
-            joinType = Join.Type.FULL;
-        } else {
-            joinType = Join.Type.INNER;
-        }
-
-        return new Join(getLocation(context), joinType, left, right, Optional.of(criteria));
-    }
-
-    @Override
-    public Node visitSampledRelation(SqlBaseParser.SampledRelationContext context) {
-        Relation child = (Relation) visit(context.aliasedRelation());
-
-        if (context.TABLESAMPLE() == null) {
-            return child;
-        }
-
-        return new SampledRelation(
-            getLocation(context),
-            child,
-            getSamplingMethod((Token) context.sampleType().getChild(0).getPayload()),
-            (Expression) visit(context.percentage));
-    }
 
     @Override
     public Node visitAliasedRelation(SqlBaseParser.AliasedRelationContext context) {
@@ -611,21 +443,6 @@ class AstBuilder
     }
 
     @Override
-    public Node visitBetween(SqlBaseParser.BetweenContext context) {
-        Expression expression = new BetweenPredicate(
-            getLocation(context),
-            (Expression) visit(context.value),
-            (Expression) visit(context.lower),
-            (Expression) visit(context.upper));
-
-        if (context.NOT() != null) {
-            expression = new NotExpression(getLocation(context), expression);
-        }
-
-        return expression;
-    }
-
-    @Override
     public Node visitNullPredicate(SqlBaseParser.NullPredicateContext context) {
         Expression child = (Expression) visit(context.value);
 
@@ -646,35 +463,6 @@ class AstBuilder
         Expression result = new LikePredicate(getLocation(context),
             (Expression) visit(context.value),
             (Expression) visit(context.pattern), escape);
-
-        if (context.NOT() != null) {
-            result = new NotExpression(getLocation(context), result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public Node visitInList(SqlBaseParser.InListContext context) {
-        Expression result = new InPredicate(
-            getLocation(context),
-            (Expression) visit(context.value),
-            new InListExpression(getLocation(context),
-                visit(context.expression(), Expression.class)));
-
-        if (context.NOT() != null) {
-            result = new NotExpression(getLocation(context), result);
-        }
-
-        return result;
-    }
-
-    @Override
-    public Node visitInSubquery(SqlBaseParser.InSubqueryContext context) {
-        Expression result = new InPredicate(
-            getLocation(context),
-            (Expression) visit(context.value),
-            new SubqueryExpression(getLocation(context), (Query) visit(context.query())));
 
         if (context.NOT() != null) {
             result = new NotExpression(getLocation(context), result);
@@ -744,70 +532,13 @@ class AstBuilder
     }
 
     @Override
-    public Node visitArrayConstructor(SqlBaseParser.ArrayConstructorContext context) {
-        return new ArrayConstructor(getLocation(context),
-            visit(context.expression(), Expression.class));
-    }
-
-    @Override
-    public Node visitCast(SqlBaseParser.CastContext context) {
-        boolean isTryCast = context.TRY_CAST() != null;
-        return new Cast(getLocation(context), (Expression) visit(context.expression()),
-            getType(context.type()), isTryCast);
-    }
-
-    @Override
-    public Node visitExtract(SqlBaseParser.ExtractContext context) {
-        String fieldString = context.identifier().getText();
-        Extract.Field field;
-        try {
-            field = Extract.Field.valueOf(fieldString.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw parseError("Invalid EXTRACT field: " + fieldString, context);
-        }
-        return new Extract(getLocation(context), (Expression) visit(context.valueExpression()),
-            field);
-    }
-
-    @Override
-    public Node visitSubscript(SqlBaseParser.SubscriptContext context) {
-        return new SubscriptExpression(getLocation(context), (Expression) visit(context.value),
-            (Expression) visit(context.index));
-    }
-
-    @Override
     public Node visitSubqueryExpression(SqlBaseParser.SubqueryExpressionContext context) {
         return new SubqueryExpression(getLocation(context), (Query) visit(context.query()));
     }
 
     @Override
-    public Node visitDereference(SqlBaseParser.DereferenceContext context) {
-        return new DereferenceExpression(
-            getLocation(context),
-            (Expression) visit(context.base),
-            (Identifier) visit(context.fieldName));
-    }
-
-    @Override
     public Node visitColumnReference(SqlBaseParser.ColumnReferenceContext context) {
         return visit(context.identifier());
-    }
-
-    @Override
-    public Node visitSimpleCase(SqlBaseParser.SimpleCaseContext context) {
-        return new SimpleCaseExpression(
-            getLocation(context),
-            (Expression) visit(context.valueExpression()),
-            visit(context.whenClause(), WhenClause.class),
-            visitIfPresent(context.elseExpression, Expression.class));
-    }
-
-    @Override
-    public Node visitSearchedCase(SqlBaseParser.SearchedCaseContext context) {
-        return new SearchedCaseExpression(
-            getLocation(context),
-            visit(context.whenClause(), WhenClause.class),
-            visitIfPresent(context.elseExpression, Expression.class));
     }
 
     @Override
@@ -822,89 +553,8 @@ class AstBuilder
         QualifiedName name = getQualifiedName(context.qualifiedName());
         boolean distinct = isDistinct(context.setQuantifier());
 
-        if (name.toString().equalsIgnoreCase("if")) {
-            check(context.expression().size() == 2 || context.expression().size() == 3,
-                "Invalid number of arguments for 'if' function", context);
-            check(!distinct, "DISTINCT not valid for 'if' function", context);
-
-            Expression elseExpression = null;
-            if (context.expression().size() == 3) {
-                elseExpression = (Expression) visit(context.expression(2));
-            }
-
-            return new IfExpression(
-                getLocation(context),
-                (Expression) visit(context.expression(0)),
-                (Expression) visit(context.expression(1)),
-                elseExpression);
-        }
-
-        if (name.toString().equalsIgnoreCase("nullif")) {
-            check(context.expression().size() == 2,
-                "Invalid number of arguments for 'nullif' function",
-                context);
-            check(!distinct, "DISTINCT not valid for 'nullif' function", context);
-
-            return new NullIfExpression(
-                getLocation(context),
-                (Expression) visit(context.expression(0)),
-                (Expression) visit(context.expression(1)));
-        }
-
-        if (name.toString().equalsIgnoreCase("coalesce")) {
-            check(context.expression().size() >= 2,
-                "The 'coalesce' function must have at least two arguments", context);
-            check(!distinct, "DISTINCT not valid for 'coalesce' function", context);
-
-            return new CoalesceExpression(getLocation(context),
-                visit(context.expression(), Expression.class));
-        }
-
-        if (name.toString().equalsIgnoreCase("try")) {
-            check(context.expression().size() == 1,
-                "The 'try' function must have exactly one argument",
-                context);
-            check(!distinct, "DISTINCT not valid for 'try' function", context);
-
-            return new TryExpression(getLocation(context),
-                (Expression) visit(getOnlyElement(context.expression())));
-        }
-
-        if (name.toString().equalsIgnoreCase("$internal$bind")) {
-            check(context.expression().size() >= 1,
-                "The '$internal$bind' function must have at least one arguments", context);
-            check(!distinct, "DISTINCT not valid for '$internal$bind' function", context);
-
-            int numValues = context.expression().size() - 1;
-            List<Expression> arguments = context.expression().stream()
-                .map(this::visit)
-                .map(Expression.class::cast)
-                .collect(toImmutableList());
-
-            return new BindExpression(
-                getLocation(context),
-                arguments.subList(0, numValues),
-                arguments.get(numValues));
-        }
-
-        return new FunctionCall(
-            getLocation(context),
-            getQualifiedName(context.qualifiedName()),
-            filter,
-            distinct,
+        return new FunctionCall(getLocation(context), name, filter, distinct,
             visit(context.expression(), Expression.class));
-    }
-
-    @Override
-    public Node visitLambda(SqlBaseParser.LambdaContext context) {
-        List<LambdaArgumentDeclaration> arguments = visit(context.identifier(), Identifier.class)
-            .stream()
-            .map(LambdaArgumentDeclaration::new)
-            .collect(toList());
-
-        Expression body = (Expression) visit(context.expression());
-
-        return new LambdaExpression(getLocation(context), arguments, body);
     }
 
     @Override
@@ -936,15 +586,6 @@ class AstBuilder
             Optional.ofNullable(context.nullOrdering)
                 .map(AstBuilder::getNullOrderingType)
                 .orElse(SortItem.NullOrdering.UNDEFINED));
-    }
-
-    @Override
-    public Node visitGroupingOperation(SqlBaseParser.GroupingOperationContext context) {
-        List<QualifiedName> arguments = context.qualifiedName().stream()
-            .map(this::getQualifiedName)
-            .collect(toList());
-
-        return new GroupingOperation(Optional.of(getLocation(context)), arguments);
     }
 
     @Override
@@ -985,12 +626,6 @@ class AstBuilder
         }
 
         String type = context.identifier().getText();
-        if (type.equalsIgnoreCase("time")) {
-            return new TimeLiteral(getLocation(context), value);
-        }
-        if (type.equalsIgnoreCase("timestamp")) {
-            return new TimestampLiteral(getLocation(context), value);
-        }
         if (type.equalsIgnoreCase("decimal")) {
             return new DecimalLiteral(getLocation(context), value);
         }
@@ -1203,17 +838,6 @@ class AstBuilder
         }
 
         throw new IllegalArgumentException("Unsupported operator: " + symbol.getText());
-    }
-
-    private static SampledRelation.Type getSamplingMethod(Token token) {
-        switch (token.getType()) {
-            case SqlBaseLexer.BERNOULLI:
-                return SampledRelation.Type.BERNOULLI;
-            case SqlBaseLexer.SYSTEM:
-                return SampledRelation.Type.SYSTEM;
-        }
-
-        throw new IllegalArgumentException("Unsupported sampling method: " + token.getText());
     }
 
     private static LogicalBinaryExpression.Type getLogicalBinaryOperator(Token token) {
