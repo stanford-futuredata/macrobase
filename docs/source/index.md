@@ -31,7 +31,7 @@ MacroBase also has a UI that offers simple point-and-click functionality
 for specifying user queries. Users can highlight the key performance metrics
 they care about, select which metadata attributes to explore, and let MacroBase
 find explanations of the anomalous or interesting trends in the data. For more,
-check out our [UI Tutorial](gui/setup).
+check out our [UI Tutorial](gui/tutorial).
 
 MacroBase is designed for extensibility, and there are a number of more
 advanced interfaces you can use to program the system and execute more complex
