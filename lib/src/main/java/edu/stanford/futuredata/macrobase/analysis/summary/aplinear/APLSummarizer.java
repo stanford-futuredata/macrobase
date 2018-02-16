@@ -71,7 +71,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 encoder.getNextKey(),
                 numThreads,
                 encoder.getBitMap(),
-                encoder.getOutlierList()
+                encoder.getOutlierList(),
+                encoder.getIsBitmapEncodedArray()
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
