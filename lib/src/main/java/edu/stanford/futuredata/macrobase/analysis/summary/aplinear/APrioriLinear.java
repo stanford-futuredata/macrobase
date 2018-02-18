@@ -411,14 +411,18 @@ public class APrioriLinear {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
-            RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
-            RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
-            // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
-            oneBitmapOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
-                    curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
-            // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for inliers)
-            oneBitmapOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
-                    curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+            if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
+                RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
+                // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
+                oneBitmapOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
+                        curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
+            }
+            if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
+                RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
+                // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for inliers)
+                oneBitmapOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
+                        curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+            }
         }
     }
 
@@ -510,16 +514,18 @@ public class APrioriLinear {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
-            RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
-            RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
-
-            // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
-            oneBitmapTwoNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
-                    curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
-
-            // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for the inliers)
-            oneBitmapTwoNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
-                    curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+            if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
+                RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
+                // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
+                oneBitmapTwoNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
+                        curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
+            }
+            if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
+                RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
+                // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for the inliers)
+                oneBitmapTwoNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
+                        curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+            }
         }
     }
 
@@ -565,14 +571,18 @@ public class APrioriLinear {
                 if (curCandidateTwo == AttributeEncoder.noSupport || !singleNextArray[curCandidateTwo])
                     continue;
 
-                RoaringBitmap outlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][1].get(curCandidateOne),
-                        byThreadColumnBitmap[colNumTwo][1].get(curCandidateTwo));
-                RoaringBitmap inlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][0].get(curCandidateOne),
-                        byThreadColumnBitmap[colNumTwo][0].get(curCandidateTwo));
-                twoBitmapsOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne, curCandidateTwo,
-                        curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
-                twoBitmapsOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne, curCandidateTwo,
-                        curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+                if (byThreadColumnBitmap[colNumOne][1].containsKey(curCandidateOne) && byThreadColumnBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
+                    RoaringBitmap outlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][1].get(curCandidateOne),
+                            byThreadColumnBitmap[colNumTwo][1].get(curCandidateTwo));
+                    twoBitmapsOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne, curCandidateTwo,
+                            curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
+                }
+                if (byThreadColumnBitmap[colNumOne][0].containsKey(curCandidateOne) && byThreadColumnBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
+                    RoaringBitmap inlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][0].get(curCandidateOne),
+                            byThreadColumnBitmap[colNumTwo][0].get(curCandidateTwo));
+                    twoBitmapsOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne, curCandidateTwo,
+                            curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+                }
             }
         }
     }
