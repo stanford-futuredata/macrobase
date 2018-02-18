@@ -89,11 +89,24 @@ public class IntSetAsLong implements IntSet {
     }
 
     public static long threeIntToLong(long a, long b, long c) {
-        long[] x = {a, b, c};
-        Arrays.sort(x);
-        a = x[0];
-        b = x[1];
-        c = x[2];
+        if (b > c)
+        {
+           long temp = b;
+           b = c;
+           c = temp;
+        }
+        if (a > b)
+        {
+            long temp = a;
+            a = b;
+            b = temp;
+        }
+        if (b > c)
+        {
+            long temp = b;
+            b = c;
+            c = temp;
+        }
         return (a << (42)) + (b << 21) + c;
     }
 
