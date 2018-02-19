@@ -265,19 +265,19 @@ public class CubePipeline implements Pipeline {
                 summarizer.setMinStdDev(minRatioMetric);
                 return summarizer;
             }
-            case "moment": {
-                APLMomentSummarizer summarizer = new APLMomentSummarizer();
-                summarizer.setMinColumn(minColumn.orElseThrow(
-                        () -> new MacrobaseException("min column not present in config")));
-                summarizer.setMaxColumn(maxColumn.orElseThrow(
-                        () -> new MacrobaseException("max column not present in config")));
-                summarizer.setMomentColumns(momentColumns);
-                summarizer.setAttributes(attributes);
-                summarizer.setMinSupport(minSupport);
-                summarizer.setMinRatioMetric(minRatioMetric);
-                summarizer.setPercentile(cutoff);
-                return summarizer;
-            }
+//            case "moment": {
+//                APLMomentSummarizer summarizer = new APLMomentSummarizer();
+//                summarizer.setMinColumn(minColumn.orElseThrow(
+//                        () -> new MacrobaseException("min column not present in config")));
+//                summarizer.setMaxColumn(maxColumn.orElseThrow(
+//                        () -> new MacrobaseException("max column not present in config")));
+//                summarizer.setMomentColumns(momentColumns);
+//                summarizer.setAttributes(attributes);
+//                summarizer.setMinSupport(minSupport);
+//                summarizer.setMinRatioMetric(minRatioMetric);
+//                summarizer.setPercentile(cutoff);
+//                return summarizer;
+//            }
             default: {
                 APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
                 summarizer.setOutlierColumn(classifier.getOutputColumnName());

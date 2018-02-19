@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.EstimatedGlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
@@ -9,8 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 /**
