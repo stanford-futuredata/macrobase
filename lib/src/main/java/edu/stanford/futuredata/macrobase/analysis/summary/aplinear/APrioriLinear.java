@@ -24,6 +24,10 @@ public class APrioriLinear {
     private double[] thresholds;
     private boolean doContainment = true;
 
+    public long mergeTime = 0;
+    public long queryTime = 0;
+    private long start;
+
     // **Cached values**
 
     // Singleton viable sets for quick lookup
@@ -64,6 +68,7 @@ public class APrioriLinear {
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
         double[] globalAggregates = new double[numAggregates];
+        start = System.nanoTime();
         if (aggregationOps == null) {
             for (int j = 0; j < numAggregates; j++) {
                 globalAggregates[j] = 0;
@@ -95,9 +100,12 @@ public class APrioriLinear {
                 }
             }
         }
+        mergeTime += System.nanoTime() - start;
+        start = System.nanoTime();
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
         }
+        queryTime += System.nanoTime() - start;
 
         // Row store for more convenient access
         final double[][] aRows = new double[numRows][numAggregates];
@@ -120,6 +128,7 @@ public class APrioriLinear {
                 threadSetAggregates.add(new HashMap<>());
             }
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
+            start = System.nanoTime();
             for (int threadNum = 0; threadNum < numThreads; threadNum++) {
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
@@ -192,6 +201,7 @@ public class APrioriLinear {
                     }
                 }
             }
+            mergeTime += System.nanoTime() - start;
 
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
@@ -199,11 +209,13 @@ public class APrioriLinear {
             for (IntSet curCandidate: setAggregates.keySet()) {
                 double[] curAggregates = setAggregates.get(curCandidate);
                 QualityMetric.Action action = QualityMetric.Action.KEEP;
+                start = System.nanoTime();
                 for (int i = 0; i < qualityMetrics.length; i++) {
                     QualityMetric q = qualityMetrics[i];
                     double t = thresholds[i];
                     action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                 }
+                queryTime += System.nanoTime() - start;
                 if (action == QualityMetric.Action.KEEP) {
                     // if a set is already past the threshold on all metrics,
                     // save it and no need for further exploration if we do containment

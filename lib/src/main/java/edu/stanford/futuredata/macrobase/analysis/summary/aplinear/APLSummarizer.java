@@ -20,12 +20,12 @@ import java.util.Map;
  */
 public abstract class APLSummarizer extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APLSummarizer");
-    AttributeEncoder encoder;
-    APLExplanation explanation;
-    APrioriLinear aplKernel;
-    boolean doContainment = true;
+    protected AttributeEncoder encoder;
+    protected APLExplanation explanation;
+    protected APrioriLinear aplKernel;
+    protected boolean doContainment = true;
     public List<QualityMetric> qualityMetricList;
-    List<Double> thresholds;
+    protected List<Double> thresholds;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
