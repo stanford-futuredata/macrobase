@@ -106,7 +106,8 @@ public class APrioriLinearDistributed {
         for(int i = 0; i < numPartitions; i++) {
             sparkTuples.add(new AttributeAggregateTuple(byThreadAttributesTranspose.get(i), aRows.get(i)));
         }
-        final JavaRDD<AttributeAggregateTuple> tupleRDD = sparkContext.parallelize(sparkTuples, numPartitions);
+        JavaRDD<AttributeAggregateTuple> tupleRDD = sparkContext.parallelize(sparkTuples, numPartitions);
+        tupleRDD.cache();
 
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
