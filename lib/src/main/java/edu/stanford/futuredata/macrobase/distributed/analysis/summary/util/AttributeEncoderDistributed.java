@@ -16,7 +16,9 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
     public JavaPairRDD<int[], double[]> encodeAttributesWithSupport(JavaPairRDD<String[], double[]> partitionedDataFrame,
                                                                    List<String[]> columns,
                                                           double minSupport,
+                                                          double[] globalAggregates,
                                                           double[] outlierColumn,
+                                                          int outlierColumnIndex,
                                                           int distributedNumPartitions,
                                                           JavaSparkContext sparkContext) {
 
@@ -30,14 +32,12 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         }
         // Create a map from strings to the number of times
         // each string appears in an outlier.
-        int numOutliers = 0;
+        int numOutliers = Math.toIntExact(Math.round(globalAggregates[outlierColumnIndex]));
         HashMap<String, Double> countMap = new HashMap<>();
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 if (outlierColumn[rowIdx] > 0.0) {
-                    if (colIdx == 0)
-                        numOutliers += outlierColumn[rowIdx];
                     String colVal = Integer.toString(colIdx) + "," + curCol[rowIdx];
                     Double curCount = countMap.get(colVal);
                     if (curCount == null)
