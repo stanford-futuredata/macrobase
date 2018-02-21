@@ -24,13 +24,11 @@ public class APrioriLinearDistributed {
 
     public static List<APLExplanationResult> explain(
             final JavaPairRDD<int[], double[]> attributesAndAggregates,
-            double[][] aggregateColumns,
             int cardinality,
             int numPartitions,
             int numColumns,
             List<QualityMetric> argQualityMetrics,
-            List<Double> argThresholds,
-            JavaSparkContext sparkContext
+            List<Double> argThresholds
     ) {
 
         Logger log = LoggerFactory.getLogger("APLSummarizerDistributed");
@@ -48,9 +46,6 @@ public class APrioriLinearDistributed {
         // Aggregate values for all of the sets we saved
         HashMap<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
 
-        final int numAggregates = aggregateColumns.length;
-        final int numRows = aggregateColumns[0].length;
-
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
         // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
@@ -64,14 +59,15 @@ public class APrioriLinearDistributed {
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
-        double[] globalAggregates = new double[numAggregates];
-        for (int j = 0; j < numAggregates; j++) {
-            globalAggregates[j] = 0;
-            double[] curColumn = aggregateColumns[j];
-            for (int i = 0; i < numRows; i++) {
-                globalAggregates[j] += curColumn[i];
-            }
-        }
+        final int numRows = Math.toIntExact(attributesAndAggregates.count());
+        double[] globalAggregates = attributesAndAggregates.reduce((Tuple2<int[], double[]> first, Tuple2<int[], double[]> second) -> {
+            final int numAggregates = first._2.length;
+            double[] sumAggregates = new double[numAggregates];
+            for (int i = 0; i < numAggregates; i++)
+                sumAggregates[i] = first._2[i] + second._2[i];
+            return new Tuple2<>(first._1, sumAggregates);
+        })._2;
+        final int numAggregates = globalAggregates.length;
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
         }
@@ -103,14 +99,14 @@ public class APrioriLinearDistributed {
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
             JavaRDD<FastFixedHashTable> hashTableSet = tupleRDD.map((AttributeAggregateTuple sparkTuple) -> {
+                double[][] aRowsForThread = sparkTuple.aRows;
+                int[][] attributesForThread = sparkTuple.attributes;
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
                     curCandidate = new IntSetAsLong(0);
                 else
                     curCandidate = new IntSetAsArray(0);
-                double[][] aRowsForThread = sparkTuple.aRows;
-                int[][] attributesForThread = sparkTuple.attributes;
                 if (curOrderFinal == 1) {
                     for (int colNum = 0; colNum < numColumns; colNum++) {
                         int[] curColumnAttributes = attributesForThread[colNum];
