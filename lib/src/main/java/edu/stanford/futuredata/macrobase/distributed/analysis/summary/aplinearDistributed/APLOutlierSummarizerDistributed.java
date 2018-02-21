@@ -31,8 +31,14 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     }
 
     @Override
-    public JavaPairRDD<int[], double[]> getEncoded(List<String[]> columns, double[] globalAggregates, JavaPairRDD<String[], double[]> partitionedDataFrame, double[] outlierColumn) {
-        return encoder.encodeAttributesWithSupport(partitionedDataFrame, columns, minOutlierSupport, globalAggregates, outlierColumn, 0,  numPartitions, sparkContext);
+    public JavaPairRDD<int[], double[]> getEncoded(
+            JavaPairRDD<String[], double[]> partitionedDataFrame,
+            double[] globalAggregates) {
+        return encoder.encodeAttributesWithSupport(partitionedDataFrame,
+                attributes.size(),
+                minOutlierSupport,
+                globalAggregates,
+                0);
     }
 
     @Override
@@ -62,16 +68,6 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     @Override
     public List<Double> getThresholds() {
         return Arrays.asList(minOutlierSupport, minRatioMetric);
-    }
-
-    @Override
-    public double getNumberOutliers(double[][] aggregates) {
-        double count = 0.0;
-        double[] outlierCount = aggregates[0];
-        for (int i = 0; i < outlierCount.length; i++) {
-            count += outlierCount[i];
-        }
-        return count;
     }
 
     public String getCountColumn() {
