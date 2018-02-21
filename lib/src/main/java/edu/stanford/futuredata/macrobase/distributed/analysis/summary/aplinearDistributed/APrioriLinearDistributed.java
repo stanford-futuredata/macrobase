@@ -4,10 +4,12 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 import java.io.Serializable;
 import java.util.*;
@@ -21,10 +23,11 @@ import java.util.*;
 public class APrioriLinearDistributed {
 
     public static List<APLExplanationResult> explain(
-            final int[][] attributes,
+            final JavaPairRDD<Integer, int[]> attributes,
             double[][] aggregateColumns,
             int cardinality,
             int numPartitions,
+            int numColumns,
             List<QualityMetric> argQualityMetrics,
             List<Double> argThresholds,
             JavaSparkContext sparkContext
@@ -47,7 +50,6 @@ public class APrioriLinearDistributed {
 
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
-        final int numColumns = attributes[0].length;
 
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
@@ -58,20 +60,6 @@ public class APrioriLinearDistributed {
             useIntSetAsArray = true;
         } else{
             useIntSetAsArray = false;
-        }
-
-        // Shard the dataset by rows for the threads, but store it by column for fast processing
-        final List<int[][]> byThreadAttributesTranspose = new ArrayList<>(numPartitions);
-        for (int threadNum = 0; threadNum < numPartitions; threadNum++) {
-            final int startIndex = (numRows * threadNum) / numPartitions;
-            final int endIndex = (numRows * (threadNum + 1)) / numPartitions;
-            int[][] thisPartition = new int[numColumns][(numRows + numPartitions)/numPartitions];
-            for(int i = 0; i < numColumns; i++) {
-                for (int j = startIndex; j < endIndex; j++) {
-                    thisPartition[i][j - startIndex] = attributes[j][i];
-                }
-            }
-            byThreadAttributesTranspose.add(thisPartition);
         }
 
         // Quality metrics are initialized with global aggregates to
@@ -89,24 +77,38 @@ public class APrioriLinearDistributed {
         }
 
         // Shared and row store for more convenient access
-        final List<double[][]> aRows = new ArrayList<>(numPartitions);
-        for(int threadNum = 0; threadNum < numPartitions; threadNum++) {
-            final int startIndex = (numRows * threadNum) / numPartitions;
-            final int endIndex = (numRows * (threadNum + 1)) / numPartitions;
-            double[][] thisPartition = new double[endIndex - startIndex][numAggregates];
-            for (int i = startIndex; i < endIndex; i++) {
-                for (int j = 0; j < numAggregates; j++) {
-                    thisPartition[i - startIndex][j] = aggregateColumns[j][i];
-                }
+        List<Tuple2<Integer, double[]>> aggregateRows = new ArrayList<>(numRows);
+        for(int i = 0; i < numRows; i++) {
+            double[] row = new double[numAggregates];
+            for (int j = 0; j < numAggregates; j++) {
+                row[j] = aggregateColumns[j][i];
             }
-            aRows.add(thisPartition);
+            aggregateRows.add(new Tuple2<>(i, row));
         }
+        JavaPairRDD<Integer, double[]> aggregateRowsRDD = JavaPairRDD.fromJavaRDD(sparkContext.parallelize(aggregateRows, numPartitions));
 
-        final List<AttributeAggregateTuple> sparkTuples = new ArrayList<>(numPartitions);
-        for(int i = 0; i < numPartitions; i++) {
-            sparkTuples.add(new AttributeAggregateTuple(byThreadAttributesTranspose.get(i), aRows.get(i)));
-        }
-        JavaRDD<AttributeAggregateTuple> tupleRDD = sparkContext.parallelize(sparkTuples, numPartitions);
+        JavaPairRDD<Integer, Tuple2<int[], double[]>> mergedRdd = attributes.join(aggregateRowsRDD, numPartitions);
+
+        JavaRDD<AttributeAggregateTuple> tupleRDD = mergedRdd.mapPartitions((Iterator<Tuple2<Integer, Tuple2<int[], double[]>>> iter) -> {
+            int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions)/numPartitions];
+            double[][] thisPartitionAggregates = new double[(numRows + numPartitions)/numPartitions][numAggregates];
+            int j = 0;
+            while(iter.hasNext()) {
+                Tuple2<Integer, Tuple2<int[], double[]>> rowNext = iter.next();
+                int[] attributesNext = rowNext._2._1;
+                double[] aggregatesNext = rowNext._2._2;
+                for (int i = 0; i < numColumns; i++) {
+                    thisPartitionAttributes[i][j] = attributesNext[i];
+                }
+                for(int i = 0; i < numAggregates; i++) {
+                    thisPartitionAggregates[j][i] = aggregatesNext[i];
+                }
+                j++;
+            }
+            List<AttributeAggregateTuple> returnList = new ArrayList<>(1);
+            returnList.add(new AttributeAggregateTuple(thisPartitionAttributes, thisPartitionAggregates));
+            return returnList.iterator();
+        }, true);
         tupleRDD.cache();
 
         for (int curOrder = 1; curOrder <= 3; curOrder++) {

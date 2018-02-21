@@ -13,11 +13,11 @@ public class AttributeEncoder {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
 
-    private HashMap<Integer, Map<String, Integer>> encoder;
-    private int nextKey;
+    protected HashMap<Integer, Map<String, Integer>> encoder;
+    protected int nextKey;
 
-    private HashMap<Integer, String> valueDecoder;
-    private HashMap<Integer, Integer> columnDecoder;
+    protected HashMap<Integer, String> valueDecoder;
+    protected HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
 
     public AttributeEncoder() {
