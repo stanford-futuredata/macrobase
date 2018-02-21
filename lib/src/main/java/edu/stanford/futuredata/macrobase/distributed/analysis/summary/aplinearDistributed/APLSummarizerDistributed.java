@@ -90,6 +90,8 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
             return new Tuple2<>(entry._2._1, entry._2._2);
         }));
 
+        mergedConsolidatedRDD.cache();
+
         return mergedConsolidatedRDD;
     }
 
@@ -98,7 +100,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
         double[][] aggregateColumns = getAggregateColumns(input);
-        JavaPairRDD<String[], double[]> partitionedDataFrame = transformDataFrame(input.getStringColsByName(attributes), aggregateColumns);
+        JavaPairRDD<String[], double[]> partitionedDataFrame = transformDataFrame(input.getStringColsByName(attributes), getAggregateColumns(input));
         JavaPairRDD<int[], double[]> encoded = getEncoded(input.getStringColsByName(attributes), input, partitionedDataFrame);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
@@ -109,13 +111,11 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
 
         List<String> aggregateNames = getAggregateNames();
         List<APLExplanationResult> aplResults = APrioriLinearDistributed.explain(encoded,
-                aggregateColumns,
                 encoder.getNextKey(),
                 numPartitions,
                 attributes.size(),
                 qualityMetricList,
-                thresholds,
-                sparkContext
+                thresholds
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
