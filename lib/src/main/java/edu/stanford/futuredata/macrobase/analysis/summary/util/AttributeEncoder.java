@@ -1,12 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.io.Serializable;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
@@ -18,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * and is used inside of the explanation operators to search for explanatory
  * column values.
  */
-public class AttributeEncoder {
+public class AttributeEncoder implements Serializable {
     private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;

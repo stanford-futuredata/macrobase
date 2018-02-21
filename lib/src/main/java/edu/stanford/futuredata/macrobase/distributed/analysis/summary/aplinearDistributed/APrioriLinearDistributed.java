@@ -23,7 +23,7 @@ import java.util.*;
 public class APrioriLinearDistributed {
 
     public static List<APLExplanationResult> explain(
-            final JavaPairRDD<Integer, int[]> attributes,
+            final JavaPairRDD<int[], double[]> attributesAndAggregates,
             double[][] aggregateColumns,
             int cardinality,
             int numPartitions,
@@ -76,27 +76,14 @@ public class APrioriLinearDistributed {
             q.initialize(globalAggregates);
         }
 
-        // Shared and row store for more convenient access
-        List<Tuple2<Integer, double[]>> aggregateRows = new ArrayList<>(numRows);
-        for(int i = 0; i < numRows; i++) {
-            double[] row = new double[numAggregates];
-            for (int j = 0; j < numAggregates; j++) {
-                row[j] = aggregateColumns[j][i];
-            }
-            aggregateRows.add(new Tuple2<>(i, row));
-        }
-        JavaPairRDD<Integer, double[]> aggregateRowsRDD = JavaPairRDD.fromJavaRDD(sparkContext.parallelize(aggregateRows, numPartitions));
-
-        JavaPairRDD<Integer, Tuple2<int[], double[]>> mergedRdd = attributes.join(aggregateRowsRDD, numPartitions);
-
-        JavaRDD<AttributeAggregateTuple> tupleRDD = mergedRdd.mapPartitions((Iterator<Tuple2<Integer, Tuple2<int[], double[]>>> iter) -> {
+        JavaRDD<AttributeAggregateTuple> tupleRDD = attributesAndAggregates.mapPartitions((Iterator<Tuple2<int[], double[]>> iter) -> {
             int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions)/numPartitions];
             double[][] thisPartitionAggregates = new double[(numRows + numPartitions)/numPartitions][numAggregates];
             int j = 0;
             while(iter.hasNext()) {
-                Tuple2<Integer, Tuple2<int[], double[]>> rowNext = iter.next();
-                int[] attributesNext = rowNext._2._1;
-                double[] aggregatesNext = rowNext._2._2;
+                Tuple2<int[], double[]> rowNext = iter.next();
+                int[] attributesNext = rowNext._1;
+                double[] aggregatesNext = rowNext._2;
                 for (int i = 0; i < numColumns; i++) {
                     thisPartitionAttributes[i][j] = attributesNext[i];
                 }
