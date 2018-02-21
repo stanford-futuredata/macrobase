@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Gl
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,8 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     }
 
     @Override
-    public int[][] getEncoded(List<String[]> columns, DataFrame input) {
-        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn));
+    public JavaPairRDD<Integer, int[]> getEncoded(List<String[]> columns, DataFrame input) {
+        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn), numPartitions, sparkContext);
     }
 
     @Override

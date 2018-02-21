@@ -18,11 +18,11 @@ public class AttributeEncoder {
     public static int noSupport = Integer.MAX_VALUE;
     private final int cardinalityThreshold = 50;
 
-    private HashMap<Integer, Map<String, Integer>> encoder;
-    private int nextKey;
+    protected HashMap<Integer, Map<String, Integer>> encoder;
+    protected int nextKey;
 
-    private HashMap<Integer, String> valueDecoder;
-    private HashMap<Integer, Integer> columnDecoder;
+    protected HashMap<Integer, String> valueDecoder;
+    protected HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
     private HashMap<Integer, RoaringBitmap>[][] bitmap;
     private ArrayList<Integer> outlierList[];
