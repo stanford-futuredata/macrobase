@@ -35,8 +35,8 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
-    public abstract JavaPairRDD<int[], double[]> getEncoded(List<String[]> columns, DataFrame input,
-                                                           JavaPairRDD<String[], double[]> partitionedDataFrame);
+    public abstract JavaPairRDD<int[], double[]> getEncoded(List<String[]> columns, double[] globalAggregates,
+                                                           JavaPairRDD<String[], double[]> partitionedDataFrame, double[] outlierColumn);
     public abstract double getNumberOutliers(double[][] aggregates);
 
     APLSummarizerDistributed(JavaSparkContext sparkContext) {
@@ -99,9 +99,17 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         encoder = new AttributeEncoderDistributed();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        double[][] aggregateColumns = getAggregateColumns(input);
         JavaPairRDD<String[], double[]> partitionedDataFrame = transformDataFrame(input.getStringColsByName(attributes), getAggregateColumns(input));
-        JavaPairRDD<int[], double[]> encoded = getEncoded(input.getStringColsByName(attributes), input, partitionedDataFrame);
+
+        double[] globalAggregates = partitionedDataFrame.reduce((Tuple2<String[], double[]> first, Tuple2<String[], double[]> second) -> {
+            final int numAggregates = first._2.length;
+            double[] sumAggregates = new double[numAggregates];
+            for (int i = 0; i < numAggregates; i++)
+                sumAggregates[i] = first._2[i] + second._2[i];
+            return new Tuple2<>(first._1, sumAggregates);
+        })._2;
+
+        JavaPairRDD<int[], double[]> encoded = getEncoded(input.getStringColsByName(attributes), globalAggregates, partitionedDataFrame, input.getDoubleColumnByName(outlierColumn));
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
@@ -111,6 +119,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
 
         List<String> aggregateNames = getAggregateNames();
         List<APLExplanationResult> aplResults = APrioriLinearDistributed.explain(encoded,
+                globalAggregates,
                 encoder.getNextKey(),
                 numPartitions,
                 attributes.size(),
@@ -118,12 +127,11 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
                 thresholds
         );
         log.info("Number of results: {}", aplResults.size());
-        numOutliers = (long)getNumberOutliers(aggregateColumns);
 
         explanation = new APLExplanation(
                 encoder,
-                numEvents,
-                numOutliers,
+                Math.round(globalAggregates[1]),
+                Math.round(globalAggregates[0]),
                 aggregateNames,
                 qualityMetricList,
                 thresholds,

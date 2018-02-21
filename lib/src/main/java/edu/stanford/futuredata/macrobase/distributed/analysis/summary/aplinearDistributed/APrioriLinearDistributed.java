@@ -6,7 +6,6 @@ import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
@@ -24,6 +23,7 @@ public class APrioriLinearDistributed {
 
     public static List<APLExplanationResult> explain(
             final JavaPairRDD<int[], double[]> attributesAndAggregates,
+            double[] globalAggregates,
             int cardinality,
             int numPartitions,
             int numColumns,
@@ -60,13 +60,6 @@ public class APrioriLinearDistributed {
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
         final int numRows = Math.toIntExact(attributesAndAggregates.count());
-        double[] globalAggregates = attributesAndAggregates.reduce((Tuple2<int[], double[]> first, Tuple2<int[], double[]> second) -> {
-            final int numAggregates = first._2.length;
-            double[] sumAggregates = new double[numAggregates];
-            for (int i = 0; i < numAggregates; i++)
-                sumAggregates[i] = first._2[i] + second._2[i];
-            return new Tuple2<>(first._1, sumAggregates);
-        })._2;
         final int numAggregates = globalAggregates.length;
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
