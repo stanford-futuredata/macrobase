@@ -33,20 +33,41 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         // Create a map from strings to the number of times
         // each string appears in an outlier.
         int numOutliers = Math.toIntExact(Math.round(globalAggregates[outlierColumnIndex]));
-        HashMap<String, Double> countMap = new HashMap<>();
-        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
-            String[] curCol = columns.get(colIdx);
-            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                if (outlierColumn[rowIdx] > 0.0) {
-                    String colVal = Integer.toString(colIdx) + "," + curCol[rowIdx];
-                    Double curCount = countMap.get(colVal);
-                    if (curCount == null)
-                        countMap.put(colVal, outlierColumn[rowIdx]);
-                    else
-                        countMap.put(colVal, curCount + outlierColumn[rowIdx]);
+        JavaRDD<HashMap<String, Double>> countMapRDD = partitionedDataFrame.mapPartitions((Iterator<Tuple2<String[], double[]>> iter) -> {
+            HashMap<String, Double> countMap = new HashMap<>();
+            while (iter.hasNext()) {
+                Tuple2<String[], double[]> row = iter.next();
+                double outlierCount = row._2[outlierColumnIndex];
+                if (outlierCount > 0.0) {
+                    String[] rowAttributes = row._1;
+                    for (int colIdx = 0; colIdx < rowAttributes.length; colIdx++) {
+                        String colVal = Integer.toString(colIdx) + "," + rowAttributes[colIdx];
+                        Double curCount = countMap.get(colVal);
+                        if (curCount == null)
+                            countMap.put(colVal, outlierCount);
+                        else
+                            countMap.put(colVal, curCount + outlierCount);
+                    }
                 }
             }
-        }
+            List<HashMap<String, Double>> countMapList = new ArrayList<>(1);
+            countMapList.add(countMap);
+            return countMapList.iterator();
+        }, true);
+        HashMap<String, Double> countMap = countMapRDD.reduce((HashMap<String, Double> first, HashMap<String, Double> second) -> {
+            HashMap<String, Double> returnTable = new HashMap<>();
+            List<HashMap<String, Double>> tables = Arrays.asList(first, second);
+            for (HashMap<String, Double> table: tables) {
+                for (String key : table.keySet()) {
+                    Double curCount = returnTable.get(key);
+                    if (curCount == null)
+                        returnTable.put(key, table.get(key));
+                    else
+                        returnTable.put(key, table.get(key) + curCount);
+                }
+            }
+            return returnTable;
+        });
 
         // Rank the strings that have minimum support among the outliers
         // by the amount of support they have.
