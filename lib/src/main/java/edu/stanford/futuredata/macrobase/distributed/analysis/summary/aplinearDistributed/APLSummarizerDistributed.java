@@ -3,9 +3,10 @@ package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearD
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.distributed.analysis.summary.util.AttributeEncoderDistributed;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +20,10 @@ import java.util.List;
  */
 public abstract class APLSummarizerDistributed extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APLSummarizerDistributed");
-    AttributeEncoder encoder;
+    AttributeEncoderDistributed encoder;
     private APLExplanation explanation;
-    private JavaSparkContext sparkContext;
-    private int numPartitions = 1;
+    protected JavaSparkContext sparkContext;
+    protected int numPartitions = 1;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -31,7 +32,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
-    public abstract int[][] getEncoded(List<String[]> columns, DataFrame input);
+    public abstract JavaPairRDD<Integer, int[]> getEncoded(List<String[]> columns, DataFrame input);
     public abstract double getNumberOutliers(double[][] aggregates);
 
     APLSummarizerDistributed(JavaSparkContext sparkContext) {
@@ -55,10 +56,10 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         return countCol;
     }
     public void process(DataFrame input) throws Exception {
-        encoder = new AttributeEncoder();
+        encoder = new AttributeEncoderDistributed();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
+        JavaPairRDD<Integer, int[]> encoded = getEncoded(input.getStringColsByName(attributes), input);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
@@ -72,6 +73,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
                 aggregateColumns,
                 encoder.getNextKey(),
                 numPartitions,
+                attributes.size(),
                 qualityMetricList,
                 thresholds,
                 sparkContext
