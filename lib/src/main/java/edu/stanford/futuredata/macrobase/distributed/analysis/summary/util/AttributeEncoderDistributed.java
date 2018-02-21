@@ -35,7 +35,7 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
                 if (outlierColumn[rowIdx] > 0.0) {
                     if (colIdx == 0)
                         numOutliers += outlierColumn[rowIdx];
-                    String colVal = Integer.toString(colIdx) + curCol[rowIdx];
+                    String colVal = Integer.toString(colIdx) + "," + curCol[rowIdx];
                     Double curCount = countMap.get(colVal);
                     if (curCount == null)
                         countMap.put(colVal, outlierColumn[rowIdx]);
@@ -57,6 +57,16 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
             // We must one-index ranks because IntSetAsLong does not accept zero values.
             stringToRank.put(filterOnMinSupport.get(i), i + 1);
         }
+        for (String key : stringToRank.keySet()) {
+            int colIdx = Integer.parseInt(key.split(",", 2)[0]);
+            String colVal = key.split(",", 2)[1];
+            int newKey = stringToRank.get(key);
+            Map<String, Integer> curColEncoder = encoder.get(colIdx);
+            curColEncoder.put(colVal, newKey);
+            valueDecoder.put(newKey, colVal);
+            columnDecoder.put(newKey, colIdx);
+            nextKey++;
+        }
 
         // Encode the strings that have support with a key equal to their rank.
         int[][] encodedAttributes = new int[numRows][numColumns];
@@ -65,19 +75,11 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 String colVal = curCol[rowIdx];
-                String colNumAndVal = Integer.toString(colIdx) + colVal;
-                if (!curColEncoder.containsKey(colVal)) {
-                    if (stringToRank.containsKey(colNumAndVal)) {
-                        int newKey = stringToRank.get(colNumAndVal);
-                        curColEncoder.put(colVal, newKey);
-                        valueDecoder.put(newKey, colVal);
-                        columnDecoder.put(newKey, colIdx);
-                        nextKey++;
-                    } else {
-                        curColEncoder.put(colVal, noSupport);
-                    }
-                }
-                int curKey = curColEncoder.get(colVal);
+                int curKey;
+                if (curColEncoder.containsKey(colVal))
+                    curKey = curColEncoder.get(colVal);
+                else
+                    curKey = noSupport;
                 encodedAttributes[rowIdx][colIdx] = curKey;
             }
         }
