@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -9,7 +10,7 @@ import java.util.stream.Collectors;
  * and is used inside of the explanation operators to search for explanatory
  * column values.
  */
-public class AttributeEncoder {
+public class AttributeEncoder implements Serializable {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
 

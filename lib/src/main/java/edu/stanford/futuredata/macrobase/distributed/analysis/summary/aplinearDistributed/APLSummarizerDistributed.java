@@ -7,10 +7,13 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Qu
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.util.AttributeEncoderDistributed;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -32,7 +35,8 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
-    public abstract JavaPairRDD<Integer, int[]> getEncoded(List<String[]> columns, DataFrame input);
+    public abstract JavaPairRDD<int[], double[]> getEncoded(List<String[]> columns, DataFrame input,
+                                                           JavaPairRDD<String[], double[]> partitionedDataFrame);
     public abstract double getNumberOutliers(double[][] aggregates);
 
     APLSummarizerDistributed(JavaSparkContext sparkContext) {
@@ -55,11 +59,47 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         }
         return countCol;
     }
+
+    JavaPairRDD<String[], double[]> transformDataFrame(List<String[]> attributeColumns, double[][] aggregateColumns) {
+        final int numAggregates = aggregateColumns.length;
+        final int numRows = aggregateColumns[0].length;
+        final int numColumns = attributeColumns.size();
+        List<Tuple2<Integer, double[]>> aggregateRows = new ArrayList<>(numRows);
+        for(int i = 0; i < numRows; i++) {
+            double[] row = new double[numAggregates];
+            for (int j = 0; j < numAggregates; j++) {
+                row[j] = aggregateColumns[j][i];
+            }
+            aggregateRows.add(new Tuple2<>(i, row));
+        }
+        JavaPairRDD<Integer, double[]> aggregateRowsRDD = JavaPairRDD.fromJavaRDD(sparkContext.parallelize(aggregateRows, numPartitions));
+        List<Tuple2<Integer, String[]>> attributeRows = new ArrayList<>(numRows);
+        for(int i = 0; i < numRows; i++) {
+            String[] row = new String[numColumns];
+            for (int j = 0; j < numColumns; j++) {
+                row[j] = attributeColumns.get(j)[i];
+            }
+            attributeRows.add(new Tuple2<>(i, row));
+        }
+        JavaPairRDD<Integer, String[]> attributeRowsRDD = JavaPairRDD.fromJavaRDD(sparkContext.parallelize(attributeRows, numPartitions));
+
+        JavaPairRDD<Integer, Tuple2<String[], double[]>> mergedRdd = attributeRowsRDD.join(aggregateRowsRDD, numPartitions);
+
+        JavaPairRDD<String[], double[]> mergedConsolidatedRDD =
+                JavaPairRDD.fromJavaRDD(mergedRdd.map((Tuple2<Integer, Tuple2<String[], double[]>> entry) -> {
+            return new Tuple2<>(entry._2._1, entry._2._2);
+        }));
+
+        return mergedConsolidatedRDD;
+    }
+
     public void process(DataFrame input) throws Exception {
         encoder = new AttributeEncoderDistributed();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        JavaPairRDD<Integer, int[]> encoded = getEncoded(input.getStringColsByName(attributes), input);
+        double[][] aggregateColumns = getAggregateColumns(input);
+        JavaPairRDD<String[], double[]> partitionedDataFrame = transformDataFrame(input.getStringColsByName(attributes), aggregateColumns);
+        JavaPairRDD<int[], double[]> encoded = getEncoded(input.getStringColsByName(attributes), input, partitionedDataFrame);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
@@ -67,7 +107,6 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         List<Double> thresholds = getThresholds();
         List<QualityMetric> qualityMetricList = getQualityMetricList();
 
-        double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
         List<APLExplanationResult> aplResults = APrioriLinearDistributed.explain(encoded,
                 aggregateColumns,

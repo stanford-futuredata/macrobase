@@ -31,8 +31,8 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     }
 
     @Override
-    public JavaPairRDD<Integer, int[]> getEncoded(List<String[]> columns, DataFrame input) {
-        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn), numPartitions, sparkContext);
+    public JavaPairRDD<int[], double[]> getEncoded(List<String[]> columns, DataFrame input, JavaPairRDD<String[], double[]> partitionedDataFrame) {
+        return encoder.encodeAttributesWithSupport(partitionedDataFrame, columns, minOutlierSupport, input.getDoubleColumnByName(outlierColumn), numPartitions, sparkContext);
     }
 
     @Override
