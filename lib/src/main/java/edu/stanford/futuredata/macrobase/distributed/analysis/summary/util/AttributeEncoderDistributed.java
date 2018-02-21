@@ -9,9 +9,12 @@ import scala.Tuple2;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.apache.avro.SchemaBuilder.map;
+
 public class AttributeEncoderDistributed extends AttributeEncoder {
 
-    public JavaPairRDD<Integer, int[]> encodeAttributesWithSupport(List<String[]> columns,
+    public JavaPairRDD<int[], double[]> encodeAttributesWithSupport(JavaPairRDD<String[], double[]> partitionedDataFrame,
+                                                                   List<String[]> columns,
                                                           double minSupport,
                                                           double[] outlierColumn,
                                                           int distributedNumPartitions,
@@ -69,28 +72,22 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         }
 
         // Encode the strings that have support with a key equal to their rank.
-        int[][] encodedAttributes = new int[numRows][numColumns];
-        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
-            Map<String, Integer> curColEncoder = encoder.get(colIdx);
-            String[] curCol = columns.get(colIdx);
-            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                String colVal = curCol[rowIdx];
+        JavaPairRDD<int[], double[]> encodedDataFrame = partitionedDataFrame.mapToPair((Tuple2<String[], double[]> entry) -> {
+            String[] row = entry._1;
+            int[] newRow = new int[numColumns];
+            for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+                Map<String, Integer> curColEncoder = encoder.get(colIdx);
+                String colVal = row[colIdx];
                 int curKey;
                 if (curColEncoder.containsKey(colVal))
                     curKey = curColEncoder.get(colVal);
                 else
                     curKey = noSupport;
-                encodedAttributes[rowIdx][colIdx] = curKey;
+                newRow[colIdx] = curKey;
             }
-        }
+            return new Tuple2<>(newRow, entry._2);
+        });
 
-        List<Tuple2<Integer, int[]>> encodedAttributesAsList = new ArrayList<>();
-        for (int i = 0; i < encodedAttributes.length; i++) {
-            encodedAttributesAsList.add(new Tuple2<>(i, encodedAttributes[i]));
-        }
-        JavaRDD<Tuple2<Integer, int[]>> encodedAttributesAsRDD = sparkContext.parallelize(encodedAttributesAsList, distributedNumPartitions);
-        JavaPairRDD<Integer, int[]> encodeAttributesAsPairRDD = JavaPairRDD.fromJavaRDD(encodedAttributesAsRDD);
-
-        return encodeAttributesAsPairRDD;
+        return encodedDataFrame;
     }
 }
