@@ -9,21 +9,13 @@ import scala.Tuple2;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.avro.SchemaBuilder.map;
-
 public class AttributeEncoderDistributed extends AttributeEncoder {
 
     public JavaPairRDD<int[], double[]> encodeAttributesWithSupport(JavaPairRDD<String[], double[]> partitionedDataFrame,
-                                                                   List<String[]> columns,
+                                                          int numColumns,
                                                           double minSupport,
                                                           double[] globalAggregates,
-                                                          double[] outlierColumn,
-                                                          int outlierColumnIndex,
-                                                          int distributedNumPartitions,
-                                                          JavaSparkContext sparkContext) {
-
-        int numColumns = columns.size();
-        int numRows = columns.get(0).length;
+                                                          int outlierColumnIndex) {
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {

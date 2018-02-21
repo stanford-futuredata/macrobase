@@ -7,7 +7,6 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Qu
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.util.AttributeEncoderDistributed;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +34,9 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
-    public abstract JavaPairRDD<int[], double[]> getEncoded(List<String[]> columns, double[] globalAggregates,
-                                                           JavaPairRDD<String[], double[]> partitionedDataFrame, double[] outlierColumn);
-    public abstract double getNumberOutliers(double[][] aggregates);
+    public abstract JavaPairRDD<int[], double[]> getEncoded(
+            JavaPairRDD<String[], double[]> partitionedDataFrame,
+            double[] globalAggregates);
 
     APLSummarizerDistributed(JavaSparkContext sparkContext) {
         this.sparkContext = sparkContext;
@@ -72,7 +71,8 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
             }
             aggregateRows.add(new Tuple2<>(i, row));
         }
-        JavaPairRDD<Integer, double[]> aggregateRowsRDD = JavaPairRDD.fromJavaRDD(sparkContext.parallelize(aggregateRows, numPartitions));
+        JavaPairRDD<Integer, double[]> aggregateRowsRDD =
+                JavaPairRDD.fromJavaRDD(sparkContext.parallelize(aggregateRows, numPartitions));
         List<Tuple2<Integer, String[]>> attributeRows = new ArrayList<>(numRows);
         for(int i = 0; i < numRows; i++) {
             String[] row = new String[numColumns];
@@ -81,13 +81,16 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
             }
             attributeRows.add(new Tuple2<>(i, row));
         }
-        JavaPairRDD<Integer, String[]> attributeRowsRDD = JavaPairRDD.fromJavaRDD(sparkContext.parallelize(attributeRows, numPartitions));
+        JavaPairRDD<Integer, String[]> attributeRowsRDD =
+                JavaPairRDD.fromJavaRDD(sparkContext.parallelize(attributeRows, numPartitions));
 
-        JavaPairRDD<Integer, Tuple2<String[], double[]>> mergedRdd = attributeRowsRDD.join(aggregateRowsRDD, numPartitions);
+        JavaPairRDD<Integer, Tuple2<String[], double[]>> mergedRdd =
+                attributeRowsRDD.join(aggregateRowsRDD, numPartitions);
 
         JavaPairRDD<String[], double[]> mergedConsolidatedRDD =
-                JavaPairRDD.fromJavaRDD(mergedRdd.map((Tuple2<Integer, Tuple2<String[], double[]>> entry) -> {
-            return new Tuple2<>(entry._2._1, entry._2._2);
+                JavaPairRDD.fromJavaRDD(mergedRdd.map(
+                        (Tuple2<Integer, Tuple2<String[], double[]>> entry) -> {
+                            return new Tuple2<>(entry._2._1, entry._2._2);
         }));
 
         mergedConsolidatedRDD.cache();
@@ -99,9 +102,11 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
         encoder = new AttributeEncoderDistributed();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        JavaPairRDD<String[], double[]> partitionedDataFrame = transformDataFrame(input.getStringColsByName(attributes), getAggregateColumns(input));
+        JavaPairRDD<String[], double[]> partitionedDataFrame =
+                transformDataFrame(input.getStringColsByName(attributes), getAggregateColumns(input));
 
-        double[] globalAggregates = partitionedDataFrame.reduce((Tuple2<String[], double[]> first, Tuple2<String[], double[]> second) -> {
+        double[] globalAggregates = partitionedDataFrame.reduce(
+                (Tuple2<String[], double[]> first, Tuple2<String[], double[]> second) -> {
             final int numAggregates = first._2.length;
             double[] sumAggregates = new double[numAggregates];
             for (int i = 0; i < numAggregates; i++)
@@ -109,7 +114,7 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
             return new Tuple2<>(first._1, sumAggregates);
         })._2;
 
-        JavaPairRDD<int[], double[]> encoded = getEncoded(input.getStringColsByName(attributes), globalAggregates, partitionedDataFrame, input.getDoubleColumnByName(outlierColumn));
+        JavaPairRDD<int[], double[]> encoded = getEncoded(partitionedDataFrame, globalAggregates);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
