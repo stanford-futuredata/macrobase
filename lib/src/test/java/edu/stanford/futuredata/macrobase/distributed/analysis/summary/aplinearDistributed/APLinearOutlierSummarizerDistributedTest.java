@@ -45,5 +45,8 @@ public class APLinearOutlierSummarizerDistributedTest {
         assertEquals(1, e.getResults().size());
         assertTrue(e.prettyPrint().contains("col1=a1"));
         assertEquals(47.0, e.numOutliers(), 1e-10);
+
+        sparkContext.stop();
+
     }
 }

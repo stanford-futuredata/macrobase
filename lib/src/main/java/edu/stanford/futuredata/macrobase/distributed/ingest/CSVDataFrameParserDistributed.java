@@ -2,22 +2,20 @@ package edu.stanford.futuredata.macrobase.distributed.ingest;
 
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
-import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.ingest.DataFrameLoader;
+import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class CSVDataFrameParserDistributed {
+public class CSVDataFrameParserDistributed implements Serializable{
     private Logger log = LoggerFactory.getLogger(edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser.class);
-    private CsvParser parser;
     private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
     private String fileName;
@@ -25,20 +23,38 @@ public class CSVDataFrameParserDistributed {
     public CSVDataFrameParserDistributed(String fileName, List<String> requiredColumns) throws IOException {
         this.requiredColumns = requiredColumns;
         this.fileName = fileName;
-        CsvParserSettings settings = new CsvParserSettings();
-        settings.getFormat().setLineSeparator("\n");
-        settings.setMaxCharsPerColumn(16384);
-        CsvParser csvParser = new CsvParser(settings);
-        csvParser.beginParsing(getReader(fileName));
-        this.parser = csvParser;
     }
 
     public void setColumnTypes(Map<String, Schema.ColType> types) {
         this.columnTypes = types;
     }
 
-    public DataFrame load(JavaSparkContext sparkContext) throws Exception {
-        String[] header = parser.parseNext();
+    public DistributedDataFrame load(JavaSparkContext sparkContext, int numPartitions) throws Exception {
+        JavaRDD<String[]> parsedFileRDD = sparkContext.textFile(fileName, numPartitions).mapPartitions(
+                (Iterator<String> iter) -> {
+                    CsvParserSettings settings = new CsvParserSettings();
+                    settings.getFormat().setLineSeparator("\n");
+                    settings.setMaxCharsPerColumn(16384);
+                    CsvParser csvParser = new CsvParser(settings);
+                    List<String[]> parsedRows = new ArrayList<>();
+                    while(iter.hasNext()) {
+                        String row = iter.next();
+                        String[] parsedRow = csvParser.parseLine(row);
+                        parsedRows.add(parsedRow);
+                    }
+                    return parsedRows.iterator();
+        }, true
+        );
+        String[] header = parsedFileRDD.first();
+        parsedFileRDD = parsedFileRDD.mapPartitionsWithIndex(
+                (Integer index, Iterator<String[]> iter) -> {
+                    if (index == 0) {
+                        iter.next();
+                        iter.remove();
+                    }
+                    return iter;
+                }, true
+        );
 
         int numColumns = header.length;
         int schemaLength = requiredColumns.size();
@@ -58,6 +74,7 @@ public class CSVDataFrameParserDistributed {
             }
         }
         // Make sure to generate the schema in the right order
+        // Make sure to generate the schema in the right order
         Schema schema = new Schema();
         int numStringColumns = 0;
         int numDoubleColumns = 0;
@@ -72,43 +89,37 @@ public class CSVDataFrameParserDistributed {
             }
         }
 
-        ArrayList<String>[] stringColumns = (ArrayList<String>[])new ArrayList[numStringColumns];
-        for (int i = 0; i < numStringColumns; i++) {
-            stringColumns[i] = new ArrayList<>();
-        }
-        ArrayList<Double>[] doubleColumns = (ArrayList<Double>[])new ArrayList[numDoubleColumns];
-        for (int i = 0; i < numDoubleColumns; i++) {
-            doubleColumns[i] = new ArrayList<>();
-        }
+        final int numStringColumnsFinal = numStringColumns;
+        final int numDoubleColumnsFinal = numDoubleColumns;
 
-        String[] row;
-        int doubleParseFailures = 0;
-        while ((row = parser.parseNext()) != null) {
-            for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
-                if (schemaIndexMap[c] >= 0) {
-                    int schemaIndex = schemaIndexMap[c];
-                    Schema.ColType t = columnTypeList[schemaIndex];
-                    String rowValue = row[c];
-                    if (t == Schema.ColType.STRING) {
-                        stringColumns[stringColNum++].add(rowValue);
-                    } else if (t == Schema.ColType.DOUBLE) {
-                        try {
-                            doubleColumns[doubleColNum].add(Double.parseDouble(rowValue));
-                        } catch (NumberFormatException e) {
-                            doubleColumns[doubleColNum].add(Double.NaN);
-                            doubleParseFailures++;
+        JavaPairRDD<String[], double[]> distributedDataFrame = parsedFileRDD.mapToPair(
+                (String[] row) -> {
+                    String[] stringRow = new String[numStringColumnsFinal];
+                    double[] doubleRow = new double[numDoubleColumnsFinal];
+                    for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
+                        if (schemaIndexMap[c] >= 0) {
+                            int schemaIndex = schemaIndexMap[c];
+                            Schema.ColType t = columnTypeList[schemaIndex];
+                            String rowValue = row[c];
+                            if (t == Schema.ColType.STRING) {
+                                stringRow[stringColNum++] = rowValue;
+                            } else if (t == Schema.ColType.DOUBLE) {
+                                try {
+                                    doubleRow[doubleColNum] = Double.parseDouble(rowValue);
+                                } catch (NumberFormatException e) {
+                                    doubleRow[doubleColNum] = Double.NaN;
+                                }
+                                doubleColNum++;
+                            } else {
+                                throw new RuntimeException("Bad ColType");
+                            }
                         }
-                        doubleColNum++;
-                    } else {
-                        throw new RuntimeException("Bad ColType");
                     }
+                    return new Tuple2<>(stringRow, doubleRow);
                 }
-            }
-        }
-        if (doubleParseFailures > 0)
-            log.warn("{} double values failed to parse", doubleParseFailures);
+        );
 
-        DataFrame df = new DataFrame(schema, stringColumns, doubleColumns);
+        DistributedDataFrame df = new DistributedDataFrame(schema, distributedDataFrame);
         return df;
     }
 
