@@ -13,6 +13,8 @@ import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetr
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import edu.stanford.futuredata.macrobase.distributed.ingest.CSVDataFrameParserDistributed;
+import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -47,6 +49,8 @@ public class BasicBatchPipeline implements Pipeline {
     private double minRiskRatio;
 
     private int distributedNumPartitions;
+
+    private JavaSparkContext sparkContext;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
@@ -126,8 +130,6 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "aplineardistributed": {
-                SparkConf conf = new SparkConf().setAppName("MacroBase");
-                JavaSparkContext sparkContext = new JavaSparkContext(conf);
                 APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(sparkContext);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
@@ -142,7 +144,7 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
-    public DataFrame loadData() throws Exception {
+    private DataFrame loadData(boolean distributed) throws Exception {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         if (isStrPredicate) {
             colTypes.put(metric, Schema.ColType.STRING);
@@ -152,29 +154,58 @@ public class BasicBatchPipeline implements Pipeline {
         }
         List<String> requiredColumns = new ArrayList<>(attributes);
         requiredColumns.add(metric);
-        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
+        if (!distributed)
+            return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
+        else {
+            CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed(inputURI.substring(6), requiredColumns);
+            loader.setColumnTypes(colTypes);
+            DataFrame df = loader.load(sparkContext);
+            return df;
+        }
     }
 
     @Override
     public Explanation results() throws Exception {
         long startTime = System.currentTimeMillis();
-        DataFrame df = loadData();
+        BatchSummarizer summarizer;
+        if (!summarizerType.toLowerCase().equals("aplineardistributed")) {
+            DataFrame df = loadData(false);
+            long elapsed = System.currentTimeMillis() - startTime;
+
+            log.info("Loading time: {} ms", elapsed);
+            log.info("{} rows", df.getNumRows());
+            log.info("Metric: {}", metric);
+            log.info("Attributes: {}", attributes);
+
+            Classifier classifier = getClassifier();
+            classifier.process(df);
+            df = classifier.getResults();
+
+            summarizer = getSummarizer(classifier.getOutputColumnName());
+
+            startTime = System.currentTimeMillis();
+            summarizer.process(df);
+        } else {
+            SparkConf conf = new SparkConf().setAppName("MacroBase");
+            sparkContext = new JavaSparkContext(conf);
+            DataFrame df = loadData(true);
+            long elapsed = System.currentTimeMillis() - startTime;
+
+            log.info("Loading time: {} ms", elapsed);
+            log.info("{} rows", df.getNumRows());
+            log.info("Metric: {}", metric);
+            log.info("Attributes: {}", attributes);
+
+            Classifier classifier = getClassifier();
+            classifier.process(df);
+            df = classifier.getResults();
+
+            summarizer = getSummarizer(classifier.getOutputColumnName());
+
+            startTime = System.currentTimeMillis();
+            summarizer.process(df);
+        }
         long elapsed = System.currentTimeMillis() - startTime;
-
-        log.info("Loading time: {} ms", elapsed);
-        log.info("{} rows", df.getNumRows());
-        log.info("Metric: {}", metric);
-        log.info("Attributes: {}", attributes);
-
-        Classifier classifier = getClassifier();
-        classifier.process(df);
-        df = classifier.getResults();
-
-        BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
-
-        startTime = System.currentTimeMillis();
-        summarizer.process(df);
-        elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {} ms", elapsed);
         Explanation output = summarizer.getResults();
 
