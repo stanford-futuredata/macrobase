@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
-import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -65,7 +64,11 @@ public class APrioriLinearDistributed {
             q.initialize(globalAggregates);
         }
 
-        JavaRDD<AttributeAggregateTuple> tupleRDD = attributesAndAggregates.mapPartitions((Iterator<Tuple2<int[], double[]>> iter) -> {
+        // Shard the input RDD by rows, then store attribute information by column.
+        // This allows easy distribution but also very fast processing.
+        JavaRDD<Tuple2<int[][], double[][]>> shardedAttributesAndAggregatesRDD =
+                attributesAndAggregates.mapPartitions(
+                        (Iterator<Tuple2<int[], double[]>> iter) -> {
             int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions)/numPartitions];
             double[][] thisPartitionAggregates = new double[(numRows + numPartitions)/numPartitions][numAggregates];
             int j = 0;
@@ -81,19 +84,19 @@ public class APrioriLinearDistributed {
                 }
                 j++;
             }
-            List<AttributeAggregateTuple> returnList = new ArrayList<>(1);
-            returnList.add(new AttributeAggregateTuple(thisPartitionAttributes, thisPartitionAggregates));
+            List<Tuple2<int[][], double[][]>> returnList = new ArrayList<>(1);
+            returnList.add(new Tuple2<>(thisPartitionAttributes, thisPartitionAggregates));
             return returnList.iterator();
         }, true);
-        tupleRDD.cache();
+        shardedAttributesAndAggregatesRDD.cache();
 
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
-            JavaRDD<FastFixedHashTable> hashTableSet = tupleRDD.map((AttributeAggregateTuple sparkTuple) -> {
-                double[][] aRowsForThread = sparkTuple.aRows;
-                int[][] attributesForThread = sparkTuple.attributes;
+            JavaRDD<FastFixedHashTable> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
+                int[][] attributesForThread = sparkTuple._1;
+                double[][] aRowsForThread = sparkTuple._2;
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
@@ -334,15 +337,5 @@ public class APrioriLinearDistributed {
             }
         }
         return false;
-    }
-}
-
-class AttributeAggregateTuple implements Serializable {
-    public final int[][] attributes;
-    public final double[][] aRows;
-
-    AttributeAggregateTuple(int[][] attributes, double[][] aRows) {
-        this.attributes = attributes;
-        this.aRows = aRows;
     }
 }
