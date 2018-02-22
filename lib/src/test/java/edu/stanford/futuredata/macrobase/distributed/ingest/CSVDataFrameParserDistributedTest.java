@@ -28,12 +28,18 @@ public class CSVDataFrameParserDistributedTest {
 
         DistributedDataFrame df = loader.load(sparkContext, 2);
 
-        assertEquals(3, df.schema.getNumColumns());
-        assertEquals("location", df.schema.getColumnName(2));
+        assertEquals(Schema.ColType.DOUBLE, df.getTypeOfColumn("usage"));
+        assertEquals(Schema.ColType.STRING, df.getTypeOfColumn("version"));
+        assertEquals(Schema.ColType.STRING, df.getTypeOfColumn("location"));
+        assertEquals(0, df.getIndexOfColumn("usage"));
+        assertEquals(0, df.getIndexOfColumn("version"));
+        assertEquals(1, df.getIndexOfColumn("location"));
 
         List<Tuple2<String[], double[]>> collectedCSV = df.dataFrameRDD.collect();
 
         assertEquals(3, collectedCSV.size());
+        assertEquals(2, collectedCSV.get(0)._1.length);
+        assertEquals(1, collectedCSV.get(0)._2.length);
 
         assertEquals(2.0, collectedCSV.get(0)._2[0]);
         assertEquals("27", collectedCSV.get(0)._1[0]);
@@ -44,7 +50,6 @@ public class CSVDataFrameParserDistributedTest {
         assertEquals(4.0, collectedCSV.get(2)._2[0]);
         assertEquals("28", collectedCSV.get(2)._1[0]);
         assertEquals("USA", collectedCSV.get(2)._1[1]);
-
 
         sparkContext.stop();
     }
