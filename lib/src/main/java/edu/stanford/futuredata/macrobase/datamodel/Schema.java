@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.datamodel;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -9,7 +10,7 @@ import java.util.Objects;
 /**
  * Provides column names, types, and order
  */
-public class Schema {
+public class Schema implements Serializable {
     public enum ColType {
         STRING,
         DOUBLE

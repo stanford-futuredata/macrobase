@@ -173,9 +173,10 @@ public class BasicBatchPipeline implements Pipeline {
         if (!distributed)
             return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
         else {
-            CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed(inputURI.substring(6), requiredColumns);
+            CSVDataFrameParser loader = new CSVDataFrameParser(inputURI.substring(6), requiredColumns);
             loader.setColumnTypes(colTypes);
-            DataFrame df = loader.load(sparkContext);
+//            DataFrame df = loader.load(sparkContext, distributedNumPartitions);
+            DataFrame df = loader.load();
             return df;
         }
     }
