@@ -4,11 +4,11 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 /**
- * Classify rows based on high / low values for a single column.
- * Returns a new dataframe with a column representation the classification status for
- * each row: 1.0 if outlier, 0.0 otherwise.
+ * Classify rows based on high / low values for a single column. Returns a new DataFrame with a
+ * column representation the classification status for each row: 1.0 if outlier, 0.0 otherwise.
  */
 public class PercentileClassifier extends Classifier implements ThresholdClassifier {
+
     // Parameters
     private double percentile = 0.5;
     private boolean includeHigh = true;
@@ -35,12 +35,12 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
         for (int i = 0; i < len; i++) {
             double curVal = metrics[i];
             if ((curVal > highCutoff && includeHigh)
-                    || (curVal < lowCutoff && includeLow)
-                    ) {
+                || (curVal < lowCutoff && includeLow)
+                ) {
                 resultColumn[i] = 1.0;
             }
         }
-        output.addDoubleColumn(outputColumnName, resultColumn);
+        output.addColumn(outputColumnName, resultColumn);
     }
 
     @Override
@@ -74,6 +74,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
         this.includeHigh = includeHigh;
         return this;
     }
+
     public boolean isIncludeLow() {
         return includeLow;
     }
@@ -90,6 +91,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     public double getLowCutoff() {
         return lowCutoff;
     }
+
     public double getHighCutoff() {
         return highCutoff;
     }

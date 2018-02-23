@@ -1,18 +1,22 @@
 package edu.stanford.futuredata.macrobase.ingest;
 
+import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import com.univocity.parsers.csv.CsvParser;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
 
 public class CSVDataFrameParser implements DataFrameLoader {
     private Logger log = LoggerFactory.getLogger(CSVDataFrameParser.class);
@@ -27,6 +31,16 @@ public class CSVDataFrameParser implements DataFrameLoader {
 
     public CSVDataFrameParser(String fileName, List<String> requiredColumns) throws IOException {
         this.requiredColumns = requiredColumns;
+        CsvParserSettings settings = new CsvParserSettings();
+        settings.getFormat().setLineSeparator("\n");
+        CsvParser csvParser = new CsvParser(settings);
+        csvParser.beginParsing(getReader(fileName));
+        this.parser = csvParser;
+    }
+
+    public CSVDataFrameParser(String fileName, Map<String, Schema.ColType> types) throws IOException {
+        this.requiredColumns = new ArrayList<>(types.keySet());
+        this.columnTypes = types;
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setLineSeparator("\n");
         CsvParser csvParser = new CsvParser(settings);
@@ -121,9 +135,9 @@ public class CSVDataFrameParser implements DataFrameLoader {
             InputStream targetStream = new FileInputStream(path);
             return new InputStreamReader(targetStream, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unable to read input", e);
+            throw new IllegalStateException("File " + path + "is not encoded using UTF-8", e);
         } catch (FileNotFoundException e) {
-            throw new IllegalStateException("Unable to read input", e);
+            throw new IllegalStateException("File " + path + " cannot be found", e);
         }
     }
 }

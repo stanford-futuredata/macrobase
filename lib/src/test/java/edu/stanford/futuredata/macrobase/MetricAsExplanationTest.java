@@ -44,7 +44,7 @@ public class MetricAsExplanationTest {
                     metric[i] = r.nextGaussian();
                 }
             }
-            df.addDoubleColumn("m"+j,metric);
+            df.addColumn("m"+j,metric);
         }
         return df;
     }

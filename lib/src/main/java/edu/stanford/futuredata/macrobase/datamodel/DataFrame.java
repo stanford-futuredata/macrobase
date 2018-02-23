@@ -1,11 +1,24 @@
 package edu.stanford.futuredata.macrobase.datamodel;
 
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Comparator.nullsLast;
+import static java.util.stream.Collectors.toList;
 
+import com.google.common.base.Joiner;
+import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
+import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
+import java.util.stream.IntStream;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Column-based DataFrame object.
@@ -13,13 +26,15 @@ import java.util.function.Predicate;
  * preserving column names and types. Complex processing should be done by
  * extracting columns as arrays and operating on arrays directly.
  *
- * The addColumn methods are the primary means of mutating a dataframe and are
- * especially useful during dataframe construction. DataFrames can also be
+ * The addColumn methods are the primary means of mutating a DataFrame and are
+ * especially useful during DataFrame construction. DataFrames can also be
  * initialized from a schema and a set of rows.
  */
 public class DataFrame {
-    private Schema schema;
 
+    private static final int MAX_COLS_FOR_TABULAR_PRINT = 10;
+
+    private Schema schema;
     private ArrayList<String[]> stringCols;
     private ArrayList<double[]> doubleCols;
     // external indices define a global ordering on columns, but internally each
@@ -38,8 +53,9 @@ public class DataFrame {
     }
 
     /**
-     * Creates a dataframe from a list of rows
-     * Slower than creating a dataframe column by column using addXColumn methods.
+     * Creates a DataFrame from a list of rows
+     * Slower than creating a DataFrame column by column using {@link #addColumn(String, double[])}
+     * or {@link #addColumn(String, String[])}
      * @param schema Schema to use
      * @param rows Data to load
      */
@@ -47,8 +63,8 @@ public class DataFrame {
         this();
         this.schema = schema;
         this.numRows = rows.size();
-        int d = schema.getNumColumns();
-        for (int c = 0; c < d; c++) {
+        final int numColumns = schema.getNumColumns();
+        for (int c = 0; c < numColumns; c++) {
             Schema.ColType t = schema.getColumnType(c);
             if (t == Schema.ColType.STRING) {
                 String[] colValues = new String[numRows];
@@ -96,7 +112,7 @@ public class DataFrame {
     }
 
     /**
-     * Shallow copy of the dataframe: the schema is recreated but the arrays backing the
+     * Shallow copy of the DataFrame: the schema is recreated but the arrays backing the
      * columns are reused.
      * @return shallow DataFrame copy
      */
@@ -110,6 +126,56 @@ public class DataFrame {
         return other;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if ((obj == null) || (getClass() != obj.getClass())) {
+            return false;
+        }
+        final DataFrame o = (DataFrame) obj;
+        return Objects.equals(schema, o.schema) &&
+            Objects.equals(numRows, o.numRows) &&
+            Objects.equals(indexToTypeIndex, o.indexToTypeIndex) &&
+            compareStringCols(stringCols, o.stringCols) &&
+            compareDoubleCols(doubleCols, o.doubleCols);
+    }
+
+    /**
+     * @return true if each String array in the first List contains the exact same values in the
+     * same order as the second List
+     */
+    private boolean compareStringCols(final List<String[]> first, final List<String[]> second) {
+        for (int i = 0; i < first.size(); ++i) {
+            final String[] arr1 = first.get(i);
+            final String[] arr2 = second.get(i);
+            for (int j = 0; j < arr1.length; ++j) {
+                if (!Objects.equals(arr1[j], arr2[j])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @return true if each double array in the first List contains the exact same values in the
+     * same order as the second List
+     */
+    private boolean compareDoubleCols(final List<double[]> first, final List<double[]> second) {
+        for (int i = 0; i < first.size(); ++i) {
+            final double[] arr1 = first.get(i);
+            final double[] arr2 = second.get(i);
+            for (int j = 0; j < arr1.length; ++j) {
+                if (arr1[j] != arr2[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public Schema getSchema() {return this.schema;}
     public int getNumRows() {return numRows;}
     public ArrayList<double[]> getDoubleCols() { return doubleCols; }
@@ -119,30 +185,148 @@ public class DataFrame {
         return getRows().toString();
     }
 
-    // Fast Column-based methods
-    private void addDoubleColumnInternal(double[] colValues) {
-        doubleCols.add(colValues);
-        indexToTypeIndex.add(doubleCols.size()-1);
+    /**
+     * Pretty print contents of the DataFrame to STDOUT. Example outputs:
+     * m rows
+     *
+     * ------------------------------------------
+     * |   col_1  |   col_2  |  ...  |   col_n  |
+     * ------------------------------------------
+     * |  val_11  |  val_12  |  ...  |  val_1n  |
+     * ...
+     * |  val_m1  |  val_m2  |  ...  |  val_mn  |
+     * ------------------------------------------
+     *
+     * or
+     *
+     * m rows
+     *
+     * col_1    |  val_11
+     * col_2    |  val_12
+     * ...
+     * col_n    |  val_1n
+     * -----------------------
+     * ...
+     * -----------------------
+     * col_1    |  val_m1
+     * col_2    |  val_m2
+     * ...
+     * col_n    |  val_mn
+     * -----------------------
+     *
+     * @param out PrintStream to write to STDOUT or file (default: STDOUT)
+     * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: 20;
+     * -1 prints out all rows)
+     */
+    public void prettyPrint(final PrintStream out, final int maxNumToPrint) {
+        out.println(numRows +  (numRows == 1 ? " row" : " rows"));
+        out.println();
+
+        if (schema.getNumColumns() > MAX_COLS_FOR_TABULAR_PRINT) {
+            // print each row so that each value is on a separate line, because the terminal isn't
+            // wide enough to display the entire table
+            if (maxNumToPrint > 0 && numRows > maxNumToPrint) {
+                final int numToPrint = maxNumToPrint / 2;
+                for (Row r : getRows(0, numToPrint))  {
+                    r.prettyPrintColumnWise(out);
+                }
+                out.println();
+                out.println("...");
+                out.println();
+                for (Row r : getRows(numRows - numToPrint, numRows))  {
+                    r.prettyPrintColumnWise(out);
+                }
+            } else {
+                for (Row r : getRows()) {
+                    r.prettyPrintColumnWise(out);
+                }
+            }
+        } else {
+            // print DataFrame as a table
+            final int maxColNameLength = schema.getColumnNames().stream()
+                .reduce("", (x, y) -> x.length() > y.length() ? x : y).length();
+            final int tableWidth =
+                maxColNameLength + 4; // 2 extra spaces on both sides of each column name and value
+            final List<String> colStrs = schema.getColumnNames().stream()
+                .map((x) -> StringUtils.center(String.valueOf(x), tableWidth)).collect(toList());
+            final String schemaStr = "|" + Joiner.on("|").join(colStrs) + "|";
+            final String dashes = Joiner.on("").join(Collections.nCopies(schemaStr.length(), "-"));
+            out.println(dashes);
+            out.println(schemaStr);
+            out.println(dashes);
+
+            if (maxNumToPrint > 0 && numRows > maxNumToPrint) {
+                final int numToPrint = maxNumToPrint / 2;
+                for (Row r : getRows(0, numToPrint))  {
+                    r.prettyPrint(out, tableWidth);
+                }
+                out.println();
+                out.println("...");
+                out.println();
+                for (Row r : getRows(numRows - numToPrint, numRows))  {
+                    r.prettyPrint(out, tableWidth);
+                }
+            } else {
+                for (Row r : getRows())  {
+                    r.prettyPrint(out, tableWidth);
+                }
+            }
+            out.println(dashes);
+            out.println();
+        }
     }
-    public DataFrame addDoubleColumn(String colName, double[] colValues) {
+
+    /**
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
+     * and <tt>maxNumToPrint</tt> set to 20
+     */
+    public void prettyPrint() {
+        prettyPrint(System.out, 20);
+    }
+
+    /**
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 20
+     */
+    public void prettyPrint(final PrintStream out) {
+      prettyPrint(out, 20);
+    }
+
+    /**
+     * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
+     */
+    public void prettyPrint(final int maxNumToPrint) {
+        prettyPrint(System.out, maxNumToPrint);
+    }
+
+    // Fast Column-based methods
+    public DataFrame addColumn(String colName, String[] colValues) {
         if (numRows == 0) {
             numRows = colValues.length;
         }
-        schema.addColumn(Schema.ColType.DOUBLE, colName);
+
+        schema.addColumn(Schema.ColType.STRING, colName);
+        addStringColumnInternal(colValues);
+        return this;
+    }
+
+    public DataFrame addColumn(String colName, double[] colValues) {
+        if (numRows == 0) {
+            numRows = colValues.length;
+        }
+
+        schema.addColumn(ColType.DOUBLE, colName);
         addDoubleColumnInternal(colValues);
         return this;
     }
+
     private void addStringColumnInternal(String[] colValues) {
         stringCols.add(colValues);
         indexToTypeIndex.add(stringCols.size()-1);
     }
-    public DataFrame addStringColumn(String colName, String[] colValues) {
-        if (numRows == 0) {
-            numRows = colValues.length;
-        }
-        schema.addColumn(Schema.ColType.STRING, colName);
-        addStringColumnInternal(colValues);
-        return this;
+
+    private void addDoubleColumnInternal(double[] colValues) {
+        doubleCols.add(colValues);
+        indexToTypeIndex.add(doubleCols.size()-1);
     }
 
     protected int[] getSubIndices(List<Integer> columns) {
@@ -152,6 +336,18 @@ public class DataFrame {
             typeSubIndices[i] = indexToTypeIndex.get(columns.get(i));
         }
         return typeSubIndices;
+    }
+
+    /**
+     * Rename column in schema.
+     *
+     * @param oldColumnName The name of the column to be renamed. If it doesn't exist, nothing is
+     * changed
+     * @param newColumnName The new name for the column
+     * @return true if rename was successful, false otherwise
+     */
+    public boolean renameColumn(final String oldColumnName, final String newColumnName) {
+        return schema.renameColumn(oldColumnName, newColumnName);
     }
 
     public boolean hasColumn(String columnName) { return schema.hasColumn(columnName); }
@@ -191,7 +387,7 @@ public class DataFrame {
 
     /**
      * @param others Dataframes to combine
-     * @return new dataframe with copied rows
+     * @return new DataFrame with copied rows
      */
     public static DataFrame unionAll(List<DataFrame> others) {
         int k = others.size();
@@ -243,44 +439,38 @@ public class DataFrame {
     }
 
     /**
-     * @param columns column indices to project
-     * @return new dataframe with subset of columns
+     * @param projectionCols The columns that should be included in the returned DataFrame. Projections
+     * that aren't in the columns of the current DataFrame will be ignored
+     * @return return a new DataFrame that includes only the columns specified by @projections.
      */
-    public DataFrame select(List<Integer> columns) {
-        DataFrame other = new DataFrame();
-        for (int c : columns) {
-            String columnName = schema.getColumnName(c);
-            Schema.ColType t = schema.getColumnType(c);
-            if (t == Schema.ColType.STRING) {
-                other.addStringColumn(columnName, getStringColumn(c));
-            } else if (t == Schema.ColType.DOUBLE) {
-                other.addDoubleColumn(columnName, getDoubleColumn(c));
-            } else {
-                throw new MacrobaseInternalError("Bad Column Type");
+    // TODO: write test for this method
+    public DataFrame project(List<String> projectionCols) {
+        final DataFrame other = new DataFrame();
+        for (String col : projectionCols) {
+            if (!schema.hasColumn(col)) {
+                continue;
+            }
+            final ColType type = schema.getColumnTypeByName(col);
+            if (type == ColType.DOUBLE) {
+                other.addColumn(col, getDoubleColumnByName(col));
+            } else if (type == ColType.STRING) {
+                other.addColumn(col, getStringColumnByName(col));
             }
         }
         return other;
     }
 
     /**
-     * @param columns column names to project
-     * @return new dataframe with subset of columns
-     */
-    public DataFrame selectByName(List<String> columns) {
-        return select(this.schema.getColumnIndices(columns));
-    }
-
-    /**
      * @param mask rows to select
-     * @return new dataframe with subset of rows
+     * @return new DataFrame with subset of rows
      */
-    protected DataFrame filter(boolean[] mask) {
+    public DataFrame filter(BitSet mask) {
         DataFrame other = new DataFrame();
 
         int d = schema.getNumColumns();
         int numTrue = 0;
         for (int i = 0; i < numRows; i++) {
-            if (mask[i]) {
+            if (mask.get(i)) {
                 numTrue++;
             }
         }
@@ -292,34 +482,35 @@ public class DataFrame {
                 String[] newColumn = new String[numTrue];
                 int j = 0;
                 for (int i = 0; i < numRows; i++) {
-                    if (mask[i]) {
+                    if (mask.get(i)) {
                         newColumn[j] = oldColumn[i];
                         j++;
                     }
                 }
-                other.addStringColumn(columnName, newColumn);
+                other.addColumn(columnName, newColumn);
             } else if (t == Schema.ColType.DOUBLE) {
                 double[] oldColumn = getDoubleColumn(c);
                 double[] newColumn = new double[numTrue];
                 int j = 0;
                 for (int i = 0; i < numRows; i++) {
-                    if (mask[i]) {
+                    if (mask.get(i)) {
                         newColumn[j] = oldColumn[i];
                         j++;
                     }
                 }
-                other.addDoubleColumn(columnName, newColumn);
+                other.addColumn(columnName, newColumn);
             } else {
                 throw new MacrobaseInternalError("Bad Column Type");
             }
         }
         return other;
     }
+
     public DataFrame filter(int columnIdx, Predicate<Object> filter) {
         String[] filterColumn = getStringColumn(columnIdx);
-        boolean[] mask = new boolean[numRows];
+        final BitSet mask = new BitSet(numRows);
         for (int i = 0; i < numRows; i++) {
-            mask[i] = filter.test(filterColumn[i]);
+          mask.set(i, filter.test(filterColumn[i]));
         }
         return filter(mask);
     }
@@ -330,24 +521,95 @@ public class DataFrame {
     /**
      * @param columnIdx column index to filter by
      * @param filter predicate to test each column value
-     * @return new dataframe with subset of rows
+     * @return new DataFrame with subset of rows
      */
     public DataFrame filter(int columnIdx, DoublePredicate filter) {
-        double[] filterColumn = getDoubleColumn(columnIdx);
-        boolean[] mask = new boolean[numRows];
-        for (int i = 0; i < numRows; i++) {
-            mask[i] = filter.test(filterColumn[i]);
-        }
+        final BitSet mask = getMaskForFilter(columnIdx, filter);
         return filter(mask);
+    }
+
+    /**
+     * @param columnIdx column index to filter by
+     * @param filter Predicate<Object> to test each column value
+     * @return a BitSet that encodes the true/false value generated by the filter
+     * on each row in the DataFrame
+     */
+    public BitSet getMaskForFilter(int columnIdx, Predicate<Object> filter) {
+        String[] filterColumn = getStringColumn(columnIdx);
+        final BitSet mask = new BitSet(numRows);
+        for (int i = 0; i < numRows; i++) {
+          mask.set(i, filter.test(filterColumn[i]));
+        }
+        return mask;
+    }
+
+    /**
+     * @param columnIdx column index to filter by
+     * @param filter DoublePredicate to test each column value
+     * @return a BitSet that encodes the true/false value generated by the filter
+     * on each row in the DataFrame
+     */
+    public BitSet getMaskForFilter(int columnIdx, DoublePredicate filter) {
+        double[] filterColumn = getDoubleColumn(columnIdx);
+        final BitSet mask = new BitSet(numRows);
+        for (int i = 0; i < numRows; i++) {
+            mask.set(i, filter.test(filterColumn[i]));
+        }
+        return mask;
     }
 
     /**
      * @param columnName column name to filter by
      * @param filter predicate to test each column value
-     * @return new dataframe with subset of rows
+     * @return new DataFrame with subset of rows
      */
     public DataFrame filter(String columnName, DoublePredicate filter) {
         return filter(schema.getColumnIndex(columnName), filter);
+    }
+
+    /**
+     * {@link #limit(int)} with default <tt>numRows</tt> set to -1 (i.e., LIMIT ALL)
+     * @return this DataFrame, unchanged
+     */
+    public DataFrame limit() {
+        return limit(-1);
+    }
+
+    /**
+     * Execute the LIMIT clause of a SQL query, i.e., take the first n rows of the DataFrame
+     * @param numRows Number of rows to include the new DataFrame. If -1, return the original
+     * DataFrame
+     * @return the new DataFrame with only the first <tt>numRows</tt> rows.
+     */
+    public DataFrame limit(final int numRows) {
+      if (numRows < 0 || numRows >= this.numRows) {
+          return this;
+      }
+      final DataFrame result = new DataFrame();
+      result.schema = this.schema.copy();
+      result.indexToTypeIndex = new ArrayList<>(this.indexToTypeIndex);
+      result.numRows = numRows;
+      final int numColumns = this.schema.getNumColumns();
+
+      for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+          Schema.ColType t = result.schema.getColumnType(colIdx);
+          if (t == Schema.ColType.STRING) {
+              final String[] col = this.getStringColumn(colIdx);
+              final String[] newCol = new String[numRows];
+              for (int i = 0; i < numRows; ++i) {
+                  newCol[i] = col[i];
+              }
+              result.stringCols.add(newCol);
+          } else if (t == Schema.ColType.DOUBLE) {
+              final double[] col = this.getDoubleColumn(colIdx);
+              final double[] newCol = new double[numRows];
+              for (int i = 0; i < numRows; ++i) {
+                  newCol[i] = col[i];
+              }
+              result.doubleCols.add(newCol);
+          }
+      }
+      return result;
     }
 
     public Row getRow(int rowIdx) {
@@ -367,15 +629,17 @@ public class DataFrame {
         Row r = new Row(schema, rowValues);
         return r;
     }
+
     public List<Row> getRows() {
-        return getRows(numRows);
+        return getRows(0, numRows);
     }
-    public List<Row> getRows(int numRowsToGet) {
+
+    private List<Row> getRows(final int startIndex, int numRowsToGet) {
         if (numRowsToGet > numRows) {
             numRowsToGet = numRows;
         }
         List<Row> rows = new ArrayList<>();
-        for (int rowIdx = 0; rowIdx < numRowsToGet; rowIdx++) {
+        for (int rowIdx = startIndex; rowIdx < numRowsToGet; rowIdx++) {
             rows.add(getRow(rowIdx));
         }
         return rows;
@@ -417,4 +681,81 @@ public class DataFrame {
     public ArrayList<String[]> getStringRowsByName(List<String> columns) {
         return getStringRows(this.schema.getColumnIndices(columns));
     }
+
+    /**
+     * Sort DataFrame rows by a single column.
+     * // TODO: write test for OrderBy
+     * @param sortCol The column to sort by
+     * @param sortAsc True => sort ascending, False => sort descending
+     * @return A new DataFrame with the correct sorted order. If <tt>col</tt> is
+     * not in the DataFrame's schema, return the same DataFrame, unchanged
+     */
+    public DataFrame orderBy(final String sortCol, final boolean sortAsc) {
+      // If column is not present in DataFrame, return as is
+      if (!this.schema.hasColumn(sortCol)) {
+          return this;
+      }
+
+      final DataFrame sortedDf = new DataFrame();
+      final ColType sortColType = this.schema.getColumnTypeByName(sortCol);
+      final int numColumns = this.schema.getNumColumns();
+
+      if (sortColType == ColType.DOUBLE) {
+          sortColumns(sortedDf, numColumns, getDoubleColumnByName(sortCol), sortAsc);
+      } else {
+          sortColumns(sortedDf, numColumns, getStringColumnByName(sortCol), sortAsc);
+      }
+      return sortedDf;
+    }
+
+    // TODO: this code duplication is awful, gotta think of a better way of doing this
+    private void sortColumns(final DataFrame sortedDf, final int numColumns,
+        final double[] sortColumn, final boolean sortAsc) {
+        Comparator<Integer> comparator = comparing(i -> sortColumn[i], nullsLast(
+            naturalOrder()));
+        if (!sortAsc) {
+            comparator = comparator.reversed();
+        }
+        for (int c = 0; c < numColumns; ++c) {
+            if (this.schema.getColumnType(c) == ColType.DOUBLE) {
+                final double[] origCol = this.getDoubleColumn(c);
+                final double[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator)
+                    .mapToDouble(i -> origCol[i]).toArray();
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            } else {
+                // ColType.STRING
+                final String[] origCol = this.getStringColumn(c);
+                final String[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator).map(i -> origCol[i])
+                    .toArray(String[]::new);
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            }
+        }
+    }
+
+    private void sortColumns(final DataFrame sortedDf, final int numColumns,
+        final String[] sortColumn, final boolean sortAsc) {
+        Comparator<Integer> comparator = comparing(i -> sortColumn[i], nullsLast(naturalOrder()));
+        if (!sortAsc) {
+            comparator = comparator.reversed();
+        }
+        for (int c = 0; c < numColumns; ++c) {
+            if (this.schema.getColumnType(c) == ColType.DOUBLE) {
+                final double[] origCol = this.getDoubleColumn(c);
+                final double[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator)
+                    .mapToDouble(i -> origCol[i]).toArray();
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            } else {
+                // ColType.STRING
+                final String[] origCol = this.getStringColumn(c);
+                final String[] newCol = IntStream.range(0, origCol.length).boxed()
+                    .sorted(comparator).map(i -> origCol[i])
+                    .toArray(String[]::new);
+                sortedDf.addColumn(this.schema.getColumnName(c), newCol);
+            }
+        }
+    }
+
 }

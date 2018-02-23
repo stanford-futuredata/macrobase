@@ -30,12 +30,13 @@ public class PipelineUtils {
             boolean usePost,
             List<String> requiredColumns
     ) throws Exception {
-        if(inputURI.substring(0, 3).equals("csv")) {
+        if(inputURI.startsWith("csv")) {
+            // take off "csv://" from inputURI
             CSVDataFrameParser loader = new CSVDataFrameParser(inputURI.substring(6), requiredColumns);
             loader.setColumnTypes(colTypes);
             DataFrame df = loader.load();
             return df;
-        } else if (inputURI.substring(0, 4).equals("http")){
+        } else if (inputURI.startsWith("http")){
             ObjectMapper mapper = new ObjectMapper();
             String bodyString = mapper.writeValueAsString(jsonBody);
 

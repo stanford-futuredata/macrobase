@@ -15,8 +15,8 @@ public class DataFrameTest {
         tinyDF = new DataFrame();
         double[] metric = {1.0, 2.0, 3.0};
         String[] attribute = {"a", "a", "b"};
-        tinyDF.addDoubleColumn("metric", metric);
-        tinyDF.addStringColumn("attribute", attribute);
+        tinyDF.addColumn("metric", metric);
+        tinyDF.addColumn("attribute", attribute);
     }
 
     @Test
@@ -32,7 +32,7 @@ public class DataFrameTest {
 
     @Test
     public void testBulkOperations() {
-        DataFrame selected = tinyDF.selectByName(Arrays.asList("attribute"));
+        DataFrame selected = tinyDF.project(Arrays.asList("attribute"));
         assertEquals(1, selected.getSchema().getNumColumns());
         DataFrame filtered = selected.filter(
                 "attribute",
@@ -61,14 +61,14 @@ public class DataFrameTest {
                     newCol[i] = counter;
                     counter++;
                 }
-                df.addDoubleColumn("d"+j,newCol);
+                df.addColumn("d"+j,newCol);
             } else {
                 String[] newCol = new String[n];
                 for (int i = 0; i < n; i++) {
                     newCol[i] = String.valueOf(counter);
                     counter++;
                 }
-                df.addStringColumn("s"+j,newCol);
+                df.addColumn("s"+j,newCol);
             }
         }
 
