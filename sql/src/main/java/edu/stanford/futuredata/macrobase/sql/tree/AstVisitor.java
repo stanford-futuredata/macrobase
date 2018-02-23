@@ -15,6 +15,15 @@ package edu.stanford.futuredata.macrobase.sql.tree;
 
 import javax.annotation.Nullable;
 
+/**
+ * Portions of this copied from Facebook's presto-parser (https://github.com/prestodb/presto/tree/master/presto-parser);
+ * any new AST type defined in the tree subpackage should be added to this file as follows:
+ * <code>
+ *     protected R visitNewAstType(NewAstType node, C context) {
+ *          return visitNode(node, context);
+ *     }
+ * </code>
+ **/
 public abstract class AstVisitor<R, C> {
 
     public R process(Node node) {

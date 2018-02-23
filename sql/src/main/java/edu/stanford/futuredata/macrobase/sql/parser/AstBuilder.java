@@ -83,8 +83,20 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-class AstBuilder
-    extends SqlBaseBaseVisitor<Node> {
+/**
+ * Portions of this copied from Facebook's presto-parser (https://github.com/prestodb/presto/tree/master/presto-parser);
+ * any new AST type defined in the SqlBase.g4 ANTLR file should be added to this file as follows:
+ * <code>
+ *     @Override
+ *     public Node visitNewAstType(SqlBaseParser.NewAstTypeContext context) {
+ *          return new NewAstType(node, context);
+ *     }
+ * </code>
+ * Parts of this file that were modified from the original file are marked below
+ * by "Modified from original" comment; new code is marked by "New".
+ * Otherwise, the code has simply been copy-pasted.
+ **/
+class AstBuilder extends SqlBaseBaseVisitor<Node> {
 
     @Override
     public Node visitSingleStatement(SqlBaseParser.SingleStatementContext context) {
@@ -98,6 +110,7 @@ class AstBuilder
 
     // ********************** query expressions ********************
 
+    // Modified from original
     @Override
     public Node visitQuery(SqlBaseParser.QueryContext context) {
         QueryBody term = (QueryBody) visit(context.queryTerm());
@@ -147,6 +160,7 @@ class AstBuilder
             term);
     }
 
+    // New
     // Import CSVs into SQL
     @Override
     public Node visitImportCsv(SqlBaseParser.ImportCsvContext context) {
@@ -163,6 +177,7 @@ class AstBuilder
         );
     }
 
+    // New
     // Exporting queries to CSVs
     @Override
     public Node visitExportClause(SqlBaseParser.ExportClauseContext context) {
@@ -173,35 +188,41 @@ class AstBuilder
             unquote(getTextIfPresent(context.filename).get()));
     }
 
+    // New
     @Override
     public Node visitDelimiterClause(SqlBaseParser.DelimiterClauseContext context) {
         return new DelimiterClause(getLocation(context), unquote(context.delimiter.getText()));
     }
 
     /***** Begin DIFF query ******/
+    // New
     @Override
     public Node visitAggregate(SqlBaseParser.AggregateContext context) {
         return new Aggregate(getLocation(context), context.getText());
     }
 
+    // New
     @Override
     public Node visitAggregateExpression(SqlBaseParser.AggregateExpressionContext context) {
         return new AggregateExpression(getLocation(context),
             (Aggregate) visit(context.aggregate()));
     }
 
+    // New
     @Override
     public Node visitMinRatioExpression(SqlBaseParser.MinRatioExpressionContext context) {
         return new MinRatioExpression(getLocation(context),
             new DecimalLiteral(context.minRatio.getText()));
     }
 
+    // New
     @Override
     public Node visitMinSupportExpression(SqlBaseParser.MinSupportExpressionContext context) {
         return new MinSupportExpression(getLocation(context),
             new DecimalLiteral(context.minSupport.getText()));
     }
 
+    // New
     @Override
     public Node visitRatioMetricExpression(SqlBaseParser.RatioMetricExpressionContext context) {
         return new RatioMetricExpression(getLocation(context),
@@ -209,6 +230,7 @@ class AstBuilder
             (AggregateExpression) visit(context.aggregateExpression()));
     }
 
+    // New
     @Override
     public Node visitSplitQuery(SqlBaseParser.SplitQueryContext context) {
         final Expression expression = (Expression) visit(context.where);
@@ -220,6 +242,7 @@ class AstBuilder
         return new SplitQuery(expression, relation, subquery);
     }
 
+    // New
     @Override
     public Node visitDiffQuerySpecification(SqlBaseParser.DiffQuerySpecificationContext context) {
         Optional<SplitQuery> splitQuery = visitIfPresent(context.splitQuery(), SplitQuery.class);
@@ -289,9 +312,9 @@ class AstBuilder
             getTextIfPresent(context.limit),
             exportExpr);
     }
-
     /***** End DIFF query ******/
 
+    // Modified from original
     @Override
     public Node visitQuerySpecification(SqlBaseParser.QuerySpecificationContext context) {
         Optional<Relation> from = Optional.empty();
@@ -547,6 +570,7 @@ class AstBuilder
             (Expression) visit(context.result));
     }
 
+    // Modified from original
     @Override
     public Node visitFunctionCall(SqlBaseParser.FunctionCallContext context) {
         Optional<Expression> filter = visitIfPresent(context.filter(), Expression.class);
