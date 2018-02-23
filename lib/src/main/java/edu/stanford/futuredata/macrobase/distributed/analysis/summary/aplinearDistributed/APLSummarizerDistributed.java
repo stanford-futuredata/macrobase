@@ -37,7 +37,9 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
 
     APLSummarizerDistributed() {}
 
-    public static JavaPairRDD<String[], double[]> transformDataFrame(DistributedDataFrame input, List<String> attributes, String outlierColumnName, String countColumnName) {
+    public static JavaPairRDD<String[], double[]> transformDataFrame(DistributedDataFrame input,
+                                                                     List<String> attributes, String outlierColumnName,
+                                                                     String countColumnName, int numPartitions) {
 
         Map<String, Integer> nameToIndexMap = input.nameToIndexMap;
 
@@ -55,6 +57,8 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
             return new Tuple2<>(newAttributesCol, newAggregatesCol);
         });
 
+        mergedConsolidatedRDD = mergedConsolidatedRDD.repartition(numPartitions);
+
         mergedConsolidatedRDD.cache();
 
         return mergedConsolidatedRDD;
@@ -65,7 +69,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
         JavaPairRDD<String[], double[]> partitionedDataFrame =
-                transformDataFrame(input, attributes, outlierColumn, countColumn);
+                transformDataFrame(input, attributes, outlierColumn, countColumn, numPartitions);
 
         double[] globalAggregates = partitionedDataFrame.reduce(
                 (Tuple2<String[], double[]> first, Tuple2<String[], double[]> second) -> {

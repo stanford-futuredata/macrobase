@@ -31,7 +31,7 @@ public class APLinearOutlierSummarizerDistributedTest {
                 Arrays.asList("col1", "col2", "col3", "_OUTLIER", "_COUNT"));
         loader.setColumnTypes(colTypes);
 
-        DistributedDataFrame df = loader.load(sparkContext, 2);
+        DistributedDataFrame df = loader.load(sparkContext, 1);
         List<String> explanationAttributes = Arrays.asList(
                 "col1",
                 "col2",
@@ -40,7 +40,7 @@ public class APLinearOutlierSummarizerDistributedTest {
 
         JavaPairRDD<String[], double[]> testRDD =
                 APLSummarizerDistributed.transformDataFrame(df, explanationAttributes,
-                        "_OUTLIER", "_COUNT");
+                        "_OUTLIER", "_COUNT", 1);
 
         List<Tuple2<String[], double[]>> collectedCSV = testRDD.collect();
         sparkContext.stop();
