@@ -30,6 +30,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
     }
 
     public DistributedDataFrame load(JavaSparkContext sparkContext, int numPartitions) throws Exception {
+        // Distribute and parse
         JavaRDD<String[]> parsedFileRDD = sparkContext.textFile(fileName, numPartitions).mapPartitions(
                 (Iterator<String> iter) -> {
                     CsvParserSettings settings = new CsvParserSettings();
@@ -45,7 +46,10 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return parsedRows.iterator();
         }, true
         );
+        // Extract the header
         String[] header = parsedFileRDD.first();
+
+        // Remove the header
         parsedFileRDD = parsedFileRDD.mapPartitionsWithIndex(
                 (Integer index, Iterator<String[]> iter) -> {
                     if (index == 0) {
@@ -73,7 +77,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
                 schemaIndex++;
             }
         }
-        // Make sure to generate the schema in the right order
+
         // Make sure to generate the schema in the right order
         Schema schema = new Schema();
         int numStringColumns = 0;
@@ -92,6 +96,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
         final int numStringColumnsFinal = numStringColumns;
         final int numDoubleColumnsFinal = numDoubleColumns;
 
+        // Refactor using the schema
         JavaPairRDD<String[], double[]> distributedDataFrame = parsedFileRDD.mapToPair(
                 (String[] row) -> {
                     String[] stringRow = new String[numStringColumnsFinal];
@@ -121,17 +126,6 @@ public class CSVDataFrameParserDistributed implements Serializable{
 
         DistributedDataFrame df = new DistributedDataFrame(schema, distributedDataFrame);
         return df;
-    }
-
-    private static Reader getReader(String path) {
-        try {
-            InputStream targetStream = new FileInputStream(path);
-            return new InputStreamReader(targetStream, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Unable to read input", e);
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException("Unable to read input", e);
-        }
     }
 }
 
