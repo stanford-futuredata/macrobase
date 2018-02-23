@@ -10,7 +10,7 @@ import java.util.Map;
 public class DistributedDataFrame {
     public Schema schema;
     public JavaPairRDD<String[], double[]> dataFrameRDD;
-    private Map<String, Integer> nameToIndexMap;
+    public Map<String, Integer> nameToIndexMap;
 
     public DistributedDataFrame(Schema schema, JavaPairRDD<String[], double[]> dataFrameRDD) {
         this.schema = schema;

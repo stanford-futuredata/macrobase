@@ -6,6 +6,9 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.distributed.analysis.classify.DistributedClassifier;
+import edu.stanford.futuredata.macrobase.distributed.analysis.classify.PredicateClassifierDistributed;
+import edu.stanford.futuredata.macrobase.distributed.analysis.summary.DistributedBatchSummarizer;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
@@ -13,6 +16,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetr
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import edu.stanford.futuredata.macrobase.distributed.ingest.CSVDataFrameParserDistributed;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
@@ -108,7 +112,37 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
-    public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
+    private DistributedClassifier getDistributedClassifier() throws MacrobaseException {
+        switch (classifierType.toLowerCase()) {
+            case "predicate": {
+                if (isStrPredicate){
+                    PredicateClassifierDistributed classifier = new PredicateClassifierDistributed(metric, predicateStr, strCutoff);
+                    return classifier;
+                }
+                PredicateClassifierDistributed classifier = new PredicateClassifierDistributed(metric, predicateStr, cutoff);
+                return classifier;
+            }
+            default : {
+                throw new MacrobaseException("Bad Classifier Type");
+            }
+        }
+    }
+
+    public ExplanationMetric getRatioMetric() throws MacrobaseException {
+        switch (ratioMetric.toLowerCase()) {
+            case "globalratio": {
+                return new GlobalRatioMetric();
+            }
+            case "riskratio": {
+                return new RiskRatioMetric();
+            }
+            default: {
+                throw new MacrobaseException("Bad Ratio Metric");
+            }
+        }
+    }
+
+    private BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
         switch (summarizerType.toLowerCase()) {
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
@@ -129,8 +163,16 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
+            default: {
+                throw new MacrobaseException("Bad Summarizer Type");
+            }
+        }
+    }
+
+    private DistributedBatchSummarizer getDistributedSummarizer(String outlierColumnName) throws MacrobaseException {
+        switch (summarizerType.toLowerCase()) {
             case "aplineardistributed": {
-                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(sparkContext);
+                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
@@ -144,7 +186,7 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
-    private DataFrame loadData(boolean distributed) throws Exception {
+    private DataFrame loadData() throws Exception {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         if (isStrPredicate) {
             colTypes.put(metric, Schema.ColType.STRING);
@@ -154,23 +196,31 @@ public class BasicBatchPipeline implements Pipeline {
         }
         List<String> requiredColumns = new ArrayList<>(attributes);
         requiredColumns.add(metric);
-        if (!distributed)
-            return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
-        else {
-            CSVDataFrameParser loader = new CSVDataFrameParser(inputURI.substring(6), requiredColumns);
-            loader.setColumnTypes(colTypes);
-//            DataFrame df = loader.load(sparkContext, distributedNumPartitions);
-            DataFrame df = loader.load();
-            return df;
+        return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
+    }
+
+    private DistributedDataFrame loadDataDistributed() throws Exception {
+        Map<String, Schema.ColType> colTypes = new HashMap<>();
+        if (isStrPredicate) {
+            colTypes.put(metric, Schema.ColType.STRING);
         }
+        else{
+            colTypes.put(metric, Schema.ColType.DOUBLE);
+        }
+        List<String> requiredColumns = new ArrayList<>(attributes);
+        requiredColumns.add(metric);
+        CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed(inputURI.substring(6), requiredColumns);
+        loader.setColumnTypes(colTypes);
+        DistributedDataFrame df = loader.load(sparkContext, distributedNumPartitions);
+        return df;
     }
 
     @Override
     public Explanation results() throws Exception {
         long startTime = System.currentTimeMillis();
-        BatchSummarizer summarizer;
+        Explanation output;
         if (!summarizerType.toLowerCase().equals("aplineardistributed")) {
-            DataFrame df = loadData(false);
+            DataFrame df = loadData();
             long elapsed = System.currentTimeMillis() - startTime;
 
             log.info("Loading time: {} ms", elapsed);
@@ -182,33 +232,32 @@ public class BasicBatchPipeline implements Pipeline {
             classifier.process(df);
             df = classifier.getResults();
 
-            summarizer = getSummarizer(classifier.getOutputColumnName());
+            BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
 
             startTime = System.currentTimeMillis();
             summarizer.process(df);
+            output = summarizer.getResults();
         } else {
             SparkConf conf = new SparkConf().setAppName("MacroBase");
             sparkContext = new JavaSparkContext(conf);
-            DataFrame df = loadData(true);
+            DistributedDataFrame df = loadDataDistributed();
             long elapsed = System.currentTimeMillis() - startTime;
 
             log.info("Loading time: {} ms", elapsed);
-            log.info("{} rows", df.getNumRows());
             log.info("Metric: {}", metric);
             log.info("Attributes: {}", attributes);
 
-            Classifier classifier = getClassifier();
-            classifier.process(df);
-            df = classifier.getResults();
+            DistributedClassifier classifier = getDistributedClassifier();
+            df = classifier.process(df);
 
-            summarizer = getSummarizer(classifier.getOutputColumnName());
+            DistributedBatchSummarizer summarizer = getDistributedSummarizer(classifier.getOutputColumnName());
 
             startTime = System.currentTimeMillis();
             summarizer.process(df);
+            output = summarizer.getResults();
         }
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Summarization time: {} ms", elapsed);
-        Explanation output = summarizer.getResults();
 
         return output;
     }
