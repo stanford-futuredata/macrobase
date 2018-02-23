@@ -89,9 +89,9 @@ public abstract class APLSummarizerDistributed extends BatchSummarizer {
 
         JavaPairRDD<String[], double[]> mergedConsolidatedRDD =
                 JavaPairRDD.fromJavaRDD(mergedRdd.map(
-                        (Tuple2<Integer, Tuple2<String[], double[]>> entry) -> {
-                            return new Tuple2<>(entry._2._1, entry._2._2);
-        }));
+                        (Tuple2<Integer, Tuple2<String[], double[]>> entry) ->
+                            new Tuple2<>(entry._2._1, entry._2._2)
+        ));
 
         mergedConsolidatedRDD.cache();
 
