@@ -1,0 +1,5 @@
+col1,col2,col3,_OUTLIER,_COUNT
+a1,b1,c1,30,100
+a2,b1,c1,5,300
+a1,b2,c1,5,400
+a1,b1,c2,7,500
