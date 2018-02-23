@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DistributedDataFrame {
-    private Schema schema;
+    public Schema schema;
     public JavaPairRDD<String[], double[]> dataFrameRDD;
     private Map<String, Integer> nameToIndexMap;
 
@@ -33,4 +33,9 @@ public class DistributedDataFrame {
         return nameToIndexMap.get(colName);
     }
 
+    public void addColumnToSchema(String colName, Schema.ColType colType) {
+        schema.addColumn(colType, colName);
+        int index  = schema.getColumnNamesByType(colType).size() - 1;
+        nameToIndexMap.put(colName, index);
+    }
 }
