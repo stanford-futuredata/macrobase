@@ -69,8 +69,8 @@ public class APrioriLinearDistributed {
         JavaRDD<Tuple2<int[][], double[][]>> shardedAttributesAndAggregatesRDD =
                 attributesAndAggregates.mapPartitions(
                         (Iterator<Tuple2<int[], double[]>> iter) -> {
-            int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions)/numPartitions];
-            double[][] thisPartitionAggregates = new double[(numRows + numPartitions)/numPartitions][numAggregates];
+            int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions * 100)/numPartitions];
+            double[][] thisPartitionAggregates = new double[(numRows + numPartitions * 100)/numPartitions][numAggregates];
             int j = 0;
             while(iter.hasNext()) {
                 Tuple2<int[], double[]> rowNext = iter.next();
