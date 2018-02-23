@@ -4,14 +4,17 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Gl
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Summarizer that works over both cube and row-based labeled ratio-based
@@ -19,11 +22,8 @@ import java.util.List;
  */
 public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizerDistributed");
-    private String countColumn = null;
 
-    public APLOutlierSummarizerDistributed(JavaSparkContext sparkContext) {
-        super(sparkContext);
-    }
+    public APLOutlierSummarizerDistributed() {}
 
     @Override
     public List<String> getAggregateNames() {
@@ -39,18 +39,6 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
                 minOutlierSupport,
                 globalAggregates,
                 0);
-    }
-
-    @Override
-    public double[][] getAggregateColumns(DataFrame input) {
-        double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
-        double[] countCol = processCountCol(input, countColumn,  outlierCol.length);
-
-        double[][] aggregateColumns = new double[2][];
-        aggregateColumns[0] = outlierCol;
-        aggregateColumns[1] = countCol;
-
-        return aggregateColumns;
     }
 
     @Override
@@ -70,12 +58,6 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
         return Arrays.asList(minOutlierSupport, minRatioMetric);
     }
 
-    public String getCountColumn() {
-        return countColumn;
-    }
-    public void setCountColumn(String countColumn) {
-        this.countColumn = countColumn;
-    }
     public double getMinRatioMetric() {
         return minRatioMetric;
     }
