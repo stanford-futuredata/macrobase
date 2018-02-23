@@ -41,14 +41,18 @@ public class MacroBaseSQLRepl {
     private final QueryEngine queryEngine;
     private final boolean paging;
 
+    private File tempFileForPaging;
+
     /**
      * Main entry point to the SQL CLI interface in MacroBase
      *
+     * @param userWantsPaging try to enable paging of results in SQL shell
      * @throws IOException if unable to instantiate ConsoleReader
      */
-    private MacroBaseSQLRepl(final boolean paging) throws IOException {
+    private MacroBaseSQLRepl(final boolean userWantsPaging) throws IOException {
+        // First try to turn paging on
+        this.paging = enablePaging(userWantsPaging);
         // Initialize console reader and writer
-        this.paging = paging;
         reader = new ConsoleReader();
         final CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
         handler.setStripAnsi(true);
@@ -57,6 +61,28 @@ public class MacroBaseSQLRepl {
 
         parser = new SqlParser();
         queryEngine = new QueryEngine();
+    }
+
+    /**
+     * Try to turn on paging of results in SQL shell, if enabled by user.
+     * @param userWantsPaging if user set --paging in the command line
+     * @return if userWantsPaging is false, return false. Otherwise, try to create temp file
+     * for paging and reading it using <code>less</code>. If an exception is thrown (i.e., either
+     * creating or reading the file failed)
+     */
+    private boolean enablePaging(boolean userWantsPaging) {
+        if (!userWantsPaging) {
+            return false;
+        }
+        try {
+            tempFileForPaging = File.createTempFile("mb-sql", null);
+            final Process p = Runtime.getRuntime()
+                .exec(new String[]{"less", tempFileForPaging.getAbsolutePath()});
+            return p.waitFor() == 0;
+        } catch (IOException | InterruptedException e) {
+            log.warn("--paging set to true, but unable to enable paging");
+            return false;
+        }
     }
 
     /**
@@ -91,9 +117,10 @@ public class MacroBaseSQLRepl {
                 if (paging) {
                     try {
                         final PrintStream ps = new PrintStream(
-                            new FileOutputStream("/tmp/mb-sql.output"));
+                            new FileOutputStream(tempFileForPaging.getAbsolutePath()));
                         result.prettyPrint(ps, -1);
-                        ProcessBuilder pb = new ProcessBuilder("less", "/tmp/mb-sql.output");
+                        ProcessBuilder pb = new ProcessBuilder("less",
+                            tempFileForPaging.getAbsolutePath());
                         pb.inheritIO();
                         Process p = pb.start();
                         p.waitFor();
@@ -186,7 +213,7 @@ public class MacroBaseSQLRepl {
             .defaultHelp(true)
             .description("Run MacroBase SQL.");
         parser.addArgument("-f", "--file").help("Load file with SQL queries to execute");
-        parser.addArgument("-p", "--paging").type(Arguments.booleanType()).setDefault(true)
+        parser.addArgument("-p", "--paging").type(Arguments.booleanType()).setDefault(false)
             .help("Turn on paging of results for SQL queries");
         final Namespace parsedArgs = parser.parseArgsOrFail(args);
 
