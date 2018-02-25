@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.MeanDevQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
@@ -27,6 +28,12 @@ public class APLMeanSummarizer extends APLSummarizer {
     @Override
     public List<String> getAggregateNames() {
         return Arrays.asList("count", "m1", "m2");
+    }
+
+    @Override
+    public AggregationOp[] getAggregationOps() {
+        AggregationOp[] curOps = {AggregationOp.SUM, AggregationOp.SUM, AggregationOp.SUM};
+        return curOps;
     }
 
     @Override

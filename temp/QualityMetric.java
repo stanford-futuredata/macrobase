@@ -1,4 +1,4 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics;
 
 /**
  * Measures how interesting a subgroup is as a function of its linear aggregates.
@@ -22,11 +22,11 @@ public interface QualityMetric {
         }
 
         public static Action combine(Action a, Action b) {
-            if (a.val <= b.val) {
-                return a;
-            } else {
-                return b;
-            }
+           if (a.val <= b.val) {
+               return a;
+           } else {
+               return b;
+           }
         }
     }
 
