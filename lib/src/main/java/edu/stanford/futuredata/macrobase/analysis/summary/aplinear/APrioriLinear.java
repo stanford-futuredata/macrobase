@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.metrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.APrioriSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.apriori.IntSet;
@@ -60,7 +61,7 @@ public class APrioriLinear {
     public List<APLExplanationResult> explain(
             final List<int[]> attributes,
             double[][] aggregateColumns,
-            Map<String, int[]> aggregationOps
+            AggregationOp[] aggregationOps
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
@@ -69,35 +70,12 @@ public class APrioriLinear {
         // allow them to determine the appropriate relative thresholds
         double[] globalAggregates = new double[numAggregates];
         start = System.nanoTime();
-        if (aggregationOps == null) {
-            for (int j = 0; j < numAggregates; j++) {
-                globalAggregates[j] = 0;
-                double[] curColumn = aggregateColumns[j];
-                for (int i = 0; i < numRows; i++) {
-                    globalAggregates[j] += curColumn[i];
-                }
-            }
-        } else {
-            for (int j : aggregationOps.getOrDefault("add", new int[0])) {
-                globalAggregates[j] = 0;
-                double[] curColumn = aggregateColumns[j];
-                for (int i = 0; i < numRows; i++) {
-                    globalAggregates[j] += curColumn[i];
-                }
-            }
-            for (int j : aggregationOps.getOrDefault("min", new int[0])) {
-                double[] curColumn = aggregateColumns[j];
-                globalAggregates[j] = curColumn[0];
-                for (int i = 0; i < numRows; i++) {
-                    globalAggregates[j] = Math.min(globalAggregates[j], curColumn[i]);
-                }
-            }
-            for (int j : aggregationOps.getOrDefault("max", new int[0])) {
-                double[] curColumn = aggregateColumns[j];
-                globalAggregates[j] = curColumn[0];
-                for (int i = 0; i < numRows; i++) {
-                    globalAggregates[j] = Math.max(globalAggregates[j], curColumn[i]);
-                }
+        for (int j = 0; j < numAggregates; j++) {
+            AggregationOp curOp = aggregationOps[j];
+            globalAggregates[j] = curOp.initValue();
+            double[] curColumn = aggregateColumns[j];
+            for (int i = 0; i < numRows; i++) {
+                globalAggregates[j] = curOp.combine(globalAggregates[j], curColumn[i]);
             }
         }
         mergeTime += System.nanoTime() - start;
