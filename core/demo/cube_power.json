@@ -1,0 +1,21 @@
+{
+  "pipeline": "PowerCubePipeline",
+  "inputURI": "csv://core/demo/app_latency_cube.csv",
+  "cutoff": 5.0,
+  "minColumn": "latency:min",
+  "maxColumn": "latency:max",
+  "powerSumColumns": [
+    "power:0:sum",
+    "power:1:sum",
+    "power:2:sum",
+    "power:3:sum",
+    "power:4:sum"
+  ],
+  "attributes": [
+    "app_version",
+    "country",
+    "device"
+  ],
+  "minRatioMetric": 10.0,
+  "minSupport": 0.1
+}

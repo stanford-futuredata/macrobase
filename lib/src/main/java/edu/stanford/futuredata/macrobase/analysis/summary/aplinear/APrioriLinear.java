@@ -346,23 +346,23 @@ public class APrioriLinear {
      */
     private boolean validateCandidate(IntSet curCandidate,
                                       HashSet<IntSet> o2Candidates) {
-            IntSet subPair;
+        IntSet subPair;
+        subPair = new IntSetAsArray(
+                curCandidate.getFirst(),
+                curCandidate.getSecond());
+        if (o2Candidates.contains(subPair)) {
             subPair = new IntSetAsArray(
-                    curCandidate.getFirst(),
-                    curCandidate.getSecond());
+                    curCandidate.getSecond(),
+                    curCandidate.getThird());
             if (o2Candidates.contains(subPair)) {
                 subPair = new IntSetAsArray(
-                        curCandidate.getSecond(),
+                        curCandidate.getFirst(),
                         curCandidate.getThird());
                 if (o2Candidates.contains(subPair)) {
-                    subPair = new IntSetAsArray(
-                            curCandidate.getFirst(),
-                            curCandidate.getThird());
-                    if (o2Candidates.contains(subPair)) {
-                        return true;
-                    }
+                    return true;
                 }
             }
+        }
         return false;
     }
 }
