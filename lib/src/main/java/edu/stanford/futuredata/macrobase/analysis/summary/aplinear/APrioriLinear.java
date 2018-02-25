@@ -291,9 +291,12 @@ public class APrioriLinear {
                         action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                     }
                     if (action == QualityMetric.Action.KEEP) {
-                        // if a set is already past the threshold on all metrics,
-                        // save it and no need for further exploration if we do containment
-                        curOrderSaved.add(curCandidate);
+                        // Make sure the candidate isn't already covered by a pair
+                        if (curOrder != 3 || validateCandidate(curCandidate, setNext.get(2))) {
+                            // if a set is already past the threshold on all metrics,
+                            // save it and no need for further exploration if we do containment
+                            curOrderSaved.add(curCandidate);
+                        }
                     } else if (action == QualityMetric.Action.NEXT) {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
