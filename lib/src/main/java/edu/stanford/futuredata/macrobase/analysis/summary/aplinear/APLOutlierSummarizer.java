@@ -1,9 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.RiskRatioQualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +19,12 @@ public class APLOutlierSummarizer extends APLSummarizer {
     @Override
     public List<String> getAggregateNames() {
         return Arrays.asList("Outliers", "Count");
+    }
+
+    @Override
+    public AggregationOp[] getAggregationOps() {
+        AggregationOp[] curOps = {AggregationOp.SUM, AggregationOp.SUM};
+        return curOps;
     }
 
     @Override

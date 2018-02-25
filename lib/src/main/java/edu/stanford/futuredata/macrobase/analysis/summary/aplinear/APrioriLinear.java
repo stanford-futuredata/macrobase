@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public class APrioriLinear {
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
+            AggregationOp[] aggregationOps,
             int cardinality,
             final int maxOrder,
             int numThreads
@@ -81,10 +83,11 @@ public class APrioriLinear {
         // allow them to determine the appropriate relative thresholds
         double[] globalAggregates = new double[numAggregates];
         for (int j = 0; j < numAggregates; j++) {
-            globalAggregates[j] = 0;
+            AggregationOp curOp = aggregationOps[j];
+            globalAggregates[j] = curOp.initValue();
             double[] curColumn = aggregateColumns[j];
             for (int i = 0; i < numRows; i++) {
-                globalAggregates[j] += curColumn[i];
+                globalAggregates[j] = curOp.combine(globalAggregates[j], curColumn[i]);
             }
         }
         for (QualityMetric q : qualityMetrics) {
@@ -139,7 +142,8 @@ public class APrioriLinear {
                                             Arrays.copyOf(aRows[rowNum], numAggregates));
                                 } else {
                                     for (int a = 0; a < numAggregates; a++) {
-                                        candidateVal[a] += aRows[rowNum][a];
+                                        AggregationOp curOp = aggregationOps[a];
+                                        candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
                                     }
                                 }
                             }
@@ -171,7 +175,8 @@ public class APrioriLinear {
                                                 Arrays.copyOf(aRows[rowNum], numAggregates));
                                     } else {
                                         for (int a = 0; a < numAggregates; a++) {
-                                            candidateVal[a] += aRows[rowNum][a];
+                                            AggregationOp curOp = aggregationOps[a];
+                                            candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
                                         }
                                     }
                                 }
@@ -212,7 +217,8 @@ public class APrioriLinear {
                                                     Arrays.copyOf(aRows[rowNum], numAggregates));
                                         } else {
                                             for (int a = 0; a < numAggregates; a++) {
-                                                candidateVal[a] += aRows[rowNum][a];
+                                                AggregationOp curOp = aggregationOps[a];
+                                                candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
                                             }
                                         }
                                     }
@@ -247,7 +253,8 @@ public class APrioriLinear {
                             setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
                         } else {
                             for (int a = 0; a < numAggregates; a++) {
-                                candidateVal[a] += curCandidateValue[a];
+                                AggregationOp curOp = aggregationOps[a];
+                                candidateVal[a] = curOp.combine(candidateVal[a], curCandidateValue[a]);
                             }
                         }
                     }
@@ -261,7 +268,8 @@ public class APrioriLinear {
                             setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
                         } else {
                             for (int a = 0; a < numAggregates; a++) {
-                                candidateVal[a] += curCandidateValue[a];
+                                AggregationOp curOp = aggregationOps[a];
+                                candidateVal[a] = curOp.combine(candidateVal[a], curCandidateValue[a]);
                             }
                         }
                     }
@@ -272,25 +280,24 @@ public class APrioriLinear {
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
             for (IntSet curCandidate: setAggregates.keySet()) {
+                QualityMetric.Action action = QualityMetric.Action.KEEP;
                 if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
-                    continue;
-                }
-                double[] curAggregates = setAggregates.get(curCandidate);
-                boolean canPassThreshold = true;
-                boolean isPastThreshold = true;
-                for (int i = 0; i < qualityMetrics.length; i++) {
-                    QualityMetric q = qualityMetrics[i];
-                    double t = thresholds[i];
-                    canPassThreshold &= q.maxSubgroupValue(curAggregates) >= t;
-                    isPastThreshold &= q.value(curAggregates) >= t;
-                }
-                if (canPassThreshold) {
-                    // if a set is already past the threshold on all metrics,
-                    // save it and no need for further exploration
-                    if (isPastThreshold && !(curOrder == 3 && !validateCandidate(curCandidate, setNext.get(2)))) {
-                        curOrderSaved.add(curCandidate);
+                    action = QualityMetric.Action.PRUNE;
+                } else {
+                    double[] curAggregates = setAggregates.get(curCandidate);
+                    for (int i = 0; i < qualityMetrics.length; i++) {
+                        QualityMetric q = qualityMetrics[i];
+                        double t = thresholds[i];
+                        action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                     }
-                    else {
+                    if (action == QualityMetric.Action.KEEP) {
+                        // Make sure the candidate isn't already covered by a pair
+                        if (curOrder != 3 || validateCandidate(curCandidate, setNext.get(2))) {
+                            // if a set is already past the threshold on all metrics,
+                            // save it and no need for further exploration if we do containment
+                            curOrderSaved.add(curCandidate);
+                        }
+                    } else if (action == QualityMetric.Action.NEXT) {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
                         curOrderNext.add(curCandidate);

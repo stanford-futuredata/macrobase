@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -26,6 +27,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     protected long numOutliers = 0;
 
     public abstract List<String> getAggregateNames();
+    public abstract AggregationOp[] getAggregationOps();
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
@@ -68,8 +70,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
+        AggregationOp[] aggregationOps = getAggregationOps();
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
+                aggregationOps,
                 encoder.getNextKey(),
                 maxOrder,
                 numThreads
