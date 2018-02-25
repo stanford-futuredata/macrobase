@@ -1,0 +1,33 @@
+{
+  "pipeline": "PowerCubePipeline",
+  "inputURI": "csv://core/demo/sample_cubed_moments.csv",
+  "cutoff": 1.0,
+  "includeLo": false,
+  "includeHi": true,
+  "ka": 5,
+  "kb": 5,
+  "minColumn": "min",
+  "maxColumn": "max",
+  "powerSumColumns": [
+    "m0",
+    "m1",
+    "m2",
+    "m3",
+    "m4"
+  ],
+  "logMinColumn": "lmin",
+  "logMaxColumn": "lmax",
+  "logSumColumns": [
+    "lm0",
+    "lm1",
+    "lm2",
+    "lm3",
+    "lm4"
+  ],
+  "attributes": [
+    "location",
+    "version"
+  ],
+  "minSupport": 0.2,
+  "minRatioMetric": 2.0
+}

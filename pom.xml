@@ -42,6 +42,7 @@
       <module>frontend</module>
       <!-- <module>contrib</module> -->
       <module>sql</module>
+      <module>msolver</module>
       <module>lib</module>
       <module>core</module>
     </modules>

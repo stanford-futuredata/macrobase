@@ -120,7 +120,7 @@ public class IntSetAsArray implements IntSet {
     public boolean contains(int i) {
         switch (values.length) {
             case 1: {
-                return values[0] == 1;
+                return values[0] == i;
             }
             case 2: {
                 return values[0] == i || values[1] == i;
