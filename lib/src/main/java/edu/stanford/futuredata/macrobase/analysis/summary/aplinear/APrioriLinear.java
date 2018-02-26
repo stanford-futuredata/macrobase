@@ -69,7 +69,7 @@ public class APrioriLinear {
         } else{
             useIntSetAsArray = false;
         }
-
+        System.out.println("numThreads: " + numThreads);
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
@@ -322,7 +322,7 @@ public class APrioriLinear {
                     }
                     if (action == QualityMetric.Action.KEEP) {
                         // Make sure the candidate isn't already covered by a pair
-                        if (curOrder != 3 || validateCandidate(curCandidate, setNext.get(2))) {
+                        if (curOrder != 3 || allPairsValid(curCandidate, setNext.get(2))) {
                             // if a set is already past the threshold on all metrics,
                             // save it and no need for further exploration if we do containment
                             curOrderSaved.add(curCandidate);
@@ -369,12 +369,12 @@ public class APrioriLinear {
     }
 
     /**
-     * Check if all subsets of an order-3 candidate are order-2 candidates.
+     * Check if all order-2 subsets of an order-3 candidate are valid candidates.
      * @param o2Candidates All candidates of order 2 with minimum support.
      * @param curCandidate An order-3 candidate
      * @return Boolean
      */
-    private boolean validateCandidate(IntSet curCandidate,
+    private boolean allPairsValid(IntSet curCandidate,
                                       HashSet<IntSet> o2Candidates) {
             IntSet subPair;
             subPair = new IntSetAsArray(
@@ -410,10 +410,10 @@ public class APrioriLinear {
 
     // One Bitmap, One Normal
     private void allOneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
-            ArrayList<Integer> outlierColList,
-            HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
-    int[] curColumnTwoAttributes, int startIndex,
-    boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                                       ArrayList<Integer> outlierColList,
+                                       HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
+                                       int[] curColumnTwoAttributes, int startIndex,
+                                       boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
@@ -433,10 +433,10 @@ public class APrioriLinear {
     }
 
     private void oneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
-            RoaringBitmap bitmap, Integer curCandidateOne,
-    int[] curColumnTwoAttributes, int startIndex,
-    boolean useIntSetAsArray, IntSet curCandidate,
-    double[] val, int numAggregates) {
+                                    RoaringBitmap bitmap, Integer curCandidateOne,
+                                    int[] curColumnTwoAttributes, int startIndex,
+                                    boolean useIntSetAsArray, IntSet curCandidate,
+                                    double[] val, int numAggregates) {
         for (Integer rowNum : bitmap) {
             int rowNumInCol = rowNum - startIndex;
             if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
@@ -453,10 +453,10 @@ public class APrioriLinear {
 
     // Two Normal columns
     private void allTwoNormal(FastFixedHashTable thisThreadSetAggregates,
-    int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
-    int startIndex, int endIndex,
-    boolean useIntSetAsArray, IntSet curCandidate,
-    double[][] aRows, int numAggregates) {
+                              int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
+                              int startIndex, int endIndex,
+                              boolean useIntSetAsArray, IntSet curCandidate,
+                              double[][] aRows, int numAggregates) {
         for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
             int rowNumInCol = rowNum - startIndex;
             // Only examine a pair if both its members have minimum support.
@@ -479,10 +479,10 @@ public class APrioriLinear {
 
     // Two bitmap columns
     private void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
-            ArrayList<Integer>[] outlierList,
-            HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
-    int colNumOne, int colNumTwo,
-    boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                              ArrayList<Integer>[] outlierList,
+                              HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                              int colNumOne, int colNumTwo,
+                              boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
@@ -513,10 +513,10 @@ public class APrioriLinear {
 
     // One Bitmap, Two Normal
     private void allOneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
-            ArrayList<Integer> outlierColList,
-            HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
-    int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
-    boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                                       ArrayList<Integer> outlierColList,
+                                       HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
+                                       int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
+                                       boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
@@ -536,10 +536,10 @@ public class APrioriLinear {
     }
 
     private void oneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
-            RoaringBitmap bitmap, Integer curCandidateOne,
-    int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
-    boolean useIntSetAsArray, IntSet curCandidate,
-    double[] val, int numAggregates) {
+                                    RoaringBitmap bitmap, Integer curCandidateOne,
+                                    int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
+                                    boolean useIntSetAsArray, IntSet curCandidate,
+                                    double[] val, int numAggregates) {
         for (Integer rowNum : bitmap) {
             int rowNumInCol = rowNum - startIndex;
             if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
@@ -565,11 +565,11 @@ public class APrioriLinear {
 
     // Two Bitmaps, One Normal
     private void allTwoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
-            ArrayList<Integer>[] outlierList,
-            HashMap<Integer, RoaringBitmap>[][] byThreadColumnBitmap,
-    int colNumOne, int colNumTwo,
-    int[] curColumnThreeAttributes, int startIndex,
-    boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                                        ArrayList<Integer>[] outlierList,
+                                        HashMap<Integer, RoaringBitmap>[][] byThreadColumnBitmap,
+                                        int colNumOne, int colNumTwo,
+                                        int[] curColumnThreeAttributes, int startIndex,
+                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
@@ -594,10 +594,10 @@ public class APrioriLinear {
     }
 
     private void twoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
-            RoaringBitmap bitmap, Integer curCandidateOne, Integer curCandidateTwo,
-    int[] curColumnThreeAttributes, int startIndex,
-    boolean useIntSetAsArray, IntSet curCandidate,
-    double[] val, int numAggregates) {
+                                     RoaringBitmap bitmap, Integer curCandidateOne, Integer curCandidateTwo,
+                                     int[] curColumnThreeAttributes, int startIndex,
+                                     boolean useIntSetAsArray, IntSet curCandidate,
+                                     double[] val, int numAggregates) {
         for (Integer rowNum : bitmap) {
             int rowNumInCol = rowNum - startIndex;
             if (curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnThreeAttributes[rowNumInCol]])
@@ -620,10 +620,10 @@ public class APrioriLinear {
 
     // All Three Normal or All Three Bitmap
     private void allThreeNormal(FastFixedHashTable thisThreadSetAggregates,
-    int[] curColumnOneAttributes, int[] curColumnTwoAttributes, int[] curColumnThreeAttributes,
-    int startIndex, int endIndex,
-    boolean useIntSetAsArray, IntSet curCandidate,
-    double[][] aRows, int numAggregates) {
+                                int[] curColumnOneAttributes, int[] curColumnTwoAttributes, int[] curColumnThreeAttributes,
+                                int startIndex, int endIndex,
+                                boolean useIntSetAsArray, IntSet curCandidate,
+                                double[][] aRows, int numAggregates) {
         for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
             int rowNumInCol = rowNum - startIndex;
             // Only construct a triple if all its singleton members have minimum support.
@@ -651,10 +651,10 @@ public class APrioriLinear {
     }
 
     private void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
-            ArrayList<Integer>[] outlierList,
-            HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
-    int colNumOne, int colNumTwo, int colNumThree,
-    boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                                ArrayList<Integer>[] outlierList,
+                                HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                                int colNumOne, int colNumTwo, int colNumThree,
+                                boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;

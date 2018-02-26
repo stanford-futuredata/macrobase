@@ -10,8 +10,8 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class APLMeanSummarizerTest {
-
-    /*public void testContainment() throws Exception {
+    /*@Test
+    public void testContainment() throws Exception {
         DataFrame df = new DataFrame();
         String[] col1 = {"a1", "a2", "a1", "a2"};
         String[] col2 = {"b1", "b1", "b2", "b2"};

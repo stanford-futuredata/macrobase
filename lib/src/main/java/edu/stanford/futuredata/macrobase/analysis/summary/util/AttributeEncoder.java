@@ -13,7 +13,7 @@ import org.roaringbitmap.RoaringBitmap;
 public class AttributeEncoder {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    private static int cardinalityThreshold = 1000;
+    private static double cardinalityThreshold = 0.01;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -78,6 +78,8 @@ public class AttributeEncoder {
                 if (outlierColumn[rowIdx] > 0.0) {
                     if (colIdx == 0)
                         numOutliers += outlierColumn[rowIdx];
+                    // prepend column index as String to column value to disambiguate
+                    // between two identical values in different columns
                     String colVal = Integer.toString(colIdx) + curCol[rowIdx];
                     Double curCount = countMap.get(colVal);
                     if (curCount == null)
@@ -91,7 +93,7 @@ public class AttributeEncoder {
         // Rank the strings that have minimum support among the outliers
         // by the amount of support they have.
         double minSupportThreshold = minSupport * numOutliers;
-        List<String> filterOnMinSupport= countMap.keySet().stream()
+        List<String> filterOnMinSupport = countMap.keySet().stream()
                 .filter(line -> countMap.get(line) > minSupportThreshold)
                 .collect(Collectors.toList());
         filterOnMinSupport.sort((s1, s2) -> countMap.get(s2).compareTo(countMap.get(s1)));
@@ -120,6 +122,8 @@ public class AttributeEncoder {
             HashSet<Integer> foundOutliers = new HashSet<>();
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 String colVal = curCol[rowIdx];
+                // Again, prepend column index as String to column value to disambiguate
+                // between two identical values in different columns
                 String colNumAndVal = Integer.toString(colIdx) + colVal;
                 int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                 if (!curColEncoder.containsKey(colVal)) {
@@ -135,13 +139,14 @@ public class AttributeEncoder {
                 }
                 int curKey = curColEncoder.get(colVal);
                 encodedAttributes[rowIdx][colIdx] = curKey;
-                if (oidx == 1 && !foundOutliers.contains(curKey)) {
+
+                if (oidx == 1 && curKey != noSupport && !foundOutliers.contains(curKey)) {
                     foundOutliers.add(curKey);
                     outlierList[colIdx].add(curKey);
                 }
             }
-
-            if (curColEncoder.size() < cardinalityThreshold) {
+            System.out.print(outlierList[colIdx].size() + " ");
+            if (true || 1.0*outlierList[colIdx].size()/numRows <= cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
@@ -157,7 +162,7 @@ public class AttributeEncoder {
                 }
             }
         }
-        System.out.println("isBitmapEncoded: " + Arrays.toString(isBitmapEncoded));
+        System.out.println("\nisBitmapEncoded: " + Arrays.toString(isBitmapEncoded));
         return encodedAttributes;
     }
 
