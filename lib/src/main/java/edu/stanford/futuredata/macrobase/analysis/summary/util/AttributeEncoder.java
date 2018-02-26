@@ -119,7 +119,6 @@ public class AttributeEncoder {
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
-            int passedMinSupportCount = 0;
             HashSet<Integer> foundOutliers = new HashSet<>();
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 String colVal = curCol[rowIdx];
@@ -129,7 +128,6 @@ public class AttributeEncoder {
                 int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                 if (!curColEncoder.containsKey(colVal)) {
                     if (stringToRank.containsKey(colNumAndVal)) {
-                        passedMinSupportCount++;
                         int newKey = stringToRank.get(colNumAndVal);
                         curColEncoder.put(colVal, newKey);
                         valueDecoder.put(newKey, colVal);
@@ -146,7 +144,6 @@ public class AttributeEncoder {
                     outlierList[colIdx].add(curKey);
                 }
             }
-            assert(passedMinSupportCount >= outlierList[colIdx].size()); 
             System.out.print(outlierList[colIdx].size() + " ");
             if (true || 1.0*outlierList[colIdx].size()/numRows <= cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
