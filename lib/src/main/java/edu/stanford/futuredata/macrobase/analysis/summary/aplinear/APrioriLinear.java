@@ -66,7 +66,7 @@ public class APrioriLinear {
         } else{
             useIntSetAsArray = false;
         }
-
+        System.out.println("numThreads: " + numThreads);
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
@@ -79,10 +79,11 @@ public class APrioriLinear {
             final int startIndex = (numRows * threadNum) / numThreads;
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
             for(int i = 0; i < numColumns; i++) {
-                for (int j = startIndex; j < endIndex; j++) {
-                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
-                }
-                if (isBitmapEncoded[i]) {
+                if (!isBitmapEncoded[i]) {
+                    for (int j = startIndex; j < endIndex; j++) {
+                        byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
+                    }
+                } else {
                     for (int j = 0; j < 2; j++) {
                         for (HashMap.Entry<Integer, RoaringBitmap> entry : bitmap[i][j].entrySet()) {
                             RoaringBitmap rr = new RoaringBitmap();
@@ -318,10 +319,9 @@ public class APrioriLinear {
                 if (canPassThreshold) {
                     // if a set is already past the threshold on all metrics,
                     // save it and no need for further exploration
-                    if (isPastThreshold && !(curOrder == 3 && !validateCandidate(curCandidate, setNext.get(2)))) {
+                    if (isPastThreshold && !(curOrder == 3 && !allPairsValid(curCandidate, setNext.get(2)))) {
                         curOrderSaved.add(curCandidate);
-                    }
-                    else {
+                    } else {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
                         curOrderNext.add(curCandidate);
@@ -363,12 +363,12 @@ public class APrioriLinear {
     }
 
     /**
-     * Check if all subsets of an order-3 candidate are order-2 candidates.
+     * Check if all order-2 subsets of an order-3 candidate are valid candidates.
      * @param o2Candidates All candidates of order 2 with minimum support.
      * @param curCandidate An order-3 candidate
      * @return Boolean
      */
-    private boolean validateCandidate(IntSet curCandidate,
+    private boolean allPairsValid(IntSet curCandidate,
                                       HashSet<IntSet> o2Candidates) {
             IntSet subPair;
             subPair = new IntSetAsArray(
