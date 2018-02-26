@@ -105,7 +105,6 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                 Math.round(globalAggregates[0]),
                 aggregateNames,
                 qualityMetricList,
-                thresholds,
                 aplResults
         );
     }
