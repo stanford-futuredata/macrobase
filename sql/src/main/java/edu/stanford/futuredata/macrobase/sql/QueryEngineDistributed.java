@@ -11,33 +11,9 @@ import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSum
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
-import edu.stanford.futuredata.macrobase.sql.tree.AllColumns;
-import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
-import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
-import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Expression;
-import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
-import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
-import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
-import edu.stanford.futuredata.macrobase.sql.tree.Literal;
-import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.*;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
-import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
-import edu.stanford.futuredata.macrobase.sql.tree.NullLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.OrderBy;
-import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
-import edu.stanford.futuredata.macrobase.sql.tree.QuerySpecification;
-import edu.stanford.futuredata.macrobase.sql.tree.Relation;
-import edu.stanford.futuredata.macrobase.sql.tree.Select;
-import edu.stanford.futuredata.macrobase.sql.tree.SelectItem;
-import edu.stanford.futuredata.macrobase.sql.tree.SingleColumn;
-import edu.stanford.futuredata.macrobase.sql.tree.SortItem;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem.Ordering;
-import edu.stanford.futuredata.macrobase.sql.tree.SplitQuery;
-import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
-import edu.stanford.futuredata.macrobase.sql.tree.Table;
-import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
 import java.util.ArrayList;
@@ -94,19 +70,21 @@ class QueryEngineDistributed {
      * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
-    DataFrame executeQuery(QueryBody query) throws MacrobaseException {
-        if (query instanceof QuerySpecification) {
-            QuerySpecification querySpec = (QuerySpecification) query;
+    DataFrame executeQuery(Query query) throws MacrobaseException {
+        QueryBody queryBody = query.getQueryBody();
+        if (queryBody instanceof QuerySpecification) {
+            QuerySpecification querySpec = (QuerySpecification) queryBody;
+            System.out.println("Non-Diff Query: " + SqlFormatter.formatSql(query, Optional.empty()));
             log.debug(querySpec.toString());
             return executeQuerySpec(querySpec);
 
-        } else if (query instanceof DiffQuerySpecification) {
-            DiffQuerySpecification diffQuery = (DiffQuerySpecification) query;
+        } else if (queryBody instanceof DiffQuerySpecification) {
+            DiffQuerySpecification diffQuery = (DiffQuerySpecification) queryBody;
             log.debug(diffQuery.toString());
             return executeDiffQuerySpec(diffQuery);
         }
         throw new MacrobaseSQLException(
-                "query of type " + query.getClass().getSimpleName() + " not yet supported");
+                "query of type " + queryBody.getClass().getSimpleName() + " not yet supported");
     }
 
     /**
@@ -128,8 +106,8 @@ class QueryEngineDistributed {
             final TableSubquery second = diffQuery.getSecond().get();
 
             // execute subqueries
-            final DataFrame outliersDf = executeQuery(first.getQuery().getQueryBody());
-            final DataFrame inliersDf = executeQuery(second.getQuery().getQueryBody());
+            final DataFrame outliersDf = executeQuery(first.getQuery());
+            final DataFrame inliersDf = executeQuery(second.getQuery());
 
             dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
         } else {
@@ -138,8 +116,7 @@ class QueryEngineDistributed {
             final Relation inputRelation = splitQuery.getInputRelation();
 
             if (inputRelation instanceof TableSubquery) {
-                final QueryBody subquery = ((TableSubquery) inputRelation).getQuery()
-                        .getQueryBody();
+                final Query subquery = ((TableSubquery) inputRelation).getQuery();
                 dfToExplain = executeQuery(subquery);
             } else {
                 // instance of Table
