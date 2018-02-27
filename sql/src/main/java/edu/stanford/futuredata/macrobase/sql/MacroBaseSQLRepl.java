@@ -39,7 +39,9 @@ public class MacroBaseSQLRepl {
     private final ConsoleReader reader;
     private final SqlParser parser;
     private final QueryEngine queryEngine;
+    private final QueryEngineDistributed queryEngineDistributed;
     private final boolean paging;
+    private boolean singleNode = false;
 
     private File tempFileForPaging;
 
@@ -61,6 +63,7 @@ public class MacroBaseSQLRepl {
 
         parser = new SqlParser();
         queryEngine = new QueryEngine();
+        queryEngineDistributed = new QueryEngineDistributed();
     }
 
     /**
@@ -105,49 +108,76 @@ public class MacroBaseSQLRepl {
             reader.getHistory().add(statementStr.replaceAll("\\s+", " ") + ";");
             try {
                 Statement stmt = parser.createStatement(statementStr);
-                log.debug(stmt.toString());
-                final DataFrame result;
-                if (stmt instanceof ImportCsv) {
-                    final ImportCsv importStatement = (ImportCsv) stmt;
-                    result = queryEngine.importTableFromCsv(importStatement);
-                } else {
-                    final QueryBody q = ((Query) stmt).getQueryBody();
-                    result = queryEngine.executeQuery(q);
-                }
-                if (paging) {
-                    try {
-                        final PrintStream ps = new PrintStream(
-                            new FileOutputStream(tempFileForPaging.getAbsolutePath()));
-                        result.prettyPrint(ps, -1);
-                        ProcessBuilder pb = new ProcessBuilder("less",
-                            tempFileForPaging.getAbsolutePath());
-                        pb.inheritIO();
-                        Process p = pb.start();
-                        p.waitFor();
-                    } catch (InterruptedException | IOException e) {
-                        e.printStackTrace();
+                log.info(stmt.toString());
+                if (singleNode) {
+                    final DataFrame result;
+                    if (stmt instanceof ImportCsv) {
+                        final ImportCsv importStatement = (ImportCsv) stmt;
+                        result = queryEngine.importTableFromCsv(importStatement);
+                    } else {
+                        final QueryBody q = ((Query) stmt).getQueryBody();
+                        result = queryEngine.executeQuery(q);
+                    }
+                    if (paging) {
+                        try {
+                            final PrintStream ps = new PrintStream(
+                                new FileOutputStream(tempFileForPaging.getAbsolutePath()));
+                            result.prettyPrint(ps, -1);
+                            ProcessBuilder pb = new ProcessBuilder("less",
+                                tempFileForPaging.getAbsolutePath());
+                            pb.inheritIO();
+                            Process p = pb.start();
+                            p.waitFor();
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        result.prettyPrint();
+                    }
+                    if (stmt instanceof Query) {
+                        final QueryBody q = ((Query) stmt).getQueryBody();
+                        q.getExportExpr().ifPresent((exportExpr) -> {
+                            // print result to file; if file already exists, do nothing and print error message
+                            final String filename = exportExpr.getFilename();
+                            if (!exists(Paths.get(filename))) {
+                                try (OutputStreamWriter outFile = new OutputStreamWriter(
+                                        new FileOutputStream(filename))) {
+                                    new CSVDataFrameWriter(exportExpr.getFieldDelimiter(),
+                                            exportExpr.getLineDelimiter()).writeToStream(result, outFile);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            } else {
+                                System.err.println("File " + filename + " already exists.");
+                                System.err.println();
+                            }
+                        });
                     }
                 } else {
-                    result.prettyPrint();
-                }
-                if (stmt instanceof Query) {
-                    final QueryBody q = ((Query) stmt).getQueryBody();
-                    q.getExportExpr().ifPresent((exportExpr) -> {
-                        // print result to file; if file already exists, do nothing and print error message
-                        final String filename = exportExpr.getFilename();
-                        if (!exists(Paths.get(filename))) {
-                            try (OutputStreamWriter outFile = new OutputStreamWriter(
-                                new FileOutputStream(filename))) {
-                                new CSVDataFrameWriter(exportExpr.getFieldDelimiter(),
-                                    exportExpr.getLineDelimiter()).writeToStream(result, outFile);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        } else {
-                            System.err.println("File " + filename + " already exists.");
-                            System.err.println();
+                    final DataFrame result;
+                    if (stmt instanceof ImportCsv) {
+                        final ImportCsv importStatement = (ImportCsv) stmt;
+                        result = queryEngineDistributed.importTableFromCsv(importStatement);
+                    } else {
+                        final QueryBody q = ((Query) stmt).getQueryBody();
+                        result = queryEngineDistributed.executeQuery(q);
+                    }
+                    if (paging) {
+                        try {
+                            final PrintStream ps = new PrintStream(
+                                    new FileOutputStream(tempFileForPaging.getAbsolutePath()));
+                            result.prettyPrint(ps, -1);
+                            ProcessBuilder pb = new ProcessBuilder("less",
+                                    tempFileForPaging.getAbsolutePath());
+                            pb.inheritIO();
+                            Process p = pb.start();
+                            p.waitFor();
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
                         }
-                    });
+                    } else {
+                        result.prettyPrint();
+                    }
                 }
             } catch (ParsingException | MacroBaseException e) {
                 e.printStackTrace(System.err);
