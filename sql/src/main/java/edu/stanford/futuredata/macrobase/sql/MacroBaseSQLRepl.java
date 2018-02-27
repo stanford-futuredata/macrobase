@@ -156,11 +156,12 @@ public class MacroBaseSQLRepl {
                 } else {
                     final DataFrame result;
                     if (stmt instanceof ImportCsv) {
+
                         final ImportCsv importStatement = (ImportCsv) stmt;
                         result = queryEngineDistributed.importTableFromCsv(importStatement);
                     } else {
                         final QueryBody q = ((Query) stmt).getQueryBody();
-                        result = queryEngineDistributed.executeQuery(q);
+                        result = queryEngineDistributed.executeQuery((Query) stmt);
                     }
                     if (paging) {
                         try {
