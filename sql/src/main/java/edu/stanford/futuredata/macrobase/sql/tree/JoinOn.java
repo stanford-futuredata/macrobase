@@ -13,8 +13,8 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
 import static java.util.Objects.requireNonNull;
+import static org.spark_project.guava.base.Objects.toStringHelper;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
