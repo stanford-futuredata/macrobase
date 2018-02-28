@@ -7,10 +7,13 @@ import edu.stanford.futuredata.macrobase.distributed.analysis.summary.Distribute
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.util.AttributeEncoderDistributed;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,9 +40,9 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
 
     APLSummarizerDistributed() {}
 
-    public static JavaPairRDD<String[], double[]> transformDataFrame(DistributedDataFrame input,
-                                                                     List<String> attributes, String outlierColumnName,
-                                                                     String countColumnName, int numPartitions) {
+    public static JavaPairRDD<String[], double[]> transformDistributedDataFrame(DistributedDataFrame input,
+                                                                                List<String> attributes, String outlierColumnName,
+                                                                                String countColumnName, int numPartitions) {
 
         Map<String, Integer> nameToIndexMap = input.nameToIndexMap;
 
@@ -64,21 +67,65 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
         return mergedConsolidatedRDD;
     }
 
+    public static JavaPairRDD<String[], double[]> transformSparkDataFrame(Dataset<Row> outlierDF, Dataset<Row> inlierDF,
+                                                                                List<String> attributes, int numPartitions) {
+        Map<String, Integer> nameToIndexMap = new HashMap<>();
+        String[] columns = outlierDF.columns();
+        for(int i = 0; i < columns.length; i++) {
+            nameToIndexMap.put(columns[i], i);
+        }
+
+        JavaPairRDD<String[], double[]> outlierMergedConsolidatedRDD = outlierDF.toJavaRDD().mapToPair((Row row) -> {
+            String[] newAttributesCol = new String[attributes.size()];
+            double[] newAggregatesCol = new double[]{1.0, 1.0}; //Outliers, count
+            for (int i = 0; i < attributes.size(); i++) {
+                newAttributesCol[i] = row.getString(nameToIndexMap.get(attributes.get(i)));
+            }
+            return new Tuple2<>(newAttributesCol, newAggregatesCol);
+        });
+        JavaPairRDD<String[], double[]> inlierMergedConsolidatedRDD = inlierDF.toJavaRDD().mapToPair((Row row) -> {
+            String[] newAttributesCol = new String[attributes.size()];
+            double[] newAggregatesCol = new double[]{0.0, 1.0}; //Outliers, count
+            for (int i = 0; i < attributes.size(); i++) {
+                newAttributesCol[i] = row.getString(nameToIndexMap.get(attributes.get(i)));
+            }
+            return new Tuple2<>(newAttributesCol, newAggregatesCol);
+        });
+
+        JavaPairRDD<String[], double[]> mergedConsolidatedRDD = outlierMergedConsolidatedRDD.union(inlierMergedConsolidatedRDD);
+
+        mergedConsolidatedRDD = mergedConsolidatedRDD.repartition(numPartitions);
+
+        mergedConsolidatedRDD.cache();
+
+        return mergedConsolidatedRDD;
+    }
+
     public void process(DistributedDataFrame input) throws Exception {
+        JavaPairRDD<String[], double[]> partitionedDataFrame =
+                transformDistributedDataFrame(input, attributes, outlierColumn, countColumn, numPartitions);
+        processInternal(partitionedDataFrame);
+    }
+
+    public void process(Dataset<Row> outlierDF, Dataset<Row> inlierDF) throws Exception {
+        JavaPairRDD<String[], double[]> partitionedDataFrame =
+                transformSparkDataFrame(outlierDF, inlierDF, attributes, numPartitions);
+        processInternal(partitionedDataFrame);
+    }
+
+
+    private void processInternal(JavaPairRDD<String[], double[]> partitionedDataFrame) {
         encoder = new AttributeEncoderDistributed();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        JavaPairRDD<String[], double[]> partitionedDataFrame =
-                transformDataFrame(input, attributes, outlierColumn, countColumn, numPartitions);
-
         double[] globalAggregates = partitionedDataFrame.reduce(
                 (Tuple2<String[], double[]> first, Tuple2<String[], double[]> second) -> {
-            final int numAggregates = first._2.length;
-            double[] sumAggregates = new double[numAggregates];
-            for (int i = 0; i < numAggregates; i++)
-                sumAggregates[i] = first._2[i] + second._2[i];
-            return new Tuple2<>(first._1, sumAggregates);
-        })._2;
+                    final int numAggregates = first._2.length;
+                    double[] sumAggregates = new double[numAggregates];
+                    for (int i = 0; i < numAggregates; i++)
+                        sumAggregates[i] = first._2[i] + second._2[i];
+                    return new Tuple2<>(first._1, sumAggregates);
+                })._2;
 
         JavaPairRDD<int[], double[]> encoded = getEncoded(partitionedDataFrame, globalAggregates);
         long elapsed = System.currentTimeMillis() - startTime;

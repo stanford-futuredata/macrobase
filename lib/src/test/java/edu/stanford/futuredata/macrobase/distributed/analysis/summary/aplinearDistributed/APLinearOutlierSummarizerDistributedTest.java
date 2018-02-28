@@ -39,7 +39,7 @@ public class APLinearOutlierSummarizerDistributedTest {
         );
 
         JavaPairRDD<String[], double[]> testRDD =
-                APLSummarizerDistributed.transformDataFrame(df, explanationAttributes,
+                APLSummarizerDistributed.transformDistributedDataFrame(df, explanationAttributes,
                         "_OUTLIER", "_COUNT", 1);
 
         List<Tuple2<String[], double[]>> collectedCSV = testRDD.collect();
