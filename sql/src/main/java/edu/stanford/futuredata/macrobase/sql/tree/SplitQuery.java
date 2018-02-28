@@ -1,9 +1,9 @@
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
+import static org.spark_project.guava.base.Objects.toStringHelper;
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,11 +48,11 @@ public class SplitQuery extends Node {
 
     @Override
     public List<Node> getChildren() {
-        ImmutableList.Builder<Node> nodes = ImmutableList.builder();
+        List<Node> nodes = new ArrayList<>();
         nodes.add(whereClause);
         relation.ifPresent(nodes::add);
         subquery.ifPresent(nodes::add);
-        return nodes.build();
+        return nodes;
     }
 
     @Override
