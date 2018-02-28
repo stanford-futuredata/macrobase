@@ -28,6 +28,7 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public class MacroBaseSQLRepl {
     private final QueryEngineDistributed queryEngineDistributed;
     private final boolean paging;
     private boolean singleNode = false;
+    private SparkSession sparkSession;
 
     private File tempFileForPaging;
 
@@ -57,13 +59,18 @@ public class MacroBaseSQLRepl {
         // Initialize console reader and writer
         reader = new ConsoleReader();
         final CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
-        handler.setStripAnsi(true);
+//        handler.setStripAnsi(true);
         reader.setCompletionHandler(handler);
         reader.addCompleter(new FileNameCompleter());
 
         parser = new SqlParser();
         queryEngine = new QueryEngine();
         queryEngineDistributed = new QueryEngineDistributed();
+
+        SparkSession spark = SparkSession
+                .builder()
+                .appName("macrobase-sql-spark")
+                .getOrCreate();
     }
 
     /**
@@ -249,19 +256,17 @@ public class MacroBaseSQLRepl {
         final Namespace parsedArgs = parser.parseArgsOrFail(args);
 
         final MacroBaseSQLRepl repl = new MacroBaseSQLRepl(parsedArgs.get("paging"));
-        final String asciiArt = Resources
-            .toString(Resources.getResource(ASCII_ART_FILE), Charsets.UTF_8);
 
         boolean printedWelcome = false;
         if (parsedArgs.get("file") != null) {
-            System.out.println(asciiArt);
+            System.out.println("Welcome to MacroBase!");
             printedWelcome = true;
             final String queriesFromFile = Files
                 .toString(new File((String) parsedArgs.get("file")), Charsets.UTF_8);
             repl.executeQueries(queriesFromFile, true);
         }
         if (!printedWelcome) {
-            System.out.println(asciiArt);
+            System.out.println("Welcome to MacroBase!");
         }
         repl.runRepl();
     }
