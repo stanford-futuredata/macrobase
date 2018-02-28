@@ -1,7 +1,5 @@
 package edu.stanford.futuredata.macrobase.sql;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -28,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,7 +131,7 @@ class QueryEngineDistributed {
 
         List<String> explainCols = diffQuery.getAttributeCols().stream()
                 .map(Identifier::getValue)
-                .collect(toImmutableList());
+                .collect(Collectors.toList());
         if ((explainCols.size() == 1) && explainCols.get(0).equals("*")) {
             // ON *, explore columns in DataFrame
             explainCols = findExplanationColumns(dfToExplain);
@@ -349,7 +348,7 @@ class QueryEngineDistributed {
             }
         }
         final List<String> projections = items.stream().map(SelectItem::toString)
-                .collect(toImmutableList());
+                .collect(Collectors.toList());
         return df.project(projections);
     }
 

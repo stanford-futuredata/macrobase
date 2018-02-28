@@ -13,7 +13,7 @@
  */
 package edu.stanford.futuredata.macrobase.sql.tree;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
+import static org.spark_project.guava.base.Objects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
 
