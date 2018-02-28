@@ -28,6 +28,8 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,6 @@ public class MacroBaseSQLRepl {
     private final QueryEngineDistributed queryEngineDistributed;
     private final boolean paging;
     private boolean singleNode = false;
-    private SparkSession sparkSession;
 
     private File tempFileForPaging;
 
@@ -65,12 +66,15 @@ public class MacroBaseSQLRepl {
 
         parser = new SqlParser();
         queryEngine = new QueryEngine();
-        queryEngineDistributed = new QueryEngineDistributed();
-
-        SparkSession spark = SparkSession
-                .builder()
-                .appName("macrobase-sql-spark")
-                .getOrCreate();
+        if (!singleNode) {
+            SparkSession spark = SparkSession
+                    .builder()
+                    .appName("macrobase-sql-spark")
+                    .getOrCreate();
+            queryEngineDistributed = new QueryEngineDistributed(spark);
+        } else {
+            queryEngineDistributed = null;
+        }
     }
 
     /**
@@ -161,31 +165,15 @@ public class MacroBaseSQLRepl {
                         });
                     }
                 } else {
-                    final DataFrame result;
+                    final Dataset<Row> result;
                     if (stmt instanceof ImportCsv) {
-
                         final ImportCsv importStatement = (ImportCsv) stmt;
                         result = queryEngineDistributed.importTableFromCsv(importStatement);
                     } else {
                         final QueryBody q = ((Query) stmt).getQueryBody();
                         result = queryEngineDistributed.executeQuery((Query) stmt);
                     }
-                    if (paging) {
-                        try {
-                            final PrintStream ps = new PrintStream(
-                                    new FileOutputStream(tempFileForPaging.getAbsolutePath()));
-                            result.prettyPrint(ps, -1);
-                            ProcessBuilder pb = new ProcessBuilder("less",
-                                    tempFileForPaging.getAbsolutePath());
-                            pb.inheritIO();
-                            Process p = pb.start();
-                            p.waitFor();
-                        } catch (InterruptedException | IOException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        result.prettyPrint();
-                    }
+                    result.show(true);
                 }
             } catch (ParsingException | MacrobaseException e) {
                 System.err.println(e.getMessage());

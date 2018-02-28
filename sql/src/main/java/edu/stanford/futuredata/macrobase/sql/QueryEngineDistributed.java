@@ -4,6 +4,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
+import com.univocity.parsers.csv.CsvParser;
+import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -14,20 +16,20 @@ import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
 import edu.stanford.futuredata.macrobase.sql.tree.SortItem.Ordering;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
+
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,8 +39,10 @@ class QueryEngineDistributed {
 
     private final Map<String, DataFrame> tablesInMemory;
     private final int numThreads;
+    private final SparkSession spark;
 
-    QueryEngineDistributed() {
+    QueryEngineDistributed(SparkSession spark) {
+        this.spark = spark;
         tablesInMemory = new HashMap<>();
         numThreads = 1; // TODO: add configuration parameter for numThreads
     }
@@ -49,13 +53,68 @@ class QueryEngineDistributed {
      * @return A DataFrame that contains the data loaded from the CSV file
      * @throws MacrobaseSQLException if there's an error parsing the CSV file
      */
-    DataFrame importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
-        final String filename = importStatement.getFilename();
+    Dataset<Row> importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
+        final String fileName = importStatement.getFilename();
         final String tableName = importStatement.getTableName().toString();
         final Map<String, ColType> schema = importStatement.getSchema();
         try {
-            DataFrame df = new CSVDataFrameParser(filename, schema).load();
-            tablesInMemory.put(tableName, df);
+            // Distribute and parse
+            JavaRDD<String[]> datasetRDD = spark.sparkContext().textFile(fileName, 1).toJavaRDD().mapPartitions(
+                    (Iterator<String> iter) -> {
+                        CsvParserSettings settings = new CsvParserSettings();
+                        settings.getFormat().setLineSeparator("\n");
+                        settings.setMaxCharsPerColumn(16384);
+                        CsvParser csvParser = new CsvParser(settings);
+                        List<String[]> parsedRows = new ArrayList<>();
+                        while(iter.hasNext()) {
+                            String row = iter.next();
+                            String[] parsedRow = csvParser.parseLine(row);
+                            parsedRows.add(parsedRow);
+                        }
+                        return parsedRows.iterator();
+                    }, true
+            );
+            // Extract the header
+            String[] header = datasetRDD.first();
+            Map<Integer, ColType> indexToColTypeMap = new HashMap<>();
+            for (int i = 0; i < header.length; i++) {
+                if (schema.containsKey(header[i])) {
+                    indexToColTypeMap.put(i, schema.get(header[i]));
+                }
+            }
+            // Remove the header
+            datasetRDD = datasetRDD.mapPartitionsWithIndex(
+                    (Integer index, Iterator<String[]> iter) -> {
+                        if (index == 0) {
+                            iter.next();
+                            iter.remove();
+                        }
+                        return iter;
+                    }, true
+            );
+            List<StructField> fields = new ArrayList<>();
+            for (int i = 0 ; i < header.length; i ++) {
+                if (schema.containsKey(header[i])) {
+                    String fieldName = header[i];
+                    if (schema.get(fieldName) == ColType.STRING) {
+                        StructField field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
+                        fields.add(field);
+                    } else {
+                        throw new MacrobaseSQLException("Only string supported in schema");
+                    }
+                }
+            }
+            JavaRDD<Row> datasetRowRDD = datasetRDD.map((String[] record) ->
+            {
+                List<String> rowList = new ArrayList<>();
+                for (int i = 0; i < record.length; i++) {
+                    if (indexToColTypeMap.containsKey(i))
+                        rowList.add(record[i]);
+                }
+                return RowFactory.create(rowList.toArray());
+            });
+            Dataset<Row> df = spark.createDataFrame(datasetRowRDD, DataTypes.createStructType(fields));
+            df.createOrReplaceTempView(tableName);
             return df;
         } catch (Exception e) {
             throw new MacrobaseSQLException(e.getMessage());
@@ -69,18 +128,20 @@ class QueryEngineDistributed {
      * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
-    DataFrame executeQuery(Query query) throws MacrobaseException {
+    Dataset<Row> executeQuery(Query query) throws MacrobaseException {
         QueryBody queryBody = query.getQueryBody();
         if (queryBody instanceof QuerySpecification) {
             QuerySpecification querySpec = (QuerySpecification) queryBody;
-            System.out.println("Non-Diff Query: " + SqlFormatter.formatSql(query, Optional.empty()));
+            String sqlString = SqlFormatter.formatSql(query, Optional.empty());
+            log.info("Non-Diff Query: " + sqlString);
             log.debug(querySpec.toString());
-            return executeQuerySpec(querySpec);
+            return spark.sql(sqlString);
 
         } else if (queryBody instanceof DiffQuerySpecification) {
-            DiffQuerySpecification diffQuery = (DiffQuerySpecification) queryBody;
-            log.debug(diffQuery.toString());
-            return executeDiffQuerySpec(diffQuery);
+            throw new MacrobaseSQLException("No diffs yet");
+//            DiffQuerySpecification diffQuery = (DiffQuerySpecification) queryBody;
+//            log.debug(diffQuery.toString());
+//            return executeDiffQuerySpec(diffQuery);
         }
         throw new MacrobaseSQLException(
                 "query of type " + queryBody.getClass().getSimpleName() + " not yet supported");
@@ -94,85 +155,85 @@ class QueryEngineDistributed {
      * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
-    private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
-            throws MacrobaseException {
-        final String outlierColName = "outlier_col";
-        DataFrame dfToExplain;
-
-        if (diffQuery.hasTwoArgs()) {
-            // case 1: two separate subqueries
-            final TableSubquery first = diffQuery.getFirst().get();
-            final TableSubquery second = diffQuery.getSecond().get();
-
-            // execute subqueries
-            final DataFrame outliersDf = executeQuery(first.getQuery());
-            final DataFrame inliersDf = executeQuery(second.getQuery());
-
-            dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
-        } else {
-            // case 2: single SPLIT (...) WHERE ... query
-            final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
-            final Relation inputRelation = splitQuery.getInputRelation();
-
-            if (inputRelation instanceof TableSubquery) {
-                final Query subquery = ((TableSubquery) inputRelation).getQuery();
-                dfToExplain = executeQuery(subquery);
-            } else {
-                // instance of Table
-                dfToExplain = getTable(((Table) inputRelation).getName().toString());
-            }
-
-            // add outlier (binary) column by evaluating the WHERE clause
-            final BitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
-            final double[] outlierVals = new double[dfToExplain.getNumRows()];
-            mask.stream().forEach((i) -> outlierVals[i] = 1.0);
-            dfToExplain.addColumn(outlierColName, outlierVals);
-        }
-
-        List<String> explainCols = diffQuery.getAttributeCols().stream()
-                .map(Identifier::getValue)
-                .collect(Collectors.toList());
-        if ((explainCols.size() == 1) && explainCols.get(0).equals("*")) {
-            // ON *, explore columns in DataFrame
-            explainCols = findExplanationColumns(dfToExplain);
-            log.info("Using " + Joiner.on(", ").join(explainCols)
-                    + " as candidate attributes for explanation");
-        }
-
-        // TODO: should be able to check this without having to execute the two subqueries
-        if (!dfToExplain.getSchema().hasColumns(explainCols)) {
-            throw new MacrobaseSQLException(
-                    "ON " + Joiner.on(", ").join(explainCols) + " not present in table");
-        }
-
-        // TODO: if an explainCol isn't in the SELECT clause, don't include it
-        final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
-        final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
-        final String ratioMetric = diffQuery.getRatioMetricExpr().getFuncName().toString();
-        final int order = diffQuery.getMaxCombo().getValue();
-
-        // execute diff
-        final APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
-        summarizer.setRatioMetric(ratioMetric)
-                .setMaxOrder(order)
-                .setMinSupport(minSupport)
-                .setMinRatioMetric(minRatioMetric)
-                .setOutlierColumn(outlierColName)
-                .setAttributes(explainCols)
-                .setNumThreads(numThreads);
-
-        try {
-            summarizer.process(dfToExplain);
-        } catch (Exception e) {
-            // TODO: get rid of this Exception
-            e.printStackTrace();
-        }
-        final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
-        resultDf.renameColumn("outliers", "outlier_count");
-        resultDf.renameColumn("count", "total_count");
-
-        return evaluateSQLClauses(diffQuery, resultDf);
-    }
+//    private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
+//            throws MacrobaseException {
+//        final String outlierColName = "outlier_col";
+//        DataFrame dfToExplain;
+//
+//        if (diffQuery.hasTwoArgs()) {
+//            // case 1: two separate subqueries
+//            final TableSubquery first = diffQuery.getFirst().get();
+//            final TableSubquery second = diffQuery.getSecond().get();
+//
+//            // execute subqueries
+//            final DataFrame outliersDf = executeQuery(first.getQuery());
+//            final DataFrame inliersDf = executeQuery(second.getQuery());
+//
+//            dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
+//        } else {
+//            // case 2: single SPLIT (...) WHERE ... query
+//            final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
+//            final Relation inputRelation = splitQuery.getInputRelation();
+//
+//            if (inputRelation instanceof TableSubquery) {
+//                final Query subquery = ((TableSubquery) inputRelation).getQuery();
+//                dfToExplain = executeQuery(subquery);
+//            } else {
+//                // instance of Table
+//                dfToExplain = getTable(((Table) inputRelation).getName().toString());
+//            }
+//
+//            // add outlier (binary) column by evaluating the WHERE clause
+//            final BitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
+//            final double[] outlierVals = new double[dfToExplain.getNumRows()];
+//            mask.stream().forEach((i) -> outlierVals[i] = 1.0);
+//            dfToExplain.addColumn(outlierColName, outlierVals);
+//        }
+//
+//        List<String> explainCols = diffQuery.getAttributeCols().stream()
+//                .map(Identifier::getValue)
+//                .collect(Collectors.toList());
+//        if ((explainCols.size() == 1) && explainCols.get(0).equals("*")) {
+//            // ON *, explore columns in DataFrame
+//            explainCols = findExplanationColumns(dfToExplain);
+//            log.info("Using " + Joiner.on(", ").join(explainCols)
+//                    + " as candidate attributes for explanation");
+//        }
+//
+//        // TODO: should be able to check this without having to execute the two subqueries
+//        if (!dfToExplain.getSchema().hasColumns(explainCols)) {
+//            throw new MacrobaseSQLException(
+//                    "ON " + Joiner.on(", ").join(explainCols) + " not present in table");
+//        }
+//
+//        // TODO: if an explainCol isn't in the SELECT clause, don't include it
+//        final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
+//        final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
+//        final String ratioMetric = diffQuery.getRatioMetricExpr().getFuncName().toString();
+//        final int order = diffQuery.getMaxCombo().getValue();
+//
+//        // execute diff
+//        final APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+//        summarizer.setRatioMetric(ratioMetric)
+//                .setMaxOrder(order)
+//                .setMinSupport(minSupport)
+//                .setMinRatioMetric(minRatioMetric)
+//                .setOutlierColumn(outlierColName)
+//                .setAttributes(explainCols)
+//                .setNumThreads(numThreads);
+//
+//        try {
+//            summarizer.process(dfToExplain);
+//        } catch (Exception e) {
+//            // TODO: get rid of this Exception
+//            e.printStackTrace();
+//        }
+//        final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
+//        resultDf.renameColumn("outliers", "outlier_count");
+//        resultDf.renameColumn("count", "total_count");
+//
+//        return evaluateSQLClauses(diffQuery, resultDf);
+//    }
 
     /**
      * Find columns that should be included in the "ON col1, col2, ..., coln" clause
