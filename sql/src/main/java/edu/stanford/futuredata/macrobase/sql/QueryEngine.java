@@ -261,7 +261,7 @@ class QueryEngine {
         outliersDf.addColumn(outlierColName,
             DoubleStream.generate(() -> 1.0).limit(outliersDf.getNumRows()).toArray());
         inliersDf.addColumn(outlierColName,
-            DoubleStream.generate(() -> 0.0).limit(outliersDf.getNumRows()).toArray());
+            DoubleStream.generate(() -> 0.0).limit(inliersDf.getNumRows()).toArray());
         return DataFrame.unionAll(Lists.newArrayList(outliersDf, inliersDf));
     }
 
