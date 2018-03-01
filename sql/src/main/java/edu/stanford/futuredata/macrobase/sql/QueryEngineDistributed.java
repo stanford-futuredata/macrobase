@@ -99,17 +99,31 @@ class QueryEngineDistributed {
                     if (schema.get(fieldName) == ColType.STRING) {
                         StructField field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
                         fields.add(field);
+                    } else if (schema.get(fieldName) == ColType.DOUBLE) {
+                        StructField field = DataTypes.createStructField(fieldName, DataTypes.DoubleType, true);
+                        fields.add(field);
                     } else {
-                        throw new MacrobaseSQLException("Only string supported in schema");
+                        throw new MacrobaseSQLException("Only strings and doubles supported in schema");
                     }
                 }
             }
             JavaRDD<Row> datasetRowRDD = datasetRDD.map((String[] record) ->
             {
-                List<String> rowList = new ArrayList<>();
+                List<Object> rowList = new ArrayList<>();
                 for (int i = 0; i < record.length; i++) {
-                    if (indexToColTypeMap.containsKey(i))
-                        rowList.add(record[i]);
+                    if (indexToColTypeMap.containsKey(i)) {
+                        if (indexToColTypeMap.get(i) == ColType.STRING) {
+                            rowList.add(record[i]);
+                        } else if (indexToColTypeMap.get(i) == ColType.DOUBLE) {
+                            try {
+                                rowList.add(Double.parseDouble(record[i]));
+                            } catch (NumberFormatException e) {
+                                rowList.add(Double.NaN);
+                            }
+                        } else {
+                            throw new MacrobaseSQLException("Only strings and doubles supported in schema");
+                        }
+                    }
                 }
                 return RowFactory.create(rowList.toArray());
             });
