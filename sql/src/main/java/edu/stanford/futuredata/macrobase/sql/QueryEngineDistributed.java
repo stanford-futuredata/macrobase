@@ -185,23 +185,22 @@ class QueryEngineDistributed {
              inliersDF = executeQuery(second.getQuery());
         } else {
             // case 2: single SPLIT (...) WHERE ... query
-            throw new MacrobaseSQLException("No splits yet");
-//            final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
-//            final Relation inputRelation = splitQuery.getInputRelation();
-//
-//            if (inputRelation instanceof TableSubquery) {
-//                final Query subquery = ((TableSubquery) inputRelation).getQuery();
-//                dfToExplain = executeQuery(subquery);
-//            } else {
-//                // instance of Table
-//                dfToExplain = getTable(((Table) inputRelation).getName().toString());
-//            }
-//
-//            // add outlier (binary) column by evaluating the WHERE clause
-//            final BitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
-//            final double[] outlierVals = new double[dfToExplain.getNumRows()];
-//            mask.stream().forEach((i) -> outlierVals[i] = 1.0);
-//            dfToExplain.addColumn(outlierColName, outlierVals);
+            final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
+            String whereString = SqlFormatter.formatSql(splitQuery.getWhereClause(), Optional.empty());
+            String relationString;
+
+            final Relation inputRelation = splitQuery.getInputRelation();
+            if (inputRelation instanceof TableSubquery) {
+                final Query subquery = ((TableSubquery) inputRelation).getQuery();
+                relationString = SqlFormatter.formatSql(subquery, Optional.empty());
+            } else {
+                // instance of Table
+                relationString = "SELECT * FROM " + ((Table) inputRelation).getName().toString();
+            }
+            String outliersString = relationString + " WHERE " + whereString;
+            String inliersString = relationString + " WHERE NOT " + whereString;
+            outliersDF = spark.sql(outliersString);
+            inliersDF = spark.sql(inliersString);
         }
 
         List<String> explainCols = diffQuery.getAttributeCols().stream()

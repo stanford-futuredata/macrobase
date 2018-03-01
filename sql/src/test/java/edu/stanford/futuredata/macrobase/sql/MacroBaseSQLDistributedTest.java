@@ -105,4 +105,51 @@ public class MacroBaseSQLDistributedTest {
         spark.stop();
     }
 
+    @Test
+    public void testDiffSplit() throws Exception {
+        final String importStr = "IMPORT FROM CSV FILE \"../core/demo/sample.csv\" INTO sample(usage string, latency string, location string, version string);";
+        SqlParser parser = new SqlParser();
+        SparkSession spark = SparkSession
+                .builder()
+                .master("local[4]")
+                .appName("macrobase-sql-spark")
+                .getOrCreate();
+        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark);
+        final Statement importStmt;
+        try {
+            importStmt = parser.createStatement(importStr.replace(";", ""));
+            assertTrue( "ingestQuery should generate a Statement of type Query",
+                    importStmt instanceof ImportCsv);
+        } catch (ParsingException e) {
+            e.printStackTrace();
+            throw new Error("ingestQuery should parse");
+        }
+        final ImportCsv importStatement = (ImportCsv) importStmt;
+        queryEngineDistributed.importTableFromCsv(importStatement);
+
+        final String diffStr = "SELECT * FROM DIFF (SPLIT sample WHERE version=\"v1\") ON location WITH MIN RATIO 1.2 MIN SUPPORT 0.05;";
+
+        final Statement diffStmt;
+        try {
+            diffStmt = parser.createStatement(diffStr.replace(";", ""));
+        } catch (ParsingException e) {
+            e.printStackTrace();
+            throw new Error("ingestQuery should parse");
+        }
+        final Query diffQuery = (Query) diffStmt;
+        Dataset<Row> diffResult = queryEngineDistributed.executeQuery(diffQuery);
+
+        List<Row> collectedResult = diffResult.collectAsList();
+
+        assertEquals(1, collectedResult.size());
+
+        assertEquals("USA", collectedResult.get(0).getString(0));
+        assertEquals(0.7168, collectedResult.get(0).getDouble(1), 0.01);
+        assertEquals(3.7885, collectedResult.get(0).getDouble(2), 0.01);
+        assertEquals(200.0, collectedResult.get(0).getDouble(3));
+        assertEquals(200.0, collectedResult.get(0).getDouble(4));
+
+        spark.stop();
+    }
+
 }
