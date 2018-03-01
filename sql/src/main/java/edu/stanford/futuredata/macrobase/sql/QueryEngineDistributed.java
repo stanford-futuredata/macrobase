@@ -242,7 +242,16 @@ class QueryEngineDistributed {
         resultDf.renameColumn("outliers", "outlier_count");
         resultDf.renameColumn("count", "total_count");
 
-        return singleNodeDataFrameToSparkDataFrame(resultDf, spark);
+        Dataset<Row> explanationDataset = singleNodeDataFrameToSparkDataFrame(resultDf, spark);
+        explanationDataset.createOrReplaceTempView("__RESERVEDDIFFQUERYTEMPVIEW__");
+
+        String outerQuery = SqlFormatter.formatSql(diffQuery.getSelect(), Optional.empty())
+                + " FROM __RESERVEDDIFFQUERYTEMPVIEW__";
+        if (diffQuery.getWhere().isPresent()) {
+            outerQuery = outerQuery + " WHERE " + SqlFormatter.formatSql(diffQuery.getWhere().get(), Optional.empty());
+        }
+
+        return spark.sql(outerQuery);
     }
 
     /**
