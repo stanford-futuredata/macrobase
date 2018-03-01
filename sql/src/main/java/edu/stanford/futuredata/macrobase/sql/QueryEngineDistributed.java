@@ -1,27 +1,17 @@
 package edu.stanford.futuredata.macrobase.sql;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.Lists;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
-import edu.stanford.futuredata.macrobase.analysis.MBFunction;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
 import edu.stanford.futuredata.macrobase.sql.tree.*;
-import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression.Type;
-import edu.stanford.futuredata.macrobase.sql.tree.SortItem.Ordering;
 import edu.stanford.futuredata.macrobase.util.MacrobaseException;
 import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
 
 import java.util.*;
-import java.util.function.DoublePredicate;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
@@ -92,6 +82,8 @@ class QueryEngineDistributed {
                         return iter;
                     }, true
             );
+
+            // Create a schema from the header for the eventual Spark Dataframe.
             List<StructField> fields = new ArrayList<>();
             for (int i = 0 ; i < header.length; i ++) {
                 if (schema.containsKey(header[i])) {
@@ -107,6 +99,8 @@ class QueryEngineDistributed {
                     }
                 }
             }
+
+            // Convert the RDD of arrays into an RDD of Spark Rows.
             JavaRDD<Row> datasetRowRDD = datasetRDD.map((String[] record) ->
             {
                 List<Object> rowList = new ArrayList<>();
@@ -127,7 +121,9 @@ class QueryEngineDistributed {
                 }
                 return RowFactory.create(rowList.toArray());
             });
+            // Create the Spark Dataset from the RDD of rows and the schema.
             Dataset<Row> df = spark.createDataFrame(datasetRowRDD, DataTypes.createStructType(fields));
+            // Register the Dataset by name so Spark SQL commands recognize it.
             df.createOrReplaceTempView(tableName);
             return df;
         } catch (Exception e) {
@@ -145,12 +141,14 @@ class QueryEngineDistributed {
     Dataset<Row> executeQuery(Query query) throws MacrobaseException {
         QueryBody queryBody = query.getQueryBody();
         if (queryBody instanceof QuerySpecification) {
+            // If the query is pure SQL (without MBSQL commands) just execute it
+            // using Spark-SQL.
             QuerySpecification querySpec = (QuerySpecification) queryBody;
             String sqlString = SqlFormatter.formatSql(query, Optional.empty());
             log.debug(querySpec.toString());
             return spark.sql(sqlString);
-
         } else if (queryBody instanceof DiffQuerySpecification) {
+            // If the query is a Diff (and possibly Split) operator from MBSQL, process it.
             DiffQuerySpecification diffQuery = (DiffQuerySpecification) queryBody;
             log.debug(diffQuery.toString());
             return executeDiffQuerySpec(diffQuery);
@@ -173,8 +171,9 @@ class QueryEngineDistributed {
         final Dataset<Row> outliersDF;
         final Dataset<Row> inliersDF;
 
+        // First, partition the dataset into inlier and outliers.
         if (diffQuery.hasTwoArgs()) {
-            // case 1: two separate subqueries
+            // Case 1: Two separate subqueries
             final TableSubquery first = diffQuery.getFirst().get();
             final TableSubquery second = diffQuery.getSecond().get();
 
@@ -182,7 +181,7 @@ class QueryEngineDistributed {
              outliersDF = executeQuery(first.getQuery());
              inliersDF = executeQuery(second.getQuery());
         } else {
-            // case 2: single SPLIT (...) WHERE ... query
+            // Case 2: A single SPLIT (...) WHERE ... query
             final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
             String whereString = SqlFormatter.formatSql(splitQuery.getWhereClause(), Optional.empty());
             String relationString;
@@ -201,6 +200,7 @@ class QueryEngineDistributed {
             inliersDF = spark.sql(inliersString);
         }
 
+        // Next, identify the attribute columns to examine.
         List<String> explainCols = diffQuery.getAttributeCols().stream()
                 .map(Identifier::getValue)
                 .collect(Collectors.toList());
@@ -208,17 +208,17 @@ class QueryEngineDistributed {
             throw new MacrobaseSQLException("No ON * yet");
         }
 
+        // Make sure all attribute columns are valid.
         for (String explainCol: explainCols) {
             if (!Arrays.asList(outliersDF.columns()).contains(explainCol))
                 throw new MacrobaseSQLException(
                         "ON " + Joiner.on(", ").join(explainCols) + " not present in table");
         }
 
-        // TODO: if an explainCol isn't in the SELECT clause, don't include it
         final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
         final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
 
-        // execute diff
+        // Execute diff
         final APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();
         summarizer.setMinSupport(minSupport);
         summarizer.setMinRatioMetric(minRatioMetric);
@@ -229,16 +229,17 @@ class QueryEngineDistributed {
         try {
             summarizer.process(outliersDF, inliersDF);
         } catch (Exception e) {
-            // TODO: get rid of this Exception
             e.printStackTrace();
         }
         final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
         resultDf.renameColumn("outliers", "outlier_count");
         resultDf.renameColumn("count", "total_count");
 
+        // Convert the Diff result into a Spark Dataset
         Dataset<Row> explanationDataset = singleNodeDataFrameToSparkDataFrame(resultDf, spark);
-        explanationDataset.createOrReplaceTempView("__RESERVEDDIFFQUERYTEMPVIEW__");
 
+        // Run the remainder of the diff query (SELECT and a possible WHERE) on the diff result.
+        explanationDataset.createOrReplaceTempView("__RESERVEDDIFFQUERYTEMPVIEW__");
         String outerQuery = SqlFormatter.formatSql(diffQuery.getSelect(), Optional.empty())
                 + " FROM __RESERVEDDIFFQUERYTEMPVIEW__";
         if (diffQuery.getWhere().isPresent()) {
