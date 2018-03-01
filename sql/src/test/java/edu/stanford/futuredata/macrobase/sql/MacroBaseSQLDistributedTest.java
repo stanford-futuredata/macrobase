@@ -92,7 +92,15 @@ public class MacroBaseSQLDistributedTest {
         final Query diffQuery = (Query) diffStmt;
         Dataset<Row> diffResult = queryEngineDistributed.executeQuery(diffQuery);
 
-        assertEquals(279, diffResult.count());
+        List<Row> collectedResult = diffResult.collectAsList();
+
+        assertEquals(1, collectedResult.size());
+
+        assertEquals("USA", collectedResult.get(0).getString(0));
+        assertEquals(0.7168, collectedResult.get(0).getDouble(1), 0.01);
+        assertEquals(1.9247, collectedResult.get(0).getDouble(2), 0.01);
+        assertEquals(200.0, collectedResult.get(0).getDouble(3));
+        assertEquals(200.0, collectedResult.get(0).getDouble(4));
 
         spark.stop();
     }
