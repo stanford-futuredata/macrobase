@@ -33,6 +33,8 @@ import org.apache.spark.sql.types.StructField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static edu.stanford.futuredata.macrobase.distributed.datamodel.DataFrameConversions.singleNodeDataFrameToSparkDataFrame;
+
 class QueryEngineDistributed {
 
     private static final Logger log = LoggerFactory.getLogger(QueryEngineDistributed.class.getSimpleName());
@@ -237,12 +239,11 @@ class QueryEngineDistributed {
             // TODO: get rid of this Exception
             e.printStackTrace();
         }
-        final APLExplanation e = summarizer.getResults();
+        final DataFrame resultDf = summarizer.getResults().toDataFrame(explainCols);
+        resultDf.renameColumn("outliers", "outlier_count");
+        resultDf.renameColumn("count", "total_count");
 
-        log.info("Computed Results");
-        System.out.println(e.prettyPrint());
-
-        return outliersDF;
+        return singleNodeDataFrameToSparkDataFrame(resultDf, spark);
     }
 
     /**
