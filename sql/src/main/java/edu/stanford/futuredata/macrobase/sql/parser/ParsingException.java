@@ -18,8 +18,7 @@ import static java.lang.String.format;
 import edu.stanford.futuredata.macrobase.sql.tree.NodeLocation;
 import org.antlr.v4.runtime.RecognitionException;
 
-public class ParsingException
-    extends RuntimeException {
+public class ParsingException extends RuntimeException {
 
     private final int line;
     private final int charPositionInLine;
