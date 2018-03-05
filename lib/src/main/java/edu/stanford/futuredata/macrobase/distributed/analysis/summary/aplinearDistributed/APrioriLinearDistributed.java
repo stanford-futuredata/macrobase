@@ -100,9 +100,16 @@ public class APrioriLinearDistributed {
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
-                    curCandidate = new IntSetAsLong(0);
+                    curCandidate = new IntSetAsLong(1, 1, 1);
                 else
-                    curCandidate = new IntSetAsArray(0);
+                    curCandidate = new IntSetAsArray(1, 1, 1);
+                // Store global aggregates for partition
+                double[] partitionAggregates = new double[numAggregates];
+                for (int i = 0; i < aRowsForThread.length; i++) {
+                    for (int j = 0; j < numAggregates; j++)
+                        partitionAggregates[j] += aRowsForThread[i][j];
+                }
+                thisThreadSetAggregates.put(curCandidate, partitionAggregates);
                 if (curOrderFinal == 1) {
                     for (int colNum = 0; colNum < numColumns; colNum++) {
                         int[] curColumnAttributes = attributesForThread[colNum];
@@ -206,9 +213,54 @@ public class APrioriLinearDistributed {
                 return thisThreadSetAggregates;
             });
 
+            hashTableSet.cache();
+
+            JavaRDD<HashSet<IntSet>> prunedHashTableSet = hashTableSet.map((FastFixedHashTable setAggregates) -> {
+                HashSet<IntSet> thisThreadPassingAggregates = new HashSet<>();
+                double[] partitionAggregates = setAggregates.get(new IntSetAsLong(1, 1, 1));
+                QualityMetric[] partitionQualityMetrics = argQualityMetrics.toArray(new QualityMetric[0]);
+                for (QualityMetric q : partitionQualityMetrics) {
+                    q.initialize(partitionAggregates);
+                }
+                for (long curCandidate: setAggregates.keySetLong()) {
+                    IntSet curCandidateSet = new IntSetAsLong(curCandidate);
+                    double[] curAggregates = setAggregates.get(curCandidateSet);
+                    boolean canPassThreshold = true;
+                    boolean isPastThreshold = true;
+                    for (int i = 0; i < partitionQualityMetrics.length; i++) {
+                        QualityMetric q = partitionQualityMetrics[i];
+                        double t = thresholds[i];
+                        canPassThreshold &= q.maxSubgroupValue(curAggregates) >= t;
+                        isPastThreshold &= q.value(curAggregates) >= t;
+                    }
+                    if (canPassThreshold) {
+                        thisThreadPassingAggregates.add(curCandidateSet);
+                    }
+                }
+                return thisThreadPassingAggregates;
+            });
+
+            final HashSet<IntSet> combinedPrunedHashTableSet = prunedHashTableSet.reduce((HashSet<IntSet> one, HashSet<IntSet> two) -> {
+                HashSet<IntSet> combined = new HashSet<>();
+                combined.addAll(one);
+                combined.addAll(two);
+                return combined;
+            });
+
+            JavaRDD<FastFixedHashTable> finalPrunedHashTableSet = hashTableSet.map((FastFixedHashTable setAggregates) -> {
+                FastFixedHashTable thisThreadPassingAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                for (long curCandidate: setAggregates.keySetLong()) {
+                    IntSet curCandidateSet = new IntSetAsLong(curCandidate);
+                    double[] curAggregates = setAggregates.get(curCandidateSet);
+                    if (combinedPrunedHashTableSet.contains(curCandidateSet)) {
+                        thisThreadPassingAggregates.put(curCandidate, curAggregates);
+                    }
+                }
+                return thisThreadPassingAggregates;
+            });
 
             FastFixedHashTable fastFixedSetAggregates =
-                    hashTableSet.reduce((FastFixedHashTable tableOne, FastFixedHashTable tableTwo) -> {
+                    finalPrunedHashTableSet.reduce((FastFixedHashTable tableOne, FastFixedHashTable tableTwo) -> {
                         List<FastFixedHashTable> tables = Arrays.asList(tableOne, tableTwo);
                         FastFixedHashTable tableCombined = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                         if (useIntSetAsArray) {
