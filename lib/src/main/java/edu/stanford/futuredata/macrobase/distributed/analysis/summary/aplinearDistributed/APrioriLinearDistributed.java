@@ -215,23 +215,35 @@ public class APrioriLinearDistributed {
 
             hashTableSet.cache();
 
+            // The collected candidate hash tables can be very large, so we prune them before reducing in order
+            // to minimize the amount of data transfer and serial computation.  We prune by identifying the set of all
+            // candidates that pass the support threshold on any partition, then filtering out all other candidates
+            // on every partition.
             JavaRDD<HashSet<IntSet>> prunedHashTableSet = hashTableSet.map((FastFixedHashTable setAggregates) -> {
                 HashSet<IntSet> thisThreadPassingAggregates = new HashSet<>();
-                double[] partitionAggregates = setAggregates.get(new IntSetAsLong(1, 1, 1));
+                double[] partitionAggregates;
+                if (useIntSetAsArray)
+                    partitionAggregates = setAggregates.get(new IntSetAsArray(1, 1, 1));
+                else
+                    partitionAggregates = setAggregates.get(new IntSetAsLong(1, 1, 1));
                 QualityMetric[] partitionQualityMetrics = argQualityMetrics.toArray(new QualityMetric[0]);
                 for (QualityMetric q : partitionQualityMetrics) {
                     q.initialize(partitionAggregates);
                 }
-                for (long curCandidate: setAggregates.keySetLong()) {
-                    IntSet curCandidateSet = new IntSetAsLong(curCandidate);
+                List<IntSet> keysList = new ArrayList<>();
+                if (useIntSetAsArray)
+                    keysList = setAggregates.keySet();
+                else {
+                    for (long curCandidate : setAggregates.keySetLong())
+                        keysList.add(new IntSetAsLong(curCandidate));
+                }
+                for (IntSet curCandidateSet: keysList) {
                     double[] curAggregates = setAggregates.get(curCandidateSet);
                     boolean canPassThreshold = true;
-                    boolean isPastThreshold = true;
                     for (int i = 0; i < partitionQualityMetrics.length; i++) {
                         QualityMetric q = partitionQualityMetrics[i];
                         double t = thresholds[i];
                         canPassThreshold &= q.maxSubgroupValue(curAggregates) >= t;
-                        isPastThreshold &= q.value(curAggregates) >= t;
                     }
                     if (canPassThreshold) {
                         thisThreadPassingAggregates.add(curCandidateSet);
@@ -240,6 +252,7 @@ public class APrioriLinearDistributed {
                 return thisThreadPassingAggregates;
             });
 
+            // This is the set of all candidates that pass the support threshold on any partition.
             final HashSet<IntSet> combinedPrunedHashTableSet = prunedHashTableSet.reduce((HashSet<IntSet> one, HashSet<IntSet> two) -> {
                 HashSet<IntSet> combined = new HashSet<>();
                 combined.addAll(one);
@@ -247,18 +260,29 @@ public class APrioriLinearDistributed {
                 return combined;
             });
 
+            // Remove all candidates not in combinedPrunedHashTableSet.
             JavaRDD<FastFixedHashTable> finalPrunedHashTableSet = hashTableSet.map((FastFixedHashTable setAggregates) -> {
                 FastFixedHashTable thisThreadPassingAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
-                for (long curCandidate: setAggregates.keySetLong()) {
-                    IntSet curCandidateSet = new IntSetAsLong(curCandidate);
-                    double[] curAggregates = setAggregates.get(curCandidateSet);
-                    if (combinedPrunedHashTableSet.contains(curCandidateSet)) {
-                        thisThreadPassingAggregates.put(curCandidate, curAggregates);
+                if (useIntSetAsArray) {
+                    for (IntSet curCandidate : setAggregates.keySet()) {
+                        double[] curAggregates = setAggregates.get(curCandidate);
+                        if (combinedPrunedHashTableSet.contains(curCandidate)) {
+                            thisThreadPassingAggregates.put(curCandidate, curAggregates);
+                        }
+                    }
+                } else {
+                    for (long curCandidate : setAggregates.keySetLong()) {
+                        IntSet curCandidateSet = new IntSetAsLong(curCandidate);
+                        double[] curAggregates = setAggregates.get(curCandidateSet);
+                        if (combinedPrunedHashTableSet.contains(curCandidateSet)) {
+                            thisThreadPassingAggregates.put(curCandidate, curAggregates);
+                        }
                     }
                 }
                 return thisThreadPassingAggregates;
             });
 
+            // Finally, reduce over the pruned hash tables to get a final candidate and counts map..
             FastFixedHashTable fastFixedSetAggregates =
                     finalPrunedHashTableSet.reduce((FastFixedHashTable tableOne, FastFixedHashTable tableTwo) -> {
                         List<FastFixedHashTable> tables = Arrays.asList(tableOne, tableTwo);
