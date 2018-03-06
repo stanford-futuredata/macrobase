@@ -32,12 +32,10 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
 
     @Override
     public JavaPairRDD<int[], double[]> getEncoded(
-            JavaPairRDD<String[], double[]> partitionedDataFrame,
-            double[] globalAggregates) {
+            JavaPairRDD<String[], double[]> partitionedDataFrame) {
         return encoder.encodeAttributesWithSupport(partitionedDataFrame,
                 attributes.size(),
                 minOutlierSupport,
-                globalAggregates,
                 0);
     }
 
