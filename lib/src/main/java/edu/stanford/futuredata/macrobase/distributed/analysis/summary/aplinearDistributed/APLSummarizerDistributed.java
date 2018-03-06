@@ -61,8 +61,6 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
             return new Tuple2<>(newAttributesCol, newAggregatesCol);
         });
 
-        mergedConsolidatedRDD = mergedConsolidatedRDD.repartition(numPartitions);
-
         mergedConsolidatedRDD.cache();
 
         return mergedConsolidatedRDD;
