@@ -49,14 +49,20 @@ public class CSVDataFrameParserDistributed implements Serializable{
         // Distribute and parse
         JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
         repartitionedRDD.cache();
-        JavaRDD<String[]> parsedFileRDD = repartitionedRDD.map(
-                (String row) -> {
+        JavaRDD<String[]> parsedFileRDD = repartitionedRDD.mapPartitions(
+                (Iterator<String> iter) -> {
                     CsvParserSettings settings = new CsvParserSettings();
                     settings.getFormat().setLineSeparator("\n");
                     settings.setMaxCharsPerColumn(16384);
                     CsvParser csvParser = new CsvParser(settings);
-                    return csvParser.parseLine(row);
-        }
+                    List<String[]> parsedRows = new ArrayList<>();
+                    while(iter.hasNext()) {
+                        String row = iter.next();
+                        String[] parsedRow = csvParser.parseLine(row);
+                        parsedRows.add(parsedRow);
+                    }
+                    return parsedRows.iterator();
+                }, true
         );
 
         int numColumns = header.length;
