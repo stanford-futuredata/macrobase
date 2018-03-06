@@ -36,8 +36,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
     public abstract JavaPairRDD<int[], double[]> getEncoded(
-            JavaPairRDD<String[], double[]> partitionedDataFrame,
-            double[] globalAggregates);
+            JavaPairRDD<String[], double[]> partitionedDataFrame);
 
     APLSummarizerDistributed() {}
 
@@ -60,8 +59,6 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                 newAggregatesCol[1] = row._2[nameToIndexMap.get(countColumnName)];
             return new Tuple2<>(newAttributesCol, newAggregatesCol);
         });
-
-        mergedConsolidatedRDD.cache();
 
         return mergedConsolidatedRDD;
     }
@@ -137,8 +134,13 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
         encoder = new AttributeEncoderDistributed();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
-        double[] globalAggregates = partitionedDataFrame.reduce(
-                (Tuple2<String[], double[]> first, Tuple2<String[], double[]> second) -> {
+
+        JavaPairRDD<int[], double[]> encoded = getEncoded(partitionedDataFrame);
+
+        encoded.cache();
+
+        double[] globalAggregates = encoded.reduce(
+                (Tuple2<int[], double[]> first, Tuple2<int[], double[]> second) -> {
                     final int numAggregates = first._2.length;
                     double[] sumAggregates = new double[numAggregates];
                     for (int i = 0; i < numAggregates; i++)
@@ -146,7 +148,6 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                     return new Tuple2<>(first._1, sumAggregates);
                 })._2;
 
-        JavaPairRDD<int[], double[]> encoded = getEncoded(partitionedDataFrame, globalAggregates);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {}", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
