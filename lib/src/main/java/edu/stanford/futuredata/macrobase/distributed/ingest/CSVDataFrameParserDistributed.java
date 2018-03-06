@@ -38,7 +38,9 @@ public class CSVDataFrameParserDistributed implements Serializable{
         CsvParser headerParser = new CsvParser(headerSettings);
         String[] header = headerParser.parseLine(fileRDD.first());
         // Distribute and parse
-        JavaRDD<String[]> parsedFileRDD = fileRDD.repartition(numPartitions).mapPartitions(
+        JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
+        repartitionedRDD.cache();
+        JavaRDD<String[]> parsedFileRDD = repartitionedRDD.mapPartitions(
                 (Iterator<String> iter) -> {
                     CsvParserSettings settings = new CsvParserSettings();
                     settings.getFormat().setLineSeparator("\n");
