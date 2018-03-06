@@ -30,8 +30,15 @@ public class CSVDataFrameParserDistributed implements Serializable{
     }
 
     public DistributedDataFrame load(JavaSparkContext sparkContext, int numPartitions) throws Exception {
+        JavaRDD<String> fileRDD = sparkContext.textFile(fileName, numPartitions);
+        // Extract the header
+        CsvParserSettings headerSettings = new CsvParserSettings();
+        headerSettings.getFormat().setLineSeparator("\n");
+        headerSettings.setMaxCharsPerColumn(16384);
+        CsvParser headerParser = new CsvParser(headerSettings);
+        String[] header = headerParser.parseLine(fileRDD.first());
         // Distribute and parse
-        JavaRDD<String[]> parsedFileRDD = sparkContext.textFile(fileName, numPartitions).mapPartitions(
+        JavaRDD<String[]> parsedFileRDD = fileRDD.repartition(numPartitions).mapPartitions(
                 (Iterator<String> iter) -> {
                     CsvParserSettings settings = new CsvParserSettings();
                     settings.getFormat().setLineSeparator("\n");
@@ -46,8 +53,6 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return parsedRows.iterator();
         }, true
         );
-        // Extract the header
-        String[] header = parsedFileRDD.first();
 
         // Remove the header
         parsedFileRDD = parsedFileRDD.mapPartitionsWithIndex(
