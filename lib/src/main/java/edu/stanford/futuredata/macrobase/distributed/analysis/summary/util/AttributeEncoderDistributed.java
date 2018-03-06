@@ -14,7 +14,6 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
     public JavaPairRDD<int[], double[]> encodeAttributesWithSupport(JavaPairRDD<String[], double[]> partitionedDataFrame,
                                                           int numColumns,
                                                           double minSupport,
-                                                          double[] globalAggregates,
                                                           int outlierColumnIndex) {
 
         for (int i = 0; i < numColumns; i++) {
@@ -24,13 +23,15 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         }
         // Create a map from strings to the number of times
         // each string appears in an outlier.
-        int numOutliers = Math.toIntExact(Math.round(globalAggregates[outlierColumnIndex]));
+        final String reservedOutlierString = "____RESERVED_OUTLIER_STRING_____";
         JavaRDD<HashMap<String, Double>> countMapRDD = partitionedDataFrame.mapPartitions((Iterator<Tuple2<String[], double[]>> iter) -> {
             HashMap<String, Double> countMap = new HashMap<>();
+            countMap.put(reservedOutlierString, 0.0);
             while (iter.hasNext()) {
                 Tuple2<String[], double[]> row = iter.next();
                 double outlierCount = row._2[outlierColumnIndex];
                 if (outlierCount > 0.0) {
+                    countMap.put(reservedOutlierString, outlierCount + countMap.get(reservedOutlierString));
                     String[] rowAttributes = row._1;
                     for (int colIdx = 0; colIdx < rowAttributes.length; colIdx++) {
                         String colVal = Integer.toString(colIdx) + "," + rowAttributes[colIdx];
@@ -63,6 +64,8 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
 
         // Rank the strings that have minimum support among the outliers
         // by the amount of support they have.
+        double numOutliers = countMap.get(reservedOutlierString);
+        countMap.remove(reservedOutlierString);
         double minSupportThreshold = minSupport * numOutliers;
         List<String> filterOnMinSupport= countMap.keySet().stream()
                 .filter(line -> countMap.get(line) > minSupportThreshold)
