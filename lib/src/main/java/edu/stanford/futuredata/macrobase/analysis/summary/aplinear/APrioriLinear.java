@@ -1,22 +1,33 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
+import com.google.common.collect.ImmutableSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsArray;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-
 /**
- * Class for handling the generic, algorithmic aspects of apriori explanation.
- * This class assumes that subgroups posses "aggregates" such as count and outlier_count
- * which can be combined additively. Then, we use APriori to find the subgroups which
- * are the most interesting as defined by "quality metrics" on these aggregates.
+ * Class for handling the generic, algorithmic aspects of apriori explanation. This class assumes
+ * that subgroups posses "aggregates" such as count and outlier_count which can be combined
+ * additively. Then, we use APriori to find the subgroups which are the most interesting as defined
+ * by "quality metrics" on these aggregates.
  */
 public class APrioriLinear {
+
     private Logger log = LoggerFactory.getLogger("APrioriLinear");
 
     // **Parameters**
@@ -29,11 +40,11 @@ public class APrioriLinear {
     // Sets that have high enough support but not high qualityMetrics, need to be explored
     private HashMap<Integer, HashSet<IntSet>> setNext;
     // Aggregate values for all of the sets we saved
-    private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
+    private HashMap<Integer, Map<IntSet, double[]>> savedAggregates;
 
     public APrioriLinear(
-            List<QualityMetric> qualityMetrics,
-            List<Double> thresholds
+        List<QualityMetric> qualityMetrics,
+        List<Double> thresholds
     ) {
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
         this.thresholds = new double[thresholds.size()];
@@ -45,12 +56,13 @@ public class APrioriLinear {
     }
 
     public List<APLExplanationResult> explain(
-            final int[][] attributes,
-            double[][] aggregateColumns,
-            AggregationOp[] aggregationOps,
-            int cardinality,
-            final int maxOrder,
-            int numThreads
+        final int[][] attributes,
+        double[][] aggregateColumns,
+        AggregationOp[] aggregationOps,
+        int cardinality,
+        final int maxOrder,
+        int numThreads,
+        final Set<Set<Integer>> functionalDependencies
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
@@ -63,20 +75,21 @@ public class APrioriLinear {
         if (cardinality >= 2097151) {
             log.warn("Cardinality is extremely high.  Candidate generation will be slow.");
             useIntSetAsArray = true;
-        } else{
+        } else {
             useIntSetAsArray = false;
         }
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
-                new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
+            new int[numThreads][numColumns][(numRows + numThreads) / numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
             final int startIndex = (numRows * threadNum) / numThreads;
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-            for(int i = 0; i < numColumns; i++)
-                for(int j = startIndex; j < endIndex; j++) {
+            for (int i = 0; i < numColumns; i++) {
+                for (int j = startIndex; j < endIndex; j++) {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
                 }
+            }
         }
 
         // Quality metrics are initialized with global aggregates to
@@ -107,7 +120,8 @@ public class APrioriLinear {
             // Initialize per-thread hashmaps.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray));
+                threadSetAggregates
+                    .add(new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray));
             }
             // Shard the dataset by row into threads and generate candidates.
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
@@ -115,35 +129,42 @@ public class APrioriLinear {
                 final int curThreadNum = threadNum;
                 final int startIndex = (numRows * threadNum) / numThreads;
                 final int endIndex = (numRows * (threadNum + 1)) / numThreads;
-                final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates.get(threadNum);
+                final FastFixedHashTable thisThreadSetAggregates = threadSetAggregates
+                    .get(threadNum);
                 // Do candidate generation in a lambda.
                 Runnable APrioriLinearRunnable = () -> {
                     IntSet curCandidate;
-                    if (!useIntSetAsArray)
+                    if (!useIntSetAsArray) {
                         curCandidate = new IntSetAsLong(0);
-                    else
+                    } else {
                         curCandidate = new IntSetAsArray(0);
+                    }
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
                             int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
                             for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                 // Require that all order-one candidates have minimum support.
-                                if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
+                                if (curColumnAttributes[rowNum - startIndex]
+                                    == AttributeEncoder.noSupport) {
                                     continue;
+                                }
                                 // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                 if (useIntSetAsArray) {
-                                    curCandidate = new IntSetAsArray(curColumnAttributes[rowNum - startIndex]);
+                                    curCandidate = new IntSetAsArray(
+                                        curColumnAttributes[rowNum - startIndex]);
                                 } else {
-                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum - startIndex];
+                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum
+                                        - startIndex];
                                 }
                                 double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                 if (candidateVal == null) {
                                     thisThreadSetAggregates.put(curCandidate,
-                                            Arrays.copyOf(aRows[rowNum], numAggregates));
+                                        Arrays.copyOf(aRows[rowNum], numAggregates));
                                 } else {
                                     for (int a = 0; a < numAggregates; a++) {
                                         AggregationOp curOp = aggregationOps[a];
-                                        candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
+                                        candidateVal[a] = curOp
+                                            .combine(candidateVal[a], aRows[rowNum][a]);
                                     }
                                 }
                             }
@@ -151,32 +172,43 @@ public class APrioriLinear {
                     } else if (curOrderFinal == 2) {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns;
+                                colNumTwo++) {
+                                if (functionallyDependent(functionalDependencies, ImmutableSet.of(colNumOne, colNumTwo))) {
+                                   continue;
+                                }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     int rowNumInCol = rowNum - startIndex;
                                     // Only examine a pair if both its members have minimum support.
-                                    if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                            || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                            || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
-                                            || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+                                    if (curColumnOneAttributes[rowNumInCol]
+                                        == AttributeEncoder.noSupport
+                                        || curColumnTwoAttributes[rowNumInCol]
+                                        == AttributeEncoder.noSupport
+                                        || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
+                                        || !singleNextArray[curColumnTwoAttributes[rowNumInCol]]) {
                                         continue;
+                                    }
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
-                                        curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNumInCol],
-                                                curColumnTwoAttributes[rowNumInCol]);
+                                        curCandidate = new IntSetAsArray(
+                                            curColumnOneAttributes[rowNumInCol],
+                                            curColumnTwoAttributes[rowNumInCol]);
                                     } else {
-                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
+                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong
+                                            .twoIntToLong(curColumnOneAttributes[rowNumInCol],
                                                 curColumnTwoAttributes[rowNumInCol]);
                                     }
-                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                    double[] candidateVal = thisThreadSetAggregates
+                                        .get(curCandidate);
                                     if (candidateVal == null) {
                                         thisThreadSetAggregates.put(curCandidate,
-                                                Arrays.copyOf(aRows[rowNum], numAggregates));
+                                            Arrays.copyOf(aRows[rowNum], numAggregates));
                                     } else {
                                         for (int a = 0; a < numAggregates; a++) {
                                             AggregationOp curOp = aggregationOps[a];
-                                            candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
+                                            candidateVal[a] = curOp
+                                                .combine(candidateVal[a], aRows[rowNum][a]);
                                         }
                                     }
                                 }
@@ -184,41 +216,60 @@ public class APrioriLinear {
                         }
                     } else if (curOrderFinal == 3) {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
-                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
-                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
-                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree % numColumns];
+                            int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][
+                                colNumOne % numColumns];
+                            for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns;
+                                colNumTwo++) {
+                                if (functionallyDependent(functionalDependencies,
+                                    ImmutableSet.of(colNumOne, colNumTwo))) {
+                                    continue;
+                                }
+                                int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][
+                                    colNumTwo % numColumns];
+                                for (int colNumThree = colNumTwo + 1; colNumThree < numColumns;
+                                    colNumThree++) {
+                                    if (functionallyDependent(functionalDependencies, ImmutableSet.of(colNumOne, colNumTwo, colNumThree))) {
+                                        continue;
+                                    }
+                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][
+                                        colNumThree % numColumns];
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                         int rowNumInCol = rowNum - startIndex;
                                         // Only construct a triple if all its singleton members have minimum support.
-                                        if (curColumnOneAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport
-                                                || !singleNextArray[curColumnThreeAttributes[rowNumInCol]]
-                                                || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
-                                                || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+                                        if (curColumnOneAttributes[rowNumInCol]
+                                            == AttributeEncoder.noSupport
+                                            || curColumnTwoAttributes[rowNumInCol]
+                                            == AttributeEncoder.noSupport
+                                            || curColumnThreeAttributes[rowNumInCol]
+                                            == AttributeEncoder.noSupport
+                                            || !singleNextArray[curColumnThreeAttributes[rowNumInCol]]
+                                            || !singleNextArray[curColumnOneAttributes[rowNumInCol]]
+                                            || !singleNextArray[curColumnTwoAttributes[rowNumInCol]]) {
                                             continue;
+                                        }
                                         // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                         if (useIntSetAsArray) {
                                             curCandidate = new IntSetAsArray(
-                                                    curColumnOneAttributes[rowNumInCol],
-                                                    curColumnTwoAttributes[rowNumInCol],
-                                                    curColumnThreeAttributes[rowNumInCol]);
+                                                curColumnOneAttributes[rowNumInCol],
+                                                curColumnTwoAttributes[rowNumInCol],
+                                                curColumnThreeAttributes[rowNumInCol]);
                                         } else {
-                                            ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
+                                            ((IntSetAsLong) curCandidate).value = IntSetAsLong
+                                                .threeIntToLong(
                                                     curColumnOneAttributes[rowNumInCol],
                                                     curColumnTwoAttributes[rowNumInCol],
                                                     curColumnThreeAttributes[rowNumInCol]);
                                         }
-                                        double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
+                                        double[] candidateVal = thisThreadSetAggregates
+                                            .get(curCandidate);
                                         if (candidateVal == null) {
                                             thisThreadSetAggregates.put(curCandidate,
-                                                    Arrays.copyOf(aRows[rowNum], numAggregates));
+                                                Arrays.copyOf(aRows[rowNum], numAggregates));
                                         } else {
                                             for (int a = 0; a < numAggregates; a++) {
                                                 AggregationOp curOp = aggregationOps[a];
-                                                candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
+                                                candidateVal[a] = curOp
+                                                    .combine(candidateVal[a], aRows[rowNum][a]);
                                             }
                                         }
                                     }
@@ -229,7 +280,7 @@ public class APrioriLinear {
                         throw new MacrobaseInternalError("High Order not supported");
                     }
                     log.debug("Time spent in Thread {} in order {}:  {} ms",
-                            curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
+                        curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
@@ -239,10 +290,11 @@ public class APrioriLinear {
             // Wait for all threads to finish running.
             try {
                 doneSignal.await();
-            } catch (InterruptedException ex) {ex.printStackTrace();}
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
 
-
-            Map<IntSet, double []> setAggregates = new HashMap<>();
+            Map<IntSet, double[]> setAggregates = new HashMap<>();
             // Collect the aggregates stored in the per-thread HashMaps.
             for (FastFixedHashTable set : threadSetAggregates) {
                 if (useIntSetAsArray) {
@@ -250,26 +302,31 @@ public class APrioriLinear {
                         double[] curCandidateValue = set.get(curCandidateKey);
                         double[] candidateVal = setAggregates.get(curCandidateKey);
                         if (candidateVal == null) {
-                            setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                            setAggregates.put(curCandidateKey,
+                                Arrays.copyOf(curCandidateValue, numAggregates));
                         } else {
                             for (int a = 0; a < numAggregates; a++) {
                                 AggregationOp curOp = aggregationOps[a];
-                                candidateVal[a] = curOp.combine(candidateVal[a], curCandidateValue[a]);
+                                candidateVal[a] = curOp
+                                    .combine(candidateVal[a], curCandidateValue[a]);
                             }
                         }
                     }
                 } else {
                     for (long curCandidateKeyLong : set.keySetLong()) {
-                        IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
+                        IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(
+                            curCandidateKeyLong);
                         IntSet curCandidateKey = new IntSetAsArray(curCandidateKeyIntSetAsLong);
                         double[] curCandidateValue = set.get(curCandidateKeyIntSetAsLong);
                         double[] candidateVal = setAggregates.get(curCandidateKey);
                         if (candidateVal == null) {
-                            setAggregates.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                            setAggregates.put(curCandidateKey,
+                                Arrays.copyOf(curCandidateValue, numAggregates));
                         } else {
                             for (int a = 0; a < numAggregates; a++) {
                                 AggregationOp curOp = aggregationOps[a];
-                                candidateVal[a] = curOp.combine(candidateVal[a], curCandidateValue[a]);
+                                candidateVal[a] = curOp
+                                    .combine(candidateVal[a], curCandidateValue[a]);
                             }
                         }
                     }
@@ -279,7 +336,7 @@ public class APrioriLinear {
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
-            for (IntSet curCandidate: setAggregates.keySet()) {
+            for (IntSet curCandidate : setAggregates.keySet()) {
                 QualityMetric.Action action = QualityMetric.Action.KEEP;
                 if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
                     action = QualityMetric.Action.PRUNE;
@@ -288,7 +345,8 @@ public class APrioriLinear {
                     for (int i = 0; i < qualityMetrics.length; i++) {
                         QualityMetric q = qualityMetrics[i];
                         double t = thresholds[i];
-                        action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
+                        action = QualityMetric.Action
+                            .combine(action, q.getAction(curAggregates, t));
                     }
                     if (action == QualityMetric.Action.KEEP) {
                         // Make sure the candidate isn't already covered by a pair
@@ -307,7 +365,7 @@ public class APrioriLinear {
 
             // Save aggregates that pass all qualityMetrics to return later, store aggregates
             // that have minimum support for higher-order exploration.
-            Map<IntSet, double []> curSavedAggregates = new HashMap<>(curOrderSaved.size());
+            Map<IntSet, double[]> curSavedAggregates = new HashMap<>(curOrderSaved.size());
             for (IntSet curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
             }
@@ -322,8 +380,8 @@ public class APrioriLinear {
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
-        for (int curOrder: savedAggregates.keySet()) {
-            Map<IntSet, double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
+        for (int curOrder : savedAggregates.keySet()) {
+            Map<IntSet, double[]> curOrderSavedAggregates = savedAggregates.get(curOrder);
             for (IntSet curSet : curOrderSavedAggregates.keySet()) {
                 double[] aggregates = curOrderSavedAggregates.get(curSet);
                 double[] metrics = new double[qualityMetrics.length];
@@ -331,7 +389,7 @@ public class APrioriLinear {
                     metrics[i] = qualityMetrics[i].value(aggregates);
                 }
                 results.add(
-                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                    new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
                 );
             }
         }
@@ -340,29 +398,40 @@ public class APrioriLinear {
 
     /**
      * Check if all subsets of an order-3 candidate are order-2 candidates.
+     *
      * @param o2Candidates All candidates of order 2 with minimum support.
      * @param curCandidate An order-3 candidate
      * @return Boolean
      */
     private boolean validateCandidate(IntSet curCandidate,
-                                      HashSet<IntSet> o2Candidates) {
-            IntSet subPair;
+        HashSet<IntSet> o2Candidates) {
+        IntSet subPair;
+        subPair = new IntSetAsArray(
+            curCandidate.getFirst(),
+            curCandidate.getSecond());
+        if (o2Candidates.contains(subPair)) {
             subPair = new IntSetAsArray(
-                    curCandidate.getFirst(),
-                    curCandidate.getSecond());
+                curCandidate.getSecond(),
+                curCandidate.getThird());
             if (o2Candidates.contains(subPair)) {
                 subPair = new IntSetAsArray(
-                        curCandidate.getSecond(),
-                        curCandidate.getThird());
+                    curCandidate.getFirst(),
+                    curCandidate.getThird());
                 if (o2Candidates.contains(subPair)) {
-                    subPair = new IntSetAsArray(
-                            curCandidate.getFirst(),
-                            curCandidate.getThird());
-                    if (o2Candidates.contains(subPair)) {
-                        return true;
-                    }
+                    return true;
                 }
             }
+        }
+        return false;
+    }
+
+    private boolean functionallyDependent(final Set<Set<Integer>> functionalDependencies,
+        final Set<Integer> colIndices) {
+        for (Set<Integer> set : functionalDependencies) {
+            if (set.containsAll(colIndices)) {
+                return true;
+            }
+        }
         return false;
     }
 }

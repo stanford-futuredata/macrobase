@@ -1,24 +1,32 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
-import java.util.*;
+import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Encode every combination of attribute names and values into a distinct integer.
- * This class assumes that attributes are stored in String columns in dataframes
- * and is used inside of the explanation operators to search for explanatory
- * column values.
+ * Encode every combination of attribute names and values into a distinct integer. This class
+ * assumes that attributes are stored in String columns in dataframes and is used inside of the
+ * explanation operators to search for explanatory column values.
  */
 public class AttributeEncoder {
+
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
 
-    private HashMap<Integer, Map<String, Integer>> encoder;
+    private Map<Integer, Map<String, Integer>> encoder;
     private int nextKey;
 
-    private HashMap<Integer, String> valueDecoder;
-    private HashMap<Integer, Integer> columnDecoder;
+    private Map<Integer, String> valueDecoder;
+    private Map<Integer, Integer> columnDecoder;
     private List<String> colNames;
+
+    private final Set<Set<Integer>> functionalDependencies;
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -26,28 +34,47 @@ public class AttributeEncoder {
         nextKey = 1;
         valueDecoder = new HashMap<>();
         columnDecoder = new HashMap<>();
+        functionalDependencies = ImmutableSet.of(ImmutableSet.of(6, 7));
     }
+
     public void setColumnNames(List<String> colNames) {
         this.colNames = colNames;
     }
 
-    public int decodeColumn(int i) {return columnDecoder.get(i);}
-    public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
-    public String decodeValue(int i) {return valueDecoder.get(i);}
-    public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
+    public int decodeColumn(int i) {
+        return columnDecoder.get(i);
+    }
+
+    public String decodeColumnName(int i) {
+        return colNames.get(columnDecoder.get(i));
+    }
+
+    public String decodeValue(int i) {
+        return valueDecoder.get(i);
+    }
+
+    public Map<Integer, Integer> getColumnDecoder() {
+        return columnDecoder;
+    }
+
+    public Set<Set<Integer>> getFunctionalDependencies() {
+        return functionalDependencies;
+    }
 
     /**
-     * Encodes columns giving each value which satisfies a minimum support threshold a key
-     * equal to its rank among all values which satisfy that threshold (so the single most common
-     * value has key 1, the next has key 2, and so on).  Encode all values not satisfying the threshold
-     * as AttributeEncoder.noSupport.
+     * Encodes columns giving each value which satisfies a minimum support threshold a key equal to
+     * its rank among all values which satisfy that threshold (so the single most common value has
+     * key 1, the next has key 2, and so on).  Encode all values not satisfying the threshold as
+     * AttributeEncoder.noSupport.
+     *
      * @param columns Columns to be encoded.
      * @param minSupport Minimum support to be satisfied.
-     * @param outlierColumn The ith value in this array is the number of outliers whose attributes are those of
-     *                      row i of columns.
+     * @param outlierColumn The ith value in this array is the number of outliers whose attributes
+     * are those of row i of columns.
      * @return A two-dimensional array of encoded values.
      */
-    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport, double[] outlierColumn) {
+    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport,
+        double[] outlierColumn) {
         if (columns.isEmpty()) {
             return new int[0][0];
         }
@@ -68,14 +95,16 @@ public class AttributeEncoder {
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                 if (outlierColumn[rowIdx] > 0.0) {
-                    if (colIdx == 0)
+                    if (colIdx == 0) {
                         numOutliers += outlierColumn[rowIdx];
+                    }
                     String colVal = Integer.toString(colIdx) + curCol[rowIdx];
                     Double curCount = countMap.get(colVal);
-                    if (curCount == null)
+                    if (curCount == null) {
                         countMap.put(colVal, outlierColumn[rowIdx]);
-                    else
+                    } else {
                         countMap.put(colVal, curCount + outlierColumn[rowIdx]);
+                    }
                 }
             }
         }
@@ -83,9 +112,9 @@ public class AttributeEncoder {
         // Rank the strings that have minimum support among the outliers
         // by the amount of support they have.
         double minSupportThreshold = minSupport * numOutliers;
-        List<String> filterOnMinSupport= countMap.keySet().stream()
-                .filter(line -> countMap.get(line) > minSupportThreshold)
-                .collect(Collectors.toList());
+        List<String> filterOnMinSupport = countMap.keySet().stream()
+            .filter(line -> countMap.get(line) > minSupportThreshold)
+            .collect(Collectors.toList());
         filterOnMinSupport.sort((s1, s2) -> countMap.get(s2).compareTo(countMap.get(s1)));
 
         HashMap<String, Integer> stringToRank = new HashMap<>(filterOnMinSupport.size());
