@@ -1,5 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.roaringbitmap.RoaringBitmap;
@@ -15,15 +17,16 @@ public class AttributeEncoder {
     public static int noSupport = Integer.MAX_VALUE;
     private static double cardinalityThreshold = 0.01;
 
-    private HashMap<Integer, Map<String, Integer>> encoder;
+    private Map<Integer, Map<String, Integer>> encoder;
     private int nextKey;
 
-    private HashMap<Integer, String> valueDecoder;
-    private HashMap<Integer, Integer> columnDecoder;
+    private Map<Integer, String> valueDecoder;
+    private Map<Integer, Integer> columnDecoder;
     private List<String> colNames;
-    private HashMap<Integer, RoaringBitmap>[][] bitmap;
+    private Map<Integer, RoaringBitmap>[][] bitmap;
     private ArrayList<Integer> outlierList[];
-    boolean isBitmapEncoded[];
+    private boolean isBitmapEncoded[];
+    private final Set<Set<Integer>> functionalDependencies;
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -31,6 +34,7 @@ public class AttributeEncoder {
         nextKey = 1;
         valueDecoder = new HashMap<>();
         columnDecoder = new HashMap<>();
+        functionalDependencies = ImmutableSet.of(ImmutableSet.of(6, 7));
     }
     public void setColumnNames(List<String> colNames) {
         this.colNames = colNames;
@@ -39,10 +43,11 @@ public class AttributeEncoder {
     public int decodeColumn(int i) {return columnDecoder.get(i);}
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
-    public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
-    public HashMap<Integer, RoaringBitmap>[][] getBitMap() {return bitmap;}
+    public Map<Integer, Integer> getColumnDecoder() {return columnDecoder;}
+    public Map<Integer, RoaringBitmap>[][] getBitmap() {return bitmap;}
     public ArrayList<Integer>[] getOutlierList() {return outlierList;}
     public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
+    public Set<Set<Integer>> getFunctionalDependencies() { return functionalDependencies; }
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key
@@ -241,5 +246,4 @@ public class AttributeEncoder {
         }
         return m;
     }
-
 }
