@@ -37,35 +37,28 @@ public class CSVDataFrameParserDistributed implements Serializable{
         headerSettings.setMaxCharsPerColumn(16384);
         CsvParser headerParser = new CsvParser(headerSettings);
         String[] header = headerParser.parseLine(fileRDD.first());
-        // Distribute and parse
-        JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
         // Remove the header
-        repartitionedRDD = repartitionedRDD.mapPartitionsWithIndex(
+        fileRDD = fileRDD.mapPartitionsWithIndex(
                 (Integer index, Iterator<String> iter) -> {
                     if (index == 0) {
                         iter.next();
-                        iter.remove();
                     }
                     return iter;
                 }, true
         );
+        // Distribute and parse
+        JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
         repartitionedRDD.cache();
-        JavaRDD<String[]> parsedFileRDD = repartitionedRDD.mapPartitions(
-                (Iterator<String> iter) -> {
+        JavaRDD<String[]> parsedFileRDD = repartitionedRDD.map(
+                (String row) -> {
                     CsvParserSettings settings = new CsvParserSettings();
                     settings.getFormat().setLineSeparator("\n");
                     settings.setMaxCharsPerColumn(16384);
                     CsvParser csvParser = new CsvParser(settings);
-                    List<String[]> parsedRows = new ArrayList<>();
-                    while(iter.hasNext()) {
-                        String row = iter.next();
-                        String[] parsedRow = csvParser.parseLine(row);
-                        parsedRows.add(parsedRow);
-                    }
-                    return parsedRows.iterator();
-        }, true
+                    return csvParser.parseLine(row);
+        }
         );
-        
+
         int numColumns = header.length;
         int schemaLength = requiredColumns.size();
         int schemaIndexMap[] = new int[numColumns];
