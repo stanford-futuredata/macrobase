@@ -39,6 +39,16 @@ public class CSVDataFrameParserDistributed implements Serializable{
         String[] header = headerParser.parseLine(fileRDD.first());
         // Distribute and parse
         JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
+        // Remove the header
+        repartitionedRDD = repartitionedRDD.mapPartitionsWithIndex(
+                (Integer index, Iterator<String> iter) -> {
+                    if (index == 0) {
+                        iter.next();
+                        iter.remove();
+                    }
+                    return iter;
+                }, true
+        );
         repartitionedRDD.cache();
         JavaRDD<String[]> parsedFileRDD = repartitionedRDD.mapPartitions(
                 (Iterator<String> iter) -> {
@@ -55,18 +65,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return parsedRows.iterator();
         }, true
         );
-
-        // Remove the header
-        parsedFileRDD = parsedFileRDD.mapPartitionsWithIndex(
-                (Integer index, Iterator<String[]> iter) -> {
-                    if (index == 0) {
-                        iter.next();
-                        iter.remove();
-                    }
-                    return iter;
-                }, true
-        );
-
+        
         int numColumns = header.length;
         int schemaLength = requiredColumns.size();
         int schemaIndexMap[] = new int[numColumns];
