@@ -30,7 +30,12 @@ public class CSVDataFrameParserDistributed implements Serializable{
     }
 
     public DistributedDataFrame load(JavaSparkContext sparkContext, int numPartitions) throws Exception {
-        JavaRDD<String> fileRDD = sparkContext.textFile(fileName, numPartitions);
+        // Increase the number of partitions to ensure enough memory for parsing overhead
+        int increasedPartitions = numPartitions * 10;
+        // For unit tests
+        if (numPartitions == 0)
+            increasedPartitions = 1;
+        JavaRDD<String> fileRDD = sparkContext.textFile(fileName, increasedPartitions);
         // Extract the header
         CsvParserSettings headerSettings = new CsvParserSettings();
         headerSettings.getFormat().setLineSeparator("\n");
@@ -46,7 +51,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return iter;
                 }, true
         );
-        JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
+        JavaRDD<String> repartitionedRDD = fileRDD.repartition(increasedPartitions);
 
         // Define a schema from the header
         int numColumns = header.length;
@@ -86,6 +91,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
         final int numDoubleColumnsFinal = numDoubleColumns;
 
         // Distribute and parse
+        repartitionedRDD.cache();
         JavaPairRDD<String[], double[]> distributedDataFrame = repartitionedRDD.mapPartitionsToPair(
                 (Iterator<String> iter) -> {
                     CsvParserSettings settings = new CsvParserSettings();
@@ -130,8 +136,6 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return parsedRows.iterator();
                 }, true
         );
-
-        distributedDataFrame.cache();
 
         DistributedDataFrame df = new DistributedDataFrame(schema, distributedDataFrame);
         return df;
