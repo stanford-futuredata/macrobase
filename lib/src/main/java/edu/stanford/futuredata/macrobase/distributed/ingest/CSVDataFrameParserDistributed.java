@@ -47,7 +47,6 @@ public class CSVDataFrameParserDistributed implements Serializable{
                 }, true
         );
         JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
-        repartitionedRDD.cache();
 
         // Define a schema from the header
         int numColumns = header.length;
@@ -123,6 +122,8 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return parsedRows.iterator();
                 }, true
         );
+
+        distributedDataFrame.cache();
 
         DistributedDataFrame df = new DistributedDataFrame(schema, distributedDataFrame);
         return df;
