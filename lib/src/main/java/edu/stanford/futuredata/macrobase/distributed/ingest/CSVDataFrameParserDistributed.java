@@ -98,26 +98,34 @@ public class CSVDataFrameParserDistributed implements Serializable{
                         String[] parsedRow = csvParser.parseLine(row);
                         String[] stringRow = new String[numStringColumnsFinal];
                         double[] doubleRow = new double[numDoubleColumnsFinal];
+                        boolean goodRow = true;
                         for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
                             if (schemaIndexMap[c] >= 0) {
                                 int schemaIndex = schemaIndexMap[c];
                                 Schema.ColType t = columnTypeList[schemaIndex];
-                                String rowValue = parsedRow[c];
-                                if (t == Schema.ColType.STRING) {
-                                    stringRow[stringColNum++] = rowValue;
-                                } else if (t == Schema.ColType.DOUBLE) {
-                                    try {
-                                        doubleRow[doubleColNum] = Double.parseDouble(rowValue);
-                                    } catch (NumberFormatException e) {
-                                        doubleRow[doubleColNum] = Double.NaN;
+                                try {
+                                    String rowValue = parsedRow[c];
+                                    if (t == Schema.ColType.STRING) {
+                                        stringRow[stringColNum++] = rowValue;
+                                    } else if (t == Schema.ColType.DOUBLE) {
+                                        try {
+                                            doubleRow[doubleColNum] = Double.parseDouble(rowValue);
+                                        } catch (NumberFormatException e) {
+                                            doubleRow[doubleColNum] = Double.NaN;
+                                        }
+                                        doubleColNum++;
+                                    } else {
+                                        throw new RuntimeException("Bad ColType");
                                     }
-                                    doubleColNum++;
-                                } else {
-                                    throw new RuntimeException("Bad ColType");
+                                } catch (ArrayIndexOutOfBoundsException e) {
+                                    goodRow = false;
+                                    break;
                                 }
                             }
                         }
-                        parsedRows.add(new Tuple2<>(stringRow, doubleRow));
+                        if (goodRow) {
+                            parsedRows.add(new Tuple2<>(stringRow, doubleRow));
+                        }
                     }
                     return parsedRows.iterator();
                 }, true
