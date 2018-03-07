@@ -137,7 +137,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
 
         JavaPairRDD<int[], double[]> encoded = getEncoded(partitionedDataFrame);
 
-        encoded.repartition(numPartitions);
+        encoded = encoded.repartition(numPartitions);
         encoded.cache();
 
         double[] globalAggregates = encoded.reduce(
