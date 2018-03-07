@@ -27,7 +27,7 @@ public class PredicateClassifierDistributedTest {
                 Arrays.asList("usage", "location", "version"));
         loader.setColumnTypes(colTypes);
 
-        DistributedDataFrame df = loader.load(sparkContext, 1);
+        DistributedDataFrame df = loader.load(sparkContext, 0);
 
         PredicateClassifierDistributed pcd = new PredicateClassifierDistributed("location", "==", "CAN");
 
