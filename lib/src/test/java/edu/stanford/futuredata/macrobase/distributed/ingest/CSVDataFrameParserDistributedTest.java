@@ -26,7 +26,7 @@ public class CSVDataFrameParserDistributedTest {
                 Arrays.asList("usage", "location", "version"));
         loader.setColumnTypes(colTypes);
 
-        DistributedDataFrame df = loader.load(sparkContext, 1);
+        DistributedDataFrame df = loader.load(sparkContext, 0);
 
         assertEquals(Schema.ColType.DOUBLE, df.getTypeOfColumn("usage"));
         assertEquals(Schema.ColType.STRING, df.getTypeOfColumn("version"));
