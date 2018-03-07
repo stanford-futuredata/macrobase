@@ -46,25 +46,10 @@ public class CSVDataFrameParserDistributed implements Serializable{
                     return iter;
                 }, true
         );
-        // Distribute and parse
         JavaRDD<String> repartitionedRDD = fileRDD.repartition(numPartitions);
         repartitionedRDD.cache();
-        JavaRDD<String[]> parsedFileRDD = repartitionedRDD.mapPartitions(
-                (Iterator<String> iter) -> {
-                    CsvParserSettings settings = new CsvParserSettings();
-                    settings.getFormat().setLineSeparator("\n");
-                    settings.setMaxCharsPerColumn(16384);
-                    CsvParser csvParser = new CsvParser(settings);
-                    List<String[]> parsedRows = new ArrayList<>();
-                    while(iter.hasNext()) {
-                        String row = iter.next();
-                        String[] parsedRow = csvParser.parseLine(row);
-                        parsedRows.add(parsedRow);
-                    }
-                    return parsedRows.iterator();
-                }, true
-        );
 
+        // Define a schema from the header
         int numColumns = header.length;
         int schemaLength = requiredColumns.size();
         int schemaIndexMap[] = new int[numColumns];
@@ -101,32 +86,42 @@ public class CSVDataFrameParserDistributed implements Serializable{
         final int numStringColumnsFinal = numStringColumns;
         final int numDoubleColumnsFinal = numDoubleColumns;
 
-        // Refactor using the schema
-        JavaPairRDD<String[], double[]> distributedDataFrame = parsedFileRDD.mapToPair(
-                (String[] row) -> {
-                    String[] stringRow = new String[numStringColumnsFinal];
-                    double[] doubleRow = new double[numDoubleColumnsFinal];
-                    for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
-                        if (schemaIndexMap[c] >= 0) {
-                            int schemaIndex = schemaIndexMap[c];
-                            Schema.ColType t = columnTypeList[schemaIndex];
-                            String rowValue = row[c];
-                            if (t == Schema.ColType.STRING) {
-                                stringRow[stringColNum++] = rowValue;
-                            } else if (t == Schema.ColType.DOUBLE) {
-                                try {
-                                    doubleRow[doubleColNum] = Double.parseDouble(rowValue);
-                                } catch (NumberFormatException e) {
-                                    doubleRow[doubleColNum] = Double.NaN;
+        // Distribute and parse
+        JavaPairRDD<String[], double[]> distributedDataFrame = repartitionedRDD.mapPartitionsToPair(
+                (Iterator<String> iter) -> {
+                    CsvParserSettings settings = new CsvParserSettings();
+                    settings.getFormat().setLineSeparator("\n");
+                    settings.setMaxCharsPerColumn(16384);
+                    CsvParser csvParser = new CsvParser(settings);
+                    List<Tuple2<String[], double[]>> parsedRows = new ArrayList<>();
+                    while(iter.hasNext()) {
+                        String row = iter.next();
+                        String[] parsedRow = csvParser.parseLine(row);
+                        String[] stringRow = new String[numStringColumnsFinal];
+                        double[] doubleRow = new double[numDoubleColumnsFinal];
+                        for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
+                            if (schemaIndexMap[c] >= 0) {
+                                int schemaIndex = schemaIndexMap[c];
+                                Schema.ColType t = columnTypeList[schemaIndex];
+                                String rowValue = parsedRow[c];
+                                if (t == Schema.ColType.STRING) {
+                                    stringRow[stringColNum++] = rowValue;
+                                } else if (t == Schema.ColType.DOUBLE) {
+                                    try {
+                                        doubleRow[doubleColNum] = Double.parseDouble(rowValue);
+                                    } catch (NumberFormatException e) {
+                                        doubleRow[doubleColNum] = Double.NaN;
+                                    }
+                                    doubleColNum++;
+                                } else {
+                                    throw new RuntimeException("Bad ColType");
                                 }
-                                doubleColNum++;
-                            } else {
-                                throw new RuntimeException("Bad ColType");
                             }
                         }
+                        parsedRows.add(new Tuple2<>(stringRow, doubleRow));
                     }
-                    return new Tuple2<>(stringRow, doubleRow);
-                }
+                    return parsedRows.iterator();
+                }, true
         );
 
         DistributedDataFrame df = new DistributedDataFrame(schema, distributedDataFrame);
