@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 NUMROWS = 1000000
-NUMCOLS = 8
+NUMCOLS = 5
 cols = [str('A' + str(i)) for i in range(NUMCOLS)]
 
 usage = np.random.rand(NUMROWS)
@@ -11,7 +11,7 @@ data = []
 for i in range(NUMROWS):
     vals = [random.random()]
     for j in range(NUMCOLS):
-        vals.append(np.random.choice(50))
+        vals.append(np.random.choice(20))
     data.append(tuple(vals))
 
 df = pd.DataFrame(data=data, columns=['usage'] + cols)
