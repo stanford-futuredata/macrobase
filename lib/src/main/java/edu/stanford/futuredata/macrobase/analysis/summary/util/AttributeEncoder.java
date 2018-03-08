@@ -13,7 +13,7 @@ import org.roaringbitmap.RoaringBitmap;
 public class AttributeEncoder {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    private static double cardinalityThreshold = 0.01;
+    private static int cardinalityThreshold = 10;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -21,7 +21,7 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
-    private HashMap<Integer, RoaringBitmap>[][] bitmap;
+    private HashMap<Integer, BitSet>[][] bitmap;
     private ArrayList<Integer> outlierList[];
     boolean isBitmapEncoded[];
 
@@ -40,7 +40,7 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
-    public HashMap<Integer, RoaringBitmap>[][] getBitMap() {return bitmap;}
+    public HashMap<Integer, BitSet>[][] getBitMap() {return bitmap;}
     public ArrayList<Integer>[] getOutlierList() {return outlierList;}
     public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
 
@@ -146,18 +146,17 @@ public class AttributeEncoder {
                 }
             }
             System.out.print(outlierList[colIdx].size() + " ");
-            if (true || 1.0*outlierList[colIdx].size()/numRows <= cardinalityThreshold) {
+            if (true || outlierList[colIdx].size() <= cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
                     int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                     int curKey = curColEncoder.get(colVal);
                     if (curKey != noSupport) {
-                        if (bitmap[colIdx][oidx].containsKey(curKey)) {
-                            bitmap[colIdx][oidx].get(curKey).add(rowIdx);
-                        } else {
-                            bitmap[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
+                        if (!bitmap[colIdx][oidx].containsKey(curKey)) {
+                            bitmap[colIdx][oidx].put(curKey, new BitSet());
                         }
+                        bitmap[colIdx][oidx].get(curKey).set(rowIdx);
                     }
                 }
             }

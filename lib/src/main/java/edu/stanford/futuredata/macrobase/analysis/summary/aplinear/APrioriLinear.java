@@ -53,7 +53,7 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            HashMap<Integer, RoaringBitmap>[][] bitmap,
+            HashMap<Integer, BitSet>[][] bitmap,
             ArrayList<Integer>[] outlierList,
             boolean[] isBitmapEncoded
     ) {
@@ -75,7 +75,7 @@ public class APrioriLinear {
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
-        final HashMap<Integer, RoaringBitmap>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
+        final HashMap<Integer, BitSet>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
         for (int i = 0; i < numThreads; i++)
             for (int j = 0; j < numColumns; j++)
                 for (int k = 0; k < 2; k++)
@@ -90,65 +90,18 @@ public class APrioriLinear {
                     }
                 } else {
                     for (int j = 0; j < 2; j++) {
-                        for (HashMap.Entry<Integer, RoaringBitmap> entry : bitmap[i][j].entrySet()) {
-                            RoaringBitmap rr = new RoaringBitmap();
-                            rr.add((long) startIndex, (long) endIndex);
-                            rr.and(entry.getValue());
-                            if (rr.getCardinality() > 0) {
-                                byThreadBitmap[threadNum][i][j].put(entry.getKey(), rr);
+                        for (HashMap.Entry<Integer, BitSet> entry : bitmap[i][j].entrySet()) {
+                            BitSet b = new BitSet();
+                            b.set(startIndex, endIndex);
+                            b.and(entry.getValue());
+                            if (b.cardinality() > 0) {
+                                byThreadBitmap[threadNum][i][j].put(entry.getKey(), b);
                             }
                         }
                     }
                 }
             }
         }
-
-        /*Random rand = new Random();
-        for (int numBits = 1000; numBits <= 1000000; numBits *= 10) {
-            System.out.println(numBits + " bits set");
-            for (int ratio = 1; ratio <= 8; ratio++) {
-                System.out.println(ratio*5 + " ratio");
-                int N = 20;
-                RoaringBitmap[] b = new RoaringBitmap[N];
-                for (int i = 0; i < N; i++) {
-                    b[i] = new RoaringBitmap();
-                    for (int j = 0; j < numBits; j++) {
-                        b[i].add(rand.nextInt(numBits * ratio * 5));
-                    }
-                }
-                long startTime1 = System.currentTimeMillis();
-                for (int i = 0; i < N; i++) {
-                    for (int j = i + 1; j < N; j++) {
-                        RoaringBitmap x = RoaringBitmap.and(b[i], b[j]);
-                    }
-                }
-                double elapsed = 1.0 * (System.currentTimeMillis() - startTime1) / (N * (N - 1) / 2);
-                System.out.println(elapsed);
-            }
-        }
-        for (int numBits = 1000; numBits <= 1000000; numBits *= 10) {
-            System.out.println(numBits + " bits set");
-            for (int ratio = 1; ratio <= 8; ratio++) {
-                System.out.println(ratio*5 + " ratio");
-                int N = 20;
-                BitSet[] b = new BitSet[N];
-                for (int i = 0; i < N; i++) {
-                    b[i] = new BitSet();
-                    for (int j = 0; j < numBits; j++) {
-                        b[i].set(rand.nextInt(numBits * ratio * 5));
-                    }
-                }
-                long startTime1 = System.currentTimeMillis();
-                for (int i = 0; i < N; i++) {
-                    for (int j = i + 1; j < N; j++) {
-                        BitSet x = (BitSet)b[i].clone();
-                        x.and(b[j]);
-                    }
-                }
-                double elapsed = 1.0 * (System.currentTimeMillis() - startTime1) / (N * (N - 1) / 2);
-                System.out.println(elapsed);
-            }
-        }*/
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
@@ -203,9 +156,9 @@ public class APrioriLinear {
                                         continue;
                                     int outlierCount = 0, inlierCount = 0;
                                     if (byThreadBitmap[curThreadNum][colNum][1].containsKey(curOutlierCandidate))
-                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).getCardinality();
+                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).cardinality();
                                     if (byThreadBitmap[curThreadNum][colNum][0].containsKey(curOutlierCandidate))
-                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).getCardinality();
+                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).cardinality();
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
                                         curCandidate = new IntSetAsArray(curOutlierCandidate);
@@ -460,20 +413,20 @@ public class APrioriLinear {
     // One Bitmap, One Normal
     private void allOneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                        ArrayList<Integer> outlierColList,
-                                       HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
+                                       HashMap<Integer, BitSet>[] byThreadColumnBitmap,
                                        int[] curColumnTwoAttributes, int startIndex,
                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
             if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
-                RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
+                BitSet outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
                 // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
                 oneBitmapOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
                         curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
             }
             if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
-                RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
+                BitSet inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
                 // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for inliers)
                 oneBitmapOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
                         curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
@@ -482,11 +435,11 @@ public class APrioriLinear {
     }
 
     private void oneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
-                                    RoaringBitmap bitmap, Integer curCandidateOne,
+                                    BitSet bitmap, Integer curCandidateOne,
                                     int[] curColumnTwoAttributes, int startIndex,
                                     boolean useIntSetAsArray, IntSet curCandidate,
                                     double[] val, int numAggregates) {
-        for (Integer rowNum : bitmap) {
+        for (int rowNum = bitmap.nextSetBit(0); rowNum >= 0; rowNum = bitmap.nextSetBit(rowNum + 1)) {
             int rowNumInCol = rowNum - startIndex;
             if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                 continue;
@@ -529,7 +482,7 @@ public class APrioriLinear {
     // Two bitmap columns
     private void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
                               ArrayList<Integer>[] outlierList,
-                              HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                              HashMap<Integer, BitSet>[][] byThreadBitmap,
                               int colNumOne, int colNumTwo,
                               boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
@@ -546,13 +499,17 @@ public class APrioriLinear {
                 }
                 int outlierCount = 0, inlierCount = 0;
                 if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
-                        byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo))
-                    outlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
-                            byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                        byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
+                    BitSet b = (BitSet)byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
+                    b.and(byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                    outlierCount = b.cardinality();
+                }
                 if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
-                        byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo))
-                    inlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
-                            byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                        byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
+                    BitSet b = (BitSet)byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
+                    b.and(byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                    inlierCount = b.cardinality();
+                }
                 updateAggregates(thisThreadSetAggregates, curCandidate, new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
             }
         }
@@ -563,20 +520,20 @@ public class APrioriLinear {
     // One Bitmap, Two Normal
     private void allOneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
                                        ArrayList<Integer> outlierColList,
-                                       HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
+                                       HashMap<Integer, BitSet>[] byThreadColumnBitmap,
                                        int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
             if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
-                RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
+                BitSet outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
                 // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
                 oneBitmapTwoNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
                         curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
             }
             if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
-                RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
+                BitSet inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
                 // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for the inliers)
                 oneBitmapTwoNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
                         curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
@@ -585,11 +542,11 @@ public class APrioriLinear {
     }
 
     private void oneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
-                                    RoaringBitmap bitmap, Integer curCandidateOne,
+                                    BitSet bitmap, Integer curCandidateOne,
                                     int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
                                     boolean useIntSetAsArray, IntSet curCandidate,
                                     double[] val, int numAggregates) {
-        for (Integer rowNum : bitmap) {
+        for (int rowNum = bitmap.nextSetBit(0); rowNum >= 0; rowNum = bitmap.nextSetBit(rowNum + 1)) {
             int rowNumInCol = rowNum - startIndex;
             if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
                     || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport
@@ -615,7 +572,7 @@ public class APrioriLinear {
     // Two Bitmaps, One Normal
     private void allTwoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                         ArrayList<Integer>[] outlierList,
-                                        HashMap<Integer, RoaringBitmap>[][] byThreadColumnBitmap,
+                                        HashMap<Integer, BitSet>[][] byThreadBitmap,
                                         int colNumOne, int colNumTwo,
                                         int[] curColumnThreeAttributes, int startIndex,
                                         boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
@@ -626,15 +583,15 @@ public class APrioriLinear {
                 if (curCandidateTwo == AttributeEncoder.noSupport || !singleNextArray[curCandidateTwo])
                     continue;
 
-                if (byThreadColumnBitmap[colNumOne][1].containsKey(curCandidateOne) && byThreadColumnBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
-                    RoaringBitmap outlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][1].get(curCandidateOne),
-                            byThreadColumnBitmap[colNumTwo][1].get(curCandidateTwo));
+                if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) && byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
+                    BitSet outlierBitmap = (BitSet)byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
+                    outlierBitmap.and(byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
                     twoBitmapsOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne, curCandidateTwo,
                             curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
                 }
-                if (byThreadColumnBitmap[colNumOne][0].containsKey(curCandidateOne) && byThreadColumnBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
-                    RoaringBitmap inlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][0].get(curCandidateOne),
-                            byThreadColumnBitmap[colNumTwo][0].get(curCandidateTwo));
+                if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) && byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
+                    BitSet inlierBitmap = (BitSet)byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
+                    inlierBitmap.and(byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
                     twoBitmapsOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne, curCandidateTwo,
                             curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
                 }
@@ -643,11 +600,11 @@ public class APrioriLinear {
     }
 
     private void twoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
-                                     RoaringBitmap bitmap, Integer curCandidateOne, Integer curCandidateTwo,
+                                     BitSet bitmap, Integer curCandidateOne, Integer curCandidateTwo,
                                      int[] curColumnThreeAttributes, int startIndex,
                                      boolean useIntSetAsArray, IntSet curCandidate,
                                      double[] val, int numAggregates) {
-        for (Integer rowNum : bitmap) {
+        for (int rowNum = bitmap.nextSetBit(0); rowNum >= 0; rowNum = bitmap.nextSetBit(rowNum + 1)) {
             int rowNumInCol = rowNum - startIndex;
             if (curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnThreeAttributes[rowNumInCol]])
                 continue;
@@ -701,44 +658,9 @@ public class APrioriLinear {
 
     private void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
                                 ArrayList<Integer>[] outlierList,
-                                HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                                HashMap<Integer, BitSet>[][] byThreadBitmap,
                                 int colNumOne, int colNumTwo, int colNumThree,
                                 boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
-        /*for (HashMap.Entry<Integer, RoaringBitmap> entryOne : byThreadBitmap[colNumOne][1].entrySet()) {
-            Integer curCandidateOne = entryOne.getKey();
-            if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
-                continue;
-            for (HashMap.Entry<Integer, RoaringBitmap> entryTwo : byThreadBitmap[colNumTwo][1].entrySet()) {
-                Integer curCandidateTwo = entryTwo.getKey();
-                if (curCandidateTwo == AttributeEncoder.noSupport || !singleNextArray[curCandidateTwo])
-                    continue;
-                for (HashMap.Entry<Integer, RoaringBitmap> entryThree : byThreadBitmap[colNumThree][1].entrySet()) {
-                    Integer curCandidateThree = entryThree.getKey();
-                    if (curCandidateThree == AttributeEncoder.noSupport || !singleNextArray[curCandidateThree])
-                        continue;
-
-                    if (useIntSetAsArray) {
-                        curCandidate = new IntSetAsArray(
-                                curCandidateOne,
-                                curCandidateTwo,
-                                curCandidateThree);
-                    } else {
-                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
-                                curCandidateOne,
-                                curCandidateTwo,
-                                curCandidateThree);
-                    }
-                    int outlierCount = RoaringBitmap.andCardinality(RoaringBitmap.and(entryOne.getValue(), entryTwo.getValue()), entryThree.getValue());
-                    //int inlierCount = RoaringBitmap.andCardinality(RoaringBitmap.and(entryOne.getValue(), entryTwo.getValue()), entryThree.getValue());
-                    int inlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
-                                        byThreadBitmap[colNumTwo][0].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][0].get(curCandidateThree));
-
-                    updateAggregates(thisThreadSetAggregates, curCandidate, new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
-                }
-            }
-        }*/
 
         for (Integer curCandidateOne : outlierList[colNumOne]) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
@@ -766,24 +688,18 @@ public class APrioriLinear {
                     if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][1].containsKey(curCandidateThree)) {
-//                        System.out.println("outlier " + byThreadBitmap[colNumOne][1].get(curCandidateOne).getCardinality() + " " +
-//                                        byThreadBitmap[colNumTwo][1].get(curCandidateTwo).getCardinality() + " " +
-//                                        byThreadBitmap[colNumThree][1].get(curCandidateThree).getCardinality());
-                        outlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][1].get(curCandidateOne),
-                                        byThreadBitmap[colNumTwo][1].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][1].get(curCandidateThree));
+                                BitSet b = (BitSet)byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
+                                b.and(byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                                b.and(byThreadBitmap[colNumThree][1].get(curCandidateThree));
+                                outlierCount = b.cardinality();
                     }
                     if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][0].containsKey(curCandidateThree)) {
-//                        System.out.println("inlier " + byThreadBitmap[colNumOne][0].get(curCandidateOne).getCardinality() + " " +
-//                                byThreadBitmap[colNumTwo][0].get(curCandidateTwo).getCardinality() + " " +
-//                                byThreadBitmap[colNumThree][0].get(curCandidateThree).getCardinality());
-                        inlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
-                                        byThreadBitmap[colNumTwo][0].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][0].get(curCandidateThree));
+                        BitSet b = (BitSet)byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
+                        b.and(byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                        b.and(byThreadBitmap[colNumThree][0].get(curCandidateThree));
+                        inlierCount = b.cardinality();
                     }
 
                     updateAggregates(thisThreadSetAggregates, curCandidate, new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
