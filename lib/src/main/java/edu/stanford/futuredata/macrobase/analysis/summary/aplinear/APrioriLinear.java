@@ -153,6 +153,7 @@ public class APrioriLinear {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
+                                double startTimeForCol = System.currentTimeMillis();
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     int rowNumInCol = rowNum - startIndex;
                                     // Only examine a pair if both its members have minimum support.
@@ -180,6 +181,10 @@ public class APrioriLinear {
                                         }
                                     }
                                 }
+                                log.info("Time for cols {}, {}: {} ms",
+                                    colNumOne, colNumTwo, 
+                                    System.currentTimeMillis() -
+                                    startTimeForCol);
                             }
                         }
                     } else if (curOrderFinal == 3) {
@@ -187,8 +192,9 @@ public class APrioriLinear {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
-                                for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colnumThree % numColumns];
+                                for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
+                                    int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
+                                    double startTimeForCol = System.currentTimeMillis();
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                         int rowNumInCol = rowNum - startIndex;
                                         // Only construct a triple if all its singleton members have minimum support.
@@ -222,6 +228,10 @@ public class APrioriLinear {
                                             }
                                         }
                                     }
+                                    log.info("Time for cols {}, {}, {}: {} ms",
+                                        colNumOne, colNumTwo, colNumThree,
+                                        System.currentTimeMillis() -
+                                        startTimeForCol);
                                 }
                             }
                         }
