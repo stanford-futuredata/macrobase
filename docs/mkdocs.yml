@@ -6,7 +6,7 @@ pages:
   - MacroBase SQL:
     - 'Docs': 'sql/docs.md'
     - 'Setup': 'sql/setup.md'
-    - 'Workshop': 'sql/workshop.md'
+    - 'Tutorial': 'sql/tutorial.md'
   - MacroBase GUI:
     - 'Tutorial': 'gui/tutorial.md'
 
