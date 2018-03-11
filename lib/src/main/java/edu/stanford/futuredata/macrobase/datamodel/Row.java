@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 public class Row {
 
     // Formatter for printing out doubles; print at least 1 and no more than 6 decimal places
-    private static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("#.0#####",
+    static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("#.0#####",
         DecimalFormatSymbols.getInstance(Locale.US));
 
     private Schema schema; // not set by user
