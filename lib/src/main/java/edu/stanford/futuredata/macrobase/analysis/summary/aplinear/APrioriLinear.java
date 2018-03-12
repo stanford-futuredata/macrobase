@@ -121,7 +121,7 @@ public class APrioriLinear {
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {
                 threadSetAggregates
-                    .add(new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray));
+                    .add(new FastFixedHashTable((int)Math.pow(cardinality, curOrder), numAggregates, useIntSetAsArray));
             }
             // Shard the dataset by row into threads and generate candidates.
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
