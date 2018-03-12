@@ -218,11 +218,12 @@ public class DataFrame {
      * @param maxNumToPrint maximum number of rows from the DataFrame to print (default: 20;
      * -1 prints out all rows)
      */
-    public void prettyPrint(final PrintStream out, final int maxNumToPrint) {
+    public void prettyPrint(final PrintStream out, final int maxNumToPrint,
+        final boolean forceTupleDisplay) {
         out.println(numRows +  (numRows == 1 ? " row" : " rows"));
         out.println();
 
-        if (schema.getNumColumns() > MAX_COLS_FOR_TABULAR_PRINT) {
+        if (forceTupleDisplay || schema.getNumColumns() > MAX_COLS_FOR_TABULAR_PRINT) {
             // print each row so that each value is on a separate line, because the terminal isn't
             // wide enough to display the entire table
             if (maxNumToPrint > 0 && numRows > maxNumToPrint) {
@@ -277,25 +278,36 @@ public class DataFrame {
     }
 
     /**
-     * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
-     * and <tt>maxNumToPrint</tt> set to 20
+     * {@link #prettyPrint(PrintStream, int, boolean)} with default <tt>out</tt> set to
+     * <tt>System.out</tt>, <tt>maxNumToPrint</tt> set to 20, <tt>forceTupleDisplay</tt> set to
+     * false
      */
     public void prettyPrint() {
-        prettyPrint(System.out, 20);
+        prettyPrint(System.out, 20, false);
     }
 
     /**
-     * {@link #prettyPrint(PrintStream, int)} with default <tt>maxNumToPrint</tt> set to 20
+     * {@link #prettyPrint(PrintStream, int, boolean)} with default <tt>out</tt> set to
+     * <tt>System.out</tt> and <tt>maxNumToPrint</tt> set to 20
+     */
+    public void prettyPrint(final boolean forceTupleDisplay) {
+        prettyPrint(System.out, 20, forceTupleDisplay);
+    }
+
+    /**
+     * {@link #prettyPrint(PrintStream, int, boolean)} with default <tt>maxNumToPrint</tt> set to 20
+     * and <tt>forceTupleDisplay</tt> set to false
      */
     public void prettyPrint(final PrintStream out) {
-      prettyPrint(out, 20);
+      prettyPrint(out, 20, false);
     }
 
     /**
-     * {@link #prettyPrint(PrintStream, int)} with default <tt>out</tt> set to <tt>System.out</tt>
+     * {@link #prettyPrint(PrintStream, int, boolean)} with default <tt>out</tt> set to
+     * <tt>System.out</tt> and <tt>forceTupleDisplay</tt> set to false
      */
     public void prettyPrint(final int maxNumToPrint) {
-        prettyPrint(System.out, maxNumToPrint);
+        prettyPrint(System.out, maxNumToPrint, false);
     }
 
     // Fast Column-based methods

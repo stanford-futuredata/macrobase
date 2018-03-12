@@ -222,4 +222,8 @@ public abstract class AstVisitor<R, C> {
     public R visitImportCsv(ImportCsv node, C context) {
         return visitStatement(node, context);
     }
+
+    public R visitMetaCommand(MetaCommand node, C context) {
+        return visitStatement(node, context);
+    }
 }

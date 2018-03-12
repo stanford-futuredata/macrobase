@@ -17,7 +17,6 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import edu.stanford.futuredata.macrobase.SqlBaseLexer;
 import edu.stanford.futuredata.macrobase.SqlBaseParser;
 import java.util.List;
 import java.util.Objects;
@@ -67,36 +66,6 @@ public class StatementSplitter {
         return partialStatement;
     }
 
-    public static String squeezeStatement(String sql) {
-        TokenSource tokens = getLexer(sql, ImmutableSet.of());
-        StringBuilder sb = new StringBuilder();
-        while (true) {
-            Token token = tokens.nextToken();
-            if (token.getType() == Token.EOF) {
-                break;
-            }
-            if (token.getType() == SqlBaseLexer.WS) {
-                sb.append(' ');
-            } else {
-                sb.append(token.getText());
-            }
-        }
-        return sb.toString().trim();
-    }
-
-    public static boolean isEmptyStatement(String sql) {
-        TokenSource tokens = getLexer(sql, ImmutableSet.of());
-        while (true) {
-            Token token = tokens.nextToken();
-            if (token.getType() == Token.EOF) {
-                return true;
-            }
-            if (token.getChannel() != Token.HIDDEN_CHANNEL) {
-                return false;
-            }
-        }
-    }
-
     private static TokenSource getLexer(String sql, Set<String> terminators) {
         requireNonNull(sql, "sql is null");
         CharStream stream = new CaseInsensitiveStream(new ANTLRInputStream(sql));
@@ -115,10 +84,6 @@ public class StatementSplitter {
 
         public String statement() {
             return statement;
-        }
-
-        public String terminator() {
-            return terminator;
         }
 
         @Override

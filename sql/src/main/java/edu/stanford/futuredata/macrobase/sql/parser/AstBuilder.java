@@ -51,6 +51,9 @@ import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.MetaCommand;
+import edu.stanford.futuredata.macrobase.sql.tree.MetaCommand.Command;
+import edu.stanford.futuredata.macrobase.sql.tree.MetaCommand.CommandValue;
 import edu.stanford.futuredata.macrobase.sql.tree.MinRatioExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.MinSupportExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
@@ -87,14 +90,11 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * Portions of this copied from Facebook's presto-parser (https://github.com/prestodb/presto/tree/master/presto-parser);
  * any new AST type defined in the SqlBase.g4 ANTLR file should be added to this file as follows:
  * <code>
- *     @Override
- *     public Node visitNewAstType(SqlBaseParser.NewAstTypeContext context) {
- *          return new NewAstType(node, context);
- *     }
- * </code>
- * Parts of this file that were modified from the original file are marked below
- * by "Modified from original" comment; new code is marked by "New".
- * Otherwise, the code has simply been copy-pasted.
+ *
+ * @Override public Node visitNewAstType(SqlBaseParser.NewAstTypeContext context) { return new
+ * NewAstType(node, context); } </code> Parts of this file that were modified from the original file
+ * are marked below by "Modified from original" comment; new code is marked by "New". Otherwise, the
+ * code has simply been copy-pasted.
  **/
 class AstBuilder extends SqlBaseBaseVisitor<Node> {
 
@@ -158,6 +158,16 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
         return new Query(
             getLocation(context),
             term);
+    }
+
+    // New
+    // MetaCommands
+    @Override
+    public Node visitMetaCommand(SqlBaseParser.MetaCommandContext context) {
+        return new MetaCommand(getLocation(context),
+            // remove backslash at beginning, whitespace at the end
+            Command.valueOf(context.getChild(0).getText().trim().substring(1).toUpperCase()),
+            CommandValue.valueOf(context.getChild(1).getText().toUpperCase()));
     }
 
     // New
@@ -312,6 +322,7 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
             getTextIfPresent(context.limit),
             exportExpr);
     }
+
     /***** End DIFF query ******/
 
     // Modified from original

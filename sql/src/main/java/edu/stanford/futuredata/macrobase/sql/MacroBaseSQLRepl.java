@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.sql;
 
 import static java.nio.file.Files.exists;
+import static java.nio.file.Files.walk;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -11,6 +12,8 @@ import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
+import edu.stanford.futuredata.macrobase.sql.tree.MetaCommand;
+import edu.stanford.futuredata.macrobase.sql.tree.MetaCommand.CommandValue;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
@@ -40,8 +43,10 @@ public class MacroBaseSQLRepl {
     private final SqlParser parser;
     private final QueryEngine queryEngine;
     private final boolean paging;
+    private boolean forceTupleDisplay;
 
     private File tempFileForPaging;
+    private boolean truncateDisplay;
 
     /**
      * Main entry point to the SQL CLI interface in MacroBase
@@ -52,6 +57,8 @@ public class MacroBaseSQLRepl {
     private MacroBaseSQLRepl(final boolean userWantsPaging) throws IOException {
         // First try to turn paging on
         this.paging = enablePaging(userWantsPaging);
+        this.forceTupleDisplay = false;
+        this.truncateDisplay = true;
         // Initialize console reader and writer
         reader = new ConsoleReader();
         final CandidateListCompletionHandler handler = new CandidateListCompletionHandler();
@@ -107,7 +114,16 @@ public class MacroBaseSQLRepl {
                 Statement stmt = parser.createStatement(statementStr);
                 log.debug(stmt.toString());
                 final DataFrame result;
-                if (stmt instanceof ImportCsv) {
+                if (stmt instanceof MetaCommand) {
+                    final MetaCommand command = (MetaCommand) stmt;
+                    switch(command.getCommand()) {
+                        case TUPLE:
+                           forceTupleDisplay = (command.getValue() == CommandValue.ON);
+                        case TRUNCATE:
+                            truncateDisplay = (command.getValue() == CommandValue.ON);
+                    }
+                    continue;
+                } else if (stmt instanceof ImportCsv) {
                     final ImportCsv importStatement = (ImportCsv) stmt;
                     result = queryEngine.importTableFromCsv(importStatement);
                 } else {
@@ -118,7 +134,7 @@ public class MacroBaseSQLRepl {
                     try {
                         final PrintStream ps = new PrintStream(
                             new FileOutputStream(tempFileForPaging.getAbsolutePath()));
-                        result.prettyPrint(ps, -1);
+                        result.prettyPrint(ps, -1, forceTupleDisplay);
                         ProcessBuilder pb = new ProcessBuilder("less",
                             tempFileForPaging.getAbsolutePath());
                         pb.inheritIO();
@@ -128,7 +144,11 @@ public class MacroBaseSQLRepl {
                         e.printStackTrace();
                     }
                 } else {
-                    result.prettyPrint();
+                    if (truncateDisplay) {
+                        result.prettyPrint(forceTupleDisplay);
+                    } else {
+                        result.prettyPrint(System.out, -1, forceTupleDisplay);
+                    }
                 }
                 if (stmt instanceof Query) {
                     final QueryBody q = ((Query) stmt).getQueryBody();

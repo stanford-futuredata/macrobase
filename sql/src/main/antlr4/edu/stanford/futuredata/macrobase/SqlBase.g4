@@ -32,6 +32,12 @@ statement
     : query                                                            #statementDefault
     | IMPORT FROM CSV FILE STRING INTO qualifiedName
         ('(' columnDefinition (',' columnDefinition)* ')')?            #importCsv
+    | metaCommand                                                      #metaCommandAndValue
+    ;
+
+metaCommand
+    : META_TUPLE_DISPLAY (ON|OFF|AUTO)
+    | META_TRUNCATE_DISPLAY (ON|OFF|AUTO)
     ;
 
 query
@@ -39,7 +45,7 @@ query
     ;
 
 queryTerm
-    : queryPrimary                                                             #queryTermDefault
+    : queryPrimary                                                     #queryTermDefault
     ;
 
 queryPrimary
@@ -361,6 +367,7 @@ ARRAY: 'ARRAY';
 AS: 'AS';
 ASC: 'ASC';
 AT: 'AT';
+AUTO: 'AUTO';
 BERNOULLI: 'BERNOULLI';
 BETWEEN: 'BETWEEN';
 BY: 'BY';
@@ -462,6 +469,7 @@ NOT: 'NOT';
 NULL: 'NULL';
 NULLIF: 'NULLIF';
 NULLS: 'NULLS';
+OFF: 'OFF';
 ON: 'ON';
 ONLY: 'ONLY';
 OPTION: 'OPTION';
@@ -558,6 +566,14 @@ ASTERISK: '*';
 SLASH: '/';
 PERCENT: '%';
 CONCAT: '||';
+
+META_TUPLE_DISPLAY: '\\'
+		('TUPLE'~[\r\n\\"])
+  ;
+
+META_TRUNCATE_DISPLAY: '\\'
+		('TRUNCATE'~[\r\n\\"])
+  ;
 
 STRING
     : '\'' ( ~'\'' | '\'\'' )* '\''
