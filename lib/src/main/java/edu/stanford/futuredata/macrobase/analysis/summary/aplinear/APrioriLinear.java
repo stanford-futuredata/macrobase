@@ -278,8 +278,8 @@ public class APrioriLinear {
                                             }
                                         }
                                     }
-                                    log.info("Time for cols {}, {}: {} ms", 
-                                        colNumOne, colNumTwo, 
+                                    log.info("Time for cols {}, {}, {}: {} ms", 
+                                        colNumOne, colNumTwo, colNumThree,
                                         System.currentTimeMillis() - startTimeForCol);
 
                                 }

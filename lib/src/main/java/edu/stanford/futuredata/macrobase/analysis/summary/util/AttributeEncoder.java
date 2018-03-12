@@ -34,7 +34,7 @@ public class AttributeEncoder {
         nextKey = 1;
         valueDecoder = new HashMap<>();
         columnDecoder = new HashMap<>();
-        functionalDependencies = ImmutableSet.of(ImmutableSet.of(3, 5, 6));
+        functionalDependencies = ImmutableSet.of(ImmutableSet.of(3, 5), ImmutableSet.of(3, 6), ImmutableSet.of(5, 6));
     }
 
     public void setColumnNames(List<String> colNames) {
