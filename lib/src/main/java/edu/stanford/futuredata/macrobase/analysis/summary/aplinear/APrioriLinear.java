@@ -183,8 +183,7 @@ public class APrioriLinear {
                                 }
                                 log.info("Time for cols {}, {}: {} ms",
                                     colNumOne, colNumTwo, 
-                                    System.currentTimeMillis() -
-                                    startTimeForCol);
+                                    System.currentTimeMillis() - startTimeForCol);
                             }
                         }
                     } else if (curOrderFinal == 3) {
@@ -195,6 +194,7 @@ public class APrioriLinear {
                                 for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
                                     double startTimeForCol = System.currentTimeMillis();
+                                    int nullCalls = 0, addCalls = 0;
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                         int rowNumInCol = rowNum - startIndex;
                                         // Only construct a triple if all its singleton members have minimum support.
@@ -219,19 +219,20 @@ public class APrioriLinear {
                                         }
                                         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
                                         if (candidateVal == null) {
+                                            nullCalls++;
                                             thisThreadSetAggregates.put(curCandidate,
                                                     Arrays.copyOf(aRows[rowNum], numAggregates));
                                         } else {
+                                            addCalls++;
                                             for (int a = 0; a < numAggregates; a++) {
                                                 AggregationOp curOp = aggregationOps[a];
                                                 candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowNum][a]);
                                             }
                                         }
                                     }
-                                    log.info("Time for cols {}, {}, {}: {} ms",
+                                    log.info("Time for cols {}, {}, {}: {} ms, nullCalls: {}, addCalls: {}",
                                         colNumOne, colNumTwo, colNumThree,
-                                        System.currentTimeMillis() -
-                                        startTimeForCol);
+                                        System.currentTimeMillis() - startTimeForCol, nullCalls, addCalls);
                                 }
                             }
                         }
