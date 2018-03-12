@@ -178,6 +178,7 @@ public class APrioriLinear {
                                    continue;
                                 }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
+                                double startTimeForCol = System.currentTimeMillis();
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     int rowNumInCol = rowNum - startIndex;
                                     // Only examine a pair if both its members have minimum support.
@@ -212,6 +213,9 @@ public class APrioriLinear {
                                         }
                                     }
                                 }
+                                log.info("Time for cols {}, {}: {} ms", 
+                                    colNumOne, colNumTwo, 
+                                    System.currentTimeMillis() - startTimeForCol);
                             }
                         }
                     } else if (curOrderFinal == 3) {
@@ -233,6 +237,7 @@ public class APrioriLinear {
                                     }
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][
                                         colNumThree % numColumns];
+                                    double startTimeForCol = System.currentTimeMillis();
                                     for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                         int rowNumInCol = rowNum - startIndex;
                                         // Only construct a triple if all its singleton members have minimum support.
@@ -273,6 +278,10 @@ public class APrioriLinear {
                                             }
                                         }
                                     }
+                                    log.info("Time for cols {}, {}, {}: {} ms", 
+                                        colNumOne, colNumTwo, colNumThree,
+                                        System.currentTimeMillis() - startTimeForCol);
+
                                 }
                             }
                         }
@@ -428,7 +437,7 @@ public class APrioriLinear {
     private boolean functionallyDependent(final Set<Set<Integer>> functionalDependencies,
         final Set<Integer> colIndices) {
         for (Set<Integer> set : functionalDependencies) {
-            if (set.containsAll(colIndices)) {
+            if (colIndices.containsAll(set)) {
                 return true;
             }
         }
