@@ -71,7 +71,8 @@ public class MacroBaseSQLRepl {
                     .builder()
                     .appName("macrobase-sql-spark")
                     .getOrCreate();
-            queryEngineDistributed = new QueryEngineDistributed(spark);
+            // TODO: add configuration parameter for numPartitions
+            queryEngineDistributed = new QueryEngineDistributed(spark, 4);
         } else {
             queryEngineDistributed = null;
         }

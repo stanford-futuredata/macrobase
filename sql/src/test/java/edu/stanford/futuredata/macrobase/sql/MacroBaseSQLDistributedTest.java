@@ -27,7 +27,7 @@ public class MacroBaseSQLDistributedTest {
                 .master("local[4]")
                 .appName("macrobase-sql-spark")
                 .getOrCreate();
-        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark);
+        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark, 1);
         final Statement stmt;
         try {
             stmt = parser.createStatement(queryStr.replace(";", ""));
@@ -42,6 +42,17 @@ public class MacroBaseSQLDistributedTest {
         Dataset<Row> result = queryEngineDistributed.importTableFromCsv(importStatement);
 
         List<Row> collectedResult = result.collectAsList();
+
+        collectedResult.sort((Row recordOne, Row recordTwo) -> {
+            Double doubleOne = Double.parseDouble(recordOne.getString(0));
+            Double doubleTwo = Double.parseDouble(recordTwo.getString(0));
+
+        if (doubleOne > doubleTwo)
+                return 1;
+        else if (doubleOne.equals(doubleTwo))
+            return 0;
+        else
+            return -1;});
 
         assertEquals(3, collectedResult.size());
 
@@ -67,7 +78,7 @@ public class MacroBaseSQLDistributedTest {
                 .master("local[4]")
                 .appName("macrobase-sql-spark")
                 .getOrCreate();
-        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark);
+        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark, 1);
         final Statement importStmt;
         try {
             importStmt = parser.createStatement(importStr.replace(";", ""));
@@ -114,7 +125,7 @@ public class MacroBaseSQLDistributedTest {
                 .master("local[4]")
                 .appName("macrobase-sql-spark")
                 .getOrCreate();
-        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark);
+        QueryEngineDistributed queryEngineDistributed = new QueryEngineDistributed(spark, 1);
         final Statement importStmt;
         try {
             importStmt = parser.createStatement(importStr.replace(";", ""));

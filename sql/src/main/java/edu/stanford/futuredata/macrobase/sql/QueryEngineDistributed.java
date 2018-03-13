@@ -32,9 +32,9 @@ class QueryEngineDistributed {
     private final int numPartitions;
     private final SparkSession spark;
 
-    QueryEngineDistributed(SparkSession spark) {
+    QueryEngineDistributed(SparkSession spark, int numPartitions) {
         this.spark = spark;
-        numPartitions = 4; // TODO: add configuration parameter for numPartitions
+        this.numPartitions = numPartitions;
     }
 
     /**
@@ -44,44 +44,36 @@ class QueryEngineDistributed {
      * @throws MacrobaseSQLException if there's an error parsing the CSV file
      */
     Dataset<Row> importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
+        // Increase the number of partitions to ensure enough memory for parsing overhead
+        int increasedPartitions = numPartitions * 10;
         final String fileName = importStatement.getFilename();
         final String tableName = importStatement.getTableName().toString();
         final Map<String, ColType> schema = importStatement.getSchema();
         try {
             // Distribute and parse
-            JavaRDD<String[]> datasetRDD = spark.sparkContext().textFile(fileName, numPartitions).toJavaRDD().mapPartitions(
-                    (Iterator<String> iter) -> {
-                        CsvParserSettings settings = new CsvParserSettings();
-                        settings.getFormat().setLineSeparator("\n");
-                        settings.setMaxCharsPerColumn(16384);
-                        CsvParser csvParser = new CsvParser(settings);
-                        List<String[]> parsedRows = new ArrayList<>();
-                        while(iter.hasNext()) {
-                            String row = iter.next();
-                            String[] parsedRow = csvParser.parseLine(row);
-                            parsedRows.add(parsedRow);
+            JavaRDD<String> fileRDD = spark.sparkContext().textFile(fileName, increasedPartitions).toJavaRDD();
+            // Extract the header
+            CsvParserSettings headerSettings = new CsvParserSettings();
+            headerSettings.getFormat().setLineSeparator("\n");
+            headerSettings.setMaxCharsPerColumn(16384);
+            CsvParser headerParser = new CsvParser(headerSettings);
+            String[] header = headerParser.parseLine(fileRDD.first());
+            // Remove the header
+            fileRDD = fileRDD.mapPartitionsWithIndex(
+                    (Integer index, Iterator<String> iter) -> {
+                        if (index == 0) {
+                            iter.next();
                         }
-                        return parsedRows.iterator();
+                        return iter;
                     }, true
             );
-            // Extract the header
-            String[] header = datasetRDD.first();
+            JavaRDD<String> repartitionedRDD = fileRDD.repartition(increasedPartitions);
             Map<Integer, ColType> indexToColTypeMap = new HashMap<>();
             for (int i = 0; i < header.length; i++) {
                 if (schema.containsKey(header[i])) {
                     indexToColTypeMap.put(i, schema.get(header[i]));
                 }
             }
-            // Remove the header
-            datasetRDD = datasetRDD.mapPartitionsWithIndex(
-                    (Integer index, Iterator<String[]> iter) -> {
-                        if (index == 0) {
-                            iter.next();
-                            iter.remove();
-                        }
-                        return iter;
-                    }, true
-            );
 
             // Create a schema from the header for the eventual Spark Dataframe.
             List<StructField> fields = new ArrayList<>();
@@ -100,27 +92,37 @@ class QueryEngineDistributed {
                 }
             }
 
-            // Convert the RDD of arrays into an RDD of Spark Rows.
-            JavaRDD<Row> datasetRowRDD = datasetRDD.map((String[] record) ->
-            {
-                List<Object> rowList = new ArrayList<>();
-                for (int i = 0; i < record.length; i++) {
-                    if (indexToColTypeMap.containsKey(i)) {
-                        if (indexToColTypeMap.get(i) == ColType.STRING) {
-                            rowList.add(record[i]);
-                        } else if (indexToColTypeMap.get(i) == ColType.DOUBLE) {
-                            try {
-                                rowList.add(Double.parseDouble(record[i]));
-                            } catch (NumberFormatException e) {
-                                rowList.add(Double.NaN);
+            JavaRDD<Row> datasetRowRDD = repartitionedRDD.mapPartitions(
+                    (Iterator<String> iter) -> {
+                        CsvParserSettings settings = new CsvParserSettings();
+                        settings.getFormat().setLineSeparator("\n");
+                        settings.setMaxCharsPerColumn(16384);
+                        CsvParser csvParser = new CsvParser(settings);
+                        List<Row> parsedRows = new ArrayList<>();
+                        while(iter.hasNext()) {
+                            String row = iter.next();
+                            String[] record = csvParser.parseLine(row);
+                            List<Object> rowList = new ArrayList<>();
+                            for (int i = 0; i < record.length; i++) {
+                                if (indexToColTypeMap.containsKey(i)) {
+                                    if (indexToColTypeMap.get(i) == ColType.STRING) {
+                                        rowList.add(record[i]);
+                                    } else if (indexToColTypeMap.get(i) == ColType.DOUBLE) {
+                                        try {
+                                            rowList.add(Double.parseDouble(record[i]));
+                                        } catch (NumberFormatException e) {
+                                            rowList.add(Double.NaN);
+                                        }
+                                    } else {
+                                        throw new MacrobaseSQLException("Only strings and doubles supported in schema");
+                                    }
+                                }
                             }
-                        } else {
-                            throw new MacrobaseSQLException("Only strings and doubles supported in schema");
+                            parsedRows.add(RowFactory.create(rowList.toArray()));
                         }
-                    }
-                }
-                return RowFactory.create(rowList.toArray());
-            });
+                        return parsedRows.iterator();
+                    }, true
+            );
             // Create the Spark Dataset from the RDD of rows and the schema.
             Dataset<Row> df = spark.createDataFrame(datasetRowRDD, DataTypes.createStructType(fields));
             // Register the Dataset by name so Spark SQL commands recognize it.
