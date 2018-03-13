@@ -106,7 +106,7 @@ public class APrioriLinear {
             final int curOrderFinal = curOrder;
             // Initialize per-thread hashmaps.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
-            int sz = (curOrder == 1) ? cardinality : setNext.get(curOrder - 1).size() * cardinality;
+            int sz = (curOrder == 1) ? cardinality : Math.min(4000*4000, (setNext.get(curOrder - 1).size() * setNext.get(1).size()));
             System.out.println("curOrder: " + curOrder + " size: " + sz);
             for (int i = 0; i < numThreads; i++) {
                 threadSetAggregates.add(new FastFixedHashTable(2 * sz, numAggregates, useIntSetAsArray));
