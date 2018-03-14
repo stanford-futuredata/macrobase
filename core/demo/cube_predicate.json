@@ -13,5 +13,6 @@
     "version"
   ],
   "minSupport": 0.2,
-  "minRatioMetric": 2.0
+  "minRatioMetric": 2.0,
+  "ratioMetric": "riskratio"
 }
