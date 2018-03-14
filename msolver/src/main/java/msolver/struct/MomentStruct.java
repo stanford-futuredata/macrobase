@@ -1,5 +1,7 @@
 package msolver.struct;
 
+import java.util.Arrays;
+
 public class MomentStruct {
     public double min, max, logMin, logMax;
     public double[] powerSums;
@@ -24,5 +26,14 @@ public class MomentStruct {
         this.logMin = logMin;
         this.logMax = logMax;
         this.logSums = logSums;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "%g,%g,%g,%g,%s,%s", min, max, logMin, logMax,
+                Arrays.toString(powerSums),
+                Arrays.toString(logSums)
+                );
     }
 }

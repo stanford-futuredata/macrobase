@@ -1,21 +1,21 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLArcMomentSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintWriter;
 import java.util.*;
 
 /**
  * Pipeline for cubed data that has min, max and moment aggregates
  */
-public class PowerCubePipeline implements Pipeline {
-    Logger log = LoggerFactory.getLogger("PowerCubePipeline");
+public class ArcPowerCubePipeline implements Pipeline {
+    Logger log = LoggerFactory.getLogger("ArcPowerCubePipeline");
 
     // Ingest
     private String inputURI;
@@ -27,21 +27,17 @@ public class PowerCubePipeline implements Pipeline {
     private double cutoff;
 //    private boolean includeHi;
 //    private boolean includeLo;
-    private int ka;
-    private int kb;
+    private int k;
     private Optional<String> minColumn;
     private Optional<String> maxColumn;
-    private Optional<String> logMinColumn;
-    private Optional<String> logMaxColumn;
     private List<String> powerSumColumns;
-    private List<String> logSumColumns;
 
     // Explanation
     private List<String> attributes;
     private double minSupport;
     private double minRatioMetric;
 
-    public PowerCubePipeline(PipelineConfig conf) {
+    public ArcPowerCubePipeline(PipelineConfig conf) {
         inputURI = conf.get("inputURI");
         restHeader = conf.get("restHeader", null);
         jsonBody = conf.get("jsonBody", null);
@@ -52,11 +48,7 @@ public class PowerCubePipeline implements Pipeline {
         minColumn = Optional.ofNullable(conf.get("minColumn"));
         maxColumn = Optional.ofNullable(conf.get("maxColumn"));
         powerSumColumns = conf.get("powerSumColumns", new ArrayList<String>());
-        ka = powerSumColumns.size();
-        logMinColumn = Optional.ofNullable(conf.get("logMinColumn"));
-        logMaxColumn = Optional.ofNullable(conf.get("logMaxColumn"));
-        logSumColumns = conf.get("logSumColumns", new ArrayList<String>());
-        kb = logSumColumns.size();
+        k = powerSumColumns.size();
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport", 3.0);
@@ -96,49 +88,26 @@ public class PowerCubePipeline implements Pipeline {
 
     private Map<String, Schema.ColType> getColTypes() throws MacroBaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
-        if (ka > 0) {
-            colTypes.put(minColumn
-                            .orElseThrow(() -> new MacroBaseException("min column not present in config")),
-                    Schema.ColType.DOUBLE);
-            colTypes.put(maxColumn
-                            .orElseThrow(() -> new MacroBaseException("max column not present in config")),
-                    Schema.ColType.DOUBLE);
-            for (String col : powerSumColumns) {
-                colTypes.put(col, Schema.ColType.DOUBLE);
-            }
-        }
-        if (kb > 0) {
-            colTypes.put(logMinColumn
-                            .orElseThrow(() -> new MacroBaseException("log min column not present in config")),
-                    Schema.ColType.DOUBLE);
-            colTypes.put(logMaxColumn
-                            .orElseThrow(() -> new MacroBaseException("log max column not present in config")),
-                    Schema.ColType.DOUBLE);
-            for (String col : logSumColumns) {
-                colTypes.put(col, Schema.ColType.DOUBLE);
-            }
+        colTypes.put(
+                minColumn.orElseThrow(() -> new MacroBaseException("min column not present in config")),
+                Schema.ColType.DOUBLE);
+        colTypes.put(
+                maxColumn.orElseThrow(() -> new MacroBaseException("max column not present in config")),
+                Schema.ColType.DOUBLE);
+        for (String col : powerSumColumns) {
+            colTypes.put(col, Schema.ColType.DOUBLE);
         }
         return colTypes;
     }
 
     private APLSummarizer getSummarizer() throws Exception {
-        APLMomentSummarizer summarizer = new APLMomentSummarizer();
-        summarizer.setKa(ka);
-        if (ka > 0) {
-            summarizer.setMinColumn(minColumn.orElseThrow(
-                    () -> new MacroBaseException("min column not present in config")));
-            summarizer.setMaxColumn(maxColumn.orElseThrow(
-                    () -> new MacroBaseException("max column not present in config")));
-            summarizer.setPowerSumColumns(powerSumColumns);
-        }
-        summarizer.setKb(kb);
-        if (kb > 0) {
-            summarizer.setLogMinColumn(logMinColumn.orElseThrow(
-                    () -> new MacroBaseException("log min column not present in config")));
-            summarizer.setLogMaxColumn(logMaxColumn.orElseThrow(
-                    () -> new MacroBaseException("log max column not present in config")));
-            summarizer.setLogSumColumns(logSumColumns);
-        }
+        APLArcMomentSummarizer summarizer = new APLArcMomentSummarizer();
+        summarizer.setK(k);
+        summarizer.setMinColumn(minColumn.orElseThrow(
+                () -> new MacroBaseException("min column not present in config")));
+        summarizer.setMaxColumn(maxColumn.orElseThrow(
+                () -> new MacroBaseException("max column not present in config")));
+        summarizer.setPowerSumColumns(powerSumColumns);
 
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);

@@ -1,6 +1,6 @@
 package msolver.thresholds;
 
-import msolver.MathUtil;
+import msolver.util.MathUtil;
 import msolver.SimpleBoundSolver;
 import msolver.struct.MomentStruct;
 

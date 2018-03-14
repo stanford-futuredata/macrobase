@@ -3,6 +3,7 @@
 .project
 .settings/*
 *.log
+core/testconfig
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

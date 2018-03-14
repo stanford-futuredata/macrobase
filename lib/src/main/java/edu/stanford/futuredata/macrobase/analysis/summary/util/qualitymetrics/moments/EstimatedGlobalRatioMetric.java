@@ -1,8 +1,6 @@
-package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
+package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.moments;
 
-import msolver.ChebyshevMomentSolver2;
 import msolver.MomentSolverBuilder;
-import msolver.struct.MomentStruct;
 
 /**
  * Measures the relative outlier rate w.r.t. the global outlier rate
@@ -14,13 +12,18 @@ public class EstimatedGlobalRatioMetric extends MomentOutlierMetric {
 
     @Override
     public String name() {
-        return "est_global_ratio";
+        return "global_ratio";
     }
 
     @Override
     public double value(double[] aggregates) {
-        MomentSolverBuilder builder = getBuilderFromAggregates(aggregates);
-        return (1-builder.getCDF(cutoff)) / (1.0 - quantile);
+        if (aggregates[outlierCountIdx] > 0) {
+            return (aggregates[outlierCountIdx] / aggregates[powerSumsBaseIdx]) / (1.0 - quantile);
+        }
+        else {
+            MomentSolverBuilder builder = getBuilderFromAggregates(aggregates);
+            return (1 - builder.getCDF(cutoff)) / (1.0 - quantile);
+        }
     }
 
     public double getOutlierRateNeeded(double[] aggregates, double threshold) {

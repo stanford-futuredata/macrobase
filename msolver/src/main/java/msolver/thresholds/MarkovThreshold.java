@@ -1,6 +1,6 @@
 package msolver.thresholds;
 
-import msolver.MathUtil;
+import msolver.util.MathUtil;
 import msolver.struct.MomentStruct;
 
 public class MarkovThreshold implements MomentThreshold {

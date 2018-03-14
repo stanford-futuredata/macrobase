@@ -16,6 +16,7 @@ public class ChebyshevMomentSolver2 {
     private boolean useStandardBasis = true;
     private boolean verbose = false;
     private double aCenter, aScale, bCenter, bScale;
+    private int maxSteps = 100;
 
     private double[] lambdas;
     private ChebyshevPolynomial approxCDF;
@@ -75,6 +76,7 @@ public class ChebyshevMomentSolver2 {
         );
         potential.setHessianType(hessianType);
         optimizer = new NewtonOptimizer(potential);
+        optimizer.setMaxIter(maxSteps);
         optimizer.setVerbose(verbose);
         if (verbose) {
             System.out.println("Beginning solve with order: "+numNormalPowers+","+(d_mus.length-numNormalPowers+1));
@@ -165,5 +167,8 @@ public class ChebyshevMomentSolver2 {
 
     public void setHessianType(int hessianType) {
         this.hessianType = hessianType;
+    }
+    public void setMaxSteps(int maxSteps) {
+        this.maxSteps = maxSteps;
     }
 }

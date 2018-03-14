@@ -1,8 +1,9 @@
-package msolver;
+package msolver.util;
 
 import msolver.data.HepData;
 import msolver.data.MomentData;
 import msolver.data.OccupancyData;
+import msolver.util.MathUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;

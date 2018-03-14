@@ -1,5 +1,7 @@
 package msolver;
 
+import msolver.util.MathUtil;
+
 import java.util.Arrays;
 import java.util.List;
 

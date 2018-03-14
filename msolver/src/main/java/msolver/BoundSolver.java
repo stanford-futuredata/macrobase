@@ -1,5 +1,6 @@
 package msolver;
 
+import msolver.util.MathUtil;
 import org.apache.commons.math3.analysis.solvers.LaguerreSolver;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.linear.*;

@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
+import static edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric.Action.PRUNE;
+
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
  * This class assumes that subgroups posses "aggregates" such as count and outlier_count
@@ -282,13 +284,17 @@ public class APrioriLinear {
             for (IntSet curCandidate: setAggregates.keySet()) {
                 QualityMetric.Action action = QualityMetric.Action.KEEP;
                 if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
-                    action = QualityMetric.Action.PRUNE;
+                    action = PRUNE;
                 } else {
                     double[] curAggregates = setAggregates.get(curCandidate);
                     for (int i = 0; i < qualityMetrics.length; i++) {
                         QualityMetric q = qualityMetrics[i];
                         double t = thresholds[i];
-                        action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
+                        QualityMetric.Action curAction = q.getAction(curAggregates, t);
+                        action = QualityMetric.Action.combine(action, curAction);
+                        if (action == PRUNE) {
+                            break;
+                        }
                     }
                     if (action == QualityMetric.Action.KEEP) {
                         // Make sure the candidate isn't already covered by a pair

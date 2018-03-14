@@ -1,8 +1,29 @@
-package msolver;
+package msolver.util;
+
+import org.jtransforms.fft.DoubleFFT_1D;
 
 import java.util.List;
 
 public class MathUtil {
+    public static double[] dct(double[] x) {
+        int n = x.length;
+        double[] y = new double[2*n-2];
+        for (int i = 0; i < n; i++) {
+            y[i] = x[i];
+        }
+        for (int i = n; i < y.length; i++) {
+            y[i] = x[2*n-2-i];
+        }
+        DoubleFFT_1D fft = new DoubleFFT_1D(y.length);
+        fft.realForward(y);
+        return y;
+    }
+
+    public static double exp(double val) {
+        final long tmp = (long) (1512775 * val + 1072632447);
+        return Double.longBitsToDouble(tmp << 32);
+    }
+
     public static long[][] getBinomials(int m) {
         long[][] binoms = new long[m+1][m+1];
         for (int i = 0; i<=m; i++) {
@@ -191,5 +212,13 @@ public class MathUtil {
             }
         }
         return h;
+    }
+
+    public static double dot(double[] a, double[] b) {
+        double sum = 0;
+        for (int i = 0; i < a.length; i++) {
+            sum += a[i]*b[i];
+        }
+        return sum;
     }
 }

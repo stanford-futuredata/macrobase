@@ -4,6 +4,7 @@ import msolver.struct.MomentStruct;
 import msolver.thresholds.MarkovThreshold;
 import msolver.thresholds.MomentThreshold;
 import msolver.thresholds.RTTThreshold;
+import msolver.util.MathUtil;
 
 import java.util.Arrays;
 
@@ -16,6 +17,10 @@ public class MomentSolverBuilder {
 
     private ChebyshevMomentSolver2 solver;
     private MomentThreshold[] cascade;
+
+    private int maxSteps = 30;
+
+    private int callType;
 
     public MomentSolverBuilder(MomentStruct ms) {
         this.ms = ms;
@@ -39,33 +44,27 @@ public class MomentSolverBuilder {
     }
     public boolean checkThreshold(double x, double phi) {
         int ka = ms.powerSums.length;
-        if (ka > 0) {
-            if (ms.min == ms.max) {
-                return x > ms.min;
-            }
-        } else {
-            if (ms.logMin == ms.logMax) {
-                return x > Math.exp(ms.logMin);
-            }
-        }
-
         if (x < ms.min) {
-            return true;
+            callType = 0;
+            return (phi <= 1);
         }
-        if (x > ms.max) {
-            return false;
+        if (x >= ms.max) {
+            callType = 0;
+            return (phi <= 0);
         }
 
         for (int i = 0; i < cascade.length; i++) {
             MomentThreshold mt = cascade[i];
             double[] bounds = mt.bound(x);
             if (bounds[0] > phi) {
+                callType = 1;
                 if (verbose) {
                     System.out.println("Above threshold: "+i);
                 }
                 return true;
             }
             if (bounds[1] < phi) {
+                callType = 1;
                 if (verbose) {
                     System.out.println("Below threshold: " + i);
                 }
@@ -73,9 +72,21 @@ public class MomentSolverBuilder {
             }
         }
 
+        long startTime = System.nanoTime();
         solve();
+        callType = 2;
         double cdfValue = solver.estimateCDF(x);
-        if (cdfValue < 1 - phi) {
+        long endTime = System.nanoTime();
+        double elapsed = (endTime - startTime) * 1.0e-6;
+        if (verbose) {
+            if (elapsed > 100) {
+                System.out.println("long: " + elapsed);
+                System.out.println(ms.toString());
+                solver.setVerbose(true);
+                solver.solve(1e-9);
+            }
+        }
+        if (1 - cdfValue >= phi) {
             return true;
         } else {
             return false;
@@ -161,7 +172,16 @@ public class MomentSolverBuilder {
                 bCenter,
                 bScale
         );
+        newSolver.setMaxSteps(maxSteps);
         newSolver.setVerbose(verbose);
         return newSolver;
+    }
+
+    public int getCallType() {
+        return callType;
+    }
+
+    public void setMaxSteps(int maxSteps) {
+        this.maxSteps = maxSteps;
     }
 }
