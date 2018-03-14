@@ -3,7 +3,7 @@ package edu.stanford.futuredata.macrobase.pipeline;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,14 +89,14 @@ public class PowerCubePipeline implements Pipeline {
         return explanation;
     }
 
-    private Map<String, Schema.ColType> getColTypes() throws MacrobaseException {
+    private Map<String, Schema.ColType> getColTypes() throws MacroBaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         if (ka > 0) {
             colTypes.put(minColumn
-                            .orElseThrow(() -> new MacrobaseException("min column not present in config")),
+                            .orElseThrow(() -> new MacroBaseException("min column not present in config")),
                     Schema.ColType.DOUBLE);
             colTypes.put(maxColumn
-                            .orElseThrow(() -> new MacrobaseException("max column not present in config")),
+                            .orElseThrow(() -> new MacroBaseException("max column not present in config")),
                     Schema.ColType.DOUBLE);
             for (String col : powerSumColumns) {
                 colTypes.put(col, Schema.ColType.DOUBLE);
@@ -104,10 +104,10 @@ public class PowerCubePipeline implements Pipeline {
         }
         if (kb > 0) {
             colTypes.put(logMinColumn
-                            .orElseThrow(() -> new MacrobaseException("log min column not present in config")),
+                            .orElseThrow(() -> new MacroBaseException("log min column not present in config")),
                     Schema.ColType.DOUBLE);
             colTypes.put(logMaxColumn
-                            .orElseThrow(() -> new MacrobaseException("log max column not present in config")),
+                            .orElseThrow(() -> new MacroBaseException("log max column not present in config")),
                     Schema.ColType.DOUBLE);
             for (String col : logSumColumns) {
                 colTypes.put(col, Schema.ColType.DOUBLE);
@@ -121,17 +121,17 @@ public class PowerCubePipeline implements Pipeline {
         summarizer.setKa(ka);
         if (ka > 0) {
             summarizer.setMinColumn(minColumn.orElseThrow(
-                    () -> new MacrobaseException("min column not present in config")));
+                    () -> new MacroBaseException("min column not present in config")));
             summarizer.setMaxColumn(maxColumn.orElseThrow(
-                    () -> new MacrobaseException("max column not present in config")));
+                    () -> new MacroBaseException("max column not present in config")));
             summarizer.setPowerSumColumns(powerSumColumns);
         }
         summarizer.setKb(kb);
         if (kb > 0) {
             summarizer.setLogMinColumn(logMinColumn.orElseThrow(
-                    () -> new MacrobaseException("log min column not present in config")));
+                    () -> new MacroBaseException("log min column not present in config")));
             summarizer.setLogMaxColumn(logMaxColumn.orElseThrow(
-                    () -> new MacrobaseException("log max column not present in config")));
+                    () -> new MacroBaseException("log max column not present in config")));
             summarizer.setLogSumColumns(logSumColumns);
         }
 

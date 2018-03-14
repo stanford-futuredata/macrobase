@@ -50,7 +50,7 @@ public class CubePipeline implements Pipeline {
     private List<String> attributes;
     private double minSupport;
     private double minRatioMetric;
-    private double meanShiftRatio;
+    private String ratioMetric;
 
     private boolean debugDump;
 
@@ -84,11 +84,11 @@ public class CubePipeline implements Pipeline {
         meanColumn = Optional.ofNullable(conf.get("meanColumn"));
         stdColumn = Optional.ofNullable(conf.get("stdColumn"));
         quantileColumns = conf.get("quantileColumns", new LinkedHashMap<String, Double>());
+        ratioMetric = conf.get("ratioMetric", "globalratio");
 
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport", 3.0);
         minRatioMetric = conf.get("minRatioMetric", 0.01);
-        meanShiftRatio = conf.get("meanShiftRatio", 1.0);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
 
         debugDump = conf.get("debugDump", false);
@@ -264,7 +264,7 @@ public class CubePipeline implements Pipeline {
                 APLCountMeanShiftSummarizer summarizer = new APLCountMeanShiftSummarizer();
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
-                summarizer.setMinMeanShift(meanShiftRatio);
+                summarizer.setMinMeanShift(minRatioMetric);
                 summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
@@ -279,6 +279,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);
                 summarizer.setNumThreads(numThreads);
+                summarizer.setRatioMetric(ratioMetric);
                 return summarizer;
             }
             default: {
@@ -289,6 +290,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRatioMetric);
                 summarizer.setNumThreads(numThreads);
+                summarizer.setRatioMetric(ratioMetric);
                 return summarizer;
             }
         }
