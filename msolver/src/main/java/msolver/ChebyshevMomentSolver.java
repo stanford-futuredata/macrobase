@@ -2,6 +2,7 @@ package msolver;
 
 import msolver.chebyshev.ChebyshevPolynomial;
 import msolver.optimizer.NewtonOptimizer;
+import msolver.util.MathUtil;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
 import org.apache.commons.math3.analysis.solvers.UnivariateSolver;
 

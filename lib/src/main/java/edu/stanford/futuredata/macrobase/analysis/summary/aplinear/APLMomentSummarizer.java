@@ -1,6 +1,9 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.moments.EstimatedGlobalRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.moments.EstimatedSupportMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.moments.MomentOutlierMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +42,20 @@ public class APLMomentSummarizer extends APLSummarizer {
             aggregateNames.add(getLogMaxColumn());
             aggregateNames.addAll(getLogSumColumns());
         }
+        aggregateNames.add("Outliers");
         return aggregateNames;
     }
 
     public int getNumAggregates() {
-        int numAggregates = 0;
-        if (ka > 0) {
-            numAggregates += 2 + ka;
-        }
-        if (kb > 0) {
-            numAggregates += 2 + kb;
-        }
-        return numAggregates;
+        return getAggregateNames().size();
+//        int numAggregates = 0;
+//        if (ka > 0) {
+//            numAggregates += 2 + ka;
+//        }
+//        if (kb > 0) {
+//            numAggregates += 2 + kb;
+//        }
+//        return numAggregates;
     }
 
     @Override
@@ -73,6 +78,9 @@ public class APLMomentSummarizer extends APLSummarizer {
                 aggregateColumns[curCol++] = input.getDoubleColumnByName(logSumColumns.get(i));
             }
         }
+        // placeholder column for outlier count
+        int n = input.getNumRows();
+        aggregateColumns[curCol++] = new double[n];
 
         if (ka > 0) {
             processCountCol(input, powerSumColumns.get(0), aggregateColumns[0].length);
@@ -103,6 +111,7 @@ public class APLMomentSummarizer extends APLSummarizer {
                 aggregationOps[curCol++] = AggregationOp.SUM;
             }
         }
+        aggregationOps[curCol++] = AggregationOp.SUM;
         return aggregationOps;
     }
 
@@ -140,9 +149,15 @@ public class APLMomentSummarizer extends APLSummarizer {
             int logMinIdx = curCol++;
             int logMaxIdx = curCol++;
             int logSumsBaseIdx = curCol;
+            curCol += kb;
             for (QualityMetric metric : qualityMetricList) {
                 ((MomentOutlierMetric)metric).setLogIndices(logMinIdx, logMaxIdx, logSumsBaseIdx);
             }
+        }
+
+        int outlierCountIdx = curCol++;
+        for (QualityMetric metric : qualityMetricList) {
+            ((MomentOutlierMetric)metric).setOutlierCountIdx(outlierCountIdx);
         }
 
         return qualityMetricList;

@@ -1,6 +1,13 @@
 package msolver;
 
+import msolver.util.MathUtil;
+import org.apache.commons.math3.analysis.solvers.LaguerreSolver;
+import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.linear.*;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
+import org.ejml.interfaces.decomposition.EigenDecomposition_F64;
 
 import java.util.Arrays;
 
@@ -9,11 +16,13 @@ public class SimpleBoundSolver {
     private int n;  // moments from 0..2n
     private double[][] momentArray;
     private double[][] smallArray;
+    private DMatrixRMaj smallMat;
 
     public SimpleBoundSolver(int numMoments) {
         this.n = (numMoments - 1) / 2;
         this.momentArray = new double[n+1][n+1];
         this.smallArray = new double[n][n];
+        this.smallMat = new DMatrixRMaj(n, n);
     }
 
     /**
@@ -168,6 +177,14 @@ public class SimpleBoundSolver {
         }
     }
 
+    public CanonicalDistribution getCanonicalDistribution(
+            double[] moments
+    ) {
+        double[] pos = solvePositions(moments);
+        double[] weights = solveWeights(moments, pos);
+        return new CanonicalDistribution(pos, weights);
+    }
+
     /**
      * The canonical distributions are minimal point-sets that match the moments.
      */
@@ -198,7 +215,6 @@ public class SimpleBoundSolver {
             }
             results[i] = new CanonicalDistribution(fullPos, fullWeights);
         }
-
         return results;
     }
 
@@ -227,7 +243,14 @@ public class SimpleBoundSolver {
         for (int i = 0; i <= deg; i++) {
             coefs[i] /= scaleFactor;
         }
-        double[] positions = polynomialRoots(coefs);
+//        double[] positions = polynomialRoots(coefs);
+
+        LaguerreSolver solver = new LaguerreSolver();
+        Complex[] roots = solver.solveAllComplex(coefs, 0);
+        double[] positions = new double[roots.length];
+        for (int i = 0; i < positions.length; i++)  {
+            positions[i] = roots[i].getReal();
+        }
         return positions;
     }
 
@@ -244,7 +267,7 @@ public class SimpleBoundSolver {
         RealVector shiftedMomentVector = new ArrayRealVector(
                 Arrays.copyOf(moments, n), false
         );
-        double[] weights = (new LUDecomposition(matrix)).getSolver().solve(shiftedMomentVector).toArray();
+        double[] weights = (new QRDecomposition(matrix)).getSolver().solve(shiftedMomentVector).toArray();
         return weights;
     }
 
@@ -253,17 +276,29 @@ public class SimpleBoundSolver {
         for (int r = 0; r < n; r++) {
             for (int c = 0; c < n-1; c++) {
                 smallArray[r][c] = 0.0;
+                smallMat.set(r, c, 0.0);
             }
         }
         for (int i = 0; i < n-1; i++) {
             smallArray[i+1][i] = 1.0;
+            smallMat.set(i+1, i, 1.0);
         }
         double a = coefs[n];
         for (int r = 0; r < n; r++) {
             smallArray[r][n-1] = -coefs[r] / a;
+            smallMat.set(r, n-1, -coefs[r]/ a);
         }
-        Array2DRowRealMatrix companionMatrix = new Array2DRowRealMatrix(smallArray, false);
-        return (new EigenDecomposition(companionMatrix)).getRealEigenvalues();
+        EigenDecomposition_F64<DMatrixRMaj> eigen = DecompositionFactory_DDRM.eig(n, false);
+        eigen.decompose(smallMat);
+        double[] eigenValues = new double[n];
+        for (int i = 0; i < n; i++) {
+            eigenValues[i] = eigen.getEigenvalue(i).real;
+        }
+        return eigenValues;
+
+//        Array2DRowRealMatrix companionMatrix = new Array2DRowRealMatrix(smallArray, false);
+//        double[] values = (new EigenDecomposition(companionMatrix)).getRealEigenvalues();
+//        return values;
     }
 
     private double[] orthogonalPolynomialCoefficients(double[] moments, int n) {

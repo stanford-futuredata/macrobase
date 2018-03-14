@@ -1,0 +1,25 @@
+{
+  "pipeline": "ArcPowerCubePipeline",
+  "inputURI": "csv://core/demo/app_latency_arc_cube.csv",
+  "cutoff": 5.0,
+  "minColumn": "latency:min",
+  "maxColumn": "latency:max",
+  "powerSumColumns": [
+    "asinh:0:sum",
+    "asinh:1:sum",
+    "asinh:2:sum",
+    "asinh:3:sum",
+    "asinh:4:sum",
+    "asinh:5:sum",
+    "asinh:6:sum",
+    "asinh:7:sum",
+    "asinh:8:sum"
+  ],
+  "attributes": [
+    "app_version",
+    "country",
+    "device"
+  ],
+  "minRatioMetric": 8.0,
+  "minSupport": 0.05
+}

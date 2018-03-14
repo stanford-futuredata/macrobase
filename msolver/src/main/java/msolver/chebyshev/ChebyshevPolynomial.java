@@ -67,7 +67,7 @@ public class ChebyshevPolynomial implements UnivariateFunction {
                 }
             }
 
-            if (error < tol || N > 4000) {
+            if (error < tol || N > 2000) {
                 break;
             } else {
                 N *= 2;
@@ -205,7 +205,7 @@ public class ChebyshevPolynomial implements UnivariateFunction {
     public double integrate() {
         double sum = 0.0;
         for (int i2 = 0; i2 < coeffs.length; i2+=2) {
-            sum -= coeffs[i2]/((i2+1)*(i2-1));
+            sum -= coeffs[i2]/(i2*i2-1);
         }
         return 2*sum;
     }

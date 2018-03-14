@@ -69,6 +69,9 @@ public class PipelineUtils {
             case "PowerCubePipeline": {
                 return new PowerCubePipeline(conf);
             }
+            case "ArcPowerCubePipeline": {
+                return new ArcPowerCubePipeline(conf);
+            }
             default: {
                 throw new MacroBaseException("Bad Pipeline");
             }

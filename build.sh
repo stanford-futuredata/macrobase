@@ -8,6 +8,10 @@ build_module () {
   popd
 }
 
+pushd msolver/
+mvn clean && mvn install -DskipTests
+popd
+
 pushd lib/
 mvn clean && mvn install -DskipTests
 popd

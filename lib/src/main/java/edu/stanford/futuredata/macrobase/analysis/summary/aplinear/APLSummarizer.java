@@ -4,10 +4,12 @@ import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.amoments.MomentOutlierMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -80,6 +82,15 @@ public abstract class APLSummarizer extends BatchSummarizer {
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
+
+//        if (this instanceof APLArcMomentSummarizer) {
+//            for (QualityMetric q : qualityMetricList) {
+//                MomentOutlierMetric m = (MomentOutlierMetric)q;
+//                System.out.println(m.name());
+//                System.out.println(m.getCutoff());
+//                System.out.println(Arrays.toString(m.getCallTypeCount()));
+//            }
+//        }
 
         explanation = new APLExplanation(
                 encoder,

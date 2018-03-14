@@ -4,6 +4,7 @@ import msolver.data.MomentData;
 import msolver.data.RetailQuantityData;
 import msolver.data.RetailQuantityLogData;
 import msolver.data.ShuttleData;
+import msolver.util.MathUtil;
 import org.junit.Test;
 
 import java.util.ArrayList;
