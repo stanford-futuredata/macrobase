@@ -94,7 +94,7 @@ public class APrioriLinearDistributed {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
-            JavaRDD<Map<IntSet, double[]>> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
+            JavaRDD<FastFixedHashTable> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
                 int[][] attributesForThread = sparkTuple._1;
                 double[][] aRowsForThread = sparkTuple._2;
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
@@ -210,7 +210,7 @@ public class APrioriLinearDistributed {
                 } else {
                     throw new MacrobaseInternalError("High Order not supported");
                 }
-                return thisThreadSetAggregates.asHashMap();
+                return thisThreadSetAggregates;
             });
 
             hashTableSet.cache();
@@ -219,7 +219,7 @@ public class APrioriLinearDistributed {
             // to minimize the amount of data transfer and serial computation.  We prune by identifying the set of all
             // candidates that pass the support threshold on any partition, then filtering out all other candidates
             // on every partition.
-            JavaRDD<HashSet<IntSet>> prunedHashTableSet = hashTableSet.map((Map<IntSet, double[]> setAggregates) -> {
+            /*JavaRDD<HashSet<IntSet>> prunedHashTableSet = hashTableSet.map((Map<IntSet, double[]> setAggregates) -> {
                 HashSet<IntSet> thisThreadPassingAggregates = new HashSet<>();
                 double[] partitionAggregates;
                 partitionAggregates = setAggregates.get(new IntSetAsArray(1, 1, 1));
@@ -260,29 +260,49 @@ public class APrioriLinearDistributed {
                     }
                 }
                 return thisThreadPassingAggregates;
-            });
+            });*/
 
-            // Finally, reduce over the pruned hash tables to get a final candidate and counts map..
-            Map<IntSet, double[]> setAggregates =
-                    finalPrunedHashTableSet.reduce((Map<IntSet, double[]> tableOne, Map<IntSet, double[]> tableTwo) -> {
-                        List<Map<IntSet, double[]>> tables = Arrays.asList(tableOne, tableTwo);
-                        Map<IntSet, double[]> tableCombined = new HashMap<>();
-                        for (Map<IntSet, double[]> table : tables) {
-                            for (IntSet curCandidateKey : table.keySet()) {
-                                double[] curCandidateValue = table.get(curCandidateKey);
-                                double[] candidateVal = tableCombined.get(curCandidateKey);
-                                if (candidateVal == null) {
-                                    tableCombined.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+
+            FastFixedHashTable fastFixedSetAggregates =
+                    hashTableSet.reduce((FastFixedHashTable tableOne, FastFixedHashTable tableTwo) -> {
+                                List<FastFixedHashTable> tables = Arrays.asList(tableOne, tableTwo);
+                                FastFixedHashTable tableCombined = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                                if (useIntSetAsArray) {
+                                    for (FastFixedHashTable table : tables) {
+                                        for (IntSet curCandidateKey : table.keySet()) {
+                                            double[] curCandidateValue = table.get(curCandidateKey);
+                                            double[] candidateVal = tableCombined.get(curCandidateKey);
+                                            if (candidateVal == null) {
+                                                tableCombined.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                                            } else {
+                                                for (int a = 0; a < numAggregates; a++) {
+                                                    candidateVal[a] += curCandidateValue[a];
+                                                }
+                                            }
+                                        }
+                                    }
                                 } else {
-                                    for (int a = 0; a < numAggregates; a++) {
-                                        candidateVal[a] += curCandidateValue[a];
+                                    for (FastFixedHashTable table : tables) {
+                                        for (long curCandidateKeyLong : table.keySetLong()) {
+                                            IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
+                                            double[] curCandidateValue = table.get(curCandidateKeyIntSetAsLong);
+                                            double[] candidateVal = tableCombined.get(curCandidateKeyIntSetAsLong);
+                                            if (candidateVal == null) {
+                                                tableCombined.put(curCandidateKeyIntSetAsLong, Arrays.copyOf(curCandidateValue, numAggregates));
+                                            } else {
+                                                for (int a = 0; a < numAggregates; a++) {
+                                                    candidateVal[a] += curCandidateValue[a];
+                                                }
+                                            }
+                                        }
                                     }
                                 }
+                                return tableCombined;
                             }
-                        }
-                        return tableCombined;
-                    }
-            );
+                    );
+
+
+            HashMap<IntSet, double[]> setAggregates = fastFixedSetAggregates.asHashMap();
 
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
