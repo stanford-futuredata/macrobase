@@ -19,6 +19,7 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
+    private int[] functionalDependencies;
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -35,6 +36,7 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
+    public int[] getFunctionalDependencies() {return functionalDependencies;}
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key
@@ -54,6 +56,12 @@ public class AttributeEncoder {
 
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
+
+        functionalDependencies = new int[numColumns];
+        functionalDependencies[5] |= (1<<6);
+        functionalDependencies[6] |= (1<<5);
+        functionalDependencies[12] |= (1<<13);
+        functionalDependencies[13] |= (1<<12);
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
