@@ -19,6 +19,7 @@ import java.util.concurrent.CountDownLatch;
 public class APrioriLinear {
     private Logger log = LoggerFactory.getLogger("APrioriLinear");
     private final boolean USE_FD = true;
+    private final int MAX_SIZE = 16000000;
 
     // **Parameters**
     private QualityMetric[] qualityMetrics;
@@ -108,8 +109,11 @@ public class APrioriLinear {
             final int curOrderFinal = curOrder;
             // Initialize per-thread hashmaps.
             final ArrayList<FastFixedHashTable> threadSetAggregates = new ArrayList<>(numThreads);
+            int sz = (curOrder == 1) ? 2*cardinality : MAX_SIZE;
+            if (curOrder > 1 && sz/setNext.get(curOrder - 1).size() >= setNext.get(1).size())
+                sz = setNext.get(curOrder - 1).size() * setNext.get(1).size();
             for (int i = 0; i < numThreads; i++) {
-                threadSetAggregates.add(new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray));
+                threadSetAggregates.add(new FastFixedHashTable(sz, numAggregates, useIntSetAsArray));
             }
             // Shard the dataset by row into threads and generate candidates.
             final CountDownLatch doneSignal = new CountDownLatch(numThreads);
