@@ -49,7 +49,7 @@ public class APrioriLinearDistributed {
         final boolean useIntSetAsArray;
         // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
         // If the cardinality is greater than that, don't use them.
-        if (cardinality >= 2097151) {
+        if (cardinality >= 0) {
             log.warn("Cardinality is extremely high.  Candidate generation will be slow.");
             useIntSetAsArray = true;
         } else{
@@ -94,10 +94,10 @@ public class APrioriLinearDistributed {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
-            JavaRDD<FastFixedHashTable> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
+            JavaRDD<Map<IntSet, double[]>> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
                 int[][] attributesForThread = sparkTuple._1;
                 double[][] aRowsForThread = sparkTuple._2;
-                FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                Map<IntSet, double[]> thisThreadSetAggregates = new HashMap<>();
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
                     curCandidate = new IntSetAsLong(1, 1, 1);
@@ -265,36 +265,20 @@ public class APrioriLinearDistributed {
             });*/
 
 
-            FastFixedHashTable fastFixedSetAggregates =
-                    hashTableSet.reduce((FastFixedHashTable tableOne, FastFixedHashTable tableTwo) -> {
-                                List<FastFixedHashTable> tables = Arrays.asList(tableOne, tableTwo);
-                                FastFixedHashTable tableCombined = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
-                                if (useIntSetAsArray) {
-                                    for (FastFixedHashTable table : tables) {
-                                        for (IntSet curCandidateKey : table.keySet()) {
-                                            double[] curCandidateValue = table.get(curCandidateKey);
-                                            double[] candidateVal = tableCombined.get(curCandidateKey);
-                                            if (candidateVal == null) {
-                                                tableCombined.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
-                                            } else {
-                                                for (int a = 0; a < numAggregates; a++) {
-                                                    candidateVal[a] += curCandidateValue[a];
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    for (FastFixedHashTable table : tables) {
-                                        for (long curCandidateKeyLong : table.keySetLong()) {
-                                            IntSetAsLong curCandidateKeyIntSetAsLong = new IntSetAsLong(curCandidateKeyLong);
-                                            double[] curCandidateValue = table.get(curCandidateKeyIntSetAsLong);
-                                            double[] candidateVal = tableCombined.get(curCandidateKeyIntSetAsLong);
-                                            if (candidateVal == null) {
-                                                tableCombined.put(curCandidateKeyIntSetAsLong, Arrays.copyOf(curCandidateValue, numAggregates));
-                                            } else {
-                                                for (int a = 0; a < numAggregates; a++) {
-                                                    candidateVal[a] += curCandidateValue[a];
-                                                }
+            // Finally, reduce over the pruned hash tables to get a final candidate and counts map..
+            Map<IntSet, double[]> setAggregates =
+                    hashTableSet.reduce((Map<IntSet, double[]> tableOne, Map<IntSet, double[]> tableTwo) -> {
+                                List<Map<IntSet, double[]>> tables = Arrays.asList(tableOne, tableTwo);
+                                Map<IntSet, double[]> tableCombined = new HashMap<>();
+                                for (Map<IntSet, double[]> table : tables) {
+                                    for (IntSet curCandidateKey : table.keySet()) {
+                                        double[] curCandidateValue = table.get(curCandidateKey);
+                                        double[] candidateVal = tableCombined.get(curCandidateKey);
+                                        if (candidateVal == null) {
+                                            tableCombined.put(curCandidateKey, Arrays.copyOf(curCandidateValue, numAggregates));
+                                        } else {
+                                            for (int a = 0; a < numAggregates; a++) {
+                                                candidateVal[a] += curCandidateValue[a];
                                             }
                                         }
                                     }
@@ -303,8 +287,6 @@ public class APrioriLinearDistributed {
                             }
                     );
 
-
-            HashMap<IntSet, double[]> setAggregates = fastFixedSetAggregates.asHashMap();
 
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
