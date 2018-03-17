@@ -1,7 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -49,12 +49,12 @@ public abstract class MBFunction {
      * Call this method to to invoke the function and generate the output column that results from
      * applying it on the DataFrame
      *
-     * @throws MacrobaseException If the column name (specified in the constructor of the
+     * @throws MacroBaseException If the column name (specified in the constructor of the
      * MBFunction) isn't present in the DataFrame, an exception is thrown.
      */
-    public final double[] apply(final DataFrame df) throws MacrobaseException {
+    public final double[] apply(final DataFrame df) throws MacroBaseException {
         if (!df.hasColumn(columnName)) {
-            throw new MacrobaseException(columnName + " not present in DataFrame");
+            throw new MacroBaseException(columnName + " not present in DataFrame");
         }
         final double[] outputCol = new double[df.getNumRows()];
         this.applyFunction(df.getDoubleColumnByName(columnName), outputCol);
@@ -68,11 +68,11 @@ public abstract class MBFunction {
      * would be "normalize"  (or "NORMALIZE"---the funcName is case-agnostic), and the {@param arg}
      * would be "battery_drain".
      *
-     * @throws MacrobaseException If there's an error instantiating the MBFunction (usually due to
+     * @throws MacroBaseException If there's an error instantiating the MBFunction (usually due to
      * incorrect arguments or improperly defined subclasses), an exception is thrown.
      */
     public static MBFunction getFunction(String funcName, String arg)
-        throws MacrobaseException {
+        throws MacroBaseException {
         Class<? extends MBFunction> clazz;
         switch (funcName.toLowerCase()) {
             case "normalize": {
@@ -84,13 +84,13 @@ public abstract class MBFunction {
                 break;
             }
             default: {
-                throw new MacrobaseException("Bad MBFunction Type: " + funcName);
+                throw new MacroBaseException("Bad MBFunction Type: " + funcName);
             }
         }
         try {
             return clazz.getConstructor(String.class).newInstance(arg);
         } catch (NoSuchMethodException | InstantiationException | InvocationTargetException | IllegalAccessException e) {
-            throw new MacrobaseException(
+            throw new MacroBaseException(
                 "MBFunction Type " + funcName + " incompatible with args (" + arg + ")");
         }
     }

@@ -5,7 +5,7 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.ingest.RESTDataFrameLoader;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 
 import java.util.Map;
 import java.util.List;
@@ -51,13 +51,13 @@ public class PipelineUtils {
             DataFrame df = loader.load();
             return df;
         } else {
-            throw new MacrobaseException("Unsupported URI");
+            throw new MacroBaseException("Unsupported URI");
         }
     }
 
     public static Pipeline createPipeline(
             PipelineConfig conf
-    ) throws MacrobaseException {
+    ) throws MacroBaseException {
         String pipelineName = conf.get("pipeline");
         switch (pipelineName) {
             case "BasicBatchPipeline": {
@@ -67,7 +67,7 @@ public class PipelineUtils {
                 return new CubePipeline(conf);
             }
             default: {
-                throw new MacrobaseException("Bad Pipeline");
+                throw new MacroBaseException("Bad Pipeline");
             }
         }
     }

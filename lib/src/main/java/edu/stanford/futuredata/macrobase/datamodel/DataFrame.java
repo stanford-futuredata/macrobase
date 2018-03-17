@@ -7,7 +7,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -79,7 +79,7 @@ public class DataFrame {
                 }
                 addDoubleColumnInternal(colValues);
             } else {
-                throw new MacrobaseInternalError("Invalid ColType");
+                throw new MacroBaseInternalError("Invalid ColType");
             }
         }
     }
@@ -106,7 +106,7 @@ public class DataFrame {
                 addDoubleColumnInternal(colValues);
                 doubleColNum++;
             } else {
-                throw new MacrobaseInternalError("Invalid ColType");
+                throw new MacroBaseInternalError("Invalid ColType");
             }
         }
     }
@@ -431,7 +431,7 @@ public class DataFrame {
                 }
                 combined.doubleCols.add(newCol);
             } else {
-                throw new MacrobaseInternalError("Invalid Col Type");
+                throw new MacroBaseInternalError("Invalid Col Type");
             }
         }
 
@@ -500,7 +500,7 @@ public class DataFrame {
                 }
                 other.addColumn(columnName, newColumn);
             } else {
-                throw new MacrobaseInternalError("Bad Column Type");
+                throw new MacroBaseInternalError("Bad Column Type");
             }
         }
         return other;
@@ -623,7 +623,7 @@ public class DataFrame {
             } else if (t == Schema.ColType.DOUBLE) {
                 rowValues.add(doubleCols.get(typeSubIndex)[rowIdx]);
             } else {
-                throw new MacrobaseInternalError("Bad ColType");
+                throw new MacroBaseInternalError("Bad ColType");
             }
         }
         Row r = new Row(schema, rowValues);

@@ -7,12 +7,9 @@ import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +72,7 @@ public class BasicBatchPipeline implements Pipeline {
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
     }
 
-    public Classifier getClassifier() throws MacrobaseException {
+    public Classifier getClassifier() throws MacroBaseException {
         switch (classifierType.toLowerCase()) {
             case "percentile": {
                 PercentileClassifier classifier = new PercentileClassifier(metric);
@@ -93,12 +90,12 @@ public class BasicBatchPipeline implements Pipeline {
                 return classifier;
             }
             default : {
-                throw new MacrobaseException("Bad Classifier Type");
+                throw new MacroBaseException("Bad Classifier Type");
             }
         }
     }
 
-    public BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
+    public BatchSummarizer getSummarizer(String outlierColumnName) throws MacroBaseException {
         switch (summarizerType.toLowerCase()) {
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
@@ -120,7 +117,7 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             default: {
-                throw new MacrobaseException("Bad Summarizer Type");
+                throw new MacroBaseException("Bad Summarizer Type");
             }
         }
     }

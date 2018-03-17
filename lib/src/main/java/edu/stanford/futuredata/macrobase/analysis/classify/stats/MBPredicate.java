@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify.stats;
 
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
@@ -11,7 +11,7 @@ public class MBPredicate {
         LESS_THAN("<"), GREATER_THAN(">"),
         LEQ("<="), GEQ(">=");
 
-        private static PredicateType getEnum(final String str) throws MacrobaseException {
+        private static PredicateType getEnum(final String str) throws MacroBaseException {
             switch (str) {
                 case "==":
                     return EQUALS;
@@ -26,7 +26,7 @@ public class MBPredicate {
                 case ">=":
                     return GEQ;
                 default:
-                    throw new MacrobaseException("PredicateClassifier: Predicate string " + str +
+                    throw new MacroBaseException("PredicateClassifier: Predicate string " + str +
                             " not suppported.");
             }
         }
@@ -42,12 +42,12 @@ public class MBPredicate {
      * @return Lambda function corresponding to the ``predicateStr''. The Lambda function takes in a single
      * argument, which will correspond to the value in the metric column. (A closure is created around the ``sentinel''
      * parameter.)
-     * @throws MacrobaseException
+     * @throws MacroBaseException
      */
     public static DoublePredicate getDoublePredicate(
             final String predicateStr,
             final double sentinel
-    ) throws MacrobaseException {
+    ) throws MacroBaseException {
         switch (PredicateType.getEnum(predicateStr)) {
             default:
             case EQUALS:
@@ -69,12 +69,12 @@ public class MBPredicate {
      * @return Lambda function corresponding to the ``predicateStr''. The Lambda function takes in a single
      * argument, which will correspond to the value in the metric column. (A closure is created around the ``sentinel''
      * parameter.)
-     * @throws MacrobaseException
+     * @throws MacroBaseException
      */
     public static Predicate<String> getStrPredicate(
             final String predicateStr,
             final String sentinel
-    ) throws MacrobaseException {
+    ) throws MacroBaseException {
         switch (PredicateType.getEnum(predicateStr)) {
             default:
             case EQUALS:

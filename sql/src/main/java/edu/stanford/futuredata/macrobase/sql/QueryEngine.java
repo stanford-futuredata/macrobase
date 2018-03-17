@@ -38,8 +38,8 @@ import edu.stanford.futuredata.macrobase.sql.tree.SplitQuery;
 import edu.stanford.futuredata.macrobase.sql.tree.StringLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
-import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseSQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -72,9 +72,9 @@ class QueryEngine {
      * Top-level method for importing tables from CSV files into MacroBase SQL
      *
      * @return A DataFrame that contains the data loaded from the CSV file
-     * @throws MacrobaseSQLException if there's an error parsing the CSV file
+     * @throws MacroBaseSQLException if there's an error parsing the CSV file
      */
-    DataFrame importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
+    DataFrame importTableFromCsv(ImportCsv importStatement) throws MacroBaseSQLException {
         final String filename = importStatement.getFilename();
         final String tableName = importStatement.getTableName().toString();
         final Map<String, ColType> schema = importStatement.getSchema();
@@ -83,7 +83,7 @@ class QueryEngine {
             tablesInMemory.put(tableName, df);
             return df;
         } catch (Exception e) {
-            throw new MacrobaseSQLException(e.getMessage());
+            throw new MacroBaseSQLException(e);
         }
     }
 
@@ -91,10 +91,10 @@ class QueryEngine {
      * Top-level method for executing a SQL query in MacroBase SQL
      *
      * @return A DataFrame corresponding to the results of the query
-     * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
+     * @throws MacroBaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
-    DataFrame executeQuery(QueryBody query) throws MacrobaseException {
+    DataFrame executeQuery(QueryBody query) throws MacroBaseException {
         if (query instanceof QuerySpecification) {
             QuerySpecification querySpec = (QuerySpecification) query;
             log.debug(querySpec.toString());
@@ -105,7 +105,7 @@ class QueryEngine {
             log.debug(diffQuery.toString());
             return executeDiffQuerySpec(diffQuery);
         }
-        throw new MacrobaseSQLException(
+        throw new MacroBaseSQLException(
             "query of type " + query.getClass().getSimpleName() + " not yet supported");
     }
 
@@ -114,11 +114,11 @@ class QueryEngine {
      * contain DIFF and SPLIT operators).
      *
      * @return A DataFrame containing the results of the query
-     * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
+     * @throws MacroBaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
     private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
-        throws MacrobaseException {
+        throws MacroBaseException {
         final String outlierColName = "outlier_col";
         DataFrame dfToExplain;
 
@@ -165,7 +165,7 @@ class QueryEngine {
 
         // TODO: should be able to check this without having to execute the two subqueries
         if (!dfToExplain.getSchema().hasColumns(explainCols)) {
-            throw new MacrobaseSQLException(
+            throw new MacroBaseSQLException(
                 "ON " + Joiner.on(", ").join(explainCols) + " not present in table");
         }
 
@@ -274,7 +274,7 @@ class QueryEngine {
      * @return a new DataFrame, the result of applying all of these clauses
      */
     private DataFrame evaluateSQLClauses(final QueryBody query, final DataFrame df)
-        throws MacrobaseException {
+        throws MacroBaseException {
         DataFrame resultDf = evaluateUDFs(df, getUDFsInSelect(query.getSelect()));
         resultDf = evaluateWhereClause(resultDf, query.getWhere());
         resultDf = evaluateSelectClause(resultDf, query.getSelect());
@@ -305,7 +305,7 @@ class QueryEngine {
      * @return A DataFrame containing the results of the SQL query
      */
     private DataFrame executeQuerySpec(final QuerySpecification query)
-        throws MacrobaseException {
+        throws MacroBaseException {
         final Table table = (Table) query.getFrom().get();
         final DataFrame df = getTable(table.getName().toString());
         return evaluateSQLClauses(query, df);
@@ -317,12 +317,12 @@ class QueryEngine {
      * @param tableName String that uniquely identifies table
      * @return a shallow copy of the DataFrame for table; the original DataFrame is never returned,
      * so that we keep it immutable
-     * @throws MacrobaseSQLException if the table has not been loaded into memory and does not
+     * @throws MacroBaseSQLException if the table has not been loaded into memory and does not
      * exist
      */
-    private DataFrame getTable(String tableName) throws MacrobaseSQLException {
+    private DataFrame getTable(String tableName) throws MacroBaseSQLException {
         if (!tablesInMemory.containsKey(tableName)) {
-            throw new MacrobaseSQLException("Table " + tableName + " does not exist");
+            throw new MacroBaseSQLException("Table " + tableName + " does not exist");
         }
         return tablesInMemory.get(tableName).copy();
     }
@@ -336,7 +336,7 @@ class QueryEngine {
      * @param udfCols The List of UDFs to evaluate
      */
     private DataFrame evaluateUDFs(final DataFrame inputDf, final List<SingleColumn> udfCols)
-        throws MacrobaseException {
+        throws MacroBaseException {
 
         // create shallow copy, so modifications don't persist on the original DataFrame
         final DataFrame resultDf = inputDf.copy();
@@ -408,7 +408,7 @@ class QueryEngine {
      * <tt>whereClauseOpt</tt> is not Present, we return <tt>df</tt>
      */
     private DataFrame evaluateWhereClause(final DataFrame df,
-        final Optional<Expression> whereClauseOpt) throws MacrobaseException {
+        final Optional<Expression> whereClauseOpt) throws MacroBaseException {
         if (!whereClauseOpt.isPresent()) {
             return df;
         }
@@ -423,10 +423,10 @@ class QueryEngine {
      * Recursive method that, given a Where clause, generates a boolean mask (a BitSet) applying the
      * clause to a DataFrame
      *
-     * @throws MacrobaseSQLException Only comparison expressions (e.g., WHERE x = 42) and logical
+     * @throws MacroBaseSQLException Only comparison expressions (e.g., WHERE x = 42) and logical
      * AND/OR/NOT combinations of such expressions are supported; exception is thrown otherwise.
      */
-    private BitSet getMask(DataFrame df, Expression whereClause) throws MacrobaseException {
+    private BitSet getMask(DataFrame df, Expression whereClause) throws MacroBaseException {
         if (whereClause instanceof NotExpression) {
             final NotExpression notExpr = (NotExpression) whereClause;
             final BitSet mask = getMask(df, notExpr.getValue());
@@ -468,12 +468,12 @@ class QueryEngine {
                 return maskForPredicate(df, (FunctionCall) right, (Literal) left, type);
             }
         }
-        throw new MacrobaseSQLException("Boolean expression not supported");
+        throw new MacroBaseSQLException("Boolean expression not supported");
     }
 
     private BitSet maskForPredicate(DataFrame df, FunctionCall func, Literal val,
         final ComparisonExpressionType type)
-        throws MacrobaseException {
+        throws MacroBaseException {
         final String funcName = func.getName().getSuffix();
         final MBFunction mbFunction = MBFunction.getFunction(funcName,
             func.getArguments().stream().map(Expression::toString).findFirst().get());
@@ -498,24 +498,24 @@ class QueryEngine {
      * @param literal The constant argument in the expression (e.g., 42)
      * @param identifier The column variable argument in the expression (e.g., x)
      * @param compExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
-     * @throws MacrobaseSQLException if the literal's type doesn't match the type of the column
+     * @throws MacroBaseSQLException if the literal's type doesn't match the type of the column
      * variable, an exception is thrown
      */
     private BitSet maskForPredicate(final DataFrame df, final Literal literal,
         final Identifier identifier, final ComparisonExpressionType compExprType)
-        throws MacrobaseSQLException {
+        throws MacroBaseSQLException {
         final String colName = identifier.getValue();
         final int colIndex;
         try {
             colIndex = df.getSchema().getColumnIndex(colName);
         } catch (UnsupportedOperationException e) {
-            throw new MacrobaseSQLException(e.getMessage());
+            throw new MacroBaseSQLException(e.getMessage());
         }
         final ColType colType = df.getSchema().getColumnType(colIndex);
 
         if (colType == ColType.DOUBLE) {
             if (!(literal instanceof DoubleLiteral)) {
-                throw new MacrobaseSQLException(
+                throw new MacroBaseSQLException(
                     "Column " + colName + " has type " + colType + ", but " + literal
                         + " is not a DoubleLiteral");
             }
@@ -531,7 +531,7 @@ class QueryEngine {
                 return df.getMaskForFilter(colIndex,
                     generateLambdaForPredicate(null, compExprType));
             } else {
-                throw new MacrobaseSQLException(
+                throw new MacroBaseSQLException(
                     "Column " + colName + " has type " + colType + ", but " + literal
                         + " is not StringLiteral");
             }
@@ -546,11 +546,11 @@ class QueryEngine {
      * @param y The constant value
      * @param compareExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
      * @return A {@link DoublePredicate}, that wraps the constant y in a closure
-     * @throws MacrobaseSQLException If a comparsion type is passed in that is not supported, an
+     * @throws MacroBaseSQLException If a comparsion type is passed in that is not supported, an
      * exception is thrown
      */
     private DoublePredicate generateLambdaForPredicate(double y,
-        ComparisonExpressionType compareExprType) throws MacrobaseSQLException {
+        ComparisonExpressionType compareExprType) throws MacroBaseSQLException {
         switch (compareExprType) {
             case EQUAL:
                 return (x) -> x == y;
@@ -569,7 +569,7 @@ class QueryEngine {
             case GREATER_THAN_OR_EQUAL:
                 return (x) -> x >= y;
             default:
-                throw new MacrobaseSQLException(compareExprType + " is not supported");
+                throw new MacroBaseSQLException(compareExprType + " is not supported");
         }
     }
 
@@ -583,11 +583,11 @@ class QueryEngine {
      * @return A {@link Predicate<Object>}, that wraps the constant y in a closure. A
      * Predicate<String> is not returned for compatibility with {@link DataFrame#filter(int,
      * Predicate)}.
-     * @throws MacrobaseSQLException If a comparsion type is passed in that is not supported, an
+     * @throws MacroBaseSQLException If a comparsion type is passed in that is not supported, an
      * exception is thrown
      */
     private Predicate<Object> generateLambdaForPredicate(final String y,
-        final ComparisonExpressionType compareExprType) throws MacrobaseSQLException {
+        final ComparisonExpressionType compareExprType) throws MacroBaseSQLException {
         switch (compareExprType) {
             case EQUAL:
                 return (x) -> Objects.equals(x, y);
@@ -597,7 +597,7 @@ class QueryEngine {
                 // if one of them is NULL and the other isn't
                 return (x) -> !Objects.equals(x, y);
             default:
-                throw new MacrobaseSQLException(compareExprType + " is not supported");
+                throw new MacroBaseSQLException(compareExprType + " is not supported");
         }
     }
 }

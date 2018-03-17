@@ -3,7 +3,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +226,7 @@ public class APrioriLinear {
                             }
                         }
                     } else {
-                        throw new MacrobaseInternalError("High Order not supported");
+                        throw new MacroBaseInternalError("High Order not supported");
                     }
                     log.debug("Time spent in Thread {} in order {}:  {} ms",
                             curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);

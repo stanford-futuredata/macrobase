@@ -12,7 +12,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -143,17 +143,17 @@ public class CubePipeline implements Pipeline {
         return explanation;
     }
 
-    private Map<String, Schema.ColType> getColTypes() throws MacrobaseException {
+    private Map<String, Schema.ColType> getColTypes() throws MacroBaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put(countColumn, Schema.ColType.DOUBLE);
         switch (classifierType) {
             case "meanshift":
             case "arithmetic": {
                 colTypes.put(meanColumn
-                        .orElseThrow(() -> new MacrobaseException("mean column not present in config")),
+                        .orElseThrow(() -> new MacroBaseException("mean column not present in config")),
                     Schema.ColType.DOUBLE);
                 colTypes.put(stdColumn
-                        .orElseThrow(() -> new MacrobaseException("std column not present in config")),
+                        .orElseThrow(() -> new MacroBaseException("std column not present in config")),
                     Schema.ColType.DOUBLE);
                 return colTypes;
             }
@@ -166,33 +166,33 @@ public class CubePipeline implements Pipeline {
             case "predicate": {
                 if (isStrPredicate) {
                     colTypes.put(metric.orElseThrow(
-                        () -> new MacrobaseException("metric column not present in config")),
+                        () -> new MacroBaseException("metric column not present in config")),
                         Schema.ColType.STRING);
                 } else {
                     colTypes.put(metric.orElseThrow(
-                        () -> new MacrobaseException("metric column not present in config")),
+                        () -> new MacroBaseException("metric column not present in config")),
                         Schema.ColType.DOUBLE);
                 }
                 return colTypes;
             }
             case "raw": {
                 colTypes.put(meanColumn.orElseThrow(
-                    () -> new MacrobaseException("mean column not present in config")),
+                    () -> new MacroBaseException("mean column not present in config")),
                     Schema.ColType.DOUBLE);
             }
             default:
-                throw new MacrobaseException("Bad Classifier Name");
+                throw new MacroBaseException("Bad Classifier Name");
         }
     }
 
-    private CubeClassifier getClassifier() throws MacrobaseException {
+    private CubeClassifier getClassifier() throws MacroBaseException {
         switch (classifierType) {
             case "arithmetic": {
                 ArithmeticClassifier classifier =
                     new ArithmeticClassifier(countColumn, meanColumn.orElseThrow(
-                        () -> new MacrobaseException("mean column not present in config")),
+                        () -> new MacroBaseException("mean column not present in config")),
                         stdColumn.orElseThrow(
-                            () -> new MacrobaseException("std column not present in config")));
+                            () -> new MacroBaseException("std column not present in config")));
                 classifier.setPercentile(cutoff);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
@@ -210,12 +210,12 @@ public class CubePipeline implements Pipeline {
                 if (isStrPredicate) {
                     return new PredicateCubeClassifier(countColumn,
                         metric.orElseThrow(
-                            () -> new MacrobaseException("metric column not present in config")),
+                            () -> new MacroBaseException("metric column not present in config")),
                         predicateStr, strCutoff);
                 }
                 return new PredicateCubeClassifier(countColumn,
                     metric.orElseThrow(
-                        () -> new MacrobaseException("metric column not present in config")),
+                        () -> new MacroBaseException("metric column not present in config")),
                     predicateStr, cutoff);
             }
 
@@ -224,11 +224,11 @@ public class CubePipeline implements Pipeline {
                 return new RawClassifier(
                     countColumn,
                     meanColumn.orElseThrow(
-                        () -> new MacrobaseException("mean column not present in config"))
+                        () -> new MacroBaseException("mean column not present in config"))
                 );
             }
             default:
-                throw new MacrobaseException("Bad Classifier Name");
+                throw new MacroBaseException("Bad Classifier Name");
         }
     }
 
@@ -238,9 +238,9 @@ public class CubePipeline implements Pipeline {
                 APLMeanSummarizer summarizer = new APLMeanSummarizer();
                 summarizer.setCountColumn(countColumn);
                 summarizer.setMeanColumn(meanColumn.orElseThrow(
-                        () -> new MacrobaseException("mean column not present in config")));
+                        () -> new MacroBaseException("mean column not present in config")));
                 summarizer.setStdColumn(stdColumn.orElseThrow(
-                        () -> new MacrobaseException("std column not present in config")));
+                        () -> new MacroBaseException("std column not present in config")));
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);

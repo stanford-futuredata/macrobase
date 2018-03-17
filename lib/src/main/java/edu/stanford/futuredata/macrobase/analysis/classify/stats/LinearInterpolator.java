@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify.stats;
 
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 
 /**
  * Performs linear interpolation in a lazy manner: interpolation does not actually
@@ -24,7 +24,7 @@ public class LinearInterpolator {
         this.y = y;
     }
 
-    public double evaluate(double value) throws MacrobaseInternalError {
+    public double evaluate(double value) throws MacroBaseInternalError {
         if ((value > x[x.length - 1]) || (value < x[0])) {
             return Double.NaN;
         }
@@ -43,6 +43,6 @@ public class LinearInterpolator {
             return slope * value + intercept;
         }
 
-        throw new MacrobaseInternalError("Linear interpolator implemented incorrectly");
+        throw new MacroBaseInternalError("Linear interpolator implemented incorrectly");
     }
 }

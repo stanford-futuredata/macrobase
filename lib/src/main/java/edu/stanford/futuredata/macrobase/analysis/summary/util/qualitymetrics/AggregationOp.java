@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 
 public enum AggregationOp {
     SUM, MIN, MAX;
@@ -17,7 +17,7 @@ public enum AggregationOp {
                 return a > b ? a : b;
             }
             default: {
-                throw new MacrobaseInternalError("Invalid Aggregation Op");
+                throw new MacroBaseInternalError("Invalid Aggregation Op");
             }
         }
     }
@@ -34,7 +34,7 @@ public enum AggregationOp {
                 return -Double.MAX_VALUE;
             }
             default: {
-                throw new MacrobaseInternalError("Invalid Aggregation Op");
+                throw new MacroBaseInternalError("Invalid Aggregation Op");
             }
         }
     }

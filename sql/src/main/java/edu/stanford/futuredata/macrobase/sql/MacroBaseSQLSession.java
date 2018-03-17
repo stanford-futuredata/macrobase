@@ -6,7 +6,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class MacroBaseSQLSession {
         queryEngine = new QueryEngine();
     }
 
-    public DataFrame executeQuery(final String queryStr) throws MacrobaseException {
+    public DataFrame executeQuery(final String queryStr) throws MacroBaseException {
         Statement stmt = parser.createStatement(queryStr);
         log.debug(stmt.toString());
         if (stmt instanceof ImportCsv) {
