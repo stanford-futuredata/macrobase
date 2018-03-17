@@ -20,15 +20,15 @@ public class Row {
     static final DecimalFormat DOUBLE_FORMAT = new DecimalFormat("#.0#####",
         DecimalFormatSymbols.getInstance(Locale.US));
 
-    private Schema schema; // not set by user
-    private List<Object> vals;
+    private final Schema schema; // not set by user
+    private final List<Object> vals;
 
-    public Row(Schema schema, List<Object> vals) {
+    public Row(final Schema schema, final List<Object> vals) {
         this.schema = schema;
         this.vals = vals;
     }
 
-    public Row(List<Object> vals) {
+    public Row(final List<Object> vals) {
         this.schema = null;
         this.vals = vals;
     }
