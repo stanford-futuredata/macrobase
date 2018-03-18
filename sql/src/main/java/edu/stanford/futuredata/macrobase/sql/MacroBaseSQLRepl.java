@@ -151,7 +151,6 @@ public class MacroBaseSQLRepl {
                 }
             } catch (ParsingException | MacroBaseException e) {
                 e.printStackTrace(System.err);
-                //System.err.println(e.getMessage());
                 System.err.println();
             }
         }
