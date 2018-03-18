@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
@@ -203,16 +204,22 @@ class QueryEngine {
      *
      * @return List of columns (as Strings)
      */
-    private List<String> findExplanationColumns(DataFrame dfToExplain) {
+    private List<String> findExplanationColumns(DataFrame df) {
         Builder<String> builder = ImmutableList.builder();
-        final int numRowsToSample =
-            dfToExplain.getNumRows() < 1000 ? dfToExplain.getNumRows() : 1000;
-        final List<String> stringCols = dfToExplain.getSchema()
-            .getColumnNamesByType(ColType.STRING);
+        final boolean sample = df.getNumRows() > 1000;
+        final int numRowsToSample = sample ? 1000 : df.getNumRows();
+        final List<String> stringCols = df.getSchema().getColumnNamesByType(ColType.STRING);
         for (String colName : stringCols) {
-            final String[] colValues = dfToExplain.getStringColumnByName(colName);
+            final String[] colValues = df.getStringColumnByName(colName);
             final Set<String> set = new HashSet<>();
-            set.addAll(Arrays.asList(colValues).subList(0, numRowsToSample));
+            if (sample) {
+                final Random random = new Random();
+                for (int i = 0; i < 1000; ++i) {
+                    set.add(colValues[random.nextInt(colValues.length)]);
+                }
+            } else {
+                set.addAll(Arrays.asList(colValues));
+            }
             if (set.size() < numRowsToSample / 4) {
                 // if number of distinct elements is less than 1/4 the number of sampled rows,
                 // include it
