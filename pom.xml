@@ -4,7 +4,7 @@
   <groupId>edu.stanford.futuredata</groupId>
   <artifactId>macrobase</artifactId>
   <packaging>pom</packaging>
-  <version>0.1-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
   <name>macrobase</name>
   <url>https://github.com/stanford-futuredata/macrobase</url>
   <description>MacroBase is an anomaly detection engine designed to prioritize human attention in large-scale datasets and data streams.</description>
