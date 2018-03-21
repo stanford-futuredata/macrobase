@@ -7,8 +7,8 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
 import edu.stanford.futuredata.macrobase.sql.tree.*;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
-import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseSQLException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,9 +41,9 @@ class QueryEngineDistributed {
      * Top-level method for importing tables from CSV files into MacroBase SQL
      *
      * @return A DataFrame that contains the data loaded from the CSV file
-     * @throws MacrobaseSQLException if there's an error parsing the CSV file
+     * @throws MacroBaseSQLException if there's an error parsing the CSV file
      */
-    Dataset<Row> importTableFromCsv(ImportCsv importStatement) throws MacrobaseSQLException {
+    Dataset<Row> importTableFromCsv(ImportCsv importStatement) throws MacroBaseSQLException {
         // Increase the number of partitions to ensure enough memory for parsing overhead
         int increasedPartitions = numPartitions * 10;
         final String fileName = importStatement.getFilename();
@@ -87,7 +87,7 @@ class QueryEngineDistributed {
                         StructField field = DataTypes.createStructField(fieldName, DataTypes.DoubleType, true);
                         fields.add(field);
                     } else {
-                        throw new MacrobaseSQLException("Only strings and doubles supported in schema");
+                        throw new MacroBaseSQLException("Only strings and doubles supported in schema");
                     }
                 }
             }
@@ -114,7 +114,7 @@ class QueryEngineDistributed {
                                             rowList.add(Double.NaN);
                                         }
                                     } else {
-                                        throw new MacrobaseSQLException("Only strings and doubles supported in schema");
+                                        throw new MacroBaseSQLException("Only strings and doubles supported in schema");
                                     }
                                 }
                             }
@@ -129,7 +129,7 @@ class QueryEngineDistributed {
             df.createOrReplaceTempView(tableName);
             return df;
         } catch (Exception e) {
-            throw new MacrobaseSQLException(e.getMessage());
+            throw new MacroBaseSQLException(e.getMessage());
         }
     }
 
@@ -137,10 +137,10 @@ class QueryEngineDistributed {
      * Top-level method for executing a SQL query in MacroBase SQL
      *
      * @return A DataFrame corresponding to the results of the query
-     * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
+     * @throws MacroBaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
-    Dataset<Row> executeQuery(Query query) throws MacrobaseException {
+    Dataset<Row> executeQuery(Query query) throws MacroBaseException {
         QueryBody queryBody = query.getQueryBody();
         if (queryBody instanceof QuerySpecification) {
             // If the query is pure SQL (without MBSQL commands) just execute it
@@ -155,7 +155,7 @@ class QueryEngineDistributed {
             log.debug(diffQuery.toString());
             return executeDiffQuerySpec(diffQuery);
         }
-        throw new MacrobaseSQLException(
+        throw new MacroBaseSQLException(
                 "query of type " + queryBody.getClass().getSimpleName() + " not yet supported");
     }
 
@@ -164,11 +164,11 @@ class QueryEngineDistributed {
      * contain DIFF and SPLIT operators).
      *
      * @return A DataFrame containing the results of the query
-     * @throws MacrobaseException If there's an error -- syntactic or logical -- processing the
+     * @throws MacroBaseException If there's an error -- syntactic or logical -- processing the
      * query, an exception is thrown
      */
     private Dataset<Row> executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
-            throws MacrobaseException {
+            throws MacroBaseException {
         final String outlierColName = "outlier_col";
         final Dataset<Row> outliersDF;
         final Dataset<Row> inliersDF;
@@ -207,13 +207,13 @@ class QueryEngineDistributed {
                 .map(Identifier::getValue)
                 .collect(Collectors.toList());
         if ((explainCols.size() == 1) && explainCols.get(0).equals("*")) {
-            throw new MacrobaseSQLException("No ON * yet");
+            throw new MacroBaseSQLException("No ON * yet");
         }
 
         // Make sure all attribute columns are valid.
         for (String explainCol: explainCols) {
             if (!Arrays.asList(outliersDF.columns()).contains(explainCol))
-                throw new MacrobaseSQLException(
+                throw new MacroBaseSQLException(
                         "ON " + Joiner.on(", ").join(explainCols) + " not present in table");
         }
 
