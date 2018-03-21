@@ -44,7 +44,7 @@ public class MacroBaseSQLRepl {
     private final QueryEngine queryEngine;
     private final QueryEngineDistributed queryEngineDistributed;
     private final boolean paging;
-    private boolean singleNode = false;
+    private boolean distributeSQL;
 
     private File tempFileForPaging;
 
@@ -54,7 +54,8 @@ public class MacroBaseSQLRepl {
      * @param userWantsPaging try to enable paging of results in SQL shell
      * @throws IOException if unable to instantiate ConsoleReader
      */
-    private MacroBaseSQLRepl(final boolean userWantsPaging) throws IOException {
+    private MacroBaseSQLRepl(final boolean distributeSQL, final boolean userWantsPaging,
+                             final int distributedNumPartitions) throws IOException {
         // First try to turn paging on
         this.paging = enablePaging(userWantsPaging);
         // Initialize console reader and writer
@@ -66,16 +67,16 @@ public class MacroBaseSQLRepl {
 
         parser = new SqlParser();
         queryEngine = new QueryEngine();
-        if (!singleNode) {
+        if (distributeSQL) {
             SparkSession spark = SparkSession
                     .builder()
                     .appName("macrobase-sql-spark")
                     .getOrCreate();
-            // TODO: add configuration parameter for numPartitions
-            queryEngineDistributed = new QueryEngineDistributed(spark, 4);
+            queryEngineDistributed = new QueryEngineDistributed(spark, distributedNumPartitions);
         } else {
             queryEngineDistributed = null;
         }
+        this.distributeSQL = distributeSQL;
     }
 
     /**
@@ -121,7 +122,7 @@ public class MacroBaseSQLRepl {
             try {
                 Statement stmt = parser.createStatement(statementStr);
                 log.info(stmt.toString());
-                if (singleNode) {
+                if (!distributeSQL) {
                     final DataFrame result;
                     if (stmt instanceof ImportCsv) {
                         final ImportCsv importStatement = (ImportCsv) stmt;
@@ -242,9 +243,14 @@ public class MacroBaseSQLRepl {
         parser.addArgument("-f", "--file").help("Load file with SQL queries to execute");
         parser.addArgument("-p", "--paging").type(Arguments.booleanType()).setDefault(false)
             .help("Turn on paging of results for SQL queries");
+        parser.addArgument("-d", "--distribute").type(Arguments.booleanType())
+                .help("Distribute as Spark job.  Requires spark-submit script on a cluster.").setDefault(false);
+        parser.addArgument("-n", "--numpartitions")
+                .help("Number of partitions to make when distributing.  Requires distributed mode.").setDefault(1);
         final Namespace parsedArgs = parser.parseArgsOrFail(args);
 
-        final MacroBaseSQLRepl repl = new MacroBaseSQLRepl(parsedArgs.get("paging"));
+        final MacroBaseSQLRepl repl = new MacroBaseSQLRepl(parsedArgs.get("distribute"), parsedArgs.get("paging"),
+                parsedArgs.get("numpartitions"));
 
         boolean printedWelcome = false;
         if (parsedArgs.get("file") != null) {
