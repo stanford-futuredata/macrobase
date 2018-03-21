@@ -1,14 +1,10 @@
 package edu.stanford.futuredata.macrobase.distributed.analysis.classify;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
-import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import org.apache.spark.api.java.JavaPairRDD;
-import scala.Serializable;
 import scala.Tuple2;
 
 import java.util.function.DoublePredicate;
@@ -40,10 +36,10 @@ public class PredicateClassifierDistributed extends DistributedClassifier {
      * @param columnName Column on which to classifier outliers
      * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
      * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     * @throws MacrobaseException
+     * @throws MacroBaseException
      */
     public PredicateClassifierDistributed(final String columnName, final String predicateStr, final double sentinel)
-            throws MacrobaseException {
+            throws MacroBaseException {
         super(columnName);
         this.doubleSentinel = sentinel;
         this.predicateStr = predicateStr;
@@ -55,10 +51,10 @@ public class PredicateClassifierDistributed extends DistributedClassifier {
      * @param columnName Column on which to classifier outliers
      * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
      * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     * @throws MacrobaseException
+     * @throws MacroBaseException
      */
     public PredicateClassifierDistributed(final String columnName, final String predicateStr, final String sentinel)
-            throws MacrobaseException {
+            throws MacroBaseException {
         super(columnName);
         this.stringSentinel = sentinel;
         this.predicateStr = predicateStr;
