@@ -245,7 +245,7 @@ public class MacroBaseSQLRepl {
             .help("Turn on paging of results for SQL queries");
         parser.addArgument("-d", "--distribute").type(Arguments.booleanType())
                 .help("Distribute as Spark job.  Requires spark-submit script on a cluster.").setDefault(false);
-        parser.addArgument("-n", "--numpartitions")
+        parser.addArgument("-n", "--numpartitions").type(Integer.class)
                 .help("Number of partitions to make when distributing.  Requires distributed mode.").setDefault(1);
         final Namespace parsedArgs = parser.parseArgsOrFail(args);
 
