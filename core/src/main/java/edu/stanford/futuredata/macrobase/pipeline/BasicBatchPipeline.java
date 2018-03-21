@@ -6,6 +6,9 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.distributed.analysis.classify.DistributedClassifier;
 import edu.stanford.futuredata.macrobase.distributed.analysis.classify.PredicateClassifierDistributed;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.DistributedBatchSummarizer;
@@ -126,10 +129,7 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
-<<<<<<< d92c91618cbb2c4186681691bb997ae31e271752
-    public BatchSummarizer getSummarizer(String outlierColumnName) throws MacroBaseException {
-=======
-    private DistributedClassifier getDistributedClassifier() throws MacrobaseException {
+    private DistributedClassifier getDistributedClassifier() throws MacroBaseException {
         switch (classifierType.toLowerCase()) {
             case "predicate": {
                 if (isStrPredicate){
@@ -140,12 +140,12 @@ public class BasicBatchPipeline implements Pipeline {
                 return classifier;
             }
             default : {
-                throw new MacrobaseException("Bad Classifier Type");
+                throw new MacroBaseException("Bad Classifier Type");
             }
         }
     }
 
-    public ExplanationMetric getRatioMetric() throws MacrobaseException {
+    public ExplanationMetric getRatioMetric() throws MacroBaseException {
         switch (ratioMetric.toLowerCase()) {
             case "globalratio": {
                 return new GlobalRatioMetric();
@@ -154,13 +154,12 @@ public class BasicBatchPipeline implements Pipeline {
                 return new RiskRatioMetric();
             }
             default: {
-                throw new MacrobaseException("Bad Ratio Metric");
+                throw new MacroBaseException("Bad Ratio Metric");
             }
         }
     }
 
-    private BatchSummarizer getSummarizer(String outlierColumnName) throws MacrobaseException {
->>>>>>> Fully working distributed pipeline
+    private BatchSummarizer getSummarizer(String outlierColumnName) throws MacroBaseException {
         switch (summarizerType.toLowerCase()) {
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
@@ -184,12 +183,12 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             default: {
-                throw new MacrobaseException("Bad Summarizer Type");
+                throw new MacroBaseException("Bad Summarizer Type");
             }
         }
     }
 
-    private DistributedBatchSummarizer getDistributedSummarizer(String outlierColumnName) throws MacrobaseException {
+    private DistributedBatchSummarizer getDistributedSummarizer(String outlierColumnName) throws MacroBaseException {
         switch (summarizerType.toLowerCase()) {
             case "aplineardistributed": {
                 APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();

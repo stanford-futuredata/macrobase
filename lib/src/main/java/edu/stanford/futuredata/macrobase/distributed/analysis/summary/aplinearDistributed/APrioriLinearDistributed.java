@@ -2,7 +2,7 @@ package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearD
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -208,7 +208,7 @@ public class APrioriLinearDistributed {
                         }
                     }
                 } else {
-                    throw new MacrobaseInternalError("High Order not supported");
+                    throw new MacroBaseInternalError("High Order not supported");
                 }
                 return thisThreadSetAggregates.asHashMap();
             });

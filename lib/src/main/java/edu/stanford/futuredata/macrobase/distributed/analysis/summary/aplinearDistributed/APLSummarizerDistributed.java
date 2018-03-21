@@ -6,7 +6,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Qu
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.DistributedBatchSummarizer;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.util.AttributeEncoderDistributed;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
-import edu.stanford.futuredata.macrobase.util.MacrobaseSQLException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseSQLException;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -84,7 +84,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                     else if (rowObject instanceof java.lang.Double)
                         newAttributesCol[i] = Double.toString((Double) rowObject);
                     else
-                        throw new MacrobaseSQLException("Only strings and doubles supported in schema not " + rowObject.getClass().getName());
+                        throw new MacroBaseSQLException("Only strings and doubles supported in schema not " + rowObject.getClass().getName());
                 }
             }
             return new Tuple2<>(newAttributesCol, newAggregatesCol);
@@ -102,7 +102,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                     else if (rowObject instanceof java.lang.Double)
                         newAttributesCol[i] = Double.toString((Double) rowObject);
                     else
-                        throw new MacrobaseSQLException("Only strings and doubles supported in schema not " + rowObject.getClass().getName());
+                        throw new MacroBaseSQLException("Only strings and doubles supported in schema not " + rowObject.getClass().getName());
                 }
             }
             return new Tuple2<>(newAttributesCol, newAggregatesCol);
