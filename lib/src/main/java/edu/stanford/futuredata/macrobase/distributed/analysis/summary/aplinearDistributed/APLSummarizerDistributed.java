@@ -110,10 +110,6 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
 
         JavaPairRDD<String[], double[]> mergedConsolidatedRDD = outlierMergedConsolidatedRDD.union(inlierMergedConsolidatedRDD);
 
-        mergedConsolidatedRDD = mergedConsolidatedRDD.repartition(numPartitions);
-
-        mergedConsolidatedRDD.cache();
-
         return mergedConsolidatedRDD;
     }
 
