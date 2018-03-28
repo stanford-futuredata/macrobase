@@ -307,7 +307,7 @@ public class APrioriLinear {
                             }
                         }
                     }
-                    log.debug("Time spent in Thread {} in order {}:  {} ms",
+                    log.info("Time spent in Thread {} in order {}:  {} ms",
                             curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
