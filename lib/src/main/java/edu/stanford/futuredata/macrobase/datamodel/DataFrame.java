@@ -37,6 +37,7 @@ public class DataFrame {
     private Schema schema;
     private ArrayList<String[]> stringCols;
     private ArrayList<double[]> doubleCols;
+    private ArrayList<boolean[]> booleanCols;
     // external indices define a global ordering on columns, but internally each
     // column is stored with other columns of its type. Thus external indices must be
     // converted into internal type-specific indices.
@@ -65,46 +66,65 @@ public class DataFrame {
         this.numRows = rows.size();
         final int numColumns = schema.getNumColumns();
         for (int c = 0; c < numColumns; c++) {
-            Schema.ColType t = schema.getColumnType(c);
-            if (t == Schema.ColType.STRING) {
+            ColType t = schema.getColumnType(c);
+            if (t == ColType.STRING) {
                 String[] colValues = new String[numRows];
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = rows.get(i).<String>getAs(c);
                 }
                 addStringColumnInternal(colValues);
-            } else if (t == Schema.ColType.DOUBLE) {
+            } else if (t == ColType.DOUBLE) {
                 double[] colValues = new double[numRows];
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = rows.get(i).<Double>getAs(c);
                 }
                 addDoubleColumnInternal(colValues);
+            } else if (t == ColType.BOOLEAN) {
+                boolean[] colValues = new boolean[numRows];
+                for (int i = 0; i < numRows; i++) {
+                    colValues[i] = rows.get(i).<Boolean>getAs(c);
+                }
+                addBooleanColumnInternal(colValues);
+
             } else {
                 throw new MacroBaseInternalError("Invalid ColType");
             }
         }
     }
 
-    public DataFrame(Schema schema, ArrayList<String>[] stringColumns, ArrayList<Double>[] doubleColumns) {
+    public DataFrame(Schema schema, ArrayList<String>[] stringColumns,
+        ArrayList<Double>[] doubleColumns, ArrayList<Boolean>[] booleanColumns) {
         this();
         this.schema = schema;
-        if (stringColumns.length > 0)
+        if (stringColumns.length > 0) {
             numRows = stringColumns[0].size();
-        else
+        } else if (doubleColumns.length > 0 ) {
             numRows = doubleColumns[0].size();
+        } else {
+            numRows = booleanColumns[0].size();
+        }
         int numColumns = schema.getNumColumns();
-        for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
-            Schema.ColType t = schema.getColumnType(c);
-            if (t == Schema.ColType.STRING) {
+        for (int c = 0, stringColNum = 0, doubleColNum = 0, booleanColNum = 0; c < numColumns;
+            c++) {
+            ColType t = schema.getColumnType(c);
+            if (t == ColType.STRING) {
                 String[] colValues = stringColumns[stringColNum].toArray(new String[numRows]);
                 addStringColumnInternal(colValues);
                 stringColNum++;
-            } else if (t == Schema.ColType.DOUBLE) {
+            } else if (t == ColType.DOUBLE) {
                 double[] colValues = new double[numRows];
                 for (int i = 0; i < numRows; i++) {
                     colValues[i] = doubleColumns[doubleColNum].get(i).doubleValue();
                 }
                 addDoubleColumnInternal(colValues);
                 doubleColNum++;
+            } else if (t == ColType.BOOLEAN) {
+                boolean[] colValues = new boolean[numRows];
+                for (int i = 0; i < numRows; i++) {
+                    colValues[i] = booleanColumns[booleanColNum].get(i).booleanValue();
+                }
+                addBooleanColumnInternal(colValues);
+                booleanColNum++;
             } else {
                 throw new MacroBaseInternalError("Invalid ColType");
             }
@@ -123,6 +143,7 @@ public class DataFrame {
         other.numRows = numRows;
         other.stringCols = new ArrayList<>(stringCols);
         other.doubleCols = new ArrayList<>(doubleCols);
+        other.booleanCols = new ArrayList<>(booleanCols);
         return other;
     }
 
@@ -139,7 +160,8 @@ public class DataFrame {
             Objects.equals(numRows, o.numRows) &&
             Objects.equals(indexToTypeIndex, o.indexToTypeIndex) &&
             compareStringCols(stringCols, o.stringCols) &&
-            compareDoubleCols(doubleCols, o.doubleCols);
+            compareDoubleCols(doubleCols, o.doubleCols) &&
+            compareBooleanCols(booleanCols, o.booleanCols);
     }
 
     /**
@@ -176,9 +198,27 @@ public class DataFrame {
         return true;
     }
 
+    /**
+     * @return true if each boolean array in the first List contains the exact same values in the
+     * same order as the second List
+     */
+    private boolean compareBooleanCols(final List<boolean[]> first, final List<boolean[]> second) {
+        for (int i = 0; i < first.size(); ++i) {
+            final boolean[] arr1 = first.get(i);
+            final boolean[] arr2 = second.get(i);
+            for (int j = 0; j < arr1.length; ++j) {
+                if (arr1[j] != arr2[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public Schema getSchema() {return this.schema;}
     public int getNumRows() {return numRows;}
     public ArrayList<double[]> getDoubleCols() { return doubleCols; }
+    public ArrayList<boolean[]> getBooleanCols() { return booleanCols; }
     public ArrayList<String[]> getStringCols() { return stringCols; }
 
     public String toString() {
@@ -304,7 +344,7 @@ public class DataFrame {
             numRows = colValues.length;
         }
 
-        schema.addColumn(Schema.ColType.STRING, colName);
+        schema.addColumn(ColType.STRING, colName);
         addStringColumnInternal(colValues);
         return this;
     }
@@ -319,6 +359,16 @@ public class DataFrame {
         return this;
     }
 
+    public DataFrame addColumn(String colName, boolean[] colValues) {
+        if (numRows == 0) {
+            numRows = colValues.length;
+        }
+
+        schema.addColumn(ColType.BOOLEAN, colName);
+        addBooleanColumnInternal(colValues);
+        return this;
+    }
+
     private void addStringColumnInternal(String[] colValues) {
         stringCols.add(colValues);
         indexToTypeIndex.add(stringCols.size()-1);
@@ -329,7 +379,12 @@ public class DataFrame {
         indexToTypeIndex.add(doubleCols.size()-1);
     }
 
-    protected int[] getSubIndices(List<Integer> columns) {
+    private void addBooleanColumnInternal(boolean[] colValues) {
+        booleanCols.add(colValues);
+        indexToTypeIndex.add(booleanCols.size()-1);
+    }
+
+    private int[] getSubIndices(List<Integer> columns) {
         int d = columns.size();
         int[] typeSubIndices = new int[d];
         for (int i = 0; i < d; i++) {
@@ -352,12 +407,36 @@ public class DataFrame {
 
     public boolean hasColumn(String columnName) { return schema.hasColumn(columnName); }
 
+    // methods for getting boolean columns
+    public boolean[] getBooleanColumn(int columnIdx) {
+        return booleanCols.get(indexToTypeIndex.get(columnIdx));
+    }
+
+    public boolean[] getBooleanColumnByName(String columnName) {
+        return booleanCols.get(indexToTypeIndex.get(schema.getColumnIndex(columnName)));
+    }
+
+    public ArrayList<boolean[]> getBooleanCols(List<Integer> columns) {
+        ArrayList<boolean[]> cols = new ArrayList<>();
+        for (int c : columns) {
+            cols.add(getBooleanColumn(c));
+        }
+        return cols;
+    }
+
+    public ArrayList<boolean[]> getBooleanColsByName(List<String> columns) {
+        return getBooleanCols(this.schema.getColumnIndices(columns));
+    }
+
+    // methods for getting double columns
     public double[] getDoubleColumn(int columnIdx) {
         return doubleCols.get(indexToTypeIndex.get(columnIdx));
     }
+
     public double[] getDoubleColumnByName(String columnName) {
         return doubleCols.get(indexToTypeIndex.get(schema.getColumnIndex(columnName)));
     }
+
     public ArrayList<double[]> getDoubleCols(List<Integer> columns) {
         ArrayList<double[]> cols = new ArrayList<>();
         for (int c : columns) {
@@ -365,15 +444,20 @@ public class DataFrame {
         }
         return cols;
     }
+
     public ArrayList<double[]> getDoubleColsByName(List<String> columns) {
         return getDoubleCols(this.schema.getColumnIndices(columns));
     }
+
+    // methods for getting String columns
     public String[] getStringColumn(int columnIdx) {
         return stringCols.get(indexToTypeIndex.get(columnIdx));
     }
+
     public String[] getStringColumnByName(String columnName) {
         return stringCols.get(indexToTypeIndex.get(schema.getColumnIndex(columnName)));
     }
+
     public ArrayList<String[]> getStringCols(List<Integer> columns) {
         ArrayList<String[]> cols = new ArrayList<>();
         for (int c : columns) {
@@ -381,6 +465,7 @@ public class DataFrame {
         }
         return cols;
     }
+
     public ArrayList<String[]> getStringColsByName(List<String> columns) {
         return getStringCols(this.schema.getColumnIndices(columns));
     }
@@ -407,8 +492,8 @@ public class DataFrame {
         int d = first.schema.getNumColumns();
 
         for (int colIdx = 0; colIdx < d; colIdx++) {
-            Schema.ColType t = combined.schema.getColumnType(colIdx);
-            if (t == Schema.ColType.STRING) {
+            ColType t = combined.schema.getColumnType(colIdx);
+            if (t == ColType.STRING) {
                 String[] newCol = new String[n];
                 int i = 0;
                 for (DataFrame curOther : others) {
@@ -419,7 +504,7 @@ public class DataFrame {
                     }
                 }
                 combined.stringCols.add(newCol);
-            } else if (t == Schema.ColType.DOUBLE) {
+            } else if (t == ColType.DOUBLE) {
                 double[] newCol = new double[n];
                 int i = 0;
                 for (DataFrame curOther : others) {
@@ -430,6 +515,16 @@ public class DataFrame {
                     }
                 }
                 combined.doubleCols.add(newCol);
+            } else if (t == ColType.BOOLEAN) {
+                boolean[] newCol = new boolean[n];
+                int i = 0;
+                for (DataFrame curOther : others) {
+                    boolean[] otherCol = curOther.getBooleanColumn(colIdx);
+                    for (boolean curDouble : otherCol) {
+                        newCol[i] = curDouble;
+                        i++;
+                    }
+                }
             } else {
                 throw new MacroBaseInternalError("Invalid Col Type");
             }
@@ -451,10 +546,13 @@ public class DataFrame {
                 continue;
             }
             final ColType type = schema.getColumnTypeByName(col);
-            if (type == ColType.DOUBLE) {
-                other.addColumn(col, getDoubleColumnByName(col));
-            } else if (type == ColType.STRING) {
+            if (type == ColType.STRING) {
                 other.addColumn(col, getStringColumnByName(col));
+            } else if (type == ColType.DOUBLE) {
+                other.addColumn(col, getDoubleColumnByName(col));
+            } else if (type == ColType.BOOLEAN) {
+                // ColType.BOOLEAN
+                other.addColumn(col, getBooleanColumnByName(col));
             }
         }
         return other;
@@ -475,9 +573,9 @@ public class DataFrame {
             }
         }
         for (int c = 0; c < d; c++) {
-            Schema.ColType t = schema.getColumnType(c);
+            ColType t = schema.getColumnType(c);
             String columnName = schema.getColumnName(c);
-            if (t == Schema.ColType.STRING) {
+            if (t == ColType.STRING) {
                 String[] oldColumn = getStringColumn(c);
                 String[] newColumn = new String[numTrue];
                 int j = 0;
@@ -488,9 +586,20 @@ public class DataFrame {
                     }
                 }
                 other.addColumn(columnName, newColumn);
-            } else if (t == Schema.ColType.DOUBLE) {
+            } else if (t == ColType.DOUBLE) {
                 double[] oldColumn = getDoubleColumn(c);
                 double[] newColumn = new double[numTrue];
+                int j = 0;
+                for (int i = 0; i < numRows; i++) {
+                    if (mask.get(i)) {
+                        newColumn[j] = oldColumn[i];
+                        j++;
+                    }
+                }
+                other.addColumn(columnName, newColumn);
+            } else if (t == ColType.BOOLEAN) {
+                boolean[] oldColumn = getBooleanColumn(c);
+                boolean[] newColumn = new boolean[numTrue];
                 int j = 0;
                 for (int i = 0; i < numRows; i++) {
                     if (mask.get(i)) {
@@ -592,15 +701,15 @@ public class DataFrame {
       final int numColumns = this.schema.getNumColumns();
 
       for (int colIdx = 0; colIdx < numColumns; colIdx++) {
-          Schema.ColType t = result.schema.getColumnType(colIdx);
-          if (t == Schema.ColType.STRING) {
+          ColType t = result.schema.getColumnType(colIdx);
+          if (t == ColType.STRING) {
               final String[] col = this.getStringColumn(colIdx);
               final String[] newCol = new String[numRows];
               for (int i = 0; i < numRows; ++i) {
                   newCol[i] = col[i];
               }
               result.stringCols.add(newCol);
-          } else if (t == Schema.ColType.DOUBLE) {
+          } else if (t == ColType.DOUBLE) {
               final double[] col = this.getDoubleColumn(colIdx);
               final double[] newCol = new double[numRows];
               for (int i = 0; i < numRows; ++i) {
@@ -616,11 +725,11 @@ public class DataFrame {
         int d = schema.getNumColumns();
         ArrayList<Object> rowValues = new ArrayList<>(d);
         for (int c = 0; c < d; c++) {
-            Schema.ColType t = schema.getColumnType(c);
+            ColType t = schema.getColumnType(c);
             int typeSubIndex = indexToTypeIndex.get(c);
-            if (t == Schema.ColType.STRING) {
+            if (t == ColType.STRING) {
                 rowValues.add(stringCols.get(typeSubIndex)[rowIdx]);
-            } else if (t == Schema.ColType.DOUBLE) {
+            } else if (t == ColType.DOUBLE) {
                 rowValues.add(doubleCols.get(typeSubIndex)[rowIdx]);
             } else {
                 throw new MacroBaseInternalError("Bad ColType");

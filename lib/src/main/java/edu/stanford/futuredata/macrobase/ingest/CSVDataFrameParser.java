@@ -4,6 +4,7 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -79,12 +80,15 @@ public class CSVDataFrameParser implements DataFrameLoader {
         Schema schema = new Schema();
         int numStringColumns = 0;
         int numDoubleColumns = 0;
+        int numBooleanColumns = 0;
         for (int c = 0; c < schemaLength; c++) {
             schema.addColumn(columnTypeList[c], columnNameList[c]);
-            if (columnTypeList[c] == Schema.ColType.STRING) {
+            if (columnTypeList[c] == ColType.STRING) {
                 numStringColumns++;
-            } else if (columnTypeList[c] == Schema.ColType.DOUBLE) {
+            } else if (columnTypeList[c] == ColType.DOUBLE) {
                 numDoubleColumns++;
+            } else if (columnTypeList[c] == ColType.BOOLEAN) {
+                numBooleanColumns++;
             } else {
                 throw new RuntimeException("Bad ColType");
             }
@@ -98,18 +102,22 @@ public class CSVDataFrameParser implements DataFrameLoader {
         for (int i = 0; i < numDoubleColumns; i++) {
             doubleColumns[i] = new ArrayList<>();
         }
+        ArrayList<Boolean>[] booleanColumns = (ArrayList<Boolean>[])new ArrayList[numBooleanColumns];
+        for (int i = 0; i < numBooleanColumns; i++) {
+            booleanColumns[i] = new ArrayList<>();
+        }
 
         String[] row;
         int doubleParseFailures = 0;
         while ((row = parser.parseNext()) != null) {
-            for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
+            for (int c = 0, stringColNum = 0, doubleColNum = 0, booleanColNum = 0; c < numColumns; c++) {
                 if (schemaIndexMap[c] >= 0) {
                     int schemaIndex = schemaIndexMap[c];
                     Schema.ColType t = columnTypeList[schemaIndex];
                     String rowValue = row[c];
-                    if (t == Schema.ColType.STRING) {
+                    if (t == ColType.STRING) {
                         stringColumns[stringColNum++].add(rowValue);
-                    } else if (t == Schema.ColType.DOUBLE) {
+                    } else if (t == ColType.DOUBLE) {
                         try {
                             doubleColumns[doubleColNum].add(Double.parseDouble(rowValue));
                         } catch (NumberFormatException | NullPointerException e) {
@@ -117,6 +125,9 @@ public class CSVDataFrameParser implements DataFrameLoader {
                             doubleParseFailures++;
                         }
                         doubleColNum++;
+                    } else if (t == ColType.BOOLEAN) {
+                        booleanColumns[booleanColNum].add(Boolean.parseBoolean(rowValue));
+                        booleanColNum++;
                     } else {
                         throw new RuntimeException("Bad ColType");
                     }
@@ -126,7 +137,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
         if (doubleParseFailures > 0)
             log.warn("{} double values failed to parse", doubleParseFailures);
 
-        DataFrame df = new DataFrame(schema, stringColumns, doubleColumns);
+        DataFrame df = new DataFrame(schema, stringColumns, doubleColumns, booleanColumns);
         return df;
     }
 

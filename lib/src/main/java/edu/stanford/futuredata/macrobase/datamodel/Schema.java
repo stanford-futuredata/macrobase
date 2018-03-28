@@ -12,7 +12,8 @@ import java.util.Objects;
 public class Schema {
     public enum ColType {
         STRING,
-        DOUBLE
+        DOUBLE,
+        BOOLEAN
     }
     private ArrayList<String> columnNames;
     private ArrayList<ColType> columnTypes;
