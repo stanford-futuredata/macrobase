@@ -22,6 +22,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     APrioriLinear aplKernel;
     List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
+    double sampleRate = 1.0;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -76,7 +77,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 aggregationOps,
                 encoder.getNextKey(),
                 maxOrder,
-                numThreads
+                numThreads,
+                sampleRate
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
@@ -95,4 +97,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
         return explanation;
     }
 
+    public void setSampleRate(double sampleRate) { this.sampleRate = sampleRate; }
 }

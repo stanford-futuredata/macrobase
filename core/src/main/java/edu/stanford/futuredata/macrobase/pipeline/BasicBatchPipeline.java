@@ -33,6 +33,7 @@ public class BasicBatchPipeline implements Pipeline {
     private boolean pctileLow;
     private String predicateStr;
     private int numThreads;
+    private double sampleRate;
 
     private String summarizerType;
     private List<String> attributes;
@@ -70,6 +71,7 @@ public class BasicBatchPipeline implements Pipeline {
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
+        sampleRate = conf.get("sampleRate", 1.0);
     }
 
     public Classifier getClassifier() throws MacroBaseException {
@@ -114,6 +116,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
                 summarizer.setNumThreads(numThreads);
+                summarizer.setSampleRate(sampleRate);
                 return summarizer;
             }
             default: {
@@ -147,7 +150,10 @@ public class BasicBatchPipeline implements Pipeline {
         log.info("Attributes: {}", attributes);
 
         Classifier classifier = getClassifier();
+        startTime = System.currentTimeMillis();
         classifier.process(df);
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Classification time: {} ms", elapsed);
         df = classifier.getResults();
 
         BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());

@@ -1,0 +1,18 @@
+{
+  "pipeline": "BasicBatchPipeline",
+  "inputURI": "csv://lib/src/test/resources/milan_100k.csv",
+  "classifier": "percentile",
+  "metric": "SMSin",
+  "cutoff": 1.0,
+  "includeHi": true,
+  "includeLo": true,
+  "summarizer": "aplinear",
+  "attributes": [
+    "Grid",
+    "Country"
+  ],
+  "ratioMetric": "globalratio",
+  "minRatioMetric": 10.0,
+  "minSupport": 0.2,
+  "sampleRate": 0.001
+}

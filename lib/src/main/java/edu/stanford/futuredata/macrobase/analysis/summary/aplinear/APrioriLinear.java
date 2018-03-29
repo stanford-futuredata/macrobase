@@ -1,5 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.sample.ReservoirSampler;
+import edu.stanford.futuredata.macrobase.analysis.sample.Sampler;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
@@ -50,10 +52,11 @@ public class APrioriLinear {
             AggregationOp[] aggregationOps,
             int cardinality,
             final int maxOrder,
-            int numThreads
+            int numThreads,
+            double sampleRate
     ) {
         final int numAggregates = aggregateColumns.length;
-        final int numRows = aggregateColumns[0].length;
+        int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
 
         // Maximum order of explanations.
@@ -67,6 +70,13 @@ public class APrioriLinear {
             useIntSetAsArray = false;
         }
 
+        int[][] usedAttributes = attributes;
+        if (sampleRate < 1.0) {
+            Sampler sampler = new ReservoirSampler();
+            usedAttributes = sampler.getSample(attributes, sampleRate);
+            numRows = usedAttributes.length;
+        }
+
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
@@ -75,7 +85,7 @@ public class APrioriLinear {
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
             for(int i = 0; i < numColumns; i++)
                 for(int j = startIndex; j < endIndex; j++) {
-                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
+                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = usedAttributes[j][i];
                 }
         }
 

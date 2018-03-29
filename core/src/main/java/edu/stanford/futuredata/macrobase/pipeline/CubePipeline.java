@@ -125,7 +125,7 @@ public class CubePipeline implements Pipeline {
         startTime = System.currentTimeMillis();
         classifier.process(df);
         elapsed = System.currentTimeMillis() - startTime;
-        log.info("Classification time: {}", elapsed);
+        log.info("Classification time: {} ms", elapsed);
         df = classifier.getResults();
         if (debugDump) {
             CSVDataFrameWriter writer = new CSVDataFrameWriter();
