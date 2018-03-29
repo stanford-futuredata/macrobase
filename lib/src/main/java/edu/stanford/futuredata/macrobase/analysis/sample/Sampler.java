@@ -45,4 +45,6 @@ public abstract class Sampler {
         }
         return samples;
     }
+
+    public int[] getSampleIndices() { return sampleIndices; }
 }

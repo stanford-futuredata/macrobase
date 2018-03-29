@@ -33,6 +33,12 @@ public class APrioriLinear {
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
+    public long sampleTime = 0;
+    public long shardTime = 0;
+    public long initializationTime = 0;
+    public long rowstoreTime = 0;
+    public long[] explainTime = {0, 0, 0};
+
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
             List<Double> thresholds
@@ -70,14 +76,39 @@ public class APrioriLinear {
             useIntSetAsArray = false;
         }
 
+        long start;
         int[][] usedAttributes = attributes;
+        Sampler sampler = new ReservoirSampler();
         if (sampleRate < 1.0) {
-            Sampler sampler = new ReservoirSampler();
+            start = System.nanoTime();
             usedAttributes = sampler.getSample(attributes, sampleRate);
             numRows = usedAttributes.length;
+            sampleTime = System.nanoTime() - start;
+            log.info("Sample time: {} ms", sampleTime / 1.e6);
         }
 
+        // Row store for more convenient access
+        start = System.nanoTime();
+        final double[][] aRows = new double[numRows][numAggregates];
+        if (sampleRate < 1.0) {
+            int[] sampleIndices = sampler.getSampleIndices();
+            for (int i = 0; i < numRows; i++) {
+                for (int j = 0; j < numAggregates; j++) {
+                    aRows[i][j] = aggregateColumns[j][sampleIndices[i]];
+                }
+            }
+        } else {
+            for (int i = 0; i < numRows; i++) {
+                for (int j = 0; j < numAggregates; j++) {
+                    aRows[i][j] = aggregateColumns[j][i];
+                }
+            }
+        }
+        rowstoreTime = System.nanoTime() - start;
+        log.info("Row store time: {} ms", rowstoreTime / 1.e6);
+
         // Shard the dataset by rows for the threads, but store it by column for fast processing
+        start = System.nanoTime();
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
         for (int threadNum = 0; threadNum < numThreads; threadNum++) {
@@ -88,9 +119,12 @@ public class APrioriLinear {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = usedAttributes[j][i];
                 }
         }
+        shardTime = System.nanoTime() - start;
+        log.info("Shard time: {} ms", shardTime / 1.e6);
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
+        start = System.nanoTime();
         double[] globalAggregates = new double[numAggregates];
         for (int j = 0; j < numAggregates; j++) {
             AggregationOp curOp = aggregationOps[j];
@@ -103,15 +137,11 @@ public class APrioriLinear {
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
         }
+        initializationTime = System.nanoTime() - start;
+        log.info("Initialization time: {} ms", initializationTime / 1.e6);
 
-        // Row store for more convenient access
-        final double[][] aRows = new double[numRows][numAggregates];
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < numAggregates; j++) {
-                aRows[i][j] = aggregateColumns[j][i];
-            }
-        }
         for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
+            start = System.nanoTime();
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Initialize per-thread hashmaps.
@@ -329,6 +359,9 @@ public class APrioriLinear {
                     singleNextArray[i.getFirst()] = true;
                 }
             }
+
+            explainTime[curOrder - 1] = System.nanoTime() - start;
+            log.info("Order {} time: {} ms", curOrder, explainTime[curOrder - 1] / 1.e6);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
