@@ -54,11 +54,20 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
 
     public void process(DataFrame input) throws Exception {
+        long startTime, elapsed;
+
+        startTime = System.currentTimeMillis();
+        if (sampleRate < 1.0) {
+            input = input.sample(sampleRate);
+        }
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Sampled in: {} ms", elapsed);
+
         encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
-        long startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
         int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
-        long elapsed = System.currentTimeMillis() - startTime;
+        elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {} ms", elapsed);
         log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
 

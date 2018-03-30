@@ -17,7 +17,9 @@ public abstract class Sampler {
      * populationSize
      */
     public double[] getSample(double[] input, double samplingRate) {
-        computeSampleIndices(input.length, samplingRate);
+        if (samplingRate != 0.0) {
+            computeSampleIndices(input.length, samplingRate);
+        }
         int sampleSize = sampleIndices.length;
         double[] samples = new double[sampleSize];
         for (int i = 0; i < sampleSize; i++) {
@@ -26,14 +28,24 @@ public abstract class Sampler {
         return samples;
     }
 
+    public double[] getSample(double[] input) {
+        return getSample(input, 0.0);
+    }
+
     public String[] getSample(String[] input, double samplingRate) {
-        computeSampleIndices(input.length, samplingRate);
+        if (samplingRate != 0.0) {
+            computeSampleIndices(input.length, samplingRate);
+        }
         int sampleSize = sampleIndices.length;
         String[] samples = new String[sampleSize];
         for (int i = 0; i < sampleSize; i++) {
             samples[i] = input[sampleIndices[i]];
         }
         return samples;
+    }
+
+    public String[] getSample(String[] input) {
+        return getSample(input, 0.0);
     }
 
     public int[][] getSample(int[][] input, double samplingRate) {

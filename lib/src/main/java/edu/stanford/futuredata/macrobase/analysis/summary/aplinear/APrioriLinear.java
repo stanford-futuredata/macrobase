@@ -77,31 +77,42 @@ public class APrioriLinear {
         }
 
         long start;
-        int[][] usedAttributes = attributes;
-        Sampler sampler = new ReservoirSampler();
-        if (sampleRate < 1.0) {
-            start = System.nanoTime();
-            usedAttributes = sampler.getSample(attributes, sampleRate);
-            numRows = usedAttributes.length;
-            sampleTime = System.nanoTime() - start;
-            log.info("Sample time: {} ms", sampleTime / 1.e6);
-        }
+//        int[][] usedAttributes = attributes;
+//        Sampler sampler = new ReservoirSampler();
+//        if (sampleRate < 1.0) {
+//            start = System.nanoTime();
+//            usedAttributes = sampler.getSample(attributes, sampleRate);
+//            numRows = usedAttributes.length;
+//            sampleTime = System.nanoTime() - start;
+//            log.info("Sample time: {} ms", sampleTime / 1.e6);
+//        }
+//
+//        // Row store for more convenient access
+//        start = System.nanoTime();
+//        final double[][] aRows = new double[numRows][numAggregates];
+//        if (sampleRate < 1.0) {
+//            int[] sampleIndices = sampler.getSampleIndices();
+//            for (int i = 0; i < numRows; i++) {
+//                for (int j = 0; j < numAggregates; j++) {
+//                    aRows[i][j] = aggregateColumns[j][sampleIndices[i]];
+//                }
+//            }
+//        } else {
+//            for (int i = 0; i < numRows; i++) {
+//                for (int j = 0; j < numAggregates; j++) {
+//                    aRows[i][j] = aggregateColumns[j][i];
+//                }
+//            }
+//        }
+//        rowstoreTime = System.nanoTime() - start;
+//        log.info("Row store time: {} ms", rowstoreTime / 1.e6);
 
         // Row store for more convenient access
         start = System.nanoTime();
         final double[][] aRows = new double[numRows][numAggregates];
-        if (sampleRate < 1.0) {
-            int[] sampleIndices = sampler.getSampleIndices();
-            for (int i = 0; i < numRows; i++) {
-                for (int j = 0; j < numAggregates; j++) {
-                    aRows[i][j] = aggregateColumns[j][sampleIndices[i]];
-                }
-            }
-        } else {
-            for (int i = 0; i < numRows; i++) {
-                for (int j = 0; j < numAggregates; j++) {
-                    aRows[i][j] = aggregateColumns[j][i];
-                }
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numAggregates; j++) {
+                aRows[i][j] = aggregateColumns[j][i];
             }
         }
         rowstoreTime = System.nanoTime() - start;
@@ -116,7 +127,7 @@ public class APrioriLinear {
             final int endIndex = (numRows * (threadNum + 1)) / numThreads;
             for(int i = 0; i < numColumns; i++)
                 for(int j = startIndex; j < endIndex; j++) {
-                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = usedAttributes[j][i];
+                    byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
                 }
         }
         shardTime = System.nanoTime() - start;

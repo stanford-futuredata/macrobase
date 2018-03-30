@@ -6,6 +6,8 @@ import static java.util.Comparator.nullsLast;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
+import edu.stanford.futuredata.macrobase.analysis.sample.ReservoirSampler;
+import edu.stanford.futuredata.macrobase.analysis.sample.Sampler;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import java.io.PrintStream;
@@ -124,6 +126,25 @@ public class DataFrame {
         other.stringCols = new ArrayList<>(stringCols);
         other.doubleCols = new ArrayList<>(doubleCols);
         return other;
+    }
+
+    /**
+     * Samples in place.
+     * @return modified DataFrame
+     */
+    public DataFrame sample(double sampleRate) {
+        Sampler sampler = new ReservoirSampler();
+        sampler.computeSampleIndices(numRows, sampleRate);
+        for (int i = 0; i < doubleCols.size(); i++) {
+            double[] col = doubleCols.get(i);
+            doubleCols.set(i, sampler.getSample(col));
+        }
+        for (int i = 0; i < stringCols.size(); i++) {
+            String[] col = stringCols.get(i);
+            stringCols.set(i, sampler.getSample(col));
+        }
+        numRows = sampler.getSampleIndices().length;
+        return this;
     }
 
     @Override
