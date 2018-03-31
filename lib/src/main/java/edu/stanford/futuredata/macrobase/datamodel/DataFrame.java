@@ -132,9 +132,7 @@ public class DataFrame {
      * Samples in place.
      * @return modified DataFrame
      */
-    public DataFrame sample(double sampleRate) {
-        Sampler sampler = new ReservoirSampler();
-        sampler.computeSampleIndices(numRows, sampleRate);
+    public DataFrame sample(Sampler sampler) {
         for (int i = 0; i < doubleCols.size(); i++) {
             double[] col = doubleCols.get(i);
             doubleCols.set(i, sampler.getSample(col));
@@ -145,6 +143,18 @@ public class DataFrame {
         }
         numRows = sampler.getSampleIndices().length;
         return this;
+    }
+
+    public DataFrame sample(double sampleRate) {
+        Sampler sampler = new ReservoirSampler();
+        sampler.computeSampleIndices(numRows, sampleRate);
+        return sample(sampler);
+    }
+
+    public DataFrame sample(int[] sampleIndices) {
+        Sampler sampler = new ReservoirSampler();
+        sampler.setSampleIndices(sampleIndices);
+        return sample(sampler);
     }
 
     @Override

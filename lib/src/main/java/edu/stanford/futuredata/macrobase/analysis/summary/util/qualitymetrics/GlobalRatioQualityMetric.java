@@ -7,10 +7,12 @@ public class GlobalRatioQualityMetric implements QualityMetric{
     private int outlierCountIdx;
     private int totalCountIdx;
     private double baseRate = 0.0;
+    private double inlierWeight = 1.0;
 
-    public GlobalRatioQualityMetric(int outlierCountIdx, int totalCountIdx) {
+    public GlobalRatioQualityMetric(int outlierCountIdx, int totalCountIdx, double inlierWeight) {
         this.outlierCountIdx = outlierCountIdx;
         this.totalCountIdx = totalCountIdx;
+        this.inlierWeight = inlierWeight;
     }
 
     @Override
@@ -20,13 +22,15 @@ public class GlobalRatioQualityMetric implements QualityMetric{
 
     @Override
     public QualityMetric initialize(double[] globalAggregates) {
-        baseRate = globalAggregates[outlierCountIdx] / globalAggregates[totalCountIdx];
+        double totalInliers = globalAggregates[totalCountIdx] - globalAggregates[outlierCountIdx];
+        baseRate = globalAggregates[outlierCountIdx] / (globalAggregates[outlierCountIdx] + totalInliers * inlierWeight);
         return this;
     }
 
     @Override
     public double value(double[] aggregates) {
-        return (aggregates[outlierCountIdx] / aggregates[totalCountIdx]) / baseRate;
+        double weightedInlierCount = inlierWeight * (aggregates[totalCountIdx] - aggregates[outlierCountIdx]);
+        return (aggregates[outlierCountIdx] / (aggregates[outlierCountIdx] + weightedInlierCount)) / baseRate;
     }
 
     @Override

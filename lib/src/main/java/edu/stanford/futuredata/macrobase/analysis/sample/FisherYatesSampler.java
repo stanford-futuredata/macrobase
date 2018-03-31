@@ -15,10 +15,9 @@ public class FisherYatesSampler extends Sampler {
 
     /**
      * @param populationSize total size of population being sampled from
-     * @param samplingRate fraction of population to use as samples
+     * @param sampleSize size of sample
      */
-    public void computeSampleIndices(int populationSize, double samplingRate) {
-        int sampleSize = (int)(populationSize * samplingRate);
+    public void computeSampleIndices(int populationSize, int sampleSize) {
         sampleIndices = new int[sampleSize];
         int[] range = new int[populationSize];
         for (int i = 0; i < populationSize; i++) {

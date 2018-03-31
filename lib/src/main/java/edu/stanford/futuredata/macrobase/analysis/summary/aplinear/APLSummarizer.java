@@ -23,6 +23,9 @@ public abstract class APLSummarizer extends BatchSummarizer {
     List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
     double sampleRate = 1.0;
+    /* When the input has been sampled, this is the ratio of the input outlier rate
+       to the true outlier rate. */
+    double inlierWeight = 1.0;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -107,4 +110,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     }
 
     public void setSampleRate(double sampleRate) { this.sampleRate = sampleRate; }
+    public void setInlierWeight(double inlierWeight) { this.inlierWeight = inlierWeight; }
 }

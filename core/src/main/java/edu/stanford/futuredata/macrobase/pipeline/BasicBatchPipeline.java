@@ -81,6 +81,7 @@ public class BasicBatchPipeline implements Pipeline {
                 classifier.setPercentile(cutoff);
                 classifier.setIncludeHigh(pctileHigh);
                 classifier.setIncludeLow(pctileLow);
+                classifier.setSampleRate(sampleRate);
                 return classifier;
             }
             case "predicate": {
@@ -97,7 +98,7 @@ public class BasicBatchPipeline implements Pipeline {
         }
     }
 
-    public BatchSummarizer getSummarizer(String outlierColumnName) throws MacroBaseException {
+    public BatchSummarizer getSummarizer(String outlierColumnName, double inlierWeight) throws MacroBaseException {
         switch (summarizerType.toLowerCase()) {
             case "fpgrowth": {
                 FPGrowthSummarizer summarizer = new FPGrowthSummarizer();
@@ -116,7 +117,8 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
                 summarizer.setNumThreads(numThreads);
-                summarizer.setSampleRate(sampleRate);
+//                summarizer.setSampleRate(sampleRate);
+                summarizer.setInlierWeight(inlierWeight);
                 return summarizer;
             }
             default: {
@@ -156,7 +158,7 @@ public class BasicBatchPipeline implements Pipeline {
         log.info("Classification time: {} ms", elapsed);
         df = classifier.getResults();
 
-        BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
+        BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName(), classifier.getInlierWeight());
 
         startTime = System.currentTimeMillis();
         summarizer.process(df);

@@ -1,23 +1,32 @@
 package edu.stanford.futuredata.macrobase.analysis.classify;
 
+import edu.stanford.futuredata.macrobase.analysis.sample.ReservoirSampler;
+import edu.stanford.futuredata.macrobase.analysis.sample.Sampler;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 
 /**
  * Classify rows based on high / low values for a single column. Returns a new DataFrame with a
  * column representation the classification status for each row: 1.0 if outlier, 0.0 otherwise.
  */
 public class PercentileClassifier extends Classifier implements ThresholdClassifier {
+    private Logger log = LoggerFactory.getLogger("PercentileClassifier");
 
     // Parameters
     private double percentile = 0.5;
     private boolean includeHigh = true;
     private boolean includeLow = true;
+    private double sampleRate = 1.0;
 
     // Calculated values
     private double lowCutoff;
     private double highCutoff;
     private DataFrame output;
+    private int numOutliers = 0;
 
     public PercentileClassifier(String columnName) {
         super(columnName);
@@ -25,22 +34,69 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
 
     @Override
     public void process(DataFrame input) {
+        long start, elapsed;
+
         double[] metrics = input.getDoubleColumnByName(columnName);
         int len = metrics.length;
+        start = System.nanoTime();
         lowCutoff = new Percentile().evaluate(metrics, percentile);
         highCutoff = new Percentile().evaluate(metrics, 100.0 - percentile);
+        elapsed = System.nanoTime() - start;
+        log.info("Cutoff eval time: {} ms", elapsed / 1.e6);
 
-        output = input.copy();
-        double[] resultColumn = new double[len];
-        for (int i = 0; i < len; i++) {
-            double curVal = metrics[i];
-            if ((curVal > highCutoff && includeHigh)
-                || (curVal < lowCutoff && includeLow)
-                ) {
+        start = System.nanoTime();
+        if (sampleRate < 1.0) {
+            int sampleSize = (int)(len * sampleRate);
+            int[] sampleIndices = new int[sampleSize];
+
+            ReservoirSampler outlierSampler = new ReservoirSampler(sampleSize);
+            ReservoirSampler inlierSampler = new ReservoirSampler(sampleSize);
+
+            for (int i = 0; i < len; i++) {
+                double curVal = metrics[i];
+                if ((curVal > highCutoff && includeHigh)
+                        || (curVal < lowCutoff && includeLow)
+                        ) {
+                    outlierSampler.process(i);
+                } else {
+                    inlierSampler.process(i);
+                }
+            }
+            numOutliers = outlierSampler.getNumProcessed();
+
+            int[] sampledOutlierIndices = outlierSampler.getSample();
+            int[] sampledInlierIndices = inlierSampler.getSample();
+            int outlierSampleSize = Math.min(sampleSize / 2, numOutliers);
+            int idx = 0;
+            for (int i = 0; i < outlierSampleSize; i++) {
+                sampleIndices[idx++] = sampledOutlierIndices[i];
+            }
+            for (int i = 0; i < sampleSize - outlierSampleSize; i++) {
+                sampleIndices[idx++] = sampledInlierIndices[i];
+            }
+
+            output = input.sample(sampleIndices);
+            double[] resultColumn = new double[sampleSize];
+            for (int i = 0; i < sampledOutlierIndices.length; i++) {
                 resultColumn[i] = 1.0;
             }
+            output.addColumn(outputColumnName, resultColumn);
+            inlierWeight =  ((double) (len - numOutliers) / sampledInlierIndices.length) / ((double) numOutliers / sampledOutlierIndices.length);
+        } else {
+            output = input.copy();
+            double[] resultColumn = new double[len];
+            for (int i = 0; i < len; i++) {
+                double curVal = metrics[i];
+                if ((curVal > highCutoff && includeHigh)
+                        || (curVal < lowCutoff && includeLow)
+                        ) {
+                    resultColumn[i] = 1.0;
+                }
+            }
+            output.addColumn(outputColumnName, resultColumn);
         }
-        output.addColumn(outputColumnName, resultColumn);
+        elapsed = System.nanoTime() - start;
+        log.info("Classification time: {} ms", elapsed / 1.e6);
     }
 
     @Override
@@ -95,4 +151,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     public double getHighCutoff() {
         return highCutoff;
     }
+
+    public void setSampleRate(double sampleRate) { this.sampleRate = sampleRate; }
+    public int getNumOutliers() { return numOutliers; }
 }

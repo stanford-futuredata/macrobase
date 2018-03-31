@@ -9,7 +9,13 @@ package edu.stanford.futuredata.macrobase.analysis.sample;
 public abstract class Sampler {
 	protected int[] sampleIndices;
 
-    public abstract void computeSampleIndices(int populationSize, double samplingRate);
+    public abstract void computeSampleIndices(int populationSize, int sampleSize);
+
+    public void computeSampleIndices(int populationSize, double samplingRate) {
+        int sampleSize = (int)(populationSize * samplingRate);
+        computeSampleIndices(populationSize, sampleSize);
+    }
+
     public abstract String getSamplingMethod();
 
     /**
@@ -59,4 +65,5 @@ public abstract class Sampler {
     }
 
     public int[] getSampleIndices() { return sampleIndices; }
+    public void setSampleIndices(int[] sampleIndices) { this.sampleIndices = sampleIndices; }
 }
