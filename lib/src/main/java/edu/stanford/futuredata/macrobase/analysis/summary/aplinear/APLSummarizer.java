@@ -84,6 +84,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
         AggregationOp[] aggregationOps = getAggregationOps();
+        startTime = System.currentTimeMillis();
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
                 aggregationOps,
@@ -92,6 +93,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 numThreads,
                 sampleRate
         );
+        elapsed = System.currentTimeMillis() - startTime;
+        log.info("Explained in: {} ms", elapsed);
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
