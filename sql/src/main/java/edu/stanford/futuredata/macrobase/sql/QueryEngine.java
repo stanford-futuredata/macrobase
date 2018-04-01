@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -256,19 +257,31 @@ class QueryEngine {
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
         final String[] outlierProjected = outlierDf.project(joinColumnName).getStringColumn(0);
         final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
-        //  TODO: Encode R, S, and T
-        final Map<String, IntPair> foreignKeyCounts = new HashMap<>(); // map foreign key to outlier and inlier counts
-        final Set<String> candidateForeignKeys = diff(outlierProjected, inlierProjected,
+        // 1a) Encode R, S, and T
+        final AttributeEncoder encoder = new AttributeEncoder();
+        final List<int[]> encodedValues = encoder.encodeKeyValueAttributes(
+            ImmutableList.of(outlierProjected, inlierProjected,
+                common.getStringColumnByName(joinColumnName.get(0))),
+            common.getStringColsByName(explainColumnNames));
+
+        final Map<Integer, IntPair> foreignKeyCounts = new HashMap<>(); // map foreign key to outlier and inlier counts
+        final Set<Integer> candidateForeignKeys = diff(
+            encodedValues.get(0), // outlierProjected
+            encodedValues.get(1), // inlierProjected
             foreignKeyCounts,
             minRatioThreshold); // returns K, the candidate keys, which may contain some false positives.
         // candidateForeignKeys contains the keys in foreignKeyCounts that exceeded the minRatioThreshold
 
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys, and merge
         //    common values that distinct keys may map to
-        final Map<String, IntPair> valueCounts = new HashMap<>(); // map values to outlier and inlier counts
-        semiJoinAndMerge(candidateForeignKeys, common,
-            foreignKeyCounts, valueCounts, minSupportThreshold, minRatioThreshold,
-            joinColumnName.get(0), explainColumnNames.get(0));
+        final Map<Integer, IntPair> valueCounts = new HashMap<>(); // map values to outlier and inlier counts
+        semiJoinAndMerge(
+            candidateForeignKeys,
+            encodedValues.subList(2, encodedValues.size()), // T
+            foreignKeyCounts,
+            valueCounts,
+            minSupportThreshold,
+            minRatioThreshold);
 
         // 3) Construct DataFrame of results
         final Map<String, String[]> stringResultsByCol = new HashMap<>();
@@ -280,8 +293,8 @@ class QueryEngine {
         doubleResultsByCol.put("total_count", new double[valueCounts.size()]);
 
         int i = 0;
-        for (Entry<String, IntPair> entry : valueCounts.entrySet()) {
-            stringResultsByCol.get(explainColumnNames.get(0))[i] = entry.getKey();
+        for (Entry<Integer, IntPair> entry : valueCounts.entrySet()) {
+            stringResultsByCol.get(explainColumnNames.get(0))[i] = encoder.decodeValue(entry.getKey());
             final IntPair value = entry.getValue();
             doubleResultsByCol.get("support")[i] = value.a / (outlierNumRows + 0.0);
             doubleResultsByCol.get("global_ratio")[i] =
@@ -300,21 +313,20 @@ class QueryEngine {
         return result;
     }
 
-    private void semiJoinAndMerge(Set<String> candidateForeignKeys, DataFrame common,
-        Map<String, IntPair> foreignKeyCounts, Map<String, IntPair> valueCounts,
-        final int minSupportThreshold, final double minRatioThreshold, final String joinColumnName,
-        final String explainColumnName) {
-        final String[] primaryKeyCol = common.getStringColumnByName(joinColumnName);
+    private void semiJoinAndMerge(Set<Integer> candidateForeignKeys, List<int[]> encodedValues,
+        Map<Integer, IntPair> foreignKeyCounts, Map<Integer, IntPair> valueCounts,
+        final int minSupportThreshold, final double minRatioThreshold) {
+        final int[] primaryKeyCol = encodedValues.get(0);
         // TODO: right now, we only handle one explain column
-        final String[] valueCol = common.getStringColumnByName(explainColumnName);
+        final int[] valueCol = encodedValues.get(1);
         // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained
         for (int i = 0; i < primaryKeyCol.length; ++i) {
-            final String primaryKey = primaryKeyCol[i];
+            final int primaryKey = primaryKeyCol[i];
             if (candidateForeignKeys.contains(primaryKey)) {
                 final IntPair foreignKeyCount = foreignKeyCounts
                     .get(primaryKey); // this always exists, never need to check for null
                 // extract the corresponding value for the candidate key
-                final String val = valueCol[i];
+                final int val = valueCol[i];
                 final IntPair valueCount = valueCounts.get(val);
                 if (valueCount == null) {
                     valueCounts.put(val, new IntPair(foreignKeyCount.a, foreignKeyCount.b));
@@ -327,13 +339,13 @@ class QueryEngine {
         }
         // 2) Go through primary key column again, check if anything maps to the same values we found in the
         for (int i = 0; i < valueCol.length; ++i) {
-            final String val = valueCol[i];
+            final int val = valueCol[i];
             final IntPair valueCount = valueCounts.get(val);
             if (valueCount == null) {
                 continue;
             }
             // extract the corresponding foreign key, merge the foreign key counts
-            final String primaryKey = primaryKeyCol[i];
+            final int primaryKey = primaryKeyCol[i];
             if (candidateForeignKeys.contains(primaryKey)) {
                 continue;
             }
@@ -350,9 +362,9 @@ class QueryEngine {
         });
     }
 
-    private Set<String> diff(final String[] outliers, final String[] inliers,
-        final Map<String, IntPair> foreignKeyCounts, double minRatioThreshold) {
-        for (String outlier : outliers) {
+    private Set<Integer> diff(final int[] outliers, final int[] inliers,
+        final Map<Integer, IntPair> foreignKeyCounts, double minRatioThreshold) {
+        for (int outlier : outliers) {
             final IntPair value = foreignKeyCounts.get(outlier);
             if (value != null) {
                 value.a++;
@@ -360,7 +372,7 @@ class QueryEngine {
                 foreignKeyCounts.put(outlier, new IntPair(1, 0));
             }
         }
-        for (String inlier : inliers) {
+        for (int inlier : inliers) {
             final IntPair value = foreignKeyCounts.get(inlier);
             if (value != null) {
                 value.b++;
@@ -368,8 +380,8 @@ class QueryEngine {
                 foreignKeyCounts.put(inlier, new IntPair(0, 1));
             }
         }
-        final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-        for (Entry<String, IntPair> entry : foreignKeyCounts.entrySet()) {
+        final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
+        for (Entry<Integer, IntPair> entry : foreignKeyCounts.entrySet()) {
             final IntPair value = entry.getValue();
             if ((value.a / (value.a + value.b + 0.0)) > minRatioThreshold) {
                 builder.add(entry.getKey());
