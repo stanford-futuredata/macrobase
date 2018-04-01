@@ -6,6 +6,7 @@ import static edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionTyp
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
@@ -58,6 +59,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
@@ -72,6 +74,7 @@ import org.slf4j.LoggerFactory;
 class QueryEngine {
 
     private static final Logger log = LoggerFactory.getLogger(QueryEngine.class.getSimpleName());
+    private static final IntPair DEFAULT_VALUE = new IntPair(0, 0);
 
     private final Map<String, DataFrame> tablesInMemory;
     private final int numThreads;
@@ -133,12 +136,32 @@ class QueryEngine {
     private DataFrame executeDiffQuerySpec(final DiffQuerySpecification diffQuery)
         throws MacroBaseException {
         final String outlierColName = "outlier_col";
+        final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
+        final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
+        final String ratioMetric = diffQuery.getRatioMetricExpr().getFuncName().toString();
+        final int order = diffQuery.getMaxCombo().getValue();
+        List<String> explainCols = diffQuery.getAttributeCols().stream()
+            .map(Identifier::getValue)
+            .collect(toImmutableList());
+
         DataFrame dfToExplain;
 
         if (diffQuery.hasTwoArgs()) {
             // case 1: two separate subqueries
             final TableSubquery first = diffQuery.getFirst().get();
             final TableSubquery second = diffQuery.getSecond().get();
+
+            // DIFF-JOIN optimization
+            if (matchesDiffJoinCriteria(first.getQuery().getQueryBody(),
+                second.getQuery().getQueryBody())) {
+                final Join firstJoin = (Join) ((QuerySpecification) first.getQuery().getQueryBody())
+                    .getFrom().get();
+                final Join secondJoin = (Join) ((QuerySpecification) second.getQuery()
+                    .getQueryBody()).getFrom().get();
+                return evaluateSQLClauses(diffQuery,
+                    executeDiffJoinQuery(firstJoin, secondJoin, explainCols, minRatioMetric,
+                        minSupport, ratioMetric, order));
+            }
 
             // execute subqueries
             final DataFrame outliersDf = executeQuery(first.getQuery().getQueryBody());
@@ -158,9 +181,6 @@ class QueryEngine {
             dfToExplain.addColumn(outlierColName, outlierVals);
         }
 
-        List<String> explainCols = diffQuery.getAttributeCols().stream()
-            .map(Identifier::getValue)
-            .collect(toImmutableList());
         if ((explainCols.size() == 1) && explainCols.get(0).equals("*")) {
             // ON *, explore columns in DataFrame
             explainCols = findExplanationColumns(dfToExplain);
@@ -175,11 +195,6 @@ class QueryEngine {
         }
 
         // TODO: if an explainCol isn't in the SELECT clause, don't include it
-        final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
-        final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
-        final String ratioMetric = diffQuery.getRatioMetricExpr().getFuncName().toString();
-        final int order = diffQuery.getMaxCombo().getValue();
-
         // execute diff
         final APLOutlierSummarizer summarizer = new APLOutlierSummarizer(true);
         summarizer.setRatioMetric(ratioMetric)
@@ -201,6 +216,195 @@ class QueryEngine {
         resultDf.renameColumn("count", "total_count");
 
         return evaluateSQLClauses(diffQuery, resultDf);
+    }
+
+    /**
+     * Execute DIFF-JOIN query using co-optimized algorithm. NOTE: Must be a Primary Key-Foreign Key
+     * Join. TODO: We make the following assumptions in the method below: 1) The two joins are both
+     * over the same, single column 2) The join column is of type String 3) The two joins are both
+     * inner joins 4) @param explainCols cannot be "*", con only be a single column in T 5) The
+     * ratio metric is global_ratio
+     *
+     * R     S       T ---   ---   ------- a     a     a | CA a     b     b | CA b     c     c | TX
+     * b     d     d | TX e     e | FL
+     *
+     * @return result of the DIFF JOIN
+     */
+    private DataFrame executeDiffJoinQuery(final Join first, final Join second,
+        final List<String> explainColumnNames, final double minRatioMetric, final double minSupport,
+        final String ratioMetric, final int order) throws MacrobaseException {
+
+        final DataFrame outlierDf = getDataFrameForRelation(first.getLeft()); // table R
+        final DataFrame inlierDf = getDataFrameForRelation(second.getLeft()); // table S
+        final DataFrame common = getDataFrameForRelation(first.getRight()); // table T
+
+        final Optional<JoinCriteria> joinCriteriaOpt = first.getCriteria();
+        if (!joinCriteriaOpt.isPresent()) {
+            throw new MacrobaseSQLException("No clause (e.g., ON, USING) specified in JOIN");
+        }
+
+        final List<String> joinColumnName = ImmutableList
+            .of(getJoinColumn(joinCriteriaOpt.get(), outlierDf.getSchema(),
+                common.getSchema())); // column A1
+
+        final int outlierNumRows = outlierDf.getNumRows();
+        final int minSupportThreshold = (int) minSupport * outlierNumRows;
+        final double globalRatioDenom =
+            outlierNumRows / (outlierNumRows + inlierDf.getNumRows() + 0.0);
+        final double minRatioThreshold = minRatioMetric * globalRatioDenom;
+
+        // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
+        final String[] outlierProjected = outlierDf.project(joinColumnName).getStringColumn(0);
+        final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
+        //  TODO: Encode R, S, and T
+        final Map<String, IntPair> foreignKeyCounts = new HashMap<>(); // map foreign key to outlier and inlier counts
+        final Set<String> candidateForeignKeys = diff(outlierProjected, inlierProjected,
+            foreignKeyCounts,
+            minRatioThreshold); // returns K, the candidate keys, which may contain some false positives.
+        // candidateForeignKeys contains the keys in foreignKeyCounts that exceeded the minRatioThreshold
+
+        // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys, and merge
+        //    common values that distinct keys may map to
+        final Map<String, IntPair> valueCounts = new HashMap<>(); // map values to outlier and inlier counts
+        semiJoinAndMerge(candidateForeignKeys, common,
+            foreignKeyCounts, valueCounts, minSupportThreshold, minRatioThreshold,
+            joinColumnName.get(0), explainColumnNames.get(0));
+
+        // 3) Construct DataFrame of results
+        final Map<String, String[]> stringResultsByCol = new HashMap<>();
+        stringResultsByCol.put(explainColumnNames.get(0), new String[valueCounts.size()]);
+        final Map<String, double[]> doubleResultsByCol = new HashMap<>();
+        doubleResultsByCol.put("global_ratio", new double[valueCounts.size()]);
+        doubleResultsByCol.put("support", new double[valueCounts.size()]);
+        doubleResultsByCol.put("outlier_count", new double[valueCounts.size()]);
+        doubleResultsByCol.put("total_count", new double[valueCounts.size()]);
+
+        int i = 0;
+        for (Entry<String, IntPair> entry : valueCounts.entrySet()) {
+            stringResultsByCol.get(explainColumnNames.get(0))[i] = entry.getKey();
+            final IntPair value = entry.getValue();
+            doubleResultsByCol.get("support")[i] = value.a / (outlierNumRows + 0.0);
+            doubleResultsByCol.get("global_ratio")[i] =
+                value.a / (value.a + value.b + 0.0) / globalRatioDenom;
+            doubleResultsByCol.get("outlier_count")[i] = value.a;
+            doubleResultsByCol.get("total_count")[i] = value.a + value.b;
+            ++i;
+        }
+        final DataFrame result = new DataFrame();
+        result.addColumn(explainColumnNames.get(0),
+            stringResultsByCol.get(explainColumnNames.get(0)));
+        result.addColumn("support", doubleResultsByCol.get("support"));
+        result.addColumn("global_ratio", doubleResultsByCol.get("global_ratio"));
+        result.addColumn("outlier_count", doubleResultsByCol.get("outlier_count"));
+        result.addColumn("total_count", doubleResultsByCol.get("total_count"));
+        return result;
+    }
+
+    private void semiJoinAndMerge(Set<String> candidateForeignKeys, DataFrame common,
+        Map<String, IntPair> foreignKeyCounts, Map<String, IntPair> valueCounts,
+        final int minSupportThreshold, final double minRatioThreshold, final String joinColumnName,
+        final String explainColumnName) {
+        final String[] primaryKeyCol = common.getStringColumnByName(joinColumnName);
+        // TODO: right now, we only handle one explain column
+        final String[] valueCol = common.getStringColumnByName(explainColumnName);
+        // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained
+        for (int i = 0; i < primaryKeyCol.length; ++i) {
+            final String primaryKey = primaryKeyCol[i];
+            if (candidateForeignKeys.contains(primaryKey)) {
+                final IntPair foreignKeyCount = foreignKeyCounts
+                    .get(primaryKey); // this always exists, never need to check for null
+                // extract the corresponding value for the candidate key
+                final String val = valueCol[i];
+                final IntPair valueCount = valueCounts.get(val);
+                if (valueCount == null) {
+                    valueCounts.put(val, new IntPair(foreignKeyCount.a, foreignKeyCount.b));
+                } else {
+                    // if the value already exists, merge the foreign key counts
+                    valueCount.a += foreignKeyCount.a; // outlier count
+                    valueCount.b += foreignKeyCount.b; // inlier count
+                }
+            }
+        }
+        // 2) Go through primary key column again, check if anything maps to the same values we found in the
+        for (int i = 0; i < valueCol.length; ++i) {
+            final String val = valueCol[i];
+            final IntPair valueCount = valueCounts.get(val);
+            if (valueCount == null) {
+                continue;
+            }
+            // extract the corresponding foreign key, merge the foreign key counts
+            final String primaryKey = primaryKeyCol[i];
+            if (candidateForeignKeys.contains(primaryKey)) {
+                continue;
+            }
+            final IntPair foreignKeyCount = foreignKeyCounts
+                .getOrDefault(primaryKey, DEFAULT_VALUE);
+            valueCount.a += foreignKeyCount.a; // outlier count
+            valueCount.b += foreignKeyCount.b; // inlier count
+        }
+        // 3) Prune anything that doesn't have enough support or no longer exceeds the minRatioThreshold
+        valueCounts.entrySet().removeIf((entry) -> {
+            final IntPair value = entry.getValue();
+            return value.a < minSupportThreshold
+                || (value.a / (value.a + value.b + 0.0)) < minRatioThreshold;
+        });
+    }
+
+    private Set<String> diff(final String[] outliers, final String[] inliers,
+        final Map<String, IntPair> foreignKeyCounts, double minRatioThreshold) {
+        for (String outlier : outliers) {
+            final IntPair value = foreignKeyCounts.get(outlier);
+            if (value != null) {
+                value.a++;
+            } else {
+                foreignKeyCounts.put(outlier, new IntPair(1, 0));
+            }
+        }
+        for (String inlier : inliers) {
+            final IntPair value = foreignKeyCounts.get(inlier);
+            if (value != null) {
+                value.b++;
+            } else {
+                foreignKeyCounts.put(inlier, new IntPair(0, 1));
+            }
+        }
+        final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        for (Entry<String, IntPair> entry : foreignKeyCounts.entrySet()) {
+            final IntPair value = entry.getValue();
+            if ((value.a / (value.a + value.b + 0.0)) > minRatioThreshold) {
+                builder.add(entry.getKey());
+            }
+        }
+        return builder.build();
+    }
+
+    /**
+     * @return true both relations are NATURAL JOIN subqueries that share a common table, e.g., R
+     * \join T, and S \join T TODO: enforce FK-PK Join
+     */
+    private boolean matchesDiffJoinCriteria(final QueryBody first, final QueryBody second) {
+        if (!(first instanceof QuerySpecification) || !(second instanceof QuerySpecification)) {
+            return false;
+        }
+        final QuerySpecification firstQuerySpec = (QuerySpecification) first;
+        final QuerySpecification secondQuerySpec = (QuerySpecification) second;
+        final Relation firstRelation = firstQuerySpec.getFrom().get();
+        final Relation secondRelation = secondQuerySpec.getFrom().get();
+
+        if (!(firstRelation instanceof Join) || !(secondRelation instanceof Join)) {
+            return false;
+        }
+
+        final Join firstJoin = (Join) firstRelation;
+        final Join secondJoin = (Join) secondRelation;
+
+        if (!(firstJoin.getCriteria().get() instanceof NaturalJoin) || !(secondJoin.getCriteria()
+            .get() instanceof NaturalJoin)) {
+            return false;
+        }
+        // TODO: my not necessarily be R \join T and S \join T; could be T \join R and T \join S. Need to support both
+        return (firstJoin.getRight().equals(secondJoin.getRight()) &&
+            !firstJoin.getLeft().equals(secondJoin.getLeft()));
     }
 
     /**
@@ -405,10 +609,10 @@ class QueryEngine {
                     smallerDoubleResults.put(colName, new LinkedList<>());
                 }
 
-                BiPredicate<Row, Row> lambda = getJoinLambda(biggerColIndex, smallerColIndex, biggerColType);
+                BiPredicate<Row, Row> lambda = getJoinLambda(biggerColIndex, smallerColIndex,
+                    biggerColType);
                 for (Row big : bigger.getRowIterator()) {
                     for (Row small : smaller.getRowIterator()) {
-
                         if (lambda.test(big, small)) {
                             // Add from big
                             for (String colName : biggerStringResults.keySet()) {
@@ -431,32 +635,32 @@ class QueryEngine {
                 final DataFrame df = new DataFrame();
                 // Add String results
                 for (String colName : biggerStringResults.keySet()) {
-                    if (colName.equals(joinColumn)) {
-                        df.addColumn(colName,
-                            biggerStringResults.get(colName).toArray(new String[0]));
-                    } else {
-                        df.addColumn(biggerName + "." + colName,
-                            biggerStringResults.get(colName).toArray(new String[0]));
-                    }
+                    final String colNameForOutput =
+                        smallerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? biggerName
+                            + "." + colName : colName;
+                    df.addColumn(colNameForOutput,
+                        biggerStringResults.get(colName).toArray(new String[0]));
                 }
                 for (String colName : smallerStringResults.keySet()) {
-                    df.addColumn(smallerName + "." + colName,
+                    final String colNameForOutput =
+                        biggerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? smallerName
+                            + "." + colName : colName;
+                    df.addColumn(colNameForOutput,
                         smallerStringResults.get(colName).toArray(new String[0]));
                 }
                 // Add double results
                 for (String colName : biggerDoubleResults.keySet()) {
-                    if (colName.equals(joinColumn)) {
-                        df.addColumn(colName,
-                            biggerDoubleResults.get(colName).stream().mapToDouble((x) -> x)
-                                .toArray());
-                    } else {
-                        df.addColumn(biggerName + "." + colName,
-                            biggerDoubleResults.get(colName).stream().mapToDouble((x) -> x)
-                                .toArray());
-                    }
+                    final String colNameForOutput =
+                        smallerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? biggerName
+                            + "." + colName : colName;
+                    df.addColumn(colNameForOutput,
+                        biggerDoubleResults.get(colName).stream().mapToDouble((x) -> x).toArray());
                 }
                 for (String colName : smallerDoubleResults.keySet()) {
-                    df.addColumn(smallerName + "." + colName,
+                    final String colNameForOutput =
+                        biggerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? smallerName
+                            + "." + colName : colName;
+                    df.addColumn(colNameForOutput,
                         smallerDoubleResults.get(colName).stream().mapToDouble((x) -> x).toArray());
                 }
                 return df;
@@ -825,8 +1029,8 @@ class QueryEngine {
 
     /**
      * Return a Java Predicate expression for a given comparison type and constant value of type
-     * double. (See {@link QueryEngine#getPredicate(String, ComparisonExpressionType)} for handling a
-     * String argument.)
+     * double. (See {@link QueryEngine#getPredicate(String, ComparisonExpressionType)} for handling
+     * a String argument.)
      *
      * @param y The constant value
      * @param compareExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
@@ -860,8 +1064,8 @@ class QueryEngine {
 
     /**
      * Return a Java Predicate expression for a given comparison type and constant value of type
-     * String. (See {@link QueryEngine#getPredicate(double, ComparisonExpressionType)} for handling a
-     * double argument.)
+     * String. (See {@link QueryEngine#getPredicate(double, ComparisonExpressionType)} for handling
+     * a double argument.)
      *
      * @param y The constant value
      * @param compareExprType One of =, !=, >, >=, <, <=, or IS DISTINCT FROM
@@ -894,3 +1098,4 @@ class QueryEngine {
         }
     }
 }
+
