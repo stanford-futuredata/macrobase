@@ -221,13 +221,21 @@ class QueryEngine {
 
     /**
      * Execute DIFF-JOIN query using co-optimized algorithm. NOTE: Must be a Primary Key-Foreign Key
-     * Join. TODO: We make the following assumptions in the method below: 1) The two joins are both
-     * over the same, single column 2) The join column is of type String 3) The two joins are both
-     * inner joins 4) @param explainCols cannot be "*", con only be a single column in T 5) The
-     * ratio metric is global_ratio
+     * Join. TODO: We make the following assumptions in the method below:
+     * 1) The two joins are both over the same, single column
+     * 2) The join column is of type String
+     * 3) The two joins are both inner joins
+     * 4) @param explainCols cannot be "*", can only be columns in T
+     * 5) The ratio metric is global_ratio
+     * 6) Only order-one combinations
      *
-     * R     S       T ---   ---   ------- a     a     a | CA a     b     b | CA b     c     c | TX
-     * b     d     d | TX e     e | FL
+     *  R     S          T
+     * ---   ---   -------------
+     *  a     a     a | CA | v1
+     *  a     b     b | CA | v2
+     *  b     c     c | TX | v1
+     *  b     d     d | TX | v2
+     *        e     e | FL | v1
      *
      * @return result of the DIFF JOIN
      */
@@ -244,9 +252,8 @@ class QueryEngine {
             throw new MacrobaseSQLException("No clause (e.g., ON, USING) specified in JOIN");
         }
 
-        final List<String> joinColumnName = ImmutableList
-            .of(getJoinColumn(joinCriteriaOpt.get(), outlierDf.getSchema(),
-                common.getSchema())); // column A1
+        final String joinColumnName = getJoinColumn(joinCriteriaOpt.get(), outlierDf.getSchema(),
+            common.getSchema()); // column A1
 
         final int outlierNumRows = outlierDf.getNumRows();
         final int minSupportThreshold = (int) minSupport * outlierNumRows;
@@ -259,42 +266,60 @@ class QueryEngine {
         final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
         // 1a) Encode R, S, and T
         final AttributeEncoder encoder = new AttributeEncoder();
-        final List<int[]> encodedValues = encoder.encodeKeyValueAttributes(
-            ImmutableList.of(outlierProjected, inlierProjected,
-                common.getStringColumnByName(joinColumnName.get(0))),
-            common.getStringColsByName(explainColumnNames));
+        final int[][] encodedPrimaryKeyAndValues = new int[common.getNumRows()][
+            explainColumnNames.size() + 1]; // include primaryKey
+
+        final List<String> keyValueColumns = ImmutableList.<String>builder().add(joinColumnName)
+            .addAll(explainColumnNames).build();
+        final Builder<int[]> encodedForeignKeyBuilder = ImmutableList.builder();
+        encoder.encodeKeyValueAttributes(
+            ImmutableList.of(outlierProjected, inlierProjected),
+            common.getStringColsByName(keyValueColumns),
+            encodedForeignKeyBuilder,
+            encodedPrimaryKeyAndValues);
+
+        final List<int[]> encodedForeignKeys = encodedForeignKeyBuilder.build();
 
         final Map<Integer, IntPair> foreignKeyCounts = new HashMap<>(); // map foreign key to outlier and inlier counts
         final Set<Integer> candidateForeignKeys = diff(
-            encodedValues.get(0), // outlierProjected
-            encodedValues.get(1), // inlierProjected
+            encodedForeignKeys.get(0), // outlierProjected
+            encodedForeignKeys.get(1), // inlierProjected
             foreignKeyCounts,
             minRatioThreshold); // returns K, the candidate keys, which may contain some false positives.
         // candidateForeignKeys contains the keys in foreignKeyCounts that exceeded the minRatioThreshold
 
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys, and merge
         //    common values that distinct keys may map to
-        final Map<Integer, IntPair> valueCounts = new HashMap<>(); // map values to outlier and inlier counts
-        semiJoinAndMerge(
-            candidateForeignKeys,
-            encodedValues.subList(2, encodedValues.size()), // T
+        final Map<Integer, IntPair> valueCounts = semiJoinAndMerge(
+            candidateForeignKeys, // K
+            encodedPrimaryKeyAndValues, // T
             foreignKeyCounts,
-            valueCounts,
             minSupportThreshold,
             minRatioThreshold);
 
         // 3) Construct DataFrame of results
         final Map<String, String[]> stringResultsByCol = new HashMap<>();
-        stringResultsByCol.put(explainColumnNames.get(0), new String[valueCounts.size()]);
+        final int numResults = valueCounts.size();
+        for (String col : explainColumnNames) {
+            stringResultsByCol.put(col, new String[numResults]);
+        }
         final Map<String, double[]> doubleResultsByCol = new HashMap<>();
-        doubleResultsByCol.put("global_ratio", new double[valueCounts.size()]);
-        doubleResultsByCol.put("support", new double[valueCounts.size()]);
-        doubleResultsByCol.put("outlier_count", new double[valueCounts.size()]);
-        doubleResultsByCol.put("total_count", new double[valueCounts.size()]);
+        doubleResultsByCol.put("global_ratio", new double[numResults]);
+        doubleResultsByCol.put("support", new double[numResults]);
+        doubleResultsByCol.put("outlier_count", new double[numResults]);
+        doubleResultsByCol.put("total_count", new double[numResults]);
 
         int i = 0;
         for (Entry<Integer, IntPair> entry : valueCounts.entrySet()) {
-            stringResultsByCol.get(explainColumnNames.get(0))[i] = encoder.decodeValue(entry.getKey());
+            final Integer encodedValue = entry.getKey();
+            final String colNameForValue = keyValueColumns
+                .get(encoder.decodeColumn(encodedValue) - 2); // skip the foreign key columns
+            stringResultsByCol.get(colNameForValue)[i] = encoder.decodeValue(encodedValue);
+            for (String explainCol : explainColumnNames) {
+                if (!explainCol.equals(colNameForValue)) {
+                    stringResultsByCol.get(explainCol)[i] = "-";
+                }
+            }
             final IntPair value = entry.getValue();
             doubleResultsByCol.get("support")[i] = value.a / (outlierNumRows + 0.0);
             doubleResultsByCol.get("global_ratio")[i] =
@@ -304,8 +329,9 @@ class QueryEngine {
             ++i;
         }
         final DataFrame result = new DataFrame();
-        result.addColumn(explainColumnNames.get(0),
-            stringResultsByCol.get(explainColumnNames.get(0)));
+        for (String explainCol : explainColumnNames) {
+            result.addColumn(explainCol, stringResultsByCol.get(explainCol));
+        }
         result.addColumn("support", doubleResultsByCol.get("support"));
         result.addColumn("global_ratio", doubleResultsByCol.get("global_ratio"));
         result.addColumn("outlier_count", doubleResultsByCol.get("outlier_count"));
@@ -313,46 +339,52 @@ class QueryEngine {
         return result;
     }
 
-    private void semiJoinAndMerge(Set<Integer> candidateForeignKeys, List<int[]> encodedValues,
-        Map<Integer, IntPair> foreignKeyCounts, Map<Integer, IntPair> valueCounts,
+    private Map<Integer, IntPair> semiJoinAndMerge(Set<Integer> candidateForeignKeys,
+        int[][] encodedValues, Map<Integer, IntPair> foreignKeyCounts,
         final int minSupportThreshold, final double minRatioThreshold) {
-        final int[] primaryKeyCol = encodedValues.get(0);
-        // TODO: right now, we only handle one explain column
-        final int[] valueCol = encodedValues.get(1);
+
+        final Map<Integer, IntPair> valueCounts = new HashMap<>();
         // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained
-        for (int i = 0; i < primaryKeyCol.length; ++i) {
-            final int primaryKey = primaryKeyCol[i];
+        final int numRows = encodedValues.length;
+        final int numCols = encodedValues[0].length;
+        for (int[] encodedValue : encodedValues) {
+            final int primaryKey = encodedValue[0];
             if (candidateForeignKeys.contains(primaryKey)) {
                 final IntPair foreignKeyCount = foreignKeyCounts
                     .get(primaryKey); // this always exists, never need to check for null
-                // extract the corresponding value for the candidate key
-                final int val = valueCol[i];
-                final IntPair valueCount = valueCounts.get(val);
-                if (valueCount == null) {
-                    valueCounts.put(val, new IntPair(foreignKeyCount.a, foreignKeyCount.b));
-                } else {
-                    // if the value already exists, merge the foreign key counts
-                    valueCount.a += foreignKeyCount.a; // outlier count
-                    valueCount.b += foreignKeyCount.b; // inlier count
+                // extract the corresponding values for the candidate key
+                for (int j = 1; j < numCols; ++j) {
+                    final int val = encodedValue[j];
+                    final IntPair valueCount = valueCounts.get(val);
+                    if (valueCount == null) {
+                        valueCounts.put(val, new IntPair(foreignKeyCount.a, foreignKeyCount.b));
+                    } else {
+                        // if the value already exists, merge the foreign key counts
+                        valueCount.a += foreignKeyCount.a; // outlier count
+                        valueCount.b += foreignKeyCount.b; // inlier count
+                    }
                 }
             }
         }
         // 2) Go through primary key column again, check if anything maps to the same values we found in the
-        for (int i = 0; i < valueCol.length; ++i) {
-            final int val = valueCol[i];
-            final IntPair valueCount = valueCounts.get(val);
-            if (valueCount == null) {
-                continue;
+        //    first pass
+        for (int[] encodedValue : encodedValues) {
+            for (int j = 1; j < numCols; ++j) {
+                final int val = encodedValue[j];
+                final IntPair valueCount = valueCounts.get(val);
+                if (valueCount == null) {
+                    continue;
+                }
+                // extract the corresponding foreign key, merge the foreign key counts
+                final int primaryKey = encodedValue[0];
+                if (candidateForeignKeys.contains(primaryKey)) {
+                    continue;
+                }
+                final IntPair foreignKeyCount = foreignKeyCounts
+                    .getOrDefault(primaryKey, DEFAULT_VALUE);
+                valueCount.a += foreignKeyCount.a; // outlier count
+                valueCount.b += foreignKeyCount.b; // inlier count
             }
-            // extract the corresponding foreign key, merge the foreign key counts
-            final int primaryKey = primaryKeyCol[i];
-            if (candidateForeignKeys.contains(primaryKey)) {
-                continue;
-            }
-            final IntPair foreignKeyCount = foreignKeyCounts
-                .getOrDefault(primaryKey, DEFAULT_VALUE);
-            valueCount.a += foreignKeyCount.a; // outlier count
-            valueCount.b += foreignKeyCount.b; // inlier count
         }
         // 3) Prune anything that doesn't have enough support or no longer exceeds the minRatioThreshold
         valueCounts.entrySet().removeIf((entry) -> {
@@ -360,6 +392,7 @@ class QueryEngine {
             return value.a < minSupportThreshold
                 || (value.a / (value.a + value.b + 0.0)) < minRatioThreshold;
         });
+        return valueCounts;
     }
 
     private Set<Integer> diff(final int[] outliers, final int[] inliers,
@@ -383,7 +416,7 @@ class QueryEngine {
         final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
         for (Entry<Integer, IntPair> entry : foreignKeyCounts.entrySet()) {
             final IntPair value = entry.getValue();
-            if ((value.a / (value.a + value.b + 0.0)) > minRatioThreshold) {
+            if ((value.a / (value.a + value.b + 0.0)) >= minRatioThreshold) {
                 builder.add(entry.getKey());
             }
         }

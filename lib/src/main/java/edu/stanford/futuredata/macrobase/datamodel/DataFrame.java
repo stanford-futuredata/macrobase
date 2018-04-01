@@ -443,7 +443,7 @@ public class DataFrame {
     /**
      * @param projectionCols The columns that should be included in the returned DataFrame. Projections
      * that aren't in the columns of the current DataFrame will be ignored
-     * @return return a new DataFrame that includes only the columns specified by @projections.
+     * @return return a new DataFrame that includes only the columns specified by @projectionCols.
      */
     // TODO: write test for this method
     public DataFrame project(List<String> projectionCols) {
@@ -458,6 +458,26 @@ public class DataFrame {
             } else if (type == ColType.STRING) {
                 other.addColumn(col, getStringColumnByName(col));
             }
+        }
+        return other;
+    }
+
+    /**
+     * @param projectionCol A single column that should be included in the returned DataFrame.
+     * @return return a new DataFrame that only includes the column specified by @projectionCol.
+     * If the column doesn't exist in the current DataFrame, return an empty DataFrame
+     */
+    // TODO: write test for this method
+    public DataFrame project(String projectionCol) {
+        final DataFrame other = new DataFrame();
+        if (!schema.hasColumn(projectionCol)) {
+            return other;
+        }
+        final ColType type = schema.getColumnTypeByName(projectionCol);
+        if (type == ColType.DOUBLE) {
+            other.addColumn(projectionCol, getDoubleColumnByName(projectionCol));
+        } else if (type == ColType.STRING) {
+            other.addColumn(projectionCol, getStringColumnByName(projectionCol));
         }
         return other;
     }
