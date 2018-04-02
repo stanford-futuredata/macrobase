@@ -246,7 +246,8 @@ class QueryEngine {
      */
     private DataFrame executeDiffJoinQuery(final Join first, final Join second,
         final List<String> explainColumnNames, final double minRatioMetric, final double minSupport,
-        final int maxOrder) throws MacrobaseException {
+        final int maxOrder) throws MacroBaseException {
+        final long startTime = System.currentTimeMillis();
 
         final DataFrame outlierDf = getDataFrameForRelation(first.getLeft()); // table R
         final DataFrame inlierDf = getDataFrameForRelation(second.getLeft()); // table S
@@ -254,7 +255,7 @@ class QueryEngine {
 
         final Optional<JoinCriteria> joinCriteriaOpt = first.getCriteria();
         if (!joinCriteriaOpt.isPresent()) {
-            throw new MacrobaseSQLException("No clause (e.g., ON, USING) specified in JOIN");
+            throw new MacroBaseSQLException("No clause (e.g., ON, USING) specified in JOIN");
         }
 
         final String joinColumnName = getJoinColumn(joinCriteriaOpt.get(), outlierDf.getSchema(),
@@ -451,6 +452,7 @@ class QueryEngine {
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
         }
+        log.info("Time spent in DiffJoin:  {} ms", System.currentTimeMillis() - startTime);
 
         // 4) Construct DataFrame of results
         List<APLExplanationResult> results = new ArrayList<>();
@@ -844,7 +846,8 @@ class QueryEngine {
     /**
      * TODO
      */
-    private DataFrame evaluateJoin(Join join) throws MacroBaseException {
+    private DataFrame evaluateJoin(Join join) throws MacroBaseException  {
+        final long startTime = System.currentTimeMillis();
         final DataFrame left = getDataFrameForRelation(join.getLeft());
         final DataFrame right = getDataFrameForRelation(join.getRight());
 
@@ -928,6 +931,7 @@ class QueryEngine {
                         }
                     }
                 }
+                log.info("Time spent in Join:  {} ms", System.currentTimeMillis() - startTime);
 
                 final DataFrame df = new DataFrame();
                 // Add String results

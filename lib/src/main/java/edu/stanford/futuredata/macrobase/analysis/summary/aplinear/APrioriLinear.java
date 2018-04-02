@@ -56,6 +56,7 @@ public class APrioriLinear {
             ArrayList<Integer>[] outlierList,
             boolean[] isBitmapEncoded
     ) {
+        final long beginTime = System.currentTimeMillis();
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
@@ -388,6 +389,9 @@ public class APrioriLinear {
                 }
             }
         }
+        log.info("Time spent in APriori:  {} ms", System.currentTimeMillis() - beginTime);
+
+
 
         List<APLExplanationResult> results = new ArrayList<>();
         for (int curOrder: savedAggregates.keySet()) {
