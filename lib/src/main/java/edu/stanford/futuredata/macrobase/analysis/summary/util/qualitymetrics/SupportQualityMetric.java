@@ -33,4 +33,9 @@ public class SupportQualityMetric implements QualityMetric{
         return true;
     }
 
+    @Override
+    public double error(double[] aggregates) {
+        return Z * Math.sqrt(aggregates[countIdx]) / globalCount;
+    }
+
 }

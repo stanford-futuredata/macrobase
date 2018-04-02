@@ -37,4 +37,17 @@ public class GlobalRatioQualityMetric implements QualityMetric{
     public boolean isMonotonic() {
         return false;
     }
+
+    @Override
+    public double error(double[] aggregates) {
+        // TODO: this is wrong
+        double inlierCount = aggregates[totalCountIdx] - aggregates[outlierCountIdx];
+        double estimatedCount = aggregates[outlierCountIdx] + inlierWeight * inlierCount;
+//        double denomError = estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + inlierWeight * inlierWeight / inlierCount);
+        double denomError = Math.sqrt(aggregates[outlierCountIdx] + inlierWeight * inlierWeight * inlierCount);
+        double g = Math.pow(Z * denomError / estimatedCount, 2);
+        System.out.format("count: %f pm %f, g: %f\n", estimatedCount, denomError, g);
+        double rateError = aggregates[outlierCountIdx] / estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + denomError * denomError / (estimatedCount * estimatedCount));
+        return Z * rateError / baseRate;
+    }
 }

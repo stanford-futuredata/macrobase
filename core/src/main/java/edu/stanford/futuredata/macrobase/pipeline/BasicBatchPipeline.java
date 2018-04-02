@@ -119,6 +119,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setNumThreads(numThreads);
 //                summarizer.setSampleRate(sampleRate);
                 summarizer.setInlierWeight(inlierWeight);
+                summarizer.setCalcErrors(sampleRate < 1.0);
                 return summarizer;
             }
             default: {

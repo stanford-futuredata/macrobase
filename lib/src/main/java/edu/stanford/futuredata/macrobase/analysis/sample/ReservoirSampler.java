@@ -42,8 +42,9 @@ public class ReservoirSampler extends Sampler {
         } else {
             int j = rand.nextInt(numProcessed+1);
             if (j < sample.length) {
-                sample[j] = numProcessed++;
+                sample[j] = value;
             }
+            numProcessed++;
         }
     }
 

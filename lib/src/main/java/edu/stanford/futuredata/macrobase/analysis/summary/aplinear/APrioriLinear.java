@@ -59,7 +59,7 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            double sampleRate
+            boolean calcErrors
     ) {
         final int numAggregates = aggregateColumns.length;
         int numRows = aggregateColumns[0].length;
@@ -381,11 +381,13 @@ public class APrioriLinear {
             for (IntSet curSet : curOrderSavedAggregates.keySet()) {
                 double[] aggregates = curOrderSavedAggregates.get(curSet);
                 double[] metrics = new double[qualityMetrics.length];
+                double[] errors = new double[qualityMetrics.length];
                 for (int i = 0; i < metrics.length; i++) {
                     metrics[i] = qualityMetrics[i].value(aggregates);
+                    errors[i] = qualityMetrics[i].error(aggregates);
                 }
                 results.add(
-                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics, calcErrors ? errors : null)
                 );
             }
         }

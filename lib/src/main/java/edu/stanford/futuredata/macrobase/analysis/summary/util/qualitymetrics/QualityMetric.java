@@ -5,6 +5,8 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
  * Risk ratio, support, and deviation from mean are examples.
  */
 public interface QualityMetric {
+    double Z = 1.96;
+
     String name();
     QualityMetric initialize(double[] globalAggregates);
     double value(double[] aggregates);
@@ -56,4 +58,7 @@ public interface QualityMetric {
     default boolean canPassThreshold(double[] aggregates, double threshold) {
         return maxSubgroupValue(aggregates) >= threshold;
     }
+
+    // Returns half the size of the 95% confidence interval
+    default double error(double[] aggregates) { return 0.0; }
 }

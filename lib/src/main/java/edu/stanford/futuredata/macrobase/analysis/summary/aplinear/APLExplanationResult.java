@@ -18,6 +18,7 @@ public class APLExplanationResult {
     private IntSet matcher;
     private double[] aggregates;
     private double[] metrics;
+    private double[] errors = null;
 
     public APLExplanationResult(
         QualityMetric[] metricTypes,
@@ -25,10 +26,21 @@ public class APLExplanationResult {
         double[] aggregates,
         double[] metrics
     ) {
+        this(metricTypes, matcher, aggregates, metrics, null);
+    }
+
+    public APLExplanationResult(
+            QualityMetric[] metricTypes,
+            IntSet matcher,
+            double[] aggregates,
+            double[] metrics,
+            double[] errors
+    ) {
         this.metricTypes = metricTypes;
         this.matcher = matcher;
         this.aggregates = aggregates;
         this.metrics = metrics;
+        this.errors = errors;
     }
 
     /**
@@ -71,7 +83,11 @@ public class APLExplanationResult {
         Map<String, String> metric = new HashMap<>();
 
         for (int i = 0; i < metricTypes.length; i++) {
-            metric.put(metricTypes[i].name(), String.format("%.3f", metrics[i]));
+            if (errors != null) {
+                metric.put(metricTypes[i].name(), String.format("%.4f \u00B1 %.4f", metrics[i], errors[i]));
+            } else {
+                metric.put(metricTypes[i].name(), String.format("%.4f", metrics[i]));
+            }
         }
         return metric;
     }
