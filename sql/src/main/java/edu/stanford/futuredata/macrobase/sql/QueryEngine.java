@@ -9,8 +9,15 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -75,6 +82,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 class QueryEngine {
+
     private static final Logger log = LoggerFactory.getLogger(QueryEngine.class.getSimpleName());
 
     private final Map<String, DataFrame> tablesInMemory;
@@ -161,7 +169,7 @@ class QueryEngine {
                     .getQueryBody()).getFrom().get();
                 return evaluateSQLClauses(diffQuery,
                     executeDiffJoinQuery(firstJoin, secondJoin, explainCols, minRatioMetric,
-                        minSupport, ratioMetric, order));
+                        minSupport, order));
             }
 
             // execute subqueries
@@ -222,12 +230,9 @@ class QueryEngine {
     /**
      * Execute DIFF-JOIN query using co-optimized algorithm. NOTE: Must be a Primary Key-Foreign Key
      * Join. TODO: We make the following assumptions in the method below:
-     * 1) The two joins are both over the same, single column
-     * 2) The join column is of type String
-     * 3) The two joins are both inner joins
-     * 4) @param explainCols cannot be "*", can only be columns in T
-     * 5) The ratio metric is global_ratio
-     * 6) Only order-one combinations
+     * 1) The two joins are both inner joins over the same, single column, which is of type String
+     * 2) @param explainCols can only be columns in T
+     * 3) The ratio metric is global_ratio
      *
      *  R     S          T
      * ---   ---   -------------
@@ -241,7 +246,7 @@ class QueryEngine {
      */
     private DataFrame executeDiffJoinQuery(final Join first, final Join second,
         final List<String> explainColumnNames, final double minRatioMetric, final double minSupport,
-        final String ratioMetric, final int order) throws MacrobaseException {
+        final int maxOrder) throws MacrobaseException {
 
         final DataFrame outlierDf = getDataFrameForRelation(first.getLeft()); // table R
         final DataFrame inlierDf = getDataFrameForRelation(second.getLeft()); // table S
@@ -256,17 +261,19 @@ class QueryEngine {
             common.getSchema()); // column A1
 
         final int outlierNumRows = outlierDf.getNumRows();
+        final int inlierNumRows = inlierDf.getNumRows();
         final int minSupportThreshold = (int) minSupport * outlierNumRows;
         final double globalRatioDenom =
-            outlierNumRows / (outlierNumRows + inlierDf.getNumRows() + 0.0);
+            outlierNumRows / (outlierNumRows + inlierNumRows + 0.0);
         final double minRatioThreshold = minRatioMetric * globalRatioDenom;
 
         // 1a) Encode \proj_{A1} R, \proj_{A1} S, and T
         final String[] outlierProjected = outlierDf.project(joinColumnName).getStringColumn(0);
         final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
         final AttributeEncoder encoder = new AttributeEncoder();
+        final int numExplainColumns = explainColumnNames.size();
         final int[][] encodedPrimaryKeyAndValues = new int[common.getNumRows()][
-            explainColumnNames.size() + 1]; // include primaryKey
+            numExplainColumns + 1]; // include primaryKey column
         final List<String> keyValueColumns = ImmutableList.<String>builder().add(joinColumnName)
             .addAll(explainColumnNames).build();
         final Builder<int[]> encodedForeignKeyBuilder = ImmutableList.builder();
@@ -278,70 +285,304 @@ class QueryEngine {
         final List<int[]> encodedForeignKeys = encodedForeignKeyBuilder.build();
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs = new HashMap<>(); // map foreign key to outlier and inlier counts
+        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs = new HashMap<>();
         final Set<Integer> candidateForeignKeys = diff(
             encodedForeignKeys.get(0), // outlierProjected
             encodedForeignKeys.get(1), // inlierProjected
             foreignKeyBitmapPairs,
-            minRatioThreshold); // returns K, the candidate keys, which may contain some false positives.
-        // candidateForeignKeys contains the keys in foreignKeyCounts that exceeded the minRatioThreshold
+            minRatioThreshold); // returns K, the candidate keys that exceeded the minRatioThreshold.
+        // K may contain false positives, though (support threshold cannot be applied yet)
 
-        // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys, and merge
-        //    common values that distinct keys may map to
+        // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
+        //    and merge common values that distinct keys may map to
+
+        // Keep track of candidates in each column, needed for order-2 and order-3 combinations
+        final Set<Integer>[] attrCandidatesByColumn = new Set[numExplainColumns];
+        for (int i = 0; i < numExplainColumns; ++i) {
+            attrCandidatesByColumn[i] = new HashSet<>();
+        }
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = semiJoinAndMerge(
             candidateForeignKeys, // K
             encodedPrimaryKeyAndValues, // T
             foreignKeyBitmapPairs,
-            minSupportThreshold,
-            minRatioThreshold);
+            attrCandidatesByColumn);
 
-        // 3) Construct DataFrame of results
-        final Map<String, String[]> stringResultsByCol = new HashMap<>();
-        final int numResults = valueBitmapPairs.size();
-        for (String col : explainColumnNames) {
-            stringResultsByCol.put(col, new String[numResults]);
+        // 3) Prune anything that doesn't have enough support
+        //    (End of order-1 step of candidate generation)
+        valueBitmapPairs.entrySet().removeIf((entry) ->
+            entry.getValue().a.getCardinality() < minSupportThreshold);
+
+        // 4) Now, we proceed as we would in the all-bitmap case of APrioriLinear: finish up the order-1 stage,
+        //    then explore all 2-order and 3-order combinations by intersecting the bitmaps, then pruning
+        //    using the QualityMetrics
+        final int numAggregates = 2;
+        final double[] thresholds = new double[]{minSupport, minRatioMetric};
+        final QualityMetric[] qualityMetrics = new QualityMetric[]{new SupportQualityMetric(0),
+            new GlobalRatioQualityMetric(0, 1)};
+
+        // Quality metrics are initialized with global aggregates to
+        // allow them to determine the appropriate relative thresholds
+        double[] globalAggregates = new double[]{outlierNumRows, outlierNumRows + inlierNumRows};
+        for (QualityMetric q : qualityMetrics) {
+            q.initialize(globalAggregates);
         }
-        final Map<String, double[]> doubleResultsByCol = new HashMap<>();
-        doubleResultsByCol.put("global_ratio", new double[numResults]);
-        doubleResultsByCol.put("support", new double[numResults]);
-        doubleResultsByCol.put("outlier_count", new double[numResults]);
-        doubleResultsByCol.put("total_count", new double[numResults]);
 
-        int i = 0;
-        for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : valueBitmapPairs.entrySet()) {
-            final Integer encodedValue = entry.getKey();
-            final String colNameForValue = keyValueColumns
-                .get(encoder.decodeColumn(encodedValue) - 2); // skip the foreign key columns
-            stringResultsByCol.get(colNameForValue)[i] = encoder.decodeValue(encodedValue);
-            for (String explainCol : explainColumnNames) {
-                if (!explainCol.equals(colNameForValue)) {
-                    stringResultsByCol.get(explainCol)[i] = "-";
+        // Prune all the collected aggregates
+        // Sets that have high enough support but not high qualityMetrics, need to be explored
+        Map<Integer, HashSet<IntSet>> setNext = new HashMap<>(3);
+        // Aggregate values for all of the sets we saved
+        Map<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
+
+        for (int curOrder = 1; curOrder <= maxOrder; ++curOrder) {
+            final FastFixedHashTable setAggregates = new FastFixedHashTable(encoder.getNextKey(),
+                numAggregates, false);
+            if (curOrder == 1) {
+                valueBitmapPairs.forEach((key, bitmapPair) -> {
+                    final int numMatchedOutliers = bitmapPair.a.getCardinality();
+                    final int numMatchedInliers = bitmapPair.b.getCardinality();
+                    updateAggregates(setAggregates, new IntSetAsLong(key),
+                        new double[]{numMatchedOutliers, numMatchedOutliers + numMatchedInliers},
+                        numAggregates);
+                });
+            } else if (curOrder == 2) {
+                IntSetAsLong curCandidate = new IntSetAsLong(0);
+                for (int colNumOne = 0; colNumOne < numExplainColumns; ++colNumOne) {
+                    for (int colNumTwo = colNumOne + 1; colNumTwo < numExplainColumns;
+                        ++colNumTwo) {
+                        for (Integer curCandidateOne : attrCandidatesByColumn[colNumOne]) {
+                            for (Integer curCandidateTwo : attrCandidatesByColumn[colNumTwo]) {
+                                curCandidate.value = IntSetAsLong
+                                    .twoIntToLong(curCandidateOne, curCandidateTwo);
+                                final Pair<RoaringBitmap, RoaringBitmap> candidateOneBitmapPair = valueBitmapPairs
+                                    .get(curCandidateOne);
+                                final Pair<RoaringBitmap, RoaringBitmap> candidateTwoBitmapPair = valueBitmapPairs
+                                    .get(curCandidateTwo);
+                                final int numMatchedOutliers = RoaringBitmap
+                                    .andCardinality(candidateOneBitmapPair.a,
+                                        candidateTwoBitmapPair.a);
+                                final int numMatchedInliers = RoaringBitmap
+                                    .andCardinality(candidateOneBitmapPair.b,
+                                        candidateTwoBitmapPair.b);
+                                updateAggregates(setAggregates, curCandidate,
+                                    new double[]{numMatchedOutliers, numMatchedOutliers + numMatchedInliers},
+                                    numAggregates);
+                            }
+                        }
+                    }
+                }
+            } else if (curOrder == 3) {
+                IntSetAsLong curCandidate = new IntSetAsLong(0);
+                for (int colNumOne = 0; colNumOne < numExplainColumns; ++colNumOne) {
+                    for (int colNumTwo = colNumOne + 1; colNumTwo < numExplainColumns;
+                        ++colNumTwo) {
+                        for (int colNumThree = colNumTwo + 1; colNumThree < numExplainColumns;
+                            ++colNumThree) {
+                            for (Integer curCandidateOne : attrCandidatesByColumn[colNumOne]) {
+                                for (Integer curCandidateTwo : attrCandidatesByColumn[colNumTwo]) {
+                                    for (Integer curCandidateThree : attrCandidatesByColumn[colNumThree]) {
+                                        // Cascade to arrays if necessary, but otherwise pack attributes into longs.
+                                        curCandidate.value = IntSetAsLong
+                                            .threeIntToLong(curCandidateOne, curCandidateTwo,
+                                                curCandidateThree);
+                                        final Pair<RoaringBitmap, RoaringBitmap> candidateOneBitmapPair = valueBitmapPairs
+                                            .get(curCandidateOne);
+                                        final Pair<RoaringBitmap, RoaringBitmap> candidateTwoBitmapPair = valueBitmapPairs
+                                            .get(curCandidateTwo);
+                                        final Pair<RoaringBitmap, RoaringBitmap> candidateThreeBitmapPair = valueBitmapPairs
+                                            .get(curCandidateThree);
+                                        final int numMatchedOutliers = RoaringBitmap.andCardinality(
+                                            RoaringBitmap.and(candidateOneBitmapPair.a,
+                                                candidateTwoBitmapPair.a),
+                                            candidateThreeBitmapPair.a);
+                                        final int numMatchedInliers = RoaringBitmap.andCardinality(
+                                            RoaringBitmap.and(candidateOneBitmapPair.b,
+                                                candidateTwoBitmapPair.b),
+                                            candidateThreeBitmapPair.b);
+                                        updateAggregates(setAggregates, curCandidate,
+                                            new double[]{numMatchedOutliers,
+                                                numMatchedOutliers + numMatchedInliers},
+                                            numAggregates);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
-            final int numMatchedOutliers = value.a.getCardinality();
-            doubleResultsByCol.get("support")[i] = numMatchedOutliers / (outlierNumRows + 0.0);
-            doubleResultsByCol.get("global_ratio")[i] =
-                numMatchedOutliers / (numMatchedOutliers + value.b.getCardinality() + 0.0) / globalRatioDenom;
-            doubleResultsByCol.get("outlier_count")[i] = numMatchedOutliers;
-            doubleResultsByCol.get("total_count")[i] = numMatchedOutliers + value.b.getCardinality();
+
+            HashSet<IntSet> curOrderNext = new HashSet<>();
+            HashSet<IntSet> curOrderSaved = new HashSet<>();
+            for (long l : setAggregates.keySetLong()) {
+                final IntSetAsLong candidate = new IntSetAsLong(l);
+                QualityMetric.Action action = QualityMetric.Action.KEEP;
+                double[] curAggregates = setAggregates.get(candidate);
+                for (int i = 0; i < qualityMetrics.length; i++) {
+                    QualityMetric q = qualityMetrics[i];
+                    double t = thresholds[i];
+                    action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
+                }
+                if (action == QualityMetric.Action.KEEP) {
+                    // Make sure the candidate isn't already covered by a pair
+                    if (curOrder != 3 || allPairsValid(candidate, setNext.get(2))) {
+                        // if a set is already past the threshold on all metrics,
+                        // save it and no need for further exploration if we do containment
+                        curOrderSaved.add(candidate);
+                        if (curOrder == 1) {
+                            // Remove this explanation from the array of candidate sets
+                            final int val = candidate.getFirst();
+                            // subtract three for foreign key columns and primary key column
+                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+
+                        }
+                    }
+                } else if (action == QualityMetric.Action.NEXT) {
+                    // otherwise if a set still has potentially good subsets,
+                    // save it for further examination
+                    curOrderNext.add(candidate);
+                }
+            }
+
+            // Save aggregates that pass all qualityMetrics to return later, store aggregates
+            // that have minimum support for higher-order exploration.
+            Map<IntSet, double[]> curSavedAggregates = new HashMap<>(curOrderSaved.size());
+            for (IntSet curSaved : curOrderSaved) {
+                curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
+            }
+            savedAggregates.put(curOrder, curSavedAggregates);
+            setNext.put(curOrder, curOrderNext);
+        }
+
+        // 4) Construct DataFrame of results
+        List<APLExplanationResult> results = new ArrayList<>();
+        for (int curOrder: savedAggregates.keySet()) {
+            Map<IntSet, double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
+            for (IntSet curSet : curOrderSavedAggregates.keySet()) {
+                double[] aggregates = curOrderSavedAggregates.get(curSet);
+                double[] metrics = new double[qualityMetrics.length];
+                for (int i = 0; i < metrics.length; i++) {
+                    metrics[i] = qualityMetrics[i].value(aggregates);
+                }
+                results.add(
+                    new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                );
+            }
+        }
+
+        return toDataFrame(results, encoder, explainColumnNames, keyValueColumns,
+        ImmutableList.of("outlier_count", "total_count"), Arrays.asList(qualityMetrics));
+    }
+
+    private void updateAggregates(FastFixedHashTable aggregates, IntSet curCandidate, double[] val, int numAggregates) {
+        double[] candidateVal = aggregates.get(curCandidate);
+        if (candidateVal == null) {
+            aggregates.put(curCandidate,
+                Arrays.copyOf(val, numAggregates));
+        } else {
+            for (int a = 0; a < numAggregates; a++) {
+                candidateVal[a] += val[a];
+            }
+        }
+    }
+
+    /**
+     * Check if all order-2 subsets of an order-3 candidate are valid candidates.
+     * @param o2Candidates All candidates of order 2 with minimum support.
+     * @param curCandidate An order-3 candidate
+     * @return Boolean
+     */
+    private boolean allPairsValid(IntSet curCandidate,
+        HashSet<IntSet> o2Candidates) {
+        IntSet subPair;
+        subPair = new IntSetAsLong(
+            curCandidate.getFirst(),
+            curCandidate.getSecond());
+        if (o2Candidates.contains(subPair)) {
+            subPair = new IntSetAsLong(
+                curCandidate.getSecond(),
+                curCandidate.getThird());
+            if (o2Candidates.contains(subPair)) {
+                subPair = new IntSetAsLong(
+                    curCandidate.getFirst(),
+                    curCandidate.getThird());
+                return o2Candidates.contains(subPair);
+            }
+        }
+        return false;
+    }
+
+    private DataFrame toDataFrame(final List<APLExplanationResult> results,
+        final AttributeEncoder encoder, final List<String> attrsToInclude, final List<String> keyValueColumns,
+        final List<String> aggregateNames, final List<QualityMetric> metrics) {
+        // String column values that will be added to DataFrame
+        final Map<String, String[]> stringResultsByCol = new HashMap<>();
+        for (String colName : attrsToInclude) {
+            stringResultsByCol.put(colName, new String[results.size()]);
+        }
+
+        // double column values that will be added to the DataFrame
+        final Map<String, double[]> doubleResultsByCol = new HashMap<>();
+        for (String colName : aggregateNames) {
+            doubleResultsByCol.put(colName, new double[results.size()]);
+        }
+        for (QualityMetric metric : metrics) {
+            // NOTE: we assume that the QualityMetrics here are the same ones
+            // that each APLExplanationResult has
+            doubleResultsByCol.put(metric.name(), new double[results.size()]);
+        }
+
+        // Add result rows to individual columns
+        int i = 0;
+        for (APLExplanationResult result : results) {
+            // attrValsInRow contains the values for the explanation attribute values in this
+            // given row
+            Set<Integer> values = result.matcher.getSet();
+            final Map<String, String> attrValsInRow = new HashMap<>();
+            for (int v : values) {
+                final String colNameForValue = keyValueColumns
+                    .get(encoder.decodeColumn(v) - 2); // skip the foreign key columns
+                attrValsInRow.put(colNameForValue, encoder.decodeValue(v));
+            }
+
+            for (String colName : stringResultsByCol.keySet()) {
+                // Iterate over all attributes that will be in the DataFrame.
+                // If attribute is present in attrValsInRow, add its corresponding value.
+                // Otherwise, add null
+                stringResultsByCol.get(colName)[i] = attrValsInRow.get(colName);
+            }
+
+            final Map<String, Double> metricValsInRow = result.getMetricsAsMap();
+            for (String colName : metricValsInRow.keySet()) {
+                doubleResultsByCol.get(colName)[i] = metricValsInRow.get(colName);
+            }
+
+            final Map<String, Double> aggregateValsInRow = result
+                .getAggregatesAsMap(aggregateNames);
+            for (String colName : aggregateNames) {
+                doubleResultsByCol.get(colName)[i] = aggregateValsInRow.get(colName);
+            }
             ++i;
         }
-        final DataFrame result = new DataFrame();
-        for (String explainCol : explainColumnNames) {
-            result.addColumn(explainCol, stringResultsByCol.get(explainCol));
+
+        // Generate DataFrame with results
+        final DataFrame df = new DataFrame();
+        for (String colName : stringResultsByCol.keySet()) {
+            df.addColumn(colName, stringResultsByCol.get(colName));
         }
-        result.addColumn("support", doubleResultsByCol.get("support"));
-        result.addColumn("global_ratio", doubleResultsByCol.get("global_ratio"));
-        result.addColumn("outlier_count", doubleResultsByCol.get("outlier_count"));
-        result.addColumn("total_count", doubleResultsByCol.get("total_count"));
-        return result;
+        // Add metrics first, then aggregates (otherwise, we'll get arbitrary orderings)
+        for (QualityMetric metric : metrics) {
+            df.addColumn(metric.name(), doubleResultsByCol.get(metric.name()));
+        }
+        for (String colName : aggregateNames) {
+            // Aggregates are capitalized for some reason
+            df.addColumn(colName.toLowerCase(), doubleResultsByCol.get(colName));
+        }
+        return df;
     }
 
     private Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> semiJoinAndMerge(
         final Set<Integer> candidateForeignKeys, final int[][] encodedValues,
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
-        final int minSupportThreshold, final double minRatioThreshold) {
+        Set<Integer>[] attrCandidatesByColumn) {
 
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = new HashMap<>();
         // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
@@ -360,6 +601,7 @@ class QueryEngine {
                     if (valueBitmapPair == null) {
                         valueBitmapPairs.put(val, new Pair<>(foreignKeyBitmapPair.a.clone(),
                             foreignKeyBitmapPair.b.clone()));
+                        attrCandidatesByColumn[j - 1].add(val); // subtract one for primary key column
                     } else {
                         // if the value already exists, merge the foreign key bitmaps
                         valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
@@ -369,12 +611,13 @@ class QueryEngine {
             }
         }
         // 2) Go through again and check which saved values from the first pass map to new
-        //    primary key values. If we find any new ones, merge their foreign key bitmaps
-        //    with the value bitmaps
+        //    primary keys. If we find any new ones, merge their foreign key bitmaps
+        //    with the existing value bitmap
         for (int[] encodedValue : encodedValues) {
             for (int j = 1; j < numCols; ++j) {
                 final int val = encodedValue[j];
-                final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs.get(val);
+                final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
+                    .get(val);
                 if (valueBitmapPair == null) {
                     // never found in the first pass
                     continue;
@@ -393,15 +636,6 @@ class QueryEngine {
                 }
             }
         }
-        // 3) Prune anything that doesn't have enough support or no longer exceeds the minRatioThreshold
-        //    (End of order-1 step of candidate generation)
-        valueBitmapPairs.entrySet().removeIf((entry) -> {
-            final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
-            final int numMatchedOutliers = value.a.getCardinality();
-            return numMatchedOutliers < minSupportThreshold
-                || (numMatchedOutliers / (numMatchedOutliers + value.b.getCardinality() + 0.0))
-                < minRatioThreshold;
-        });
         return valueBitmapPairs;
     }
 
@@ -414,7 +648,8 @@ class QueryEngine {
             if (value != null) {
                 value.a.add(i);
             } else {
-                foreignKeyCounts.put(outlier, new Pair<>(RoaringBitmap.bitmapOf(i), new RoaringBitmap()));
+                foreignKeyCounts
+                    .put(outlier, new Pair<>(RoaringBitmap.bitmapOf(i), new RoaringBitmap()));
             }
         }
         for (int i = 0; i < inliers.length; ++i) {
@@ -423,14 +658,17 @@ class QueryEngine {
             if (value != null) {
                 value.b.add(i);
             } else {
-                foreignKeyCounts.put(inlier, new Pair<>(new RoaringBitmap(), RoaringBitmap.bitmapOf(i)));
+                foreignKeyCounts
+                    .put(inlier, new Pair<>(new RoaringBitmap(), RoaringBitmap.bitmapOf(i)));
             }
         }
         final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
-        for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts.entrySet()) {
+        for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
+            .entrySet()) {
             final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
             final int numOutliers = value.a.getCardinality();
-            if ((numOutliers / (numOutliers + value.b.getCardinality() + 0.0)) >= minRatioThreshold) {
+            if ((numOutliers / (numOutliers + value.b.getCardinality() + 0.0))
+                >= minRatioThreshold) {
                 builder.add(entry.getKey());
             }
         }
