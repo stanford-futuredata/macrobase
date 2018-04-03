@@ -287,19 +287,22 @@ class QueryEngine {
         final List<int[]> encodedForeignKeys = encodedForeignKeyBuilder.build();
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
+        final long foreignKeyDiff = System.currentTimeMillis();
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs = new HashMap<>();
-        final Set<Integer> candidateForeignKeys = diff(
+        final Set<Integer> candidateForeignKeys = foreignKeyDiff(
             encodedForeignKeys.get(0), // outlierProjected
             encodedForeignKeys.get(1), // inlierProjected
             foreignKeyBitmapPairs,
             minRatioThreshold); // returns K, the candidate keys that exceeded the minRatioThreshold.
         // K may contain false positives, though (support threshold cannot be applied yet)
+        log.info("Foreign key diff time: {} ms", System.currentTimeMillis() - foreignKeyDiff);
         log.info("Num candidate foreign keys: {}", candidateForeignKeys.size());
 
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
         //    and merge common values that distinct keys may map to
 
         // Keep track of candidates in each column, needed for order-2 and order-3 combinations
+        final long semiJoinAndMergeTime = System.currentTimeMillis();
         final Set<Integer>[] attrCandidatesByColumn = new Set[numExplainColumns];
         for (int i = 0; i < numExplainColumns; ++i) {
             attrCandidatesByColumn[i] = new HashSet<>();
@@ -309,11 +312,14 @@ class QueryEngine {
             encodedPrimaryKeyAndValues, // T
             foreignKeyBitmapPairs,
             attrCandidatesByColumn);
+        log.info("Semi-join and merge time: {} ms", semiJoinAndMergeTime - semiJoinAndMergeTime);
 
         // 3) Prune anything that doesn't have enough support
         //    (End of order-1 step of candidate generation)
+        final int sizeBefore = valueBitmapPairs.size();
         valueBitmapPairs.entrySet().removeIf((entry) ->
             entry.getValue().a.getCardinality() < minSupportThreshold);
+        log.info("Num candidates pruned by support: {}", valueBitmapPairs.size() - sizeBefore);
 
         // 4) Now, we proceed as we would in the all-bitmap case of APrioriLinear: finish up the order-1 stage,
         //    then explore all 2-order and 3-order combinations by intersecting the bitmaps, then pruning
@@ -337,6 +343,7 @@ class QueryEngine {
         Map<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
 
         for (int curOrder = 1; curOrder <= maxOrder; ++curOrder) {
+            final long orderTime = System.currentTimeMillis();
             final FastFixedHashTable setAggregates = new FastFixedHashTable(encoder.getNextKey(),
                 numAggregates, false);
             if (curOrder == 1) {
@@ -453,6 +460,7 @@ class QueryEngine {
             }
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
+            log.info("Order {} time: {} ms", curOrder, System.currentTimeMillis() - orderTime);
         }
         log.info("Time spent in DiffJoin:  {} ms", System.currentTimeMillis() - startTime);
 
@@ -588,6 +596,8 @@ class QueryEngine {
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
         Set<Integer>[] attrCandidatesByColumn) {
 
+        int numAdditionalValues = 0;
+
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = new HashMap<>();
         // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
         //    For every match, save the corresponding values
@@ -610,6 +620,7 @@ class QueryEngine {
                         // if the value already exists, merge the foreign key bitmaps
                         valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
                         valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
+                        ++numAdditionalValues;
                     }
                 }
             }
@@ -637,13 +648,15 @@ class QueryEngine {
                 if (foreignKeyBitmapPair != null) {
                     valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
                     valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
+                    ++numAdditionalValues;
                 }
             }
         }
+        log.info("Num additional values: {}", numAdditionalValues);
         return valueBitmapPairs;
     }
 
-    private Set<Integer> diff(final int[] outliers, final int[] inliers,
+    private Set<Integer> foreignKeyDiff(final int[] outliers, final int[] inliers,
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyCounts,
         double minRatioThreshold) {
         for (int i = 0; i < outliers.length; ++i) {
