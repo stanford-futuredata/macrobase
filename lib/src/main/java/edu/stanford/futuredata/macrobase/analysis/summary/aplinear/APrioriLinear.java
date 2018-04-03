@@ -73,7 +73,7 @@ public class APrioriLinear {
         } else{
             useIntSetAsArray = false;
         }
-        System.out.println("numThreads: " + numThreads);
+        log.info("NumThreads: {}", numThreads);
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
