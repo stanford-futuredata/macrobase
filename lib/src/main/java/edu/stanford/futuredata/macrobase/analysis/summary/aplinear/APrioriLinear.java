@@ -163,7 +163,8 @@ public class APrioriLinear {
                                     } else {
                                         ((IntSetAsLong) curCandidate).value = curOutlierCandidate;
                                     }
-                                    updateAggregates(thisThreadSetAggregates, curCandidate, new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
+                                    updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
+                                            new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
                                 }
                             } else {
                                 int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
@@ -177,7 +178,8 @@ public class APrioriLinear {
                                     } else {
                                         ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum - startIndex];
                                     }
-                                    updateAggregates(thisThreadSetAggregates, curCandidate, aRows[rowNum], numAggregates);
+                                    updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
+                                            aRows[rowNum], numAggregates);
                                 }
                             }
                         }
@@ -189,19 +191,19 @@ public class APrioriLinear {
 
                                 if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
                                     // Bitmap-Bitmap
-                                    allTwoBitmap(thisThreadSetAggregates, outlierList, byThreadBitmap[curThreadNum],
+                                    allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, byThreadBitmap[curThreadNum],
                                             colNumOne, colNumTwo, useIntSetAsArray, curCandidate, numAggregates);
                                 } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo]) {
                                     // Bitmap-Normal
-                                    allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumOne], byThreadBitmap[curThreadNum][colNumOne],
+                                    allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumOne], aggregationOps, byThreadBitmap[curThreadNum][colNumOne],
                                             curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
                                 } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
                                     // Normal-Bitmap
-                                    allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumTwo], byThreadBitmap[curThreadNum][colNumTwo],
+                                    allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumTwo], aggregationOps, byThreadBitmap[curThreadNum][colNumTwo],
                                             curColumnOneAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
                                 } else {
                                     // Normal-Normal
-                                    allTwoNormal(thisThreadSetAggregates, curColumnOneAttributes, curColumnTwoAttributes,
+                                    allTwoNormal(thisThreadSetAggregates, curColumnOneAttributes, curColumnTwoAttributes, aggregationOps,
                                             startIndex, endIndex, useIntSetAsArray, curCandidate, aRows, numAggregates);
                                 }
                             }
@@ -217,41 +219,41 @@ public class APrioriLinear {
 
                                     if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] && isBitmapEncoded[colNumThree]) {
                                         // all 3 cols are bitmaps
-                                        allThreeBitmap(thisThreadSetAggregates, outlierList, byThreadBitmap[curThreadNum],
+                                        allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps, byThreadBitmap[curThreadNum],
                                                 colNumOne, colNumTwo, colNumThree, useIntSetAsArray, curCandidate, numAggregates);
 
                                     } else if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] && !isBitmapEncoded[colNumThree]) {
                                         // one and two are bitmaps, 3 is normal
-                                        allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, byThreadBitmap[curThreadNum], colNumOne, colNumTwo,
+                                        allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps, byThreadBitmap[curThreadNum], colNumOne, colNumTwo,
                                                 curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
 
                                     } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] && isBitmapEncoded[colNumThree]) {
                                         // one and three are bitmaps, 2 is normal
-                                        allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, byThreadBitmap[curThreadNum], colNumOne, colNumThree,
+                                        allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps, byThreadBitmap[curThreadNum], colNumOne, colNumThree,
                                                 curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
 
                                     } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] && isBitmapEncoded[colNumThree]) {
                                         // two and three are bitmaps, 1 is normal
-                                        allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, byThreadBitmap[curThreadNum], colNumTwo, colNumThree,
+                                        allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps, byThreadBitmap[curThreadNum], colNumTwo, colNumThree,
                                                 curColumnOneAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
 
                                     } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] && !isBitmapEncoded[colNumThree]) {
                                         // one is a bitmap, 2 and 3 are normal
-                                        allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumOne], byThreadBitmap[curThreadNum][colNumOne],
+                                        allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumOne], aggregationOps, byThreadBitmap[curThreadNum][colNumOne],
                                                 curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
 
                                     } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] && !isBitmapEncoded[colNumThree]) {
                                         // two is a bitmap, 1 and 3 are normal
-                                        allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumTwo], byThreadBitmap[curThreadNum][colNumTwo],
+                                        allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumTwo], aggregationOps, byThreadBitmap[curThreadNum][colNumTwo],
                                                 curColumnOneAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
 
                                     } else if (!isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] && isBitmapEncoded[colNumThree]) {
                                         // three is a bitmap, 1 and 2 are normal
-                                        allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumThree], byThreadBitmap[curThreadNum][colNumThree],
+                                        allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumThree], aggregationOps, byThreadBitmap[curThreadNum][colNumThree],
                                                 curColumnOneAttributes, curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, numAggregates);
                                     } else {
                                         // all three are normal
-                                        allThreeNormal(thisThreadSetAggregates, curColumnOneAttributes, curColumnTwoAttributes, curColumnThreeAttributes,
+                                        allThreeNormal(thisThreadSetAggregates, curColumnOneAttributes, curColumnTwoAttributes, curColumnThreeAttributes, aggregationOps,
                                                 startIndex, endIndex, useIntSetAsArray, curCandidate, aRows, numAggregates);
                                     }
                                 }
@@ -396,14 +398,16 @@ public class APrioriLinear {
         return false;
     }
 
-    private void updateAggregates(FastFixedHashTable thisThreadSetAggregates, IntSet curCandidate, double[] val, int numAggregates) {
+    private void updateAggregates(FastFixedHashTable thisThreadSetAggregates, IntSet curCandidate, AggregationOp[] aggregationOps,
+                                  double[] val, int numAggregates) {
         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
         if (candidateVal == null) {
             thisThreadSetAggregates.put(curCandidate,
                     Arrays.copyOf(val, numAggregates));
         } else {
             for (int a = 0; a < numAggregates; a++) {
-                candidateVal[a] += val[a];
+                AggregationOp curOp = aggregationOps[a];
+                candidateVal[a] = curOp.combine(candidateVal[a], val[a]);
             }
         }
     }
@@ -413,6 +417,7 @@ public class APrioriLinear {
     // One Bitmap, One Normal
     private void allOneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                        ArrayList<Integer> outlierColList,
+                                       AggregationOp[] aggregationOps,
                                        HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
                                        int[] curColumnTwoAttributes, int startIndex,
                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
@@ -422,13 +427,13 @@ public class APrioriLinear {
             if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
                 RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
                 // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
-                oneBitmapOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
+                oneBitmapOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne, aggregationOps,
                         curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
             }
             if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
                 RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
                 // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for inliers)
-                oneBitmapOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
+                oneBitmapOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne, aggregationOps,
                         curColumnTwoAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
             }
         }
@@ -436,12 +441,14 @@ public class APrioriLinear {
 
     private void oneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                     RoaringBitmap bitmap, Integer curCandidateOne,
+                                    AggregationOp[] aggregationOps,
                                     int[] curColumnTwoAttributes, int startIndex,
                                     boolean useIntSetAsArray, IntSet curCandidate,
                                     double[] val, int numAggregates) {
         for (Integer rowNum : bitmap) {
             int rowNumInCol = rowNum - startIndex;
-            if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport || !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
+            if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport ||
+                    !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
                 continue;
             // Cascade to arrays if necessary, but otherwise pack attributes into longs.
             if (useIntSetAsArray) {
@@ -449,13 +456,14 @@ public class APrioriLinear {
             } else {
                 ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curCandidateOne, curColumnTwoAttributes[rowNumInCol]);
             }
-            updateAggregates(thisThreadSetAggregates, curCandidate, val, numAggregates);
+            updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps, val, numAggregates);
         }
     }
 
     // Two Normal columns
     private void allTwoNormal(FastFixedHashTable thisThreadSetAggregates,
                               int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
+                              AggregationOp[] aggregationOps,
                               int startIndex, int endIndex,
                               boolean useIntSetAsArray, IntSet curCandidate,
                               double[][] aRows, int numAggregates) {
@@ -475,13 +483,14 @@ public class APrioriLinear {
                 ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNumInCol],
                         curColumnTwoAttributes[rowNumInCol]);
             }
-            updateAggregates(thisThreadSetAggregates, curCandidate, aRows[rowNum], numAggregates);
+            updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps, aRows[rowNum], numAggregates);
         }
     }
 
     // Two bitmap columns
     private void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
                               ArrayList<Integer>[] outlierList,
+                              AggregationOp[] aggregationOps,
                               HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
                               int colNumOne, int colNumTwo,
                               boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
@@ -506,7 +515,8 @@ public class APrioriLinear {
                         byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo))
                     inlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
                             byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
-                updateAggregates(thisThreadSetAggregates, curCandidate, new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
+                updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
+                        new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
             }
         }
     }
@@ -516,6 +526,7 @@ public class APrioriLinear {
     // One Bitmap, Two Normal
     private void allOneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
                                        ArrayList<Integer> outlierColList,
+                                       AggregationOp[] aggregationOps,
                                        HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
                                        int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
@@ -526,20 +537,23 @@ public class APrioriLinear {
                 RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
                 // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
                 oneBitmapTwoNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
-                        curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
+                        curColumnTwoAttributes, curColumnThreeAttributes, aggregationOps,
+                        startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
             }
             if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
                 RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
                 // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for the inliers)
                 oneBitmapTwoNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
-                        curColumnTwoAttributes, curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+                        curColumnTwoAttributes, curColumnThreeAttributes, aggregationOps,
+                        startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
             }
         }
     }
 
     private void oneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
                                     RoaringBitmap bitmap, Integer curCandidateOne,
-                                    int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
+                                    int[] curColumnTwoAttributes, int[] curColumnThreeAttributes,
+                                    AggregationOp[]  aggregationOps, int startIndex,
                                     boolean useIntSetAsArray, IntSet curCandidate,
                                     double[] val, int numAggregates) {
         for (Integer rowNum : bitmap) {
@@ -561,13 +575,14 @@ public class APrioriLinear {
                         curColumnTwoAttributes[rowNumInCol],
                         curColumnThreeAttributes[rowNumInCol]);
             }
-            updateAggregates(thisThreadSetAggregates, curCandidate, val, numAggregates);
+            updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps, val, numAggregates);
         }
     }
 
     // Two Bitmaps, One Normal
     private void allTwoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                         ArrayList<Integer>[] outlierList,
+                                        AggregationOp[] aggregationOps,
                                         HashMap<Integer, RoaringBitmap>[][] byThreadColumnBitmap,
                                         int colNumOne, int colNumTwo,
                                         int[] curColumnThreeAttributes, int startIndex,
@@ -583,13 +598,15 @@ public class APrioriLinear {
                     RoaringBitmap outlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][1].get(curCandidateOne),
                             byThreadColumnBitmap[colNumTwo][1].get(curCandidateTwo));
                     twoBitmapsOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne, curCandidateTwo,
-                            curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
+                            curColumnThreeAttributes, aggregationOps,startIndex, useIntSetAsArray, curCandidate,
+                            new double[]{1, 1}, numAggregates);
                 }
                 if (byThreadColumnBitmap[colNumOne][0].containsKey(curCandidateOne) && byThreadColumnBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
                     RoaringBitmap inlierBitmap = RoaringBitmap.and(byThreadColumnBitmap[colNumOne][0].get(curCandidateOne),
                             byThreadColumnBitmap[colNumTwo][0].get(curCandidateTwo));
                     twoBitmapsOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne, curCandidateTwo,
-                            curColumnThreeAttributes, startIndex, useIntSetAsArray, curCandidate, new double[]{0, 1}, numAggregates);
+                            curColumnThreeAttributes, aggregationOps, startIndex, useIntSetAsArray,
+                            curCandidate, new double[]{0, 1}, numAggregates);
                 }
             }
         }
@@ -597,7 +614,8 @@ public class APrioriLinear {
 
     private void twoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                      RoaringBitmap bitmap, Integer curCandidateOne, Integer curCandidateTwo,
-                                     int[] curColumnThreeAttributes, int startIndex,
+                                     int[] curColumnThreeAttributes,
+                                     AggregationOp[]  aggregationOps, int startIndex,
                                      boolean useIntSetAsArray, IntSet curCandidate,
                                      double[] val, int numAggregates) {
         for (Integer rowNum : bitmap) {
@@ -616,13 +634,15 @@ public class APrioriLinear {
                         curCandidateTwo,
                         curColumnThreeAttributes[rowNumInCol]);
             }
-            updateAggregates(thisThreadSetAggregates, curCandidate, val, numAggregates);
+            updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps, val, numAggregates);
         }
     }
 
     // All Three Normal or All Three Bitmap
     private void allThreeNormal(FastFixedHashTable thisThreadSetAggregates,
-                                int[] curColumnOneAttributes, int[] curColumnTwoAttributes, int[] curColumnThreeAttributes,
+                                int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
+                                int[] curColumnThreeAttributes,
+                                AggregationOp[]  aggregationOps,
                                 int startIndex, int endIndex,
                                 boolean useIntSetAsArray, IntSet curCandidate,
                                 double[][] aRows, int numAggregates) {
@@ -648,12 +668,13 @@ public class APrioriLinear {
                         curColumnTwoAttributes[rowNumInCol],
                         curColumnThreeAttributes[rowNumInCol]);
             }
-            updateAggregates(thisThreadSetAggregates, curCandidate, aRows[rowNum], numAggregates);
+            updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps, aRows[rowNum], numAggregates);
         }
     }
 
     private void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
                                 ArrayList<Integer>[] outlierList,
+                                AggregationOp[]  aggregationOps,
                                 HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
                                 int colNumOne, int colNumTwo, int colNumThree,
                                 boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
@@ -698,7 +719,8 @@ public class APrioriLinear {
                                 byThreadBitmap[colNumThree][0].get(curCandidateThree));
                     }
 
-                    updateAggregates(thisThreadSetAggregates, curCandidate, new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
+                    updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
+                            new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
                 }
             }
         }
