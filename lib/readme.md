@@ -1,4 +1,4 @@
-## Macrobase core operator library
+## MacroBase core operator library
 
 Basic operators for explaining differences in 
 high-dimensional data using categorical attributes.

@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.analysis.classify.stats;
 
-import edu.stanford.futuredata.macrobase.util.MacrobaseInternalError;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 
 import java.util.*;
 
@@ -42,7 +42,7 @@ public class WeightedPercentile {
                 }
             }
         }
-        throw new MacrobaseInternalError("WeightedPercentile was implemented incorrectly");
+        throw new MacroBaseInternalError("WeightedPercentile was implemented incorrectly");
     }
 
     private void computeCounts() {

@@ -1,11 +1,11 @@
 # Configuration Parameters
 
-This document describes the important parameters in Macrobase that
+This document describes the important parameters in MacroBase that
 affect its behavior.
 
 ## Workload-specific parameters
 
-We first describe workload-specific parameters. Macrobase will throw an exception if 
+We first describe workload-specific parameters. MacroBase will throw an exception if 
 parameters that don't have a default value aren't specified.
 
 <table class="table">
@@ -48,7 +48,7 @@ reciprocal of the value for each point (i.e. 1/value).
   <td>(none)</td>
   <td>
   Query used to specify input data source. Can be used to restrict
-the rows or columns Macrobase needs to look at. For example,
+the rows or columns MacroBase needs to look at. For example,
 <code>SELECT tabl1.col1, tabl1.col2, tabl2.col3 FROM tabl1, tabl2 WHERE tabl1.id == tabl2.id;</code>
   </td>
 </tr>

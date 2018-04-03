@@ -2,7 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
@@ -26,14 +26,14 @@ public class PredicateCubeClassifier extends CubeClassifier {
      * @param metricColumnName Column on which to classifier outliers
      * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
      * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     * @throws MacrobaseException
+     * @throws MacroBaseException
      */
     public PredicateCubeClassifier(
             final String countColumnName,
             final String metricColumnName,
             final String predicateStr,
             final double sentinel
-    ) throws MacrobaseException {
+    ) throws MacroBaseException {
         super(countColumnName);
         this.metricColumnName = metricColumnName;
         this.predicate = MBPredicate.getDoublePredicate(predicateStr, sentinel);
@@ -45,14 +45,14 @@ public class PredicateCubeClassifier extends CubeClassifier {
      * @param metricColumnName Column on which to classifier outliers
      * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
      * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     * @throws MacrobaseException
+     * @throws MacroBaseException
      */
     public PredicateCubeClassifier(
             final String countColumnName,
             final String metricColumnName,
             final String predicateStr,
             final String sentinel
-    ) throws MacrobaseException {
+    ) throws MacroBaseException {
         super(countColumnName);
         this.metricColumnName = metricColumnName;
         this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinel);

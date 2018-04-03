@@ -14,7 +14,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -149,8 +149,8 @@ public class MacroBaseSQLRepl {
                         }
                     });
                 }
-            } catch (ParsingException | MacrobaseException e) {
-                System.err.println(e.getMessage());
+            } catch (ParsingException | MacroBaseException e) {
+                e.printStackTrace(System.err);
                 System.err.println();
             }
         }

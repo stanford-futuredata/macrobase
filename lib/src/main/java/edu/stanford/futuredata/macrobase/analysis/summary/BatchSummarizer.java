@@ -2,7 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary;
 
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.operator.Operator;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,9 +75,9 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
         return this;
     }
 
-    public BatchSummarizer setMaxOrder(final int maxOrder) throws MacrobaseException {
+    public BatchSummarizer setMaxOrder(final int maxOrder) throws MacroBaseException {
         if (maxOrder < 1 || maxOrder > 3) {
-            throw new MacrobaseException("Max Order " + maxOrder +
+            throw new MacroBaseException("Max Order " + maxOrder +
                 " cannot be less than 1 or greater than 3");
         }
         this.maxOrder = maxOrder;

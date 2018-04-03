@@ -13,7 +13,7 @@ public class RowTest {
         Row row = new Row(Arrays.asList(5.0, "java"));
         assertEquals(5.0, row.getAs(0), 1e-10);
         assertEquals("java", row.getAs(1));
-        assertTrue(row.toString().contains("5.0"));
+        assertTrue(row.toString().contains(Row.DOUBLE_FORMAT.format(5.0)));
 
         Schema schema = new Schema();
         schema.addColumn(Schema.ColType.DOUBLE, "metric");

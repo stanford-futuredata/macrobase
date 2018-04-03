@@ -2,7 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.classify;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 
@@ -36,7 +36,7 @@ public class PredicateClassifier extends Classifier {
      */
     public PredicateClassifier(final String columnName, final String predicateStr,
         final double sentinel)
-        throws MacrobaseException {
+        throws MacroBaseException {
         super(columnName);
         this.predicate = MBPredicate.getDoublePredicate(predicateStr, sentinel);
         this.isStrPredicate = false;
@@ -50,7 +50,7 @@ public class PredicateClassifier extends Classifier {
      */
     public PredicateClassifier(final String columnName, final String predicateStr,
         final String sentinel)
-        throws MacrobaseException {
+        throws MacroBaseException {
         super(columnName);
         this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinel);
         this.isStrPredicate = true;

@@ -3,15 +3,13 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
+import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.roaringbitmap.RoaringBitmap;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.Random;
-import java.util.BitSet;
-
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
  * This class assumes that subgroups posses "aggregates" such as count and outlier_count
@@ -259,6 +257,8 @@ public class APrioriLinear {
                                 }
                             }
                         }
+                    } else {
+                        throw new MacroBaseInternalError("High Order not supported");
                     }
                     log.info("Time spent in Thread {} in order {}:  {} ms",
                             curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
