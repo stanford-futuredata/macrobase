@@ -3,6 +3,8 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.roaringbitmap.RoaringBitmap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encode every combination of attribute names and values into a distinct integer.
@@ -11,6 +13,7 @@ import org.roaringbitmap.RoaringBitmap;
  * column values.
  */
 public class AttributeEncoder {
+    private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
     private final int cardinalityThreshold = 50;
@@ -145,7 +148,6 @@ public class AttributeEncoder {
                     outlierList[colIdx].add(curKey);
                 }
             }
-            System.out.print(outlierList[colIdx].size() + " ");
             if (useBitMaps && outlierList[colIdx].size() < cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
@@ -162,7 +164,7 @@ public class AttributeEncoder {
                 }
             }
         }
-        System.out.println("\nisBitmapEncoded: " + Arrays.toString(isBitmapEncoded));
+        log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
         return encodedAttributes;
     }
 
