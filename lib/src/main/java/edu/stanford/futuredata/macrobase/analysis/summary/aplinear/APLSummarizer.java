@@ -26,6 +26,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     /* When the input has been sampled, this is the ratio of the input outlier rate
        to the true outlier rate. */
     double inlierWeight = 1.0;
+    double outlierSampleRate;
     boolean calcErrors = false;
 
     protected long numEvents = 0;
@@ -115,5 +116,6 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
     public void setSampleRate(double sampleRate) { this.sampleRate = sampleRate; }
     public void setInlierWeight(double inlierWeight) { this.inlierWeight = inlierWeight; }
+    public void setOutlierSampleRate(double outlierSampleRate) { this.outlierSampleRate = outlierSampleRate; }
     public void setCalcErrors(boolean calcErrors) { this.calcErrors = calcErrors; }
 }

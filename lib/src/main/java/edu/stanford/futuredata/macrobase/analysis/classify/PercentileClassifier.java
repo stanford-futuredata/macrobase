@@ -81,7 +81,8 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
                 resultColumn[i] = 1.0;
             }
             output.addColumn(outputColumnName, resultColumn);
-            inlierWeight =  ((double) (len - numOutliers) / (sampleSize - outlierSampleSize)) / ((double) numOutliers / outlierSampleSize);
+            inlierWeight = ((double) (len - numOutliers) / (sampleSize - outlierSampleSize)) / ((double) numOutliers / outlierSampleSize);
+            outlierSampleRate = (double) outlierSampleSize / numOutliers;
         } else {
             output = input.copy();
             double[] resultColumn = new double[len];

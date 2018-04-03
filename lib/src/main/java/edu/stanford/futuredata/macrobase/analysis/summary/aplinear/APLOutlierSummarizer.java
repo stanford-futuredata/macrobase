@@ -61,7 +61,7 @@ public class APLOutlierSummarizer extends APLSummarizer {
             case "globalratio":
             default:
                 qualityMetricList.add(
-                    new GlobalRatioQualityMetric(0, 1, inlierWeight));
+                    new GlobalRatioQualityMetric(0, 1, inlierWeight, outlierSampleRate));
         }
         return qualityMetricList;
     }

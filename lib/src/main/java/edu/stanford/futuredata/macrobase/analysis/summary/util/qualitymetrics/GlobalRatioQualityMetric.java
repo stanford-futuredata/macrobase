@@ -8,11 +8,13 @@ public class GlobalRatioQualityMetric implements QualityMetric{
     private int totalCountIdx;
     private double baseRate = 0.0;
     private double inlierWeight = 1.0;
+    private double outlierSampleRate;
 
-    public GlobalRatioQualityMetric(int outlierCountIdx, int totalCountIdx, double inlierWeight) {
+    public GlobalRatioQualityMetric(int outlierCountIdx, int totalCountIdx, double inlierWeight, double outlierSampleRate) {
         this.outlierCountIdx = outlierCountIdx;
         this.totalCountIdx = totalCountIdx;
         this.inlierWeight = inlierWeight;
+        this.outlierSampleRate = outlierSampleRate;
     }
 
     @Override
@@ -40,13 +42,13 @@ public class GlobalRatioQualityMetric implements QualityMetric{
 
     @Override
     public double error(double[] aggregates) {
-        // TODO: this is wrong
+        // TODO: check if this is correct
         double inlierCount = aggregates[totalCountIdx] - aggregates[outlierCountIdx];
         double estimatedCount = aggregates[outlierCountIdx] + inlierWeight * inlierCount;
 //        double denomError = estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + inlierWeight * inlierWeight / inlierCount);
         double denomError = Math.sqrt(aggregates[outlierCountIdx] + inlierWeight * inlierWeight * inlierCount);
         double g = Math.pow(Z * denomError / estimatedCount, 2);
-        System.out.format("count: %f pm %f, g: %f\n", estimatedCount, denomError, g);
+        System.out.format("count: %f pm %f, g: %f\n", estimatedCount / outlierSampleRate, denomError / outlierSampleRate, g);
         double rateError = aggregates[outlierCountIdx] / estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + denomError * denomError / (estimatedCount * estimatedCount));
         return Z * rateError / baseRate;
     }

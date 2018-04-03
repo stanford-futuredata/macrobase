@@ -7,6 +7,7 @@ public abstract class Classifier implements Transformer {
     protected String columnName;
     protected String outputColumnName = "_OUTLIER";
     protected double inlierWeight = 1.0;
+    protected double outlierSampleRate;
 
     public Classifier(String columnName) {
         this.columnName = columnName;
@@ -35,4 +36,5 @@ public abstract class Classifier implements Transformer {
     }
 
     public double getInlierWeight() { return inlierWeight; }
+    public double getOutlierSampleRate() { return outlierSampleRate; }
 }
