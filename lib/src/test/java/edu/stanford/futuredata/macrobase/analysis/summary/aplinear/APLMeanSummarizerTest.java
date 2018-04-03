@@ -10,7 +10,6 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class APLMeanSummarizerTest {
-    /*
     @Test
     public void testContainment() throws Exception {
         DataFrame df = new DataFrame();
@@ -80,5 +79,4 @@ public class APLMeanSummarizerTest {
         assertTrue(e.prettyPrint().contains("col1=a1"));
         assertEquals(100.0, e.numOutliers(), 1e-10);
     }
-    */
 }

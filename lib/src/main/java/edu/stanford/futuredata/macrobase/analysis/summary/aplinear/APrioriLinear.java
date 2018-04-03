@@ -648,7 +648,6 @@ public class APrioriLinear {
                         curColumnTwoAttributes[rowNumInCol],
                         curColumnThreeAttributes[rowNumInCol]);
             }
-            System.out.printf("%s %s\n", curCandidate.toString(), Arrays.toString(aRows[rowNum]));
             updateAggregates(thisThreadSetAggregates, curCandidate, aRows[rowNum], numAggregates);
         }
     }

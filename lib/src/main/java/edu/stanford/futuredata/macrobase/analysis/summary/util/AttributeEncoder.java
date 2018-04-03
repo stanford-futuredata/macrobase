@@ -13,7 +13,7 @@ import org.roaringbitmap.RoaringBitmap;
 public class AttributeEncoder {
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    private static double cardinalityThreshold = 50;
+    private final int cardinalityThreshold = 50;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -23,7 +23,7 @@ public class AttributeEncoder {
     private List<String> colNames;
     private HashMap<Integer, RoaringBitmap>[][] bitmap;
     private ArrayList<Integer> outlierList[];
-    boolean isBitmapEncoded[];
+    private boolean isBitmapEncoded[];
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -173,6 +173,9 @@ public class AttributeEncoder {
 
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
+
+        // No columns are bitmap encoded, all are false.
+        isBitmapEncoded = new boolean[numColumns];
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
