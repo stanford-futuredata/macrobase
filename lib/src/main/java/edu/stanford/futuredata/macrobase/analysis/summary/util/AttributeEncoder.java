@@ -55,7 +55,7 @@ public class AttributeEncoder {
      *                      row i of columns.
      * @return A two-dimensional array of encoded values.
      */
-    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport, double[] outlierColumn) {
+    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport, double[] outlierColumn, boolean useBitMaps) {
         if (columns.isEmpty()) {
             return new int[0][0];
         }
@@ -146,7 +146,7 @@ public class AttributeEncoder {
                 }
             }
             System.out.print(outlierList[colIdx].size() + " ");
-            if (outlierList[colIdx].size() < cardinalityThreshold) {
+            if (useBitMaps && outlierList[colIdx].size() < cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];

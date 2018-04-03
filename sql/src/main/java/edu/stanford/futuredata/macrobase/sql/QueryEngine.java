@@ -177,7 +177,7 @@ class QueryEngine {
         final int order = diffQuery.getMaxCombo().getValue();
 
         // execute diff
-        final APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+        final APLOutlierSummarizer summarizer = new APLOutlierSummarizer(true);
         summarizer.setRatioMetric(ratioMetric)
             .setMaxOrder(order)
             .setMinSupport(minSupport)

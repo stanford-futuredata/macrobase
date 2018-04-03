@@ -36,7 +36,7 @@ public class APLOutlierSummarizerTest {
                 "location",
                 "version"
         );
-        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        APLOutlierSummarizer summ = new APLOutlierSummarizer(true);
         summ.setMinSupport(.01);
         summ.setMinRatioMetric(10.0);
         summ.setAttributes(explanationAttributes);
@@ -48,7 +48,7 @@ public class APLOutlierSummarizerTest {
         assertEquals(1, results.size());
     }
 
-    /*@Test
+    @Test
     public void testCubeOrder3() throws Exception {
         DataFrame df = new DataFrame();
         String[] col1 = {"a1", "a2", "a1", "a1"};
@@ -67,7 +67,7 @@ public class APLOutlierSummarizerTest {
                 "col2",
                 "col3"
         );
-        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        APLOutlierSummarizer summ = new APLOutlierSummarizer(false);
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
         summ.setMinSupport(.1);
@@ -78,7 +78,7 @@ public class APLOutlierSummarizerTest {
         assertEquals(1, e.getResults().size());
         assertTrue(e.prettyPrint().contains("col1=a1"));
         assertEquals(47.0, e.numOutliers(), 1e-10);
-    }*/
+    }
 
     @Test
     public void testSimpleOrder3() throws Exception {
@@ -99,7 +99,7 @@ public class APLOutlierSummarizerTest {
                 "col2",
                 "col3"
         );
-        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        APLOutlierSummarizer summ = new APLOutlierSummarizer(true);
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
         summ.setMinSupport(.1);
