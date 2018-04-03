@@ -34,6 +34,8 @@ public class BasicBatchPipeline implements Pipeline {
     private String predicateStr;
     private int numThreads;
     private double sampleRate;
+    private int outlierSampleSize;
+    private int inlierSampleSize;
 
     private String summarizerType;
     private List<String> attributes;
@@ -72,6 +74,8 @@ public class BasicBatchPipeline implements Pipeline {
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         sampleRate = conf.get("sampleRate", 1.0);
+        outlierSampleSize = conf.get("outlierSampleSize", -1);
+        inlierSampleSize = conf.get("inlierSampleSize", -1);
     }
 
     public Classifier getClassifier() throws MacroBaseException {
@@ -82,6 +86,8 @@ public class BasicBatchPipeline implements Pipeline {
                 classifier.setIncludeHigh(pctileHigh);
                 classifier.setIncludeLow(pctileLow);
                 classifier.setSampleRate(sampleRate);
+                classifier.setOutlierSampleSize(outlierSampleSize);
+                classifier.setInlierSampleSize(inlierSampleSize);
                 return classifier;
             }
             case "predicate": {
@@ -120,7 +126,7 @@ public class BasicBatchPipeline implements Pipeline {
 //                summarizer.setSampleRate(sampleRate);
                 summarizer.setInlierWeight(inlierWeight);
                 summarizer.setOutlierSampleRate(outlierSampleRate);
-                summarizer.setCalcErrors(sampleRate < 1.0);
+                summarizer.setCalcErrors(sampleRate < 1.0 || outlierSampleSize > 0);
                 return summarizer;
             }
             default: {
