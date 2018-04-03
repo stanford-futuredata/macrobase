@@ -168,7 +168,7 @@ class QueryEngine {
                 final Join secondJoin = (Join) ((QuerySpecification) second.getQuery()
                     .getQueryBody()).getFrom().get();
                 return evaluateSQLClauses(diffQuery,
-                    executeDiffJoinQuery(firstJoin, secondJoin, explainCols, minRatioMetric,
+                    evaluateDiffJoin(firstJoin, secondJoin, explainCols, minRatioMetric,
                         minSupport, order));
             }
 
@@ -244,7 +244,7 @@ class QueryEngine {
      *
      * @return result of the DIFF JOIN
      */
-    private DataFrame executeDiffJoinQuery(final Join first, final Join second,
+    private DataFrame evaluateDiffJoin(final Join first, final Join second,
         final List<String> explainColumnNames, final double minRatioMetric, final double minSupport,
         final int maxOrder) throws MacroBaseException {
         final long startTime = System.currentTimeMillis();
@@ -261,11 +261,12 @@ class QueryEngine {
         final String joinColumnName = getJoinColumn(joinCriteriaOpt.get(), outlierDf.getSchema(),
             common.getSchema()); // column A1
 
-        final int outlierNumRows = outlierDf.getNumRows();
-        final int inlierNumRows = inlierDf.getNumRows();
-        final int minSupportThreshold = (int) minSupport * outlierNumRows;
+        final int numOutliers = outlierDf.getNumRows();
+        final int numInliers = inlierDf.getNumRows();
+        log.info("Num Outliers:  {}, num inliers: {}", numOutliers, numInliers);
+        final int minSupportThreshold = (int) minSupport * numOutliers;
         final double globalRatioDenom =
-            outlierNumRows / (outlierNumRows + inlierNumRows + 0.0);
+            numOutliers / (numOutliers + numInliers + 0.0);
         final double minRatioThreshold = minRatioMetric * globalRatioDenom;
 
         // 1a) Encode \proj_{A1} R, \proj_{A1} S, and T
@@ -293,6 +294,7 @@ class QueryEngine {
             foreignKeyBitmapPairs,
             minRatioThreshold); // returns K, the candidate keys that exceeded the minRatioThreshold.
         // K may contain false positives, though (support threshold cannot be applied yet)
+        log.info("Num candidate foreign keys: {}", candidateForeignKeys.size());
 
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
         //    and merge common values that distinct keys may map to
@@ -323,7 +325,7 @@ class QueryEngine {
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
-        double[] globalAggregates = new double[]{outlierNumRows, outlierNumRows + inlierNumRows};
+        double[] globalAggregates = new double[]{numOutliers, numOutliers + numInliers};
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
         }
