@@ -1,6 +1,8 @@
 package edu.stanford.futuredata.macrobase.sql;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric.Action.KEEP;
+import static edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric.Action.NEXT;
 import static edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType.EQUAL;
 
 import com.google.common.base.Joiner;
@@ -312,7 +314,7 @@ class QueryEngine {
             encodedPrimaryKeyAndValues, // T
             foreignKeyBitmapPairs,
             attrCandidatesByColumn);
-        log.info("Semi-join and merge time: {} ms", semiJoinAndMergeTime - semiJoinAndMergeTime);
+        log.info("Semi-join and merge time: {} ms", System.currentTimeMillis() - semiJoinAndMergeTime);
 
         // 3) Prune anything that doesn't have enough support
         //    (End of order-1 step of candidate generation)
@@ -338,15 +340,17 @@ class QueryEngine {
 
         // Prune all the collected aggregates
         // Sets that have high enough support but not high qualityMetrics, need to be explored
-        Map<Integer, HashSet<IntSet>> setNext = new HashMap<>(3);
+        final Map<Integer, HashSet<IntSet>> setNext = new HashMap<>(3);
         // Aggregate values for all of the sets we saved
-        Map<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
+        final Map<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
 
-        for (int curOrder = 1; curOrder <= maxOrder; ++curOrder) {
+        for (int order = 1; order <= maxOrder; ++order) {
             final long orderTime = System.currentTimeMillis();
-            final FastFixedHashTable setAggregates = new FastFixedHashTable(encoder.getNextKey(),
+            // For now, we always use IntSetAsLong
+            final FastFixedHashTable setAggregates = new FastFixedHashTable(order == 1 ?
+                encoder.getNextKey() : encoder.getNextKey() * setNext.get(order).size(),
                 numAggregates, false);
-            if (curOrder == 1) {
+            if (order == 1) {
                 valueBitmapPairs.forEach((key, bitmapPair) -> {
                     final int numMatchedOutliers = bitmapPair.a.getCardinality();
                     final int numMatchedInliers = bitmapPair.b.getCardinality();
@@ -354,7 +358,7 @@ class QueryEngine {
                         new double[]{numMatchedOutliers, numMatchedOutliers + numMatchedInliers},
                         numAggregates);
                 });
-            } else if (curOrder == 2) {
+            } else if (order == 2) {
                 IntSetAsLong curCandidate = new IntSetAsLong(0);
                 for (int colNumOne = 0; colNumOne < numExplainColumns; ++colNumOne) {
                     for (int colNumTwo = colNumOne + 1; colNumTwo < numExplainColumns;
@@ -380,7 +384,7 @@ class QueryEngine {
                         }
                     }
                 }
-            } else if (curOrder == 3) {
+            } else if (order == 3) {
                 IntSetAsLong curCandidate = new IntSetAsLong(0);
                 for (int colNumOne = 0; colNumOne < numExplainColumns; ++colNumOne) {
                     for (int colNumTwo = colNumOne + 1; colNumTwo < numExplainColumns;
@@ -400,6 +404,7 @@ class QueryEngine {
                                             .get(curCandidateTwo);
                                         final Pair<RoaringBitmap, RoaringBitmap> candidateThreeBitmapPair = valueBitmapPairs
                                             .get(curCandidateThree);
+                                        // TODO: write three-argument version of andCardinality
                                         final int numMatchedOutliers = RoaringBitmap.andCardinality(
                                             RoaringBitmap.and(candidateOneBitmapPair.a,
                                                 candidateTwoBitmapPair.a),
@@ -424,31 +429,47 @@ class QueryEngine {
             HashSet<IntSet> curOrderSaved = new HashSet<>();
             for (long l : setAggregates.keySetLong()) {
                 final IntSetAsLong candidate = new IntSetAsLong(l);
-                QualityMetric.Action action = QualityMetric.Action.KEEP;
+                QualityMetric.Action action = KEEP;
                 double[] curAggregates = setAggregates.get(candidate);
                 for (int i = 0; i < qualityMetrics.length; i++) {
                     QualityMetric q = qualityMetrics[i];
                     double t = thresholds[i];
                     action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                 }
-                if (action == QualityMetric.Action.KEEP) {
+                if (action == KEEP) {
                     // Make sure the candidate isn't already covered by a pair
-                    if (curOrder != 3 || allPairsValid(candidate, setNext.get(2))) {
+                    if (order != 3 || allPairsValid(candidate, setNext.get(2))) {
                         // if a set is already past the threshold on all metrics,
                         // save it and no need for further exploration if we do containment
                         curOrderSaved.add(candidate);
-                        if (curOrder == 1) {
-                            // Remove this explanation from the array of candidate sets
-                            final int val = candidate.getFirst();
-                            // subtract three for foreign key columns and primary key column
-                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
-
+                        // Remove this explanation from the array of candidate sets
+                        switch (order) {
+                            case 2:
+                                int val = candidate.getSecond();
+                                // subtract three for foreign key columns and primary key column
+                                attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                            case 1:
+                                val = candidate.getFirst();
+                                attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
                         }
                     }
-                } else if (action == QualityMetric.Action.NEXT) {
-                    // otherwise if a set still has potentially good subsets,
-                    // save it for further examination
+                } else if (action == NEXT) {
+                    // If a set still has potentially good subsets, save it for further examination
                     curOrderNext.add(candidate);
+                } else {
+                    // Prune search space by removing candidates from attrCandidatesByColumn
+                    switch (order) {
+                        case 3:
+                            int val = candidate.getThird();
+                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                        case 2:
+                            val = candidate.getSecond();
+                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                        case 1:
+                            val = candidate.getFirst();
+                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                            break;
+                    }
                 }
             }
 
@@ -458,24 +479,31 @@ class QueryEngine {
             for (IntSet curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
             }
-            savedAggregates.put(curOrder, curSavedAggregates);
-            setNext.put(curOrder, curOrderNext);
-            log.info("Order {} time: {} ms", curOrder, System.currentTimeMillis() - orderTime);
+            savedAggregates.put(order, curSavedAggregates);
+            if (curOrderNext.isEmpty()) {
+                log.info("curOrderNext is empty, skipping higher-order explanations");
+                break;
+            }
+            setNext.put(order, curOrderNext);
+            log.info("Order {} time: {} ms", order, System.currentTimeMillis() - orderTime);
         }
-        log.info("Time spent in DiffJoin:  {} ms", System.currentTimeMillis() - startTime);
+        log.info("Time spent in DiffJoin: {} ms", System.currentTimeMillis() - startTime);
 
         // 4) Construct DataFrame of results
         List<APLExplanationResult> results = new ArrayList<>();
-        for (int curOrder: savedAggregates.keySet()) {
-            Map<IntSet, double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
-            for (IntSet curSet : curOrderSavedAggregates.keySet()) {
-                double[] aggregates = curOrderSavedAggregates.get(curSet);
+        for (Map<IntSet, double []> curOrderSavedAggregates : savedAggregates.values()) {
+            if (curOrderSavedAggregates == null) {
+                // we stopped early, because there was nothing in curOrderNext
+                continue;
+            }
+            for (Entry<IntSet, double[]> entry : curOrderSavedAggregates.entrySet()) {
+                double[] aggregates = entry.getValue();
                 double[] metrics = new double[qualityMetrics.length];
                 for (int i = 0; i < metrics.length; i++) {
                     metrics[i] = qualityMetrics[i].value(aggregates);
                 }
                 results.add(
-                    new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                    new APLExplanationResult(qualityMetrics, entry.getKey(), aggregates, metrics)
                 );
             }
         }
