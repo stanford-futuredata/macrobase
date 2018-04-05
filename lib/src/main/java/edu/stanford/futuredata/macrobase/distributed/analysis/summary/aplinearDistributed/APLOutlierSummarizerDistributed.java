@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed;
 
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
@@ -28,6 +29,12 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     @Override
     public List<String> getAggregateNames() {
         return Arrays.asList("Outliers", "Count");
+    }
+
+    @Override
+    public AggregationOp[] getAggregationOps() {
+        AggregationOp[] curOps = {AggregationOp.SUM, AggregationOp.SUM};
+        return curOps;
     }
 
     @Override
