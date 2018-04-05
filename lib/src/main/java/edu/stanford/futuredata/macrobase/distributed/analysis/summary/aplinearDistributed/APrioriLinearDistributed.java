@@ -7,11 +7,14 @@ import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
 import java.util.*;
+
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.updateAggregates;
 
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
@@ -70,7 +73,7 @@ public class APrioriLinearDistributed {
 
         // Shard the input RDD by rows, then store attribute information by column.
         // This allows easy distribution but also very fast processing.
-        JavaRDD<Tuple2<int[][], double[][]>> shardedAttributesAndAggregatesRDD =
+        JavaRDD<Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, RoaringBitmap>[][]>> shardedAttributesAndAggregatesRDD =
                 attributesAndAggregates.mapPartitions(
                         (Iterator<Tuple2<int[], double[]>> iter) -> {
             int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions * 100)/numPartitions];
@@ -88,8 +91,30 @@ public class APrioriLinearDistributed {
                 }
                 j++;
             }
-            List<Tuple2<int[][], double[][]>> returnList = new ArrayList<>(1);
-            returnList.add(new Tuple2<>(thisPartitionAttributes, thisPartitionAggregates));
+            int partitionNumRows = j;
+            HashMap<Integer, RoaringBitmap>[][] partitionBitmaps = new HashMap[numColumns][2];
+            for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+                for (int a = 0; a < 2; a++) {
+                    partitionBitmaps[colIdx][a] = new HashMap<>();
+                }
+            }
+            for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+                if (isBitmapEncoded[colIdx]) {
+                    for (int rowIdx = 0; rowIdx < partitionNumRows; rowIdx++) {
+                        int oidx = (thisPartitionAggregates[rowIdx][0] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
+                        int curKey = thisPartitionAttributes[colIdx][rowIdx];
+                        if (curKey != AttributeEncoder.noSupport) {
+                            if (partitionBitmaps[colIdx][oidx].containsKey(curKey)) {
+                                partitionBitmaps[colIdx][oidx].get(curKey).add(rowIdx);
+                            } else {
+                                partitionBitmaps[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
+                            }
+                        }
+                    }
+                }
+            }
+            List<Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, RoaringBitmap>[][]>> returnList = new ArrayList<>(1);
+            returnList.add(new Tuple2<>(new Tuple2<>(thisPartitionAttributes, thisPartitionAggregates), partitionBitmaps));
             return returnList.iterator();
         }, true);
         shardedAttributesAndAggregatesRDD.cache();
@@ -98,9 +123,11 @@ public class APrioriLinearDistributed {
             long startTime = System.currentTimeMillis();
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
-            JavaRDD<Map<IntSet, double[]>> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
-                int[][] attributesForThread = sparkTuple._1;
-                double[][] aRowsForThread = sparkTuple._2;
+            JavaRDD<Map<IntSet, double[]>> hashTableSet = shardedAttributesAndAggregatesRDD.map((
+                    Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, RoaringBitmap>[][]> sparkTuple) -> {
+                int[][] attributesForThread = sparkTuple._1._1;
+                double[][] aRowsForThread = sparkTuple._1._2;
+                HashMap<Integer, RoaringBitmap>[][] partitionBitmaps = sparkTuple._2;
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
@@ -122,26 +149,39 @@ public class APrioriLinearDistributed {
                 thisThreadSetAggregates.put(curCandidate, partitionAggregates);
                 if (curOrderFinal == 1) {
                     for (int colNum = 0; colNum < numColumns; colNum++) {
-                        int[] curColumnAttributes = attributesForThread[colNum];
-                        for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
-                            // Require that all order-one candidates have minimum support.
-                            if (curColumnAttributes[rowNum] == AttributeEncoder.noSupport)
-                                continue;
-                            // Cascade to arrays if necessary, but otherwise pack attributes into longs.
-                            if (useIntSetAsArray) {
-                                curCandidate = new IntSetAsArray(curColumnAttributes[rowNum]);
-                            } else {
-                                ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum];
-                            }
-                            double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                            if (candidateVal == null) {
-                                thisThreadSetAggregates.put(curCandidate,
-                                        Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
-                            } else {
-                                for (int a = 0; a < numAggregates; a++) {
-                                    AggregationOp curOp = aggregationOps[a];
-                                    candidateVal[a] = curOp.combine(candidateVal[a], aRowsForThread[rowNum][a]);
+                        if (isBitmapEncoded[colNum]) {
+                            for (Integer curOutlierCandidate : outlierList[colNum]) {
+                                // Require that all order-one candidates have minimum support.
+                                if (curOutlierCandidate == AttributeEncoder.noSupport)
+                                    continue;
+                                int outlierCount = 0, inlierCount = 0;
+                                if (partitionBitmaps[colNum][1].containsKey(curOutlierCandidate))
+                                    outlierCount = partitionBitmaps[colNum][1].get(curOutlierCandidate).getCardinality();
+                                if (partitionBitmaps[colNum][0].containsKey(curOutlierCandidate))
+                                    inlierCount = partitionBitmaps[colNum][0].get(curOutlierCandidate).getCardinality();
+                                // Cascade to arrays if necessary, but otherwise pack attributes into longs.
+                                if (useIntSetAsArray) {
+                                    curCandidate = new IntSetAsArray(curOutlierCandidate);
+                                } else {
+                                    ((IntSetAsLong) curCandidate).value = curOutlierCandidate;
                                 }
+                                updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
+                                        new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
+                            }
+                        } else {
+                            int[] curColumnAttributes = attributesForThread[colNum];
+                            for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
+                                // Require that all order-one candidates have minimum support.
+                                if (curColumnAttributes[rowNum] == AttributeEncoder.noSupport)
+                                    continue;
+                                // Cascade to arrays if necessary, but otherwise pack attributes into longs.
+                                if (useIntSetAsArray) {
+                                    curCandidate = new IntSetAsArray(curColumnAttributes[rowNum]);
+                                } else {
+                                    ((IntSetAsLong) curCandidate).value = curColumnAttributes[rowNum];
+                                }
+                                updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
+                                        aRowsForThread[rowNum], numAggregates);
                             }
                         }
                     }
