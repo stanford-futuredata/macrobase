@@ -282,7 +282,7 @@ public class CubePipeline implements Pipeline {
                 return summarizer;
             }
             default: {
-                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+                APLOutlierSummarizer summarizer = new APLOutlierSummarizer(false);
                 summarizer.setOutlierColumn(classifier.getOutputColumnName());
                 summarizer.setCountColumn(classifier.getCountColumnName());
                 summarizer.setAttributes(attributes);

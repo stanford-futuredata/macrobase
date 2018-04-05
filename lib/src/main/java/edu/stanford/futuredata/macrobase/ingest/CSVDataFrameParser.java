@@ -4,7 +4,6 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,6 +30,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
     private void init(String filename) {
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setLineSeparator("\n");
+        settings.setMaxCharsPerColumn(16384);
         CsvParser csvParser = new CsvParser(settings);
         csvParser.beginParsing(getReader(filename));
         this.parser = csvParser;
