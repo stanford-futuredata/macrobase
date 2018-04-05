@@ -89,10 +89,12 @@ class QueryEngine {
 
     private final Map<String, DataFrame> tablesInMemory;
     private final int numThreads;
+    private final boolean useHashJoin;
 
     QueryEngine() {
         tablesInMemory = new HashMap<>();
         numThreads = 1; // TODO: add configuration parameter for numThreads
+        useHashJoin = true;
     }
 
     /**
@@ -348,7 +350,7 @@ class QueryEngine {
             final long orderTime = System.currentTimeMillis();
             // For now, we always use IntSetAsLong
             final FastFixedHashTable setAggregates = new FastFixedHashTable(order == 1 ?
-                encoder.getNextKey() : encoder.getNextKey() * setNext.get(order).size(),
+                encoder.getNextKey() : encoder.getNextKey() * setNext.get(order - 1).size(),
                 numAggregates, false);
             if (order == 1) {
                 valueBitmapPairs.forEach((key, bitmapPair) -> {
@@ -906,6 +908,8 @@ class QueryEngine {
             throw new MacroBaseSQLException("No clause (e.g., ON, USING) specified in JOIN");
         }
 
+        // Right now, we only support equality joins on a single column; this is enforced in
+        // getJoinColumn
         final Schema biggerSchema = bigger.getSchema();
         final Schema smallerSchema = smaller.getSchema();
         final String joinColumn = getJoinColumn(joinCriteriaOpt.get(), biggerSchema, smallerSchema);
@@ -952,27 +956,15 @@ class QueryEngine {
                     smallerDoubleResults.put(colName, new LinkedList<>());
                 }
 
-                BiPredicate<Row, Row> lambda = getJoinLambda(biggerColIndex, smallerColIndex,
-                    biggerColType);
-                for (Row big : bigger.getRowIterator()) {
-                    for (Row small : smaller.getRowIterator()) {
-                        if (lambda.test(big, small)) {
-                            // Add from big
-                            for (String colName : biggerStringResults.keySet()) {
-                                biggerStringResults.get(colName).add(big.getAs(colName));
-                            }
-                            for (String colName : biggerDoubleResults.keySet()) {
-                                biggerDoubleResults.get(colName).add(big.getAs(colName));
-                            }
-                            // Add from small
-                            for (String colName : smallerStringResults.keySet()) {
-                                smallerStringResults.get(colName).add(small.getAs(colName));
-                            }
-                            for (String colName : smallerDoubleResults.keySet()) {
-                                smallerDoubleResults.get(colName).add(small.getAs(colName));
-                            }
-                        }
-                    }
+                if (useHashJoin) {
+                    log.info("Using hash join");
+                    hashJoin(bigger, smaller, joinColumn, biggerStringResults, smallerStringResults,
+                    biggerDoubleResults, smallerDoubleResults);
+                } else {
+                    log.info("Using nested loops join");
+                    nestedLoopsJoin(bigger, smaller, getJoinLambda(biggerColIndex, smallerColIndex,
+                        biggerColType), biggerStringResults, smallerStringResults,
+                        biggerDoubleResults, smallerDoubleResults);
                 }
                 log.info("Time spent in Join:  {} ms", System.currentTimeMillis() - startTime);
 
@@ -1014,6 +1006,59 @@ class QueryEngine {
     }
 
     /**
+     * Evaluate join using hash-join algorithm
+     */
+    private void hashJoin(final DataFrame bigger, final DataFrame smaller,
+        final String joinColumn,
+        final Map<String, List<String>> biggerStringResults,
+        final Map<String, List<String>> smallerStringResults,
+        final Map<String, List<Double>> biggerDoubleResults,
+        final Map<String, List<Double>> smallerDoubleResults) throws MacroBaseSQLException {
+
+        final String[] smallerColumn = smaller.project(joinColumn).getStringColumn(0);
+        Map<String, List<Integer>> colValuesToIndices = new HashMap<>();
+        for (int i = 0; i < smallerColumn.length; ++i) {
+            final String value = smallerColumn[i];
+            List<Integer> list = colValuesToIndices.computeIfAbsent(value, k -> new ArrayList<>());
+            list.add(i);
+        }
+
+        final String[] biggerColumn = bigger.project(joinColumn).getStringColumn(0);
+
+        for (int i = 0; i < biggerColumn.length; ++i) {
+            final String value = biggerColumn[i];
+            List<Integer> indices = colValuesToIndices.get(value);
+            if (indices != null) {
+                final Row biggerRow = bigger.getRow(i);
+                for (int j : indices) {
+                    addResultToJoinOutput(biggerStringResults, smallerStringResults,
+                        biggerDoubleResults, smallerDoubleResults, biggerRow, smaller.getRow(j));
+                }
+            }
+        }
+    }
+
+    /**
+     * Evaluate join using nested loops algorithm
+     */
+    private void nestedLoopsJoin(final DataFrame bigger, final DataFrame smaller,
+        final BiPredicate<Row, Row> lambda,
+        final Map<String, List<String>> biggerStringResults,
+        final Map<String, List<String>> smallerStringResults,
+        final Map<String, List<Double>> biggerDoubleResults,
+        final Map<String, List<Double>> smallerDoubleResults) throws MacroBaseSQLException {
+        for (Row bigRow : bigger.getRowIterator()) {
+            for (Row smallRow : smaller.getRowIterator()) {
+                if (lambda.test(bigRow, smallRow)) {
+                    addResultToJoinOutput(biggerStringResults, smallerStringResults,
+                        biggerDoubleResults, smallerDoubleResults, bigRow, smallRow);
+
+                }
+            }
+        }
+    }
+
+    /**
      * TODO
      */
     private String getName(Relation relation) throws MacroBaseSQLException {
@@ -1030,6 +1075,39 @@ class QueryEngine {
 
     /**
      * TODO
+     * @param biggerStringResults
+     * @param smallerStringResults
+     * @param biggerDoubleResults
+     * @param smallerDoubleResults
+     * @param big
+     * @param small
+     */
+    private void addResultToJoinOutput(final Map<String, List<String>> biggerStringResults,
+        final Map<String, List<String>> smallerStringResults,
+        final Map<String, List<Double>> biggerDoubleResults,
+        final Map<String, List<Double>> smallerDoubleResults, final Row big, final Row small) {
+        // Add from big
+        for (String colName : biggerStringResults.keySet()) {
+            biggerStringResults.get(colName).add(big.getAs(colName));
+        }
+        for (String colName : biggerDoubleResults.keySet()) {
+            biggerDoubleResults.get(colName).add(big.getAs(colName));
+        }
+        // Add from small
+        for (String colName : smallerStringResults.keySet()) {
+            smallerStringResults.get(colName).add(small.getAs(colName));
+        }
+        for (String colName : smallerDoubleResults.keySet()) {
+            smallerDoubleResults.get(colName).add(small.getAs(colName));
+        }
+    }
+
+    /**
+     * Extracts the column we're joining on as a single String. We also enforce
+     * all of the assumptions we make in {@link #evaluateJoin(Join)}:
+     * 1) We join only on a single Column
+     * 2) The join must be an equality join
+     * @throws MacroBaseSQLException if the assumptions are violated
      */
     private String getJoinColumn(final JoinCriteria joinCriteria,
         Schema biggerSchema, Schema smallerSchema) throws MacroBaseSQLException {
