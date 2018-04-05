@@ -14,7 +14,7 @@ import scala.Tuple2;
 
 import java.util.*;
 
-import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.updateAggregates;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.*;
 
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
@@ -190,31 +190,30 @@ public class APrioriLinearDistributed {
                         int[] curColumnOneAttributes = attributesForThread[colNumOne];
                         for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                             int[] curColumnTwoAttributes = attributesForThread[colNumTwo];
-                            for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
-                                // Only examine a pair if both its members have minimum support.
-                                if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
-                                        || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
-                                        || !singleNextArray[curColumnOneAttributes[rowNum]]
-                                        || !singleNextArray[curColumnTwoAttributes[rowNum]])
-                                    continue;
-                                // Cascade to arrays if necessary, but otherwise pack attributes into longs.
-                                if (useIntSetAsArray) {
-                                    curCandidate = new IntSetAsArray(curColumnOneAttributes[rowNum],
-                                            curColumnTwoAttributes[rowNum]);
-                                } else {
-                                    ((IntSetAsLong) curCandidate).value = IntSetAsLong.twoIntToLong(curColumnOneAttributes[rowNum],
-                                            curColumnTwoAttributes[rowNum]);
-                                }
-                                double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                if (candidateVal == null) {
-                                    thisThreadSetAggregates.put(curCandidate,
-                                            Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
-                                } else {
-                                    for (int a = 0; a < numAggregates; a++) {
-                                        AggregationOp curOp = aggregationOps[a];
-                                        candidateVal[a] = curOp.combine(candidateVal[a], aRowsForThread[rowNum][a]);
-                                    }
-                                }
+
+                            if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
+                                // Bitmap-Bitmap
+                                allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
+                                        partitionBitmaps, colNumOne, colNumTwo, useIntSetAsArray,
+                                        curCandidate, numAggregates);
+                            } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo]) {
+                                // Bitmap-Normal
+                                allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumOne],
+                                        aggregationOps, singleNextArray, partitionBitmaps[colNumOne],
+                                        curColumnTwoAttributes, 0, useIntSetAsArray, curCandidate,
+                                        numAggregates);
+                            } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
+                                // Normal-Bitmap
+                                allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumTwo],
+                                        aggregationOps, singleNextArray, partitionBitmaps[colNumTwo],
+                                        curColumnOneAttributes, 0, useIntSetAsArray, curCandidate,
+                                        numAggregates);
+                            } else {
+                                // Normal-Normal
+                                allTwoNormal(thisThreadSetAggregates, curColumnOneAttributes,
+                                        curColumnTwoAttributes, aggregationOps, singleNextArray,
+                                        0,  aRowsForThread.length, useIntSetAsArray, curCandidate, aRowsForThread,
+                                        numAggregates);
                             }
                         }
                     }
@@ -223,39 +222,70 @@ public class APrioriLinearDistributed {
                         int[] curColumnOneAttributes = attributesForThread[colNumOne % numColumns];
                         for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                             int[] curColumnTwoAttributes = attributesForThread[colNumTwo % numColumns];
-                            for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                int[] curColumnThreeAttributes = attributesForThread[colnumThree % numColumns];
-                                for (int rowNum = 0; rowNum < aRowsForThread.length; rowNum++) {
-                                    // Only construct a triple if all its singleton members have minimum support.
-                                    if (curColumnOneAttributes[rowNum] == AttributeEncoder.noSupport
-                                            || curColumnTwoAttributes[rowNum] == AttributeEncoder.noSupport
-                                            || curColumnThreeAttributes[rowNum] == AttributeEncoder.noSupport
-                                            || !singleNextArray[curColumnThreeAttributes[rowNum]]
-                                            || !singleNextArray[curColumnOneAttributes[rowNum]]
-                                            || !singleNextArray[curColumnTwoAttributes[rowNum]])
-                                        continue;
-                                    // Cascade to arrays if necessary, but otherwise pack attributes into longs.
-                                    if (useIntSetAsArray) {
-                                        curCandidate = new IntSetAsArray(
-                                                curColumnOneAttributes[rowNum],
-                                                curColumnTwoAttributes[rowNum],
-                                                curColumnThreeAttributes[rowNum]);
-                                    } else {
-                                        ((IntSetAsLong) curCandidate).value = IntSetAsLong.threeIntToLong(
-                                                curColumnOneAttributes[rowNum],
-                                                curColumnTwoAttributes[rowNum],
-                                                curColumnThreeAttributes[rowNum]);
-                                    }
-                                    double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
-                                    if (candidateVal == null) {
-                                        thisThreadSetAggregates.put(curCandidate,
-                                                Arrays.copyOf(aRowsForThread[rowNum], numAggregates));
-                                    } else {
-                                        for (int a = 0; a < numAggregates; a++) {
-                                            AggregationOp curOp = aggregationOps[a];
-                                            candidateVal[a] = curOp.combine(candidateVal[a], aRowsForThread[rowNum][a]);
-                                        }
-                                    }
+                            for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
+                                int[] curColumnThreeAttributes = attributesForThread[colNumThree % numColumns];
+                                if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
+                                        isBitmapEncoded[colNumThree]) {
+                                    // all 3 cols are bitmaps
+                                    allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
+                                            singleNextArray, partitionBitmaps,
+                                            colNumOne, colNumTwo, colNumThree, useIntSetAsArray, curCandidate,
+                                            numAggregates);
+
+                                } else if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
+                                        !isBitmapEncoded[colNumThree]) {
+                                    // one and two are bitmaps, 3 is normal
+                                    allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps,
+                                            singleNextArray, partitionBitmaps, colNumOne, colNumTwo,
+                                            curColumnThreeAttributes, 0, useIntSetAsArray, curCandidate,
+                                            numAggregates);
+
+                                } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] &&
+                                        isBitmapEncoded[colNumThree]) {
+                                    // one and three are bitmaps, 2 is normal
+                                    allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps,
+                                            singleNextArray, partitionBitmaps, colNumOne, colNumThree,
+                                            curColumnTwoAttributes, 0, useIntSetAsArray, curCandidate,
+                                            numAggregates);
+
+                                } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
+                                        isBitmapEncoded[colNumThree]) {
+                                    // two and three are bitmaps, 1 is normal
+                                    allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps,
+                                            singleNextArray, partitionBitmaps, colNumTwo, colNumThree,
+                                            curColumnOneAttributes, 0, useIntSetAsArray, curCandidate,
+                                            numAggregates);
+
+                                } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] &&
+                                        !isBitmapEncoded[colNumThree]) {
+                                    // one is a bitmap, 2 and 3 are normal
+                                    allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumOne],
+                                            aggregationOps, singleNextArray, partitionBitmaps[colNumOne],
+                                            curColumnTwoAttributes, curColumnThreeAttributes, 0,
+                                            useIntSetAsArray, curCandidate, numAggregates);
+
+                                } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
+                                        !isBitmapEncoded[colNumThree]) {
+                                    // two is a bitmap, 1 and 3 are normal
+                                    allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumTwo],
+                                            aggregationOps, singleNextArray, partitionBitmaps[colNumTwo],
+                                            curColumnOneAttributes, curColumnThreeAttributes,
+                                            0, useIntSetAsArray, curCandidate, numAggregates);
+
+                                } else if (!isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] &&
+                                        isBitmapEncoded[colNumThree]) {
+                                    // three is a bitmap, 1 and 2 are normal
+                                    allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumThree],
+                                            aggregationOps, singleNextArray,
+                                            partitionBitmaps[colNumThree],
+                                            curColumnOneAttributes, curColumnTwoAttributes,
+                                            0, useIntSetAsArray, curCandidate, numAggregates);
+                                } else {
+                                    // all three are normal
+                                    allThreeNormal(thisThreadSetAggregates, curColumnOneAttributes,
+                                            curColumnTwoAttributes, curColumnThreeAttributes,
+                                            aggregationOps, singleNextArray, 0, aRowsForThread.length,
+                                            useIntSetAsArray, curCandidate, aRowsForThread, numAggregates);
                                 }
                             }
                         }
