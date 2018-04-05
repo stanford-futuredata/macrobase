@@ -19,7 +19,8 @@ import org.slf4j.LoggerFactory;
  * column values.
  */
 public class AttributeEncoder {
-    private Logger log = LoggerFactory.getLogger("AttributeEncoder");
+    private static final Logger log = LoggerFactory.getLogger("AttributeEncoder");
+
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
     private final int cardinalityThreshold = 5;
@@ -72,6 +73,7 @@ public class AttributeEncoder {
 
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
+        log.info("numValuesEncoded: {}",  numColumns*numRows);
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
@@ -172,6 +174,7 @@ public class AttributeEncoder {
             }
         }
         log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
+
         return encodedAttributes;
     }
 
@@ -194,6 +197,7 @@ public class AttributeEncoder {
 
         int[][] encodedAttributes = new int[numRows][numColumns];
 
+        // noinspection Duplicates
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
@@ -207,6 +211,44 @@ public class AttributeEncoder {
                 }
                 int curKey = curColEncoder.get(colVal);
                 encodedAttributes[rowIdx][colIdx] = curKey;
+            }
+        }
+
+        return encodedAttributes;
+    }
+
+    public int[][] encodeAttributesByColumn(List<String[]> columns) {
+        if (columns.isEmpty()) {
+            log.info("numValuesEncoded: 0");
+            return new int[0][0];
+        }
+
+        int numColumns = columns.size();
+        int numRows = columns.get(0).length;
+
+        for (int i = 0; i < numColumns; i++) {
+            if (!encoder.containsKey(i)) {
+                encoder.put(i, new HashMap<>());
+            }
+        }
+
+        int[][] encodedAttributes = new int[numColumns][numRows];
+        log.info("numValuesEncoded: {}", numColumns*numRows);
+
+        // noinspection Duplicates
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            Map<String, Integer> curColEncoder = encoder.get(colIdx);
+            String[] curCol = columns.get(colIdx);
+            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+                String colVal = curCol[rowIdx];
+                if (!curColEncoder.containsKey(colVal)) {
+                    curColEncoder.put(colVal, nextKey);
+                    valueDecoder.put(nextKey, colVal);
+                    columnDecoder.put(nextKey, colIdx);
+                    nextKey++;
+                }
+                int curKey = curColEncoder.get(colVal);
+                encodedAttributes[colIdx][rowIdx] = curKey;
             }
         }
 

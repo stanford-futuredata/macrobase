@@ -1,14 +1,13 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * Generic summarizer superclass that can be customized with
@@ -22,6 +21,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     APrioriLinear aplKernel;
     List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
+    private double[][] globalAggregateCols;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -59,7 +59,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {} ms", elapsed);
-        log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
+        log.info("Distinct values encoded: {}", encoder.getNextKey() - 1);
 
         thresholds = getThresholds();
         qualityMetricList = getQualityMetricList();
@@ -73,6 +73,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         AggregationOp[] aggregationOps = getAggregationOps();
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
+                globalAggregateCols == null ?  aggregateColumns : globalAggregateCols,
                 aggregationOps,
                 encoder.getNextKey(),
                 maxOrder,
@@ -96,6 +97,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
     public APLExplanation getResults() {
         return explanation;
+    }
+
+    public void setGlobalAggregateCols(double[][] globalAggregateCols) {
+        this.globalAggregateCols = globalAggregateCols;
     }
 
 }

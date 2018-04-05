@@ -179,4 +179,9 @@ public class IntSetAsLong implements IntSet {
                 + (this.value >>> 45) + 31 * (this.value >>> 7) + 7 * (this.value >>> 37));
     }
 
+    @Override
+    public String toString() {
+            return String.format("(%s, %s, %s)", getFirst(), getSecond(), getThird());
+    }
+
 }

@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
  * any new AST type defined in the tree subpackage should be added to this file as follows:
  * <code>
  *     protected R visitNewAstType(NewAstType node, C context) {
- *          return visitNode(node, context);
+ *         return visitNode(node, context);
  *     }
  * </code>
  **/
@@ -127,6 +127,10 @@ public abstract class AstVisitor<R, C> {
     }
 
     protected R visitIdentifier(Identifier node, C context) {
+        return visitExpression(node, context);
+    }
+
+    protected R visitDereferenceExpression(DereferenceExpression node, C context) {
         return visitExpression(node, context);
     }
 

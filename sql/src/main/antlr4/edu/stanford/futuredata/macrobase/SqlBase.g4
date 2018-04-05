@@ -180,7 +180,13 @@ escapeClause
     ;
 
 relation
-    : aliasedRelation
+    : aliasedRelation                             #relationDefault
+    | left=relation
+      ( CROSS JOIN right=aliasedRelation
+      | joinType JOIN rightRelation=relation joinCriteria
+      | NATURAL joinType JOIN right=aliasedRelation
+      )                                           #joinRelation
+
     ;
 
 joinType

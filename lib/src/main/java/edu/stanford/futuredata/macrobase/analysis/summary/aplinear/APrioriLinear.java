@@ -48,6 +48,7 @@ public class APrioriLinear {
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
+            double[][] globalAggregateCols,
             AggregationOp[] aggregationOps,
             int cardinality,
             final int maxOrder,
@@ -56,12 +57,13 @@ public class APrioriLinear {
             ArrayList<Integer>[] outlierList,
             boolean[] isBitmapEncoded
     ) {
+        final long beginTime = System.currentTimeMillis();
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
         final int numColumns = attributes[0].length;
 
         // Singleton viable sets for quick lookup
-        boolean[] singleNextArray = new boolean[cardinality];;
+        boolean[] singleNextArray = new boolean[cardinality];
 
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
@@ -110,8 +112,8 @@ public class APrioriLinear {
         for (int j = 0; j < numAggregates; j++) {
             AggregationOp curOp = aggregationOps[j];
             globalAggregates[j] = curOp.initValue();
-            double[] curColumn = aggregateColumns[j];
-            for (int i = 0; i < numRows; i++) {
+            double[] curColumn = globalAggregateCols[j];
+            for (int i = 0; i < curColumn.length; i++) {
                 globalAggregates[j] = curOp.combine(globalAggregates[j], curColumn[i]);
             }
         }
@@ -325,6 +327,9 @@ public class APrioriLinear {
                 }
             }
         }
+        log.info("Time spent in APriori:  {} ms", System.currentTimeMillis() - beginTime);
+
+
 
         List<APLExplanationResult> results = new ArrayList<>();
         for (int curOrder: savedAggregates.keySet()) {
