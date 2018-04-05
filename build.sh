@@ -2,14 +2,28 @@
 
 set -e
 
+if [[ "$1" == "--tests" ]]; then
+  echo "Running with tests"
+  TEST=1
+  shift 
+fi
+
 build_module () {
   pushd $1
-  mvn clean && mvn package -DskipTests
+  if [[ $TEST -eq 1 ]]; then
+    mvn clean && mvn package
+  else
+    mvn clean && mvn package -DskipTests
+  fi
   popd
 }
 
 pushd lib/
-mvn clean && mvn install -DskipTests
+if [[ $TEST -eq 1 ]]; then
+  mvn clean && mvn install
+else
+  mvn clean && mvn install -DskipTests
+fi
 popd
 
 if [[ $# -eq 0 ]]; then

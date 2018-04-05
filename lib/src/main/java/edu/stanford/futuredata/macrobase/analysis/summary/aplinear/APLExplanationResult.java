@@ -15,7 +15,7 @@ import java.util.Set;
 public class APLExplanationResult {
 
     private QualityMetric[] metricTypes;
-    private IntSet matcher;
+    public  final IntSet matcher;
     private double[] aggregates;
     private double[] metrics;
 
@@ -34,7 +34,7 @@ public class APLExplanationResult {
     /**
      * @return A Map with each metric value associated with the corresponding name of the metric
      */
-    Map<String, Double> getMetricsAsMap() {
+    public Map<String, Double> getMetricsAsMap() {
         final Map<String, Double> map = new HashMap<>();
 
         for (int i = 0; i < metricTypes.length; i++) {
@@ -48,7 +48,7 @@ public class APLExplanationResult {
      * @return A Map with each aggregate value associated with the corresponding name of the
      * aggregate.
      */
-    Map<String, Double> getAggregatesAsMap(final List<String> aggregateNames) {
+    public Map<String, Double> getAggregatesAsMap(final List<String> aggregateNames) {
         final Map<String, Double> map = new HashMap<>();
 
         for (int i = 0; i < aggregates.length; i++) {
@@ -57,7 +57,7 @@ public class APLExplanationResult {
         return map;
     }
 
-    Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
+    public Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
         Set<Integer> values = matcher.getSet();
         Map<String, String> match = new HashMap<>();
 

@@ -30,8 +30,7 @@ public class CSVDataFrameWriter {
         CsvWriter writer = new CsvWriter(out, settings);
         writer.writeHeaders(columnNames);
 
-        List<Row> rows = df.getRows();
-        for (Row curRow : rows) {
+        for (Row curRow : df.getRowIterator()) {
             List<Object> rowValues = curRow.getVals();
             writer.writeRow(rowValues);
         }
