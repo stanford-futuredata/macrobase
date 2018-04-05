@@ -91,7 +91,7 @@ public class APLinearOutlierSummarizerDistributedTest {
                 "col2",
                 "col3"
         );
-        APLOutlierSummarizerDistributed summ = new APLOutlierSummarizerDistributed();
+        APLOutlierSummarizerDistributed summ = new APLOutlierSummarizerDistributed(false);
         summ.setCountColumn("_COUNT");
         summ.setOutlierColumn("_OUTLIER");
         summ.setMinSupport(.1);

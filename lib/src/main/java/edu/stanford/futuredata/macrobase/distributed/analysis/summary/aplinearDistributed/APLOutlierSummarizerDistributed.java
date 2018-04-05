@@ -23,8 +23,9 @@ import java.util.Map;
  */
 public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizerDistributed");
+    private boolean useBitMaps;
 
-    public APLOutlierSummarizerDistributed() {}
+    public APLOutlierSummarizerDistributed(boolean useBitMaps) {this.useBitMaps = useBitMaps;}
 
     @Override
     public List<String> getAggregateNames() {
@@ -43,7 +44,7 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
         return encoder.encodeAttributesWithSupport(partitionedDataFrame,
                 attributes.size(),
                 minOutlierSupport,
-                0);
+                0, useBitMaps);
     }
 
     @Override

@@ -4,17 +4,20 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.Tuple2;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class AttributeEncoderDistributed extends AttributeEncoder {
+    private Logger log = LoggerFactory.getLogger("AttributeEncoderDistributed");
 
     public JavaPairRDD<int[], double[]> encodeAttributesWithSupport(JavaPairRDD<String[], double[]> partitionedDataFrame,
                                                           int numColumns,
                                                           double minSupport,
-                                                          int outlierColumnIndex) {
+                                                          int outlierColumnIndex, boolean useBitMaps) {
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
@@ -34,6 +37,8 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
                     countMap.put(reservedOutlierString, outlierCount + countMap.get(reservedOutlierString));
                     String[] rowAttributes = row._1;
                     for (int colIdx = 0; colIdx < rowAttributes.length; colIdx++) {
+                        // Prepend column index as String to column value to disambiguate
+                        // between two identical values in different columns
                         String colVal = Integer.toString(colIdx) + "," + rowAttributes[colIdx];
                         Double curCount = countMap.get(colVal);
                         if (curCount == null)
@@ -67,7 +72,11 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         double numOutliers = countMap.get(reservedOutlierString);
         countMap.remove(reservedOutlierString);
         double minSupportThreshold = minSupport * numOutliers;
-        List<String> filterOnMinSupport= countMap.keySet().stream()
+        outlierList = new ArrayList[numColumns];
+        for (int i = 0; i < numColumns; i++)
+            outlierList[i] = new ArrayList<>();
+        isBitmapEncoded = new boolean[numColumns];
+        List<String> filterOnMinSupport = countMap.keySet().stream()
                 .filter(line -> countMap.get(line) > minSupportThreshold)
                 .collect(Collectors.toList());
 
@@ -80,11 +89,18 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
             int colIdx = Integer.parseInt(key.split(",", 2)[0]);
             String colVal = key.split(",", 2)[1];
             int newKey = stringToRank.get(key);
+            outlierList[colIdx].add(newKey);
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             curColEncoder.put(colVal, newKey);
             valueDecoder.put(newKey, colVal);
             columnDecoder.put(newKey, colIdx);
             nextKey++;
+        }
+
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            if (useBitMaps && outlierList[colIdx].size() < cardinalityThreshold) {
+                isBitmapEncoded[colIdx] = true;
+            }
         }
 
         // Encode the strings that have support with a key equal to their rank.
@@ -103,7 +119,7 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
             }
             return new Tuple2<>(newRow, entry._2);
         });
-
+        log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
         return encodedDataFrame;
     }
 }

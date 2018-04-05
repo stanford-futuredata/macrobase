@@ -191,7 +191,7 @@ public class BasicBatchPipeline implements Pipeline {
     private DistributedBatchSummarizer getDistributedSummarizer(String outlierColumnName) throws MacroBaseException {
         switch (summarizerType.toLowerCase()) {
             case "aplineardistributed": {
-                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();
+                APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(true);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
