@@ -108,7 +108,7 @@ public class BasicBatchPipeline implements Pipeline {
             }
             case "aplinear":
             case "apriori": {
-                APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
+                APLOutlierSummarizer summarizer = new APLOutlierSummarizer(true);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);

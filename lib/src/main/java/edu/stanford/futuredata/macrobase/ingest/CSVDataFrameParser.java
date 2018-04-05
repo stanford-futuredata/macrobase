@@ -33,6 +33,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
         this.requiredColumns = requiredColumns;
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setLineSeparator("\n");
+        settings.setMaxCharsPerColumn(16384);
         CsvParser csvParser = new CsvParser(settings);
         csvParser.beginParsing(getReader(filename));
         this.parser = csvParser;

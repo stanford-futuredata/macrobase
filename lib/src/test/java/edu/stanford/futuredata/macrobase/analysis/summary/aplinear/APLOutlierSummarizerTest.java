@@ -30,17 +30,17 @@ public class APLOutlierSummarizerTest {
         PercentileClassifier pc = new PercentileClassifier("usage")
                 .setPercentile(1.0);
         pc.process(df);
-        DataFrame df_classified = pc.getResults();
+        DataFrame dfClassified = pc.getResults();
 
         List<String> explanationAttributes = Arrays.asList(
                 "location",
                 "version"
         );
-        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        APLOutlierSummarizer summ = new APLOutlierSummarizer(true);
         summ.setMinSupport(.01);
         summ.setMinRatioMetric(10.0);
         summ.setAttributes(explanationAttributes);
-        summ.process(df_classified);
+        summ.process(dfClassified);
 
         APLExplanation e = summ.getResults();
         List<APLExplanationResult> results = e.getResults();
@@ -49,7 +49,7 @@ public class APLOutlierSummarizerTest {
     }
 
     @Test
-    public void testOrder3() throws Exception {
+    public void testCubeOrder3() throws Exception {
         DataFrame df = new DataFrame();
         String[] col1 = {"a1", "a2", "a1", "a1"};
         String[] col2 = {"b1", "b1", "b2", "b1"};
@@ -67,7 +67,7 @@ public class APLOutlierSummarizerTest {
                 "col2",
                 "col3"
         );
-        APLOutlierSummarizer summ = new APLOutlierSummarizer();
+        APLOutlierSummarizer summ = new APLOutlierSummarizer(false);
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
         summ.setMinSupport(.1);
@@ -78,5 +78,37 @@ public class APLOutlierSummarizerTest {
         assertEquals(1, e.getResults().size());
         assertTrue(e.prettyPrint().contains("col1=a1"));
         assertEquals(47.0, e.numOutliers(), 1e-10);
+    }
+
+    @Test
+    public void testSimpleOrder3() throws Exception {
+        DataFrame df = new DataFrame();
+        String[] col1 = {"a1", "a2", "a1", "a1"};
+        String[] col2 = {"b1", "b1", "b2", "b1"};
+        String[] col3 = {"c1", "c1", "c1", "c2"};
+        double[] counts = {1, 1, 1, 1};
+        double[] oCounts = {1, 0, 0, 0};
+        df.addColumn("col1", col1);
+        df.addColumn("col2", col2);
+        df.addColumn("col3", col3);
+        df.addColumn("counts", counts);
+        df.addColumn("oCounts", oCounts);
+
+        List<String> explanationAttributes = Arrays.asList(
+                "col1",
+                "col2",
+                "col3"
+        );
+        APLOutlierSummarizer summ = new APLOutlierSummarizer(true);
+        summ.setCountColumn("counts");
+        summ.setOutlierColumn("oCounts");
+        summ.setMinSupport(.1);
+        summ.setMinRatioMetric(3.0);
+        summ.setAttributes(explanationAttributes);
+        summ.process(df);
+        APLExplanation e = summ.getResults();
+        assertEquals(1, e.getResults().size());
+        assertTrue(e.prettyPrint().contains("col1=a1"));
+        assertEquals(1, e.numOutliers(), 1e-10);
     }
 }
