@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearD
 
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.DistributedBatchSummarizer;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.util.AttributeEncoderDistributed;
@@ -33,6 +34,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
     protected long numOutliers = 0;
 
     public abstract List<String> getAggregateNames();
+    public abstract AggregationOp[] getAggregationOps();
     public abstract List<QualityMetric> getQualityMetricList();
     public abstract List<Double> getThresholds();
     public abstract JavaPairRDD<int[], double[]> getEncoded(
@@ -136,12 +138,17 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
         encoded = encoded.repartition(numPartitions);
         encoded.cache();
 
+
+        AggregationOp[] aggregationOps = getAggregationOps();
+
         double[] globalAggregates = encoded.reduce(
                 (Tuple2<int[], double[]> first, Tuple2<int[], double[]> second) -> {
                     final int numAggregates = first._2.length;
                     double[] sumAggregates = new double[numAggregates];
-                    for (int i = 0; i < numAggregates; i++)
-                        sumAggregates[i] = first._2[i] + second._2[i];
+                    for (int i = 0; i < numAggregates; i++) {
+                        AggregationOp curOp = aggregationOps[i];
+                        sumAggregates[i] = curOp.combine(first._2[i], second._2[i]);
+                    }
                     return new Tuple2<>(first._1, sumAggregates);
                 })._2;
 
@@ -158,6 +165,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                 encoder.getNextKey(),
                 numPartitions,
                 attributes.size(),
+                aggregationOps,
                 qualityMetricList,
                 thresholds
         );
