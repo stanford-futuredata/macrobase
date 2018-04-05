@@ -36,6 +36,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.DelimiterClause;
+import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DiffQuerySpecification;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
@@ -49,10 +50,14 @@ import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Join;
+import edu.stanford.futuredata.macrobase.sql.tree.JoinCriteria;
+import edu.stanford.futuredata.macrobase.sql.tree.JoinOn;
+import edu.stanford.futuredata.macrobase.sql.tree.JoinUsing;
 import edu.stanford.futuredata.macrobase.sql.tree.LikePredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.LogicalBinaryExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.MinRatioExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.MinSupportExpression;
+import edu.stanford.futuredata.macrobase.sql.tree.NaturalJoin;
 import edu.stanford.futuredata.macrobase.sql.tree.Node;
 import edu.stanford.futuredata.macrobase.sql.tree.NodeLocation;
 import edu.stanford.futuredata.macrobase.sql.tree.NotExpression;
@@ -396,6 +401,47 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
     }
 
     // *************** from clause *****************
+    @Override
+    public Node visitJoinRelation(SqlBaseParser.JoinRelationContext context) {
+        Relation left = (Relation) visit(context.left);
+        Relation right;
+
+        if (context.CROSS() != null) {
+            right = (Relation) visit(context.right);
+            return new Join(getLocation(context), Join.Type.CROSS, left, right, Optional.empty());
+        }
+
+        JoinCriteria criteria;
+        if (context.NATURAL() != null) {
+            right = (Relation) visit(context.right);
+            criteria = new NaturalJoin();
+        } else {
+            right = (Relation) visit(context.rightRelation);
+            if (context.joinCriteria().ON() != null) {
+                criteria = new JoinOn(
+                    (Expression) visit(context.joinCriteria().booleanExpression()));
+            } else if (context.joinCriteria().USING() != null) {
+                criteria = new JoinUsing(
+                    visit(context.joinCriteria().identifier(), Identifier.class));
+            } else {
+                throw new IllegalArgumentException("Unsupported join criteria");
+            }
+        }
+
+        Join.Type joinType;
+        if (context.joinType().LEFT() != null) {
+            joinType = Join.Type.LEFT;
+        } else if (context.joinType().RIGHT() != null) {
+            joinType = Join.Type.RIGHT;
+        } else if (context.joinType().FULL() != null) {
+            joinType = Join.Type.FULL;
+        } else {
+            joinType = Join.Type.INNER;
+        }
+
+        return new Join(getLocation(context), joinType, left, right, Optional.of(criteria));
+    }
+
 
     @Override
     public Node visitAliasedRelation(SqlBaseParser.AliasedRelationContext context) {
@@ -558,6 +604,15 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
     public Node visitSubqueryExpression(SqlBaseParser.SubqueryExpressionContext context) {
         return new SubqueryExpression(getLocation(context), (Query) visit(context.query()));
     }
+
+    @Override
+    public Node visitDereference(SqlBaseParser.DereferenceContext context) {
+        return new DereferenceExpression(
+            getLocation(context),
+            (Expression) visit(context.base),
+            (Identifier) visit(context.fieldName));
+    }
+
 
     @Override
     public Node visitColumnReference(SqlBaseParser.ColumnReferenceContext context) {
