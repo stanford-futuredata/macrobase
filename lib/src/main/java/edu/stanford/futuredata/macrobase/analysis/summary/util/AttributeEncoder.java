@@ -18,7 +18,7 @@ public class AttributeEncoder implements Serializable {
     private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    private final int cardinalityThreshold = 5;
+    protected final int cardinalityThreshold = 5;
 
     protected HashMap<Integer, Map<String, Integer>> encoder;
     protected int nextKey;
@@ -27,8 +27,8 @@ public class AttributeEncoder implements Serializable {
     protected HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
     private HashMap<Integer, RoaringBitmap>[][] bitmap;
-    private ArrayList<Integer> outlierList[];
-    private boolean isBitmapEncoded[];
+    protected ArrayList<Integer> outlierList[];
+    protected boolean isBitmapEncoded[];
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -84,7 +84,7 @@ public class AttributeEncoder implements Serializable {
                 if (outlierColumn[rowIdx] > 0.0) {
                     if (colIdx == 0)
                         numOutliers += outlierColumn[rowIdx];
-                    // prepend column index as String to column value to disambiguate
+                    // Prepend column index as String to column value to disambiguate
                     // between two identical values in different columns
                     String colVal = Integer.toString(colIdx) + curCol[rowIdx];
                     Double curCount = countMap.get(colVal);

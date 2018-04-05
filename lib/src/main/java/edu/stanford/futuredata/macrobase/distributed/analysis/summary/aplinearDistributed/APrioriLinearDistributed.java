@@ -28,6 +28,8 @@ public class APrioriLinearDistributed {
             int numPartitions,
             int numColumns,
             AggregationOp[] aggregationOps,
+            ArrayList<Integer>[] outlierList,
+            boolean[] isBitmapEncoded,
             List<QualityMetric> argQualityMetrics,
             List<Double> argThresholds
     ) {

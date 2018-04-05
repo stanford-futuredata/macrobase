@@ -221,7 +221,7 @@ class QueryEngineDistributed {
         final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
 
         // Execute diff
-        final APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed();
+        final APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(true);
         summarizer.setMinSupport(minSupport);
         summarizer.setMinRatioMetric(minRatioMetric);
         summarizer.setOutlierColumn(outlierColName);
