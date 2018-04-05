@@ -76,12 +76,12 @@ public class BitmapHelperFunctions {
                 int outlierCount = 0, inlierCount = 0;
                 if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                         byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo))
-                    outlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
-                            byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                    outlierCount = RoaringBitmap.and(byThreadBitmap[colNumOne][1].get(curCandidateOne),
+                            byThreadBitmap[colNumTwo][1].get(curCandidateTwo)).getCardinality();
                 if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                         byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo))
-                    inlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
-                            byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                    inlierCount = RoaringBitmap.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
+                            byThreadBitmap[colNumTwo][0].get(curCandidateTwo)).getCardinality();
                 updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
                         new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
             }
@@ -157,18 +157,18 @@ public class BitmapHelperFunctions {
                     if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][1].containsKey(curCandidateThree)) {
-                        outlierCount = RoaringBitmap.andCardinality(
+                        outlierCount = RoaringBitmap.and(
                                 RoaringBitmap.and(byThreadBitmap[colNumOne][1].get(curCandidateOne),
                                         byThreadBitmap[colNumTwo][1].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][1].get(curCandidateThree));
+                                byThreadBitmap[colNumThree][1].get(curCandidateThree)).getCardinality();
                     }
                     if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][0].containsKey(curCandidateThree)) {
-                        inlierCount = RoaringBitmap.andCardinality(
+                        inlierCount = RoaringBitmap.and(
                                 RoaringBitmap.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
                                         byThreadBitmap[colNumTwo][0].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][0].get(curCandidateThree));
+                                byThreadBitmap[colNumThree][0].get(curCandidateThree)).getCardinality();
                     }
 
                     updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
