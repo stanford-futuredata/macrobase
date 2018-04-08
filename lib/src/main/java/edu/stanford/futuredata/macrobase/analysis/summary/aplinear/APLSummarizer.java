@@ -75,7 +75,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 aggregateColumns,
                 aggregationOps,
                 encoder.getNextKey(),
-                maxOrder,
+                Math.min(maxOrder, attributes.size()),
                 numThreads
         );
         log.info("Number of results: {}", aplResults.size());
