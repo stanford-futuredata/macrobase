@@ -1,12 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Query } from '../query';
-import { QueryService } from '../query.service'
 
 @Component({
   selector: 'app-query-wizard',
   templateUrl: './query-wizard.component.html',
   styleUrls: ['./query-wizard.component.css'],
-  providers: [QueryService]
 })
 export class QueryWizardComponent implements OnInit {
   query: Query;

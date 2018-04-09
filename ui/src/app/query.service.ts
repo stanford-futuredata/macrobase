@@ -11,4 +11,17 @@ export class QueryService {
   private queryURL = '0.0.0.0:4567';
 
   constructor(private http: Http) { }
+
+  getQuery(): Observable<string> {
+    return this.http.get(this.queryURL)
+        .catch(this.handleError);
+  }
+
+  private handleError(error: Response | any) {
+        let errorMessage: string;
+
+        errorMessage = error.message ? error.message : error.toString();
+
+        return Observable.throw(errorMessage);
+    }
 }
