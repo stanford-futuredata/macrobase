@@ -36,6 +36,8 @@ public class BasicBatchPipeline implements Pipeline {
     private boolean pctileLow;
     private String predicateStr;
     private int numThreads;
+    private boolean useFDs;
+    private int[] functionalDependencies;
 
     private String summarizerType;
     private List<String> attributes;
@@ -69,6 +71,23 @@ public class BasicBatchPipeline implements Pipeline {
 
         summarizerType = conf.get("summarizer", "apriori");
         attributes = conf.get("attributes");
+        useFDs = conf.get("useFDs", false);
+
+        //parse out functional dependencies into bitmaps
+        if (useFDs){
+            ArrayList<ArrayList<Integer>> rawDependencies = conf.get("functionalDependencies");
+            functionalDependencies = new int[attributes.size()];
+            for (ArrayList<Integer> dependency : rawDependencies) {
+                for (int i : dependency) {
+                    for (int j : dependency) {
+                        if (i != j) {
+                            functionalDependencies[i] |= (1 << j);
+                        }
+                    }
+                }
+            }
+        }
+
         ratioMetric = conf.get("ratioMetric", "globalRatio");
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
@@ -117,6 +136,8 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
                 summarizer.setNumThreads(numThreads);
+                summarizer.setFDUsage(useFDs);
+                summarizer.setFDValues(functionalDependencies);
                 return summarizer;
             }
             default: {

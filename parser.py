@@ -4,6 +4,7 @@ import sys
 def compute_metrics(x, name):
     print("Average", name, "time:", np.mean(x))
     print("STD of", name, "time:", np.std(x, ddof=1))
+    print(name,x)
 
 def parse_times_file(filename):
     load, encode, summary = [], [], []
@@ -21,7 +22,6 @@ def parse_times_file(filename):
     compute_metrics(summary, "Summarization")
 
 def reorder_output(filename):
-    lines = []
     with open(filename, "r") as f:
         lines = [line for line in f]
     lines.sort()

@@ -77,8 +77,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 encoder.getNextKey(),
                 maxOrder,
                 numThreads,
-                encoder.getFunctionalDependencies()
+                functionalDependencies,
+                useFDs
         );
+
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 

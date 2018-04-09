@@ -1,0 +1,32 @@
+{
+  "pipeline": "BasicBatchPipeline",
+  "inputURI": "csv://data/dvt_data.csv",
+  "classifier": "percentile",
+  "metric": "JITTER_RND",
+  "cutoff": 0.01,
+  "useFDs": true,
+  "functionalDependencies": [
+    [5,6],
+    [12,13]
+  ],
+  "summarizer": "aplinear",
+  "attributes": [
+    "LP_UNIT",
+    "CHIP_VER",
+    "SW_VERSION",
+    "ANTENNA",
+    "VRAIL",
+    "AMBIENT_TEMP",
+    "MEAS_TEMP",
+    "USERNAME",
+    "STATION",
+    "OS",
+    "MODULATION",
+    "SIMULATION",
+    "JITTER_DET",
+    "JITTER_TOT"
+  ],
+  "minRatioMetric": 10.0,
+  "minSupport": 0.001,
+  "numThreads": 1
+}

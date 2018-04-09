@@ -18,7 +18,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class APrioriLinear {
     private Logger log = LoggerFactory.getLogger("APrioriLinear");
-    private final boolean USE_FD = true;
+    ////private final boolean USE_FD = true;
     private final int MAX_SIZE = 16000000;
 
     // **Parameters**
@@ -53,7 +53,8 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            final int[] functionalDependencies
+            final int[] functionalDependencies,
+            final boolean useFDs
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
@@ -158,7 +159,7 @@ public class APrioriLinear {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                if (USE_FD && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
                                     continue;
                                 }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
@@ -195,12 +196,12 @@ public class APrioriLinear {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
-                                if (USE_FD && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
                                     continue;
                                 }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
                                 for (int colnumThree = colNumTwo + 1; colnumThree < numColumns; colnumThree++) {
-                                    if (USE_FD && (((functionalDependencies[colNumOne] & (1<<colnumThree)) == (1<<colnumThree)) ||
+                                    if (useFDs && (((functionalDependencies[colNumOne] & (1<<colnumThree)) == (1<<colnumThree)) ||
                                                    ((functionalDependencies[colNumTwo] & (1<<colnumThree)) == (1<<colnumThree)))) {
                                         continue;
                                     }
