@@ -53,8 +53,8 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            final int[] functionalDependencies,
-            final boolean useFDs
+            final boolean useFDs,
+            final int[] functionalDependencies
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;

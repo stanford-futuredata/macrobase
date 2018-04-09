@@ -77,8 +77,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 encoder.getNextKey(),
                 maxOrder,
                 numThreads,
-                functionalDependencies,
-                useFDs
+                useFDs,
+                functionalDependencies
         );
 
         log.info("Number of results: {}", aplResults.size());
