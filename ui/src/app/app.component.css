@@ -1,0 +1,26 @@
+.title {
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: white;
+    background-color: #333;
+    padding: 1% 1%;
+}
+
+.wizard {
+    height: 100%;
+    width: 30%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+.cell {
+    display: inline;
+    color: black;
+    /*left: 30%;*/
+}

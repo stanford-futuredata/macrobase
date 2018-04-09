@@ -1,0 +1,61 @@
+<div class="query-wizard">
+
+<div class="title">
+    Query Wizard
+</div>
+<br>
+
+Metrics:
+<select [(ngModel)]="selectedMetric">
+    <option></option>
+    <option *ngFor="let possibleMetric of possibleMetrics"
+            [value] = "possibleMetric">
+        {{possibleMetric}}
+    </option>
+</select>
+<button (click)="addMetric()"> + </button>
+
+<ul *ngFor="let metric of query.metrics">
+    <div>
+        {{metric}}
+        <button (click)="removeMetric(metric)"> - </button>
+    </div>
+</ul>
+<br>
+
+Attributes:
+<select [(ngModel)]="selectedAttr">
+    <option></option>
+    <option *ngFor="let possibleAttr of possibleAttrs"
+            [value] = "possibleAttr">
+        {{possibleAttr}}
+    </option>
+</select>
+<button (click)="addAttr()"> + </button>
+
+<ul *ngFor="let attr of query.attrs">
+    <div>
+        {{attr}}
+        <button (click)="removeAttr(attr)"> - </button>
+    </div>
+</ul>
+<br>
+
+Support:
+<div>
+    <input [(ngModel)]="query.support">
+</div>
+<br>
+
+Risk Ratio:
+<div>
+    <input [(ngModel)]="query.rratio">
+</div>
+<br>
+
+SQL Query:
+<div>
+    {{sqlQuery}}
+</div>
+
+</div>

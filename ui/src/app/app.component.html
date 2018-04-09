@@ -1,0 +1,22 @@
+<!-- <div class = "title">
+    {{ title }}
+</div>
+ -->
+
+<div id="wizard" class="wizard" style="display:none">
+    <button style="float:right;" (click)="closeWizard()"> < </button>
+    <app-query-wizard></app-query-wizard>
+</div>
+
+
+<div id="main" style="display:inline-block">
+
+    <div>
+        <button id="openWizard" (click)="openWizard()"> > </button>
+    </div>
+
+    <div class="cell">
+        Cell info here
+    </div>
+
+</div>
