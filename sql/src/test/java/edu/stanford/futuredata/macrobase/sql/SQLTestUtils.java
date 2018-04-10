@@ -14,7 +14,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
-import edu.stanford.futuredata.macrobase.util.MacrobaseException;
+import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -41,7 +41,7 @@ public class SQLTestUtils {
         try {
             final DataFrame result = queryEngine.executeQuery(q);
             assertTrue(expected.equals(result));
-        } catch (MacrobaseException e) {
+        } catch (MacroBaseException e) {
             e.printStackTrace();
             throw new Error(queryFilename + " should not throw an exception");
         }
@@ -81,7 +81,7 @@ public class SQLTestUtils {
                     final ImportCsv importStatement = (ImportCsv) stmt;
                     queryEngine.importTableFromCsv(importStatement);
                 }
-            } catch (MacrobaseException e) {
+            } catch (MacroBaseException e) {
                 e.printStackTrace();
                 throw new Error(queryFilename + " should not throw an exception");
             } catch (ParsingException e) {

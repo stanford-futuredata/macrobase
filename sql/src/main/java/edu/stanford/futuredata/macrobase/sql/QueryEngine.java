@@ -268,7 +268,7 @@ class QueryEngine {
         final int numOutliers = outlierDf.getNumRows();
         final int numInliers = inlierDf.getNumRows();
         log.info("Num Outliers:  {}, num inliers: {}", numOutliers, numInliers);
-        final int minSupportThreshold = (int) minSupport * numOutliers;
+        final int minSupportThreshold = (int) (minSupport * numOutliers);
         final double globalRatioDenom =
             numOutliers / (numOutliers + numInliers + 0.0);
         final double minRatioThreshold = minRatioMetric * globalRatioDenom;
@@ -298,12 +298,9 @@ class QueryEngine {
             encodedForeignKeys.get(1), // inlierProjected
             foreignKeyBitmapPairs,
             minRatioThreshold); // returns K, the candidate keys that exceeded the minRatioThreshold.
-        // K may contain false positives, though (support threshold cannot be applied yet)
+        // K may contain false positives, though (support threshold hasn't been applied yet)
         log.info("Foreign key diff time: {} ms", System.currentTimeMillis() - foreignKeyDiff);
         log.info("Num candidate foreign keys: {}", candidateForeignKeys.size());
-
-        // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
-        //    and merge common values that distinct keys may map to
 
         // Keep track of candidates in each column, needed for order-2 and order-3 combinations
         final long semiJoinAndMergeTime = System.currentTimeMillis();
@@ -311,6 +308,9 @@ class QueryEngine {
         for (int i = 0; i < numExplainColumns; ++i) {
             attrCandidatesByColumn[i] = new HashSet<>();
         }
+
+        // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
+        //    and merge common values that distinct keys may map to
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = semiJoinAndMerge(
             candidateForeignKeys, // K
             encodedPrimaryKeyAndValues, // T
@@ -709,6 +709,7 @@ class QueryEngine {
                     .put(inlier, new Pair<>(new RoaringBitmap(), RoaringBitmap.bitmapOf(i)));
             }
         }
+        // Generate candidates based on min ratio
         final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
         for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
             .entrySet()) {
@@ -879,6 +880,9 @@ class QueryEngine {
         if (from instanceof Join) {
             final Join join = (Join) from;
             df = evaluateJoin(join);
+        } else if (from instanceof TableSubquery) {
+            final TableSubquery subquery = (TableSubquery) from;
+            df = executeQuery(subquery.getQuery().getQueryBody());
         } else if (from instanceof Table) {
             final Table table = (Table) from;
             df = getTable(table.getName().toString());
