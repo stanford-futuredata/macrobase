@@ -283,12 +283,15 @@ class QueryEngine {
         final List<String> keyValueColumns = ImmutableList.<String>builder().add(joinColumnName)
             .addAll(explainColumnNames).build();
         final Builder<int[]> encodedForeignKeyBuilder = ImmutableList.builder();
+        final long encodingTime = System.currentTimeMillis();
+        log.info("Starting encoding");
         encoder.encodeKeyValueAttributes(
             ImmutableList.of(outlierProjected, inlierProjected),
             common.getStringColsByName(keyValueColumns),
             encodedForeignKeyBuilder,
             encodedPrimaryKeyAndValues);
         final List<int[]> encodedForeignKeys = encodedForeignKeyBuilder.build();
+        log.info("Encoding time: {} ms", System.currentTimeMillis() - encodingTime);
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
         final long foreignKeyDiff = System.currentTimeMillis();
@@ -347,6 +350,7 @@ class QueryEngine {
         final Map<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
 
         for (int order = 1; order <= maxOrder; ++order) {
+            log.info("Starting order {}", order);
             final long orderTime = System.currentTimeMillis();
             // For now, we always use IntSetAsLong
             final FastFixedHashTable setAggregates = new FastFixedHashTable(order == 1 ?
@@ -514,6 +518,115 @@ class QueryEngine {
         ImmutableList.of("outlier_count", "total_count"), Arrays.asList(qualityMetrics));
     }
 
+    private Set<Integer> foreignKeyDiff(final int[] outliers, final int[] inliers,
+        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyCounts,
+        double minRatioThreshold) {
+        log.info("Starting outliers");
+        for (int i = 0; i < outliers.length; ++i) {
+            final int outlier = outliers[i];
+            final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(outlier);
+            if (value != null) {
+                value.a.add(i);
+            } else {
+                foreignKeyCounts
+                    .put(outlier, new Pair<>(RoaringBitmap.bitmapOf(i), new RoaringBitmap()));
+            }
+        }
+        log.info("Starting inliers");
+        for (int i = 0; i < inliers.length; ++i) {
+            final int inlier = inliers[i];
+            final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(inlier);
+            if (value != null) {
+                value.b.add(i);
+            } else {
+                foreignKeyCounts
+                    .put(inlier, new Pair<>(new RoaringBitmap(), RoaringBitmap.bitmapOf(i)));
+            }
+        }
+        // Generate candidates based on min ratio
+        final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
+        for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
+            .entrySet()) {
+            final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
+            final int numOutliers = value.a.getCardinality();
+            if ((numOutliers / (numOutliers + value.b.getCardinality() + 0.0))
+                >= minRatioThreshold) {
+                builder.add(entry.getKey());
+            }
+        }
+        return builder.build();
+    }
+
+    private Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> semiJoinAndMerge(
+        final Set<Integer> candidateForeignKeys, final int[][] encodedValues,
+        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
+        Set<Integer>[] attrCandidatesByColumn) {
+
+        int numAdditionalValues = 0;
+
+        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = new HashMap<>();
+        if (candidateForeignKeys.isEmpty()) {
+            log.info("candidateForeignKeys is empty");
+            return valueBitmapPairs;
+        }
+        // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
+        //    For every match, save the corresponding values
+        final int numCols = encodedValues[0].length;
+        for (int[] encodedValue : encodedValues) {
+            final int primaryKey = encodedValue[0];
+            if (candidateForeignKeys.contains(primaryKey)) {
+                final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
+                    .get(primaryKey); // this always exists, never need to check for null
+                // extract the corresponding values for the candidate key
+                for (int j = 1; j < numCols; ++j) {
+                    final int val = encodedValue[j];
+                    final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
+                        .get(val);
+                    if (valueBitmapPair == null) {
+                        valueBitmapPairs.put(val, new Pair<>(foreignKeyBitmapPair.a.clone(),
+                            foreignKeyBitmapPair.b.clone()));
+                        attrCandidatesByColumn[j - 1].add(val); // subtract one for primary key column
+                    } else {
+                        // if the value already exists, merge the foreign key bitmaps
+                        valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
+                        valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
+                        ++numAdditionalValues;
+                    }
+                }
+            }
+        }
+        // 2) Go through again and check which saved values from the first pass map to new
+        //    primary keys. If we find any new ones, merge their foreign key bitmaps
+        //    with the existing value bitmap
+        for (int[] encodedValue : encodedValues) {
+            for (int j = 1; j < numCols; ++j) {
+                final int val = encodedValue[j];
+                final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
+                    .get(val);
+                if (valueBitmapPair == null) {
+                    // never found in the first pass
+                    continue;
+                }
+                // extract the corresponding foreign key, merge the foreign key bitmaps
+                final int primaryKey = encodedValue[0];
+                if (candidateForeignKeys.contains(primaryKey)) {
+                    // found in the first pass, but already included in valueBitmapPair
+                    continue;
+                }
+                final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
+                    .get(primaryKey);
+                if (foreignKeyBitmapPair != null) {
+                    valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
+                    valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
+                    ++numAdditionalValues;
+                }
+            }
+        }
+        log.info("Num additional values: {}", numAdditionalValues);
+        return valueBitmapPairs;
+    }
+
+    /**** HELPER METHODS THAT WERE COPIED FROM APrioriLinear and APLExplanation ****/
     private void updateAggregates(FastFixedHashTable aggregates, IntSet curCandidate, double[] val, int numAggregates) {
         double[] candidateVal = aggregates.get(curCandidate);
         if (candidateVal == null) {
@@ -526,12 +639,6 @@ class QueryEngine {
         }
     }
 
-    /**
-     * Check if all order-2 subsets of an order-3 candidate are valid candidates.
-     * @param o2Candidates All candidates of order 2 with minimum support.
-     * @param curCandidate An order-3 candidate
-     * @return Boolean
-     */
     private boolean allPairsValid(IntSet curCandidate,
         HashSet<IntSet> o2Candidates) {
         IntSet subPair;
@@ -620,108 +727,8 @@ class QueryEngine {
         }
         return df;
     }
+    /**** END HELPER METHODS ****/
 
-    private Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> semiJoinAndMerge(
-        final Set<Integer> candidateForeignKeys, final int[][] encodedValues,
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
-        Set<Integer>[] attrCandidatesByColumn) {
-
-        int numAdditionalValues = 0;
-
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = new HashMap<>();
-        // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
-        //    For every match, save the corresponding values
-        final int numCols = encodedValues[0].length;
-        for (int[] encodedValue : encodedValues) {
-            final int primaryKey = encodedValue[0];
-            if (candidateForeignKeys.contains(primaryKey)) {
-                final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
-                    .get(primaryKey); // this always exists, never need to check for null
-                // extract the corresponding values for the candidate key
-                for (int j = 1; j < numCols; ++j) {
-                    final int val = encodedValue[j];
-                    final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
-                        .get(val);
-                    if (valueBitmapPair == null) {
-                        valueBitmapPairs.put(val, new Pair<>(foreignKeyBitmapPair.a.clone(),
-                            foreignKeyBitmapPair.b.clone()));
-                        attrCandidatesByColumn[j - 1].add(val); // subtract one for primary key column
-                    } else {
-                        // if the value already exists, merge the foreign key bitmaps
-                        valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
-                        valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
-                        ++numAdditionalValues;
-                    }
-                }
-            }
-        }
-        // 2) Go through again and check which saved values from the first pass map to new
-        //    primary keys. If we find any new ones, merge their foreign key bitmaps
-        //    with the existing value bitmap
-        for (int[] encodedValue : encodedValues) {
-            for (int j = 1; j < numCols; ++j) {
-                final int val = encodedValue[j];
-                final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
-                    .get(val);
-                if (valueBitmapPair == null) {
-                    // never found in the first pass
-                    continue;
-                }
-                // extract the corresponding foreign key, merge the foreign key bitmaps
-                final int primaryKey = encodedValue[0];
-                if (candidateForeignKeys.contains(primaryKey)) {
-                    // found in the first pass, but already included in valueBitmapPair
-                    continue;
-                }
-                final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
-                    .get(primaryKey);
-                if (foreignKeyBitmapPair != null) {
-                    valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
-                    valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
-                    ++numAdditionalValues;
-                }
-            }
-        }
-        log.info("Num additional values: {}", numAdditionalValues);
-        return valueBitmapPairs;
-    }
-
-    private Set<Integer> foreignKeyDiff(final int[] outliers, final int[] inliers,
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyCounts,
-        double minRatioThreshold) {
-        for (int i = 0; i < outliers.length; ++i) {
-            final int outlier = outliers[i];
-            final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(outlier);
-            if (value != null) {
-                value.a.add(i);
-            } else {
-                foreignKeyCounts
-                    .put(outlier, new Pair<>(RoaringBitmap.bitmapOf(i), new RoaringBitmap()));
-            }
-        }
-        for (int i = 0; i < inliers.length; ++i) {
-            final int inlier = inliers[i];
-            final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(inlier);
-            if (value != null) {
-                value.b.add(i);
-            } else {
-                foreignKeyCounts
-                    .put(inlier, new Pair<>(new RoaringBitmap(), RoaringBitmap.bitmapOf(i)));
-            }
-        }
-        // Generate candidates based on min ratio
-        final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
-        for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
-            .entrySet()) {
-            final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
-            final int numOutliers = value.a.getCardinality();
-            if ((numOutliers / (numOutliers + value.b.getCardinality() + 0.0))
-                >= minRatioThreshold) {
-                builder.add(entry.getKey());
-            }
-        }
-        return builder.build();
-    }
 
     /**
      * @return true both relations are NATURAL JOIN subqueries that share a common table, e.g., R
