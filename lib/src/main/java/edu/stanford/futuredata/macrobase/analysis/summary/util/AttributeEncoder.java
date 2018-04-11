@@ -1,7 +1,5 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,7 +19,9 @@ import org.slf4j.LoggerFactory;
  * column values.
  */
 public class AttributeEncoder {
-    private Logger log = LoggerFactory.getLogger("AttributeEncoder");
+
+    private static final Logger log = LoggerFactory.getLogger(AttributeEncoder.class.getSimpleName());
+
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
     private final int cardinalityThreshold = 50;
@@ -74,6 +74,7 @@ public class AttributeEncoder {
 
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
+        log.info("numValuesEncoded: {}",  numColumns*numRows);
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
@@ -196,6 +197,7 @@ public class AttributeEncoder {
 
         int[][] encodedAttributes = new int[numRows][numColumns];
 
+        // noinspection Duplicates
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
@@ -215,38 +217,30 @@ public class AttributeEncoder {
         return encodedAttributes;
     }
 
-    /**
-     * TODO
-     * encode Primary Key and Values as row-based
-     * @param foreignKeys
-     * @param primaryKeyAndValues
-     * @param encodedPrimaryKeyAndValues
-     */
-    public List<int[]> encodeKeyValueAttributes(final List<String[]> foreignKeys,
-        final List<String[]> primaryKeyAndValues, int[][] encodedPrimaryKeyAndValues) {
-        final Builder<int[]> builder = ImmutableList.builder();
-        if (foreignKeys.isEmpty() && primaryKeyAndValues.isEmpty()) {
-            return builder.build();
-        }
-        final int numKeys = foreignKeys.size() + 1; // add one for primary key
-        final int numColumns = numKeys + primaryKeyAndValues.size() - 1;
-        // one decoder for all the key columns
-        final HashMap<String, Integer> keyDecoder = new HashMap<>();
-        for (int i = 0; i < numKeys; i++) {
-            encoder.put(i, keyDecoder);
-        }
-        // a decoder for each value column
-        for (int i = numKeys; i < numColumns; i++) {
-            encoder.put(i, new HashMap<>());
+    public int[][] encodeAttributesByColumn(List<String[]> columns) {
+        if (columns.isEmpty()) {
+            log.info("numValuesEncoded: 0");
+            return new int[0][0];
         }
 
-        int colIdx = 0;
-        for (String[] curCol : foreignKeys) {
-            final Map<String, Integer> curColEncoder = encoder.get(colIdx);
-            final int[] encodedCol = new int[curCol.length];
-            int rowIdx = 0;
-            for (String colVal : curCol) {
-                //noinspection Duplicates
+        int numColumns = columns.size();
+        int numRows = columns.get(0).length;
+
+        for (int i = 0; i < numColumns; i++) {
+            if (!encoder.containsKey(i)) {
+                encoder.put(i, new HashMap<>());
+            }
+        }
+
+        int[][] encodedAttributes = new int[numColumns][numRows];
+        log.info("numValuesEncoded: {}", numColumns*numRows);
+
+        // noinspection Duplicates
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            Map<String, Integer> curColEncoder = encoder.get(colIdx);
+            String[] curCol = columns.get(colIdx);
+            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+                String colVal = curCol[rowIdx];
                 if (!curColEncoder.containsKey(colVal)) {
                     curColEncoder.put(colVal, nextKey);
                     valueDecoder.put(nextKey, colVal);
@@ -254,35 +248,11 @@ public class AttributeEncoder {
                     nextKey++;
                 }
                 int curKey = curColEncoder.get(colVal);
-                encodedCol[rowIdx] = curKey;
-                ++rowIdx;
+                encodedAttributes[colIdx][rowIdx] = curKey;
             }
-            builder.add(encodedCol);
-            ++colIdx;
         }
 
-        if (primaryKeyAndValues.isEmpty()) {
-            return builder.build();
-        }
-
-        final int numRows = encodedPrimaryKeyAndValues[0].length;
-        for (String[] curCol : primaryKeyAndValues) {
-            Map<String, Integer> curColEncoder = encoder.get(colIdx);
-            final int[] encodedColumn = encodedPrimaryKeyAndValues[colIdx - numKeys + 1];
-            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                String colVal = curCol[rowIdx];
-                //noinspection Duplicates
-                if (!curColEncoder.containsKey(colVal)) {
-                    curColEncoder.put(colVal, nextKey);
-                    valueDecoder.put(nextKey, colVal);
-                    columnDecoder.put(nextKey, colIdx);
-                    nextKey++;
-                }
-                encodedColumn[rowIdx] = curColEncoder.get(colVal);
-            }
-            ++colIdx;
-        }
-        return builder.build();
+        return encodedAttributes;
     }
 
     public List<int[]> encodeAttributes(List<String[]> columns) {

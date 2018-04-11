@@ -273,34 +273,46 @@ class QueryEngine {
             numOutliers / (numOutliers + numInliers + 0.0);
         final double minRatioThreshold = minRatioMetric * globalRatioDenom;
 
+        final int numAggregates = 2;
+        final double[] thresholds = new double[]{minSupport, minRatioMetric};
+        final QualityMetric[] qualityMetrics = new QualityMetric[]{new SupportQualityMetric(0),
+            new GlobalRatioQualityMetric(0, 1)};
+
+        // Quality metrics are initialized with global aggregates to
+        // allow them to determine the appropriate relative thresholds
+        double[] globalAggregates = new double[]{numOutliers, numOutliers + numInliers};
+        for (QualityMetric q : qualityMetrics) {
+            q.initialize(globalAggregates);
+        }
+
         // 1a) Encode \proj_{A1} R, \proj_{A1} S, and T
         final String[] outlierProjected = outlierDf.project(joinColumnName).getStringColumn(0);
         final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
         final AttributeEncoder encoder = new AttributeEncoder();
         final int numExplainColumns = explainColumnNames.size();
-        final int[][] encodedPrimaryKeyAndValues = new int[numExplainColumns + 1][
-            common.getNumRows()]; // include primaryKey column
-        final List<String> keyValueColumns = ImmutableList.<String>builder().add(joinColumnName)
-            .addAll(explainColumnNames).build();
         final long encodingTime = System.currentTimeMillis();
-        log.info("Starting encoding");
-        final List<int[]> encodedForeignKeys = encoder.encodeKeyValueAttributes(
-            ImmutableList.of(outlierProjected, inlierProjected),
-            common.getStringColsByName(keyValueColumns),
-            encodedPrimaryKeyAndValues);
-        log.info("Encoding time: {} ms", System.currentTimeMillis() - encodingTime);
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
         final long foreignKeyDiff = System.currentTimeMillis();
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs = new HashMap<>();
-        final Set<Integer> candidateForeignKeys = foreignKeyDiff(
-            encodedForeignKeys.get(0), // outlierProjected
-            encodedForeignKeys.get(1), // inlierProjected
+        final Map<String, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs = new HashMap<>();
+        final Set<String> candidateForeignKeys = foreignKeyDiff(
+            outlierProjected,
+            inlierProjected,
             foreignKeyBitmapPairs,
             minRatioThreshold); // returns K, the candidate keys that exceeded the minRatioThreshold.
         // K may contain false positives, though (support threshold hasn't been applied yet)
         log.info("Foreign key diff time: {} ms", System.currentTimeMillis() - foreignKeyDiff);
         log.info("Num candidate foreign keys: {}", candidateForeignKeys.size());
+
+        if (candidateForeignKeys.isEmpty()) {
+            return toDataFrame(Lists.newArrayList(), encoder, explainColumnNames,
+                ImmutableList.of("outlier_count", "total_count"), Arrays.asList(qualityMetrics));
+
+        }
+        log.info("Starting encoding");
+        final int[][] encodedValues = encoder.encodeAttributesByColumn(
+            common.getStringColsByName(explainColumnNames));
+        log.info("Encoding time: {} ms", System.currentTimeMillis() - encodingTime);
 
         // Keep track of candidates in each column, needed for order-2 and order-3 combinations
         final long semiJoinAndMergeTime = System.currentTimeMillis();
@@ -313,7 +325,8 @@ class QueryEngine {
         //    and merge common values that distinct keys may map to
         final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = semiJoinAndMerge(
             candidateForeignKeys, // K
-            encodedPrimaryKeyAndValues, // T
+            common.getStringColumnByName(joinColumnName),
+            encodedValues, // T
             foreignKeyBitmapPairs,
             attrCandidatesByColumn);
         log.info("Semi-join and merge time: {} ms", System.currentTimeMillis() - semiJoinAndMergeTime);
@@ -328,17 +341,6 @@ class QueryEngine {
         // 4) Now, we proceed as we would in the all-bitmap case of APrioriLinear: finish up the order-1 stage,
         //    then explore all 2-order and 3-order combinations by intersecting the bitmaps, then pruning
         //    using the QualityMetrics
-        final int numAggregates = 2;
-        final double[] thresholds = new double[]{minSupport, minRatioMetric};
-        final QualityMetric[] qualityMetrics = new QualityMetric[]{new SupportQualityMetric(0),
-            new GlobalRatioQualityMetric(0, 1)};
-
-        // Quality metrics are initialized with global aggregates to
-        // allow them to determine the appropriate relative thresholds
-        double[] globalAggregates = new double[]{numOutliers, numOutliers + numInliers};
-        for (QualityMetric q : qualityMetrics) {
-            q.initialize(globalAggregates);
-        }
 
         // Prune all the collected aggregates
         // Sets that have high enough support but not high qualityMetrics, need to be explored
@@ -449,11 +451,10 @@ class QueryEngine {
                         switch (order) {
                             case 2:
                                 int val = candidate.getSecond();
-                                // subtract three for foreign key columns and primary key column
-                                attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                                attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
                             case 1:
                                 val = candidate.getFirst();
-                                attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                                attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
                         }
                     }
                 } else if (action == NEXT) {
@@ -464,13 +465,13 @@ class QueryEngine {
                     switch (order) {
                         case 3:
                             int val = candidate.getThird();
-                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                            attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
                         case 2:
                             val = candidate.getSecond();
-                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                            attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
                         case 1:
                             val = candidate.getFirst();
-                            attrCandidatesByColumn[encoder.decodeColumn(val) - 3].remove(val);
+                            attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
                             break;
                     }
                 }
@@ -511,16 +512,16 @@ class QueryEngine {
             }
         }
 
-        return toDataFrame(results, encoder, explainColumnNames, keyValueColumns,
+        return toDataFrame(results, encoder, explainColumnNames,
         ImmutableList.of("outlier_count", "total_count"), Arrays.asList(qualityMetrics));
     }
 
-    private Set<Integer> foreignKeyDiff(final int[] outliers, final int[] inliers,
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyCounts,
+    private Set<String> foreignKeyDiff(final String[] outliers, final String[] inliers,
+        final Map<String, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyCounts,
         double minRatioThreshold) {
         log.info("Starting outliers");
         for (int i = 0; i < outliers.length; ++i) {
-            final int outlier = outliers[i];
+            final String outlier = outliers[i];
             final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(outlier);
             if (value != null) {
                 value.a.add(i);
@@ -531,7 +532,7 @@ class QueryEngine {
         }
         log.info("Starting inliers");
         for (int i = 0; i < inliers.length; ++i) {
-            final int inlier = inliers[i];
+            final String inlier = inliers[i];
             final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(inlier);
             if (value != null) {
                 value.b.add(i);
@@ -541,8 +542,8 @@ class QueryEngine {
             }
         }
         // Generate candidates based on min ratio
-        final ImmutableSet.Builder<Integer> builder = ImmutableSet.builder();
-        for (Entry<Integer, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
+        final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+        for (Entry<String, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
             .entrySet()) {
             final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
             final int numOutliers = value.a.getCardinality();
@@ -555,8 +556,10 @@ class QueryEngine {
     }
 
     private Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> semiJoinAndMerge(
-        final Set<Integer> candidateForeignKeys, final int[][] encodedValues,
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
+        final Set<String> candidateForeignKeys,
+        final String[] primaryKeyColumn,
+        final int[][] encodedValues,
+        final Map<String, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
         Set<Integer>[] attrCandidatesByColumn) {
 
         int numAdditionalValues = 0;
@@ -571,19 +574,19 @@ class QueryEngine {
         final int numCols = encodedValues.length;
         final int numRows = encodedValues[0].length;
         for (int i = 0; i < numRows; ++i) {
-            final int primaryKey = encodedValues[0][i];
+            final String primaryKey = primaryKeyColumn[i];
             if (candidateForeignKeys.contains(primaryKey)) {
                 final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
                     .get(primaryKey); // this always exists, never need to check for null
                 // extract the corresponding values for the candidate key
-                for (int j = 1; j < numCols; ++j) {
+                for (int j = 0; j < numCols; ++j) {
                     final int val = encodedValues[j][i];
                     final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
                         .get(val);
                     if (valueBitmapPair == null) {
                         valueBitmapPairs.put(val, new Pair<>(foreignKeyBitmapPair.a.clone(),
                             foreignKeyBitmapPair.b.clone()));
-                        attrCandidatesByColumn[j - 1].add(val); // subtract one for primary key column
+                        attrCandidatesByColumn[j].add(val); // subtract one for primary key column
                     } else {
                         // if the value already exists, merge the foreign key bitmaps
                         valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
@@ -596,7 +599,7 @@ class QueryEngine {
         // 2) Go through again and check which saved values from the first pass map to new
         //    primary keys. If we find any new ones, merge their foreign key bitmaps
         //    with the existing value bitmap
-            for (int j = 1; j < numCols; ++j) {
+            for (int j = 0; j < numCols; ++j) {
                 final int[] encodedColumn = encodedValues[j];
                 for (int i = 0; i < numRows; ++i) {
                 final int val = encodedColumn[i];
@@ -607,7 +610,7 @@ class QueryEngine {
                     continue;
                 }
                 // extract the corresponding foreign key, merge the foreign key bitmaps
-                final int primaryKey = encodedValues[0][i];
+                final String primaryKey = primaryKeyColumn[i];
                 if (candidateForeignKeys.contains(primaryKey)) {
                     // found in the first pass, but already included in valueBitmapPair
                     continue;
@@ -659,7 +662,7 @@ class QueryEngine {
     }
 
     private DataFrame toDataFrame(final List<APLExplanationResult> results,
-        final AttributeEncoder encoder, final List<String> attrsToInclude, final List<String> keyValueColumns,
+        final AttributeEncoder encoder, final List<String> attrsToInclude,
         final List<String> aggregateNames, final List<QualityMetric> metrics) {
         // String column values that will be added to DataFrame
         final Map<String, String[]> stringResultsByCol = new HashMap<>();
@@ -686,8 +689,8 @@ class QueryEngine {
             Set<Integer> values = result.matcher.getSet();
             final Map<String, String> attrValsInRow = new HashMap<>();
             for (int v : values) {
-                final String colNameForValue = keyValueColumns
-                    .get(encoder.decodeColumn(v) - 2); // skip the foreign key columns
+                final String colNameForValue = attrsToInclude
+                    .get(encoder.decodeColumn(v));
                 attrValsInRow.put(colNameForValue, encoder.decodeValue(v));
             }
 
