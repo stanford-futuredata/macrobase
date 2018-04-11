@@ -59,7 +59,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
         long elapsed = System.currentTimeMillis() - startTime;
         log.info("Encoded in: {} ms", elapsed);
-        log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
+        log.info("Distinct values encoded: {}", encoder.getNextKey() - 1);
 
         thresholds = getThresholds();
         qualityMetricList = getQualityMetricList();

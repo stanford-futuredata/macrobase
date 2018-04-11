@@ -107,6 +107,7 @@ public class MacroBaseSQLRepl {
                 Statement stmt = parser.createStatement(statementStr);
                 log.debug(stmt.toString());
                 final DataFrame result;
+                System.gc();
                 if (stmt instanceof ImportCsv) {
                     final ImportCsv importStatement = (ImportCsv) stmt;
                     result = queryEngine.importTableFromCsv(importStatement);

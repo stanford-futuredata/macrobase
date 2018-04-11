@@ -278,19 +278,16 @@ class QueryEngine {
         final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
         final AttributeEncoder encoder = new AttributeEncoder();
         final int numExplainColumns = explainColumnNames.size();
-        final int[][] encodedPrimaryKeyAndValues = new int[common.getNumRows()][
-            numExplainColumns + 1]; // include primaryKey column
+        final int[][] encodedPrimaryKeyAndValues = new int[numExplainColumns + 1][
+            common.getNumRows()]; // include primaryKey column
         final List<String> keyValueColumns = ImmutableList.<String>builder().add(joinColumnName)
             .addAll(explainColumnNames).build();
-        final Builder<int[]> encodedForeignKeyBuilder = ImmutableList.builder();
         final long encodingTime = System.currentTimeMillis();
         log.info("Starting encoding");
-        encoder.encodeKeyValueAttributes(
+        final List<int[]> encodedForeignKeys = encoder.encodeKeyValueAttributes(
             ImmutableList.of(outlierProjected, inlierProjected),
             common.getStringColsByName(keyValueColumns),
-            encodedForeignKeyBuilder,
             encodedPrimaryKeyAndValues);
-        final List<int[]> encodedForeignKeys = encodedForeignKeyBuilder.build();
         log.info("Encoding time: {} ms", System.currentTimeMillis() - encodingTime);
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
@@ -571,15 +568,16 @@ class QueryEngine {
         }
         // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
         //    For every match, save the corresponding values
-        final int numCols = encodedValues[0].length;
-        for (int[] encodedValue : encodedValues) {
-            final int primaryKey = encodedValue[0];
+        final int numCols = encodedValues.length;
+        final int numRows = encodedValues[0].length;
+        for (int i = 0; i < numRows; ++i) {
+            final int primaryKey = encodedValues[0][i];
             if (candidateForeignKeys.contains(primaryKey)) {
                 final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
                     .get(primaryKey); // this always exists, never need to check for null
                 // extract the corresponding values for the candidate key
                 for (int j = 1; j < numCols; ++j) {
-                    final int val = encodedValue[j];
+                    final int val = encodedValues[j][i];
                     final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
                         .get(val);
                     if (valueBitmapPair == null) {
@@ -598,9 +596,10 @@ class QueryEngine {
         // 2) Go through again and check which saved values from the first pass map to new
         //    primary keys. If we find any new ones, merge their foreign key bitmaps
         //    with the existing value bitmap
-        for (int[] encodedValue : encodedValues) {
             for (int j = 1; j < numCols; ++j) {
-                final int val = encodedValue[j];
+                final int[] encodedColumn = encodedValues[j];
+                for (int i = 0; i < numRows; ++i) {
+                final int val = encodedColumn[i];
                 final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
                     .get(val);
                 if (valueBitmapPair == null) {
@@ -608,7 +607,7 @@ class QueryEngine {
                     continue;
                 }
                 // extract the corresponding foreign key, merge the foreign key bitmaps
-                final int primaryKey = encodedValue[0];
+                final int primaryKey = encodedValues[0][i];
                 if (candidateForeignKeys.contains(primaryKey)) {
                     // found in the first pass, but already included in valueBitmapPair
                     continue;

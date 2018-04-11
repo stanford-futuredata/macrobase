@@ -70,12 +70,6 @@ public class SQLTestUtils {
                 if (stmt instanceof Query) {
                     final QueryBody q = ((Query) stmt).getQueryBody();
                     final DataFrame result = queryEngine.executeQuery(q);
-                    try (OutputStreamWriter outFile = new OutputStreamWriter(
-                        new FileOutputStream("output.csv"))) {
-                        new CSVDataFrameWriter(",", "\n").writeToStream(result, outFile);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                     assertTrue(expected.equals(result));
                 } else if (stmt instanceof ImportCsv) {
                     final ImportCsv importStatement = (ImportCsv) stmt;
