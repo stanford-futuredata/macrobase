@@ -33,6 +33,16 @@ public class MacroBaseSQLDiffJoinTest {
         .put("total_count", ColType.DOUBLE)
         .build();
 
+    private final Map<String, ColType> THREE_ATTRS_SCHEMA = ImmutableMap.<String, ColType>builder()
+        .put("A1", ColType.STRING)
+        .put("A2", ColType.STRING)
+        .put("A3", ColType.STRING)
+        .put("support", ColType.DOUBLE)
+        .put("global_ratio", ColType.DOUBLE)
+        .put("outlier_count", ColType.DOUBLE)
+        .put("total_count", ColType.DOUBLE)
+        .build();
+
     private final Map<String, ColType> FOUR_ATTRS_SCHEMA = ImmutableMap.<String, ColType>builder()
         .put("A1", ColType.STRING)
         .put("A2", ColType.STRING)
@@ -108,5 +118,11 @@ public class MacroBaseSQLDiffJoinTest {
     public void diffJoinQuery10() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/10.sql",
             loadDataFrameFromCSV("diff-joins/10.csv", FOUR_ATTRS_SCHEMA));
+    }
+
+    @Test
+    public void diffJoinQuery11() throws Exception {
+        runQueriesFromFile(parser, queryEngine, "diff-joins/11.sql",
+            loadDataFrameFromCSV("diff-joins/11.csv", THREE_ATTRS_SCHEMA));
     }
 }

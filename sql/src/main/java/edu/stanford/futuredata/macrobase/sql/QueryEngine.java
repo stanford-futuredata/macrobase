@@ -334,9 +334,15 @@ class QueryEngine {
         // 3) Prune anything that doesn't have enough support
         //    (End of order-1 step of candidate generation)
         final int sizeBefore = valueBitmapPairs.size();
-        valueBitmapPairs.entrySet().removeIf((entry) ->
-            entry.getValue().a.getCardinality() < minSupportThreshold);
-        log.info("Num candidates pruned by support: {}", valueBitmapPairs.size() - sizeBefore);
+        valueBitmapPairs.entrySet().removeIf((entry) -> {
+            final boolean lowSupport = entry.getValue().a.getCardinality() < minSupportThreshold;
+            if (lowSupport) {
+                final int val = entry.getKey();
+                attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
+            }
+            return lowSupport;
+        });
+        log.info("Num candidates pruned by support: {}", sizeBefore - valueBitmapPairs.size());
 
         // 4) Now, we proceed as we would in the all-bitmap case of APrioriLinear: finish up the order-1 stage,
         //    then explore all 2-order and 3-order combinations by intersecting the bitmaps, then pruning
