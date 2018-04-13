@@ -24,3 +24,14 @@
     color: black;
     /*left: 30%;*/
 }
+
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    padding-left: 10px;
+    width: 100%;
+    background-color: gray;
+    color: black;
+    text-align: left;
+}

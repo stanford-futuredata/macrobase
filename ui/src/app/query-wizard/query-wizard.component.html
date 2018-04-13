@@ -24,38 +24,33 @@ Metrics:
 <br>
 
 Attributes:
-<select [(ngModel)]="selectedAttr">
+<select [(ngModel)]="selectedAttribute">
     <option></option>
-    <option *ngFor="let possibleAttr of possibleAttrs"
-            [value] = "possibleAttr">
-        {{possibleAttr}}
+    <option *ngFor="let possibleAttribute of possibleAttributes"
+            [value] = "possibleAttribute">
+        {{possibleAttribute}}
     </option>
 </select>
-<button (click)="addAttr()"> + </button>
+<button (click)="addAttribute()"> + </button>
 
-<ul *ngFor="let attr of query.attrs">
+<ul *ngFor="let attribute of query.attributes">
     <div>
-        {{attr}}
-        <button (click)="removeAttr(attr)"> - </button>
+        {{attribute}}
+        <button (click)="removeAttribute(attribute)"> - </button>
     </div>
 </ul>
 <br>
 
 Support:
 <div>
-    <input [(ngModel)]="query.support">
+    <input [(ngModel)]="query.minSupport">
 </div>
 <br>
 
 Risk Ratio:
 <div>
-    <input [(ngModel)]="query.rratio">
+    <input [(ngModel)]="query.minRatioMetric">
 </div>
 <br>
 
-SQL Query:
-<div>
-    {{sqlQuery}}
-</div>
-
-</div>
+<button (click)="runQuery()"> Run Query </button>

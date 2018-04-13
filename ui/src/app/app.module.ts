@@ -7,21 +7,28 @@ import { QueryWizardComponent } from './query-wizard/query-wizard.component';
 import { FormsModule } from '@angular/forms';
 import { CellComponent } from './cell/cell.component';
 
-import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
+import { MessagesComponent } from './messages/messages.component';
+import { MessageService } from './message.service';
+import { QueryService } from './query.service';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     QueryWizardComponent,
-    CellComponent
+    CellComponent,
+    MessagesComponent
   ],
   imports: [
     BrowserModule,
     FormsModule,
-    HttpModule
+    HttpClientModule
   ],
-  providers: [],
+  providers: [
+    MessageService,
+    QueryService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

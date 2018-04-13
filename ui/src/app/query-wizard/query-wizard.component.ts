@@ -1,79 +1,76 @@
 import { Component, OnInit } from '@angular/core';
 import { Query } from '../query';
+import { QueryResult } from '../query-result'
+
+import { QueryService } from '../query.service'
+import { MessageService } from '../message.service'
 
 @Component({
   selector: 'app-query-wizard',
   templateUrl: './query-wizard.component.html',
-  styleUrls: ['./query-wizard.component.css'],
+  styleUrls: ['./query-wizard.component.css']
 })
 export class QueryWizardComponent implements OnInit {
   query: Query;
   selectedMetric;
-  selectedAttr;
-  sqlQuery
+  selectedAttribute;
+  sqlQuery;
 
-  constructor() { }
+  constructor(private queryService: QueryService, private messageService: MessageService) { }
 
   addMetric(): void {
     if(this.selectedMetric) this.query.metrics.add(this.selectedMetric);
   }
 
-  addAttr(): void {
-    if(this.selectedAttr) this.query.attrs.add(this.selectedAttr);
+  addAttribute(): void {
+    if(this.selectedAttribute) this.query.attributes.add(this.selectedAttribute);
   }
 
   removeMetric(metric: string): void {
     this.query.metrics.delete(metric)
   }
 
-  removeAttr(attr: string): void {
-    this.query.attrs.delete(attr)
+  removeAttribute(attribute: string): void {
+    this.query.attributes.delete(attribute)
   }
 
-  // updateSql(): void {
-  //   let dbStr = "wiki";
-
-  //   let metricStr = "";
-  //   for(let metric in this.query.metrics){
-  //     metricStr += "percentile(" + metric + ") > 0.95";
-  //   }
-
-  //   let attrStr = "";
-  //   for(let attr in this.query.attrs){
-  //     attrStr += attr + ",";
-  //   }
-  //   if(attrStr) attrStr = substr(0, attrStr.length-2);
-
-  //   this.sqlQuery = "SELECT * FROM DIFF (SPLIT " + dbStr + " WHERE " metricStr + " ON " + attrStr + ";";
-  // }
-
   possibleMetrics = [
-    'added',
-    'deleted',
-    'delta'
+    'usage',
+    'latency'
   ];
 
-  possibleAttrs = [
-    'isMinor',
-    'isRobot',
-    'channel',
-    'namespace',
-    'isUnpatrolled',
-    'isNew'
+  possibleAttributes = [
+    'location',
+    'version'
   ];
 
   getBaseQuery(): void {
     this.query = {
-      metrics: new Set(['deleted']),
-      attrs: new Set(['isRobot', 'isNew', 'channel']),
-      support: .1,
-      rratio: .1
+      pipeline: "BasicBatchPipeline",
+      inputURI: "csv://core/demo/sample.csv",
+      classifier: "percentile",
+      metrics: new Set(["usage"]),
+      cutoff: 1.0,
+      includeHi: true,
+      includeLo: true,
+      summarizer: "aplinear",
+      attributes: new Set([
+        "location",
+        "version"
+      ]),
+      ratioMetric: "globalratio",
+      minRatioMetric: 10.0,
+      minSupport: 0.2
     };
+  }
+
+  runQuery(query: Query) {
+    this.queryService.runQuery(this.query);
+    this.messageService.add("Running query on: " + JSON.stringify(this.query));
   }
 
   ngOnInit() {
     this.getBaseQuery();
-    // this.updateSql();
   }
 
 }
