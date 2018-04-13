@@ -1,18 +1,16 @@
 export class Query{
-  constructor(
-    public pipeline: string,
-    public inputURI: string,
-    public classifier: string,
-    public metrics = new Set(),
-    public cutoff: number,
-    public includeHi: boolean,
-    public includeLo: boolean,
-    public summarizer: string,
-    public attributes = new Set(),
-    public ratioMetric: string,
-    public minRatioMetric: number,
-    public minSupport: number,
-  ) { }
+    pipeline: string;
+    inputURI: string;
+    classifier: string;
+    metric: string;
+    cutoff: number;
+    includeHi: boolean;
+    includeLo: boolean;
+    summarizer: string;
+    attributes: string[];
+    ratioMetric: string;
+    minRatioMetric: number;
+    minSupport: number;
 }
 
 // {

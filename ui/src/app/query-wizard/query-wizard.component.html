@@ -15,7 +15,7 @@ Metrics:
 </select>
 <button (click)="addMetric()"> + </button>
 
-<ul *ngFor="let metric of query.metrics">
+<ul *ngFor="let metric of metricSet">
     <div>
         {{metric}}
         <button (click)="removeMetric(metric)"> - </button>
@@ -33,7 +33,7 @@ Attributes:
 </select>
 <button (click)="addAttribute()"> + </button>
 
-<ul *ngFor="let attribute of query.attributes">
+<ul *ngFor="let attribute of attributeSet">
     <div>
         {{attribute}}
         <button (click)="removeAttribute(attribute)"> - </button>

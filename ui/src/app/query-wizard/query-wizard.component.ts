@@ -12,26 +12,36 @@ import { MessageService } from '../message.service'
 })
 export class QueryWizardComponent implements OnInit {
   query: Query;
+  metricSet = new Set();
+  attributeSet = new Set();
   selectedMetric;
   selectedAttribute;
-  sqlQuery;
 
   constructor(private queryService: QueryService, private messageService: MessageService) { }
 
   addMetric(): void {
-    if(this.selectedMetric) this.query.metrics.add(this.selectedMetric);
+    if(this.selectedMetric) this.metricSet.add(this.selectedMetric);
+    this.updateQuery();
   }
 
   addAttribute(): void {
-    if(this.selectedAttribute) this.query.attributes.add(this.selectedAttribute);
+    if(this.selectedAttribute) this.attributeSet.add(this.selectedAttribute);
+    this.updateQuery();
   }
 
   removeMetric(metric: string): void {
-    this.query.metrics.delete(metric)
+    this.metricSet.delete(metric);
+    this.updateQuery();
   }
 
   removeAttribute(attribute: string): void {
-    this.query.attributes.delete(attribute)
+    this.attributeSet.delete(attribute);
+    this.updateQuery();
+  }
+
+  updateQuery(): void {
+    this.query.metric = Array.from(this.metricSet)[0]
+    this.query.attributes = Array.from(this.attributeSet)
   }
 
   possibleMetrics = [
@@ -44,29 +54,33 @@ export class QueryWizardComponent implements OnInit {
     'version'
   ];
 
+
+
   getBaseQuery(): void {
     this.query = {
       pipeline: "BasicBatchPipeline",
       inputURI: "csv://core/demo/sample.csv",
       classifier: "percentile",
-      metrics: new Set(["usage"]),
-      cutoff: 1.0,
+      metric: "usage",
+      cutoff: 1.1,
       includeHi: true,
       includeLo: true,
       summarizer: "aplinear",
-      attributes: new Set([
+      attributes: [
         "location",
         "version"
-      ]),
+      ],
       ratioMetric: "globalratio",
-      minRatioMetric: 10.0,
+      minRatioMetric: 10.1,
       minSupport: 0.2
     };
+    this.metricSet.add("usage");
+    this.attributeSet.add("location");
+    this.attributeSet.add("version");
   }
 
   runQuery(query: Query) {
     this.queryService.runQuery(this.query);
-    this.messageService.add("Running query on: " + JSON.stringify(this.query));
   }
 
   ngOnInit() {
