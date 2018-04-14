@@ -54,8 +54,6 @@ export class QueryWizardComponent implements OnInit {
     'version'
   ];
 
-
-
   getBaseQuery(): void {
     this.query = {
       pipeline: "BasicBatchPipeline",
@@ -74,6 +72,7 @@ export class QueryWizardComponent implements OnInit {
       minRatioMetric: 10.1,
       minSupport: 0.2
     };
+
     this.metricSet.add("usage");
     this.attributeSet.add("location");
     this.attributeSet.add("version");
