@@ -77,7 +77,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 encoder.getNextKey(),
                 maxOrder,
                 numThreads,
-                encoder.getBitMap(),
+                encoder.getBitmap(),
                 encoder.getOutlierList(),
                 encoder.getIsBitmapEncodedArray()
         );

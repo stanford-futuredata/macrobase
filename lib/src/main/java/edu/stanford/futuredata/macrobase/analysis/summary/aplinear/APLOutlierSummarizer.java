@@ -15,10 +15,10 @@ public class APLOutlierSummarizer extends APLSummarizer {
 
     private Logger log = LoggerFactory.getLogger("APLOutlierSummarizer");
     private String countColumn = null;
-    private boolean useBitMaps;
+    private boolean useBitmaps;
 
-    public APLOutlierSummarizer(boolean useBitMaps) {
-        this.useBitMaps = useBitMaps;
+    public APLOutlierSummarizer(boolean useBitmaps) {
+        this.useBitmaps = useBitmaps;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class APLOutlierSummarizer extends APLSummarizer {
     @Override
     public int[][] getEncoded(List<String[]> columns, DataFrame input) {
         return encoder.encodeAttributesWithSupport(columns, minOutlierSupport,
-            input.getDoubleColumnByName(outlierColumn), useBitMaps);
+            input.getDoubleColumnByName(outlierColumn), useBitmaps);
     }
 
     @Override
