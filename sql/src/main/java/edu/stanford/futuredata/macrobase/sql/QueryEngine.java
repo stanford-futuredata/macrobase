@@ -358,8 +358,7 @@ class QueryEngine {
             log.info("Starting order {}", order);
             final long orderTime = System.currentTimeMillis();
             // For now, we always use IntSetAsLong
-            final FastFixedHashTable setAggregates = new FastFixedHashTable(order == 1 ?
-                encoder.getNextKey() : encoder.getNextKey() * setNext.get(order - 1).size(),
+            final FastFixedHashTable setAggregates = new FastFixedHashTable(valueBitmapPairs.size(),
                 numAggregates, false);
             if (order == 1) {
                 valueBitmapPairs.forEach((key, bitmapPair) -> {
