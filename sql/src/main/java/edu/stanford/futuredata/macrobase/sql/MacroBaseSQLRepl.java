@@ -216,6 +216,8 @@ public class MacroBaseSQLRepl {
         parser.addArgument("-f", "--file").help("Load file with SQL queries to execute");
         parser.addArgument("-p", "--paging").type(Arguments.booleanType()).setDefault(false)
             .help("Turn on paging of results for SQL queries");
+        parser.addArgument("-q", "--quit").type(Arguments.booleanType()).setDefault(false)
+            .help("Exit immediately, only used if '-f/--file' is present");
         final Namespace parsedArgs = parser.parseArgsOrFail(args);
 
         final MacroBaseSQLRepl repl = new MacroBaseSQLRepl(parsedArgs.get("paging"));
@@ -229,6 +231,9 @@ public class MacroBaseSQLRepl {
             final String queriesFromFile = Files
                 .toString(new File((String) parsedArgs.get("file")), Charsets.UTF_8);
             repl.executeQueries(queriesFromFile, true);
+            if (parsedArgs.get("quit")) {
+                return;
+            }
         }
         if (!printedWelcome) {
             System.out.println(asciiArt);
