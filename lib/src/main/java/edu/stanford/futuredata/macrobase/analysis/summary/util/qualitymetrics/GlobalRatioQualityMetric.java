@@ -9,6 +9,8 @@ public class GlobalRatioQualityMetric implements QualityMetric{
     private double baseRate = 0.0;
     private double inlierWeight = 1.0;
     private double outlierSampleRate;
+    private double globalOutlierCount;
+    private double globalInlierCount;
 
     public GlobalRatioQualityMetric(int outlierCountIdx, int totalCountIdx, double inlierWeight, double outlierSampleRate) {
         this.outlierCountIdx = outlierCountIdx;
@@ -24,13 +26,18 @@ public class GlobalRatioQualityMetric implements QualityMetric{
 
     @Override
     public QualityMetric initialize(double[] globalAggregates) {
-        double totalInliers = globalAggregates[totalCountIdx] - globalAggregates[outlierCountIdx];
-        baseRate = globalAggregates[outlierCountIdx] / (globalAggregates[outlierCountIdx] + totalInliers * inlierWeight);
+        globalOutlierCount = globalAggregates[outlierCountIdx];
+        globalInlierCount = globalAggregates[totalCountIdx] - globalAggregates[outlierCountIdx];
+        baseRate = globalOutlierCount / (globalOutlierCount + globalInlierCount * inlierWeight);
         return this;
     }
 
     @Override
     public double value(double[] aggregates) {
+//        double outlierRate = aggregates[outlierCountIdx] / globalOutlierCount;
+//        double scaledInlierRate = inlierWeight * (aggregates[totalCountIdx] - aggregates[outlierCountIdx]) / globalInlierCount;
+//        return outlierRate / (outlierRate + scaledInlierRate);
+
         double weightedInlierCount = inlierWeight * (aggregates[totalCountIdx] - aggregates[outlierCountIdx]);
         return (aggregates[outlierCountIdx] / (aggregates[outlierCountIdx] + weightedInlierCount)) / baseRate;
     }
@@ -42,7 +49,15 @@ public class GlobalRatioQualityMetric implements QualityMetric{
 
     @Override
     public double error(double[] aggregates) {
-        // TODO: check if this is correct
+//        double outlierRate = aggregates[outlierCountIdx] / globalOutlierCount;
+//        double inlierRate = (aggregates[totalCountIdx] - aggregates[outlierCountIdx]) / globalInlierCount;
+//
+//        double outlierRateError = Z * Math.sqrt(outlierRate * (1-outlierRate) / globalOutlierCount);
+//        double inlierRateError = Z * Math.sqrt(inlierRate * (1-inlierRate) / globalInlierCount);
+//        double scaledInlierRateError = inlierWeight * inlierRateError;
+//        double denomError = Math.sqrt(outlierRateError * outlierRateError + scaledInlierRateError * scaledInlierRateError);
+
+        // TODO: fix this
         double inlierCount = aggregates[totalCountIdx] - aggregates[outlierCountIdx];
         double estimatedCount = aggregates[outlierCountIdx] + inlierWeight * inlierCount;
 //        double denomError = estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + inlierWeight * inlierWeight / inlierCount);

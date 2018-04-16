@@ -381,13 +381,15 @@ public class APrioriLinear {
             for (IntSet curSet : curOrderSavedAggregates.keySet()) {
                 double[] aggregates = curOrderSavedAggregates.get(curSet);
                 double[] metrics = new double[qualityMetrics.length];
-                double[] errors = new double[qualityMetrics.length];
+//                double[] errors = new double[qualityMetrics.length];
+                ArrayList<double[]> confidenceIntervals = new ArrayList<>();
                 for (int i = 0; i < metrics.length; i++) {
                     metrics[i] = qualityMetrics[i].value(aggregates);
-                    errors[i] = qualityMetrics[i].error(aggregates);
+//                    errors[i] = qualityMetrics[i].error(aggregates);
+                    confidenceIntervals.add(qualityMetrics[i].confidenceInterval(aggregates));
                 }
                 results.add(
-                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics, calcErrors ? errors : null)
+                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics, calcErrors ? confidenceIntervals : null)
                 );
             }
         }

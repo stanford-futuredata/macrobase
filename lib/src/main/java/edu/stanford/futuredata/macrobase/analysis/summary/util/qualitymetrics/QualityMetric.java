@@ -61,4 +61,13 @@ public interface QualityMetric {
 
     // Returns half the size of the 95% confidence interval
     default double error(double[] aggregates) { return 0.0; }
+
+    default double[] confidenceInterval(double[] aggregates) {
+        double[] CI = new double[2];
+        double value = value(aggregates);
+        double error = error(aggregates);
+        CI[0] = value - error;
+        CI[1] = value + error;
+        return CI;
+    }
 }

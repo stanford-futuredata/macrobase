@@ -49,7 +49,7 @@ public class APLOutlierSummarizer extends APLSummarizer {
     public List<QualityMetric> getQualityMetricList() {
         List<QualityMetric> qualityMetricList = new ArrayList<>();
         qualityMetricList.add(
-            new SupportQualityMetric(0)
+            new SupportQualityMetric(0, fullNumOutliers)
         );
         switch (ratioMetric) {
             case "risk_ratio":

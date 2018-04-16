@@ -3,11 +3,8 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * Subgroup which meets the quality threshold metrics.
@@ -18,7 +15,7 @@ public class APLExplanationResult {
     private IntSet matcher;
     private double[] aggregates;
     private double[] metrics;
-    private double[] errors = null;
+    private ArrayList<double[]> confidenceIntervals = null;
 
     public APLExplanationResult(
         QualityMetric[] metricTypes,
@@ -34,13 +31,13 @@ public class APLExplanationResult {
             IntSet matcher,
             double[] aggregates,
             double[] metrics,
-            double[] errors
+            ArrayList<double[]> confidenceIntervals
     ) {
         this.metricTypes = metricTypes;
         this.matcher = matcher;
         this.aggregates = aggregates;
         this.metrics = metrics;
-        this.errors = errors;
+        this.confidenceIntervals = confidenceIntervals;
     }
 
     /**
@@ -83,8 +80,9 @@ public class APLExplanationResult {
         Map<String, String> metric = new HashMap<>();
 
         for (int i = 0; i < metricTypes.length; i++) {
-            if (errors != null) {
-                metric.put(metricTypes[i].name(), String.format("%.4f \u00B1 %.4f", metrics[i], errors[i]));
+            if (confidenceIntervals != null) {
+                double[] CI = confidenceIntervals.get(i);
+                metric.put(metricTypes[i].name(), String.format("%.4f [%.4f, %.4f]", metrics[i], CI[0], CI[1]));
             } else {
                 metric.put(metricTypes[i].name(), String.format("%.4f", metrics[i]));
             }

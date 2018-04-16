@@ -28,6 +28,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     double inlierWeight = 1.0;
     double outlierSampleRate;
     boolean calcErrors = false;
+    int fullNumOutliers;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -118,4 +119,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setInlierWeight(double inlierWeight) { this.inlierWeight = inlierWeight; }
     public void setOutlierSampleRate(double outlierSampleRate) { this.outlierSampleRate = outlierSampleRate; }
     public void setCalcErrors(boolean calcErrors) { this.calcErrors = calcErrors; }
+    public void setFullNumOutliers(int fullNumOutliers) { this.fullNumOutliers = fullNumOutliers; }
 }

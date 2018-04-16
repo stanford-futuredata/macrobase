@@ -42,4 +42,20 @@ public class RiskRatioQualityMetric implements QualityMetric{
     public boolean isMonotonic() {
         return false;
     }
+
+    @Override
+    public double[] confidenceInterval(double[] aggregates) {
+        double value = value(aggregates);
+        double[] confidenceInterval = new double[2];
+
+        double matchedOutlier = aggregates[outlierCountIdx];
+        double matchedTotal = aggregates[totalCountIdx];
+        double unMatchedOutlier = totalOutliers - aggregates[outlierCountIdx];
+        double unMatchedTotal = totalInliers + totalOutliers - aggregates[totalCountIdx];
+        double logError = Z * Math.sqrt(1/matchedOutlier - 1/matchedTotal + 1/unMatchedOutlier - 1/unMatchedTotal);
+
+        confidenceInterval[0] = value * Math.exp(-logError);
+        confidenceInterval[1] = value * Math.exp(logError);
+        return confidenceInterval;
+    }
 }

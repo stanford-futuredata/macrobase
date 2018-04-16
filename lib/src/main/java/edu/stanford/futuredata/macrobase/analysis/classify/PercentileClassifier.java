@@ -28,7 +28,6 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     private double lowCutoff;
     private double highCutoff;
     private DataFrame output;
-    private int numOutliers = 0;
 
     public PercentileClassifier(String columnName) {
         super(columnName);
@@ -196,7 +195,6 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     }
 
     public void setSampleRate(double sampleRate) { this.sampleRate = sampleRate; }
-    public int getNumOutliers() { return numOutliers; }
     public void setOutlierSampleSize(int outlierSampleSize) { this.outlierSampleSize = outlierSampleSize; }
     public void setInlierSampleSize(int inlierSampleSize) { this.inlierSampleSize = inlierSampleSize; }
 }
