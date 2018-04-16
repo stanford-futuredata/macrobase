@@ -51,8 +51,10 @@ public class APrioriLinear {
 
     public List<APLExplanationResult> explain(
             final int[][] attributes,
-            double[][] aggregateColumns
+            double[][] aggregateColumns,
+            final int numThreads
     ) {
+        log.info("Num threads: {}", numThreads);
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
 
@@ -85,7 +87,6 @@ public class APrioriLinear {
             final LongOpenHashSet precalculatedCandidates = precalculateCandidates(curOrder);
             // Run the critical path of the algorithm--candidate generation--in parallel.
             final int curOrderFinal = curOrder;
-            final int numThreads = Runtime.getRuntime().availableProcessors();
             // Group by and calculate aggregates for each of the candidates
             final ArrayList<Long2ObjectOpenHashMap<double []>> threadSetAggregates = new ArrayList<>(numThreads);
             for (int i = 0; i < numThreads; i++) {

@@ -43,6 +43,7 @@ public class BasicBatchPipeline implements Pipeline {
     private String ratioMetric;
     private double minSupport;
     private double minRiskRatio;
+    private int numThreads;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
@@ -73,6 +74,7 @@ public class BasicBatchPipeline implements Pipeline {
         ratioMetric = conf.get("ratioMetric", "globalRatio");
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
+        numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
     }
 
     public Classifier getClassifier() throws MacrobaseException {
@@ -121,6 +123,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setRatioMetric(getRatioMetric());
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             case "fpgrowth": {
@@ -139,6 +142,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             default: {

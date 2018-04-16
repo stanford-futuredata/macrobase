@@ -20,6 +20,7 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     protected double minOutlierSupport = 0.1;
     protected double minRatioMetric = 3;
     protected List<String> attributes = new ArrayList<>();
+    protected int numThreads = Runtime.getRuntime().availableProcessors();
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -32,6 +33,16 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
 
     public void setAttributes(List<String> attributes) {
         this.attributes = attributes;
+    }
+
+    /**
+     * The number of threads used in parallel summarizers.
+     *
+     * @param numThreads Number of threads to use.
+     */
+    public BatchSummarizer setNumThreads(int numThreads) {
+        this.numThreads = numThreads;
+        return this;
     }
 
     /**
