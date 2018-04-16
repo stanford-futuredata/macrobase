@@ -5,13 +5,13 @@ import static net.sourceforge.argparse4j.impl.Arguments.storeTrue;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.google.common.io.Resources;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.parser.StatementSplitter;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
+import edu.stanford.futuredata.macrobase.sql.tree.ImportHive;
 import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
@@ -72,6 +72,7 @@ public class MacroBaseSQLRepl {
             SparkSession spark = SparkSession
                     .builder()
                     .appName("macrobase-sql-spark")
+                    .enableHiveSupport()
                     .getOrCreate();
             queryEngineDistributed = new QueryEngineDistributed(spark, distributedNumPartitions);
         } else {
@@ -172,6 +173,9 @@ public class MacroBaseSQLRepl {
                     if (stmt instanceof ImportCsv) {
                         final ImportCsv importStatement = (ImportCsv) stmt;
                         result = queryEngineDistributed.importTableFromCsv(importStatement);
+                    } else if (stmt instanceof ImportHive) {
+                        final ImportHive importStatement = (ImportHive) stmt;
+                        result = queryEngineDistributed.importTableFromHive(importStatement);
                     } else {
                         final QueryBody q = ((Query) stmt).getQueryBody();
                         result = queryEngineDistributed.executeQuery((Query) stmt);

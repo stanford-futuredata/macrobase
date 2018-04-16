@@ -32,6 +32,8 @@ statement
     : query                                                            #statementDefault
     | IMPORT FROM CSV FILE STRING INTO qualifiedName
         ('(' columnDefinition (',' columnDefinition)* ')')?            #importCsv
+    | IMPORT FROM HIVE STRING INTO qualifiedName
+        ('(' columnDefinition (',' columnDefinition)* ')')?            #importHive
     ;
 
 query
@@ -423,6 +425,7 @@ GRAPHVIZ: 'GRAPHVIZ';
 GROUP: 'GROUP';
 GROUPING: 'GROUPING';
 HAVING: 'HAVING';
+HIVE: 'HIVE';
 HOUR: 'HOUR';
 IF: 'IF';
 IMPORT: 'IMPORT';

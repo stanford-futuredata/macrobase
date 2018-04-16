@@ -45,6 +45,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.FunctionCall;
 import edu.stanford.futuredata.macrobase.sql.tree.GenericLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.Identifier;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
+import edu.stanford.futuredata.macrobase.sql.tree.ImportHive;
 import edu.stanford.futuredata.macrobase.sql.tree.IntLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNotNullPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.IsNullPredicate;
@@ -174,6 +175,21 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
             filename,
             getQualifiedName(context.qualifiedName()),
             columns
+        );
+    }
+
+    @Override
+    public Node visitImportHive(SqlBaseParser.ImportHiveContext context) {
+        String filename = context.STRING().getText();
+        filename = filename.substring(1, filename.length() - 1);
+        // Remove single quotes from beginning and end of filename
+        final List<ColumnDefinition> columns = visit(context.columnDefinition(),
+                ColumnDefinition.class);
+        return new ImportHive(
+                getLocation(context),
+                filename,
+                getQualifiedName(context.qualifiedName()),
+                columns
         );
     }
 

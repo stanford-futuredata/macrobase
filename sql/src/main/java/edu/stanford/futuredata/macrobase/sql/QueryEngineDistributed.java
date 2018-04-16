@@ -37,6 +37,14 @@ class QueryEngineDistributed {
         this.numPartitions = numPartitions;
     }
 
+    public Dataset<Row> importTableFromHive(ImportHive importStatement) {
+        final String tableName = importStatement.getTableName().toString();
+        Dataset<Row> hiveDf = spark.sql(importStatement.getHiveQuery());
+        // Register the Dataset by name so Spark SQL commands recognize it.
+        hiveDf.createOrReplaceTempView(tableName);
+        return hiveDf;
+    }
+
     /**
      * Top-level method for importing tables from CSV files into MacroBase SQL
      *
