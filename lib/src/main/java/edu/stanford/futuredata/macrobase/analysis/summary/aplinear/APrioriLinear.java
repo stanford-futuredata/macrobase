@@ -1,17 +1,31 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allOneBitmapOneNormal;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allOneBitmapTwoNormal;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allThreeBitmap;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allThreeNormal;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allTwoBitmap;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allTwoBitmapsOneNormal;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.allTwoNormal;
+import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.updateAggregates;
+
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsArray;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.roaringbitmap.RoaringBitmap;
-
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-
-import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.BitmapHelperFunctions.*;
 
 /**
  * Class for handling the generic, algorithmic aspects of apriori explanation.
@@ -52,7 +66,7 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            HashMap<Integer, RoaringBitmap>[][] bitmap,
+            HashMap<Integer, BitSet>[][] bitmap,
             ArrayList<Integer>[] outlierList,
             boolean[] isBitmapEncoded
     ) {
@@ -77,7 +91,7 @@ public class APrioriLinear {
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
-        final HashMap<Integer, RoaringBitmap>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
+        final HashMap<Integer, BitSet>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
         for (int i = 0; i < numThreads; i++)
             for (int j = 0; j < numColumns; j++)
                 for (int k = 0; k < 2; k++)
@@ -92,11 +106,11 @@ public class APrioriLinear {
                     }
                 } else {
                     for (int j = 0; j < 2; j++) {
-                        for (HashMap.Entry<Integer, RoaringBitmap> entry : bitmap[i][j].entrySet()) {
-                            RoaringBitmap rr = new RoaringBitmap();
-                            rr.add((long) startIndex, (long) endIndex);
+                        for (HashMap.Entry<Integer, BitSet> entry : bitmap[i][j].entrySet()) {
+                            final BitSet rr = new BitSet();
+                            rr.set(startIndex, endIndex);
                             rr.and(entry.getValue());
-                            if (rr.getCardinality() > 0) {
+                            if (rr.cardinality() > 0) {
                                 byThreadBitmap[threadNum][i][j].put(entry.getKey(), rr);
                             }
                         }
@@ -158,9 +172,9 @@ public class APrioriLinear {
                                         continue;
                                     int outlierCount = 0, inlierCount = 0;
                                     if (byThreadBitmap[curThreadNum][colNum][1].containsKey(curOutlierCandidate))
-                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).getCardinality();
+                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).cardinality();
                                     if (byThreadBitmap[curThreadNum][colNum][0].containsKey(curOutlierCandidate))
-                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).getCardinality();
+                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).cardinality();
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
                                         curCandidate = new IntSetAsArray(curOutlierCandidate);

@@ -1,9 +1,11 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsArray;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
-import org.roaringbitmap.RoaringBitmap;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,14 +33,14 @@ public class BitmapHelperFunctions {
     public static void allOneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                        ArrayList<Integer> outlierColList,
                                        AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                                       HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
+                                       HashMap<Integer, BitSet>[] byThreadColumnBitmap,
                                        int[] curColumnTwoAttributes, int startIndex,
                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
             if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
-                RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
+                BitSet outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
                 // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
                 oneBitmapOneNormal(thisThreadSetAggregates, outlierBitmap,
                         curCandidateOne, aggregationOps, singleNextArray,
@@ -46,7 +48,7 @@ public class BitmapHelperFunctions {
                         curCandidate, new double[]{1, 1}, numAggregates);
             }
             if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
-                RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
+                BitSet inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
                 // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for inliers)
                 oneBitmapOneNormal(thisThreadSetAggregates, inlierBitmap,
                         curCandidateOne, aggregationOps, singleNextArray,
@@ -57,12 +59,19 @@ public class BitmapHelperFunctions {
     }
 
     private static void oneBitmapOneNormal(FastFixedHashTable thisThreadSetAggregates,
-                                    RoaringBitmap bitmap, Integer curCandidateOne,
+                                    BitSet bitmap, Integer curCandidateOne,
                                     AggregationOp[] aggregationOps, boolean[] singleNextArray,
                                     int[] curColumnTwoAttributes, int startIndex,
                                     boolean useIntSetAsArray, IntSet curCandidate,
                                     double[] val, int numAggregates) {
-        for (Integer rowNum : bitmap) {
+
+        int i = 0;
+        while (true) {
+            final int rowNum = bitmap.nextSetBit(i);
+            if (rowNum == -1) {
+                break;
+            }
+            i = rowNum + 1;
             int rowNumInCol = rowNum - startIndex;
             if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport ||
                     !singleNextArray[curColumnTwoAttributes[rowNumInCol]])
@@ -109,7 +118,7 @@ public class BitmapHelperFunctions {
     public static void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
                               ArrayList<Integer>[] outlierList,
                               AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                              HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                              HashMap<Integer, BitSet>[][] byThreadBitmap,
                               int colNumOne, int colNumTwo,
                               boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
@@ -127,11 +136,11 @@ public class BitmapHelperFunctions {
                 int outlierCount = 0, inlierCount = 0;
                 if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                         byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo))
-                    outlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
+                    outlierCount = BitSet.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
                             byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
                 if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                         byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo))
-                    inlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
+                    inlierCount = BitSet.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
                             byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
                 updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
                         new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
@@ -145,21 +154,21 @@ public class BitmapHelperFunctions {
     public static void allOneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
                                        ArrayList<Integer> outlierColList,
                                        AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                                       HashMap<Integer, RoaringBitmap>[] byThreadColumnBitmap,
+                                       HashMap<Integer, BitSet>[] byThreadColumnBitmap,
                                        int[] curColumnTwoAttributes, int[] curColumnThreeAttributes, int startIndex,
                                        boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierColList) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
             if (byThreadColumnBitmap[1].containsKey(curCandidateOne)) {
-                RoaringBitmap outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
+                BitSet outlierBitmap = byThreadColumnBitmap[1].get(curCandidateOne);
                 // pass in Array of [1, 1] for [outlier_count_col, total_count_col]
                 oneBitmapTwoNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne,
                         curColumnTwoAttributes, curColumnThreeAttributes, aggregationOps, singleNextArray,
                         startIndex, useIntSetAsArray, curCandidate, new double[]{1, 1}, numAggregates);
             }
             if (byThreadColumnBitmap[0].containsKey(curCandidateOne)) {
-                RoaringBitmap inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
+                BitSet inlierBitmap = byThreadColumnBitmap[0].get(curCandidateOne);
                 // pass in Array of [0, 1] for [outlier_count_col, total_count_col] (since this is for the inliers)
                 oneBitmapTwoNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne,
                         curColumnTwoAttributes, curColumnThreeAttributes, aggregationOps, singleNextArray,
@@ -169,12 +178,18 @@ public class BitmapHelperFunctions {
     }
 
     private static void oneBitmapTwoNormal(FastFixedHashTable thisThreadSetAggregates,
-                                    RoaringBitmap bitmap, Integer curCandidateOne,
+                                    BitSet bitmap, Integer curCandidateOne,
                                     int[] curColumnTwoAttributes, int[] curColumnThreeAttributes,
                                     AggregationOp[]  aggregationOps, boolean[] singleNextArray, int startIndex,
                                     boolean useIntSetAsArray, IntSet curCandidate,
                                     double[] val, int numAggregates) {
-        for (Integer rowNum : bitmap) {
+        int i = 0;
+        while (true) {
+            final int rowNum = bitmap.nextSetBit(i);
+            if (rowNum == -1) {
+                break;
+            }
+            i = rowNum + 1;
             int rowNumInCol = rowNum - startIndex;
             if (curColumnTwoAttributes[rowNumInCol] == AttributeEncoder.noSupport
                     || curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport
@@ -201,7 +216,7 @@ public class BitmapHelperFunctions {
     public static void allTwoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
                                         ArrayList<Integer>[] outlierList,
                                         AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                                        HashMap<Integer, RoaringBitmap>[][] byThreadColumnBitmap,
+                                        HashMap<Integer, BitSet>[][] byThreadColumnBitmap,
                                         int colNumOne, int colNumTwo,
                                         int[] curColumnThreeAttributes, int startIndex,
                                         boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
@@ -214,7 +229,7 @@ public class BitmapHelperFunctions {
 
                 if (byThreadColumnBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                         byThreadColumnBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
-                    RoaringBitmap outlierBitmap = RoaringBitmap.and(
+                    BitSet outlierBitmap = BitSet.and(
                             byThreadColumnBitmap[colNumOne][1].get(curCandidateOne),
                             byThreadColumnBitmap[colNumTwo][1].get(curCandidateTwo));
                     twoBitmapsOneNormal(thisThreadSetAggregates, outlierBitmap, curCandidateOne, curCandidateTwo,
@@ -224,7 +239,7 @@ public class BitmapHelperFunctions {
                 }
                 if (byThreadColumnBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                         byThreadColumnBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
-                    RoaringBitmap inlierBitmap = RoaringBitmap.and(
+                    BitSet inlierBitmap = BitSet.and(
                             byThreadColumnBitmap[colNumOne][0].get(curCandidateOne),
                             byThreadColumnBitmap[colNumTwo][0].get(curCandidateTwo));
                     twoBitmapsOneNormal(thisThreadSetAggregates, inlierBitmap, curCandidateOne, curCandidateTwo,
@@ -236,12 +251,18 @@ public class BitmapHelperFunctions {
     }
 
     private static void twoBitmapsOneNormal(FastFixedHashTable thisThreadSetAggregates,
-                                     RoaringBitmap bitmap, Integer curCandidateOne, Integer curCandidateTwo,
+                                     BitSet bitmap, Integer curCandidateOne, Integer curCandidateTwo,
                                      int[] curColumnThreeAttributes,
                                      AggregationOp[]  aggregationOps, boolean[] singleNextArray, int startIndex,
                                      boolean useIntSetAsArray, IntSet curCandidate,
                                      double[] val, int numAggregates) {
-        for (Integer rowNum : bitmap) {
+        int i = 0;
+        while (true) {
+            final int rowNum = bitmap.nextSetBit(i);
+            if (rowNum == -1) {
+                break;
+            }
+            i = rowNum + 1;
             int rowNumInCol = rowNum - startIndex;
             if (curColumnThreeAttributes[rowNumInCol] == AttributeEncoder.noSupport ||
                     !singleNextArray[curColumnThreeAttributes[rowNumInCol]])
@@ -299,7 +320,7 @@ public class BitmapHelperFunctions {
     public static void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
                                 ArrayList<Integer>[] outlierList,
                                 AggregationOp[]  aggregationOps, boolean[] singleNextArray,
-                                HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                                HashMap<Integer, BitSet>[][] byThreadBitmap,
                                 int colNumOne, int colNumTwo, int colNumThree,
                                 boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
 
@@ -329,16 +350,16 @@ public class BitmapHelperFunctions {
                     if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][1].containsKey(curCandidateThree)) {
-                        outlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][1].get(curCandidateOne),
+                        outlierCount = BitSet.andCardinality(
+                                BitSet.and(byThreadBitmap[colNumOne][1].get(curCandidateOne),
                                         byThreadBitmap[colNumTwo][1].get(curCandidateTwo)),
                                 byThreadBitmap[colNumThree][1].get(curCandidateThree));
                     }
                     if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][0].containsKey(curCandidateThree)) {
-                        inlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
+                        inlierCount = BitSet.andCardinality(
+                                BitSet.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
                                         byThreadBitmap[colNumTwo][0].get(curCandidateTwo)),
                                 byThreadBitmap[colNumThree][0].get(curCandidateThree));
                     }
