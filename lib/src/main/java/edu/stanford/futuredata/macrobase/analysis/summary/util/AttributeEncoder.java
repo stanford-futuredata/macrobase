@@ -84,7 +84,7 @@ public class AttributeEncoder {
         // by the amount of support they have.
         double minSupportThreshold = minSupport * numOutliers;
         List<String> filterOnMinSupport= countMap.keySet().stream()
-                .filter(line -> countMap.get(line) > minSupportThreshold)
+                .filter(line -> countMap.get(line) >= minSupportThreshold)
                 .collect(Collectors.toList());
         filterOnMinSupport.sort((s1, s2) -> countMap.get(s2).compareTo(countMap.get(s1)));
 
