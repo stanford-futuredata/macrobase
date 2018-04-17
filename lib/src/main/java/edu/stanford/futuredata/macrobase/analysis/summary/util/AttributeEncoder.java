@@ -1,6 +1,12 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
@@ -43,7 +49,7 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
-    public HashMap<Integer, RoaringBitmap>[][] getBitMap() {return bitmap;}
+    public HashMap<Integer, RoaringBitmap>[][] getBitmap() {return bitmap;}
     public ArrayList<Integer>[] getOutlierList() {return outlierList;}
     public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
 
@@ -58,7 +64,8 @@ public class AttributeEncoder {
      *                      row i of columns.
      * @return A two-dimensional array of encoded values.
      */
-    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport, double[] outlierColumn, boolean useBitMaps) {
+    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport,
+        double[] outlierColumn, boolean useBitmaps) {
         if (columns.isEmpty()) {
             return new int[0][0];
         }
@@ -97,7 +104,7 @@ public class AttributeEncoder {
         // by the amount of support they have.
         double minSupportThreshold = minSupport * numOutliers;
         List<String> filterOnMinSupport = countMap.keySet().stream()
-                .filter(line -> countMap.get(line) > minSupportThreshold)
+                .filter(line -> countMap.get(line) >= minSupportThreshold)
                 .collect(Collectors.toList());
         filterOnMinSupport.sort((s1, s2) -> countMap.get(s2).compareTo(countMap.get(s1)));
 
@@ -148,7 +155,7 @@ public class AttributeEncoder {
                     outlierList[colIdx].add(curKey);
                 }
             }
-            if (useBitMaps && outlierList[colIdx].size() < cardinalityThreshold) {
+            if (useBitmaps && outlierList[colIdx].size() < cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
