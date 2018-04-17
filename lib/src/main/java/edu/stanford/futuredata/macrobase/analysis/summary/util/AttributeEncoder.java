@@ -171,7 +171,7 @@ public class AttributeEncoder {
                 }
             }
         }
-        log.debug("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
+        log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
         return encodedAttributes;
     }
 
