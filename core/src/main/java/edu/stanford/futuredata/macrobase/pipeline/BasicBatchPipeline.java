@@ -10,6 +10,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.ratios.ExplanationMetr
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.GlobalRatioMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.ratios.RiskRatioMetric;
 import edu.stanford.futuredata.macrobase.distributed.analysis.classify.DistributedClassifier;
+import edu.stanford.futuredata.macrobase.distributed.analysis.classify.PercentileClassifierDistributed;
 import edu.stanford.futuredata.macrobase.distributed.analysis.classify.PredicateClassifierDistributed;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.DistributedBatchSummarizer;
 import edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed.APLOutlierSummarizerDistributed;
@@ -115,13 +116,18 @@ public class BasicBatchPipeline implements Pipeline {
 
     private DistributedClassifier getDistributedClassifier() throws MacroBaseException {
         switch (classifierType.toLowerCase()) {
+            case "percentile": {
+                PercentileClassifierDistributed classifier = new PercentileClassifierDistributed(metric);
+                classifier.setPercentile(cutoff);
+                classifier.setIncludeHigh(pctileHigh);
+                classifier.setIncludeLow(pctileLow);
+                return classifier;
+            }
             case "predicate": {
                 if (isStrPredicate){
-                    PredicateClassifierDistributed classifier = new PredicateClassifierDistributed(metric, predicateStr, strCutoff);
-                    return classifier;
+                    return new PredicateClassifierDistributed(metric, predicateStr, strCutoff);
                 }
-                PredicateClassifierDistributed classifier = new PredicateClassifierDistributed(metric, predicateStr, cutoff);
-                return classifier;
+                return new PredicateClassifierDistributed(metric, predicateStr, cutoff);
             }
             default : {
                 throw new MacroBaseException("Bad Classifier Type");
