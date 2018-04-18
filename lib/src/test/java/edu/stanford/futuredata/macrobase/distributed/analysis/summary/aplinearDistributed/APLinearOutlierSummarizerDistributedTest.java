@@ -5,6 +5,7 @@ import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import edu.stanford.futuredata.macrobase.distributed.ingest.CSVDataFrameParserDistributed;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
@@ -26,7 +27,7 @@ public class APLinearOutlierSummarizerDistributedTest {
         colTypes.put("_COUNT", Schema.ColType.DOUBLE);
 
         SparkConf conf = new SparkConf().setAppName("MacroBaseTest").setMaster("local");
-        JavaSparkContext sparkContext = new JavaSparkContext(conf);
+        SparkContext sparkContext = new SparkContext(conf);
         CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed("src/test/resources/distributedTest.csv",
                 Arrays.asList("col1", "col2", "col3", "_OUTLIER", "_COUNT"));
         loader.setColumnTypes(colTypes);
@@ -79,7 +80,7 @@ public class APLinearOutlierSummarizerDistributedTest {
         colTypes.put("_COUNT", Schema.ColType.DOUBLE);
 
         SparkConf conf = new SparkConf().setAppName("MacroBaseTest").setMaster("local");
-        JavaSparkContext sparkContext = new JavaSparkContext(conf);
+        SparkContext sparkContext = new SparkContext(conf);
         CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed("src/test/resources/distributedTest.csv",
                 Arrays.asList("col1", "col2", "col3", "_OUTLIER", "_COUNT"));
         loader.setColumnTypes(colTypes);

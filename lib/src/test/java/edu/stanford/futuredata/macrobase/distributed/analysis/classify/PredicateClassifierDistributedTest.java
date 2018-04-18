@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import edu.stanford.futuredata.macrobase.distributed.ingest.CSVDataFrameParserDistributed;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
 import scala.Tuple2;
@@ -22,7 +23,7 @@ public class PredicateClassifierDistributedTest {
         colTypes.put("usage", Schema.ColType.DOUBLE);
 
         SparkConf conf = new SparkConf().setAppName("MacroBaseTest").setMaster("local");
-        JavaSparkContext sparkContext = new JavaSparkContext(conf);
+        SparkContext sparkContext = new SparkContext(conf);
         CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed("src/test/resources/tiny.csv",
                 Arrays.asList("usage", "location", "version"));
         loader.setColumnTypes(colTypes);

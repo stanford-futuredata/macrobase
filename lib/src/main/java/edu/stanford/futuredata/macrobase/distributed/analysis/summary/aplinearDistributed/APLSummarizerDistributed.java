@@ -76,6 +76,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
         JavaPairRDD<String[], double[]> outlierMergedConsolidatedRDD = outlierDF.toJavaRDD().mapToPair((Row row) -> {
             String[] newAttributesCol = new String[attributes.size()];
             double[] newAggregatesCol = new double[]{1.0, 1.0}; //Outliers, count
+            //noinspection Duplicates
             for (int i = 0; i < attributes.size(); i++) {
                 if (row.isNullAt(nameToIndexMap.get(attributes.get(i)))) {
                     newAttributesCol[i] = null;
@@ -94,6 +95,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
         JavaPairRDD<String[], double[]> inlierMergedConsolidatedRDD = inlierDF.toJavaRDD().mapToPair((Row row) -> {
             String[] newAttributesCol = new String[attributes.size()];
             double[] newAggregatesCol = new double[]{0.0, 1.0}; //Outliers, count
+            //noinspection Duplicates
             for (int i = 0; i < attributes.size(); i++) {
                 if (row.isNullAt(nameToIndexMap.get(attributes.get(i)))) {
                     newAttributesCol[i] = null;

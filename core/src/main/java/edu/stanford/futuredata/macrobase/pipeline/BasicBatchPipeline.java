@@ -16,6 +16,7 @@ import edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDi
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
+import edu.stanford.futuredata.macrobase.distributed.ingest.HiveDataFrameParserDistributed;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import edu.stanford.futuredata.macrobase.distributed.ingest.CSVDataFrameParserDistributed;
@@ -25,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
+import org.apache.spark.sql.SparkSession;
 
 /**
  * Simplest default pipeline: load, classify, and then explain
@@ -53,7 +55,7 @@ public class BasicBatchPipeline implements Pipeline {
 
     private int distributedNumPartitions;
 
-    private JavaSparkContext sparkContext;
+    private SparkSession spark;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
@@ -208,9 +210,18 @@ public class BasicBatchPipeline implements Pipeline {
         }
         List<String> requiredColumns = new ArrayList<>(attributes);
         requiredColumns.add(metric);
-        CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed(inputURI.substring(6), requiredColumns);
-        loader.setColumnTypes(colTypes);
-        DistributedDataFrame df = loader.load(sparkContext, distributedNumPartitions);
+        DistributedDataFrame df;
+        if (inputURI.startsWith("csv://")) {
+            CSVDataFrameParserDistributed loader = new CSVDataFrameParserDistributed(
+                inputURI.substring(6), requiredColumns);
+            loader.setColumnTypes(colTypes);
+            df = loader.load(spark.sparkContext(), distributedNumPartitions);
+        } else {
+           HiveDataFrameParserDistributed loader = new HiveDataFrameParserDistributed(
+               inputURI.substring(7), requiredColumns);
+            loader.setColumnTypes(colTypes);
+            df = loader.load(spark, distributedNumPartitions);
+        }
         return df;
     }
 
@@ -237,8 +248,12 @@ public class BasicBatchPipeline implements Pipeline {
             summarizer.process(df);
             output = summarizer.getResults();
         } else {
-            SparkConf conf = new SparkConf().setAppName("MacroBase");
-            sparkContext = new JavaSparkContext(conf);
+            spark = SparkSession
+                .builder()
+                .appName("MacroBase CLI")
+//                .config("spark.sql.warehouse.dir", warehouseLocation)
+                .enableHiveSupport()
+                .getOrCreate();
             DistributedDataFrame df = loadDataDistributed();
             long elapsed = System.currentTimeMillis() - startTime;
 

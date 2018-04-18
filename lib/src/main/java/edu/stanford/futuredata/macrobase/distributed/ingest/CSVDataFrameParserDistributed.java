@@ -4,6 +4,7 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -29,13 +30,13 @@ public class CSVDataFrameParserDistributed implements Serializable{
         this.columnTypes = types;
     }
 
-    public DistributedDataFrame load(JavaSparkContext sparkContext, int numPartitions) throws Exception {
+    public DistributedDataFrame load(SparkContext sparkContext, int numPartitions) throws Exception {
         // Increase the number of partitions to ensure enough memory for parsing overhead
         int increasedPartitions = numPartitions * 10;
         // For unit tests
         if (numPartitions == 0)
             increasedPartitions = 1;
-        JavaRDD<String> fileRDD = sparkContext.textFile(fileName, increasedPartitions);
+        JavaRDD<String> fileRDD = sparkContext.textFile(fileName, increasedPartitions).toJavaRDD();
         // Extract the header
         CsvParserSettings headerSettings = new CsvParserSettings();
         headerSettings.getFormat().setLineSeparator("\n");
