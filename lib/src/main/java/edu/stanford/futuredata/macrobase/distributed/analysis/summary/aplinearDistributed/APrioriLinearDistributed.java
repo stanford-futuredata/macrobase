@@ -196,18 +196,6 @@ public class APrioriLinearDistributed {
                                 allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                         partitionBitmaps, colNumOne, colNumTwo, useIntSetAsArray,
                                         curCandidate, numAggregates);
-                            } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo]) {
-                                // Bitmap-Normal
-                                allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumOne],
-                                        aggregationOps, singleNextArray, partitionBitmaps[colNumOne],
-                                        curColumnTwoAttributes, 0, useIntSetAsArray, curCandidate,
-                                        numAggregates);
-                            } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
-                                // Normal-Bitmap
-                                allOneBitmapOneNormal(thisThreadSetAggregates, outlierList[colNumTwo],
-                                        aggregationOps, singleNextArray, partitionBitmaps[colNumTwo],
-                                        curColumnOneAttributes, 0, useIntSetAsArray, curCandidate,
-                                        numAggregates);
                             } else {
                                 // Normal-Normal
                                 allTwoNormal(thisThreadSetAggregates, curColumnOneAttributes,
@@ -232,54 +220,6 @@ public class APrioriLinearDistributed {
                                             colNumOne, colNumTwo, colNumThree, useIntSetAsArray, curCandidate,
                                             numAggregates);
 
-                                } else if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                        !isBitmapEncoded[colNumThree]) {
-                                    // one and two are bitmaps, 3 is normal
-                                    allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps,
-                                            singleNextArray, partitionBitmaps, colNumOne, colNumTwo,
-                                            curColumnThreeAttributes, 0, useIntSetAsArray, curCandidate,
-                                            numAggregates);
-
-                                } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] &&
-                                        isBitmapEncoded[colNumThree]) {
-                                    // one and three are bitmaps, 2 is normal
-                                    allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps,
-                                            singleNextArray, partitionBitmaps, colNumOne, colNumThree,
-                                            curColumnTwoAttributes, 0, useIntSetAsArray, curCandidate,
-                                            numAggregates);
-
-                                } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                        isBitmapEncoded[colNumThree]) {
-                                    // two and three are bitmaps, 1 is normal
-                                    allTwoBitmapsOneNormal(thisThreadSetAggregates, outlierList, aggregationOps,
-                                            singleNextArray, partitionBitmaps, colNumTwo, colNumThree,
-                                            curColumnOneAttributes, 0, useIntSetAsArray, curCandidate,
-                                            numAggregates);
-
-                                } else if (isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] &&
-                                        !isBitmapEncoded[colNumThree]) {
-                                    // one is a bitmap, 2 and 3 are normal
-                                    allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumOne],
-                                            aggregationOps, singleNextArray, partitionBitmaps[colNumOne],
-                                            curColumnTwoAttributes, curColumnThreeAttributes, 0,
-                                            useIntSetAsArray, curCandidate, numAggregates);
-
-                                } else if (!isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                        !isBitmapEncoded[colNumThree]) {
-                                    // two is a bitmap, 1 and 3 are normal
-                                    allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumTwo],
-                                            aggregationOps, singleNextArray, partitionBitmaps[colNumTwo],
-                                            curColumnOneAttributes, curColumnThreeAttributes,
-                                            0, useIntSetAsArray, curCandidate, numAggregates);
-
-                                } else if (!isBitmapEncoded[colNumOne] && !isBitmapEncoded[colNumTwo] &&
-                                        isBitmapEncoded[colNumThree]) {
-                                    // three is a bitmap, 1 and 2 are normal
-                                    allOneBitmapTwoNormal(thisThreadSetAggregates, outlierList[colNumThree],
-                                            aggregationOps, singleNextArray,
-                                            partitionBitmaps[colNumThree],
-                                            curColumnOneAttributes, curColumnTwoAttributes,
-                                            0, useIntSetAsArray, curCandidate, numAggregates);
                                 } else {
                                     // all three are normal
                                     allThreeNormal(thisThreadSetAggregates, curColumnOneAttributes,
