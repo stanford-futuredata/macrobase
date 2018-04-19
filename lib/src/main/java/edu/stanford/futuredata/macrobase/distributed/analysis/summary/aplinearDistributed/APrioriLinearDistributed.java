@@ -236,7 +236,7 @@ public class APrioriLinearDistributed {
                 return thisThreadSetAggregates.asHashMap();
             });
 
-            hashTableSet.cache();
+            /*hashTableSet.cache();
 
             // The collected candidate hash tables can be very large, so we prune them before reducing in order
             // to minimize the amount of data transfer and serial computation.  We prune by identifying the set of all
@@ -283,11 +283,11 @@ public class APrioriLinearDistributed {
                     }
                 }
                 return thisThreadPassingAggregates;
-            });
+            });*/
 
             // Finally, reduce over the pruned hash tables to get a final candidate and counts map..
             Map<IntSet, double[]> setAggregates =
-                    finalPrunedHashTableSet.reduce((Map<IntSet, double[]> tableOne, Map<IntSet, double[]> tableTwo) -> {
+                    hashTableSet.reduce((Map<IntSet, double[]> tableOne, Map<IntSet, double[]> tableTwo) -> {
                         List<Map<IntSet, double[]>> tables = Arrays.asList(tableOne, tableTwo);
                         Map<IntSet, double[]> tableCombined = new HashMap<>();
                         for (Map<IntSet, double[]> table : tables) {
