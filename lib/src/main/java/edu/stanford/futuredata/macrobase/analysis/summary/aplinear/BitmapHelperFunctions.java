@@ -7,10 +7,11 @@ import org.roaringbitmap.RoaringBitmap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 public class BitmapHelperFunctions {
 
-    public static void updateAggregates(FastFixedHashTable thisThreadSetAggregates,
+    public static void updateAggregates(Map<IntSet, double[]> thisThreadSetAggregates,
                                         IntSet curCandidate, AggregationOp[] aggregationOps,
                                   double[] val, int numAggregates) {
         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
@@ -28,7 +29,7 @@ public class BitmapHelperFunctions {
     /*********************** All Order-2 helper methods ***********************/
 
     // Two Normal columns
-    public static void allTwoNormal(FastFixedHashTable thisThreadSetAggregates,
+    public static void allTwoNormal(Map<IntSet, double[]> thisThreadSetAggregates,
                               int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
                               AggregationOp[] aggregationOps, boolean[] singleNextArray,
                               int startIndex, int endIndex,
@@ -55,7 +56,7 @@ public class BitmapHelperFunctions {
     }
 
     // Two bitmap columns
-    public static void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
+    public static void allTwoBitmap(Map<IntSet, double[]> thisThreadSetAggregates,
                               ArrayList<Integer>[] outlierList,
                               AggregationOp[] aggregationOps, boolean[] singleNextArray,
                               HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
@@ -91,7 +92,7 @@ public class BitmapHelperFunctions {
     /*********************** All Order-3 helper methods ***********************/
 
     // All Three Normal or All Three Bitmap
-    public static void allThreeNormal(FastFixedHashTable thisThreadSetAggregates,
+    public static void allThreeNormal(Map<IntSet, double[]> thisThreadSetAggregates,
                                 int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
                                 int[] curColumnThreeAttributes,
                                 AggregationOp[]  aggregationOps, boolean[] singleNextArray,
@@ -124,7 +125,7 @@ public class BitmapHelperFunctions {
         }
     }
 
-    public static void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
+    public static void allThreeBitmap(Map<IntSet, double[]> thisThreadSetAggregates,
                                 ArrayList<Integer>[] outlierList,
                                 AggregationOp[]  aggregationOps, boolean[] singleNextArray,
                                 HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,

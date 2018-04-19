@@ -148,7 +148,7 @@ public class APrioriLinear {
                         curCandidate = new IntSetAsLong(0);
                     else
                         curCandidate = new IntSetAsArray(0);
-                    if (curOrderFinal == 1) {
+                    /*if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
                             if (isBitmapEncoded[colNum]) {
                                 for (Integer curOutlierCandidate : outlierList[colNum]) {
@@ -233,7 +233,7 @@ public class APrioriLinear {
                         }
                     } else {
                         throw new MacroBaseInternalError("High Order not supported");
-                    }
+                    }*/
                     log.info("Time spent in Thread {} in order {}:  {} ms",
                             curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();

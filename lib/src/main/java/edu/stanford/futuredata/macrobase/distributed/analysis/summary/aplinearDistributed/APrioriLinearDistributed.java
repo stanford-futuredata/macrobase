@@ -56,7 +56,7 @@ public class APrioriLinearDistributed {
         final boolean useIntSetAsArray;
         // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
         // If the cardinality is greater than that, don't use them.
-        if (cardinality >= 2097151) {
+        if (cardinality >= 0) {
             log.warn("Cardinality is extremely high.  Candidate generation will be slow.");
             useIntSetAsArray = true;
         } else{
@@ -128,7 +128,7 @@ public class APrioriLinearDistributed {
                 int[][] attributesForThread = sparkTuple._1._1;
                 double[][] aRowsForThread = sparkTuple._1._2;
                 HashMap<Integer, RoaringBitmap>[][] partitionBitmaps = sparkTuple._2;
-                FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                Map<IntSet, double[]> thisThreadSetAggregates = new HashMap<>();
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
                     curCandidate = new IntSetAsLong(1, 1, 1);
@@ -233,7 +233,7 @@ public class APrioriLinearDistributed {
                 } else {
                     throw new MacroBaseInternalError("High Order not supported");
                 }
-                return thisThreadSetAggregates.asHashMap();
+                return thisThreadSetAggregates;
             });
 
             hashTableSet.cache();
