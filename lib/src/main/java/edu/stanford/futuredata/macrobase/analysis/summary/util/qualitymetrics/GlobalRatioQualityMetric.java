@@ -63,7 +63,7 @@ public class GlobalRatioQualityMetric implements QualityMetric{
 //        double denomError = estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + inlierWeight * inlierWeight / inlierCount);
         double denomError = Math.sqrt(aggregates[outlierCountIdx] + inlierWeight * inlierWeight * inlierCount);
         double g = Math.pow(Z * denomError / estimatedCount, 2);
-        System.out.format("count: %f pm %f, g: %f\n", estimatedCount / outlierSampleRate, denomError / outlierSampleRate, g);
+//        System.out.format("count: %f pm %f, g: %f\n", estimatedCount / outlierSampleRate, denomError / outlierSampleRate, g);
         double rateError = aggregates[outlierCountIdx] / estimatedCount * Math.sqrt(1 / aggregates[outlierCountIdx] + denomError * denomError / (estimatedCount * estimatedCount));
         return Z * rateError / baseRate;
     }

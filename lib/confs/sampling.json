@@ -1,0 +1,26 @@
+{
+  "testName": "sampling",
+  "fileName": "src/test/resources/milan_100k.csv",
+  "metric": "SMSin",
+  "cutoff": 1.0,
+  "includeHi": true,
+  "includeLo": false,
+  "attributes": [
+    "Grid",
+    "Country"
+  ],
+  "ratioMetric": "riskratio",
+  "minRatioMetric": 10.0,
+  "minSupport": 0.04,
+  "sampleRates": [
+    1.0, 0.5, 0.1, 0.05
+  ],
+  "outlierSampleFractions": [
+    0.5, -1.0
+  ],
+  "numTrials": 2,
+
+  "verbose": true,
+  "calcError": true,
+  "appendTimeStamp": true
+}

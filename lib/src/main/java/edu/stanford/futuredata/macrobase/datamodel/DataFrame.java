@@ -129,20 +129,21 @@ public class DataFrame {
     }
 
     /**
-     * Samples in place.
-     * @return modified DataFrame
+     * Samples and returns a new DataFrame.
+     * @return new sampled DataFrame
      */
     public DataFrame sample(Sampler sampler) {
+        DataFrame other = copy();
         for (int i = 0; i < doubleCols.size(); i++) {
             double[] col = doubleCols.get(i);
-            doubleCols.set(i, sampler.getSample(col));
+            other.doubleCols.set(i, sampler.getSample(col));
         }
         for (int i = 0; i < stringCols.size(); i++) {
             String[] col = stringCols.get(i);
-            stringCols.set(i, sampler.getSample(col));
+            other.stringCols.set(i, sampler.getSample(col));
         }
-        numRows = sampler.getSampleIndices().length;
-        return this;
+        other.numRows = sampler.getSampleIndices().length;
+        return other;
     }
 
     public DataFrame sample(double sampleRate) {

@@ -42,6 +42,65 @@ public class PercentileClassifierTest {
     }
 
     @Test
+    public void testSimpleSample() throws Exception {
+        assertEquals(1000, df.getNumRows());
+        PercentileClassifier pc = new PercentileClassifier("val");
+        pc.setIncludeHigh(true);
+        pc.setIncludeLow(false);
+        pc.setPercentile(10);
+        pc.setSampleRate(0.1);
+        pc.process(df);
+        DataFrame output = pc.getResults();
+        assertEquals((int) (df.getNumRows() * 0.1), output.getNumRows());
+
+        DataFrame outliers = output.filter(
+                pc.getOutputColumnName(), (double d) -> d != 0.0
+        );
+        int numOutliers = outliers.getNumRows();
+        assertTrue(numOutliers >= 5 && numOutliers <= 15);
+    }
+
+    @Test
+    public void testWeightedSample() throws Exception {
+        assertEquals(1000, df.getNumRows());
+        PercentileClassifier pc = new PercentileClassifier("val");
+        pc.setIncludeHigh(true);
+        pc.setIncludeLow(false);
+        pc.setPercentile(10);
+        pc.setSampleRate(0.1);
+        pc.setOutlierSampleFraction(0.5);
+        pc.process(df);
+        DataFrame output = pc.getResults();
+        assertEquals((int) (df.getNumRows() * 0.1), output.getNumRows());
+
+        DataFrame outliers = output.filter(
+                pc.getOutputColumnName(), (double d) -> d != 0.0
+        );
+        int numOutliers = outliers.getNumRows();
+        assertTrue(numOutliers == 50);
+    }
+
+    @Test
+    public void testExplicitSampleSize() throws Exception {
+        assertEquals(1000, df.getNumRows());
+        PercentileClassifier pc = new PercentileClassifier("val");
+        pc.setIncludeHigh(true);
+        pc.setIncludeLow(false);
+        pc.setPercentile(10);
+        pc.setInlierSampleSize(200);
+        pc.setOutlierSampleSize(75);
+        pc.process(df);
+        DataFrame output = pc.getResults();
+        assertEquals(275, output.getNumRows());
+
+        DataFrame outliers = output.filter(
+                pc.getOutputColumnName(), (double d) -> d != 0.0
+        );
+        int numOutliers = outliers.getNumRows();
+        assertTrue(numOutliers == 75);
+    }
+
+    @Test
     public void testConfigure() throws Exception {
         PercentileClassifier pc = new PercentileClassifier("notcolumn");
         pc.setColumnName("val");

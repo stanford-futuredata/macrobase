@@ -34,6 +34,7 @@ public class BasicBatchPipeline implements Pipeline {
     private String predicateStr;
     private int numThreads;
     private double sampleRate;
+    private double outlierSampleFraction;
     private int outlierSampleSize;
     private int inlierSampleSize;
 
@@ -74,6 +75,7 @@ public class BasicBatchPipeline implements Pipeline {
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         sampleRate = conf.get("sampleRate", 1.0);
+        outlierSampleFraction = conf.get("outlierSampleFraction", 0.5);
         outlierSampleSize = conf.get("outlierSampleSize", -1);
         inlierSampleSize = conf.get("inlierSampleSize", -1);
     }
@@ -86,6 +88,7 @@ public class BasicBatchPipeline implements Pipeline {
                 classifier.setIncludeHigh(pctileHigh);
                 classifier.setIncludeLow(pctileLow);
                 classifier.setSampleRate(sampleRate);
+                classifier.setOutlierSampleFraction(outlierSampleFraction);
                 classifier.setOutlierSampleSize(outlierSampleSize);
                 classifier.setInlierSampleSize(inlierSampleSize);
                 return classifier;

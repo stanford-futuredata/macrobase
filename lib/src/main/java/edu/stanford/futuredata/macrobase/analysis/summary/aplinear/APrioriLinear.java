@@ -24,6 +24,7 @@ public class APrioriLinear {
     // **Parameters**
     private QualityMetric[] qualityMetrics;
     private double[] thresholds;
+    private boolean verbose;
 
     // **Cached values**
     // Singleton viable sets for quick lookup
@@ -33,11 +34,11 @@ public class APrioriLinear {
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
-    public long sampleTime = 0;
-    public long shardTime = 0;
-    public long initializationTime = 0;
-    public long rowstoreTime = 0;
-    public long[] explainTime = {0, 0, 0};
+//    public long sampleTime = 0;
+    public double shardTime = 0;
+    public double initializationTime = 0;
+    public double rowstoreTime = 0;
+    public double[] explainTime = {0, 0, 0};
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -115,8 +116,10 @@ public class APrioriLinear {
                 aRows[i][j] = aggregateColumns[j][i];
             }
         }
-        rowstoreTime = System.nanoTime() - start;
-        log.info("Row store time: {} ms", rowstoreTime / 1.e6);
+        rowstoreTime = (System.nanoTime() - start) / 1.e6;
+        if (verbose) {
+            log.info("Row store time: {} ms", rowstoreTime);
+        }
 
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         start = System.nanoTime();
@@ -130,8 +133,10 @@ public class APrioriLinear {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
                 }
         }
-        shardTime = System.nanoTime() - start;
-        log.info("Shard time: {} ms", shardTime / 1.e6);
+        shardTime = (System.nanoTime() - start) / 1.e6;
+        if (verbose) {
+            log.info("Shard time: {} ms", shardTime);
+        }
 
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
@@ -148,8 +153,10 @@ public class APrioriLinear {
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
         }
-        initializationTime = System.nanoTime() - start;
-        log.info("Initialization time: {} ms", initializationTime / 1.e6);
+        initializationTime = (System.nanoTime() - start) / 1.e6;
+        if (verbose) {
+            log.info("Initialization time: {} ms", initializationTime);
+        }
 
         for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
             start = System.nanoTime();
@@ -371,8 +378,10 @@ public class APrioriLinear {
                 }
             }
 
-            explainTime[curOrder - 1] = System.nanoTime() - start;
-            log.info("Order {} time: {} ms", curOrder, explainTime[curOrder - 1] / 1.e6);
+            explainTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
+            if (verbose) {
+                log.info("Order {} time: {} ms", curOrder, explainTime[curOrder - 1]);
+            }
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
@@ -423,4 +432,6 @@ public class APrioriLinear {
             }
         return false;
     }
+
+    public void setVerbose(boolean verbose) { this.verbose = verbose; }
 }

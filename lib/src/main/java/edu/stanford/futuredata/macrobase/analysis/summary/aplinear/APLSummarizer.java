@@ -19,7 +19,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     Logger log = LoggerFactory.getLogger("APLSummarizer");
     AttributeEncoder encoder;
     APLExplanation explanation;
-    APrioriLinear aplKernel;
+    public APrioriLinear aplKernel;
     List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
     double sampleRate = 1.0;
@@ -29,9 +29,15 @@ public abstract class APLSummarizer extends BatchSummarizer {
     double outlierSampleRate;
     boolean calcErrors = false;
     int fullNumOutliers;
+    boolean verbose = true;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
+
+    public double encodingTime;
+    public int numEncodedCategories;
+    public double explanationTime;
+    public int numResults;
 
     public abstract List<String> getAggregateNames();
     public abstract AggregationOp[] getAggregationOps();
@@ -74,8 +80,13 @@ public abstract class APLSummarizer extends BatchSummarizer {
         startTime = System.currentTimeMillis();
         int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
         elapsed = System.currentTimeMillis() - startTime;
-        log.info("Encoded in: {} ms", elapsed);
-        log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
+        if (verbose) {
+            log.info("Encoded in: {} ms", elapsed);
+            log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
+        } else {
+            encodingTime = elapsed;
+            numEncodedCategories = encoder.getNextKey() - 1;
+        }
 
         thresholds = getThresholds();
         qualityMetricList = getQualityMetricList();
@@ -83,6 +94,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 qualityMetricList,
                 thresholds
         );
+        aplKernel.setVerbose(verbose);
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
@@ -97,8 +109,13 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 calcErrors
         );
         elapsed = System.currentTimeMillis() - startTime;
-        log.info("Explained in: {} ms", elapsed);
-        log.info("Number of results: {}", aplResults.size());
+        if (verbose) {
+            log.info("Explained in: {} ms", elapsed);
+            log.info("Number of results: {}", aplResults.size());
+        } else {
+            explanationTime = elapsed;
+            numResults = aplResults.size();
+        }
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
         explanation = new APLExplanation(
@@ -120,4 +137,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setOutlierSampleRate(double outlierSampleRate) { this.outlierSampleRate = outlierSampleRate; }
     public void setCalcErrors(boolean calcErrors) { this.calcErrors = calcErrors; }
     public void setFullNumOutliers(int fullNumOutliers) { this.fullNumOutliers = fullNumOutliers; }
+    public void setVerbose(boolean verbose) { this.verbose = verbose; }
 }

@@ -21,13 +21,17 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     private boolean includeHigh = true;
     private boolean includeLow = true;
     private double sampleRate = 1.0;
+    private double outlierSampleFraction = -1.0;
     private int outlierSampleSize = -1;
     private int inlierSampleSize = -1;
+    private boolean verbose = true;
 
     // Calculated values
     private double lowCutoff;
     private double highCutoff;
     private DataFrame output;
+    public double cutoffTime;
+    public double classificationTime;
 
     public PercentileClassifier(String columnName) {
         super(columnName);
@@ -43,7 +47,11 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
         lowCutoff = new Percentile().evaluate(metrics, percentile);
         highCutoff = new Percentile().evaluate(metrics, 100.0 - percentile);
         elapsed = System.nanoTime() - start;
-        log.info("Cutoff eval time: {} ms", elapsed / 1.e6);
+        if (verbose) {
+            log.info("Cutoff eval time: {} ms", elapsed / 1.e6);
+        } else {
+            cutoffTime = elapsed / 1.e6;
+        }
 
         start = System.nanoTime();
         if (outlierSampleSize > 0 && inlierSampleSize > 0 && outlierSampleSize + inlierSampleSize < len) {
@@ -87,43 +95,61 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
             inlierWeight = ((double) (len - numOutliers) / actualInlierSampleSize) / ((double) numOutliers / actualOutlierSampleSize);
             outlierSampleRate = (double) actualOutlierSampleSize / numOutliers;
         } else if (sampleRate < 1.0) {
-            int sampleSize = (int)(len * sampleRate);
-            int[] sampleIndices = new int[sampleSize];
+            if (outlierSampleFraction > 0.0 && outlierSampleFraction < 1.0) {  // weighted sample
+                int sampleSize = (int) (len * sampleRate);
+                int[] sampleIndices = new int[sampleSize];
 
-            ReservoirSampler outlierSampler = new ReservoirSampler(sampleSize);
-            ReservoirSampler inlierSampler = new ReservoirSampler(sampleSize);
+                ReservoirSampler outlierSampler = new ReservoirSampler(sampleSize);
+                ReservoirSampler inlierSampler = new ReservoirSampler(sampleSize);
 
-            for (int i = 0; i < len; i++) {
-                double curVal = metrics[i];
-                if ((curVal > highCutoff && includeHigh)
-                        || (curVal < lowCutoff && includeLow)
-                        ) {
-                    outlierSampler.process(i);
-                } else {
-                    inlierSampler.process(i);
+                for (int i = 0; i < len; i++) {
+                    double curVal = metrics[i];
+                    if ((curVal > highCutoff && includeHigh)
+                            || (curVal < lowCutoff && includeLow)
+                            ) {
+                        outlierSampler.process(i);
+                    } else {
+                        inlierSampler.process(i);
+                    }
                 }
-            }
-            numOutliers = outlierSampler.getNumProcessed();
+                numOutliers = outlierSampler.getNumProcessed();
 
-            int[] sampledOutlierIndices = outlierSampler.getSample();
-            int[] sampledInlierIndices = inlierSampler.getSample();
-            int outlierSampleSize = Math.min(sampleSize / 2, numOutliers);
-            int idx = 0;
-            for (int i = 0; i < outlierSampleSize; i++) {
-                sampleIndices[idx++] = sampledOutlierIndices[i];
-            }
-            for (int i = 0; i < sampleSize - outlierSampleSize; i++) {
-                sampleIndices[idx++] = sampledInlierIndices[i];
-            }
+                int[] sampledOutlierIndices = outlierSampler.getSample();
+                int[] sampledInlierIndices = inlierSampler.getSample();
+                int outlierSampleSize = Math.min((int) (sampleSize * outlierSampleFraction), numOutliers);
+                int idx = 0;
+                for (int i = 0; i < outlierSampleSize; i++) {
+                    sampleIndices[idx++] = sampledOutlierIndices[i];
+                }
+                for (int i = 0; i < sampleSize - outlierSampleSize; i++) {
+                    sampleIndices[idx++] = sampledInlierIndices[i];
+                }
 
-            output = input.sample(sampleIndices);
-            double[] resultColumn = new double[sampleSize];
-            for (int i = 0; i < outlierSampleSize; i++) {
-                resultColumn[i] = 1.0;
+                output = input.sample(sampleIndices);
+                double[] resultColumn = new double[sampleSize];
+                for (int i = 0; i < outlierSampleSize; i++) {
+                    resultColumn[i] = 1.0;
+                }
+                output.addColumn(outputColumnName, resultColumn);
+                inlierWeight = ((double) (len - numOutliers) / (sampleSize - outlierSampleSize)) / ((double) numOutliers / outlierSampleSize);
+                outlierSampleRate = (double) outlierSampleSize / numOutliers;
+            } else {  // simple random sample
+                output = input.sample(sampleRate);
+                metrics = output.getDoubleColumnByName(columnName);
+                len = metrics.length;
+                double[] resultColumn = new double[len];
+                for (int i = 0; i < len; i++) {
+                    double curVal = metrics[i];
+                    if ((curVal > highCutoff && includeHigh)
+                            || (curVal < lowCutoff && includeLow)
+                            ) {
+                        resultColumn[i] = 1.0;
+                    }
+                }
+                output.addColumn(outputColumnName, resultColumn);
+                inlierWeight = 1.0;  // assumption
+                outlierSampleRate = sampleRate;  // assumption
             }
-            output.addColumn(outputColumnName, resultColumn);
-            inlierWeight = ((double) (len - numOutliers) / (sampleSize - outlierSampleSize)) / ((double) numOutliers / outlierSampleSize);
-            outlierSampleRate = (double) outlierSampleSize / numOutliers;
         } else {
             output = input.copy();
             double[] resultColumn = new double[len];
@@ -138,7 +164,11 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
             output.addColumn(outputColumnName, resultColumn);
         }
         elapsed = System.nanoTime() - start;
-        log.info("Classification time: {} ms", elapsed / 1.e6);
+        if (verbose) {
+            log.info("Classification time: {} ms", elapsed / 1.e6);
+        } else {
+            classificationTime = elapsed / 1.e6;
+        }
     }
 
     @Override
@@ -195,6 +225,8 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
     }
 
     public void setSampleRate(double sampleRate) { this.sampleRate = sampleRate; }
+    public void setOutlierSampleFraction(double outlierSampleFraction) { this.outlierSampleFraction = outlierSampleFraction; }
     public void setOutlierSampleSize(int outlierSampleSize) { this.outlierSampleSize = outlierSampleSize; }
     public void setInlierSampleSize(int inlierSampleSize) { this.inlierSampleSize = inlierSampleSize; }
+    public void setVerbose(boolean verbose) { this.verbose = verbose; }
 }
