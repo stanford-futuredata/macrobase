@@ -16,32 +16,32 @@ export class QueryWizardComponent implements OnInit {
   attributeSet = new Set();
   selectedMetric;
   selectedAttribute;
+  minSupport;
+  minRatioMetric;
 
   constructor(private queryService: QueryService, private messageService: MessageService) { }
 
   addMetric(): void {
     if(this.selectedMetric) this.metricSet.add(this.selectedMetric);
-    this.updateQuery();
   }
 
   addAttribute(): void {
     if(this.selectedAttribute) this.attributeSet.add(this.selectedAttribute);
-    this.updateQuery();
   }
 
   removeMetric(metric: string): void {
     this.metricSet.delete(metric);
-    this.updateQuery();
   }
 
   removeAttribute(attribute: string): void {
     this.attributeSet.delete(attribute);
-    this.updateQuery();
   }
 
   updateQuery(): void {
-    this.query.metric = Array.from(this.metricSet)[0]
-    this.query.attributes = Array.from(this.attributeSet)
+    this.query.metric = Array.from(this.metricSet)[0];
+    this.query.attributes = Array.from(this.attributeSet);
+    this.query.minSupport = parseFloat(this.minSupport);
+    this.query.minRatioMetric = parseFloat(this.minRatioMetric);
   }
 
   possibleMetrics = [
@@ -73,12 +73,16 @@ export class QueryWizardComponent implements OnInit {
       minSupport: 0.2
     };
 
-    this.metricSet.add("usage");
-    this.attributeSet.add("location");
-    this.attributeSet.add("version");
+    this.metricSet.add(this.query.metric);
+    for(var i in this.query.attributes){
+      this.attributeSet.add(this.query.attributes[i]);
+    }
+    this.minSupport = this.query.minSupport;
+    this.minRatioMetric = this.query.minRatioMetric;
   }
 
   runQuery(query: Query) {
+    this.updateQuery();
     this.queryService.runQuery(this.query);
   }
 

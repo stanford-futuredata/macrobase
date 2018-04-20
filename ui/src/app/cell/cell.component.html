@@ -2,8 +2,13 @@
     Cell
 </h2>
 
-{{queryService.queryResult}}
-
-<pre>
-  {{queryService.queryString}}
-</pre>
+<div *ngIf="this.queryService.queryResult">
+  #events: {{this.queryService.queryResult.numTotal}}
+  <br>
+  #outliers: {{this.queryService.queryResult.outliers}}
+  <br>
+  Results:
+  <pre>
+    {{this.queryService.resultsString}}
+  </pre>
+</div>

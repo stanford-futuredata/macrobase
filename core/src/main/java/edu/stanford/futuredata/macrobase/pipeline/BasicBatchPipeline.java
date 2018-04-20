@@ -69,8 +69,21 @@ public class BasicBatchPipeline implements Pipeline {
         summarizerType = conf.get("summarizer", "apriori");
         attributes = conf.get("attributes");
         ratioMetric = conf.get("ratioMetric", "globalRatio");
-        minRiskRatio = conf.get("minRatioMetric", 3.0);
-        minSupport = conf.get("minSupport", 0.01);
+
+        if(conf.get("minRatioMetric", 3.0) instanceof Double) {
+            minRiskRatio = (double) conf.get("minRatioMetric", 3.0);
+        }
+        else {
+            minRiskRatio = (double) (int) conf.get("minRatioMetric", 3);
+        }
+
+        if(conf.get("minSupport", 0.01) instanceof Double) {
+            minSupport = (double) conf.get("minSupport", 0.01);
+        }
+        else {
+            minSupport= (double) (int) conf.get("minSupport", 0);
+        }
+
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         meanColumn = Optional.ofNullable(conf.get("meanColumn"));
         meanShiftRatio = conf.get("meanShiftRatio", 1.0);
