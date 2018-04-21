@@ -59,7 +59,7 @@ public class SamplingBench {
         sampleRates = conf.get("sampleRates");
         outlierSampleFractions = conf.get("outlierSampleFractions");
         numTrials = conf.get("numTrials");
-        warmupTime = conf.get("warmupTime");
+        warmupTime = conf.get("warmupTime", 5);
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);

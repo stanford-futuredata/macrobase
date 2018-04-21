@@ -125,6 +125,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setRatioMetric(ratioMetric);
                 summarizer.setNumThreads(numThreads);
 //                summarizer.setSampleRate(sampleRate);
                 summarizer.setInlierWeight(classifier.getInlierWeight());
