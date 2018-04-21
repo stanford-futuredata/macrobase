@@ -20,6 +20,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     AttributeEncoder encoder;
     APLExplanation explanation;
     public APrioriLinear aplKernel;
+    public APrioriBasic aplBasicKernel;
     List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
     double sampleRate = 1.0;
@@ -30,6 +31,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     boolean calcErrors = false;
     int fullNumOutliers;
     boolean verbose = true;
+    boolean basic = false;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -90,24 +92,39 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
         thresholds = getThresholds();
         qualityMetricList = getQualityMetricList();
-        aplKernel = new APrioriLinear(
-                qualityMetricList,
-                thresholds
-        );
-        aplKernel.setVerbose(verbose);
+        if (basic) {
+            aplBasicKernel = new APrioriBasic(
+                    qualityMetricList,
+                    thresholds
+            );
+        } else {
+            aplKernel = new APrioriLinear(
+                    qualityMetricList,
+                    thresholds
+            );
+            aplKernel.setVerbose(verbose);
+        }
 
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
         AggregationOp[] aggregationOps = getAggregationOps();
         startTime = System.currentTimeMillis();
-        List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
-                aggregateColumns,
-                aggregationOps,
-                encoder.getNextKey(),
-                Math.min(maxOrder, attributes.size()),
-                numThreads,
-                calcErrors
-        );
+        List<APLExplanationResult> aplResults;
+        if (basic) {
+            aplResults = aplBasicKernel.explain(
+                    encoded,
+                    aggregateColumns
+            );
+        } else {
+            aplResults = aplKernel.explain(encoded,
+                    aggregateColumns,
+                    aggregationOps,
+                    encoder.getNextKey(),
+                    Math.min(maxOrder, attributes.size()),
+                    numThreads,
+                    calcErrors
+            );
+        }
         elapsed = System.currentTimeMillis() - startTime;
         if (verbose) {
             log.info("Explained in: {} ms", elapsed);
@@ -138,4 +155,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setCalcErrors(boolean calcErrors) { this.calcErrors = calcErrors; }
     public void setFullNumOutliers(int fullNumOutliers) { this.fullNumOutliers = fullNumOutliers; }
     public void setVerbose(boolean verbose) { this.verbose = verbose; }
+    public void setBasic(boolean basic) { this.basic = basic; }
 }

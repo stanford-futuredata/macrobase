@@ -30,6 +30,10 @@ public class APrioriBasic {
     // aggregate values for all of the sets we saved
     HashMap<Integer, HashMap<IntSetAsArray, double[]>> savedAggregates;
 
+    public double initializationTime = 0;
+    public double rowstoreTime = 0;
+    public double[] explainTime = {0, 0, 0};
+
     public APrioriBasic(
             List<QualityMetric> qualityMetrics,
             List<Double> thresholds
@@ -44,14 +48,17 @@ public class APrioriBasic {
     }
 
     public List<APLExplanationResult> explain(
-            List<int[]> attributes,
+            int[][] attributes,
             double[][] aggregateColumns
     ) {
         int d = aggregateColumns.length;
         int n = aggregateColumns[0].length;
 
+        long start;
+
         // Quality metrics are initialized with global aggregates to
         // allow them to determine the appropriate relative thresholds
+        start = System.nanoTime();
         double[] globalAggregates = new double[d];
         for (int j = 0; j < d; j++) {
             globalAggregates[j] = 0;
@@ -63,15 +70,20 @@ public class APrioriBasic {
         for (QualityMetric q : qualityMetrics) {
             q.initialize(globalAggregates);
         }
+        initializationTime = (System.nanoTime() - start) / 1.e6;
 
         // row store for more convenient access
+        start = System.nanoTime();
         double[][] aRows = new double[n][d];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < d; j++) {
                 aRows[i][j] = aggregateColumns[j][i];
             }
         }
+        rowstoreTime = (System.nanoTime() - start) / 1.e6;
+
         for (int curOrder = 1; curOrder <= 3; curOrder++) {
+            start = System.nanoTime();
             // Group by and calculate aggregates for each of the candidates
             HashMap<IntSetAsArray, double[]> setAggregates = new HashMap<>();
 
@@ -80,7 +92,7 @@ public class APrioriBasic {
             // sets.
             HashSet<IntSetAsArray> precalculatedCandidates = precalculateCandidates(curOrder);
             for (int i = 0; i < n; i++){
-                int[] curRowAttributes = attributes.get(i);
+                int[] curRowAttributes = attributes[i];
                 ArrayList<IntSetAsArray> candidates = getCandidates(
                         curOrder,
                         curRowAttributes,
@@ -139,6 +151,7 @@ public class APrioriBasic {
                     singleNext.add(i.getFirst());
                 }
             }
+            explainTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
         }
 
         List<APLExplanationResult> results = new ArrayList<>();

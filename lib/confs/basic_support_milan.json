@@ -1,0 +1,18 @@
+{
+  "testName": "basic_support_milan",
+  "fileName": "src/test/resources/milan_100k.csv",
+  "attributes": [
+    "Grid",
+    "Country"
+  ],
+  "minSupport": 0.04,
+  "sampleRates": [
+    1.0, 0.99, 0.75, 0.5, 0.3, 0.2, 0.1, 0.05, 0.02
+  ],
+  "numTrials": 10,
+  "warmupTime": 5,
+
+  "verbose": true,
+  "calcError": true,
+  "appendTimeStamp": true
+}
