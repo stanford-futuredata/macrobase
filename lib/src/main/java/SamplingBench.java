@@ -3,6 +3,8 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
@@ -11,6 +13,7 @@ import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import io.CSVOutput;
+import org.apache.commons.math3.analysis.function.Exp;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,6 +35,7 @@ public class SamplingBench {
     private List<Double> sampleRates;
     private List<Double> outlierSampleFractions;
     private int numTrials;
+    private int warmupTime;
 
     private boolean verbose = false;
     private boolean calcError = false;
@@ -55,6 +59,7 @@ public class SamplingBench {
         sampleRates = conf.get("sampleRates");
         outlierSampleFractions = conf.get("outlierSampleFractions");
         numTrials = conf.get("numTrials");
+        warmupTime = conf.get("warmupTime");
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);
@@ -81,14 +86,14 @@ public class SamplingBench {
 
         List<Map<String, String>> results = new ArrayList<>();
 
-        warmStart(df);
+        APLExplanation trueOutput = warmStart(df);
+        int numTrueResults = trueOutput.getResults().size();
 
         for (double sr : sampleRates) {
             for (double osf : outlierSampleFractions) {
+                System.out.format("Sample rate %.4f, outlier sample fraction %.4f\n", sr, osf);
                 for (int curTrial = 0; curTrial < numTrials; curTrial++) {
                     System.gc();
-
-                    System.out.format("Sample rate %f, outlier sample fraction %f, trial %d\n", sr, osf, curTrial);
 
                     PercentileClassifier classifier = getClassifier(sr, osf);
                     startTime = System.currentTimeMillis();
@@ -101,7 +106,8 @@ public class SamplingBench {
                     startTime = System.currentTimeMillis();
                     summarizer.process(classifiedDF);
                     long summarizationTime = System.currentTimeMillis() - startTime;
-                    Explanation output = summarizer.getResults();
+                    APLExplanation output = summarizer.getResults();
+                    int numMatches = getNumMatches(output, trueOutput);
 
                     Map<String, String> curResults = new HashMap<>();
                     curResults.put("dataset", fileName);
@@ -120,6 +126,10 @@ public class SamplingBench {
                     curResults.put("order1_time", String.format("%f", summarizer.aplKernel.explainTime[0]));
                     curResults.put("order2_time", String.format("%f", summarizer.aplKernel.explainTime[1]));
                     curResults.put("order3_time", String.format("%f", summarizer.aplKernel.explainTime[2]));
+                    curResults.put("num_results", String.format("%d", summarizer.numResults));
+                    curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
+                    curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
+                    curResults.put("precision", String.format("%f", (double) numMatches / summarizer.numResults));
                     results.add(curResults);
                 }
             }
@@ -128,9 +138,10 @@ public class SamplingBench {
         return results;
     }
 
-    public void warmStart(DataFrame df) throws Exception {
+    public APLExplanation warmStart(DataFrame df) throws Exception {
         long start = System.currentTimeMillis();
-        while (System.currentTimeMillis() - start < 1000) {
+        APLExplanation trueOutput = null;
+        while (System.currentTimeMillis() - start < 1000 * warmupTime || trueOutput == null) {
             System.gc();
 
             PercentileClassifier classifier = getClassifier(1.0, -1.0);
@@ -140,8 +151,29 @@ public class SamplingBench {
             APLSummarizer summarizer = getSummarizer(classifier.getOutputColumnName(), classifier, 1.0);
 
             summarizer.process(classifiedDF);
-            Explanation output = summarizer.getResults();
+            trueOutput = summarizer.getResults();
         }
+        return trueOutput;
+    }
+
+    public int getNumMatches(APLExplanation output, APLExplanation trueOutput) {
+        List<APLExplanationResult> results = output.getResults();
+        List<APLExplanationResult> trueResults = trueOutput.getResults();
+
+        int numResults = results.size();
+        int trueNumResults = trueResults.size();
+        int numMatches = 0;
+
+        for (APLExplanationResult result : results) {
+            for (APLExplanationResult trueResult : trueResults) {
+                if (result.equals(trueResult, output.getEncoder(), trueOutput.getEncoder())) {
+                    numMatches++;
+                    break;
+                }
+            }
+        }
+
+        return numMatches;
     }
 
     public PercentileClassifier getClassifier(double sampleRate, double outlierSampleFraction) throws MacroBaseException {

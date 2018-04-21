@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 
+import javax.management.Attribute;
 import java.util.*;
 
 /**
@@ -133,5 +134,11 @@ public class APLExplanationResult {
             "matches", matchString,
             "aggregates", aggregateString
         );
+    }
+
+    public boolean equals(APLExplanationResult other, AttributeEncoder encoder, AttributeEncoder otherEncoder) {
+        Map<String, String> matches = prettyPrintMatch(encoder);
+        Map<String, String> otherMatches = other.prettyPrintMatch(otherEncoder);
+        return matches.equals(otherMatches);
     }
 }

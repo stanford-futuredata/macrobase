@@ -40,6 +40,10 @@ public class APLExplanation implements Explanation {
         return results;
     }
 
+    public AttributeEncoder getEncoder() {
+        return encoder;
+    }
+
     @JsonProperty("results")
     public List<Map<String, Map<String, String>>> results() {
         List<Map<String, Map<String, String>>> r = new ArrayList<>();
