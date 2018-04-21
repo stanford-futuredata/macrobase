@@ -29,8 +29,12 @@ public class APLOutlierSummarizer extends APLSummarizer {
 
     @Override
     public int[][] getEncoded(List<String[]> columns, DataFrame input) {
-        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport,
-            input.getDoubleColumnByName(outlierColumn));
+        if (simpleEncoding) {
+            return encoder.encodeAttributesAsArray(columns);
+        } else {
+            return encoder.encodeAttributesWithSupport(columns, minOutlierSupport,
+                    input.getDoubleColumnByName(outlierColumn));
+        }
     }
 
     @Override

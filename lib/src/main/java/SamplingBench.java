@@ -37,6 +37,9 @@ public class SamplingBench {
     private int numTrials;
     private int warmupTime;
 
+    private boolean useBasic;
+    private boolean simpleEncoding;
+
     private boolean verbose = false;
     private boolean calcError = false;
     private boolean appendTimeStamp = true;
@@ -60,6 +63,9 @@ public class SamplingBench {
         outlierSampleFractions = conf.get("outlierSampleFractions");
         numTrials = conf.get("numTrials");
         warmupTime = conf.get("warmupTime", 5);
+
+        useBasic = conf.get("basic", false);
+        simpleEncoding = conf.get("simpleEncoding", false);
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);
@@ -120,12 +126,20 @@ public class SamplingBench {
                     curResults.put("sampling_time", String.format("%f", classifier.classificationTime));
                     curResults.put("encoding_time", String.format("%f", summarizer.encodingTime));
                     curResults.put("explanation_time", String.format("%f", summarizer.explanationTime));
-                    curResults.put("shard_time", String.format("%f", summarizer.aplKernel.shardTime));
-                    curResults.put("initialization_time", String.format("%f", summarizer.aplKernel.initializationTime));
-                    curResults.put("rowstore_time", String.format("%f", summarizer.aplKernel.rowstoreTime));
-                    curResults.put("order1_time", String.format("%f", summarizer.aplKernel.explainTime[0]));
-                    curResults.put("order2_time", String.format("%f", summarizer.aplKernel.explainTime[1]));
-                    curResults.put("order3_time", String.format("%f", summarizer.aplKernel.explainTime[2]));
+                    if (useBasic) {
+                        curResults.put("initialization_time", String.format("%f", summarizer.aplBasicKernel.initializationTime));
+                        curResults.put("rowstore_time", String.format("%f", summarizer.aplBasicKernel.rowstoreTime));
+                        curResults.put("order1_time", String.format("%f", summarizer.aplBasicKernel.explainTime[0]));
+                        curResults.put("order2_time", String.format("%f", summarizer.aplBasicKernel.explainTime[1]));
+                        curResults.put("order3_time", String.format("%f", summarizer.aplBasicKernel.explainTime[2]));
+                    } else {
+                        curResults.put("shard_time", String.format("%f", summarizer.aplKernel.shardTime));
+                        curResults.put("initialization_time", String.format("%f", summarizer.aplKernel.initializationTime));
+                        curResults.put("rowstore_time", String.format("%f", summarizer.aplKernel.rowstoreTime));
+                        curResults.put("order1_time", String.format("%f", summarizer.aplKernel.explainTime[0]));
+                        curResults.put("order2_time", String.format("%f", summarizer.aplKernel.explainTime[1]));
+                        curResults.put("order3_time", String.format("%f", summarizer.aplKernel.explainTime[2]));
+                    }
                     curResults.put("num_results", String.format("%d", summarizer.numResults));
                     curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
                     curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
@@ -200,6 +214,8 @@ public class SamplingBench {
 //                summarizer.setSampleRate(sampleRate);
         summarizer.setInlierWeight(classifier.getInlierWeight());
         summarizer.setOutlierSampleRate(classifier.getOutlierSampleRate());
+        summarizer.setBasic(useBasic);
+        summarizer.setSimpleEncoding(simpleEncoding);
         summarizer.setCalcErrors(sampleRate < 1.0);
         summarizer.setFullNumOutliers(classifier.getNumOutliers());
         summarizer.setVerbose(false);

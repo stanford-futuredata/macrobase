@@ -32,6 +32,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     int fullNumOutliers;
     boolean verbose = true;
     boolean basic = false;
+    boolean simpleEncoding = false;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -156,4 +157,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setFullNumOutliers(int fullNumOutliers) { this.fullNumOutliers = fullNumOutliers; }
     public void setVerbose(boolean verbose) { this.verbose = verbose; }
     public void setBasic(boolean basic) { this.basic = basic; }
+    public void setSimpleEncoding(boolean simpleEncoding) { this.simpleEncoding = simpleEncoding; }
 }
