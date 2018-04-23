@@ -103,6 +103,11 @@ public class BasicSupportBench {
                 curResults.put("order2_time", String.format("%f", summarizer.aplBasicKernel.explainTime[1]));
                 curResults.put("order3_time", String.format("%f", summarizer.aplBasicKernel.explainTime[2]));
                 curResults.put("num_results", String.format("%d", summarizer.numResults));
+                curResults.put("num_results_o1", String.format("%d", summarizer.aplBasicKernel.numSaved[0]));
+                curResults.put("num_results_o2", String.format("%d", summarizer.aplBasicKernel.numSaved[1]));
+                curResults.put("num_results_o3", String.format("%d", summarizer.aplBasicKernel.numSaved[2]));
+                curResults.put("num_next_o1", String.format("%d", summarizer.aplBasicKernel.numNext[0]));
+                curResults.put("num_next_o2", String.format("%d", summarizer.aplBasicKernel.numNext[1]));
                 curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
                 curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
                 curResults.put("precision", String.format("%f", (double) numMatches / summarizer.numResults));

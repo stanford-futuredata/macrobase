@@ -14,7 +14,7 @@ import java.util.*;
  * which can be combined additively. Then, we use APriori to find the subgroups which
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
-public class APrioriBasic {
+public class APrioriBasic extends APriori {
     Logger log = LoggerFactory.getLogger("APrioriBasic");
 
     // **Parameters**
@@ -29,10 +29,6 @@ public class APrioriBasic {
     HashMap<Integer, HashSet<IntSetAsArray>> setNext;
     // aggregate values for all of the sets we saved
     HashMap<Integer, HashMap<IntSetAsArray, double[]>> savedAggregates;
-
-    public double initializationTime = 0;
-    public double rowstoreTime = 0;
-    public double[] explainTime = {0, 0, 0};
 
     public APrioriBasic(
             List<QualityMetric> qualityMetrics,
@@ -128,11 +124,13 @@ public class APrioriBasic {
                     // save it and no need for further exploration
                     if (isPastThreshold) {
                         curOrderSaved.add(curCandidate);
+                        numSaved[curOrder - 1]++;
                     }
                     else {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
                         curOrderNext.add(curCandidate);
+                        numNext[curOrder - 1]++;
                     }
                 } else {
                     pruned++;

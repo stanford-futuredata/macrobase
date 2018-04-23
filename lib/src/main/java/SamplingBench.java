@@ -3,10 +3,7 @@ import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
 import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -126,20 +123,25 @@ public class SamplingBench {
                     curResults.put("sampling_time", String.format("%f", classifier.classificationTime));
                     curResults.put("encoding_time", String.format("%f", summarizer.encodingTime));
                     curResults.put("explanation_time", String.format("%f", summarizer.explanationTime));
+
+                    APriori kernel;
                     if (useBasic) {
-                        curResults.put("initialization_time", String.format("%f", summarizer.aplBasicKernel.initializationTime));
-                        curResults.put("rowstore_time", String.format("%f", summarizer.aplBasicKernel.rowstoreTime));
-                        curResults.put("order1_time", String.format("%f", summarizer.aplBasicKernel.explainTime[0]));
-                        curResults.put("order2_time", String.format("%f", summarizer.aplBasicKernel.explainTime[1]));
-                        curResults.put("order3_time", String.format("%f", summarizer.aplBasicKernel.explainTime[2]));
+                        kernel = summarizer.aplBasicKernel;
                     } else {
-                        curResults.put("shard_time", String.format("%f", summarizer.aplKernel.shardTime));
-                        curResults.put("initialization_time", String.format("%f", summarizer.aplKernel.initializationTime));
-                        curResults.put("rowstore_time", String.format("%f", summarizer.aplKernel.rowstoreTime));
-                        curResults.put("order1_time", String.format("%f", summarizer.aplKernel.explainTime[0]));
-                        curResults.put("order2_time", String.format("%f", summarizer.aplKernel.explainTime[1]));
-                        curResults.put("order3_time", String.format("%f", summarizer.aplKernel.explainTime[2]));
+                        kernel = summarizer.aplKernel;
                     }
+                    curResults.put("shard_time", String.format("%f", kernel.shardTime));
+                    curResults.put("initialization_time", String.format("%f", kernel.initializationTime));
+                    curResults.put("rowstore_time", String.format("%f", kernel.rowstoreTime));
+                    curResults.put("order1_time", String.format("%f", kernel.explainTime[0]));
+                    curResults.put("order2_time", String.format("%f", kernel.explainTime[1]));
+                    curResults.put("order3_time", String.format("%f", kernel.explainTime[2]));
+                    curResults.put("num_results_o1", String.format("%d", kernel.numSaved[0]));
+                    curResults.put("num_results_o2", String.format("%d", kernel.numSaved[1]));
+                    curResults.put("num_results_o3", String.format("%d", kernel.numSaved[2]));
+                    curResults.put("num_next_o1", String.format("%d", kernel.numNext[0]));
+                    curResults.put("num_next_o2", String.format("%d", kernel.numNext[1]));
+
                     curResults.put("num_results", String.format("%d", summarizer.numResults));
                     curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
                     curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));

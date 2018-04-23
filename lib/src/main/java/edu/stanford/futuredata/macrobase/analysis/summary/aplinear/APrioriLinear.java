@@ -18,7 +18,7 @@ import java.util.concurrent.CountDownLatch;
  * which can be combined additively. Then, we use APriori to find the subgroups which
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
-public class APrioriLinear {
+public class APrioriLinear extends APriori {
     private Logger log = LoggerFactory.getLogger("APrioriLinear");
 
     // **Parameters**
@@ -33,12 +33,6 @@ public class APrioriLinear {
     private HashMap<Integer, HashSet<IntSet>> setNext;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
-
-//    public long sampleTime = 0;
-    public double shardTime = 0;
-    public double initializationTime = 0;
-    public double rowstoreTime = 0;
-    public double[] explainTime = {0, 0, 0};
 
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
@@ -354,11 +348,13 @@ public class APrioriLinear {
                             // if a set is already past the threshold on all metrics,
                             // save it and no need for further exploration if we do containment
                             curOrderSaved.add(curCandidate);
+                            numSaved[curOrder - 1]++;
                         }
                     } else if (action == QualityMetric.Action.NEXT) {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
                         curOrderNext.add(curCandidate);
+                        numNext[curOrder - 1]++;
                     }
                 }
             }
