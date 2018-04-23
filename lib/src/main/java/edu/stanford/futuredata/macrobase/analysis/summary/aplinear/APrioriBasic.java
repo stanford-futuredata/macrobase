@@ -150,6 +150,9 @@ public class APrioriBasic extends APriori {
                 }
             }
             explainTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
+            if (curOrderNext.isEmpty()) {
+                break;
+            }
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
