@@ -22,26 +22,21 @@ export class QueryService {
   constructor(private http: HttpClient, private messageService: MessageService) { }
 
   queryResult: QueryResult;
-  resultsString: string;
 
   runQuery(query: Query) {
     this.messageService.add("Running query on: " + JSON.stringify(query));
     this.http.post<QueryResult>(this.queryURL, JSON.stringify(query))
       .subscribe(
         data => {this.queryResult = data;
-                 this.updateString();},
+                 this.updateMatchingAttributes();},
         err => {this.handleError('runQuery()', err);}
       );
-    // this.http.post<QueryResult>(this.queryURL, '{"pipeline":"BasicBatchPipeline","inputURI":"csv://core/demo/sample.csv","classifier":"percentile","metric":"usage","cutoff":1.0,"includeHi":true,"includeLo":true,"summarizer":"aplinear","attributes":["location","version"],"ratioMetric":"globalratio","minRatioMetric":10.0,"minSupport":0.2}')
-    //   .subscribe(
-    //     data => {this.queryResult = data;
-    //              this.updateString();},
-    //     err => {this.handleError('runQuery()', err);}
-    //   )
   }
 
-  updateString() {
-    this.resultsString = JSON.stringify(this.queryResult.results, undefined, 3);
+  updateMatchingAttributes() {
+    this.queryResult.results.forEach( (result) => {
+      result.matcherString = JSON.stringify(result.matcher);
+    })
   }
 
   private handleError(fname: string, err: HttpErrorResponse) {

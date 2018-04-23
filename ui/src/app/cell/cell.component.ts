@@ -7,7 +7,6 @@ import { QueryService } from '../query.service'
   styleUrls: ['./cell.component.css']
 })
 export class CellComponent implements OnInit {
-
   constructor(private queryService: QueryService) { }
 
   ngOnInit() {

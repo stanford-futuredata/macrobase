@@ -10,19 +10,24 @@
 }
 
 .wizard {
-    height: 100%;
-    width: 30%;
-    position: fixed;
+/*    height: 100%;
+    width: 30%;*/
     top: 0;
     left: 0;
-    padding-top: 10px;
-    padding-left: 10px;
+/*    padding-top: 10px;
+    padding-left: 10px;*/
+    color: black;
+    background-color: #C0C0C0;
 }
 
 .cell {
-    display: inline;
+    display: block;
     color: black;
-    /*left: 30%;*/
+    /*width: 100%;
+    height: 50%;*/
+    top: 0;
+    left: 0;
+    background-color: #C0C0C0;
 }
 
 .footer {

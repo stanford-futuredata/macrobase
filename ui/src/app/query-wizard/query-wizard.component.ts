@@ -69,8 +69,8 @@ export class QueryWizardComponent implements OnInit {
         "version"
       ],
       ratioMetric: "globalratio",
-      minRatioMetric: 10.1,
-      minSupport: 0.2
+      minRatioMetric: 1.0,
+      minSupport: 0.01
     };
 
     this.metricSet.add(this.query.metric);

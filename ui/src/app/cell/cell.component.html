@@ -1,14 +1,14 @@
-<h2>
-    Cell
-</h2>
-
 <div *ngIf="this.queryService.queryResult">
-  #events: {{this.queryService.queryResult.numTotal}}
-  <br>
-  #outliers: {{this.queryService.queryResult.outliers}}
-  <br>
-  Results:
-  <pre>
-    {{this.queryService.resultsString}}
-  </pre>
+  #Total Events: {{this.queryService.queryResult.numTotal}} <br>
+  #Total Outliers: {{this.queryService.queryResult.outliers}} <br>
+
+  <div *ngFor="let result of this.queryService.queryResult.results">
+    <p>
+      Attributes: {{result.matcherString}} <br>
+      Outlier Count: {{result.aggregate.Outliers}} <br>
+      Total Count:   {{result.aggregate.Count}} <br>
+      Global Ratio:  {{result.metric.global_ratio}} <br>
+      Support:       {{result.metric.support}}
+    </p>
+  </div>
 </div>
