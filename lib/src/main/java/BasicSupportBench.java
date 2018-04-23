@@ -47,6 +47,7 @@ public class BasicSupportBench {
     }
 
     public static void main(String[] args) throws Exception {
+        long start = System.currentTimeMillis();
         String confFile = args[0];
         BasicSupportBench bench = new BasicSupportBench(confFile);
 
@@ -54,6 +55,8 @@ public class BasicSupportBench {
         CSVOutput output = new CSVOutput();
         output.setAddTimeStamp(bench.appendTimeStamp);
         output.writeAllResults(results, bench.testName);
+        long elapsed = System.currentTimeMillis() - start;
+        System.out.format("Benchmark time: %.3f s\n", elapsed / 1.e3);
     }
 
     public List<Map<String, String>> run() throws Exception {

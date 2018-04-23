@@ -70,6 +70,7 @@ public class SamplingBench {
     }
 
     public static void main(String[] args) throws Exception {
+        long start = System.currentTimeMillis();
         String confFile = args[0];
         SamplingBench bench = new SamplingBench(confFile);
 
@@ -77,6 +78,8 @@ public class SamplingBench {
         CSVOutput output = new CSVOutput();
         output.setAddTimeStamp(bench.appendTimeStamp);
         output.writeAllResults(results, bench.testName);
+        long elapsed = System.currentTimeMillis() - start;
+        System.out.format("Benchmark time: %.3f s\n", elapsed / 1.e3);
     }
 
     public List<Map<String, String>> run() throws Exception {
