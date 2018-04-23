@@ -21,20 +21,20 @@ export class QueryService {
 
   constructor(private http: HttpClient, private messageService: MessageService) { }
 
-  queryResult: QueryResult;
+  queryResults = new Map();
 
-  runQuery(query: Query) {
-    this.messageService.add("Running query on: " + JSON.stringify(query));
+  runQuery(query: Query, id: number) {
+    this.messageService.add("Query " + id + ": Running query on: " + JSON.stringify(query));
     this.http.post<QueryResult>(this.queryURL, JSON.stringify(query))
       .subscribe(
-        data => {this.queryResult = data;
-                 this.updateMatchingAttributes();},
+        data => {this.queryResults.set(id, data);
+                 this.updateMatchingAttributes(id);},
         err => {this.handleError('runQuery()', err);}
       );
   }
 
-  updateMatchingAttributes() {
-    this.queryResult.results.forEach( (result) => {
+  updateMatchingAttributes(id: number) {
+    this.queryResults.get(id).results.forEach( (result) => {
       result.matcherString = JSON.stringify(result.matcher);
     })
   }

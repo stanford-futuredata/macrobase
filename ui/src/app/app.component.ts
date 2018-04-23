@@ -6,18 +6,27 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'MacroBase';
+  displayMessages = false;
+  id = 0;
+  validIDs = new Set();
 
-  openWizard(): void {
-      // document.getElementById("main").style.marginLeft = "20%";
-      // document.getElementById("wizard").style.width = "20%";
-      document.getElementById("wizard").style.display = "inline-block";
-      document.getElementById("openWizard").style.display = 'none';
+  newQuery() {
+    this.validIDs.add(this.id);
+    this.id++;
   }
 
-   closeWizard(): void {
-      document.getElementById("main").style.marginLeft = "0%";
-      document.getElementById("wizard").style.display = "none";
-      document.getElementById("openWizard").style.display = "block";
+  deleteQuery(id: number) {
+    this.validIDs.delete(id);
   }
+
+  minimizeCell(id: number){
+    document.getElementById("cell"+id).style.display = "none";
+    document.getElementById("expandCell"+id).style.display = "block";
+  }
+
+  expandCell(id: number){
+    document.getElementById("cell"+id).style.display = "block";
+    document.getElementById("expandCell"+id).style.display = "none";
+  }
+
 }

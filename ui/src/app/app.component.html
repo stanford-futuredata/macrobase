@@ -1,17 +1,29 @@
-<div id="wizard" class="wizard" style="display:none">
-    <button style="float:right;" (click)="closeWizard()"> < </button>
-    <app-query-wizard></app-query-wizard>
+<div *ngFor="let id of validIDs">
+
+  <div id="wizard{{id}}" class="wizard">
+      <div style="text-align: right">
+        <button class="closeButton" (click)="deleteQuery(id)"> X </button>
+      </div>
+      <app-query-wizard id={{id}}></app-query-wizard>
+  </div>
+
+  <div id="cell{{id}}" class="cell">
+      <app-cell id={{id}}></app-cell>
+      <div style="text-align: right">
+        <button class="minimizeButton" (click)="minimizeCell(id)"> - </button>
+      </div>
+  </div>
+
+  <div id="expandCell{{id}}" class="cell" style="display:none; text-align:right;">
+    <button class="minimizeButton" (click)="expandCell(id)"> | </button>
+  </div>
+
+  <br>
+
 </div>
 
+<button class="addButton" (click)="newQuery()"> + </button>
 
-<div id="main" style="display:inline-block">
-    <div class="cell">
-        <button id="openWizard" (click)="openWizard()"> > </button>
-        <app-cell></app-cell>
-    </div>
-
-</div>
-
-<div class="footer">
+<div class="footer" *ngIf="displayMessages">
   <app-messages></app-messages>
 </div>

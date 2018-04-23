@@ -1,56 +1,45 @@
-<div>
+<table cellpadding="10">
+    <td>
+        <b> Metric: </b>
+        <select [(ngModel)]="selectedMetric">
+            <option *ngFor="let possibleMetric of possibleMetrics"
+                    [value] = "possibleMetric">
+                {{possibleMetric}}
+            </option>
+        </select>
+    </td>
 
-<div class="title">
-    Query Wizard
-</div>
+    <td align="right">
+        <b> Support: </b>
+        <input [(ngModel)]="minSupport">
+    </td>
+
+    <td>
+        <b> Risk Ratio: </b>
+        <input [(ngModel)]="minRatioMetric">
+    </td>
+</table>
+
 <br>
 
-Metrics:
-<select [(ngModel)]="selectedMetric">
-    <option></option>
-    <option *ngFor="let possibleMetric of possibleMetrics"
-            [value] = "possibleMetric">
-        {{possibleMetric}}
-    </option>
-</select>
-<button (click)="addMetric()"> + </button>
+<table cellpadding="10">
+    <td>
+        <b> Attributes: </b>
+        <select [(ngModel)]="selectedAttribute">
+            <option></option>
+            <option *ngFor="let possibleAttribute of possibleAttributes" [value] = "possibleAttribute">
+                {{possibleAttribute}}
+            </option>
+        </select>
+        <button (click)="addAttribute()"> Add </button>
+    </td>
 
-<ul *ngFor="let metric of metricSet">
-    <div>
-        {{metric}}
-        <button (click)="removeMetric(metric)"> - </button>
-    </div>
-</ul>
-<br>
-
-Attributes:
-<select [(ngModel)]="selectedAttribute">
-    <option></option>
-    <option *ngFor="let possibleAttribute of possibleAttributes"
-            [value] = "possibleAttribute">
-        {{possibleAttribute}}
-    </option>
-</select>
-<button (click)="addAttribute()"> + </button>
-
-<ul *ngFor="let attribute of attributeSet">
-    <div>
+    <td *ngFor="let attribute of attributeSet" class="attribute">
         {{attribute}}
         <button (click)="removeAttribute(attribute)"> - </button>
-    </div>
-</ul>
-<br>
+    </td>
+</table>
 
-Support:
-<div>
-    <input [(ngModel)]="minSupport">
+<div style="text-align:right;">
+    <button class="submitButton" (click)="runQuery()"> Run Query </button>
 </div>
-<br>
-
-Risk Ratio:
-<div>
-    <input [(ngModel)]="minRatioMetric">
-</div>
-<br>
-
-<button (click)="runQuery()"> Run Query </button>

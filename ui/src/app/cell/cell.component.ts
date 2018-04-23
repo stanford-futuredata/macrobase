@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { QueryService } from '../query.service'
 
 @Component({
@@ -7,7 +7,10 @@ import { QueryService } from '../query.service'
   styleUrls: ['./cell.component.css']
 })
 export class CellComponent implements OnInit {
-  constructor(private queryService: QueryService) { }
+  @Input() id: number;
+
+  constructor(private queryService: QueryService) {
+  }
 
   ngOnInit() {
   }
