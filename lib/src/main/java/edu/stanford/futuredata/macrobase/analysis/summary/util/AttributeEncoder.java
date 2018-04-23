@@ -1,5 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
+import org.w3c.dom.Attr;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -154,6 +156,62 @@ public class AttributeEncoder {
         }
 
         return encodedAttributes;
+    }
+
+    public static int[][] encodeAttributesAsArray(List<String[]> columns, AttributeEncoder ae) {
+        if (columns.isEmpty()) {
+            return new int[0][0];
+        }
+
+        int numColumns = columns.size();
+        int numRows = columns.get(0).length;
+
+        int[][] encodedAttributes = new int[numRows][numColumns];
+
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            Map<String, Integer> curColEncoder = ae.encoder.get(colIdx);
+            String[] curCol = columns.get(colIdx);
+            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+                String colVal = curCol[rowIdx];
+                int curKey = curColEncoder.get(colVal);
+                encodedAttributes[rowIdx][colIdx] = curKey;
+            }
+        }
+
+        return encodedAttributes;
+    }
+
+    public static AttributeEncoder encode(List<String[]> columns) {
+        AttributeEncoder ae = new AttributeEncoder();
+
+        if (columns.isEmpty()) {
+            return ae;
+        }
+
+        int numColumns = columns.size();
+        int numRows = columns.get(0).length;
+
+        for (int i = 0; i < numColumns; i++) {
+            if (!ae.encoder.containsKey(i)) {
+                ae.encoder.put(i, new HashMap<>());
+            }
+        }
+
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            Map<String, Integer> curColEncoder = ae.encoder.get(colIdx);
+            String[] curCol = columns.get(colIdx);
+            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
+                String colVal = curCol[rowIdx];
+                if (!curColEncoder.containsKey(colVal)) {
+                    curColEncoder.put(colVal, ae.nextKey);
+                    ae.valueDecoder.put(ae.nextKey, colVal);
+                    ae.columnDecoder.put(ae.nextKey, colIdx);
+                    ae.nextKey++;
+                }
+            }
+        }
+
+        return ae;
     }
 
     public List<int[]> encodeAttributes(List<String[]> columns) {

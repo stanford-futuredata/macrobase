@@ -67,8 +67,11 @@ public abstract class APLSummarizer extends BatchSummarizer {
         return countCol;
     }
 
-
     public void process(DataFrame input) throws Exception {
+        process(input, true);
+    }
+
+    public void process(DataFrame input, boolean doEncoding) throws Exception {
         long startTime, elapsed;
 
 //        startTime = System.currentTimeMillis();
@@ -78,17 +81,24 @@ public abstract class APLSummarizer extends BatchSummarizer {
 //        elapsed = System.currentTimeMillis() - startTime;
 //        log.info("Sampled in: {} ms", elapsed);
 
-        encoder = new AttributeEncoder();
-        encoder.setColumnNames(attributes);
-        startTime = System.currentTimeMillis();
-        int[][] encoded = getEncoded(input.getStringColsByName(attributes), input);
-        elapsed = System.currentTimeMillis() - startTime;
-        if (verbose) {
-            log.info("Encoded in: {} ms", elapsed);
-            log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
+        int[][] encoded;
+        if (doEncoding) {
+            encoder = new AttributeEncoder();
+            encoder.setColumnNames(attributes);
+            startTime = System.currentTimeMillis();
+            encoded = getEncoded(input.getStringColsByName(attributes), input);
+            elapsed = System.currentTimeMillis() - startTime;
+            if (verbose) {
+                log.info("Encoded in: {} ms", elapsed);
+                log.info("Encoded Categories: {}", encoder.getNextKey() - 1);
+            } else {
+                encodingTime = elapsed;
+                numEncodedCategories = encoder.getNextKey() - 1;
+            }
         } else {
-            encodingTime = elapsed;
-            numEncodedCategories = encoder.getNextKey() - 1;
+            startTime = System.currentTimeMillis();
+            encoded = AttributeEncoder.encodeAttributesAsArray(input.getStringColsByName(attributes), encoder);
+            encodingTime = System.currentTimeMillis() - startTime;
         }
 
         thresholds = getThresholds();
@@ -158,4 +168,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setVerbose(boolean verbose) { this.verbose = verbose; }
     public void setBasic(boolean basic) { this.basic = basic; }
     public void setSimpleEncoding(boolean simpleEncoding) { this.simpleEncoding = simpleEncoding; }
+    public void setEncoder(AttributeEncoder encoder) { this.encoder = encoder; }
 }

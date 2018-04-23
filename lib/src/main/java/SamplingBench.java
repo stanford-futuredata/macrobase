@@ -5,6 +5,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
@@ -12,11 +13,13 @@ import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import io.CSVOutput;
 import org.apache.commons.math3.analysis.function.Exp;
 
+import javax.management.Attribute;
 import java.io.IOException;
 import java.util.*;
 
 public class SamplingBench {
     private String testName;
+    private String baseDir;
     private String fileName;
 
     private String metric;
@@ -36,6 +39,7 @@ public class SamplingBench {
 
     private boolean useBasic;
     private boolean simpleEncoding;
+    private boolean preEncode;
 
     private boolean verbose = false;
     private boolean calcError = false;
@@ -44,6 +48,7 @@ public class SamplingBench {
     public SamplingBench(String confFile) throws IOException{
         RunConfig conf = RunConfig.fromJsonFile(confFile);
         testName = conf.get("testName");
+        baseDir = conf.get("baseDir", "results");
         fileName = conf.get("fileName");
 
         metric = conf.get("metric");
@@ -63,6 +68,7 @@ public class SamplingBench {
 
         useBasic = conf.get("basic", false);
         simpleEncoding = conf.get("simpleEncoding", false);
+        preEncode = conf.get("preEncode", false);
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);
@@ -76,6 +82,7 @@ public class SamplingBench {
 
         List<Map<String, String>> results = bench.run();
         CSVOutput output = new CSVOutput();
+        output.setBaseDir(bench.baseDir);
         output.setAddTimeStamp(bench.appendTimeStamp);
         output.writeAllResults(results, bench.testName);
         long elapsed = System.currentTimeMillis() - start;
@@ -95,6 +102,12 @@ public class SamplingBench {
         APLExplanation trueOutput = warmStart(df);
         int numTrueResults = trueOutput.getResults().size();
 
+        AttributeEncoder encoder = null;
+        if (preEncode) {
+            encoder = AttributeEncoder.encode(df.getStringColsByName(attributes));
+            encoder.setColumnNames(attributes);
+        }
+
         for (double sr : sampleRates) {
             for (double osf : outlierSampleFractions) {
                 System.out.format("Sample rate %.4f, outlier sample fraction %.4f\n", sr, osf);
@@ -107,13 +120,18 @@ public class SamplingBench {
                     long classificationTime = System.currentTimeMillis() - startTime;
                     DataFrame classifiedDF = classifier.getResults();
 
-                    APLSummarizer summarizer = getSummarizer(classifier.getOutputColumnName(), classifier, sr);
+                    APLSummarizer summarizer = getSummarizer(classifier.getOutputColumnName(), classifier, sr, encoder);
 
                     startTime = System.currentTimeMillis();
-                    summarizer.process(classifiedDF);
+                    summarizer.process(classifiedDF, !preEncode);
                     long summarizationTime = System.currentTimeMillis() - startTime;
                     APLExplanation output = summarizer.getResults();
-                    int numMatches = getNumMatches(output, trueOutput);
+                    int numMatches;
+                    if (preEncode) {
+                        numMatches = getNumMatches(output, trueOutput, encoder);
+                    } else {
+                        numMatches = getNumMatches(output, trueOutput);
+                    }
 
                     Map<String, String> curResults = new HashMap<>();
                     curResults.put("dataset", fileName);
@@ -167,7 +185,7 @@ public class SamplingBench {
             classifier.process(df);
             DataFrame classifiedDF = classifier.getResults();
 
-            APLSummarizer summarizer = getSummarizer(classifier.getOutputColumnName(), classifier, 1.0);
+            APLSummarizer summarizer = getSummarizer(classifier.getOutputColumnName(), classifier, 1.0, null);
 
             summarizer.process(classifiedDF);
             trueOutput = summarizer.getResults();
@@ -195,6 +213,26 @@ public class SamplingBench {
         return numMatches;
     }
 
+    public int getNumMatches(APLExplanation output, APLExplanation trueOutput, AttributeEncoder encoder) {
+        List<APLExplanationResult> results = output.getResults();
+        List<APLExplanationResult> trueResults = trueOutput.getResults();
+
+        int numResults = results.size();
+        int trueNumResults = trueResults.size();
+        int numMatches = 0;
+
+        for (APLExplanationResult result : results) {
+            for (APLExplanationResult trueResult : trueResults) {
+                if (result.equals(trueResult, encoder, encoder)) {
+                    numMatches++;
+                    break;
+                }
+            }
+        }
+
+        return numMatches;
+    }
+
     public PercentileClassifier getClassifier(double sampleRate, double outlierSampleFraction) throws MacroBaseException {
         PercentileClassifier classifier = new PercentileClassifier(metric);
         classifier.setPercentile(cutoff);
@@ -208,7 +246,7 @@ public class SamplingBench {
         return classifier;
     }
 
-    public APLSummarizer getSummarizer(String outlierColumnName, Classifier classifier, double sampleRate) throws MacroBaseException {
+    public APLSummarizer getSummarizer(String outlierColumnName, Classifier classifier, double sampleRate, AttributeEncoder encoder) throws MacroBaseException {
         APLOutlierSummarizer summarizer = new APLOutlierSummarizer();
         summarizer.setOutlierColumn(outlierColumnName);
         summarizer.setAttributes(attributes);
@@ -221,6 +259,9 @@ public class SamplingBench {
         summarizer.setOutlierSampleRate(classifier.getOutlierSampleRate());
         summarizer.setBasic(useBasic);
         summarizer.setSimpleEncoding(simpleEncoding);
+        if (preEncode) {
+            summarizer.setEncoder(encoder);
+        }
         summarizer.setCalcErrors(sampleRate < 1.0);
         summarizer.setFullNumOutliers(classifier.getNumOutliers());
         summarizer.setVerbose(false);

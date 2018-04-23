@@ -50,4 +50,5 @@ public class CSVOutput {
     public void setAddTimeStamp(boolean addTimeStamp) {
         this.addTimeStamp = addTimeStamp;
     }
+    public void setBaseDir(String baseDir) { this.baseDir = baseDir; }
 }
