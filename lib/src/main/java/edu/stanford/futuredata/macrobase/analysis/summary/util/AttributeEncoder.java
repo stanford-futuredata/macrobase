@@ -163,7 +163,7 @@ public class AttributeEncoder {
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
-            if (useBitmaps && outlierList[colIdx].size() < cardinalityThreshold) {
+            if (useBitmaps && outlierList[colIdx].size() <= cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
@@ -183,8 +183,42 @@ public class AttributeEncoder {
         return encodedAttributes;
     }
 
+    /**
+     * Determines a cardinality threshold for a set of columns given the columns' cardinalities.
+     * Applies a cost model which assumes that the "normal" cost of candidate generation is largely
+     * invariant while the bitmap cost depends on the products of cardinalities of the
+     * bitmap-encoded columns.
+     * @param colCardinalities  Column cardinalities.
+     * @return Optimal cardinality threshold.
+     */
     protected int computeCardinalityThreshold(int[] colCardinalities) {
-        return 5;
+
+        // Ratio of speed of analyzing candidates in a triplet of columns
+        // versus a single three-bitmap andCardinality.
+        final int andCardinalityCost = 100;
+
+        Arrays.sort(colCardinalities);
+        if (colCardinalities.length < 3)
+            return Integer.MAX_VALUE;
+        int cardinalityThreshold = 0;
+        for(int colIdx = 2; colIdx < colCardinalities.length; colIdx++) {
+            int potentialThreshold = colCardinalities[colIdx];
+            // The cost of analyzing candidates "normally" without bitmaps.
+            int normalCost = colIdx * (colIdx - 1) * andCardinalityCost;
+            // The cost of analyzing candidates encoded as bitmaps.
+            // This number is a sum of all products of potentialThreshold with
+            // all products of lower cardinalities.
+            int bitmapCost = 0;
+            for (int i = 0; i < colIdx; i++) {
+                for (int j = i + 1; j < colIdx; j++) {
+                    bitmapCost += colCardinalities[i] * colCardinalities[j] * potentialThreshold;
+                }
+            }
+            if (bitmapCost < normalCost) {
+                cardinalityThreshold = potentialThreshold;
+            }
+        }
+        return cardinalityThreshold;
     }
 
     public int[][] encodeAttributesAsArray(List<String[]> columns) {
