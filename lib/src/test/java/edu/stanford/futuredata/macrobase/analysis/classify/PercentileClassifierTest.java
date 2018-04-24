@@ -78,6 +78,10 @@ public class PercentileClassifierTest {
         );
         int numOutliers = outliers.getNumRows();
         assertTrue(numOutliers == 50);
+        double[] vals = outliers.getDoubleColumnByName("val");
+        for (double val : vals) {
+            assertTrue(val >= 900);
+        }
     }
 
     @Test
@@ -98,6 +102,10 @@ public class PercentileClassifierTest {
         );
         int numOutliers = outliers.getNumRows();
         assertTrue(numOutliers == 75);
+        double[] vals = outliers.getDoubleColumnByName("val");
+        for (double val : vals) {
+            assertTrue(val >= 900);
+        }
     }
 
     @Test

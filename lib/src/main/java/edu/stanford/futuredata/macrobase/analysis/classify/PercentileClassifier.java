@@ -99,7 +99,7 @@ public class PercentileClassifier extends Classifier implements ThresholdClassif
                 int sampleSize = (int) (len * sampleRate);
                 int[] sampleIndices = new int[sampleSize];
 
-                ReservoirSampler outlierSampler = new ReservoirSampler(sampleSize);
+                ReservoirSampler outlierSampler = new ReservoirSampler((int) (sampleSize * outlierSampleFraction));
                 ReservoirSampler inlierSampler = new ReservoirSampler(sampleSize);
 
                 for (int i = 0; i < len; i++) {
