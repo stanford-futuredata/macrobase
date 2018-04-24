@@ -195,7 +195,7 @@ public class AttributeEncoder {
 
         // Ratio of speed of analyzing candidates in a triplet of columns
         // versus a single three-bitmap andCardinality.
-        final int andCardinalityCost = 100;
+        final int andCardinalityCost = 110;
 
         Arrays.sort(colCardinalities);
         if (colCardinalities.length < 3)
