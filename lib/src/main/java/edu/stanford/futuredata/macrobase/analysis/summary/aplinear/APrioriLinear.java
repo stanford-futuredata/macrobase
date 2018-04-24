@@ -54,7 +54,9 @@ public class APrioriLinear {
             int numThreads,
             HashMap<Integer, RoaringBitmap>[][] bitmap,
             ArrayList<Integer>[] outlierList,
-            boolean[] isBitmapEncoded
+            boolean[] isBitmapEncoded,
+            boolean useFDs,
+            int[] functionalDependencies
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
@@ -190,6 +192,10 @@ public class APrioriLinear {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                                //if FDs are enabled, and these two attribute cols are FDs, skip
+                                if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                    continue;
+                                }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
                                 if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
                                     // Bitmap-Bitmap
@@ -210,8 +216,17 @@ public class APrioriLinear {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                                //if FD on and attributes 1 and 2 are FDs, skip
+                                if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                    continue;
+                                }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
                                 for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
+                                    //if FD on and attribute 3 is FD w/ 1 or 2, skip
+                                    if (useFDs && (((functionalDependencies[colNumOne] & (1 << colNumThree)) == (1 << colNumThree))
+                                            || ((functionalDependencies[colNumTwo] & (1 << colNumThree)) == (1 << colNumThree)))) {
+                                        continue;
+                                    }
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
                                     if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
                                             isBitmapEncoded[colNumThree]) {

@@ -40,6 +40,9 @@ public class BasicBatchPipeline implements Pipeline {
     private double minSupport;
     private double minRiskRatio;
 
+    private boolean useFDs;
+    private int[] functionalDependencies;
+
 
     public BasicBatchPipeline (PipelineConfig conf) {
         inputURI = conf.get("inputURI");
@@ -70,6 +73,20 @@ public class BasicBatchPipeline implements Pipeline {
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
+
+        //if FDs are behind used, parse them into bitmaps. For now, all FDs must be in the first 31 attributes
+        useFDs = conf.get("useFDs", false);
+        if (useFDs) {
+            ArrayList<ArrayList<Integer>> rawDependencies = conf.get("functionalDependencies");
+            functionalDependencies = new int[attributes.size()];
+            for (ArrayList<Integer> dependency : rawDependencies) {
+                for (int i : dependency) {
+                    for (int j : dependency) {
+                        if (i != j) functionalDependencies[i] |= (1 << j);
+                    }
+                }
+            }
+        }
     }
 
     public Classifier getClassifier() throws MacroBaseException {
@@ -114,6 +131,8 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
                 summarizer.setNumThreads(numThreads);
+                summarizer.setFDUsage(useFDs);
+                summarizer.setFDValues(functionalDependencies);
                 return summarizer;
             }
             default: {
