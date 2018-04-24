@@ -22,7 +22,6 @@ public class AttributeEncoder {
     private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    private final int cardinalityThreshold = 5;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -125,6 +124,7 @@ public class AttributeEncoder {
         for (int i = 0; i < numColumns; i++)
             outlierList[i] = new ArrayList<>();
         isBitmapEncoded = new boolean[numColumns];
+        int[] colCardinalities = new int[numColumns];
 
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
@@ -155,6 +155,14 @@ public class AttributeEncoder {
                     outlierList[colIdx].add(curKey);
                 }
             }
+            colCardinalities[colIdx] = outlierList[colIdx].size();
+        }
+        log.info("Column cardinalities: {}", Arrays.toString(colCardinalities));
+        int cardinalityThreshold = computeCardinalityThreshold(colCardinalities);
+        log.info("Cardinality threshold: {}", cardinalityThreshold);
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            Map<String, Integer> curColEncoder = encoder.get(colIdx);
+            String[] curCol = columns.get(colIdx);
             if (useBitmaps && outlierList[colIdx].size() < cardinalityThreshold) {
                 isBitmapEncoded[colIdx] = true;
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
@@ -173,6 +181,10 @@ public class AttributeEncoder {
         }
         log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
         return encodedAttributes;
+    }
+
+    protected int computeCardinalityThreshold(int[] colCardinalities) {
+        return 5;
     }
 
     public int[][] encodeAttributesAsArray(List<String[]> columns) {
