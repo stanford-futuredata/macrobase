@@ -900,6 +900,31 @@ public class ModBitSet implements Cloneable, java.io.Serializable {
         checkInvariants();
     }
 
+    public static int andCardinality(ModBitSet setOne, ModBitSet setTwo) {
+        int cardinality = 0;
+        long curWord;
+        int minWordsInUse = Math.min(setOne.wordsInUse, setTwo.wordsInUse);
+        // Perform logical AND on words in common
+        for (int i = 0; i < minWordsInUse; i++) {
+            curWord = setOne.words[i] & setTwo.words[i];
+            cardinality += Long.bitCount(curWord);
+        }
+        return cardinality;
+    }
+
+    public static int andCardinality(ModBitSet setOne, ModBitSet setTwo, ModBitSet setThree) {
+        int cardinality = 0;
+        long curWord;
+        int minWordsInUse = Math.min(setOne.wordsInUse, setTwo.wordsInUse);
+        minWordsInUse = Math.min(minWordsInUse, setThree.wordsInUse);
+        // Perform logical AND on words in common
+        for (int i = 0; i < minWordsInUse; i++) {
+            curWord = setOne.words[i] & setTwo.words[i] & setThree.words[i];
+            cardinality += Long.bitCount(curWord);
+        }
+        return cardinality;
+    }
+
     /**
      * Performs a logical <b>OR</b> of this bit set with the bit set
      * argument. This bit set is modified so that a bit in it has the

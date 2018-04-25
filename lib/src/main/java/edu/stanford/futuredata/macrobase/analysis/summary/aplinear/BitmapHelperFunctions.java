@@ -74,15 +74,13 @@ public class BitmapHelperFunctions {
                 int outlierCount = 0, inlierCount = 0;
                 if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                         byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
-                    ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
-                    tempModBitSet.and( byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
-                    outlierCount = tempModBitSet.cardinality();
+                    outlierCount = ModBitSet.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
+                            byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
                 }
                 if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                         byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
-                    ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
-                    tempModBitSet.and( byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
-                    inlierCount = tempModBitSet.cardinality();
+                    inlierCount = ModBitSet.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
+                            byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
                 }
                 updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
                         new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
@@ -159,18 +157,16 @@ public class BitmapHelperFunctions {
                     if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][1].containsKey(curCandidateThree)) {
-                        ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
-                        tempModBitSet.and( byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
-                        tempModBitSet.and( byThreadBitmap[colNumThree][1].get(curCandidateThree));
-                        outlierCount = tempModBitSet.cardinality();
+                        outlierCount = ModBitSet.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
+                                byThreadBitmap[colNumTwo][1].get(curCandidateTwo),
+                                byThreadBitmap[colNumThree][1].get(curCandidateThree));
                     }
                     if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][0].containsKey(curCandidateThree)) {
-                        ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
-                        tempModBitSet.and( byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
-                        tempModBitSet.and( byThreadBitmap[colNumThree][0].get(curCandidateThree));
-                        inlierCount = tempModBitSet.cardinality();
+                        inlierCount = ModBitSet.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
+                                byThreadBitmap[colNumTwo][0].get(curCandidateTwo),
+                                byThreadBitmap[colNumThree][0].get(curCandidateThree));
                     }
 
                     updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
