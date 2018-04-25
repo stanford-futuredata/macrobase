@@ -21,6 +21,9 @@ public class APrioriBasic extends APriori {
     private QualityMetric[] qualityMetrics;
     private double[] thresholds;
 
+    private double injectFraction = 0.0;
+    private Random rand;
+
     // **Cached values**
 
     // singleton viable sets for quick lookup
@@ -133,7 +136,12 @@ public class APrioriBasic extends APriori {
                         numNext[curOrder - 1]++;
                     }
                 } else {
-                    pruned++;
+                    if (injectFraction > 0.0 && rand.nextDouble() < injectFraction) {
+                        curOrderNext.add(curCandidate);
+                        numNext[curOrder - 1]++;
+                    } else {
+                        pruned++;
+                    }
                 }
             }
 
@@ -278,5 +286,12 @@ public class APrioriBasic extends APriori {
         }
 
         return finalCandidates;
+    }
+
+    public void setInjectFraction(double injectFraction) {
+        if (injectFraction > 0.0) {
+            this.injectFraction = injectFraction;
+            rand = new Random();
+        }
     }
 }
