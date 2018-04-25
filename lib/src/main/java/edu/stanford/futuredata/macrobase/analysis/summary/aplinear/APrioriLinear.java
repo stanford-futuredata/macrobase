@@ -54,7 +54,7 @@ public class APrioriLinear {
             int numThreads,
             HashMap<Integer, ModBitSet>[][] bitmap,
             ArrayList<Integer>[] outlierList,
-            boolean[] isBitmapEncoded,
+            int[] colCardinalities,
             boolean useFDs,
             int[] functionalDependencies
     ) {
@@ -91,7 +91,7 @@ public class APrioriLinear {
                 for (int j = startIndex; j < endIndex; j++) {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
                 }
-                if (isBitmapEncoded[i]) {
+                if (colCardinalities[i] < AttributeEncoder.cardinalityThreshold) {
                     for (int j = 0; j < 2; j++) {
                         for (HashMap.Entry<Integer, ModBitSet> entry : bitmap[i][j].entrySet()) {
                             ModBitSet rr = entry.getValue().get(startIndex, endIndex);
@@ -150,7 +150,7 @@ public class APrioriLinear {
                         curCandidate = new IntSetAsArray(0);
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
-                            if (isBitmapEncoded[colNum]) {
+                            if (colCardinalities[colNum] < AttributeEncoder.cardinalityThreshold) {
                                 for (Integer curOutlierCandidate : outlierList[colNum]) {
                                     // Require that all order-one candidates have minimum support.
                                     if (curOutlierCandidate == AttributeEncoder.noSupport)
@@ -195,7 +195,7 @@ public class APrioriLinear {
                                     continue;
                                 }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
-                                if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
+                                if (colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 128) {
                                     // Bitmap-Bitmap
                                     allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                             byThreadBitmap[curThreadNum], colNumOne, colNumTwo, useIntSetAsArray,
@@ -226,8 +226,7 @@ public class APrioriLinear {
                                         continue;
                                     }
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
-                                    if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                            isBitmapEncoded[colNumThree]) {
+                                    if (colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 128) {
                                         // all 3 cols are bitmaps
                                         allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                                 singleNextArray, byThreadBitmap[curThreadNum],

@@ -79,7 +79,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 numThreads,
                 encoder.getBitmap(),
                 encoder.getOutlierList(),
-                encoder.getIsBitmapEncodedArray(),
+                encoder.getColCardinalities(),
                 useFDs,
                 functionalDependencies
         );

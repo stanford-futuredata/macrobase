@@ -16,6 +16,7 @@ public class AttributeEncoder {
     private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
+    public static int cardinalityThreshold = 128;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -24,8 +25,8 @@ public class AttributeEncoder {
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
     private HashMap<Integer, ModBitSet>[][] bitmap;
+    private int[] colCardinalities;
     private ArrayList<Integer> outlierList[];
-    private boolean isBitmapEncoded[];
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -44,7 +45,7 @@ public class AttributeEncoder {
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
     public HashMap<Integer, ModBitSet>[][] getBitmap() {return bitmap;}
     public ArrayList<Integer>[] getOutlierList() {return outlierList;}
-    public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
+    public int[] getColCardinalities() {return colCardinalities;}
 
     /**
      * Encodes columns giving each value which satisfies a minimum support threshold a key
@@ -117,8 +118,7 @@ public class AttributeEncoder {
         outlierList = new ArrayList[numColumns];
         for (int i = 0; i < numColumns; i++)
             outlierList[i] = new ArrayList<>();
-        isBitmapEncoded = new boolean[numColumns];
-        int[] colCardinalities = new int[numColumns];
+        colCardinalities = new int[numColumns];
 
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
@@ -150,15 +150,14 @@ public class AttributeEncoder {
                 }
             }
             colCardinalities[colIdx] = outlierList[colIdx].size();
+            if (!useBitmaps)
+                colCardinalities[colIdx] = cardinalityThreshold + 1;
         }
         log.info("Column cardinalities: {}", Arrays.toString(colCardinalities));
-        int cardinalityThreshold = computeCardinalityThreshold(colCardinalities);
-        log.info("Cardinality threshold: {}", cardinalityThreshold);
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
-            if (useBitmaps && outlierList[colIdx].size() <= cardinalityThreshold) {
-                isBitmapEncoded[colIdx] = true;
+            if (useBitmaps && colCardinalities[colIdx] < cardinalityThreshold) {
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
                     int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
@@ -174,49 +173,7 @@ public class AttributeEncoder {
                 }
             }
         }
-        log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
         return encodedAttributes;
-    }
-
-    /**
-     * Determines a cardinality threshold for a set of columns given the columns' cardinalities.
-     * Applies a cost model which assumes that the "normal" cost of candidate generation is largely
-     * invariant while the bitmap cost depends on the products of cardinalities of the
-     * bitmap-encoded columns.
-     * @param colCardinalities  Column cardinalities.
-     * @return Optimal cardinality threshold.
-     */
-    protected int computeCardinalityThreshold(int[] colCardinalities) {
-
-        // Ratio of speed of analyzing candidates in a triplet of columns
-        // versus a single three-bitmap andCardinality.
-        final int andCardinalityCost = 110;
-
-        Arrays.sort(colCardinalities);
-        if (colCardinalities.length < 3)
-            return Integer.MAX_VALUE;
-        int cardinalityThreshold = 0;
-        for(int colIdx = 2; colIdx < colCardinalities.length; colIdx++) {
-            int potentialThreshold = colCardinalities[colIdx];
-            // Only consider each unique potential cardinality once.
-            if (colIdx + 1 < colCardinalities.length && potentialThreshold == colCardinalities[colIdx + 1])
-                continue;
-            // The cost of analyzing candidates "normally" without bitmaps.
-            int normalCost = colIdx * (colIdx - 1) * andCardinalityCost;
-            // The cost of analyzing candidates encoded as bitmaps.
-            // This number is a sum of all products of potentialThreshold with
-            // all products of lower cardinalities.
-            int bitmapCost = 0;
-            for (int i = 0; i < colIdx; i++) {
-                for (int j = i + 1; j < colIdx; j++) {
-                    bitmapCost += colCardinalities[i] * colCardinalities[j] * potentialThreshold;
-                }
-            }
-            if (bitmapCost < normalCost) {
-                cardinalityThreshold = potentialThreshold;
-            }
-        }
-        return cardinalityThreshold;
     }
 
     public int[][] encodeAttributesAsArray(List<String[]> columns) {
@@ -227,14 +184,15 @@ public class AttributeEncoder {
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
 
-        // No columns are bitmap encoded, all are false.
-        isBitmapEncoded = new boolean[numColumns];
-
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
                 encoder.put(i, new HashMap<>());
             }
         }
+
+        colCardinalities = new int[numColumns];
+        for (int i = 0; i < numColumns; i++)
+            colCardinalities[i] = cardinalityThreshold + 1;
 
         int[][] encodedAttributes = new int[numRows][numColumns];
 
