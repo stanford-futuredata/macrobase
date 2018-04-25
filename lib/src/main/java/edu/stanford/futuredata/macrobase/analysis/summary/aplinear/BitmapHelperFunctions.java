@@ -2,11 +2,9 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
-import org.roaringbitmap.RoaringBitmap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.ModBitSet;
 
 public class BitmapHelperFunctions {
 
@@ -58,7 +56,7 @@ public class BitmapHelperFunctions {
     public static void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
                               ArrayList<Integer>[] outlierList,
                               AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                              HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                              HashMap<Integer, ModBitSet>[][] byThreadBitmap,
                               int colNumOne, int colNumTwo,
                               boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
@@ -75,13 +73,17 @@ public class BitmapHelperFunctions {
                 }
                 int outlierCount = 0, inlierCount = 0;
                 if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
-                        byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo))
-                    outlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][1].get(curCandidateOne),
-                            byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                        byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo)) {
+                    ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
+                    tempModBitSet.and( byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                    outlierCount = tempModBitSet.cardinality();
+                }
                 if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
-                        byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo))
-                    inlierCount = RoaringBitmap.andCardinality(byThreadBitmap[colNumOne][0].get(curCandidateOne),
-                            byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                        byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo)) {
+                    ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
+                    tempModBitSet.and( byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                    inlierCount = tempModBitSet.cardinality();
+                }
                 updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,
                         new double[]{outlierCount, outlierCount + inlierCount}, numAggregates);
             }
@@ -127,7 +129,7 @@ public class BitmapHelperFunctions {
     public static void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
                                 ArrayList<Integer>[] outlierList,
                                 AggregationOp[]  aggregationOps, boolean[] singleNextArray,
-                                HashMap<Integer, RoaringBitmap>[][] byThreadBitmap,
+                                HashMap<Integer, ModBitSet>[][] byThreadBitmap,
                                 int colNumOne, int colNumTwo, int colNumThree,
                                 boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
 
@@ -157,18 +159,18 @@ public class BitmapHelperFunctions {
                     if (byThreadBitmap[colNumOne][1].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][1].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][1].containsKey(curCandidateThree)) {
-                        outlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][1].get(curCandidateOne),
-                                        byThreadBitmap[colNumTwo][1].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][1].get(curCandidateThree));
+                        ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][1].get(curCandidateOne).clone();
+                        tempModBitSet.and( byThreadBitmap[colNumTwo][1].get(curCandidateTwo));
+                        tempModBitSet.and( byThreadBitmap[colNumThree][1].get(curCandidateThree));
+                        outlierCount = tempModBitSet.cardinality();
                     }
                     if (byThreadBitmap[colNumOne][0].containsKey(curCandidateOne) &&
                             byThreadBitmap[colNumTwo][0].containsKey(curCandidateTwo) &&
                             byThreadBitmap[colNumThree][0].containsKey(curCandidateThree)) {
-                        inlierCount = RoaringBitmap.andCardinality(
-                                RoaringBitmap.and(byThreadBitmap[colNumOne][0].get(curCandidateOne),
-                                        byThreadBitmap[colNumTwo][0].get(curCandidateTwo)),
-                                byThreadBitmap[colNumThree][0].get(curCandidateThree));
+                        ModBitSet tempModBitSet = (ModBitSet) byThreadBitmap[colNumOne][0].get(curCandidateOne).clone();
+                        tempModBitSet.and( byThreadBitmap[colNumTwo][0].get(curCandidateTwo));
+                        tempModBitSet.and( byThreadBitmap[colNumThree][0].get(curCandidateThree));
+                        inlierCount = tempModBitSet.cardinality();
                     }
 
                     updateAggregates(thisThreadSetAggregates, curCandidate, aggregationOps,

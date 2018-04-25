@@ -1,14 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-import org.roaringbitmap.RoaringBitmap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +23,7 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
-    private HashMap<Integer, RoaringBitmap>[][] bitmap;
+    private HashMap<Integer, ModBitSet>[][] bitmap;
     private ArrayList<Integer> outlierList[];
     private boolean isBitmapEncoded[];
 
@@ -48,7 +42,7 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
-    public HashMap<Integer, RoaringBitmap>[][] getBitmap() {return bitmap;}
+    public HashMap<Integer, ModBitSet>[][] getBitmap() {return bitmap;}
     public ArrayList<Integer>[] getOutlierList() {return outlierList;}
     public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
 
@@ -171,9 +165,10 @@ public class AttributeEncoder {
                     int curKey = curColEncoder.get(colVal);
                     if (curKey != noSupport) {
                         if (bitmap[colIdx][oidx].containsKey(curKey)) {
-                            bitmap[colIdx][oidx].get(curKey).add(rowIdx);
+                            bitmap[colIdx][oidx].get(curKey).set(rowIdx);
                         } else {
-                            bitmap[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
+                            bitmap[colIdx][oidx].put(curKey, new ModBitSet());
+                            bitmap[colIdx][oidx].get(curKey).set(rowIdx);
                         }
                     }
                 }

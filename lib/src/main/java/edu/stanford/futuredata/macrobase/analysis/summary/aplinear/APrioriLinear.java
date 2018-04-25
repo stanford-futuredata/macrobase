@@ -52,7 +52,7 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            HashMap<Integer, RoaringBitmap>[][] bitmap,
+            HashMap<Integer, ModBitSet>[][] bitmap,
             ArrayList<Integer>[] outlierList,
             boolean[] isBitmapEncoded,
             boolean useFDs,
@@ -79,7 +79,7 @@ public class APrioriLinear {
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
-        final HashMap<Integer, RoaringBitmap>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
+        final HashMap<Integer, ModBitSet>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
         for (int i = 0; i < numThreads; i++)
             for (int j = 0; j < numColumns; j++)
                 for (int k = 0; k < 2; k++)
@@ -93,11 +93,9 @@ public class APrioriLinear {
                 }
                 if (isBitmapEncoded[i]) {
                     for (int j = 0; j < 2; j++) {
-                        for (HashMap.Entry<Integer, RoaringBitmap> entry : bitmap[i][j].entrySet()) {
-                            RoaringBitmap rr = new RoaringBitmap();
-                            rr.add((long) startIndex, (long) endIndex);
-                            rr.and(entry.getValue());
-                            if (rr.getCardinality() > 0) {
+                        for (HashMap.Entry<Integer, ModBitSet> entry : bitmap[i][j].entrySet()) {
+                            ModBitSet rr = entry.getValue().get(startIndex, endIndex);
+                            if (rr.cardinality() > 0) {
                                 byThreadBitmap[threadNum][i][j].put(entry.getKey(), rr);
                             }
                         }
@@ -159,9 +157,9 @@ public class APrioriLinear {
                                         continue;
                                     int outlierCount = 0, inlierCount = 0;
                                     if (byThreadBitmap[curThreadNum][colNum][1].containsKey(curOutlierCandidate))
-                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).getCardinality();
+                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).cardinality();
                                     if (byThreadBitmap[curThreadNum][colNum][0].containsKey(curOutlierCandidate))
-                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).getCardinality();
+                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).cardinality();
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
                                         curCandidate = new IntSetAsArray(curOutlierCandidate);

@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.ModBitSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
@@ -40,17 +41,8 @@ import edu.stanford.futuredata.macrobase.sql.tree.Table;
 import edu.stanford.futuredata.macrobase.sql.tree.TableSubquery;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import edu.stanford.futuredata.macrobase.util.MacroBaseSQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.DoubleStream;
@@ -148,7 +140,7 @@ class QueryEngine {
             }
 
             // add outlier (binary) column by evaluating the WHERE clause
-            final BitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
+            final ModBitSet mask = getMask(dfToExplain, splitQuery.getWhereClause());
             final double[] outlierVals = new double[dfToExplain.getNumRows()];
             mask.stream().forEach((i) -> outlierVals[i] = 1.0);
             dfToExplain.addColumn(outlierColName, outlierVals);
@@ -420,30 +412,30 @@ class QueryEngine {
             return df;
         }
         final Expression whereClause = whereClauseOpt.get();
-        final BitSet mask = getMask(df, whereClause);
+        final ModBitSet mask = getMask(df, whereClause);
         return df.filter(mask);
     }
 
     // ********************* Helper methods for evaluating Where clauses **********************
 
     /**
-     * Recursive method that, given a Where clause, generates a boolean mask (a BitSet) applying the
+     * Recursive method that, given a Where clause, generates a boolean mask (a ModBitSet) applying the
      * clause to a DataFrame
      *
      * @throws MacroBaseSQLException Only comparison expressions (e.g., WHERE x = 42) and logical
      * AND/OR/NOT combinations of such expressions are supported; exception is thrown otherwise.
      */
-    private BitSet getMask(DataFrame df, Expression whereClause) throws MacroBaseException {
+    private ModBitSet getMask(DataFrame df, Expression whereClause) throws MacroBaseException {
         if (whereClause instanceof NotExpression) {
             final NotExpression notExpr = (NotExpression) whereClause;
-            final BitSet mask = getMask(df, notExpr.getValue());
+            final ModBitSet mask = getMask(df, notExpr.getValue());
             mask.flip(0, df.getNumRows());
             return mask;
 
         } else if (whereClause instanceof LogicalBinaryExpression) {
             final LogicalBinaryExpression binaryExpr = (LogicalBinaryExpression) whereClause;
-            final BitSet leftMask = getMask(df, binaryExpr.getLeft());
-            final BitSet rightMask = getMask(df, binaryExpr.getRight());
+            final ModBitSet leftMask = getMask(df, binaryExpr.getLeft());
+            final ModBitSet rightMask = getMask(df, binaryExpr.getRight());
             if (binaryExpr.getType() == Type.AND) {
                 leftMask.and(rightMask);
                 return leftMask;
@@ -462,7 +454,7 @@ class QueryEngine {
 
             if (left instanceof Literal && right instanceof Literal) {
                 final boolean val = left.equals(right);
-                final BitSet mask = new BitSet(df.getNumRows());
+                final ModBitSet mask = new ModBitSet(df.getNumRows());
                 mask.set(0, df.getNumRows(), val);
                 return mask;
             } else if (left instanceof Literal && right instanceof Identifier) {
@@ -478,8 +470,8 @@ class QueryEngine {
         throw new MacroBaseSQLException("Boolean expression not supported");
     }
 
-    private BitSet maskForPredicate(DataFrame df, FunctionCall func, Literal val,
-        final ComparisonExpressionType type)
+    private ModBitSet maskForPredicate(DataFrame df, FunctionCall func, Literal val,
+                                       final ComparisonExpressionType type)
         throws MacroBaseException {
         final String funcName = func.getName().getSuffix();
         final MBFunction mbFunction = MBFunction.getFunction(funcName,
@@ -487,7 +479,7 @@ class QueryEngine {
         final double[] col = mbFunction.apply(df);
         final DoublePredicate predicate = generateLambdaForPredicate(
             ((DoubleLiteral) val).getValue(), type);
-        final BitSet mask = new BitSet(col.length);
+        final ModBitSet mask = new ModBitSet(col.length);
         for (int i = 0; i < col.length; ++i) {
             if (predicate.test(col[i])) {
                 mask.set(i);
@@ -499,7 +491,7 @@ class QueryEngine {
 
     /**
      * The base case for {@link QueryEngine#getMask(DataFrame, Expression)}; returns a boolean mask
-     * (as a BitSet) for a single comparision expression (e.g., WHERE x = 42)
+     * (as a ModBitSet) for a single comparision expression (e.g., WHERE x = 42)
      *
      * @param df The DataFrame on which to evaluate the comparison expression
      * @param literal The constant argument in the expression (e.g., 42)
@@ -508,8 +500,8 @@ class QueryEngine {
      * @throws MacroBaseSQLException if the literal's type doesn't match the type of the column
      * variable, an exception is thrown
      */
-    private BitSet maskForPredicate(final DataFrame df, final Literal literal,
-        final Identifier identifier, final ComparisonExpressionType compExprType)
+    private ModBitSet maskForPredicate(final DataFrame df, final Literal literal,
+                                       final Identifier identifier, final ComparisonExpressionType compExprType)
         throws MacroBaseSQLException {
         final String colName = identifier.getValue();
         final int colIndex;
