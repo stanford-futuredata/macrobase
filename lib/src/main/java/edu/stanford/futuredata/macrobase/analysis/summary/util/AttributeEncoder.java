@@ -198,6 +198,9 @@ public class AttributeEncoder {
         int cardinalityThreshold = 0;
         for(int colIdx = 2; colIdx < colCardinalities.length; colIdx++) {
             int potentialThreshold = colCardinalities[colIdx];
+            // Only consider each unique potential cardinality once.
+            if (colIdx + 1 < colCardinalities.length && potentialThreshold == colCardinalities[colIdx + 1])
+                continue;
             // The cost of analyzing candidates "normally" without bitmaps.
             int normalCost = colIdx * (colIdx - 1) * andCardinalityCost;
             // The cost of analyzing candidates encoded as bitmaps.
