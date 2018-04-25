@@ -7,6 +7,7 @@ import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.roaringbitmap.RoaringBitmap;
+import org.w3c.dom.Attr;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -195,7 +196,9 @@ public class APrioriLinear {
                                     continue;
                                 }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
-                                if (colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 128) {
+                                if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 256) {
                                     // Bitmap-Bitmap
                                     allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                             byThreadBitmap[curThreadNum], colNumOne, colNumTwo, useIntSetAsArray,
@@ -226,7 +229,10 @@ public class APrioriLinear {
                                         continue;
                                     }
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
-                                    if (colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 128) {
+                                    if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                            colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                            colCardinalities[colNumThree] < AttributeEncoder.cardinalityThreshold &&
+                                            colCardinalities[colNumOne] * colCardinalities[colNumTwo] * colCardinalities[colNumThree] < 256) {
                                         // all 3 cols are bitmaps
                                         allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                                 singleNextArray, byThreadBitmap[curThreadNum],
