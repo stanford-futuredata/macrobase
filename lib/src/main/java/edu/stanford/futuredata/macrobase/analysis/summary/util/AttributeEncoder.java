@@ -16,7 +16,7 @@ public class AttributeEncoder {
     private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    public static int cardinalityThreshold = 128;
+    public static int cardinalityThreshold = 1000000;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
