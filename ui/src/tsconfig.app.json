@@ -4,7 +4,14 @@
     "outDir": "../out-tsc/app",
     "baseUrl": "./",
     "module": "es2015",
-    "types": []
+    "types": [
+      "plotly.js"
+    ],
+    "paths": {
+      "plotly.js": [
+        "../node_modules/plotly.js/dist/plotly-basic.js"
+      ]
+    }
   },
   "exclude": [
     "test.ts",

@@ -11,6 +11,8 @@ export class Query{
     ratioMetric: string;
     minRatioMetric: number;
     minSupport: number;
+    numRows: number;
+    columnFilters: string;
 }
 
 // {

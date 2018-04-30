@@ -1,7 +1,5 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.BufferedReader;
@@ -26,11 +24,7 @@ public class PipelineConfig {
         return new PipelineConfig(conf);
     }
     public static PipelineConfig fromJsonString(String json) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> map = mapper.readValue(
-                json,
-                new TypeReference<Map<String, Object>>() {}
-        );
+        Map<String, Object> map = PipelineUtils.jsonStringToMap(json);
         return new PipelineConfig(map);
     }
 

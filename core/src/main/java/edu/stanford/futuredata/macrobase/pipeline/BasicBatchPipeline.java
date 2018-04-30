@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Simplest default pipeline: load, classify, and then explain
@@ -41,6 +42,9 @@ public class BasicBatchPipeline implements Pipeline {
     private double minSupport;
     private double minRiskRatio;
     private double meanShiftRatio;
+
+    private int numRows;
+    private String columnFiltersJson;
 
 
     public BasicBatchPipeline (PipelineConfig conf) {
@@ -70,6 +74,7 @@ public class BasicBatchPipeline implements Pipeline {
         attributes = conf.get("attributes");
         ratioMetric = conf.get("ratioMetric", "globalRatio");
 
+        //Allowing conversion from integer b/c of type confusion by UI (via JSON.stringify)
         if(conf.get("minRatioMetric", 3.0) instanceof Double) {
             minRiskRatio = (double) conf.get("minRatioMetric", 3.0);
         }
@@ -83,6 +88,9 @@ public class BasicBatchPipeline implements Pipeline {
         else {
             minSupport= (double) (int) conf.get("minSupport", 0);
         }
+
+        numRows = conf.get("numRows", -1); //-1 indicating all
+        columnFiltersJson = conf.get("columnFilters", "");
 
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         meanColumn = Optional.ofNullable(conf.get("meanColumn"));
@@ -204,5 +212,31 @@ public class BasicBatchPipeline implements Pipeline {
         Explanation output = summarizer.getResults();
 
         return output;
+    }
+
+    @Override
+    public DataFrame getRows() throws Exception {
+        long startTime = System.currentTimeMillis();
+        DataFrame df = loadData();
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        log.info("Loading time: {} ms", elapsed);
+        log.info("{} rows", df.getNumRows());
+        log.info("Metric: {}", metric);
+        log.info("Attributes: {}", attributes);
+
+        if(numRows >= 0){
+            df = df.limit(numRows);
+            log.info("Limiting on {} rows", numRows);
+        }
+        if(!columnFiltersJson.equals("")){
+            Map<String, Object> columnFilters = PipelineUtils.jsonStringToMap(columnFiltersJson);
+            for(String columnName: columnFilters.keySet()) {
+                Predicate<Object> columnPredicate = (i) -> (i.equals(columnFilters.get(columnName)));
+                df = df.filter(columnName, columnPredicate);
+                log.info("Filtering on column {} == {}", columnName, columnFilters.get(columnName));
+            }
+        }
+        return df;
     }
 }

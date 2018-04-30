@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.pipeline.*;
+import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -17,8 +18,7 @@ import static spark.Spark.*;
 public class RestServer {
     private static Logger log = LoggerFactory.getLogger(RestServer.class);
 
-    /*****************************************/
-
+    /* Changing response headers to allow POST access from separately hosted UI */
     private static final HashMap<String, String> corsHeaders = new HashMap<String, String>();
 
     static {
@@ -37,11 +37,11 @@ public class RestServer {
         after(filter);
     }
 
-    /*****************************************/
-
     public static void main(String[] args) {
         RestServer.apply();
+
         post("/query", RestServer::processBasicBatchQuery, RestServer::toJsonString);
+        post("/rows", RestServer::getRows, RestServer::toJsonString);
 
         exception(Exception.class, (exception, request, response) -> {
             log.error("An exception occurred: ", exception);
@@ -56,6 +56,16 @@ public class RestServer {
         Pipeline p = PipelineUtils.createPipeline(conf);
         Explanation e = p.results();
         return e;
+    }
+
+    public static DataFrame getRows(
+            Request req, Response res
+    ) throws Exception {
+        //res.type()
+        PipelineConfig conf = PipelineConfig.fromJsonString(req.body());
+        Pipeline p = PipelineUtils.createPipeline(conf);
+        DataFrame df = p.getRows();
+        return df;
     }
 
     public static String toJsonString(Object o) throws JsonProcessingException {

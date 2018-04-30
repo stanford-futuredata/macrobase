@@ -13,13 +13,82 @@ import { MessageService } from '../message.service'
 export class QueryWizardComponent implements OnInit {
   @Input() id: number;
   query: Query;
+
+  possibleAttributes: string[];
+  possibleMetrics: string[];
+
   attributeSet = new Set();
   selectedMetric;
   selectedAttribute;
   minSupport;
   minRatioMetric;
 
+  dataSource = "csv://../data/wikiticker.csv";
+
   constructor(private queryService: QueryService, private messageService: MessageService) { }
+
+  ngOnInit() {
+    this.loadSchema();
+    this.getBaseQuery();
+  }
+
+  //to be implemented
+  loadSchema(): void {
+    this.possibleAttributes = [
+      "time",
+      "user",
+      "page",
+      "channel",
+      "namespace",
+      "comment",
+      "metroCode",
+      "cityName",
+      "regionName",
+      "regionIsoCode",
+      "countryName",
+      "countryIsoCode",
+      "isAnonymous",
+      "isMinor",
+      "isNew",
+      "isRobot",
+      "isUnpatrolled"
+    ]
+
+    this.possibleMetrics = [
+      "delta",
+      "added",
+      "deleted"
+    ]
+  }
+
+  getBaseQuery(): void {
+    this.query = {
+      pipeline: "BasicBatchPipeline",
+      inputURI: this.dataSource,
+      classifier: "percentile",
+      metric: "added",
+      cutoff: 1.1,
+      includeHi: true,
+      includeLo: true,
+      summarizer: "aplinear",
+      attributes: [
+        "isNew",
+        "isRobot"
+      ],
+      ratioMetric: "globalratio",
+      minRatioMetric: 1.0,
+      minSupport: 0.01,
+      numRows: -1,
+      columnFilters: ""
+    };
+
+    for(var i in this.query.attributes){
+      this.attributeSet.add(this.query.attributes[i]);
+    }
+    this.selectedMetric = this.query.metric;
+    this.minSupport = this.query.minSupport;
+    this.minRatioMetric = this.query.minRatioMetric;
+  }
 
   addAttribute(): void {
     if(this.selectedAttribute) this.attributeSet.add(this.selectedAttribute);
@@ -36,50 +105,9 @@ export class QueryWizardComponent implements OnInit {
     this.query.minRatioMetric = parseFloat(this.minRatioMetric);
   }
 
-  possibleMetrics = [
-    'usage',
-    'latency'
-  ];
-
-  possibleAttributes = [
-    'location',
-    'version'
-  ];
-
-  getBaseQuery(): void {
-    this.query = {
-      pipeline: "BasicBatchPipeline",
-      inputURI: "csv://core/demo/sample.csv",
-      classifier: "percentile",
-      metric: "usage",
-      cutoff: 1.1,
-      includeHi: true,
-      includeLo: true,
-      summarizer: "aplinear",
-      attributes: [
-        "location",
-        "version"
-      ],
-      ratioMetric: "globalratio",
-      minRatioMetric: 1.0,
-      minSupport: 0.01
-    };
-
-    for(var i in this.query.attributes){
-      this.attributeSet.add(this.query.attributes[i]);
-    }
-    this.selectedMetric = "usage"
-    this.minSupport = this.query.minSupport;
-    this.minRatioMetric = this.query.minRatioMetric;
-  }
-
   runQuery(query: Query) {
     this.updateQuery();
     this.queryService.runQuery(this.query, this.id);
-  }
-
-  ngOnInit() {
-    this.getBaseQuery();
   }
 
 }

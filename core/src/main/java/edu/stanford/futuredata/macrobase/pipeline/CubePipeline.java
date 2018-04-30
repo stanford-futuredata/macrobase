@@ -138,6 +138,11 @@ public class CubePipeline implements Pipeline {
         return explanation;
     }
 
+    @Override
+    public DataFrame getRows() {
+        return null;
+    }
+
     private Map<String, Schema.ColType> getColTypes() throws MacroBaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put(countColumn, Schema.ColType.DOUBLE);

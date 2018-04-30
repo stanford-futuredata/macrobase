@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -70,5 +71,14 @@ public class PipelineUtils {
                 throw new MacroBaseException("Bad Pipeline");
             }
         }
+    }
+
+    public static Map<String, Object> jsonStringToMap(String json) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> map = mapper.readValue(
+                json,
+                new TypeReference<Map<String, Object>>() {}
+        );
+        return map;
     }
 }

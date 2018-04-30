@@ -1,15 +1,23 @@
 <div *ngIf="queryService.queryResults.get(id)">
   <table cellpadding="20" border="1px">
     <td>
-      <b>Total Events:</b> {{queryService.queryResults.get(id).numTotal}} <br>
-      <b>Total Outliers:</b> {{queryService.queryResults.get(id).outliers}} <br>
+      <b>Total Events:</b> {{queryResult.numTotal}} <br>
+      <b>Total Outliers:</b> {{queryResult.outliers}} <br>
     </td>
-    <td *ngFor="let result of queryService.queryResults.get(id).results">
+    <td *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i">
+        {{i}} <br>
         <b>Attributes: {{result.matcherString}}</b> <br>
         Outlier Count: {{result.aggregate.Outliers}} <br>
         Total Count:   {{result.aggregate.Count}} <br>
         Global Ratio:  {{result.metric.global_ratio}} <br>
         Support:       {{result.metric.support}}
+        <div style="text-align:right">
+          <button (click)="getRows(i)"> Get Rows </button>
+        </div>
     </td>
   </table>
+
+  <div *ngIf="queryService.rows.get(id)">
+    {{rowStr}}
+  </div>
 </div>

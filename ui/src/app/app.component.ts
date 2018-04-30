@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { QueryService } from './query.service'
 
 @Component({
   selector: 'app-root',
@@ -6,9 +7,11 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  displayMessages = false;
+  displayMessages = true;
   id = 0;
   validIDs = new Set();
+
+  constructor(private queryService: QueryService) { }
 
   newQuery() {
     this.validIDs.add(this.id);
@@ -17,6 +20,7 @@ export class AppComponent {
 
   deleteQuery(id: number) {
     this.validIDs.delete(id);
+    this.queryService.removeID(id);
   }
 
   minimizeCell(id: number){
