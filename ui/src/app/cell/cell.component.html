@@ -1,23 +1,40 @@
-<div *ngIf="queryService.queryResults.get(id)">
+<div *ngIf="displayItemsets">
+  <b>Total Events:</b> {{totalEvents}} <br>
+  <b>Total Outliers:</b> {{totalOutliers}} <br>
   <table cellpadding="20" border="1px">
-    <td>
-      <b>Total Events:</b> {{queryResult.numTotal}} <br>
-      <b>Total Outliers:</b> {{queryResult.outliers}} <br>
-    </td>
-    <td *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i">
-        {{i}} <br>
-        <b>Attributes: {{result.matcherString}}</b> <br>
-        Outlier Count: {{result.aggregate.Outliers}} <br>
-        Total Count:   {{result.aggregate.Count}} <br>
-        Global Ratio:  {{result.metric.global_ratio}} <br>
-        Support:       {{result.metric.support}}
-        <div style="text-align:right">
-          <button (click)="getRows(i)"> Get Rows </button>
-        </div>
-    </td>
+    <tr *ngFor="let rowResults of resultsTable; index as i_row" [attr.data-index]="i_row">
+      <td *ngFor="let result of rowResults; index as i" [attr.data-index]="i">
+          <b>Attributes: {{result.matcherString}}</b> <br>
+          Outlier Count: {{result.aggregate.Outliers}} <br>
+          Total Count:   {{result.aggregate.Count}} <br>
+          Global Ratio:  {{result.metric.global_ratio}} <br>
+          Support:       {{result.metric.support}}
+          <div style="text-align:right">
+            <button (click)="getItemsetData(getItemsetID(i, i_row), 20, true)"> Sample </button>
+            <button (click)="makeHistogram(getItemsetID(i, i_row))"> Histogram </button>
+          </div>
+      </td>
+    </tr>
   </table>
+</div>
 
-  <div *ngIf="queryService.rows.get(id)">
-    {{rowStr}}
-  </div>
+<div *ngIf="displayData">
+  <table cellpadding="10" border="1px">
+    <tr>
+      <th *ngFor="let colName of itemsetData.schema.columnNames">
+        {{colName}}
+      </th>
+    </tr>
+
+    <tr *ngFor="let row of itemsetData.rows">
+      <td *ngFor="let entry of row.vals">
+        {{entry}}
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div *ngIf="displayHistogram">
+  <div id="histogram" style="display:block;"></div>
+  <button (click)="clearHistogram()" style="background-color:darkred"> Clear Plot </button>
 </div>

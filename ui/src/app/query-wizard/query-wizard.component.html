@@ -25,13 +25,13 @@
 <table cellpadding="10">
     <td>
         <b> Attributes: </b>
-        <select [(ngModel)]="selectedAttribute">
+        <select [(ngModel)]="selectedAttribute"
+          (change)="addAttribute()">
             <option></option>
             <option *ngFor="let possibleAttribute of possibleAttributes" [value] = "possibleAttribute">
                 {{possibleAttribute}}
             </option>
         </select>
-        <button (click)="addAttribute()"> Add </button>
     </td>
 
     <td *ngFor="let attribute of attributeSet" class="attribute">

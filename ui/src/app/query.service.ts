@@ -13,15 +13,16 @@ import * as $ from "jquery";
 @Injectable()
 export class QueryService {
   private queryURL = 'http://0.0.0.0:4567/query';
-  private rowsURL = 'http://0.0.0.0:4567/rows';
+  private dataURL = 'http://0.0.0.0:4567/rows';
 
   //notify components that response has been received from server
   queryResponseReceived = new EventEmitter();
-  rowsResponseReceived = new EventEmitter();
+  dataResponseReceived = new EventEmitter();
 
   queries = new Map();
   queryResults = new Map();
-  rows = new Map();
+  itemsetData = new Map();
+  queryData = new Map();
 
   constructor(private http: HttpClient, private messageService: MessageService) { }
 
@@ -44,13 +45,31 @@ export class QueryService {
     })
   }
 
-  getRows(query: Query, queryID: number, itemsetID: number) {
-    this.messageService.add("Getting rows from query " + queryID + ", itemset " + itemsetID + ": Sending request: " + JSON.stringify(query));
-    this.http.post(this.rowsURL, JSON.stringify(query))
+  /*
+   Sends POST request to server to get sample data over rows of the original query that match up with the given itemset.
+  */
+  getItemsetData(query: Query, queryID: number, itemsetID: number) {
+    this.messageService.add("Getting data from query " + queryID + ", itemset " + itemsetID + ": Sending request: " + JSON.stringify(query));
+    this.http.post(this.dataURL, JSON.stringify(query))
       .subscribe(
         data => {
-                 this.rows.set(queryID, data);
-                 this.rowsResponseReceived.emit();
+                 this.itemsetData.set(queryID, data);
+                 this.dataResponseReceived.emit();
+                },
+        err => {this.handleError('runQuery()', err);}
+      );
+  }
+
+  /*
+   Sends POST request to server to get sample data over all rows of the original query.
+   */
+  getQueryData(query: Query, queryID: number) {
+    this.messageService.add("Getting data from query " + queryID + ": Sending request: " + JSON.stringify(query));
+    this.http.post(this.dataURL, JSON.stringify(query))
+      .subscribe(
+        data => {
+                 this.queryData.set(queryID, data);
+                 this.dataResponseReceived.emit();
                 },
         err => {this.handleError('runQuery()', err);}
       );
@@ -59,7 +78,8 @@ export class QueryService {
   removeID(queryID: number) {
     this.queries.delete(queryID);
     this.queryResults.delete(queryID);
-    this.rows.delete(queryID);
+    this.itemsetData.delete(queryID);
+    this.queryData.delete(queryID);
   }
 
   private handleError(fname: string, err: HttpErrorResponse) {

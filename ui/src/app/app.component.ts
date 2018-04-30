@@ -7,7 +7,7 @@ import { QueryService } from './query.service'
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  displayMessages = true;
+  displayMessages = false;
   id = 0;
   validIDs = new Set();
 
