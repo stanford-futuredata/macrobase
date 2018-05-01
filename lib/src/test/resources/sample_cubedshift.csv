@@ -1,0 +1,10 @@
+time,location,version,count,meanLatency
+1,AUS,v3,150,37
+2,AUS,v3,120,25
+1,AUS,v2,150,45
+2,AUS,v2,180,20
+1,USA,v3,200,20
+2,USA,v3,200,25
+1,UK,v3,1,50
+2,UK,v3,2,100
+2,RUS,v3,200,30
