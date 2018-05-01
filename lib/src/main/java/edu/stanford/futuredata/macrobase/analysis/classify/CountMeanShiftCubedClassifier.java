@@ -14,10 +14,10 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
     private String metricColumnName;
     private String meanColumnName;
     private boolean isStrPredicate;
-    public String outlierCountColumnName = "_OUTLIERCOUNT";
-    public String inlierCountColumnName = "_INLIERCOUNT";
-    public String outlierMeanColumnName = "_OUTLIERMEAN";
-    public String inlierMeanColumnName = "_INLIERMEAN";
+    public static String outlierCountColumnName = "_OUTLIERCOUNT";
+    public static String inlierCountColumnName = "_INLIERCOUNT";
+    public static String outlierMeanColumnName = "_OUTLIERMEAN";
+    public static String inlierMeanColumnName = "_INLIERMEAN";
 
     /**
      * @param metricColumnName Column on which to classifier outliers

@@ -1,22 +1,23 @@
-package edu.stanford.futuredata.macrobase.analysis.classify;
+package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
+import edu.stanford.futuredata.macrobase.analysis.classify.CountMeanShiftCubedClassifier;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
+import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
-public class CountMeanShiftCubedClassifierTest {
+public class APLCountMeanShiftSummarizerTest  {
     private DataFrame df;
 
     @Before
     public void setUp() throws Exception {
-        List<String> requiredColumns = new ArrayList<>(Arrays.asList("time", "location", "version", "count", "meanLatency"));
+        List<String> requiredColumns = new ArrayList<>(Arrays.asList("time", "location", "version", "count", "col3", "meanLatency"));
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put("time", Schema.ColType.STRING);
         colTypes.put("count", Schema.ColType.DOUBLE);
@@ -27,27 +28,27 @@ public class CountMeanShiftCubedClassifierTest {
     }
 
     @Test
-    public void testClassify() throws Exception {
+    public void testSummarize() throws Exception {
         assertEquals(9, df.getNumRows());
         CountMeanShiftCubedClassifier pc = new CountMeanShiftCubedClassifier("count", "time", "meanLatency", "==", "1");
         pc.process(df);
         DataFrame output = pc.getResults();
         assertEquals(df.getNumRows(), output.getNumRows());
-        assertEquals(5, df.getSchema().getNumColumns());
-        assertEquals(9, output.getSchema().getNumColumns());
 
+        List<String> explanationAttributes = Arrays.asList(
+                "location",
+                "version",
+                "col3"
+        );
 
-        double[] outlierCountColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.outlierCountColumnName);
-        double[] inlierMeanColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanColumnName);
-
-        assertEquals(150, outlierCountColumn[0], 0.1);
-        assertEquals(0, outlierCountColumn[1], 0.1);
-        assertEquals(0, outlierCountColumn[8], 0.1);
-        assertEquals(1, outlierCountColumn[6], 0.1);
-        assertEquals(0, inlierMeanColumn[2], 0.1);
-        assertEquals(20, inlierMeanColumn[3], 0.1);
-        assertEquals(25, inlierMeanColumn[5], 0.1);
-        assertEquals(100, inlierMeanColumn[7], 0.1);
+        APLCountMeanShiftSummarizer summ = new APLCountMeanShiftSummarizer();
+        summ.setMinSupport(.05);
+        summ.setAttributes(explanationAttributes);
+        summ.process(output);
+        APLExplanation e = summ.getResults();
+        System.out.println(e.prettyPrint());
+        TestCase.assertEquals(5, e.getResults().size());
     }
 
 }
+
