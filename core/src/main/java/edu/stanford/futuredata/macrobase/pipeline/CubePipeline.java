@@ -195,12 +195,21 @@ public class CubePipeline implements Pipeline {
     private CubeClassifier getClassifier() throws MacroBaseException {
         switch (classifierType) {
             case "countmeanshift": {
-                return new CountMeanShiftCubedClassifier(countColumn,
-                        metric.orElseThrow(
-                                () -> new MacroBaseException("metric column not present in config")),
-                        meanColumn.orElseThrow(
-                                () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                        strCutoff);
+                if (isStrPredicate) {
+                    return new CountMeanShiftCubedClassifier(countColumn,
+                            metric.orElseThrow(
+                                    () -> new MacroBaseException("metric column not present in config")),
+                            meanColumn.orElseThrow(
+                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
+                            strCutoff);
+                } else {
+                    return new CountMeanShiftCubedClassifier(countColumn,
+                            metric.orElseThrow(
+                                    () -> new MacroBaseException("metric column not present in config")),
+                            meanColumn.orElseThrow(
+                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
+                            cutoff);
+                }
             }
             case "arithmetic": {
                 ArithmeticClassifier classifier =
