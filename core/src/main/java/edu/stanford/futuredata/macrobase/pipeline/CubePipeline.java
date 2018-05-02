@@ -1,14 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.ArithmeticClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.CubeClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.PredicateCubeClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.QuantileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.RawClassifier;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanation;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLMeanSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.classify.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
@@ -69,7 +62,7 @@ public class CubePipeline implements Pipeline {
         classifierType = conf.get("classifier", "arithmetic");
         countColumn = conf.get("countColumn", "count");
 
-        if (classifierType.equals("predicate")) {
+        if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
             Object rawCutoff = conf.get("cutoff");
             isStrPredicate = rawCutoff instanceof String;
             if (isStrPredicate) {
@@ -147,6 +140,20 @@ public class CubePipeline implements Pipeline {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put(countColumn, Schema.ColType.DOUBLE);
         switch (classifierType) {
+            case "countmeanshift":
+                if (isStrPredicate) {
+                    colTypes.put(metric.orElseThrow(
+                            () -> new MacroBaseException("metric column not present in config")),
+                            Schema.ColType.STRING);
+                } else {
+                    colTypes.put(metric.orElseThrow(
+                            () -> new MacroBaseException("metric column not present in config")),
+                            Schema.ColType.DOUBLE);
+                }
+                colTypes.put(meanColumn
+                                .orElseThrow(() -> new MacroBaseException("mean column not present in config")),
+                        Schema.ColType.DOUBLE);
+                return colTypes;
             case "meanshift":
             case "arithmetic": {
                 colTypes.put(meanColumn
@@ -187,6 +194,14 @@ public class CubePipeline implements Pipeline {
 
     private CubeClassifier getClassifier() throws MacroBaseException {
         switch (classifierType) {
+            case "countmeanshift": {
+                return new CountMeanShiftCubedClassifier(countColumn,
+                        metric.orElseThrow(
+                                () -> new MacroBaseException("metric column not present in config")),
+                        meanColumn.orElseThrow(
+                                () -> new MacroBaseException("mean column not present in config")), predicateStr,
+                        strCutoff);
+            }
             case "arithmetic": {
                 ArithmeticClassifier classifier =
                     new ArithmeticClassifier(countColumn, meanColumn.orElseThrow(
@@ -234,6 +249,13 @@ public class CubePipeline implements Pipeline {
 
     private APLSummarizer getSummarizer(CubeClassifier classifier) throws Exception {
         switch (classifierType) {
+            case "countmeanshift": {
+                APLCountMeanShiftSummarizer summarizer = new APLCountMeanShiftSummarizer();
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinMeanShift(minRatioMetric);
+                return summarizer;
+            }
             case "meanshift": {
                 APLMeanSummarizer summarizer = new APLMeanSummarizer();
                 summarizer.setCountColumn(countColumn);
