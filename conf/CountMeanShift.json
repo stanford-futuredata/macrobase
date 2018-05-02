@@ -13,7 +13,7 @@
     "version",
     "col3",
   ],
-  "minRatioMetric": 5.0,
+  "minMeanShift": 5.0,
   "minSupport": 0.05,
   "numThreads": 1
 }
