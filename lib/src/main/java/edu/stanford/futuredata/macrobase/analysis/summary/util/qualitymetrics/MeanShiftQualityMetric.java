@@ -1,5 +1,9 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
+/**
+ * Measures the shift of the mean of a value from the inlier to
+ * the outlier population.
+ */
 public class MeanShiftQualityMetric implements QualityMetric {
     private int oCountIdx, iCountIdx, oMeanIdx, iMeanIdx;
 

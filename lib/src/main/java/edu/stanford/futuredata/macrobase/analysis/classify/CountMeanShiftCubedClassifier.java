@@ -21,7 +21,9 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
     public static String inlierMeanColumnName = "_INLIERMEAN";
 
     /**
-     * @param metricColumnName Column on which to classifier outliers
+     * @param countColumnName Column containing per-row counts
+     * @param metricColumnName Column on which to classify outliers
+     * @param meanColumnName Column containing means whose shifts will be explained
      * @param predicateStr Predicate used for classification: "==" or "!="
      * @param sentinel String sentinel value used when evaluating the predicate to determine outlier
      * @throws MacroBaseException
@@ -41,7 +43,9 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
     }
 
     /**
-     * @param metricColumnName Column on which to classifier outliers
+     * @param countColumnName Column containing per-row counts
+     * @param metricColumnName Column on which to classify outliers
+     * @param meanColumnName Column containing means whose shifts will be explained
      * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
      * @param sentinel Double sentinel value used when evaluating the predicate to determine outlier
      */
@@ -61,7 +65,8 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
 
     /**
      * Scan through the metric column, and evaluate the predicate on every value in the column. The ``input'' DataFrame
-     * remains unmodified; a copy is created and all modifications are made on the copy.
+     * remains unmodified; a copy is created and all modifications are made on the copy.  Then store counts and
+     * meancounts for both outliers and inliers.
      * @throws Exception
      */
     @Override

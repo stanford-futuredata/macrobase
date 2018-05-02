@@ -13,6 +13,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Summarizer that measures the shift of the mean of some value from the inlier
+ * population to the outlier population.  Explanations return all sets of attributes with min
+ * support among both inlier and outlier population where the shift of the mean of a value
+ * from the inliers to the outliers passes some threshold.
+ */
 public class APLCountMeanShiftSummarizer  extends APLSummarizer {
     private Logger log = LoggerFactory.getLogger("APLMeanSummarizer");
 
@@ -20,7 +26,7 @@ public class APLCountMeanShiftSummarizer  extends APLSummarizer {
 
     @Override
     public List<String> getAggregateNames() {
-        return Arrays.asList("outlierCount", "inlierCount", "outlierMean", "inlierMean");
+        return Arrays.asList("outlierCount", "inlierCount", "outlierMeanCount", "inlierMeanCount");
     }
 
     @Override
