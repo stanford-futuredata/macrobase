@@ -68,10 +68,10 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
             final String curVal = metrics[i];
             if (strPredicate.test(curVal)) {
                 outlierCountColumn[i] = totalCountColumn[i];
-                outlierMeanColumn[i] = totalMeanColumn[i];
+                outlierMeanColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
             } else {
                 inlierCountColumn[i] = totalCountColumn[i];
-                inlierMeanColumn[i] = totalMeanColumn[i];
+                inlierMeanColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
             }
         }
         output.addColumn(outlierCountColumnName, outlierCountColumn);

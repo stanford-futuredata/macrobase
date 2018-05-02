@@ -45,9 +45,9 @@ public class CountMeanShiftCubedClassifierTest {
         assertEquals(0, outlierCountColumn[8], 0.1);
         assertEquals(1, outlierCountColumn[6], 0.1);
         assertEquals(0, inlierMeanColumn[2], 0.1);
-        assertEquals(20, inlierMeanColumn[3], 0.1);
-        assertEquals(25, inlierMeanColumn[5], 0.1);
-        assertEquals(100, inlierMeanColumn[7], 0.1);
+        assertEquals(20 * 180, inlierMeanColumn[3], 0.1);
+        assertEquals(25 * 200, inlierMeanColumn[5], 0.1);
+        assertEquals(100 * 2, inlierMeanColumn[7], 0.1);
     }
 
 }

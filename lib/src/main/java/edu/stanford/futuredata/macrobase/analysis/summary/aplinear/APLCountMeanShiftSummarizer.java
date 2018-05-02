@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.CountMeanShiftCubedClassifier;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.MeanShiftQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
@@ -14,6 +15,8 @@ import java.util.List;
 
 public class APLCountMeanShiftSummarizer  extends APLSummarizer {
     private Logger log = LoggerFactory.getLogger("APLMeanSummarizer");
+
+    private double minMeanShift = 1.0;
 
     @Override
     public List<String> getAggregateNames() {
@@ -56,12 +59,15 @@ public class APLCountMeanShiftSummarizer  extends APLSummarizer {
         qualityMetricList.add(
                 new SupportQualityMetric(1)
         );
+        qualityMetricList.add(
+                new MeanShiftQualityMetric(0, 1, 2, 3)
+        );
         return qualityMetricList;
     }
 
     @Override
     public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minOutlierSupport);
+        return Arrays.asList(minOutlierSupport, minOutlierSupport, minMeanShift);
     }
 
     @Override
@@ -70,6 +76,10 @@ public class APLCountMeanShiftSummarizer  extends APLSummarizer {
         for (double outlierCount: aggregates[0])
             sum += outlierCount;
         return sum;
+    }
+
+    public void setMinMeanShift(double minMeanShift) {
+        this.minMeanShift = minMeanShift;
     }
 
 }

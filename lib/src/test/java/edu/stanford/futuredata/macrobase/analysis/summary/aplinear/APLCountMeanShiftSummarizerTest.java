@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class APLCountMeanShiftSummarizerTest  {
     private DataFrame df;
@@ -43,11 +44,14 @@ public class APLCountMeanShiftSummarizerTest  {
 
         APLCountMeanShiftSummarizer summ = new APLCountMeanShiftSummarizer();
         summ.setMinSupport(.05);
+        summ.setMinMeanShift(5.0);
         summ.setAttributes(explanationAttributes);
         summ.process(output);
         APLExplanation e = summ.getResults();
-        System.out.println(e.prettyPrint());
-        TestCase.assertEquals(5, e.getResults().size());
+        TestCase.assertEquals(3, e.getResults().size());
+        assertTrue(e.prettyPrint().contains("location=AUS"));
+        assertTrue(e.prettyPrint().contains("version=v2"));
+        assertTrue(e.prettyPrint().contains("col3=0"));
     }
 
 }
