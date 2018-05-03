@@ -17,7 +17,7 @@ public class AttributeEncoder implements Serializable {
     private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    protected final int cardinalityThreshold = 5;
+    public static int cardinalityThreshold = 128;
 
     protected HashMap<Integer, Map<String, Integer>> encoder;
     protected int nextKey;

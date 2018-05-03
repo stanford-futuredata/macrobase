@@ -75,7 +75,7 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         outlierList = new ArrayList[numColumns];
         for (int i = 0; i < numColumns; i++)
             outlierList[i] = new ArrayList<>();
-        isBitmapEncoded = new boolean[numColumns];
+        colCardinalities = new int[numColumns];
         List<String> filterOnMinSupport = countMap.keySet().stream()
                 .filter(line -> countMap.get(line) > minSupportThreshold)
                 .collect(Collectors.toList());
@@ -98,9 +98,9 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
         }
 
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
-            if (useBitMaps && outlierList[colIdx].size() < cardinalityThreshold) {
-                isBitmapEncoded[colIdx] = true;
-            }
+            colCardinalities[colIdx] = outlierList[colIdx].size();
+            if (!useBitMaps)
+                colCardinalities[colIdx] = cardinalityThreshold + 1;
         }
 
         // Encode the strings that have support with a key equal to their rank.
@@ -119,7 +119,7 @@ public class AttributeEncoderDistributed extends AttributeEncoder {
             }
             return new Tuple2<>(newRow, entry._2);
         });
-        log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
+        log.info("Column cardinalities: {}", Arrays.toString(colCardinalities));
         return encodedDataFrame;
     }
 }

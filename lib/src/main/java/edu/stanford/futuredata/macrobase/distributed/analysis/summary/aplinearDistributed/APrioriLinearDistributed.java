@@ -7,7 +7,6 @@ import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.Tuple2;
@@ -32,7 +31,7 @@ public class APrioriLinearDistributed {
             int numColumns,
             AggregationOp[] aggregationOps,
             ArrayList<Integer>[] outlierList,
-            boolean[] isBitmapEncoded,
+            int[] colCardinalities,
             List<QualityMetric> argQualityMetrics,
             List<Double> argThresholds
     ) {
@@ -73,7 +72,7 @@ public class APrioriLinearDistributed {
 
         // Shard the input RDD by rows, then store attribute information by column.
         // This allows easy distribution but also very fast processing.
-        JavaRDD<Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, RoaringBitmap>[][]>> shardedAttributesAndAggregatesRDD =
+        JavaRDD<Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, ModBitSet>[][]>> shardedAttributesAndAggregatesRDD =
                 attributesAndAggregates.mapPartitions(
                         (Iterator<Tuple2<int[], double[]>> iter) -> {
             int[][] thisPartitionAttributes = new int[numColumns][(numRows + numPartitions * 100)/numPartitions];
@@ -92,28 +91,29 @@ public class APrioriLinearDistributed {
                 j++;
             }
             int partitionNumRows = j;
-            HashMap<Integer, RoaringBitmap>[][] partitionBitmaps = new HashMap[numColumns][2];
+            HashMap<Integer, ModBitSet>[][] partitionBitmaps = new HashMap[numColumns][2];
             for (int colIdx = 0; colIdx < numColumns; colIdx++) {
                 for (int a = 0; a < 2; a++) {
                     partitionBitmaps[colIdx][a] = new HashMap<>();
                 }
             }
             for (int colIdx = 0; colIdx < numColumns; colIdx++) {
-                if (isBitmapEncoded[colIdx]) {
+                if (colCardinalities[colIdx] < AttributeEncoder.cardinalityThreshold) {
                     for (int rowIdx = 0; rowIdx < partitionNumRows; rowIdx++) {
                         int oidx = (thisPartitionAggregates[rowIdx][0] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                         int curKey = thisPartitionAttributes[colIdx][rowIdx];
                         if (curKey != AttributeEncoder.noSupport) {
                             if (partitionBitmaps[colIdx][oidx].containsKey(curKey)) {
-                                partitionBitmaps[colIdx][oidx].get(curKey).add(rowIdx);
+                                partitionBitmaps[colIdx][oidx].get(curKey).set(rowIdx);
                             } else {
-                                partitionBitmaps[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
+                                partitionBitmaps[colIdx][oidx].put(curKey, new ModBitSet());
+                                partitionBitmaps[colIdx][oidx].get(curKey).set(rowIdx);
                             }
                         }
                     }
                 }
             }
-            List<Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, RoaringBitmap>[][]>> returnList = new ArrayList<>(1);
+            List<Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, ModBitSet>[][]>> returnList = new ArrayList<>(1);
             returnList.add(new Tuple2<>(new Tuple2<>(thisPartitionAttributes, thisPartitionAggregates), partitionBitmaps));
             return returnList.iterator();
         }, true);
@@ -124,10 +124,10 @@ public class APrioriLinearDistributed {
             final int curOrderFinal = curOrder;
             // Do candidate generation in a lambda.
             JavaRDD<Map<IntSet, double[]>> hashTableSet = shardedAttributesAndAggregatesRDD.map((
-                    Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, RoaringBitmap>[][]> sparkTuple) -> {
+                    Tuple2<Tuple2<int[][], double[][]>, HashMap<Integer, ModBitSet>[][]> sparkTuple) -> {
                 int[][] attributesForThread = sparkTuple._1._1;
                 double[][] aRowsForThread = sparkTuple._1._2;
-                HashMap<Integer, RoaringBitmap>[][] partitionBitmaps = sparkTuple._2;
+                HashMap<Integer, ModBitSet>[][] partitionBitmaps = sparkTuple._2;
                 FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
@@ -149,16 +149,16 @@ public class APrioriLinearDistributed {
                 thisThreadSetAggregates.put(curCandidate, partitionAggregates);
                 if (curOrderFinal == 1) {
                     for (int colNum = 0; colNum < numColumns; colNum++) {
-                        if (isBitmapEncoded[colNum]) {
+                        if (colCardinalities[colNum] < AttributeEncoder.cardinalityThreshold) {
                             for (Integer curOutlierCandidate : outlierList[colNum]) {
                                 // Require that all order-one candidates have minimum support.
                                 if (curOutlierCandidate == AttributeEncoder.noSupport)
                                     continue;
                                 int outlierCount = 0, inlierCount = 0;
                                 if (partitionBitmaps[colNum][1].containsKey(curOutlierCandidate))
-                                    outlierCount = partitionBitmaps[colNum][1].get(curOutlierCandidate).getCardinality();
+                                    outlierCount = partitionBitmaps[colNum][1].get(curOutlierCandidate).cardinality();
                                 if (partitionBitmaps[colNum][0].containsKey(curOutlierCandidate))
-                                    inlierCount = partitionBitmaps[colNum][0].get(curOutlierCandidate).getCardinality();
+                                    inlierCount = partitionBitmaps[colNum][0].get(curOutlierCandidate).cardinality();
                                 // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                 if (useIntSetAsArray) {
                                     curCandidate = new IntSetAsArray(curOutlierCandidate);
@@ -190,8 +190,9 @@ public class APrioriLinearDistributed {
                         int[] curColumnOneAttributes = attributesForThread[colNumOne];
                         for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                             int[] curColumnTwoAttributes = attributesForThread[colNumTwo];
-
-                            if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
+                            if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                    colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                    colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 256) {
                                 // Bitmap-Bitmap
                                 allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                         partitionBitmaps, colNumOne, colNumTwo, useIntSetAsArray,
@@ -212,8 +213,10 @@ public class APrioriLinearDistributed {
                             int[] curColumnTwoAttributes = attributesForThread[colNumTwo % numColumns];
                             for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
                                 int[] curColumnThreeAttributes = attributesForThread[colNumThree % numColumns];
-                                if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                        isBitmapEncoded[colNumThree]) {
+                                if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumThree] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] * colCardinalities[colNumTwo] * colCardinalities[colNumThree] < 256) {
                                     // all 3 cols are bitmaps
                                     allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                             singleNextArray, partitionBitmaps,

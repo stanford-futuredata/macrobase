@@ -167,7 +167,7 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                 attributes.size(),
                 aggregationOps,
                 encoder.getOutlierList(),
-                encoder.getIsBitmapEncodedArray(),
+                encoder.getColCardinalities(),
                 qualityMetricList,
                 thresholds
         );
