@@ -49,7 +49,7 @@ public class APrioriLinearDistributed {
         final boolean useIntSetAsArray;
         // 2097151 is 2^21 - 1, the largest value that can fit in a length-three IntSetAsLong.
         // If the cardinality is greater than that, don't use them.
-        if (cardinality >= 2097151) {
+        if (cardinality >= 0) {
             log.warn("Cardinality is extremely high.  Candidate generation will be slow.");
             useIntSetAsArray = true;
         } else{
@@ -97,7 +97,7 @@ public class APrioriLinearDistributed {
             JavaRDD<Map<IntSet, double[]>> hashTableSet = shardedAttributesAndAggregatesRDD.map((Tuple2<int[][], double[][]> sparkTuple) -> {
                 int[][] attributesForThread = sparkTuple._1;
                 double[][] aRowsForThread = sparkTuple._2;
-                FastFixedHashTable thisThreadSetAggregates = new FastFixedHashTable(cardinality, numAggregates, useIntSetAsArray);
+                Map<IntSet, double[]> thisThreadSetAggregates = new HashMap<>();
                 IntSet curCandidate;
                 if (!useIntSetAsArray)
                     curCandidate = new IntSetAsLong(1, 1, 1);
@@ -210,61 +210,12 @@ public class APrioriLinearDistributed {
                 } else {
                     throw new MacroBaseInternalError("High Order not supported");
                 }
-                return thisThreadSetAggregates.asHashMap();
-            });
-
-            hashTableSet.cache();
-
-            // The collected candidate hash tables can be very large, so we prune them before reducing in order
-            // to minimize the amount of data transfer and serial computation.  We prune by identifying the set of all
-            // candidates that pass the support threshold on any partition, then filtering out all other candidates
-            // on every partition.
-            JavaRDD<HashSet<IntSet>> prunedHashTableSet = hashTableSet.map((Map<IntSet, double[]> setAggregates) -> {
-                HashSet<IntSet> thisThreadPassingAggregates = new HashSet<>();
-                double[] partitionAggregates;
-                partitionAggregates = setAggregates.get(new IntSetAsArray(1, 1, 1));
-                QualityMetric[] partitionQualityMetrics = argQualityMetrics.toArray(new QualityMetric[0]);
-                for (QualityMetric q : partitionQualityMetrics) {
-                    q.initialize(partitionAggregates);
-                }
-                for (IntSet curCandidateSet: setAggregates.keySet()) {
-                    double[] curAggregates = setAggregates.get(curCandidateSet);
-                    boolean canPassThreshold = true;
-                    for (int i = 0; i < partitionQualityMetrics.length; i++) {
-                        QualityMetric q = partitionQualityMetrics[i];
-                        double t = thresholds[i];
-                        canPassThreshold &= q.maxSubgroupValue(curAggregates) >= t;
-                    }
-                    if (canPassThreshold) {
-                        thisThreadPassingAggregates.add(curCandidateSet);
-                    }
-                }
-                return thisThreadPassingAggregates;
-            });
-
-            // This is the set of all candidates that pass the support threshold on any partition.
-            final HashSet<IntSet> combinedPrunedHashTableSet = prunedHashTableSet.reduce((HashSet<IntSet> one, HashSet<IntSet> two) -> {
-                HashSet<IntSet> combined = new HashSet<>();
-                combined.addAll(one);
-                combined.addAll(two);
-                return combined;
-            });
-
-            // Remove all candidates not in combinedPrunedHashTableSet.
-            JavaRDD<Map<IntSet, double[]>> finalPrunedHashTableSet = hashTableSet.map((Map<IntSet, double[]> setAggregates) -> {
-                Map<IntSet, double[]> thisThreadPassingAggregates = new HashMap<>();
-                for (IntSet curCandidate : setAggregates.keySet()) {
-                    double[] curAggregates = setAggregates.get(curCandidate);
-                    if (combinedPrunedHashTableSet.contains(curCandidate)) {
-                        thisThreadPassingAggregates.put(curCandidate, curAggregates);
-                    }
-                }
-                return thisThreadPassingAggregates;
+                return thisThreadSetAggregates;
             });
 
             // Finally, reduce over the pruned hash tables to get a final candidate and counts map..
             Map<IntSet, double[]> setAggregates =
-                    finalPrunedHashTableSet.reduce((Map<IntSet, double[]> tableOne, Map<IntSet, double[]> tableTwo) -> {
+                    hashTableSet.reduce((Map<IntSet, double[]> tableOne, Map<IntSet, double[]> tableTwo) -> {
                         List<Map<IntSet, double[]>> tables = Arrays.asList(tableOne, tableTwo);
                         Map<IntSet, double[]> tableCombined = new HashMap<>();
                         for (Map<IntSet, double[]> table : tables) {
