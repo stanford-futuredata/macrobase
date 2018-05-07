@@ -57,7 +57,8 @@ public class APrioriLinear {
             ArrayList<Integer>[] outlierList,
             int[] colCardinalities,
             boolean useFDs,
-            int[] functionalDependencies
+            int[] functionalDependencies,
+            int bitmapRatioThreshold
     ) {
         final int numAggregates = aggregateColumns.length;
         final int numRows = aggregateColumns[0].length;
@@ -198,7 +199,7 @@ public class APrioriLinear {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
                                 if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                         colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
-                                        colCardinalities[colNumOne] * colCardinalities[colNumTwo] < 256) {
+                                        colCardinalities[colNumOne] * colCardinalities[colNumTwo] < bitmapRatioThreshold) {
                                     // Bitmap-Bitmap
                                     allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                             byThreadBitmap[curThreadNum], colNumOne, colNumTwo, useIntSetAsArray,
@@ -232,7 +233,8 @@ public class APrioriLinear {
                                     if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                             colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                             colCardinalities[colNumThree] < AttributeEncoder.cardinalityThreshold &&
-                                            colCardinalities[colNumOne] * colCardinalities[colNumTwo] * colCardinalities[colNumThree] < 256) {
+                                            colCardinalities[colNumOne] * colCardinalities[colNumTwo] *
+                                                    colCardinalities[colNumThree] < bitmapRatioThreshold) {
                                         // all 3 cols are bitmaps
                                         allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                                 singleNextArray, byThreadBitmap[curThreadNum],

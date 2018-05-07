@@ -25,6 +25,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
+    protected int bitmapRatioThreshold = 256;
 
     public abstract List<String> getAggregateNames();
     public abstract AggregationOp[] getAggregationOps();
@@ -81,7 +82,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 encoder.getOutlierList(),
                 encoder.getColCardinalities(),
                 useFDs,
-                functionalDependencies
+                functionalDependencies,
+                bitmapRatioThreshold
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
@@ -98,6 +100,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
     public APLExplanation getResults() {
         return explanation;
+    }
+
+    public void setBitmapRatioThreshold(int bitmapRatioThreshold) {
+        this.bitmapRatioThreshold = bitmapRatioThreshold;
     }
 
 }

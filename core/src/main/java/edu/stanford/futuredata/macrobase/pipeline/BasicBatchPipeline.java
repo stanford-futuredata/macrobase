@@ -33,6 +33,7 @@ public class BasicBatchPipeline implements Pipeline {
     private boolean pctileLow;
     private String predicateStr;
     private int numThreads;
+    private int bitmapRatioThreshold;
 
     private String summarizerType;
     private List<String> attributes;
@@ -73,6 +74,8 @@ public class BasicBatchPipeline implements Pipeline {
         minRiskRatio = conf.get("minRatioMetric", 3.0);
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
+        bitmapRatioThreshold = conf.get("bitmapRatioThreshold", 256);
+
 
         //if FDs are behind used, parse them into bitmaps. For now, all FDs must be in the first 31 attributes
         useFDs = conf.get("useFDs", false);
@@ -130,6 +133,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setBitmapRatioThreshold(bitmapRatioThreshold);
                 summarizer.setNumThreads(numThreads);
                 summarizer.setFDUsage(useFDs);
                 summarizer.setFDValues(functionalDependencies);
