@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { QueryService } from './query.service'
+import { DisplayService } from './display.service'
 
 @Component({
   selector: 'app-root',
@@ -8,14 +9,36 @@ import { QueryService } from './query.service'
 })
 export class AppComponent {
   displayMessages = false;
-  id = 0;
+  newID = 0;
   validIDs = new Set();
+  displayIDs: number[];
+  displayType = this.displayService.getDisplayType(); //DataHomepage, GenerateQuery, Dashboard, Explore
 
-  constructor(private queryService: QueryService) { }
+  constructor(private queryService: QueryService, private displayService: DisplayService) { }
+
+  ngOnInit() {
+    this.displayService.displayChanged.subscribe(
+        () => {this.updateDisplayType(this.displayService.getDisplayType(), this.displayService.getIDs());}
+      )
+  }
+
+  updateDisplayType(type: string, ids: number[]) {
+    if(type == 'GenerateQuery'){
+      if(ids.length == 0){
+        this.newQuery();
+        this.displayIDs = [this.newID];
+      }
+      else{ //editing an existing query
+        this.displayIDs = ids;
+      }
+    }
+
+    this.displayType = type;
+  }
 
   newQuery() {
-    this.validIDs.add(this.id);
-    this.id++;
+    this.newID++;
+    this.validIDs.add(this.newID);
   }
 
   deleteQuery(id: number) {

@@ -62,6 +62,7 @@ nav a.active {
 /* everywhere else */
 * {
   font-family: Tahoma, Geneva, sans-serif;
+  color: black;
 }
 
 table{

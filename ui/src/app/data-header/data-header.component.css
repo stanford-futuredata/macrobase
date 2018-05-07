@@ -1,0 +1,16 @@
+table {
+  cellpadding: 20;
+  border: 1px solid black;
+  width: 100%;
+  table-layout: fixed;
+}
+
+td {
+  text-align: center;
+  border: 1px solid black;
+  background-color: gray;
+}
+
+td:hover {
+  background-color: darkgray;
+}

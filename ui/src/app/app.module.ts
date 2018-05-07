@@ -11,6 +11,9 @@ import { HttpClientModule } from '@angular/common/http';
 import { MessagesComponent } from './messages/messages.component';
 import { MessageService } from './message.service';
 import { QueryService } from './query.service';
+import { DataHeaderComponent } from './data-header/data-header.component';
+import { DisplayService } from './display.service';
+import { DataService } from './data.service';
 
 
 @NgModule({
@@ -18,7 +21,8 @@ import { QueryService } from './query.service';
     AppComponent,
     QueryWizardComponent,
     CellComponent,
-    MessagesComponent
+    MessagesComponent,
+    DataHeaderComponent
   ],
   imports: [
     BrowserModule,
@@ -27,7 +31,9 @@ import { QueryService } from './query.service';
   ],
   providers: [
     MessageService,
-    QueryService
+    QueryService,
+    DisplayService,
+    DataService
   ],
   bootstrap: [AppComponent]
 })

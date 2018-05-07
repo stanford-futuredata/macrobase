@@ -1,28 +1,70 @@
-<div *ngFor="let id of validIDs">
+<div class="dataHeader">
+  <app-data-header> </app-data-header>
+</div>
+
+<!-- DATA HOMEPAGE -->
+<div *ngIf="displayType=='DataHomepage'">
+  <br>
+  <h1> Data Homepage </h1>
+</div>
+
+<!-- DASHBOARD -->
+<div *ngIf="displayType=='Dashboard'">
+  <br>
+  <h1> Dashboard </h1>
+
+  <div *ngFor="let id of validIDs">
+
+    <div id="wizard{{id}}" class="wizard">
+        <div style="text-align: right">
+          <button class="closeButton" (click)="deleteQuery(id)"> X </button>
+        </div>
+        <app-query-wizard id={{id}}></app-query-wizard>
+    </div>
+
+    <div id="cell{{id}}" class="cell">
+        <app-cell id={{id}}></app-cell>
+        <div style="text-align: right">
+          <button class="minimizeButton" (click)="minimizeCell(id)"> - </button>
+        </div>
+    </div>
+
+    <div id="expandCell{{id}}" class="cell" style="display:none; text-align:right;">
+      <button class="minimizeButton" (click)="expandCell(id)"> | </button>
+    </div>
+
+    <br>
+
+  </div>
+
+  <button class="addButton" (click)="newQuery()"> + </button>
+</div>
+
+<!-- QUERY WIZARD -->
+<div *ngIf="displayType=='QueryWizard'">
+  <br>
+  <h1> Query Editor </h1>
 
   <div id="wizard{{id}}" class="wizard">
-      <div style="text-align: right">
-        <button class="closeButton" (click)="deleteQuery(id)"> X </button>
-      </div>
-      <app-query-wizard id={{id}}></app-query-wizard>
+    <div style="text-align: right">
+      <button class="closeButton" (click)="deleteQuery(id)"> X </button>
+    </div>
+    <app-query-wizard id={{id}}></app-query-wizard>
   </div>
 
   <div id="cell{{id}}" class="cell">
-      <app-cell id={{id}}></app-cell>
-      <div style="text-align: right">
-        <button class="minimizeButton" (click)="minimizeCell(id)"> - </button>
-      </div>
+    <app-cell id={{id}}></app-cell>
   </div>
 
-  <div id="expandCell{{id}}" class="cell" style="display:none; text-align:right;">
-    <button class="minimizeButton" (click)="expandCell(id)"> | </button>
-  </div>
-
-  <br>
 
 </div>
 
-<button class="addButton" (click)="newQuery()"> + </button>
+<!-- EXPLORE EXPLANATIONS -->
+<div *ngIf="displayType=='Explore'">
+  <br>
+  <h1> Explore </h1>
+</div>
+
 
 <div class="footer" *ngIf="displayMessages">
   <app-messages></app-messages>
