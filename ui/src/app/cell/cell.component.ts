@@ -40,6 +40,7 @@ export class CellComponent implements OnInit {
     this.queryService.getItemsetData(query, this.id, itemsetID);
 
     if(isSample){
+      this.isPlot = false;
       this.displayHistogram = 0;
       this.displayData = true;
     }
@@ -180,6 +181,7 @@ export class CellComponent implements OnInit {
     this.displayItemsets = true;
 
     this.displayData = false;
+    this.isPlot = false;
     this.displayHistogram = 0;
   }
 
