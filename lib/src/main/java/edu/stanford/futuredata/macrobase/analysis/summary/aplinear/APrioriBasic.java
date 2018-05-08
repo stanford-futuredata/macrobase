@@ -151,7 +151,7 @@ public class APrioriBasic extends APriori {
                     }
                 }
             }
-            pruneTime[curOrder - 1] = (System.nanoTime() - orderStart) / 1.e6;
+            pruneTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
 
             start = System.nanoTime();
             HashMap<IntSetAsArray, double[]> curSavedAggregates = new HashMap<>(curOrderSaved.size());
@@ -166,7 +166,7 @@ public class APrioriBasic extends APriori {
                     singleNext.add(i.getFirst());
                 }
             }
-            saveTime[curOrder - 1] = (System.nanoTime() - orderStart) / 1.e6;
+            saveTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
             explainTime[curOrder - 1] = (System.nanoTime() - orderStart) / 1.e6;
             if (smartStopping && curOrderNext.isEmpty()) {
                 break;
