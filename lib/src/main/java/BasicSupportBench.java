@@ -116,6 +116,15 @@ public class BasicSupportBench {
                 curResults.put("order1_time", String.format("%f", summarizer.aplBasicKernel.explainTime[0]));
                 curResults.put("order2_time", String.format("%f", summarizer.aplBasicKernel.explainTime[1]));
                 curResults.put("order3_time", String.format("%f", summarizer.aplBasicKernel.explainTime[2]));
+                curResults.put("order1_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[0]));
+                curResults.put("order2_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[1]));
+                curResults.put("order3_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[2]));
+                curResults.put("order1_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[0]));
+                curResults.put("order2_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[1]));
+                curResults.put("order3_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[2]));
+                curResults.put("order1_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[0]));
+                curResults.put("order2_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[1]));
+                curResults.put("order3_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[2]));
                 curResults.put("num_results", String.format("%d", summarizer.numResults));
                 curResults.put("num_results_o1", String.format("%d", summarizer.aplBasicKernel.numSaved[0]));
                 curResults.put("num_results_o2", String.format("%d", summarizer.aplBasicKernel.numSaved[1]));

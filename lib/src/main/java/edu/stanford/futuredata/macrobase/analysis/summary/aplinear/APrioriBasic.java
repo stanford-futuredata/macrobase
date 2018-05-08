@@ -85,13 +85,14 @@ public class APrioriBasic extends APriori {
         rowstoreTime = (System.nanoTime() - start) / 1.e6;
 
         for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
-            start = System.nanoTime();
+            long orderStart = System.nanoTime();
             // Group by and calculate aggregates for each of the candidates
             HashMap<IntSetAsArray, double[]> setAggregates = new HashMap<>();
 
             // precalculate all possible candidate sets from "next" sets of
             // previous orders. We will focus on aggregating results for these
             // sets.
+            start = System.nanoTime();
             HashSet<IntSetAsArray> precalculatedCandidates = precalculateCandidates(curOrder);
             for (int i = 0; i < n; i++){
                 int[] curRowAttributes = attributes[i];
@@ -111,7 +112,9 @@ public class APrioriBasic extends APriori {
                     );
                 }
             }
+            aggregationTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
 
+            start = System.nanoTime();
             HashSet<IntSetAsArray> curOrderNext = new HashSet<>();
             HashSet<IntSetAsArray> curOrderSaved = new HashSet<>();
             int pruned = 0;
@@ -148,7 +151,9 @@ public class APrioriBasic extends APriori {
                     }
                 }
             }
+            pruneTime[curOrder - 1] = (System.nanoTime() - orderStart) / 1.e6;
 
+            start = System.nanoTime();
             HashMap<IntSetAsArray, double[]> curSavedAggregates = new HashMap<>(curOrderSaved.size());
             for (IntSetAsArray curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
@@ -161,7 +166,8 @@ public class APrioriBasic extends APriori {
                     singleNext.add(i.getFirst());
                 }
             }
-            explainTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
+            saveTime[curOrder - 1] = (System.nanoTime() - orderStart) / 1.e6;
+            explainTime[curOrder - 1] = (System.nanoTime() - orderStart) / 1.e6;
             if (smartStopping && curOrderNext.isEmpty()) {
                 break;
             }
