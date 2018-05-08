@@ -23,12 +23,12 @@ public class APLOutlierSummarizer extends APLSummarizer {
 
     @Override
     public List<String> getAggregateNames() {
-        return Arrays.asList("Outliers", "Count");
+        return Arrays.asList("Count");
     }
 
     @Override
     public AggregationOp[] getAggregationOps() {
-        AggregationOp[] curOps = {AggregationOp.SUM, AggregationOp.SUM};
+        AggregationOp[] curOps = {AggregationOp.SUM};
         return curOps;
     }
 
@@ -43,9 +43,8 @@ public class APLOutlierSummarizer extends APLSummarizer {
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
         double[] countCol = processCountCol(input, countColumn, outlierCol.length);
 
-        double[][] aggregateColumns = new double[2][];
-        aggregateColumns[0] = outlierCol;
-        aggregateColumns[1] = countCol;
+        double[][] aggregateColumns = new double[1][];
+        aggregateColumns[0] = countCol;
 
         return aggregateColumns;
     }
@@ -56,24 +55,12 @@ public class APLOutlierSummarizer extends APLSummarizer {
         qualityMetricList.add(
             new SupportQualityMetric(0)
         );
-        switch (ratioMetric) {
-            case "risk_ratio":
-            case "riskratio":
-                qualityMetricList.add(
-                    new RiskRatioQualityMetric(0, 1));
-                break;
-            case "global_ratio":
-            case "globalratio":
-            default:
-                qualityMetricList.add(
-                    new GlobalRatioQualityMetric(0, 1));
-        }
         return qualityMetricList;
     }
 
     @Override
     public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minRatioMetric);
+        return Arrays.asList(minOutlierSupport);
     }
 
     @Override
