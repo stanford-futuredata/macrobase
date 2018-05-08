@@ -26,7 +26,7 @@ public class APLCountMeanShiftSummarizer  extends APLSummarizer {
 
     @Override
     public List<String> getAggregateNames() {
-        return Arrays.asList("outlierCount", "inlierCount", "outlierMeanCount", "inlierMeanCount");
+        return Arrays.asList("outlierCount", "inlierCount", "outlierMeanSum", "inlierMeanSum");
     }
 
     @Override
