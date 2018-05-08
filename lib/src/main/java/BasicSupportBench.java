@@ -25,6 +25,7 @@ public class BasicSupportBench {
     private int numTrials;
     private int warmupTime;
     private boolean smartStopping;
+    private boolean computeAccuracy;
 
     private boolean verbose = false;
     private boolean calcError = false;
@@ -42,6 +43,7 @@ public class BasicSupportBench {
         numTrials = conf.get("numTrials");
         warmupTime = conf.get("warmupTime", 5);
         smartStopping = conf.get("smartStopping", true);
+        computeAccuracy = conf.get("computeAccuracy", true);
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);
@@ -91,8 +93,11 @@ public class BasicSupportBench {
                 startTime = System.currentTimeMillis();
                 summarizer.process(dfCopy);
                 long summarizationTime = System.currentTimeMillis() - startTime;
-                APLExplanation output = summarizer.getResults();
-                int numMatches = getNumMatches(output, trueOutput);
+                int numMatches = 0;
+                if (computeAccuracy) {
+                    APLExplanation output = summarizer.getResults();
+                    numMatches = getNumMatches(output, trueOutput);
+                }
 
                 Map<String, String> curResults = new HashMap<>();
                 curResults.put("dataset", fileName);
@@ -114,8 +119,10 @@ public class BasicSupportBench {
                 curResults.put("num_next_o1", String.format("%d", summarizer.aplBasicKernel.numNext[0]));
                 curResults.put("num_next_o2", String.format("%d", summarizer.aplBasicKernel.numNext[1]));
                 curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
-                curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
-                curResults.put("precision", String.format("%f", (double) numMatches / summarizer.numResults));
+                if (computeAccuracy) {
+                    curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
+                    curResults.put("precision", String.format("%f", (double) numMatches / summarizer.numResults));
+                }
                 results.add(curResults);
             }
         }
