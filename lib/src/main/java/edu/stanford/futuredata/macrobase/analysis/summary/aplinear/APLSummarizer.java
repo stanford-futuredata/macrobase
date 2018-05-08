@@ -126,6 +126,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         List<APLExplanationResult> aplResults;
         if (basic) {
             aplBasicKernel.setInjectFraction(injectFraction);
+            aplBasicKernel.setDoContainment(doContainment);
             aplBasicKernel.setSmartStopping(smartStopping);
             aplResults = aplBasicKernel.explain(
                     encoded,
