@@ -322,6 +322,7 @@ public class APrioriLinear {
                             // if a set is already past the threshold on all metrics,
                             // save it and no need for further exploration if we do containment
                             curOrderSaved.add(curCandidate);
+                            curOrderNext.add(curCandidate);
                         }
                     } else if (action == QualityMetric.Action.NEXT) {
                         // otherwise if a set still has potentially good subsets,
