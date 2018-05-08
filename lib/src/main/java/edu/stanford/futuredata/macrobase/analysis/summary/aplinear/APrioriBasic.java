@@ -25,6 +25,7 @@ public class APrioriBasic extends APriori {
     private Random rand;
     private boolean smartStopping = true;
     private boolean doContainment = true;
+    private int maxOrder = 3;
 
     // **Cached values**
 
@@ -83,7 +84,7 @@ public class APrioriBasic extends APriori {
         }
         rowstoreTime = (System.nanoTime() - start) / 1.e6;
 
-        for (int curOrder = 1; curOrder <= 3; curOrder++) {
+        for (int curOrder = 1; curOrder <= maxOrder; curOrder++) {
             start = System.nanoTime();
             // Group by and calculate aggregates for each of the candidates
             HashMap<IntSetAsArray, double[]> setAggregates = new HashMap<>();
@@ -300,4 +301,5 @@ public class APrioriBasic extends APriori {
 
     public void setSmartStopping(boolean smartStopping) { this.smartStopping = smartStopping; }
     public void setDoContainment(boolean doContainment) { this.doContainment = doContainment; }
+    public void setMaxOrder(int maxOrder) { this.maxOrder = maxOrder; }
 }

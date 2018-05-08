@@ -128,6 +128,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
             aplBasicKernel.setInjectFraction(injectFraction);
             aplBasicKernel.setDoContainment(doContainment);
             aplBasicKernel.setSmartStopping(smartStopping);
+            aplBasicKernel.setMaxOrder(maxOrder);
             aplResults = aplBasicKernel.explain(
                     encoded,
                     aggregateColumns

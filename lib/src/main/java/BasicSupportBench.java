@@ -27,6 +27,7 @@ public class BasicSupportBench {
     private boolean smartStopping;
     private boolean doContainment;
     private boolean computeAccuracy;
+    private int maxOrder;
 
     private boolean verbose = false;
     private boolean calcError = false;
@@ -46,6 +47,7 @@ public class BasicSupportBench {
         smartStopping = conf.get("smartStopping", true);
         doContainment = conf.get("doContainment", true);
         computeAccuracy = conf.get("computeAccuracy", true);
+        maxOrder = conf.get("maxOrder", 3);
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);
@@ -177,6 +179,7 @@ public class BasicSupportBench {
         summarizer.setBasic(true);
         summarizer.setSmartStopping(smartStopping);
         summarizer.setDoContainment(doContainment);
+        summarizer.setMaxOrder(maxOrder);
         return summarizer;
     }
 
