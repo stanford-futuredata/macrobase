@@ -34,6 +34,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     boolean basic = false;
     boolean simpleEncoding = false;
     double injectFraction = 0.0;
+    boolean smartStopping = true;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -124,6 +125,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         List<APLExplanationResult> aplResults;
         if (basic) {
             aplBasicKernel.setInjectFraction(injectFraction);
+            aplBasicKernel.setSmartStopping(smartStopping);
             aplResults = aplBasicKernel.explain(
                     encoded,
                     aggregateColumns
@@ -172,4 +174,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setSimpleEncoding(boolean simpleEncoding) { this.simpleEncoding = simpleEncoding; }
     public void setEncoder(AttributeEncoder encoder) { this.encoder = encoder; }
     public void setInjectFraction(double injectFraction) { this.injectFraction = injectFraction; }
+    public void setSmartStopping(boolean smartStopping) { this.smartStopping = smartStopping; }
 }

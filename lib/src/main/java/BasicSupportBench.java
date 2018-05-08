@@ -24,6 +24,7 @@ public class BasicSupportBench {
     private List<Double> sampleRates;
     private int numTrials;
     private int warmupTime;
+    private boolean smartStopping;
 
     private boolean verbose = false;
     private boolean calcError = false;
@@ -40,6 +41,7 @@ public class BasicSupportBench {
         sampleRates = conf.get("sampleRates");
         numTrials = conf.get("numTrials");
         warmupTime = conf.get("warmupTime", 5);
+        smartStopping = conf.get("smartStopping", true);
 
         verbose = conf.get("verbose", false);
         calcError = conf.get("calcError", false);
@@ -164,6 +166,7 @@ public class BasicSupportBench {
         summarizer.setFullNumOutliers(input.getNumRows());
         summarizer.setVerbose(false);
         summarizer.setBasic(true);
+        summarizer.setSmartStopping(smartStopping);
         return summarizer;
     }
 

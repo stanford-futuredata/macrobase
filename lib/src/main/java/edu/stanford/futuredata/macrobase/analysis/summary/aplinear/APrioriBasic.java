@@ -23,6 +23,7 @@ public class APrioriBasic extends APriori {
 
     private double injectFraction = 0.0;
     private Random rand;
+    private boolean smartStopping = true;
 
     // **Cached values**
 
@@ -158,9 +159,9 @@ public class APrioriBasic extends APriori {
                 }
             }
             explainTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
-//            if (curOrderNext.isEmpty()) {
-//                break;
-//            }
+            if (smartStopping && curOrderNext.isEmpty()) {
+                break;
+            }
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
@@ -294,4 +295,6 @@ public class APrioriBasic extends APriori {
             rand = new Random();
         }
     }
+
+    public void setSmartStopping(boolean smartStopping) { this.smartStopping = smartStopping; }
 }
