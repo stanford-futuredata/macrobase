@@ -44,14 +44,14 @@ public class APLCountMeanShiftSummarizer  extends APLSummarizer {
     public double[][] getAggregateColumns(DataFrame input) {
         double[] outlierCountColumn = input.getDoubleColumnByName(CountMeanShiftCubedClassifier.outlierCountColumnName);
         double[] inlierCountColumn = input.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierCountColumnName);
-        double[] outlierMeanColumn = input.getDoubleColumnByName(CountMeanShiftCubedClassifier.outlierMeanColumnName);
-        double[] inlierMeanColumn = input.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanColumnName);
+        double[] outlierMeanSumColumn = input.getDoubleColumnByName(CountMeanShiftCubedClassifier.outlierMeanSumColumnName);
+        double[] inlierMeanSumColumn = input.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanSumColumnName);
 
         double[][] aggregateColumns = new double[4][];
         aggregateColumns[0] = outlierCountColumn;
         aggregateColumns[1] = inlierCountColumn;
-        aggregateColumns[2] = outlierMeanColumn;
-        aggregateColumns[3] = inlierMeanColumn;
+        aggregateColumns[2] = outlierMeanSumColumn;
+        aggregateColumns[3] = inlierMeanSumColumn;
 
         return aggregateColumns;
     }

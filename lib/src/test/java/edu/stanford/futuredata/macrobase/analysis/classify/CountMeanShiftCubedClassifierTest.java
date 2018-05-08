@@ -3,7 +3,6 @@ package edu.stanford.futuredata.macrobase.analysis.classify;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
@@ -34,7 +33,7 @@ public class CountMeanShiftCubedClassifierTest {
 
 
         double[] outlierCountColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.outlierCountColumnName);
-        double[] inlierMeanColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanColumnName);
+        double[] inlierMeanColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanSumColumnName);
 
         assertEquals(150, outlierCountColumn[0], 0.1);
         assertEquals(0, outlierCountColumn[1], 0.1);
@@ -67,7 +66,7 @@ public class CountMeanShiftCubedClassifierTest {
 
 
         double[] outlierCountColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.outlierCountColumnName);
-        double[] inlierMeanColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanColumnName);
+        double[] inlierMeanColumn = output.getDoubleColumnByName(CountMeanShiftCubedClassifier.inlierMeanSumColumnName);
 
         assertEquals(150, outlierCountColumn[0], 0.1);
         assertEquals(0, outlierCountColumn[1], 0.1);

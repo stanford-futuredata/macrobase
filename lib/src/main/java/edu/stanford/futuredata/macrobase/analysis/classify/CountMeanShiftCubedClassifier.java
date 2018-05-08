@@ -17,8 +17,8 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
     private boolean isStrPredicate;
     public static String outlierCountColumnName = "_OUTLIERCOUNT";
     public static String inlierCountColumnName = "_INLIERCOUNT";
-    public static String outlierMeanColumnName = "_OUTLIERMEAN";
-    public static String inlierMeanColumnName = "_INLIERMEAN";
+    public static String outlierMeanSumColumnName = "_OUTLIERMEANSUM";
+    public static String inlierMeanSumColumnName = "_INLIERMEANSUM";
 
     /**
      * @param countColumnName Column containing per-row counts
@@ -73,44 +73,28 @@ public class CountMeanShiftCubedClassifier extends CubeClassifier {
     public void process(DataFrame input) throws Exception {
         String[] stringMetrics = input.getStringColumnByName(metricColumnName);
         double[] doubleMetrics = input.getDoubleColumnByName(metricColumnName);
-        int len;
-        if (isStrPredicate) {
-            len = stringMetrics.length;
-        } else {
-            len = doubleMetrics.length;
-        }
         output = input.copy();
         double[] totalCountColumn = input.getDoubleColumnByName(getCountColumnName());
         double[] totalMeanColumn = input.getDoubleColumnByName(meanColumnName);
+        int len = totalCountColumn.length;
         double[] outlierCountColumn = new double[len];
         double[] inlierCountColumn = new double[len];
-        double[] outlierMeanColumn = new double[len];
-        double[] inlierMeanColumn = new double[len];
+        double[] outlierMeanSumColumn = new double[len];
+        double[] inlierMeanSumColumn = new double[len];
         for (int i = 0; i < len; i++) {
-            if (isStrPredicate) {
-                final String curVal = stringMetrics[i];
-                if (strPredicate.test(curVal)) {
+                if ((isStrPredicate && strPredicate.test(stringMetrics[i])) ||
+                        (!isStrPredicate && doublePredicate.test(doubleMetrics[i]))) {
                     outlierCountColumn[i] = totalCountColumn[i];
-                    outlierMeanColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
+                    outlierMeanSumColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
                 } else {
                     inlierCountColumn[i] = totalCountColumn[i];
-                    inlierMeanColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
+                    inlierMeanSumColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
                 }
-            } else {
-                final double curVal = doubleMetrics[i];
-                if (doublePredicate.test(curVal)) {
-                    outlierCountColumn[i] = totalCountColumn[i];
-                    outlierMeanColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
-                } else {
-                    inlierCountColumn[i] = totalCountColumn[i];
-                    inlierMeanColumn[i] = totalMeanColumn[i] * totalCountColumn[i];
-                }
-            }
         }
         output.addColumn(outlierCountColumnName, outlierCountColumn);
         output.addColumn(inlierCountColumnName, inlierCountColumn);
-        output.addColumn(outlierMeanColumnName, outlierMeanColumn);
-        output.addColumn(inlierMeanColumnName, inlierMeanColumn);
+        output.addColumn(outlierMeanSumColumnName, outlierMeanSumColumn);
+        output.addColumn(inlierMeanSumColumnName, inlierMeanSumColumn);
     }
 
 

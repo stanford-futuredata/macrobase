@@ -11,9 +11,9 @@
   "attributes": [
     "location",
     "version",
-    "col3",
+    "language",
   ],
-  "minMeanShift": 5.0,
+  "meanShiftRatio": 1.1,
   "minSupport": 0.05,
   "numThreads": 1
 }

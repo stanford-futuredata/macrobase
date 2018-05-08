@@ -18,7 +18,7 @@ public class APLCountMeanShiftSummarizerTest  {
 
     @Before
     public void setUp() throws Exception {
-        List<String> requiredColumns = new ArrayList<>(Arrays.asList("time", "location", "version", "count", "col3", "meanLatency"));
+        List<String> requiredColumns = new ArrayList<>(Arrays.asList("time", "location", "version", "count", "language", "meanLatency"));
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put("time", Schema.ColType.STRING);
         colTypes.put("count", Schema.ColType.DOUBLE);
@@ -39,19 +39,19 @@ public class APLCountMeanShiftSummarizerTest  {
         List<String> explanationAttributes = Arrays.asList(
                 "location",
                 "version",
-                "col3"
+                "language"
         );
 
         APLCountMeanShiftSummarizer summ = new APLCountMeanShiftSummarizer();
         summ.setMinSupport(.05);
-        summ.setMinMeanShift(5.0);
+        summ.setMinMeanShift(1.1);
         summ.setAttributes(explanationAttributes);
         summ.process(output);
         APLExplanation e = summ.getResults();
         TestCase.assertEquals(3, e.getResults().size());
         assertTrue(e.prettyPrint().contains("location=AUS"));
         assertTrue(e.prettyPrint().contains("version=v2"));
-        assertTrue(e.prettyPrint().contains("col3=0"));
+        assertTrue(e.prettyPrint().contains("language=ENG"));
     }
 
 }

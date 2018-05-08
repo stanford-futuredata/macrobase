@@ -1,7 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
- * Measures the shift of the mean of a value from the inlier to
+ * Measures the relative shift of the mean of a value from the inlier to
  * the outlier population.
  */
 public class MeanShiftQualityMetric implements QualityMetric {
@@ -31,7 +31,7 @@ public class MeanShiftQualityMetric implements QualityMetric {
 
     @Override
     public double value(double[] aggregates) {
-        return aggregates[oMeanIdx]/aggregates[oCountIdx] - aggregates[iMeanIdx]/aggregates[iCountIdx];
+        return (aggregates[oMeanIdx]/aggregates[oCountIdx]) / (aggregates[iMeanIdx]/aggregates[iCountIdx]);
     }
 
     @Override

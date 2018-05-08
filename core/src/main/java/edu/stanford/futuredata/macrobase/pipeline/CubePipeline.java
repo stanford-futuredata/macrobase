@@ -50,7 +50,7 @@ public class CubePipeline implements Pipeline {
     private List<String> attributes;
     private double minSupport;
     private double minRatioMetric;
-    private double minMeanShift;
+    private double meanShiftRatio;
 
     private boolean debugDump;
 
@@ -88,7 +88,7 @@ public class CubePipeline implements Pipeline {
         attributes = conf.get("attributes");
         minSupport = conf.get("minSupport", 3.0);
         minRatioMetric = conf.get("minRatioMetric", 0.01);
-        minMeanShift = conf.get("minMeanShift", 1.0);
+        meanShiftRatio = conf.get("meanShiftRatio", 1.0);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
 
         debugDump = conf.get("debugDump", false);
@@ -264,7 +264,7 @@ public class CubePipeline implements Pipeline {
                 APLCountMeanShiftSummarizer summarizer = new APLCountMeanShiftSummarizer();
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
-                summarizer.setMinMeanShift(minMeanShift);
+                summarizer.setMinMeanShift(meanShiftRatio);
                 return summarizer;
             }
             case "meanshift": {
