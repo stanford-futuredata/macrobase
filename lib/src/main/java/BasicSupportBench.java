@@ -25,6 +25,7 @@ public class BasicSupportBench {
     private int numTrials;
     private int warmupTime;
     private boolean smartStopping;
+    private boolean doContainment;
     private boolean computeAccuracy;
 
     private boolean verbose = false;
@@ -43,6 +44,7 @@ public class BasicSupportBench {
         numTrials = conf.get("numTrials");
         warmupTime = conf.get("warmupTime", 5);
         smartStopping = conf.get("smartStopping", true);
+        doContainment = conf.get("doContainment", true);
         computeAccuracy = conf.get("computeAccuracy", true);
 
         verbose = conf.get("verbose", false);
@@ -174,6 +176,7 @@ public class BasicSupportBench {
         summarizer.setVerbose(false);
         summarizer.setBasic(true);
         summarizer.setSmartStopping(smartStopping);
+        summarizer.setDoContainment(doContainment);
         return summarizer;
     }
 

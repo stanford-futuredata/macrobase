@@ -24,6 +24,7 @@ public class APrioriBasic extends APriori {
     private double injectFraction = 0.0;
     private Random rand;
     private boolean smartStopping = true;
+    private boolean doContainment = true;
 
     // **Cached values**
 
@@ -130,7 +131,8 @@ public class APrioriBasic extends APriori {
                         curOrderSaved.add(curCandidate);
                         numSaved[curOrder - 1]++;
                     }
-                    else {
+
+                    if (!doContainment || !isPastThreshold) {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
                         curOrderNext.add(curCandidate);
@@ -297,4 +299,5 @@ public class APrioriBasic extends APriori {
     }
 
     public void setSmartStopping(boolean smartStopping) { this.smartStopping = smartStopping; }
+    public void setDoContainment(boolean doContainment) { this.doContainment = doContainment; }
 }

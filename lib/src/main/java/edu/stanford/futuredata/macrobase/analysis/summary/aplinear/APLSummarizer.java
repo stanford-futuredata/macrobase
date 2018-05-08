@@ -35,6 +35,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     boolean simpleEncoding = false;
     double injectFraction = 0.0;
     boolean smartStopping = true;
+    boolean doContainment = true;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -175,4 +176,5 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setEncoder(AttributeEncoder encoder) { this.encoder = encoder; }
     public void setInjectFraction(double injectFraction) { this.injectFraction = injectFraction; }
     public void setSmartStopping(boolean smartStopping) { this.smartStopping = smartStopping; }
+    public void setDoContainment(boolean doContainment) { this.doContainment = doContainment; }
 }
