@@ -5,18 +5,18 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
  * the outlier population.
  */
 public class MeanShiftQualityMetric implements QualityMetric {
-    private int oCountIdx, iCountIdx, oMeanIdx, iMeanIdx;
+    private int oCountIdx, iCountIdx, oMeanCountIdx, iMeanCountIdx;
 
     public MeanShiftQualityMetric(
             int oCountIdx,
             int iCountIdx,
-            int oMeanIdx,
-            int iMeanIdx
+            int oMeanCountIdx,
+            int iMeanCountIdx
     ) {
         this.oCountIdx = oCountIdx;
         this.iCountIdx = iCountIdx;
-        this.oMeanIdx = oMeanIdx;
-        this.iMeanIdx = iMeanIdx;
+        this.oMeanCountIdx = oMeanCountIdx;
+        this.iMeanCountIdx = iMeanCountIdx;
     }
 
     @Override
@@ -31,7 +31,7 @@ public class MeanShiftQualityMetric implements QualityMetric {
 
     @Override
     public double value(double[] aggregates) {
-        return (aggregates[oMeanIdx]/aggregates[oCountIdx]) / (aggregates[iMeanIdx]/aggregates[iCountIdx]);
+        return (aggregates[oMeanCountIdx]/aggregates[oCountIdx]) / (aggregates[iMeanCountIdx]/aggregates[iCountIdx]);
     }
 
     @Override
