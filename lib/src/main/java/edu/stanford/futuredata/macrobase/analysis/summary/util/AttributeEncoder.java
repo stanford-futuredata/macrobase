@@ -3,8 +3,6 @@ package edu.stanford.futuredata.macrobase.analysis.summary.util;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,12 +58,8 @@ public class AttributeEncoder {
      *                      row i of columns.
      * @return A two-dimensional array of encoded values.
      */
-    public int[][] encodeAttributesWithSupport(List<String[]> columns, boolean useBitmaps,
-                                               int outlierColumnIdx,
-                                               double[][] aggregateColumns,
-                                               AggregationOp[] aggregationOps,
-                                               List<QualityMetric> qualityMetrics,
-                                               List<Double> thresholds) {
+    public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport,
+        double[] outlierColumn, boolean useBitmaps) {
         if (columns.isEmpty()) {
             return new int[0][0];
         }
@@ -78,63 +72,35 @@ public class AttributeEncoder {
                 encoder.put(i, new HashMap<>());
             }
         }
-        int numAggregates = aggregateColumns.length;
-        // Quality metrics are initialized with global aggregates to
-        // allow them to determine the appropriate relative thresholds
-        double[] globalAggregates = new double[numAggregates];
-        for (int j = 0; j < numAggregates; j++) {
-            AggregationOp curOp = aggregationOps[j];
-            globalAggregates[j] = curOp.initValue();
-            double[] curColumn = aggregateColumns[j];
-            for (int i = 0; i < numRows; i++) {
-                globalAggregates[j] = curOp.combine(globalAggregates[j], curColumn[i]);
-            }
-        }
-        for (QualityMetric q : qualityMetrics) {
-            q.initialize(globalAggregates);
-        }
-        // Row store for more convenient access
-        final double[][] aRows = new double[numRows][numAggregates];
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < numAggregates; j++) {
-                aRows[i][j] = aggregateColumns[j][i];
-            }
-        }
-
-        // Create a map from strings to aggregates
-        HashMap<String, double[]> countMap = new HashMap<>();
+        // Create a map from strings to the number of times
+        // each string appears in an outlier.
+        int numOutliers = 0;
+        HashMap<String, Double> countMap = new HashMap<>();
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             String[] curCol = columns.get(colIdx);
             for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                // prepend column index as String to column value to disambiguate
-                // between two identical values in different columns
-                String colVal = Integer.toString(colIdx) + curCol[rowIdx];
-                double[] candidateVal = countMap.get(colVal);
-                if (candidateVal == null) {
-                    countMap.put(colVal,
-                            Arrays.copyOf(aRows[rowIdx], numAggregates));
-                } else {
-                    for (int a = 0; a < numAggregates; a++) {
-                        AggregationOp curOp = aggregationOps[a];
-                        candidateVal[a] = curOp.combine(candidateVal[a], aRows[rowIdx][a]);
-                    }
+                if (outlierColumn[rowIdx] > 0.0) {
+                    if (colIdx == 0)
+                        numOutliers += outlierColumn[rowIdx];
+                    // prepend column index as String to column value to disambiguate
+                    // between two identical values in different columns
+                    String colVal = Integer.toString(colIdx) + curCol[rowIdx];
+                    Double curCount = countMap.get(colVal);
+                    if (curCount == null)
+                        countMap.put(colVal, outlierColumn[rowIdx]);
+                    else
+                        countMap.put(colVal, curCount + outlierColumn[rowIdx]);
                 }
             }
         }
 
-        // Filter strings that do not pass all monotonic quality metrics
+        // Rank the strings that have minimum support among the outliers
+        // by the amount of support they have.
+        double minSupportThreshold = minSupport * numOutliers;
         List<String> filterOnMinSupport = countMap.keySet().stream()
-                .filter(line ->
-                {
-                    QualityMetric.Action action = QualityMetric.Action.KEEP;
-                    for (int i = 0; i < qualityMetrics.size(); i++) {
-                        QualityMetric q = qualityMetrics.get(i);
-                        double t = thresholds.get(i);
-                         action = QualityMetric.Action.combine(action, q.getAction(countMap.get(line), t));
-                    }
-                    return action == QualityMetric.Action.KEEP;
-                })
+                .filter(line -> countMap.get(line) >= minSupportThreshold)
                 .collect(Collectors.toList());
+        filterOnMinSupport.sort((s1, s2) -> countMap.get(s2).compareTo(countMap.get(s1)));
 
         HashMap<String, Integer> stringToRank = new HashMap<>(filterOnMinSupport.size());
         for (int i = 0; i < filterOnMinSupport.size(); i++) {
@@ -163,7 +129,7 @@ public class AttributeEncoder {
                 // Again, prepend column index as String to column value to disambiguate
                 // between two identical values in different columns
                 String colNumAndVal = Integer.toString(colIdx) + colVal;
-                int oidx = (aggregateColumns[outlierColumnIdx][rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
+                int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                 if (!curColEncoder.containsKey(colVal)) {
                     if (stringToRank.containsKey(colNumAndVal)) {
                         int newKey = stringToRank.get(colNumAndVal);
@@ -194,7 +160,7 @@ public class AttributeEncoder {
             if (useBitmaps && colCardinalities[colIdx] < cardinalityThreshold) {
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
-                    int oidx = (aggregateColumns[outlierColumnIdx][rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
+                    int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                     int curKey = curColEncoder.get(colVal);
                     if (curKey != noSupport) {
                         if (bitmap[colIdx][oidx].containsKey(curKey)) {
