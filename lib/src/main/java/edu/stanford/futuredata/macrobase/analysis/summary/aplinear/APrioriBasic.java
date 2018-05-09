@@ -111,6 +111,7 @@ public class APrioriBasic extends APriori {
                             APrioriBasic::addToArray
                     );
                 }
+                numProcessed[curOrder - 1] += candidates.size();
             }
             aggregationTime[curOrder - 1] = (System.nanoTime() - start) / 1.e6;
 

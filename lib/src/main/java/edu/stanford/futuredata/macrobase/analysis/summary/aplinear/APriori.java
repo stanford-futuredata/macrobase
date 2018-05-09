@@ -8,6 +8,7 @@ public abstract class APriori {
     public double[] aggregationTime = {0, 0, 0};
     public double[] pruneTime = {0, 0, 0};
     public double[] saveTime = {0, 0, 0};
+    public int[] numProcessed = {0, 0, 0};
     public int[] numSaved = {0, 0, 0};
     public int[] numNext = {0, 0, 0};
 }

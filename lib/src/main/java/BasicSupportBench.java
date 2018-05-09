@@ -125,6 +125,9 @@ public class BasicSupportBench {
                 curResults.put("order1_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[0]));
                 curResults.put("order2_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[1]));
                 curResults.put("order3_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[2]));
+                curResults.put("order1_num_processed", String.format("%d", summarizer.aplBasicKernel.numProcessed[0]));
+                curResults.put("order2_num_processed", String.format("%d", summarizer.aplBasicKernel.numProcessed[1]));
+                curResults.put("order3_num_processed", String.format("%d", summarizer.aplBasicKernel.numProcessed[2]));
                 curResults.put("num_results", String.format("%d", summarizer.numResults));
                 curResults.put("num_results_o1", String.format("%d", summarizer.aplBasicKernel.numSaved[0]));
                 curResults.put("num_results_o2", String.format("%d", summarizer.aplBasicKernel.numSaved[1]));
