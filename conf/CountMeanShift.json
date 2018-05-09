@@ -1,0 +1,19 @@
+{
+  "pipeline": "CubePipeline",
+  "inputURI": "csv://lib/src/test/resources/sample_cubedshift.csv",
+  "classifier": "countmeanshift",
+  "metric": "time",
+  "predicate": "==",
+  "cutoff": "1",
+  "meanColumn": "meanLatency",
+  "countColumn": "count",
+  "summarizer": "countmeanshift",
+  "attributes": [
+    "location",
+    "version",
+    "language",
+  ],
+  "meanShiftRatio": 1.1,
+  "minSupport": 0.05,
+  "numThreads": 1
+}
