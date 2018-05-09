@@ -140,6 +140,7 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinMeanShift(meanShiftRatio);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             default: {

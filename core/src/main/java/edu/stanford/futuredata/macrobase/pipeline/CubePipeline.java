@@ -265,6 +265,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinMeanShift(meanShiftRatio);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             case "meanshift": {
@@ -277,6 +278,7 @@ public class CubePipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinStdDev(minRatioMetric);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             default: {
