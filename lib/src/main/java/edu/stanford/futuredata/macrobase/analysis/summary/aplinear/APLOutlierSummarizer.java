@@ -34,8 +34,19 @@ public class APLOutlierSummarizer extends APLSummarizer {
 
     @Override
     public int[][] getEncoded(List<String[]> columns, DataFrame input) {
-        return encoder.encodeAttributesWithSupport(columns, minOutlierSupport,
-            input.getDoubleColumnByName(outlierColumn), useBitmaps);
+        List<QualityMetric> qualityMetrics = getQualityMetricList();
+        List<Double> thresholds = getThresholds();
+        List<QualityMetric> monotonicQualityMetrics = new ArrayList<>();
+        List<Double> monotonicThresholds = new ArrayList<>();
+        for(int i = 0; i < qualityMetrics.size(); i++) {
+            if (qualityMetrics.get(i).isMonotonic()) {
+                monotonicQualityMetrics.add(qualityMetrics.get(i));
+                monotonicThresholds.add(thresholds.get(i));
+            }
+        }
+        return encoder.encodeAttributesWithSupport(columns, useBitmaps,
+                0, getAggregateColumns(input), getAggregationOps(),
+                monotonicQualityMetrics, monotonicThresholds);
     }
 
     @Override
