@@ -254,8 +254,6 @@ public class APrioriLinear {
                     } else {
                         throw new MacroBaseInternalError("High Order not supported");
                     }
-                    log.info("Time spent in Thread {} in order {}:  {} ms",
-                            curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
@@ -344,6 +342,7 @@ public class APrioriLinear {
                     singleNextArray[i.getFirst()] = true;
                 }
             }
+            log.info("Time spent in order {}:  {} ms", curOrderFinal, System.currentTimeMillis() - startTime);
         }
 
         List<APLExplanationResult> results = new ArrayList<>();
