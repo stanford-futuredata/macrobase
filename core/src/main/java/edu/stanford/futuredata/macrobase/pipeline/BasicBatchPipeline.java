@@ -1,9 +1,9 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import edu.stanford.futuredata.macrobase.analysis.classify.Classifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.PercentileClassifier;
-import edu.stanford.futuredata.macrobase.analysis.classify.PredicateClassifier;
+import com.fasterxml.jackson.databind.jsonschema.SchemaAware;
+import edu.stanford.futuredata.macrobase.analysis.classify.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
@@ -27,6 +27,7 @@ public class BasicBatchPipeline implements Pipeline {
     private String classifierType;
     private String metric;
     private double cutoff;
+    private Optional<String> meanColumn;
     private String strCutoff;
     private boolean isStrPredicate;
     private boolean pctileHigh;
@@ -40,6 +41,7 @@ public class BasicBatchPipeline implements Pipeline {
     private String ratioMetric;
     private double minSupport;
     private double minRiskRatio;
+    private double meanShiftRatio;
 
     private boolean useFDs;
     private int[] functionalDependencies;
@@ -51,7 +53,7 @@ public class BasicBatchPipeline implements Pipeline {
         classifierType = conf.get("classifier", "percentile");
         metric = conf.get("metric");
 
-        if (classifierType.equals("predicate")) {
+        if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
             Object rawCutoff = conf.get("cutoff");
             isStrPredicate = rawCutoff instanceof String;
             if (isStrPredicate) {
@@ -90,6 +92,8 @@ public class BasicBatchPipeline implements Pipeline {
                 }
             }
         }
+        meanColumn = Optional.ofNullable(conf.get("meanColumn"));
+        meanShiftRatio = conf.get("meanShiftRatio", 1.0);
     }
 
     public Classifier getClassifier() throws MacroBaseException {
@@ -100,6 +104,21 @@ public class BasicBatchPipeline implements Pipeline {
                 classifier.setIncludeHigh(pctileHigh);
                 classifier.setIncludeLow(pctileLow);
                 return classifier;
+            }
+            case "countmeanshift": {
+                if (isStrPredicate) {
+                    return new CountMeanShiftClassifier(
+                            metric,
+                            meanColumn.orElseThrow(
+                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
+                            strCutoff);
+                } else {
+                    return new CountMeanShiftClassifier(
+                            metric,
+                            meanColumn.orElseThrow(
+                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
+                            cutoff);
+                }
             }
             case "predicate": {
                 if (isStrPredicate){
@@ -139,6 +158,14 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setFDValues(functionalDependencies);
                 return summarizer;
             }
+            case "countmeanshift": {
+                APLCountMeanShiftSummarizer summarizer = new APLCountMeanShiftSummarizer();
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinMeanShift(meanShiftRatio);
+                summarizer.setNumThreads(numThreads);
+                return summarizer;
+            }
             default: {
                 throw new MacroBaseException("Bad Summarizer Type");
             }
@@ -154,6 +181,11 @@ public class BasicBatchPipeline implements Pipeline {
             colTypes.put(metric, Schema.ColType.DOUBLE);
         }
         List<String> requiredColumns = new ArrayList<>(attributes);
+        if (meanColumn.isPresent()) {
+            colTypes.put(meanColumn.get(), Schema.ColType.DOUBLE);
+            requiredColumns.add(meanColumn.get());
+
+        }
         requiredColumns.add(metric);
         return PipelineUtils.loadDataFrame(inputURI, colTypes, requiredColumns);
     }

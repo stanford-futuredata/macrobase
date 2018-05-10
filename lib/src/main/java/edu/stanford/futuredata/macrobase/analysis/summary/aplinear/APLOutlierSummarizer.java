@@ -62,6 +62,11 @@ public class APLOutlierSummarizer extends APLSummarizer {
                 qualityMetricList.add(
                     new RiskRatioQualityMetric(0, 1));
                 break;
+            case "prevalence_ratio":
+            case "prevalenceratio":
+                qualityMetricList.add(
+                    new PrevalenceRatioQualityMetric(0, 1));
+                break;
             case "global_ratio":
             case "globalratio":
             default:
