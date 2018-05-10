@@ -29,21 +29,11 @@ public class PrevalenceRatioQualityMetric implements QualityMetric {
 
     @Override
     public double value(double[] aggregates) {
-//        if(outlierCount == 0 || matchedOutlier == 0) {
-//            return 0;
-//        }
-//
-//        double inlierCount = totalCount - outlierCount;
-//        double matchedInlier = matchedTotal - matchedOutlier;
-//
-//        if(matchedInlier == 0) {
-//            matchedInlier += 1; // increment by 1 to avoid DivideByZero error
-//        }
-//
-//        return (matchedOutlier / outlierCount) / (matchedInlier / inlierCount);
-
         final double matchedOutlier = aggregates[outlierCountIdx];
-        final double matchedTotal = aggregates[totalCountIdx];
+        double matchedTotal = aggregates[totalCountIdx];
+        if (matchedTotal == matchedOutlier) {
+            matchedTotal += 1.0;
+        }
         return matchedOutlier / (matchedTotal - matchedOutlier) / baseRate;
     }
 
