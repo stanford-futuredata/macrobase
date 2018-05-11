@@ -36,7 +36,7 @@ public class BasicSupportBench {
         fileName = conf.get("fileName");
 
         attributes = conf.get("attributes");
-        minSupports = conf.get("minSupport", Collections.singletonList(0.01));
+        minSupports = conf.get("minSupports", Collections.singletonList(0.01));
 
         sampleRates = conf.get("sampleRates");
         numTrials = conf.get("numTrials");
