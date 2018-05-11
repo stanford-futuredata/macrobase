@@ -9,17 +9,14 @@ import io.CSVOutput;
 
 import javax.xml.crypto.Data;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class BasicSupportBench {
     private String testName;
     private String fileName;
 
     private List<String> attributes;
-    private double minSupport;
+    private List<Double> minSupports;
 
     private List<Double> sampleRates;
     private int numTrials;
@@ -39,7 +36,7 @@ public class BasicSupportBench {
         fileName = conf.get("fileName");
 
         attributes = conf.get("attributes");
-        minSupport = conf.get("minSupport", 0.01);
+        minSupports = conf.get("minSupport", Collections.singletonList(0.01));
 
         sampleRates = conf.get("sampleRates");
         numTrials = conf.get("numTrials");
@@ -77,82 +74,85 @@ public class BasicSupportBench {
 
         List<Map<String, String>> results = new ArrayList<>();
 
-        APLExplanation trueOutput = warmStart(df);
-        int numTrueResults = trueOutput.getResults().size();
+        for (double minSupport : minSupports) {
+            APLExplanation trueOutput = warmStart(df, minSupport);
+            int numTrueResults = trueOutput.getResults().size();
 
-        for (double sr : sampleRates) {
-            System.out.format("Sample rate %.4f\n", sr);
-            for (int curTrial = 0; curTrial < numTrials; curTrial++) {
-                System.gc();
+            for (double sr : sampleRates) {
+                System.out.format("Support: %.4f, Sample rate %.4f\n", minSupport, sr);
+                for (int curTrial = 0; curTrial < numTrials; curTrial++) {
+                    System.gc();
 
-                DataFrame dfCopy = df;
-                long start = System.nanoTime();
-                if (sr < 1.0) {
-                    dfCopy = dfCopy.sample(sr);
+                    DataFrame dfCopy = df;
+                    long start = System.nanoTime();
+                    if (sr < 1.0) {
+                        dfCopy = dfCopy.sample(sr);
+                    }
+                    double sampleTime = (System.nanoTime() - start) / 1.e6;
+
+                    APLSummarizer summarizer = getSummarizer(dfCopy, minSupport, sr);
+
+                    startTime = System.currentTimeMillis();
+                    summarizer.process(dfCopy);
+                    long summarizationTime = System.currentTimeMillis() - startTime;
+                    int numMatches = 0;
+                    if (computeAccuracy) {
+                        APLExplanation output = summarizer.getResults();
+                        numMatches = getNumMatches(output, trueOutput);
+                    }
+
+                    Map<String, String> curResults = new HashMap<>();
+                    curResults.put("dataset", fileName);
+                    curResults.put("trial", String.format("%d", curTrial));
+                    curResults.put("min_support", String.format("%f", minSupport));
+                    curResults.put("sample_rate", String.format("%f", sr));
+                    curResults.put("sampling_time", String.format("%f", sampleTime));
+                    curResults.put("summarization_time", String.format("%d", summarizationTime));
+                    curResults.put("encoding_time", String.format("%f", summarizer.encodingTime));
+                    curResults.put("explanation_time", String.format("%f", summarizer.explanationTime));
+                    curResults.put("initialization_time", String.format("%f", summarizer.aplBasicKernel.initializationTime));
+                    curResults.put("rowstore_time", String.format("%f", summarizer.aplBasicKernel.rowstoreTime));
+                    curResults.put("order1_time", String.format("%f", summarizer.aplBasicKernel.explainTime[0]));
+                    curResults.put("order2_time", String.format("%f", summarizer.aplBasicKernel.explainTime[1]));
+                    curResults.put("order3_time", String.format("%f", summarizer.aplBasicKernel.explainTime[2]));
+                    curResults.put("order1_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[0]));
+                    curResults.put("order2_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[1]));
+                    curResults.put("order3_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[2]));
+                    curResults.put("order1_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[0]));
+                    curResults.put("order2_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[1]));
+                    curResults.put("order3_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[2]));
+                    curResults.put("order1_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[0]));
+                    curResults.put("order2_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[1]));
+                    curResults.put("order3_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[2]));
+                    curResults.put("num_processed_o1", String.format("%d", summarizer.aplBasicKernel.numProcessed[0]));
+                    curResults.put("num_processed_o2", String.format("%d", summarizer.aplBasicKernel.numProcessed[1]));
+                    curResults.put("num_processed_o3", String.format("%d", summarizer.aplBasicKernel.numProcessed[2]));
+                    curResults.put("num_results", String.format("%d", summarizer.numResults));
+                    curResults.put("num_results_o1", String.format("%d", summarizer.aplBasicKernel.numSaved[0]));
+                    curResults.put("num_results_o2", String.format("%d", summarizer.aplBasicKernel.numSaved[1]));
+                    curResults.put("num_results_o3", String.format("%d", summarizer.aplBasicKernel.numSaved[2]));
+                    curResults.put("num_next_o1", String.format("%d", summarizer.aplBasicKernel.numNext[0]));
+                    curResults.put("num_next_o2", String.format("%d", summarizer.aplBasicKernel.numNext[1]));
+                    curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
+                    if (computeAccuracy) {
+                        curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
+                        curResults.put("precision", String.format("%f", (double) numMatches / summarizer.numResults));
+                    }
+                    results.add(curResults);
                 }
-                double sampleTime = (System.nanoTime() - start) / 1.e6;
-
-                APLSummarizer summarizer = getSummarizer(dfCopy, sr);
-
-                startTime = System.currentTimeMillis();
-                summarizer.process(dfCopy);
-                long summarizationTime = System.currentTimeMillis() - startTime;
-                int numMatches = 0;
-                if (computeAccuracy) {
-                    APLExplanation output = summarizer.getResults();
-                    numMatches = getNumMatches(output, trueOutput);
-                }
-
-                Map<String, String> curResults = new HashMap<>();
-                curResults.put("dataset", fileName);
-                curResults.put("trial", String.format("%d", curTrial));
-                curResults.put("sample_rate", String.format("%f", sr));
-                curResults.put("sampling_time", String.format("%f", sampleTime));
-                curResults.put("summarization_time", String.format("%d", summarizationTime));
-                curResults.put("encoding_time", String.format("%f", summarizer.encodingTime));
-                curResults.put("explanation_time", String.format("%f", summarizer.explanationTime));
-                curResults.put("initialization_time", String.format("%f", summarizer.aplBasicKernel.initializationTime));
-                curResults.put("rowstore_time", String.format("%f", summarizer.aplBasicKernel.rowstoreTime));
-                curResults.put("order1_time", String.format("%f", summarizer.aplBasicKernel.explainTime[0]));
-                curResults.put("order2_time", String.format("%f", summarizer.aplBasicKernel.explainTime[1]));
-                curResults.put("order3_time", String.format("%f", summarizer.aplBasicKernel.explainTime[2]));
-                curResults.put("order1_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[0]));
-                curResults.put("order2_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[1]));
-                curResults.put("order3_agg_time", String.format("%f", summarizer.aplBasicKernel.aggregationTime[2]));
-                curResults.put("order1_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[0]));
-                curResults.put("order2_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[1]));
-                curResults.put("order3_prune_time", String.format("%f", summarizer.aplBasicKernel.pruneTime[2]));
-                curResults.put("order1_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[0]));
-                curResults.put("order2_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[1]));
-                curResults.put("order3_save_time", String.format("%f", summarizer.aplBasicKernel.saveTime[2]));
-                curResults.put("order1_num_processed", String.format("%d", summarizer.aplBasicKernel.numProcessed[0]));
-                curResults.put("order2_num_processed", String.format("%d", summarizer.aplBasicKernel.numProcessed[1]));
-                curResults.put("order3_num_processed", String.format("%d", summarizer.aplBasicKernel.numProcessed[2]));
-                curResults.put("num_results", String.format("%d", summarizer.numResults));
-                curResults.put("num_results_o1", String.format("%d", summarizer.aplBasicKernel.numSaved[0]));
-                curResults.put("num_results_o2", String.format("%d", summarizer.aplBasicKernel.numSaved[1]));
-                curResults.put("num_results_o3", String.format("%d", summarizer.aplBasicKernel.numSaved[2]));
-                curResults.put("num_next_o1", String.format("%d", summarizer.aplBasicKernel.numNext[0]));
-                curResults.put("num_next_o2", String.format("%d", summarizer.aplBasicKernel.numNext[1]));
-                curResults.put("num_encoded", String.format("%d", summarizer.numEncodedCategories));
-                if (computeAccuracy) {
-                    curResults.put("recall", String.format("%f", (double) numMatches / numTrueResults));
-                    curResults.put("precision", String.format("%f", (double) numMatches / summarizer.numResults));
-                }
-                results.add(curResults);
             }
         }
 
         return results;
     }
 
-    public APLExplanation warmStart(DataFrame df) throws Exception {
+    public APLExplanation warmStart(DataFrame df, double minSupport) throws Exception {
         long start = System.currentTimeMillis();
         APLExplanation trueOutput = null;
         while (System.currentTimeMillis() - start < 1000 * warmupTime || trueOutput == null) {
             System.gc();
 
-            APLSummarizer summarizer = getSummarizer(df, 1.0);
+            APLSummarizer summarizer = getSummarizer(df, minSupport, 1.0);
             summarizer.process(df);
             trueOutput = summarizer.getResults();
         }
@@ -179,7 +179,7 @@ public class BasicSupportBench {
         return numMatches;
     }
 
-    public APLSummarizer getSummarizer(DataFrame input, double sampleRate) throws MacroBaseException {
+    public APLSummarizer getSummarizer(DataFrame input, double minSupport, double sampleRate) throws MacroBaseException {
         APLSupportSummarizer summarizer = new APLSupportSummarizer();
         summarizer.setAttributes(attributes);
         summarizer.setMinSupport(minSupport);
