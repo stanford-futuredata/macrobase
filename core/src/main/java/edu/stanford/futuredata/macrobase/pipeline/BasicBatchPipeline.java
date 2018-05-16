@@ -6,6 +6,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLXRaySummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -148,6 +149,18 @@ public class BasicBatchPipeline implements Pipeline {
             case "aplinear":
             case "apriori": {
                 APLOutlierSummarizer summarizer = new APLOutlierSummarizer(true);
+                summarizer.setOutlierColumn(outlierColumnName);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setBitmapRatioThreshold(bitmapRatioThreshold);
+                summarizer.setNumThreads(numThreads);
+                summarizer.setFDUsage(useFDs);
+                summarizer.setFDValues(functionalDependencies);
+                return summarizer;
+            }
+            case "xray": {
+                APLXRaySummarizer summarizer = new APLXRaySummarizer(true);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
