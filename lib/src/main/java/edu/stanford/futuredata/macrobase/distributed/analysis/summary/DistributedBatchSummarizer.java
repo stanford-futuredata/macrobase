@@ -23,6 +23,7 @@ public abstract class DistributedBatchSummarizer implements Operator<Distributed
     protected double minRatioMetric = 3;
     protected List<String> attributes = new ArrayList<>();
     protected int numThreads = Runtime.getRuntime().availableProcessors();
+    protected String ratioMetric = "global_ratio";
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -57,4 +58,10 @@ public abstract class DistributedBatchSummarizer implements Operator<Distributed
      * @param numThreads Number of threads to use.
      */
     public void setNumThreads(int numThreads) { this.numThreads = numThreads; }
+
+
+    public DistributedBatchSummarizer setRatioMetric(final String ratioMetric) {
+        this.ratioMetric = ratioMetric;
+        return this;
+    }
 }

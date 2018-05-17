@@ -219,6 +219,7 @@ class QueryEngineDistributed {
 
         final double minRatioMetric = diffQuery.getMinRatioExpression().getMinRatio();
         final double minSupport = diffQuery.getMinSupportExpression().getMinSupport();
+        final String ratioMetric = diffQuery.getRatioMetricExpr().getFuncName().toString();
 
         // Execute diff
         final APLOutlierSummarizerDistributed summarizer = new APLOutlierSummarizerDistributed(true);
@@ -227,6 +228,7 @@ class QueryEngineDistributed {
         summarizer.setOutlierColumn(outlierColName);
         summarizer.setAttributes(explainCols);
         summarizer.setNumPartitions(numPartitions);
+        summarizer.setRatioMetric(ratioMetric);
 
         try {
             summarizer.process(outliersDF, inliersDF);

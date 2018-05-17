@@ -1,9 +1,6 @@
 package edu.stanford.futuredata.macrobase.distributed.analysis.summary.aplinearDistributed;
 
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.distributed.datamodel.DistributedDataFrame;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -53,9 +50,18 @@ public class APLOutlierSummarizerDistributed extends APLSummarizerDistributed {
         qualityMetricList.add(
                 new SupportQualityMetric(0)
         );
-        qualityMetricList.add(
-                new GlobalRatioQualityMetric(0, 1)
-        );
+        switch (ratioMetric) {
+            case "risk_ratio":
+            case "riskratio":
+                qualityMetricList.add(
+                        new RiskRatioQualityMetric(0, 1));
+                break;
+            case "global_ratio":
+            case "globalratio":
+            default:
+                qualityMetricList.add(
+                        new GlobalRatioQualityMetric(0, 1));
+        }
         return qualityMetricList;
     }
 
