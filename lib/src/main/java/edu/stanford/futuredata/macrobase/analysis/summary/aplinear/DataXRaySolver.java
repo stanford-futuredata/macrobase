@@ -232,6 +232,13 @@ public class DataXRaySolver {
         /** calculate error rate and cost */
         public void calculateEC(){
 
+            if (dataXRayMap.containsKey(this.featureVector.toString())) {
+                double[] tuple = dataXRayMap.get(this.featureVector.toString());
+                this.errorrate = tuple[0];
+                this.cost = tuple[1];
+                return;
+            }
+
             // get true element count and false element count
             int tcount = 0, fcount = 0;
             for(Element element : this.listOfElement.values()){
