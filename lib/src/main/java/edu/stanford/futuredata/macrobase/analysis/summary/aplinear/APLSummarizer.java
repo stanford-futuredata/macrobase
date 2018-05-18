@@ -88,6 +88,21 @@ public abstract class APLSummarizer extends BatchSummarizer {
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
+
+        double gErrB_ = 0.9;
+        double bErrB_ = 0.6;
+        double gVarB_ = 0.05;
+        double bVarB_ = 0.1;
+        double alpha_ = 0.5;
+        if (aggregateNames.get(0).equals("XRayOutliers")) {
+            long XRayStartTime = System.currentTimeMillis();
+            DataXRaySolver dataxray = new DataXRaySolver(alpha_, gErrB_, bErrB_, gVarB_, bVarB_);
+            dataxray.readData("DataXRayReverb.in"); // read data
+            dataxray.solveFeatures(); // solve for features
+            dataxray.printBadFeature("DataXRayReverb.out");// save bad features
+            log.info("XRay Time: {}", System.currentTimeMillis() - XRayStartTime);
+        }
+
         explanation = new APLExplanation(
                 encoder,
                 numEvents,

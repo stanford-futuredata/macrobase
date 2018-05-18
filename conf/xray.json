@@ -1,0 +1,20 @@
+{
+  "pipeline": "BasicBatchPipeline",
+  "inputURI": "csv://reverb_mb.csv",
+  "classifier": "predicate",
+  "metric": "label",
+  "predicate": "==",
+  "cutoff": "false",
+  "summarizer": "xray",
+  "attributes": [
+    "sentenceID",
+    "sub",
+    "verb",
+    "obj",
+    "confidence"
+  ],
+  "minRatioMetric": 0.0,
+  "minSupport": 0.0,
+  "numThreads": 1,
+  "distributedNumPartitions": 4
+}

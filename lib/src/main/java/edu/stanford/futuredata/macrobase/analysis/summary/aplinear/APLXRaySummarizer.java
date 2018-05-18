@@ -22,7 +22,7 @@ public class APLXRaySummarizer extends APLSummarizer {
 
     @Override
     public List<String> getAggregateNames() {
-        return Arrays.asList("Outliers", "Count");
+        return Arrays.asList("XRayOutliers", "XRayCount");
     }
 
     @Override
