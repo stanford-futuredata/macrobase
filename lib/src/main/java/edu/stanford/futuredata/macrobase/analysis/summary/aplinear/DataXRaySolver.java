@@ -321,6 +321,7 @@ public class DataXRaySolver {
     double badFeatureErrorBound = 0.6; // lower bound for error rate
     double goodFeatureVarianceBound = 0.1; // upper bound for variance
     double badFeatureVarianceBound = 0.05; // lower bound for variance
+    Map<String, double[]> dataXRayMap;
 
     /**
      * dataxray solver initialization
@@ -335,12 +336,14 @@ public class DataXRaySolver {
             double gErrB_,
             double bErrB_,
             double gVarB_,
-            double bVarB_){
+            double bVarB_,
+            Map<String, double[]> dataXRayMap){
         alpha = alpha_;
         this.goodFeatureErrorBound = gErrB_;
         this.badFeatureErrorBound = bErrB_;
         this.goodFeatureVarianceBound = gVarB_;
         this.badFeatureVarianceBound = bVarB_;
+        this.dataXRayMap = dataXRayMap;
     }
 
     /** Save selected bad features in file
@@ -600,47 +603,6 @@ public class DataXRaySolver {
         allElements.addAll(feature.listOfElement.values());
         maxDimLevel = feature.maxDimLevel;
         dims = maxDimLevel.length;
-    }
-    public static void main(String[] args) throws Exception {
-        double gErrB_ = 0.9;
-        double bErrB_ = 0.6;
-        double gVarB_ = 0.05;
-        double bVarB_ = 0.1;
-        double alpha_ = 0.5;
-        String inputpath = "";
-        String outputpath = "";
-
-        String helpstring =
-                "-I <input path> (mandatory) \n"
-                        + "-O <output path> (mandatory) \n"
-                        + "-ge <early accept, errorrate> \n"
-                        + "-gv <early accept, variance> \n"
-                        + "-be <early prune, errorrate> \n"
-                        + "-bv <early prune, variance> \n"
-                        + "-alpha <alpha> \n"
-                        + "-help";
-        int startidx = 0;
-        while(startidx < args.length) {
-            switch(args[startidx]){
-                case "-I" : inputpath = args[++startidx]; startidx++; break;
-                case "-O" : outputpath = args[++startidx]; startidx++; break;
-                case "-ge" : gErrB_ = Double.valueOf(args[++startidx]); startidx++; break;
-                case "-gv" : gVarB_ = Double.valueOf(args[++startidx]); startidx++; break;
-                case "-be" : bErrB_ = Double.valueOf(args[++startidx]); startidx++; break;
-                case "-bv" : bVarB_ = Double.valueOf(args[++startidx]); startidx++; break;
-                case "-alpha" : alpha_ = Double.valueOf(args[++startidx]); startidx++; break;
-                case "-help" : System.out.println(helpstring); return;
-            }
-        }
-        // check input
-        if(inputpath.length() < 1 || outputpath.length() < 1) {
-            System.out.println(helpstring);
-            return;
-        }
-        DataXRaySolver dataxray = new DataXRaySolver(alpha_, gErrB_, bErrB_, gVarB_, bVarB_);
-        dataxray.readData("input.in"); // read data
-        dataxray.solveFeatures(); // solve for features
-        dataxray.printBadFeature("output.out");// save bad features
     }
 }
 

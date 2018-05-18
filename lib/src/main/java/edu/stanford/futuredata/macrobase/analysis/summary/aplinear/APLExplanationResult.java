@@ -57,6 +57,29 @@ public class APLExplanationResult {
         return map;
     }
 
+
+    public double[] getXRayTuple() {
+        return new double[]{aggregates[0] / aggregates[1], metrics[1]};
+    }
+
+    public String getStringedFeatureVector(AttributeEncoder encoder, List<String> colNames) {
+        Set<Integer> values = matcher.getSet();
+        Map<String, String> match = new HashMap<>();
+
+        for (int k : values) {
+            match.put(encoder.decodeColumnName(k), encoder.decodeValue(k));
+        }
+        String retString = "";
+        for (String colName : colNames) {
+            if (match.containsKey(colName)) {
+                retString += match.get(colName) + ":";
+            } else {
+                retString += "a:";
+            }
+        }
+        return retString;
+    }
+
     Map<String, String> prettyPrintMatch(AttributeEncoder encoder) {
         Set<Integer> values = matcher.getSet();
         Map<String, String> match = new HashMap<>();

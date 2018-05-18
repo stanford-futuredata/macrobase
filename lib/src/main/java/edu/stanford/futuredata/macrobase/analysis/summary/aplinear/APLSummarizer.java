@@ -8,7 +8,9 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Generic summarizer superclass that can be customized with
@@ -26,6 +28,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     protected long numEvents = 0;
     protected long numOutliers = 0;
     protected int bitmapRatioThreshold = 256;
+    double alpha = 0.5;
 
     public abstract List<String> getAggregateNames();
     public abstract AggregationOp[] getAggregationOps();
@@ -88,21 +91,6 @@ public abstract class APLSummarizer extends BatchSummarizer {
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);
 
-
-        double gErrB_ = 0.9;
-        double bErrB_ = 0.6;
-        double gVarB_ = 0.05;
-        double bVarB_ = 0.1;
-        double alpha_ = 0.5;
-        if (aggregateNames.get(0).equals("XRayOutliers")) {
-            long XRayStartTime = System.currentTimeMillis();
-            DataXRaySolver dataxray = new DataXRaySolver(alpha_, gErrB_, bErrB_, gVarB_, bVarB_);
-            dataxray.readData("DataXRayReverb.in"); // read data
-            dataxray.solveFeatures(); // solve for features
-            dataxray.printBadFeature("DataXRayReverb.out");// save bad features
-            log.info("XRay Time: {}", System.currentTimeMillis() - XRayStartTime);
-        }
-
         explanation = new APLExplanation(
                 encoder,
                 numEvents,
@@ -111,6 +99,26 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 qualityMetricList,
                 aplResults
         );
+
+        double gErrB_ = 0.9;
+        double bErrB_ = 0.6;
+        double gVarB_ = 0.05;
+        double bVarB_ = 0.1;
+        if (aggregateNames.get(0).equals("XRayOutliers")) {
+            Map<String, double[]> dataXRayMap = new HashMap<>();
+
+            for (APLExplanationResult er : explanation.getResults()) {
+                dataXRayMap.put(er.getStringedFeatureVector(encoder, attributes), er.getXRayTuple());
+            }
+
+            long XRayStartTime = System.currentTimeMillis();
+            DataXRaySolver dataxray = new DataXRaySolver(alpha, gErrB_, bErrB_, gVarB_, bVarB_, dataXRayMap);
+            dataxray.readData("DataXRayReverb.in"); // read data
+            dataxray.solveFeatures(); // solve for features
+            dataxray.printBadFeature("DataXRayReverb.out");// save bad features
+            log.info("XRay Time: {}", System.currentTimeMillis() - XRayStartTime);
+        }
+
     }
 
     public APLExplanation getResults() {

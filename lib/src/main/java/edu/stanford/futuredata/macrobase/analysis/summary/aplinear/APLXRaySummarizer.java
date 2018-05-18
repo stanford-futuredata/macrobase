@@ -14,7 +14,6 @@ public class APLXRaySummarizer extends APLSummarizer {
     private Logger log = LoggerFactory.getLogger("APLXRaySummarizer");
     private String countColumn = null;
     private boolean useBitmaps;
-    private double alpha = 0.5;
 
     public APLXRaySummarizer(boolean useBitmaps) {
         this.useBitmaps = useBitmaps;
