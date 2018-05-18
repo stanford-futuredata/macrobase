@@ -33,16 +33,10 @@ export class QueryService {
         data => {
                  this.queryResults.set(id, data);
                  this.queries.set(id, query);
-                 this.queryResponseReceived.emit();
+                 this.queryResponseReceived.emit(id);
                 },
         err => {this.handleError('runQuery()', err);}
       );
-  }
-
-  updateMatchingAttributes(id: number) {
-    this.queryResults.get(id).results.forEach( (result) => {
-      result.matcherString = JSON.stringify(result.matcher);
-    })
   }
 
   /*

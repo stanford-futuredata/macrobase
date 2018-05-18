@@ -74,3 +74,14 @@
   display: inline-block;
   font-size: 12px;
 }
+
+button {
+  font-size: 18px;
+  color: black;
+}
+
+.summary {
+    padding: 15px;
+    text-align: left;
+    border: 1px solid black;
+}

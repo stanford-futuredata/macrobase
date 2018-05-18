@@ -14,6 +14,8 @@ import { QueryService } from './query.service';
 import { DataHeaderComponent } from './data-header/data-header.component';
 import { DisplayService } from './display.service';
 import { DataService } from './data.service';
+import { QuerySummaryComponent } from './query-summary/query-summary.component';
+import { PlotComponent } from './plot/plot.component';
 
 
 @NgModule({
@@ -22,7 +24,9 @@ import { DataService } from './data.service';
     QueryWizardComponent,
     CellComponent,
     MessagesComponent,
-    DataHeaderComponent
+    DataHeaderComponent,
+    QuerySummaryComponent,
+    PlotComponent
   ],
   imports: [
     BrowserModule,

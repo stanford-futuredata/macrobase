@@ -1,19 +1,22 @@
 <div *ngIf="displayItemsets">
-  <b>Total Events:</b> {{totalEvents}} <br>
-  <b>Total Outliers:</b> {{totalOutliers}} <br>
-  <table cellpadding="20" border="1px">
-    <tr *ngFor="let rowResults of resultsTable; index as i_row" [attr.data-index]="i_row">
-      <td *ngFor="let result of rowResults; index as i" [attr.data-index]="i">
-          <b>Attributes: {{result.matcherString}}</b> <br>
-          Outlier Count: {{result.aggregate.Outliers}} <br>
-          Total Count:   {{result.aggregate.Count}} <br>
-          Global Ratio:  {{result.metric.global_ratio}} <br>
-          Support:       {{result.metric.support}}
-          <div style="text-align:right">
-            <button (click)="getItemsetData(getItemsetID(i, i_row), 20, true)"> Sample </button>
-            <button (click)="makeHistogram(getItemsetID(i, i_row))"> Histogram </button>
-          </div>
-      </td>
+  <table cellpadding="15" border="1px" width="100%">
+    <tr>
+      <th> Attributes </th>
+      <th> Outlier Count (out of {{totalOutliers}}) </th>
+      <th> Event Count (out of {{totalEvents}})</th>
+      <th> Global Ratio </th>
+      <th> Support </th>
+    </tr>
+    <tr *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i">
+      <td> <i>{{result.matcherString}}</i> <br> </td>
+      <td> {{result.aggregate.Outliers}} <br> </td>
+      <td> {{result.aggregate.Count}} <br> </td>
+      <td> {{result.metric.global_ratio}} <br> </td>
+      <td> {{result.metric.support}} </td>
+      <!-- <div style="text-align:right">
+        <button (click)="getItemsetData(getItemsetID(i, i_row), 20, true)"> Sample </button>
+        <button (click)="makeHistogram(getItemsetID(i, i_row))"> Histogram </button>
+      </div> -->
     </tr>
   </table>
 </div>

@@ -11,8 +11,10 @@ export class DataHeaderComponent implements OnInit {
 
   setDisplayType(type: string){
     this.displayService.setDisplayType(type);
-    this.displayService.setIDs([]);
+    this.updateDisplay(type);
+  }
 
+  updateDisplay(type: string){
     this.clearColors();
     document.getElementById(type).style.backgroundColor = "lightblue";
   }
@@ -21,11 +23,16 @@ export class DataHeaderComponent implements OnInit {
     document.getElementById('DataHomepage').style.backgroundColor = "gray";
     document.getElementById('Dashboard').style.backgroundColor = "gray";
     document.getElementById('QueryWizard').style.backgroundColor = "gray";
+    document.getElementById('Explore').style.backgroundColor = "gray";
   }
 
   constructor(private displayService: DisplayService) { }
 
   ngOnInit() {
+    this.updateDisplay(this.displayService.getDisplayType());
+    this.displayService.displayChanged.subscribe(
+        () => {this.updateDisplay(this.displayService.getDisplayType());}
+      )
   }
 
 }

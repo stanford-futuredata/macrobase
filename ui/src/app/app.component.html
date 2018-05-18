@@ -12,50 +12,30 @@
 <div *ngIf="displayType=='Dashboard'">
   <br>
   <h1> Dashboard </h1>
-
-  <div *ngFor="let id of validIDs">
-
-    <div id="wizard{{id}}" class="wizard">
-        <div style="text-align: right">
-          <button class="closeButton" (click)="deleteQuery(id)"> X </button>
-        </div>
-        <app-query-wizard id={{id}}></app-query-wizard>
-    </div>
-
-    <div id="cell{{id}}" class="cell">
-        <app-cell id={{id}}></app-cell>
-        <div style="text-align: right">
-          <button class="minimizeButton" (click)="minimizeCell(id)"> - </button>
-        </div>
-    </div>
-
-    <div id="expandCell{{id}}" class="cell" style="display:none; text-align:right;">
-      <button class="minimizeButton" (click)="expandCell(id)"> | </button>
-    </div>
-
-    <br>
-
-  </div>
-
-  <button class="addButton" (click)="newQuery()"> + </button>
+  <button (click)="exploreSelected()"> Explore </button>
+  <button (click)="newQuery()"> New </button>
+  <button (click)="editSelected()"> Edit </button>
+  <button (click)="deleteSelected()"> Delete </button>
+  <br>
+  <br>
+  <table cellpadding="20" border="1px" width="100%">
+    <tr *ngFor="let id of validIDs" (click)="selectID(id)" [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
+      <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
+    </tr>
+  </table>
 </div>
 
 <!-- QUERY WIZARD -->
 <div *ngIf="displayType=='QueryWizard'">
   <br>
   <h1> Query Editor </h1>
-
-  <div id="wizard{{id}}" class="wizard">
-    <div style="text-align: right">
-      <button class="closeButton" (click)="deleteQuery(id)"> X </button>
-    </div>
-    <app-query-wizard id={{id}}></app-query-wizard>
+  <div id="wizard{{editID}}" class="wizard">
+    <app-query-wizard id={{editID}}></app-query-wizard>
   </div>
 
-  <div id="cell{{id}}" class="cell">
-    <app-cell id={{id}}></app-cell>
+  <div id="cell{{editID}}" class="cell">
+    <app-cell id={{editID}}></app-cell>
   </div>
-
 
 </div>
 
@@ -63,6 +43,21 @@
 <div *ngIf="displayType=='Explore'">
   <br>
   <h1> Explore </h1>
+  <button (click)="plotSelected()">Plot</button>
+  <br>
+  <br>
+  <div *ngFor="let id of exploreIDs">
+    <div id="summary{{id}}" class="summary" style="background-color:bisque">
+      <app-query-summary id={{id}}></app-query-summary>
+    </div>
+    <div id="cell{{id}}" class="cell">
+      <app-cell id={{id}}></app-cell>
+    </div>
+    <br>
+  </div>
+
+  <div *ngIf="isPlot">
+    <app-plot id="0"></app-plot>
 </div>
 
 

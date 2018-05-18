@@ -3,32 +3,67 @@ import { QueryService } from '../query.service';
 import { MessageService } from "../message.service";
 
 @Component({
-  selector: 'app-cell',
-  templateUrl: './cell.component.html',
-  styleUrls: ['./cell.component.css']
+  selector: 'app-plot',
+  templateUrl: './plot.component.html',
+  styleUrls: ['./plot.component.css']
 })
-export class CellComponent implements OnInit {
-  @Input() id: number;
+export class PlotComponent implements OnInit {
+  @Input() id;
 
-  displayItemsets = false;
-  displayData = false;
-  displayHistogram = 0; //0 - do not display, 1 - waiting for data, 2 - display
-  curItemsetID: number;
+  query;
+  queryData;
+  queryResult
+  itemsetData;
 
-  constructor(private queryService: QueryService, private messageService: MessageService) {
-  }
+  displayHistogram = 0;
+  curItemsetID;
+  isPlot = false;
+
+  constructor(private queryService: QueryService, private messageService: MessageService) { }
 
   ngOnInit() {
-    if(this.queryService.queries.has(this.id)){
-      this.updateQuery();
-    }
-    this.queryService.queryResponseReceived.subscribe(
-        () => {this.updateQuery();}
-      )
+    this.updateData();
+
     this.queryService.dataResponseReceived.subscribe(
         () => {this.updateData();
                this.updateHistogram();}
       )
+
+    this.makeHistogram(this.id);
+  }
+
+
+  updateData() {
+    this.query = this.queryService.queries.get(this.id)
+    this.queryData = this.queryService.queryData.get(this.id);
+    this.queryResult = this.queryService.queryResults.get(this.id);
+    this.itemsetData = this.queryService.itemsetData.get(this.id);
+  }
+
+  /*
+   Return an array of just the metric column of a dataframe.
+  */
+  getMetricData(data){
+    let metricName = this.query.metric;
+    let metricCol = -1;
+
+    for(let i = 0; i < data.schema.numColumns; i++){
+      if(data.schema.columnNames[i] == metricName){
+        metricCol = i;
+        break;
+      }
+    }
+    if(metricCol == -1){
+      this.messageService.add("Bad metric column name");
+    }
+
+    let metricData = new Array();
+
+    for(let i = 0; i < data.numRows; i++){
+      metricData.push(data.rows[i].vals[metricCol]);
+    }
+
+    return metricData;
   }
 
   getItemsetData(itemsetID: number, numRows: number, isSample: boolean) {
@@ -38,12 +73,6 @@ export class CellComponent implements OnInit {
     query.columnFilters = this.getItemsetAttributes(itemsetID);
 
     this.queryService.getItemsetData(query, this.id, itemsetID);
-
-    if(isSample){
-      this.isPlot = false;
-      this.displayHistogram = 0;
-      this.displayData = true;
-    }
   }
 
   getItemsetAttributes(itemsetID: number) {
@@ -59,12 +88,9 @@ export class CellComponent implements OnInit {
     this.queryService.getQueryData(query, this.id);
   }
 
-  isPlot = false;
-
   makeHistogram(itemsetID: number) {
     this.curItemsetID = itemsetID;
     this.getItemsetData(itemsetID, -1, false);
-
     if(this.isPlot){ //no need to wait for query data
       this.displayHistogram = 2;
     }
@@ -72,7 +98,6 @@ export class CellComponent implements OnInit {
       this.getQueryData(-1);
       this.displayHistogram = 1;
     }
-    this.displayData = false;
   }
 
   clearHistogram(){
@@ -118,67 +143,6 @@ export class CellComponent implements OnInit {
     Plotly.plot(document.getElementById("histogram"), data=data, layout);
 
     this.isPlot = true;
-  }
-
-  /*
-   Return an array of just the metric column of a dataframe.
-  */
-  getMetricData(data){
-    let metricName = this.query.metric;
-    let metricCol = -1;
-
-    for(let i = 0; i < data.schema.numColumns; i++){
-      if(data.schema.columnNames[i] == metricName){
-        metricCol = i;
-        break;
-      }
-    }
-    if(metricCol == -1){
-      this.messageService.add("Bad metric column name");
-    }
-
-    let metricData = new Array();
-
-    for(let i = 0; i < data.numRows; i++){
-      metricData.push(data.rows[i].vals[metricCol]);
-    }
-
-    return metricData;
-  }
-
-  // getItemsetID(itemID: number, rowID: number){
-  //   return itemID + (rowID * this.maxEntriesPerRow);
-  // }
-
-  query;
-  totalEvents;
-  totalOutliers;
-  queryResult;
-
-  updateQuery() {
-    this.query = this.queryService.queries.get(this.id)
-    this.queryResult = this.queryService.queryResults.get(this.id);
-    this.totalEvents = this.queryResult.numTotal;
-    this.totalOutliers = this.queryResult.outliers;
-    let numItemsets = this.queryResult.results.length;
-
-    //JSON to string for itemset attributes
-    this.queryResult.results.forEach( (result) => {
-      result.matcherString = JSON.stringify(result.matcher);
-    })
-
-    this.displayItemsets = true;
-
-    this.displayData = false;
-    this.isPlot = false;
-    this.displayHistogram = 0;
-  }
-
-  itemsetData;
-  queryData;
-  updateData() {
-    this.itemsetData = this.queryService.itemsetData.get(this.id);
-    this.queryData = this.queryService.queryData.get(this.id);
   }
 
 }
