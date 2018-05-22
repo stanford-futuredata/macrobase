@@ -116,7 +116,7 @@ public class CSVDataFrameParserDistributed implements Serializable{
                                     } else if (t == Schema.ColType.DOUBLE) {
                                         try {
                                             doubleRow[doubleColNum] = Double.parseDouble(rowValue);
-                                        } catch (NumberFormatException e) {
+                                        } catch (NumberFormatException | NullPointerException e) {
                                             doubleRow[doubleColNum] = Double.NaN;
                                         }
                                         doubleColNum++;
