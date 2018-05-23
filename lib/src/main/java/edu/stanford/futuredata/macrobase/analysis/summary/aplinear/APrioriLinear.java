@@ -319,6 +319,7 @@ public class APrioriLinear {
                         if (curOrder != 3 || allPairsValid(curCandidate, setNext.get(2))) {
                             // if a set is already past the threshold on all metrics,
                             // save it and no need for further exploration if we do containment
+                            curOrderNext.add(curCandidate);
                             curOrderSaved.add(curCandidate);
                         }
                     } else if (action == QualityMetric.Action.NEXT) {

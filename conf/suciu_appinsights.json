@@ -20,7 +20,7 @@
     "url"
   ],
   "minRatioMetric": 2.0,
-  "minSupport": 0.0001,
+  "minSupport": 0.0,
   "numThreads": 1,
   "distributedNumPartitions": 4
 }
