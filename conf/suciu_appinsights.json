@@ -1,0 +1,26 @@
+{
+  "pipeline": "BasicBatchPipeline",
+  "inputURI": "csv://all_1600MB.csv",
+  "classifier": "predicate",
+  "metric": "success",
+  "predicate": "==",
+  "cutoff": "False",
+  "summarizer": "suciu",
+  "attributes": [
+    "operation_Name",
+    "application_Version",
+    "client_Type",
+    "cloud_RoleName",
+    "cloud_RoleInstance",
+    "appId",
+    "appName",
+    "iKey",
+    "sdkVersion",
+    "itemType",
+    "url"
+  ],
+  "minRatioMetric": 2.0,
+  "minSupport": 0.0001,
+  "numThreads": 1,
+  "distributedNumPartitions": 4
+}

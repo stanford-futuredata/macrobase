@@ -1,11 +1,11 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import com.fasterxml.jackson.databind.jsonschema.SchemaAware;
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLSuciuSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.FPGrowthSummarizer;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -156,6 +156,15 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setNumThreads(numThreads);
                 summarizer.setFDUsage(useFDs);
                 summarizer.setFDValues(functionalDependencies);
+                return summarizer;
+            }
+            case "suciu": {
+                APLSuciuSummarizer summarizer = new APLSuciuSummarizer(true);
+                summarizer.setOutlierColumn(outlierColumnName);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setBitmapRatioThreshold(bitmapRatioThreshold);
+                summarizer.setNumThreads(numThreads);
                 return summarizer;
             }
             case "countmeanshift": {
