@@ -7,21 +7,18 @@
       <th> Global Ratio </th>
       <th> Support </th>
     </tr>
-    <tr *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i">
+    <tr *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i"
+     (click)="selectResult(i)" [style.background-color]="getSelectedColor(i)" id="result{{i}}">
       <td> <i>{{result.matcherString}}</i> <br> </td>
       <td> {{result.aggregate.Outliers}} <br> </td>
       <td> {{result.aggregate.Count}} <br> </td>
       <td> {{result.metric.global_ratio}} <br> </td>
       <td> {{result.metric.support}} </td>
-      <!-- <div style="text-align:right">
-        <button (click)="getItemsetData(getItemsetID(i, i_row), 20, true)"> Sample </button>
-        <button (click)="makeHistogram(getItemsetID(i, i_row))"> Histogram </button>
-      </div> -->
     </tr>
   </table>
 </div>
 
-<div *ngIf="displayData">
+<!-- <div *ngIf="displayData">
   <table cellpadding="10" border="1px">
     <tr>
       <th *ngFor="let colName of itemsetData.schema.columnNames">
@@ -35,11 +32,11 @@
       </td>
     </tr>
   </table>
-</div>
+</div> -->
 
-<div *ngIf="displayHistogram">
+<!-- <div *ngIf="displayHistogram">
   <div id="histogram" style="display:block;"></div>
   <div style="text-align:center;">
     <button (click)="clearHistogram()" style="background-color:darkred;"> Clear Plot </button>
   </div>
-</div>
+</div> -->

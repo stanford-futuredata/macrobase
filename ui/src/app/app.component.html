@@ -8,10 +8,10 @@
   <h1> Data Homepage </h1>
 </div>
 
-<!-- DASHBOARD -->
-<div *ngIf="displayType=='Dashboard'">
+<!-- History -->
+<div *ngIf="displayType=='History'">
   <br>
-  <h1> Dashboard </h1>
+  <h1> Query History </h1>
   <button (click)="exploreSelected()"> Explore </button>
   <button (click)="newQuery()"> New </button>
   <button (click)="editSelected()"> Edit </button>
@@ -26,7 +26,7 @@
 </div>
 
 <!-- QUERY WIZARD -->
-<div *ngIf="displayType=='QueryWizard'">
+<div *ngIf="displayType=='Edit'">
   <br>
   <h1> Query Editor </h1>
   <div id="wizard{{editID}}" class="wizard">
@@ -47,7 +47,7 @@
   <br>
   <br>
   <div *ngFor="let id of exploreIDs">
-    <div id="summary{{id}}" class="summary" style="background-color:bisque">
+    <div id="summary{{id}}" class="summary" style="background-color:burlywood">
       <app-query-summary id={{id}}></app-query-summary>
     </div>
     <div id="cell{{id}}" class="cell">

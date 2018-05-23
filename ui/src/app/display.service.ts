@@ -16,6 +16,12 @@ export class DisplayService {
     this.displayChanged.emit()
   }
 
+  selectedResultsByID = new Map();
+
+  updateSelectedResults(result: number, selections) {
+    this.selectedResultsByID[result] = selections;
+  }
+
   constructor() { }
 
 }

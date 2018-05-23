@@ -15,6 +15,8 @@ export class PlotComponent implements OnInit {
   queryResult
   itemsetData;
 
+  histogramIDs = new Map(); //metricName: list of ids
+
   displayHistogram = 0;
   curItemsetID;
   isPlot = false;

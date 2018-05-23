@@ -11,9 +11,8 @@ export class AppComponent {
   displayMessages = false;
   newID = 0;
   validIDs = new Set();
-  editExisting = false;
   editID = 0;
-  displayType = this.displayService.getDisplayType(); //DataHomepage, QueryWizard, Dashboard, Explore
+  displayType = this.displayService.getDisplayType(); //DataHomepage, Edit, History, Explore
   selectedIDs = new Set();
   exploreIDs = new Set();
   isPlot = false;
@@ -31,20 +30,7 @@ export class AppComponent {
   }
 
   updateDisplayType(type: string) {
-    if(type == 'QueryWizard'){
-      if(!this.editExisting){
-        this.editID = this.newID;
-      }
-      this.editExisting = false;
-    }
-
     this.displayType = type;
-  }
-
-  highlightSelected() {
-    for(let id in Array.from(this.selectedIDs)) {
-      document.getElementById('summary'+id).style.backgroundColor = "gray";
-    }
   }
 
   updateValidIDs(id: number) {
@@ -56,21 +42,21 @@ export class AppComponent {
 
   getSelectedColor(id: number) {
     if(this.selectedIDs.has(id)){
-      return "gray";
+      return "lightgray";
     }
     else{
-      return "bisque";
+      return "white";
     }
   }
 
   selectID(id: number) {
     if(this.selectedIDs.has(id)){
       this.selectedIDs.delete(id);
-      document.getElementById('summary'+id).style.backgroundColor = "bisque";
+      document.getElementById('summary'+id).style.backgroundColor = "white";
     }
     else{
       this.selectedIDs.add(id);
-      document.getElementById('summary'+id).style.backgroundColor = "gray";
+      document.getElementById('summary'+id).style.backgroundColor = "lightgray";
     }
   }
 
@@ -80,14 +66,13 @@ export class AppComponent {
   }
 
   newQuery(){
-    this.editExisting = false;
-    this.displayService.setDisplayType('QueryWizard');
+    this.editID = this.newID;
+    this.displayService.setDisplayType('Edit');
   }
 
   editSelected() {
     this.editID = Array.from(this.selectedIDs)[0];
-    this.editExisting = true;
-    this.displayService.setDisplayType('QueryWizard')
+    this.displayService.setDisplayType('Edit')
   }
 
   deleteSelected() {

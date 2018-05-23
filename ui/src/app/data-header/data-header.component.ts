@@ -21,8 +21,8 @@ export class DataHeaderComponent implements OnInit {
 
   clearColors() {
     document.getElementById('DataHomepage').style.backgroundColor = "gray";
-    document.getElementById('Dashboard').style.backgroundColor = "gray";
-    document.getElementById('QueryWizard').style.backgroundColor = "gray";
+    document.getElementById('History').style.backgroundColor = "gray";
+    document.getElementById('Edit').style.backgroundColor = "gray";
     document.getElementById('Explore').style.backgroundColor = "gray";
   }
 
