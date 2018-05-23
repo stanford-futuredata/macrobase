@@ -1,14 +1,21 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsArray;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.InterventionQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Generic summarizer superclass that can be customized with
@@ -72,21 +79,58 @@ public abstract class APLSummarizer extends BatchSummarizer {
         double[][] aggregateColumns = getAggregateColumns(input);
         List<String> aggregateNames = getAggregateNames();
         AggregationOp[] aggregationOps = getAggregationOps();
-        List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
-                aggregateColumns,
-                aggregationOps,
-                encoder.getNextKey(),
-                maxOrder,
-                numThreads,
-                encoder.getBitmap(),
-                encoder.getOutlierList(),
-                encoder.getColCardinalities(),
-                useFDs,
-                functionalDependencies,
-                bitmapRatioThreshold
-        );
-        log.info("Number of results: {}", aplResults.size());
+
+
         numOutliers = (long)getNumberOutliers(aggregateColumns);
+
+        List<APLExplanationResult> aplResults = new ArrayList<>();
+
+        final int numAggregates = aggregateColumns.length;
+        final int numRows = aggregateColumns[0].length;
+        final int numColumns = encoded[0].length;
+
+        // Row store for more convenient access
+        final double[][] aRows = new double[numRows][numAggregates];
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numAggregates; j++) {
+                aRows[i][j] = aggregateColumns[j][i];
+            }
+        }
+
+        Map<IntSet, Integer> cubeMap = new HashMap<>();
+        for (int i = 0; i < numRows; i++) {
+            if (aRows[i][0] > 0.0) {
+                for (int j = 0; j < numColumns; j++) {
+                    IntSet set = new IntSetAsArray(encoded[i][j]);
+                    cubeMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                }
+                for (int j = 0; j < numColumns; j++) {
+                    for (int k = j + 1; k < numColumns; k++) {
+                        IntSet set = new IntSetAsArray(encoded[i][j], encoded[i][k]);
+                        cubeMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                    }
+                }
+                for (int j = 0; j < numColumns; j++) {
+                    for (int k = j + 1; k < numColumns; k++) {
+                        for (int l = k + 1; l < numColumns; l++) {
+                            IntSet set = new IntSetAsArray(encoded[i][j], encoded[i][k], encoded[i][l]);
+                            cubeMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (IntSet curSet : cubeMap.keySet()) {
+            double[] aggregates = new double[]{(double) cubeMap.get(curSet)};
+            double[] metrics = new double[]{numOutliers - (double) cubeMap.get(curSet)};
+            aplResults.add(
+                    new APLExplanationResult(new QualityMetric[] {
+                            new InterventionQualityMetric(0)}, curSet, aggregates, metrics)
+            );
+        }
+
+        log.info("Number of results: {}", aplResults.size());
 
         explanation = new APLExplanation(
                 encoder,
