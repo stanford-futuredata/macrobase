@@ -1,14 +1,17 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
 /**
- * Measures how large a subgroup is relative to a global count
+ * q_1 / q_2
  */
 public class InterventionQualityMetric implements QualityMetric{
     private int countIdx;
+    private int outlierIdx;
+    private double globalOutlierCount;
     private double globalCount;
 
-    public InterventionQualityMetric(int countIdx) {
+    public InterventionQualityMetric(int outlierIdx, int countIdx) {
         this.countIdx = countIdx;
+        this.outlierIdx = outlierIdx;
     }
 
     @Override
@@ -20,17 +23,18 @@ public class InterventionQualityMetric implements QualityMetric{
     @Override
     public QualityMetric initialize(double[] globalAggregates) {
         globalCount = globalAggregates[countIdx];
+        globalOutlierCount = globalAggregates[outlierIdx];
         return this;
     }
 
     @Override
     public double value(double[] aggregates) {
-        return  globalCount - aggregates[countIdx];
+        return  (globalOutlierCount - aggregates[outlierIdx]) / (globalCount - aggregates[countIdx]);
     }
 
     @Override
     public boolean isMonotonic() {
-        return true;
+        return false;
     }
 
 }

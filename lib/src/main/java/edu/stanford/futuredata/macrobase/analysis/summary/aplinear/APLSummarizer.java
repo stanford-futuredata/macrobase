@@ -8,6 +8,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Ag
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.InterventionQualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
+import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,36 +98,59 @@ public abstract class APLSummarizer extends BatchSummarizer {
             }
         }
 
-        Map<IntSet, Integer> cubeMap = new HashMap<>();
+        Map<IntSet, Integer> outlierMap = new HashMap<>();
+        Map<IntSet, Integer> cubeTotalMap = new HashMap<>();
         for (int i = 0; i < numRows; i++) {
-            if (aRows[i][0] > 0.0) {
                 for (int j = 0; j < numColumns; j++) {
+                    if (encoded[i][j] == AttributeEncoder.noSupport)
+                        continue;
                     IntSet set = new IntSetAsArray(encoded[i][j]);
-                    cubeMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                    cubeTotalMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                    if (aRows[i][0] > 0.0) {
+                        outlierMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                    }
                 }
                 for (int j = 0; j < numColumns; j++) {
                     for (int k = j + 1; k < numColumns; k++) {
+                        if ((encoded[i][j] == AttributeEncoder.noSupport) || (encoded[i][k] == AttributeEncoder.noSupport))
+                        continue;
                         IntSet set = new IntSetAsArray(encoded[i][j], encoded[i][k]);
-                        cubeMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                        cubeTotalMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                        if (aRows[i][0] > 0.0) {
+                            outlierMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                        }
                     }
                 }
                 for (int j = 0; j < numColumns; j++) {
                     for (int k = j + 1; k < numColumns; k++) {
                         for (int l = k + 1; l < numColumns; l++) {
+                            if ((encoded[i][j] == AttributeEncoder.noSupport) || (encoded[i][k] == AttributeEncoder.noSupport)|| (encoded[i][l] == AttributeEncoder.noSupport))
+                                continue;
                             IntSet set = new IntSetAsArray(encoded[i][j], encoded[i][k], encoded[i][l]);
-                            cubeMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                            cubeTotalMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                            if (aRows[i][0] > 0.0) {
+                                outlierMap.compute(set, (key, v) -> v == null ? 1 : v + 1);
+                            }
                         }
                     }
-                }
             }
         }
 
-        for (IntSet curSet : cubeMap.keySet()) {
-            double[] aggregates = new double[]{(double) cubeMap.get(curSet)};
-            double[] metrics = new double[]{numOutliers - (double) cubeMap.get(curSet)};
+        for (IntSet curSet : cubeTotalMap.keySet()) {
+            double totalCount = cubeTotalMap.get(curSet);
+            double outlierCount;
+            if (outlierMap.containsKey(curSet)) {
+                outlierCount = (double) outlierMap.get(curSet);
+            } else {
+                outlierCount = 0.0;
+            }
+            double[] aggregates = new double[]{outlierCount, totalCount};
+            double[] metrics = new double[]{(numOutliers - outlierCount)/(numRows - totalCount), outlierCount / numOutliers};
+            if (numRows - totalCount == 0)
+                metrics[0] = Double.MAX_VALUE;
             aplResults.add(
                     new APLExplanationResult(new QualityMetric[] {
-                            new InterventionQualityMetric(0)}, curSet, aggregates, metrics)
+                            new InterventionQualityMetric(0, 1), new SupportQualityMetric(0)}, curSet, aggregates, metrics)
             );
         }
 

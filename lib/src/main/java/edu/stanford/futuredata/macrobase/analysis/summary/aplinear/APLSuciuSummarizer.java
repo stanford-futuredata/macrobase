@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 public class APLSuciuSummarizer extends APLSummarizer {
 
     private Logger log = LoggerFactory.getLogger("APLInterventionSummarizer");
+    private String countColumn = null;
     private boolean useBitmaps;
 
     public APLSuciuSummarizer(boolean useBitmaps) {
@@ -19,12 +20,12 @@ public class APLSuciuSummarizer extends APLSummarizer {
 
     @Override
     public List<String> getAggregateNames() {
-        return Arrays.asList("OutlierCount");
+        return Arrays.asList("OutlierCount", "Count");
     }
 
     @Override
     public AggregationOp[] getAggregationOps() {
-        AggregationOp[] curOps = {AggregationOp.SUM};
+        AggregationOp[] curOps = {AggregationOp.SUM, AggregationOp.SUM};
         return curOps;
     }
 
@@ -37,9 +38,11 @@ public class APLSuciuSummarizer extends APLSummarizer {
     @Override
     public double[][] getAggregateColumns(DataFrame input) {
         double[] outlierCol = input.getDoubleColumnByName(outlierColumn);
+        double[] countCol = processCountCol(input, countColumn, outlierCol.length);
 
-        double[][] aggregateColumns = new double[1][];
+        double[][] aggregateColumns = new double[2][];
         aggregateColumns[0] = outlierCol;
+        aggregateColumns[1] = countCol;
 
         return aggregateColumns;
     }
@@ -51,7 +54,7 @@ public class APLSuciuSummarizer extends APLSummarizer {
                 new SupportQualityMetric(0)
         );
         qualityMetricList.add(
-                new InterventionQualityMetric(0)
+                new InterventionQualityMetric(0, 1)
         );
         return qualityMetricList;
     }
