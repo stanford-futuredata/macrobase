@@ -1,6 +1,6 @@
 {
   "pipeline": "BasicBatchPipeline",
-  "inputURI": "csv://all_1600MB.csv",
+  "inputURI": "csv://all_200MB.csv",
   "classifier": "predicate",
   "metric": "success",
   "predicate": "==",
