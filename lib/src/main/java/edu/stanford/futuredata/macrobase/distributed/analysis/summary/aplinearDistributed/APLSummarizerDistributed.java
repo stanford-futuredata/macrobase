@@ -169,7 +169,9 @@ public abstract class APLSummarizerDistributed extends DistributedBatchSummarize
                 encoder.getOutlierList(),
                 encoder.getColCardinalities(),
                 qualityMetricList,
-                thresholds
+                thresholds,
+                useFDs,
+                functionalDependencies
         );
         log.info("Number of results: {}", aplResults.size());
 

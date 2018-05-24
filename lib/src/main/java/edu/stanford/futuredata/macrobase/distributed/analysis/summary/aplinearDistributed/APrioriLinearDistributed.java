@@ -33,7 +33,9 @@ public class APrioriLinearDistributed {
             ArrayList<Integer>[] outlierList,
             int[] colCardinalities,
             List<QualityMetric> argQualityMetrics,
-            List<Double> argThresholds
+            List<Double> argThresholds,
+            boolean useFDs,
+            int[] functionalDependencies
     ) {
 
         Logger log = LoggerFactory.getLogger("APLSummarizerDistributed");
@@ -189,6 +191,10 @@ public class APrioriLinearDistributed {
                     for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                         int[] curColumnOneAttributes = attributesForThread[colNumOne];
                         for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                            //if FDs are enabled, and these two attribute cols are FDs, skip
+                            if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                continue;
+                            }
                             int[] curColumnTwoAttributes = attributesForThread[colNumTwo];
                             if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                     colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
@@ -210,8 +216,17 @@ public class APrioriLinearDistributed {
                     for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                         int[] curColumnOneAttributes = attributesForThread[colNumOne % numColumns];
                         for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                            //if FD on and attributes 1 and 2 are FDs, skip
+                            if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                continue;
+                            }
                             int[] curColumnTwoAttributes = attributesForThread[colNumTwo % numColumns];
                             for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
+                                //if FD on and attribute 3 is FD w/ 1 or 2, skip
+                                if (useFDs && (((functionalDependencies[colNumOne] & (1 << colNumThree)) == (1 << colNumThree))
+                                        || ((functionalDependencies[colNumTwo] & (1 << colNumThree)) == (1 << colNumThree)))) {
+                                    continue;
+                                }
                                 int[] curColumnThreeAttributes = attributesForThread[colNumThree % numColumns];
                                 if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                         colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&

@@ -196,6 +196,8 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setFDUsage(useFDs);
+                summarizer.setFDValues(functionalDependencies);
                 summarizer.setNumPartitions(distributedNumPartitions);
                 return summarizer;
             }

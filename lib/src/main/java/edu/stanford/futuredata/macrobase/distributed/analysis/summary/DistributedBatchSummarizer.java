@@ -24,6 +24,8 @@ public abstract class DistributedBatchSummarizer implements Operator<Distributed
     protected List<String> attributes = new ArrayList<>();
     protected int numThreads = Runtime.getRuntime().availableProcessors();
     protected String ratioMetric = "global_ratio";
+    protected boolean useFDs = false;
+    protected int[] functionalDependencies;
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -64,4 +66,15 @@ public abstract class DistributedBatchSummarizer implements Operator<Distributed
         this.ratioMetric = ratioMetric;
         return this;
     }
+
+    public DistributedBatchSummarizer setFDUsage(final boolean useFDs) {
+        this.useFDs = useFDs;
+        return this;
+    }
+
+    public DistributedBatchSummarizer setFDValues(final int[] functionalDependencies) {
+        this.functionalDependencies = functionalDependencies;
+        return this;
+    }
+
 }
