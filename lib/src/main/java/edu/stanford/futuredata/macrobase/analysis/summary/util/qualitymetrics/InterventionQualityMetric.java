@@ -29,6 +29,8 @@ public class InterventionQualityMetric implements QualityMetric{
 
     @Override
     public double value(double[] aggregates) {
+        if (globalCount  == aggregates[countIdx])
+            return Double.MAX_VALUE;
         return  (globalOutlierCount - aggregates[outlierIdx]) / (globalCount - aggregates[countIdx]);
     }
 
