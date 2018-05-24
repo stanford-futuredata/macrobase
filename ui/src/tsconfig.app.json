@@ -9,7 +9,7 @@
     ],
     "paths": {
       "plotly.js": [
-        "../node_modules/plotly.js/dist/plotly-basic.js"
+        "../node_modules/plotly.js/dist/plotly.js"
       ]
     }
   },

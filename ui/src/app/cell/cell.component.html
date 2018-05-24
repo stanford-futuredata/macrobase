@@ -8,7 +8,7 @@
       <th> Support </th>
     </tr>
     <tr *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i"
-     (click)="selectResult(i)" [style.background-color]="getSelectedColor(i)" id="result{{i}}">
+     (click)="selectResult(i)" [style.background-color]="getSelectedColor(i)" id="result {{id}} {{i}}">
       <td> <i>{{result.matcherString}}</i> <br> </td>
       <td> {{result.aggregate.Outliers}} <br> </td>
       <td> {{result.aggregate.Count}} <br> </td>

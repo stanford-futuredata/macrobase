@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { QueryService } from '../query.service';
 import { MessageService } from "../message.service";
+import { DisplayService } from "../display.service";
 
 @Component({
   selector: 'app-plot',
@@ -8,38 +9,82 @@ import { MessageService } from "../message.service";
   styleUrls: ['./plot.component.css']
 })
 export class PlotComponent implements OnInit {
-  @Input() id;
+  @Input() queryID: number;
+  @Input() itemsetID: number;
 
   query;
-  queryData;
-  queryResult
   itemsetData;
 
-  histogramIDs = new Map(); //metricName: list of ids
+  dataLoaded = false;
 
-  displayHistogram = 0;
-  curItemsetID;
-  isPlot = false;
-
-  constructor(private queryService: QueryService, private messageService: MessageService) { }
+  constructor(private queryService: QueryService, private messageService: MessageService, private displayService: DisplayService) { }
 
   ngOnInit() {
-    this.updateData();
+    this.query = this.queryService.queries.get(this.queryID);
+
+    this.requestData();
 
     this.queryService.dataResponseReceived.subscribe(
-        () => {this.updateData();
-               this.updateHistogram();}
+        () => {this.updateData();}
       )
-
-    this.makeHistogram(this.id);
   }
 
+  requestData() {
+    let newQuery = this.query;
+    newQuery.numRows = -1; //select all rows
+    newQuery.columnFilters = this.getItemsetAttributes();
+
+    this.queryService.getItemsetData(newQuery, this.queryID, this.itemsetID);
+  }
+
+  getItemsetAttributes() {
+    if(this.itemsetID < 0) {
+      return "";
+    }
+    let itemset = this.queryService.queryResults.get(this.queryID).results[this.itemsetID];
+    return JSON.stringify(itemset.matcher);
+  }
 
   updateData() {
-    this.query = this.queryService.queries.get(this.id)
-    this.queryData = this.queryService.queryData.get(this.id);
-    this.queryResult = this.queryService.queryResults.get(this.id);
-    this.itemsetData = this.queryService.itemsetData.get(this.id);
+    if(this.dataLoaded) {
+      return;
+    }
+
+    let key = this.queryID.toString() + "," + this.itemsetID.toString()
+    if(this.queryService.itemsetData.has(key)) {
+      this.itemsetData = this.queryService.itemsetData.get(key);
+      this.dataLoaded = true;
+      this.makeHistogram();
+    }
+  }
+
+  makeHistogram() {
+    let metricData = this.getMetricData(this.itemsetData);
+
+    let histName = "";
+    if(this.itemsetID < 0) {
+      histName = "all";
+    }
+    else{
+      histName = this.getItemsetAttributes();
+    }
+
+    let data = [
+      {
+        x: metricData,
+        type:'histogram',
+        histnorm:'count'
+      }
+    ];
+
+    var layout = {
+      title: histName,
+      xaxis: {title: this.query.metric, range: this.displayService.axisBounds.get(this.query.metric)},
+      yaxis: {title: 'Count'}
+    };
+
+    let div = "histogram" + " " + this.queryID.toString() + " " + this.itemsetID.toString();
+    Plotly.newPlot(div, data=data, layout);
   }
 
   /*
@@ -59,92 +104,28 @@ export class PlotComponent implements OnInit {
       this.messageService.add("Bad metric column name");
     }
 
-    let metricData = new Array();
+    let metricData = [];
+
+    let max = Number.NEGATIVE_INFINITY
+    let min = Number.POSITIVE_INFINITY
 
     for(let i = 0; i < data.numRows; i++){
-      metricData.push(data.rows[i].vals[metricCol]);
+      let val = data.rows[i].vals[metricCol]
+      metricData.push(val);
+      if(this.itemsetID < 0) {
+        if(val < min) {
+          min = val;
+        }
+        if(val > max) {
+          max = val;
+        }
+      }
+    }
+
+    if(this.itemsetID < 0) {
+      this.displayService.updateAxisBounds(metricName, min, max);
     }
 
     return metricData;
   }
-
-  getItemsetData(itemsetID: number, numRows: number, isSample: boolean) {
-    this.curItemsetID = itemsetID;
-    let query = this.queryService.queries.get(this.id);
-    query.numRows = numRows;
-    query.columnFilters = this.getItemsetAttributes(itemsetID);
-
-    this.queryService.getItemsetData(query, this.id, itemsetID);
-  }
-
-  getItemsetAttributes(itemsetID: number) {
-    let itemset = this.queryResult.results[itemsetID];
-    return JSON.stringify(itemset.matcher);
-  }
-
-  getQueryData(numRows: number) {
-    let query = this.query;
-    query.numRows = numRows;
-    query.columnFilters = "";
-
-    this.queryService.getQueryData(query, this.id);
-  }
-
-  makeHistogram(itemsetID: number) {
-    this.curItemsetID = itemsetID;
-    this.getItemsetData(itemsetID, -1, false);
-    if(this.isPlot){ //no need to wait for query data
-      this.displayHistogram = 2;
-    }
-    else{
-      this.getQueryData(-1);
-      this.displayHistogram = 1;
-    }
-  }
-
-  clearHistogram(){
-    Plotly.purge(document.getElementById("histogram"));
-    this.displayHistogram = 0;
-    this.isPlot = false;
-  }
-
-  updateHistogram() {
-    if(this.displayHistogram == 0){
-      return;
-    }
-    if(this.displayHistogram == 1){
-      this.displayHistogram++;
-      return;
-    }
-
-    let data = []
-
-    if(!this.isPlot){
-      let queryMetricData = this.getMetricData(this.queryData);
-      data.push({
-              y: queryMetricData,
-              opacity:0.75,
-              type:'histogram',
-              histnorm:'probability density',
-              name:'all'});
-    }
-
-    let itemsetMetricData = this.getMetricData(this.itemsetData);
-    data.push({
-            y: itemsetMetricData,
-            opacity:0.75,
-            type:'histogram',
-            histnorm:'probability density',
-            name:this.getItemsetAttributes(this.curItemsetID)});
-
-    var layout = {
-            xaxis: {title: this.query.metric},
-            yaxis: {title: 'Probability Density'},
-            barmode:'overlay'};
-
-    Plotly.plot(document.getElementById("histogram"), data=data, layout);
-
-    this.isPlot = true;
-  }
-
 }

@@ -51,7 +51,7 @@ export class CellComponent implements OnInit {
 
   updateSelectedResults() {
     if(this.displayService.selectedResultsByID.has(this.id)) {
-      this.selectedResults = this.displayService.selectedResultsByID[this.id];
+      this.selectedResults = this.displayService.selectedResultsByID.get(this.id);
     }
     else{
       this.selectedResults = new Set();
@@ -61,11 +61,11 @@ export class CellComponent implements OnInit {
   selectResult(i: number) {
     if(this.selectedResults.has(i)){
       this.selectedResults.delete(i);
-      document.getElementById('result'+i).style.backgroundColor = "white";
+      document.getElementById('result'+ " " + this.id + " " + i).style.backgroundColor = "white";
     }
     else{
       this.selectedResults.add(i);
-      document.getElementById('result'+i).style.backgroundColor = "lightgray";
+      document.getElementById('result'+ " " + this.id + " " + i).style.backgroundColor = "lightgray";
     }
 
     this.displayService.updateSelectedResults(this.id, this.selectedResults);

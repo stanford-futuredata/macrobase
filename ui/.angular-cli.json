@@ -21,7 +21,7 @@
       "styles": [
         "styles.css"
       ],
-      "scripts": [ "../node_modules/plotly.js/dist/plotly-basic.js" ],
+      "scripts": [ "../node_modules/plotly.js/dist/plotly.js" ],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",

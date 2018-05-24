@@ -23,6 +23,8 @@ export class QueryWizardComponent implements OnInit {
   minSupport;
   minRatioMetric;
 
+  checkAll = true;
+
   dataSource = "csv://../data/wikiticker.csv";
 
   constructor(private queryService: QueryService, private messageService: MessageService) { }
@@ -89,6 +91,15 @@ export class QueryWizardComponent implements OnInit {
     this.minSupport = this.query.minSupport;
     this.minRatioMetric = this.query.minRatioMetric;
   }
+
+  // updateAttribute(selectedAttribute) {
+  //   if(this.attributeSet.has(selectedAttribute)){
+  //     this.removeAttribute(selectedAttribute)
+  //   }
+  //   else{
+  //     this.addAttribute(selectedAttribute)
+  //   }
+  // }
 
   addAttribute(): void {
     if(this.selectedAttribute) this.attributeSet.add(this.selectedAttribute);

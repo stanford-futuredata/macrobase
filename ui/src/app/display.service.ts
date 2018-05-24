@@ -16,10 +16,18 @@ export class DisplayService {
     this.displayChanged.emit()
   }
 
+  selectedResultsChanged = new EventEmitter
   selectedResultsByID = new Map();
 
-  updateSelectedResults(result: number, selections) {
-    this.selectedResultsByID[result] = selections;
+  updateSelectedResults(queryID: number, selections) {
+    this.selectedResultsByID.set(queryID, selections);
+    this.selectedResultsChanged.emit()
+  }
+
+  axisBounds = new Map();
+
+  updateAxisBounds(metric: string, min: number, max: number){
+    this.axisBounds.set(metric, [min, max])
   }
 
   constructor() { }

@@ -15,6 +15,7 @@ export class AppComponent {
   displayType = this.displayService.getDisplayType(); //DataHomepage, Edit, History, Explore
   selectedIDs = new Set();
   exploreIDs = new Set();
+  plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
   isPlot = false;
 
   constructor(private queryService: QueryService, private displayService: DisplayService) { }
@@ -27,9 +28,15 @@ export class AppComponent {
     this.queryService.queryResponseReceived.subscribe(
         (id) => {this.updateValidIDs(id);}
       )
+    this.displayService.selectedResultsChanged.subscribe(
+        () => {if(this.displayType == "Explore") {this.refreshPlot();} }
+      )
   }
 
   updateDisplayType(type: string) {
+    // if(type == "Explore") {
+      // this.refreshPlot();
+    // }
     this.displayType = type;
   }
 
@@ -84,8 +91,43 @@ export class AppComponent {
     });
   }
 
-  plotSelected(){
-    this.isPlot = true;
+  refreshPlot() {
+    this.togglePlot();
+    this.togglePlot();
+  }
+
+  togglePlot() {
+    if(this.isPlot){
+      this.isPlot = false;
+      this.plotIDsByMetric = new Map();
+      document.getElementById('plotButton').style.backgroundColor = "#eee";
+    }
+    else{
+      this.createPlotIDs();
+      this.isPlot = true;
+      document.getElementById('plotButton').style.backgroundColor = "lightblue";
+    }
+  }
+
+  createPlotIDs(){
+    for(let queryID of Array.from(this.exploreIDs)) {
+      if(this.displayService.selectedResultsByID.has(queryID) &&
+        this.displayService.selectedResultsByID.get(queryID).size != 0){
+        let metric = this.queryService.queries.get(queryID).metric;
+
+        if(!this.plotIDsByMetric.has(metric)){
+          this.plotIDsByMetric.set(metric, new Map());
+        }
+
+        if(!this.plotIDsByMetric.get(metric).has(queryID)){
+          this.plotIDsByMetric.get(metric).set(queryID, [-1]);
+        }
+
+        for(let itemsetID of Array.from(this.displayService.selectedResultsByID.get(queryID).keys())){
+          this.plotIDsByMetric.get(metric).get(queryID).push(itemsetID);
+        }
+      }
+    }
   }
 
   minimizeCell(id: number){

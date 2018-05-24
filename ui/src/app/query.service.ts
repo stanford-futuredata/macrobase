@@ -21,8 +21,8 @@ export class QueryService {
 
   queries = new Map();
   queryResults = new Map();
-  itemsetData = new Map();
-  queryData = new Map();
+  itemsetData = new Map(); //map of [queryID, itemsetID] to rows of data, itemsetID of -1 = all
+  // queryData = new Map();
 
   constructor(private http: HttpClient, private messageService: MessageService) { }
 
@@ -47,33 +47,34 @@ export class QueryService {
     this.http.post(this.dataURL, JSON.stringify(query))
       .subscribe(
         data => {
-                 this.itemsetData.set(queryID, data);
+                 let key = queryID.toString() + "," + itemsetID.toString()
+                 this.itemsetData.set(key, data);
                  this.dataResponseReceived.emit();
                 },
         err => {this.handleError('runQuery()', err);}
       );
   }
 
-  /*
-   Sends POST request to server to get sample data over all rows of the original query.
-   */
-  getQueryData(query: Query, queryID: number) {
-    this.messageService.add("Getting data from query " + queryID + ": Sending request: " + JSON.stringify(query));
-    this.http.post(this.dataURL, JSON.stringify(query))
-      .subscribe(
-        data => {
-                 this.queryData.set(queryID, data);
-                 this.dataResponseReceived.emit();
-                },
-        err => {this.handleError('runQuery()', err);}
-      );
-  }
+  // /*
+  //  Sends POST request to server to get sample data over all rows of the original query.
+  //  */
+  // getQueryData(query: Query, queryID: number) {
+  //   this.messageService.add("Getting data from query " + queryID + ": Sending request: " + JSON.stringify(query));
+  //   this.http.post(this.dataURL, JSON.stringify(query))
+  //     .subscribe(
+  //       data => {
+  //                this.queryData.set(queryID, data);
+  //                this.dataResponseReceived.emit();
+  //               },
+  //       err => {this.handleError('runQuery()', err);}
+  //     );
+  // }
 
   removeID(queryID: number) {
     this.queries.delete(queryID);
     this.queryResults.delete(queryID);
     this.itemsetData.delete(queryID);
-    this.queryData.delete(queryID);
+    // this.queryData.delete(queryID);
   }
 
   private handleError(fname: string, err: HttpErrorResponse) {
