@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DisplayService } from '../display.service'
+import { DataService } from '../data.service'
 
 @Component({
   selector: 'app-data-header',
@@ -7,7 +8,21 @@ import { DisplayService } from '../display.service'
   styleUrls: ['./data-header.component.css']
 })
 export class DataHeaderComponent implements OnInit {
-  dataSource = "csv://../data/wikiticker.csv";
+  constructor(private displayService: DisplayService, private dataService: DataService) { }
+
+  dataSource: string;
+
+  ngOnInit() {
+    this.updateDisplay(this.displayService.getDisplayType());
+    this.displayService.displayChanged.subscribe(
+        () => {this.updateDisplay(this.displayService.getDisplayType());}
+      )
+
+    this.dataSource = this.dataService.getDataSource();
+    this.dataService.dataSourceChanged.subscribe(
+        () => {this.dataSource = this.dataService.getDataSource();}
+      )
+  }
 
   setDisplayType(type: string){
     this.displayService.setDisplayType(type);
@@ -25,14 +40,4 @@ export class DataHeaderComponent implements OnInit {
     document.getElementById('Edit').style.backgroundColor = "gray";
     document.getElementById('Explore').style.backgroundColor = "gray";
   }
-
-  constructor(private displayService: DisplayService) { }
-
-  ngOnInit() {
-    this.updateDisplay(this.displayService.getDisplayType());
-    this.displayService.displayChanged.subscribe(
-        () => {this.updateDisplay(this.displayService.getDisplayType());}
-      )
-  }
-
 }

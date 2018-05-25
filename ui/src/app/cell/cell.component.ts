@@ -31,7 +31,7 @@ export class CellComponent implements OnInit {
 
     this.queryService.queryResponseReceived.subscribe(
         () => {this.updateQuery();}
-      )
+      );
   }
 
   updateQuery() {

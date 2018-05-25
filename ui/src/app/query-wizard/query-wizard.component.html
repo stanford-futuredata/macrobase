@@ -30,27 +30,12 @@
 <ul>
     <input type="checkbox" (change)="updateAll()" [(ngModel)]="checkAll"> Select all<br><br>
     <li *ngFor="let possibleAttribute of possibleAttributes">
-        <input type="checkbox" (change)="updateAttribute(possibleAttribute)" [checked]="checkAll"> {{possibleAttribute}}
+        <input type="checkbox"
+        (change)="updateAttribute(possibleAttribute)"
+        [checked]="checkAttribute(possibleAttribute)">
+        {{possibleAttribute}}
     </li>
 </ul>
-
-<!-- <table cellpadding="10">
-    <td>
-        <b> Attributes: </b>
-        <select [(ngModel)]="selectedAttribute"
-          (change)="addAttribute()">
-            <option></option>
-            <option *ngFor="let possibleAttribute of possibleAttributes" [value] = "possibleAttribute">
-                {{possibleAttribute}}
-            </option>
-        </select>
-    </td>
-
-    <td *ngFor="let attribute of attributeSet" class="attribute">
-        {{attribute}}
-        <button (click)="removeAttribute(attribute)"> - </button>
-    </td>
-</table> -->
 
 <div style="text-align:right;">
     <button class="submitButton" (click)="runQuery()"> Run Query </button>

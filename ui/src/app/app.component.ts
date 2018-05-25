@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { QueryService } from './query.service'
 import { DisplayService } from './display.service'
+import { DataService } from './data.service'
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   displayMessages = false;
   newID = 0;
   validIDs = new Set();
@@ -18,26 +19,35 @@ export class AppComponent {
   plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
   isPlot = false;
 
-  constructor(private queryService: QueryService, private displayService: DisplayService) { }
+  dataSource = "csv://../data/wikiticker.csv"
+  schemaSource = ""
+  port = "4567"
+
+  constructor(private queryService: QueryService, private displayService: DisplayService, private dataService: DataService) { }
 
   ngOnInit() {
     this.updateDisplayType(this.displayService.getDisplayType());
     this.displayService.displayChanged.subscribe(
         () => {this.updateDisplayType(this.displayService.getDisplayType());}
       )
+
     this.queryService.queryResponseReceived.subscribe(
         (id) => {this.updateValidIDs(id);}
       )
+
     this.displayService.selectedResultsChanged.subscribe(
         () => {if(this.displayType == "Explore") {this.refreshPlot();} }
       )
+
+    this.dataService.setDataSource(this.dataSource);
   }
 
   updateDisplayType(type: string) {
-    // if(type == "Explore") {
-      // this.refreshPlot();
-    // }
     this.displayType = type;
+  }
+
+  updateDataSource() {
+    this.dataService.setDataSource(this.dataSource);
   }
 
   updateValidIDs(id: number) {

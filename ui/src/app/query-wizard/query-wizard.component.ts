@@ -90,12 +90,29 @@ export class QueryWizardComponent implements OnInit {
 
   updateAll() {
     for(let attribute of this.possibleAttributes) {
-      this.updateAttribute(attribute)
+      if(this.checkAll) {
+        if(!this.checkAttribute(attribute)) {
+          this.addAttribute(attribute)
+        }
+      }
+      else{
+        if(this.checkAttribute(attribute)) {
+          this.removeAttribute(attribute)
+        }
+      }
     }
   }
 
-  updateAttribute(attribute: string) {
+  checkAttribute(attribute: string) {
     if(this.attributeSet.has(attribute)){
+      return true;
+    }
+
+    return false;
+  }
+
+  updateAttribute(attribute: string) {
+    if(this.checkAttribute(attribute)){
       this.removeAttribute(attribute)
     }
     else{
