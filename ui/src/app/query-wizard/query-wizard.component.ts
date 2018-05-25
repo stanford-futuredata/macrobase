@@ -19,11 +19,10 @@ export class QueryWizardComponent implements OnInit {
 
   attributeSet = new Set();
   selectedMetric;
-  selectedAttribute;
   minSupport;
   minRatioMetric;
 
-  checkAll = true;
+  checkAll = false;
 
   dataSource = "csv://../data/wikiticker.csv";
 
@@ -73,10 +72,7 @@ export class QueryWizardComponent implements OnInit {
       includeHi: true,
       includeLo: true,
       summarizer: "aplinear",
-      attributes: [
-        "isNew",
-        "isRobot"
-      ],
+      attributes: [],
       ratioMetric: "globalratio",
       minRatioMetric: 1.0,
       minSupport: 0.01,
@@ -92,17 +88,23 @@ export class QueryWizardComponent implements OnInit {
     this.minRatioMetric = this.query.minRatioMetric;
   }
 
-  // updateAttribute(selectedAttribute) {
-  //   if(this.attributeSet.has(selectedAttribute)){
-  //     this.removeAttribute(selectedAttribute)
-  //   }
-  //   else{
-  //     this.addAttribute(selectedAttribute)
-  //   }
-  // }
+  updateAll() {
+    for(let attribute of this.possibleAttributes) {
+      this.updateAttribute(attribute)
+    }
+  }
 
-  addAttribute(): void {
-    if(this.selectedAttribute) this.attributeSet.add(this.selectedAttribute);
+  updateAttribute(attribute: string) {
+    if(this.attributeSet.has(attribute)){
+      this.removeAttribute(attribute)
+    }
+    else{
+      this.addAttribute(attribute)
+    }
+  }
+
+  addAttribute(attribute: string): void {
+    this.attributeSet.add(attribute);
   }
 
   removeAttribute(attribute: string): void {

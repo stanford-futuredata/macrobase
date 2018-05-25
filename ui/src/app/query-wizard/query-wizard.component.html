@@ -1,36 +1,40 @@
 <table cellpadding="10">
-    <td>
-        <b> Metric: </b>
-        <select [(ngModel)]="selectedMetric">
-            <option *ngFor="let possibleMetric of possibleMetrics"
-                    [value] = "possibleMetric">
-                {{possibleMetric}}
-            </option>
-        </select>
-    </td>
+    <tr>
+        <td>
+            <b> Metric: </b>
+            <select [(ngModel)]="selectedMetric">
+                <option *ngFor="let possibleMetric of possibleMetrics"
+                        [value] = "possibleMetric">
+                    {{possibleMetric}}
+                </option>
+            </select>
+        </td>
 
-    <td align="right">
-        <b> Support: </b>
-        <input [(ngModel)]="minSupport">
-    </td>
+        <td align="right">
+            <b> Support: </b>
+            <input [(ngModel)]="minSupport">
+        </td>
 
-    <td>
-        <b> Risk Ratio: </b>
-        <input [(ngModel)]="minRatioMetric">
-    </td>
+        <td>
+            <b> Risk Ratio: </b>
+            <input [(ngModel)]="minRatioMetric">
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b> Attributes: </b>
+        </td>
+    </tr>
 </table>
 
-<br>
-
-<!-- <b> Attributes: </b> -->
-<!-- <ul>
-    <input type="checkbox" [(ngModel)]="checkAll"> Check all<br><br>
+<ul>
+    <input type="checkbox" (change)="updateAll()" [(ngModel)]="checkAll"> Select all<br><br>
     <li *ngFor="let possibleAttribute of possibleAttributes">
         <input type="checkbox" (change)="updateAttribute(possibleAttribute)" [checked]="checkAll"> {{possibleAttribute}}
     </li>
 </ul>
- -->
-<table cellpadding="10">
+
+<!-- <table cellpadding="10">
     <td>
         <b> Attributes: </b>
         <select [(ngModel)]="selectedAttribute"
@@ -46,7 +50,7 @@
         {{attribute}}
         <button (click)="removeAttribute(attribute)"> - </button>
     </td>
-</table>
+</table> -->
 
 <div style="text-align:right;">
     <button class="submitButton" (click)="runQuery()"> Run Query </button>

@@ -42,9 +42,13 @@ export class CellComponent implements OnInit {
     let numItemsets = this.queryResult.results.length;
 
     //JSON to string for itemset attributes
-    this.queryResult.results.forEach( (result) => {
-      result.matcherString = JSON.stringify(result.matcher);
-    })
+    for(let result of this.queryResult.results) {
+      result.matcherString = []
+      for(let attribute in result.matcher) {
+        let itemset = attribute + ": " + result.matcher[attribute];
+        result.matcherString.push(itemset);
+      }
+    }
 
     this.displayItemsets = true;
   }
