@@ -1,5 +1,6 @@
 package edu.stanford.futuredata.macrobase.sql;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Charsets;
@@ -7,7 +8,6 @@ import com.google.common.io.Resources;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema.ColType;
 import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameParser;
-import edu.stanford.futuredata.macrobase.ingest.CSVDataFrameWriter;
 import edu.stanford.futuredata.macrobase.sql.parser.ParsingException;
 import edu.stanford.futuredata.macrobase.sql.parser.SqlParser;
 import edu.stanford.futuredata.macrobase.sql.tree.ImportCsv;
@@ -15,15 +15,13 @@ import edu.stanford.futuredata.macrobase.sql.tree.Query;
 import edu.stanford.futuredata.macrobase.sql.tree.QueryBody;
 import edu.stanford.futuredata.macrobase.sql.tree.Statement;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Map;
 
-public class SQLTestUtils {
+class SQLTestUtils {
 
-    public static void runQueryFromFile(final SqlParser parser, final QueryEngine queryEngine,
+    static void runQueryFromFile(final SqlParser parser, final QueryEngine queryEngine,
         final String queryFilename, final DataFrame expected)
         throws IOException {
         final String queryStr = Resources
@@ -40,14 +38,14 @@ public class SQLTestUtils {
         final QueryBody q = ((Query) stmt).getQueryBody();
         try {
             final DataFrame result = queryEngine.executeQuery(q);
-            assertTrue(expected.equals(result));
+            assertEquals(expected, result);
         } catch (MacroBaseException e) {
             e.printStackTrace();
             throw new Error(queryFilename + " should not throw an exception");
         }
     }
 
-    public static void runQueriesFromFile(final SqlParser parser, final QueryEngine queryEngine,
+    static void runQueriesFromFile(final SqlParser parser, final QueryEngine queryEngine,
         final String queryFilename, final DataFrame expected)
         throws IOException {
         final List<String> queriesInFile = Resources
@@ -70,7 +68,7 @@ public class SQLTestUtils {
                 if (stmt instanceof Query) {
                     final QueryBody q = ((Query) stmt).getQueryBody();
                     final DataFrame result = queryEngine.executeQuery(q);
-                    assertTrue(expected.equals(result));
+                    assertEquals(expected, result);
                 } else if (stmt instanceof ImportCsv) {
                     final ImportCsv importStatement = (ImportCsv) stmt;
                     queryEngine.importTableFromCsv(importStatement);
@@ -85,7 +83,7 @@ public class SQLTestUtils {
         }
     }
 
-    public static DataFrame loadDataFrameFromCSV(final String csvFilename,
+    static DataFrame loadDataFrameFromCsv(final String csvFilename,
         final Map<String, ColType> schema) throws Exception {
         return new CSVDataFrameParser(Resources.getResource(csvFilename).getFile(), schema).load();
     }

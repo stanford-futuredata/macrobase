@@ -1,9 +1,8 @@
 package edu.stanford.futuredata.macrobase.sql;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric.Action.KEEP;
-import static edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric.Action.NEXT;
 import static edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpressionType.EQUAL;
+import static java.util.stream.DoubleStream.concat;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -11,15 +10,8 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
-import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLExplanationResult;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.FastFixedHashTable;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSet;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.IntSetAsLong;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.GlobalRatioQualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.SupportQualityMetric;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -78,8 +70,6 @@ import java.util.function.BiPredicate;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 import java.util.stream.DoubleStream;
-import org.antlr.v4.runtime.misc.Pair;
-import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,6 +148,7 @@ class QueryEngine {
             .collect(toImmutableList());
 
         DataFrame dfToExplain;
+        double[][] aggregateColumns = null;
 
         if (diffQuery.hasTwoArgs()) {
             // case 1: two separate subqueries
@@ -171,16 +162,41 @@ class QueryEngine {
                     .getFrom().get();
                 final Join secondJoin = (Join) ((QuerySpecification) second.getQuery()
                     .getQueryBody()).getFrom().get();
-                return evaluateSQLClauses(diffQuery,
-                    evaluateDiffJoin(firstJoin, secondJoin, explainCols, minRatioMetric,
-                        minSupport, order));
+
+                final DataFrame outlierDf = getDataFrameForRelation(firstJoin.getLeft()); // table R
+                final DataFrame inlierDf = getDataFrameForRelation(secondJoin.getLeft()); // table S
+                final DataFrame common = getDataFrameForRelation(firstJoin.getRight()); // table T
+
+                final Optional<JoinCriteria> joinCriteriaOpt = firstJoin.getCriteria();
+                if (!joinCriteriaOpt.isPresent()) {
+                    throw new MacroBaseSQLException(
+                        "No clause (e.g., ON, USING) specified in JOIN");
+                }
+
+                final String joinColumn = getJoinColumn(joinCriteriaOpt.get(),
+                    outlierDf.getSchema(),
+                    common.getSchema()); // column A1
+
+                dfToExplain = evaluateDiffJoin(outlierDf, inlierDf, common, joinColumn, explainCols,
+                    minRatioMetric);
+                final double[] countCol = concat(
+                    DoubleStream.generate(() -> 1.0).limit(outlierDf.getNumRows()),
+                    DoubleStream.generate(() -> 1.0).limit(inlierDf.getNumRows())
+                ).toArray();
+                final double[] outlierCol = concat(
+                    DoubleStream.generate(() -> 1.0).limit(outlierDf.getNumRows()),
+                    DoubleStream.generate(() -> 0.0).limit(inlierDf.getNumRows())
+                ).toArray();
+                aggregateColumns = new double[2][];
+                aggregateColumns[0] = outlierCol;
+                aggregateColumns[1] = countCol;
+            } else {
+                // execute subqueries
+                final DataFrame outliersDf = executeQuery(first.getQuery().getQueryBody());
+                final DataFrame inliersDf = executeQuery(second.getQuery().getQueryBody());
+
+                dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
             }
-
-            // execute subqueries
-            final DataFrame outliersDf = executeQuery(first.getQuery().getQueryBody());
-            final DataFrame inliersDf = executeQuery(second.getQuery().getQueryBody());
-
-            dfToExplain = concatOutliersAndInliers(outlierColName, outliersDf, inliersDf);
         } else {
             // case 2: single SPLIT (...) WHERE ... query
             final SplitQuery splitQuery = diffQuery.getSplitQuery().get();
@@ -218,6 +234,10 @@ class QueryEngine {
             .setAttributes(explainCols)
             .setNumThreads(numThreads);
 
+        if (aggregateColumns != null) {
+            summarizer.setGlobalAggregateCols(aggregateColumns);
+        }
+
         try {
             summarizer.process(dfToExplain);
         } catch (Exception e) {
@@ -238,77 +258,46 @@ class QueryEngine {
      * 2) @param explainCols can only be columns in T
      * 3) The ratio metric is global_ratio
      *
-     *  R     S          T
+     * R     S          T
      * ---   ---   -------------
-     *  a     a     a | CA | v1
-     *  a     b     b | CA | v2
-     *  b     c     c | TX | v1
-     *  b     d     d | TX | v2
-     *        e     e | FL | v1
+     * a     a     a | CA | v1
+     * a     b     b | CA | v2
+     * b     c     c | TX | v1
+     * b     d     d | TX | v2
+     * e           e | FL | v1
      *
      * @return result of the DIFF JOIN
      */
-    private DataFrame evaluateDiffJoin(final Join first, final Join second,
-        final List<String> explainColumnNames, final double minRatioMetric, final double minSupport,
-        final int maxOrder) throws MacroBaseException {
+    private DataFrame evaluateDiffJoin(final DataFrame outlierDf, final DataFrame inlierDf,
+        final DataFrame common, final String joinColumn, final List<String> explainColumnNames,
+        final double minRatioMetric)
+        throws MacroBaseException {
         final long startTime = System.currentTimeMillis();
-
-        final DataFrame outlierDf = getDataFrameForRelation(first.getLeft()); // table R
-        final DataFrame inlierDf = getDataFrameForRelation(second.getLeft()); // table S
-        final DataFrame common = getDataFrameForRelation(first.getRight()); // table T
-
-        final Optional<JoinCriteria> joinCriteriaOpt = first.getCriteria();
-        if (!joinCriteriaOpt.isPresent()) {
-            throw new MacroBaseSQLException("No clause (e.g., ON, USING) specified in JOIN");
-        }
-
-        final String joinColumnName = getJoinColumn(joinCriteriaOpt.get(), outlierDf.getSchema(),
-            common.getSchema()); // column A1
 
         final int numOutliers = outlierDf.getNumRows();
         final int numInliers = inlierDf.getNumRows();
         log.info("Num Outliers:  {}, num inliers: {}", numOutliers, numInliers);
-        final int minSupportThreshold = (int) (minSupport * numOutliers);
         final double globalRatioDenom =
             numOutliers / (numOutliers + numInliers + 0.0);
         final double minRatioThreshold = minRatioMetric * globalRatioDenom;
 
-        final int numAggregates = 2;
-        final double[] thresholds = new double[]{minSupport, minRatioMetric};
-        final QualityMetric[] qualityMetrics = new QualityMetric[]{new SupportQualityMetric(0),
-            new GlobalRatioQualityMetric(0, 1)};
-
-        // Quality metrics are initialized with global aggregates to
-        // allow them to determine the appropriate relative thresholds
-        double[] globalAggregates = new double[]{numOutliers, numOutliers + numInliers};
-        for (QualityMetric q : qualityMetrics) {
-            q.initialize(globalAggregates);
-        }
-
-        // 1a) Encode \proj_{A1} R, \proj_{A1} S, and T
-        final String[] outlierProjected = outlierDf.project(joinColumnName).getStringColumn(0);
-        final String[] inlierProjected = inlierDf.project(joinColumnName).getStringColumn(0);
+        final String[] outlierProjected = outlierDf.project(joinColumn).getStringColumn(0);
+        final String[] inlierProjected = inlierDf.project(joinColumn).getStringColumn(0);
         final AttributeEncoder encoder = new AttributeEncoder();
-        final int numExplainColumns = explainColumnNames.size();
         final long encodingTime = System.currentTimeMillis();
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
         final long foreignKeyDiff = System.currentTimeMillis();
-        final Map<String, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs = new HashMap<>();
-        final Set<String> candidateForeignKeys = foreignKeyDiff(
-            outlierProjected,
-            inlierProjected,
-            foreignKeyBitmapPairs,
+        final Set<String> candidateForeignKeys = foreignKeyDiff(outlierProjected, inlierProjected,
             minRatioThreshold); // returns K, the candidate keys that exceeded the minRatioThreshold.
         // K may contain false positives, though (support threshold hasn't been applied yet)
         log.info("Foreign key diff time: {} ms", System.currentTimeMillis() - foreignKeyDiff);
         log.info("Num candidate foreign keys: {}", candidateForeignKeys.size());
 
         if (candidateForeignKeys.isEmpty()) {
-            return toDataFrame(Lists.newArrayList(), encoder, explainColumnNames,
-                ImmutableList.of("outlier_count", "total_count"), Arrays.asList(qualityMetrics));
-
+            return new DataFrame();
         }
+
         log.info("Starting encoding");
         final int[][] encodedValues = encoder.encodeAttributesByColumn(
             common.getStringColsByName(explainColumnNames));
@@ -316,243 +305,90 @@ class QueryEngine {
 
         // Keep track of candidates in each column, needed for order-2 and order-3 combinations
         final long semiJoinAndMergeTime = System.currentTimeMillis();
-        final Set<Integer>[] attrCandidatesByColumn = new Set[numExplainColumns];
-        for (int i = 0; i < numExplainColumns; ++i) {
-            attrCandidatesByColumn[i] = new HashSet<>();
-        }
-
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
         //    and merge common values that distinct keys may map to
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = semiJoinAndMerge(
+        final Map<String, Integer> colValuesToIndices = semiJoinAndMerge(
             candidateForeignKeys, // K
-            common.getStringColumnByName(joinColumnName),
-            encodedValues, // T
-            foreignKeyBitmapPairs,
-            attrCandidatesByColumn);
-        log.info("Semi-join and merge time: {} ms", System.currentTimeMillis() - semiJoinAndMergeTime);
+            common.getStringColumnByName(joinColumn),
+            encodedValues); // T
+        log.info("Semi-join and merge time: {} ms",
+            System.currentTimeMillis() - semiJoinAndMergeTime);
 
-        // 3) Prune anything that doesn't have enough support
-        //    (End of order-1 step of candidate generation)
-        final int sizeBefore = valueBitmapPairs.size();
-        valueBitmapPairs.entrySet().removeIf((entry) -> {
-            final boolean lowSupport = entry.getValue().a.getCardinality() < minSupportThreshold;
-            if (lowSupport) {
-                final int val = entry.getKey();
-                attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
-            }
-            return lowSupport;
-        });
-        log.info("Num candidates pruned by support: {}", sizeBefore - valueBitmapPairs.size());
+        final DataFrame toReturn = diffJoinAndConcat(outlierDf, inlierDf, common, joinColumn,
+            colValuesToIndices);
+        log.info("Total DiffJoin Time: {} ms", System.currentTimeMillis() - startTime);
+        return toReturn;
+    }
 
-        // 4) Now, we proceed as we would in the all-bitmap case of APrioriLinear: finish up the order-1 stage,
-        //    then explore all 2-order and 3-order combinations by intersecting the bitmaps, then pruning
-        //    using the QualityMetrics
+    @SuppressWarnings("Duplicates")
+    private DataFrame diffJoinAndConcat(DataFrame outlierDf, DataFrame inlierDf, DataFrame common,
+        final String joinColumn, Map<String, Integer> colValuesToIndices) {
 
-        // Prune all the collected aggregates
-        // Sets that have high enough support but not high qualityMetrics, need to be explored
-        final Map<Integer, HashSet<IntSet>> setNext = new HashMap<>(3);
-        // Aggregate values for all of the sets we saved
-        final Map<Integer, Map<IntSet, double []>> savedAggregates = new HashMap<>(3);
+        final DataFrame outliersDf = diffJoinSingle(outlierDf, common, joinColumn,
+            colValuesToIndices);
+        final DataFrame inliersDf = diffJoinSingle(inlierDf, common, joinColumn,
+            colValuesToIndices);
+        return concatOutliersAndInliers("outlier_col",
+            outliersDf,
+            inliersDf
+        );
 
-        for (int order = 1; order <= maxOrder; ++order) {
-            log.info("Starting order {}", order);
-            final long orderTime = System.currentTimeMillis();
-            // For now, we always use IntSetAsLong
-            final FastFixedHashTable setAggregates = new FastFixedHashTable(valueBitmapPairs.size(),
-                numAggregates, false);
-            if (order == 1) {
-                valueBitmapPairs.forEach((key, bitmapPair) -> {
-                    final int numMatchedOutliers = bitmapPair.a.getCardinality();
-                    final int numMatchedInliers = bitmapPair.b.getCardinality();
-                    updateAggregates(setAggregates, new IntSetAsLong(key),
-                        new double[]{numMatchedOutliers, numMatchedOutliers + numMatchedInliers},
-                        numAggregates);
-                });
-            } else if (order == 2) {
-                IntSetAsLong curCandidate = new IntSetAsLong(0);
-                for (int colNumOne = 0; colNumOne < numExplainColumns; ++colNumOne) {
-                    for (int colNumTwo = colNumOne + 1; colNumTwo < numExplainColumns;
-                        ++colNumTwo) {
-                        for (Integer curCandidateOne : attrCandidatesByColumn[colNumOne]) {
-                            for (Integer curCandidateTwo : attrCandidatesByColumn[colNumTwo]) {
-                                curCandidate.value = IntSetAsLong
-                                    .twoIntToLong(curCandidateOne, curCandidateTwo);
-                                final Pair<RoaringBitmap, RoaringBitmap> candidateOneBitmapPair = valueBitmapPairs
-                                    .get(curCandidateOne);
-                                final Pair<RoaringBitmap, RoaringBitmap> candidateTwoBitmapPair = valueBitmapPairs
-                                    .get(curCandidateTwo);
-                                final int numMatchedOutliers = RoaringBitmap
-                                    .andCardinality(candidateOneBitmapPair.a,
-                                        candidateTwoBitmapPair.a);
-                                final int numMatchedInliers = RoaringBitmap
-                                    .andCardinality(candidateOneBitmapPair.b,
-                                        candidateTwoBitmapPair.b);
-                                updateAggregates(setAggregates, curCandidate,
-                                    new double[]{numMatchedOutliers, numMatchedOutliers + numMatchedInliers},
-                                    numAggregates);
-                            }
-                        }
-                    }
-                }
-            } else if (order == 3) {
-                IntSetAsLong curCandidate = new IntSetAsLong(0);
-                for (int colNumOne = 0; colNumOne < numExplainColumns; ++colNumOne) {
-                    for (int colNumTwo = colNumOne + 1; colNumTwo < numExplainColumns;
-                        ++colNumTwo) {
-                        for (int colNumThree = colNumTwo + 1; colNumThree < numExplainColumns;
-                            ++colNumThree) {
-                            for (Integer curCandidateOne : attrCandidatesByColumn[colNumOne]) {
-                                for (Integer curCandidateTwo : attrCandidatesByColumn[colNumTwo]) {
-                                    for (Integer curCandidateThree : attrCandidatesByColumn[colNumThree]) {
-                                        // Cascade to arrays if necessary, but otherwise pack attributes into longs.
-                                        curCandidate.value = IntSetAsLong
-                                            .threeIntToLong(curCandidateOne, curCandidateTwo,
-                                                curCandidateThree);
-                                        final Pair<RoaringBitmap, RoaringBitmap> candidateOneBitmapPair = valueBitmapPairs
-                                            .get(curCandidateOne);
-                                        final Pair<RoaringBitmap, RoaringBitmap> candidateTwoBitmapPair = valueBitmapPairs
-                                            .get(curCandidateTwo);
-                                        final Pair<RoaringBitmap, RoaringBitmap> candidateThreeBitmapPair = valueBitmapPairs
-                                            .get(curCandidateThree);
-                                        // TODO: write three-argument version of andCardinality
-                                        final int numMatchedOutliers = RoaringBitmap.andCardinality(
-                                            RoaringBitmap.and(candidateOneBitmapPair.a,
-                                                candidateTwoBitmapPair.a),
-                                            candidateThreeBitmapPair.a);
-                                        final int numMatchedInliers = RoaringBitmap.andCardinality(
-                                            RoaringBitmap.and(candidateOneBitmapPair.b,
-                                                candidateTwoBitmapPair.b),
-                                            candidateThreeBitmapPair.b);
-                                        updateAggregates(setAggregates, curCandidate,
-                                            new double[]{numMatchedOutliers,
-                                                numMatchedOutliers + numMatchedInliers},
-                                            numAggregates);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+    }
 
-            HashSet<IntSet> curOrderNext = new HashSet<>();
-            HashSet<IntSet> curOrderSaved = new HashSet<>();
-            for (long l : setAggregates.keySetLong()) {
-                final IntSetAsLong candidate = new IntSetAsLong(l);
-                QualityMetric.Action action = KEEP;
-                double[] curAggregates = setAggregates.get(candidate);
-                for (int i = 0; i < qualityMetrics.length; i++) {
-                    QualityMetric q = qualityMetrics[i];
-                    double t = thresholds[i];
-                    action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
-                }
-                if (action == KEEP) {
-                    // Make sure the candidate isn't already covered by a pair
-                    if (order != 3 || allPairsValid(candidate, setNext.get(2))) {
-                        // if a set is already past the threshold on all metrics,
-                        // save it and no need for further exploration if we do containment
-                        curOrderSaved.add(candidate);
-                        // Remove this explanation from the array of candidate sets
-                        switch (order) {
-                            case 2:
-                                int val = candidate.getSecond();
-                                attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
-                            case 1:
-                                val = candidate.getFirst();
-                                attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
-                        }
-                    }
-                } else if (action == NEXT) {
-                    // If a set still has potentially good subsets, save it for further examination
-                    curOrderNext.add(candidate);
-                } else {
-                    // Prune search space by removing candidates from attrCandidatesByColumn
-                    switch (order) {
-                        case 3:
-                            int val = candidate.getThird();
-                            attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
-                        case 2:
-                            val = candidate.getSecond();
-                            attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
-                        case 1:
-                            val = candidate.getFirst();
-                            attrCandidatesByColumn[encoder.decodeColumn(val)].remove(val);
-                            break;
-                    }
-                }
-            }
-
-            // Save aggregates that pass all qualityMetrics to return later, store aggregates
-            // that have minimum support for higher-order exploration.
-            Map<IntSet, double[]> curSavedAggregates = new HashMap<>(curOrderSaved.size());
-            for (IntSet curSaved : curOrderSaved) {
-                curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
-            }
-            savedAggregates.put(order, curSavedAggregates);
-            if (curOrderNext.isEmpty()) {
-                log.info("curOrderNext is empty, skipping higher-order explanations");
-                break;
-            }
-            setNext.put(order, curOrderNext);
-            log.info("Order {} time: {} ms", order, System.currentTimeMillis() - orderTime);
+    private DataFrame diffJoinSingle(DataFrame bigger, DataFrame smaller, String joinColumn,
+        Map<String, Integer> colValuesToIndices) {
+        final Map<String, List<String>> biggerStringResults = new HashMap<>();
+        final Map<String, List<String>> smallerStringResults = new HashMap<>();
+        for (String colName : bigger.getSchema().getColumnNamesByType(ColType.STRING)) {
+            biggerStringResults.put(colName, new LinkedList<>());
         }
-        log.info("Time spent in DiffJoin: {} ms", System.currentTimeMillis() - startTime);
-
-        // 4) Construct DataFrame of results
-        List<APLExplanationResult> results = new ArrayList<>();
-        for (Map<IntSet, double []> curOrderSavedAggregates : savedAggregates.values()) {
-            if (curOrderSavedAggregates == null) {
-                // we stopped early, because there was nothing in curOrderNext
+        for (String colName : smaller.getSchema().getColumnNamesByType(ColType.STRING)) {
+            if (colName.equals(joinColumn)) {
                 continue;
             }
-            for (Entry<IntSet, double[]> entry : curOrderSavedAggregates.entrySet()) {
-                double[] aggregates = entry.getValue();
-                double[] metrics = new double[qualityMetrics.length];
-                for (int i = 0; i < metrics.length; i++) {
-                    metrics[i] = qualityMetrics[i].value(aggregates);
-                }
-                results.add(
-                    new APLExplanationResult(qualityMetrics, entry.getKey(), aggregates, metrics)
-                );
-            }
+            smallerStringResults.put(colName, new LinkedList<>());
         }
 
-        return toDataFrame(results, encoder, explainColumnNames,
-        ImmutableList.of("outlier_count", "total_count"), Arrays.asList(qualityMetrics));
+        // double column values that will be added to the DataFrame
+        final Map<String, List<Double>> biggerDoubleResults = new HashMap<>();
+        final Map<String, List<Double>> smallerDoubleResults = new HashMap<>();
+        for (String colName : bigger.getSchema().getColumnNamesByType(ColType.DOUBLE)) {
+            biggerDoubleResults.put(colName, new LinkedList<>());
+        }
+        for (String colName : smaller.getSchema().getColumnNamesByType(ColType.DOUBLE)) {
+            if (colName.equals(joinColumn)) {
+                continue;
+            }
+            smallerDoubleResults.put(colName, new LinkedList<>());
+        }
+        hashJoinWithIndex(bigger, smaller, joinColumn, colValuesToIndices, biggerStringResults,
+            smallerStringResults, biggerDoubleResults, smallerDoubleResults);
+        return joinResultToDataFrame("small", "big", bigger.getSchema(),
+            smaller.getSchema(), joinColumn, biggerStringResults, smallerStringResults,
+            biggerDoubleResults, smallerDoubleResults);
     }
 
     private Set<String> foreignKeyDiff(final String[] outliers, final String[] inliers,
-        final Map<String, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyCounts,
         double minRatioThreshold) {
+        final Map<String, Integer> outlierCounts = new HashMap<>();
         log.info("Starting outliers");
-        for (int i = 0; i < outliers.length; ++i) {
-            final String outlier = outliers[i];
-            final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(outlier);
-            if (value != null) {
-                value.a.add(i);
-            } else {
-                foreignKeyCounts
-                    .put(outlier, new Pair<>(RoaringBitmap.bitmapOf(i), new RoaringBitmap()));
-            }
+        //noinspection Duplicates
+        for (final String outlier : outliers) {
+            outlierCounts.merge(outlier, 1, (a, b) -> a + b);
         }
         log.info("Starting inliers");
-        for (int i = 0; i < inliers.length; ++i) {
-            final String inlier = inliers[i];
-            final Pair<RoaringBitmap, RoaringBitmap> value = foreignKeyCounts.get(inlier);
-            if (value != null) {
-                value.b.add(i);
-            } else {
-                foreignKeyCounts
-                    .put(inlier, new Pair<>(new RoaringBitmap(), RoaringBitmap.bitmapOf(i)));
-            }
+        final Map<String, Integer> inlierCounts = new HashMap<>();
+        //noinspection Duplicates
+        for (final String inlier : inliers) {
+            inlierCounts.merge(inlier, 1, (a, b) -> a + b);
         }
         // Generate candidates based on min ratio
         final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-        for (Entry<String, Pair<RoaringBitmap, RoaringBitmap>> entry : foreignKeyCounts
+        for (Entry<String, Integer> entry : outlierCounts
             .entrySet()) {
-            final Pair<RoaringBitmap, RoaringBitmap> value = entry.getValue();
-            final int numOutliers = value.a.getCardinality();
-            if ((numOutliers / (numOutliers + value.b.getCardinality() + 0.0))
+            final int numOutliers = entry.getValue();
+            final int numInliers = inlierCounts.getOrDefault(entry.getKey(), 0);
+            if ((numOutliers / (numOutliers + numInliers + 0.0))
                 >= minRatioThreshold) {
                 builder.add(entry.getKey());
             }
@@ -560,182 +396,56 @@ class QueryEngine {
         return builder.build();
     }
 
-    private Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> semiJoinAndMerge(
-        final Set<String> candidateForeignKeys,
-        final String[] primaryKeyColumn,
-        final int[][] encodedValues,
-        final Map<String, Pair<RoaringBitmap, RoaringBitmap>> foreignKeyBitmapPairs,
-        Set<Integer>[] attrCandidatesByColumn) {
+    private Map<String, Integer> semiJoinAndMerge(final Set<String> candidateForeignKeys,
+        final String[] primaryKeyColumn, final int[][] encodedValues) {
 
         int numAdditionalValues = 0;
+        final int numRows = encodedValues[0].length;
 
-        final Map<Integer, Pair<RoaringBitmap, RoaringBitmap>> valueBitmapPairs = new HashMap<>();
         if (candidateForeignKeys.isEmpty()) {
             log.info("candidateForeignKeys is empty");
-            return valueBitmapPairs;
         }
-        // 1) R \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
+
+        final Set<Integer> attrCandidatesByColumn = new HashSet<>();
+        final Map<String, Integer> colValuesToIndices = new HashMap<>();
+
+        // 1) K \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
         //    For every match, save the corresponding values
-        final int numCols = encodedValues.length;
-        final int numRows = encodedValues[0].length;
         for (int i = 0; i < numRows; ++i) {
             final String primaryKey = primaryKeyColumn[i];
             if (candidateForeignKeys.contains(primaryKey)) {
-                final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
-                    .get(primaryKey); // this always exists, never need to check for null
+                colValuesToIndices.put(primaryKey, i);
+
                 // extract the corresponding values for the candidate key
-                for (int j = 0; j < numCols; ++j) {
-                    final int val = encodedValues[j][i];
-                    final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
-                        .get(val);
-                    if (valueBitmapPair == null) {
-                        valueBitmapPairs.put(val, new Pair<>(foreignKeyBitmapPair.a.clone(),
-                            foreignKeyBitmapPair.b.clone()));
-                        attrCandidatesByColumn[j].add(val); // subtract one for primary key column
-                    } else {
-                        // if the value already exists, merge the foreign key bitmaps
-                        valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
-                        valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
-                        ++numAdditionalValues;
-                    }
+                for (int[] encodedValue : encodedValues) {
+                    final int val = encodedValue[i];
+                    attrCandidatesByColumn.add(val);
                 }
             }
         }
+
         // 2) Go through again and check which saved values from the first pass map to new
-        //    primary keys. If we find any new ones, merge their foreign key bitmaps
-        //    with the existing value bitmap
-            for (int j = 0; j < numCols; ++j) {
-                final int[] encodedColumn = encodedValues[j];
-                for (int i = 0; i < numRows; ++i) {
+        //    primary keys. If we find any new ones, add them to colValuesToIndices, so we
+        //    can do the join
+        for (final int[] encodedColumn : encodedValues) {
+            for (int i = 0; i < numRows; ++i) {
                 final int val = encodedColumn[i];
-                final Pair<RoaringBitmap, RoaringBitmap> valueBitmapPair = valueBitmapPairs
-                    .get(val);
-                if (valueBitmapPair == null) {
+                if (!attrCandidatesByColumn.contains(val)) {
                     // never found in the first pass
                     continue;
                 }
                 // extract the corresponding foreign key, merge the foreign key bitmaps
                 final String primaryKey = primaryKeyColumn[i];
-                if (candidateForeignKeys.contains(primaryKey)) {
-                    // found in the first pass, but already included in valueBitmapPair
-                    continue;
-                }
-                final Pair<RoaringBitmap, RoaringBitmap> foreignKeyBitmapPair = foreignKeyBitmapPairs
-                    .get(primaryKey);
-                if (foreignKeyBitmapPair != null) {
-                    valueBitmapPair.a.or(foreignKeyBitmapPair.a); // outliers
-                    valueBitmapPair.b.or(foreignKeyBitmapPair.b); // inliers
+                if (!candidateForeignKeys.contains(primaryKey)) {
+                    // if not found in the first pass, add it
+                    colValuesToIndices.put(primaryKey, i);
                     ++numAdditionalValues;
                 }
             }
         }
         log.info("Num additional values: {}", numAdditionalValues);
-        return valueBitmapPairs;
+        return colValuesToIndices;
     }
-
-    /**** HELPER METHODS THAT WERE COPIED FROM APrioriLinear and APLExplanation ****/
-    private void updateAggregates(FastFixedHashTable aggregates, IntSet curCandidate, double[] val, int numAggregates) {
-        double[] candidateVal = aggregates.get(curCandidate);
-        if (candidateVal == null) {
-            aggregates.put(curCandidate,
-                Arrays.copyOf(val, numAggregates));
-        } else {
-            for (int a = 0; a < numAggregates; a++) {
-                candidateVal[a] += val[a];
-            }
-        }
-    }
-
-    private boolean allPairsValid(IntSet curCandidate,
-        HashSet<IntSet> o2Candidates) {
-        IntSet subPair;
-        subPair = new IntSetAsLong(
-            curCandidate.getFirst(),
-            curCandidate.getSecond());
-        if (o2Candidates.contains(subPair)) {
-            subPair = new IntSetAsLong(
-                curCandidate.getSecond(),
-                curCandidate.getThird());
-            if (o2Candidates.contains(subPair)) {
-                subPair = new IntSetAsLong(
-                    curCandidate.getFirst(),
-                    curCandidate.getThird());
-                return o2Candidates.contains(subPair);
-            }
-        }
-        return false;
-    }
-
-    private DataFrame toDataFrame(final List<APLExplanationResult> results,
-        final AttributeEncoder encoder, final List<String> attrsToInclude,
-        final List<String> aggregateNames, final List<QualityMetric> metrics) {
-        // String column values that will be added to DataFrame
-        final Map<String, String[]> stringResultsByCol = new HashMap<>();
-        for (String colName : attrsToInclude) {
-            stringResultsByCol.put(colName, new String[results.size()]);
-        }
-
-        // double column values that will be added to the DataFrame
-        final Map<String, double[]> doubleResultsByCol = new HashMap<>();
-        for (String colName : aggregateNames) {
-            doubleResultsByCol.put(colName, new double[results.size()]);
-        }
-        for (QualityMetric metric : metrics) {
-            // NOTE: we assume that the QualityMetrics here are the same ones
-            // that each APLExplanationResult has
-            doubleResultsByCol.put(metric.name(), new double[results.size()]);
-        }
-
-        // Add result rows to individual columns
-        int i = 0;
-        for (APLExplanationResult result : results) {
-            // attrValsInRow contains the values for the explanation attribute values in this
-            // given row
-            Set<Integer> values = result.matcher.getSet();
-            final Map<String, String> attrValsInRow = new HashMap<>();
-            for (int v : values) {
-                final String colNameForValue = attrsToInclude
-                    .get(encoder.decodeColumn(v));
-                attrValsInRow.put(colNameForValue, encoder.decodeValue(v));
-            }
-
-            for (String colName : stringResultsByCol.keySet()) {
-                // Iterate over all attributes that will be in the DataFrame.
-                // If attribute is present in attrValsInRow, add its corresponding value.
-                // Otherwise, add null
-                stringResultsByCol.get(colName)[i] = attrValsInRow.get(colName);
-            }
-
-            final Map<String, Double> metricValsInRow = result.getMetricsAsMap();
-            for (String colName : metricValsInRow.keySet()) {
-                doubleResultsByCol.get(colName)[i] = metricValsInRow.get(colName);
-            }
-
-            final Map<String, Double> aggregateValsInRow = result
-                .getAggregatesAsMap(aggregateNames);
-            for (String colName : aggregateNames) {
-                doubleResultsByCol.get(colName)[i] = aggregateValsInRow.get(colName);
-            }
-            ++i;
-        }
-
-        // Generate DataFrame with results
-        final DataFrame df = new DataFrame();
-        for (String colName : stringResultsByCol.keySet()) {
-            df.addColumn(colName, stringResultsByCol.get(colName));
-        }
-        // Add metrics first, then aggregates (otherwise, we'll get arbitrary orderings)
-        for (QualityMetric metric : metrics) {
-            df.addColumn(metric.name(), doubleResultsByCol.get(metric.name()));
-        }
-        for (String colName : aggregateNames) {
-            // Aggregates are capitalized for some reason
-            df.addColumn(colName.toLowerCase(), doubleResultsByCol.get(colName));
-        }
-        return df;
-    }
-    /**** END HELPER METHODS ****/
-
 
     /**
      * @return true both relations are NATURAL JOIN subqueries that share a common table, e.g., R
@@ -909,7 +619,7 @@ class QueryEngine {
     /**
      * TODO
      */
-    private DataFrame evaluateJoin(Join join) throws MacroBaseException  {
+    private DataFrame evaluateJoin(Join join) throws MacroBaseException {
         final long startTime = System.currentTimeMillis();
         final DataFrame left = getDataFrameForRelation(join.getLeft());
         final DataFrame right = getDataFrameForRelation(join.getRight());
@@ -977,7 +687,7 @@ class QueryEngine {
                 if (useHashJoin) {
                     log.info("Using hash join");
                     hashJoin(bigger, smaller, joinColumn, biggerStringResults, smallerStringResults,
-                    biggerDoubleResults, smallerDoubleResults);
+                        biggerDoubleResults, smallerDoubleResults);
                 } else {
                     log.info("Using nested loops join");
                     nestedLoopsJoin(bigger, smaller, getJoinLambda(biggerColIndex, smallerColIndex,
@@ -986,40 +696,75 @@ class QueryEngine {
                 }
                 log.info("Time spent in Join:  {} ms", System.currentTimeMillis() - startTime);
 
-                final DataFrame df = new DataFrame();
-                // Add String results
-                for (String colName : biggerStringResults.keySet()) {
-                    final String colNameForOutput =
-                        smallerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? biggerName
-                            + "." + colName : colName;
-                    df.addColumn(colNameForOutput,
-                        biggerStringResults.get(colName).toArray(new String[0]));
-                }
-                for (String colName : smallerStringResults.keySet()) {
-                    final String colNameForOutput =
-                        biggerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? smallerName
-                            + "." + colName : colName;
-                    df.addColumn(colNameForOutput,
-                        smallerStringResults.get(colName).toArray(new String[0]));
-                }
-                // Add double results
-                for (String colName : biggerDoubleResults.keySet()) {
-                    final String colNameForOutput =
-                        smallerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? biggerName
-                            + "." + colName : colName;
-                    df.addColumn(colNameForOutput,
-                        biggerDoubleResults.get(colName).stream().mapToDouble((x) -> x).toArray());
-                }
-                for (String colName : smallerDoubleResults.keySet()) {
-                    final String colNameForOutput =
-                        biggerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? smallerName
-                            + "." + colName : colName;
-                    df.addColumn(colNameForOutput,
-                        smallerDoubleResults.get(colName).stream().mapToDouble((x) -> x).toArray());
-                }
-                return df;
+                return joinResultToDataFrame(smallerName, biggerName, biggerSchema, smallerSchema,
+                    joinColumn, biggerStringResults, smallerStringResults, biggerDoubleResults,
+                    smallerDoubleResults);
             default:
                 throw new MacroBaseSQLException("Join type " + join.getType() + "not supported");
+        }
+    }
+
+    private DataFrame joinResultToDataFrame(String smallerName, String biggerName,
+        Schema biggerSchema, Schema smallerSchema, String joinColumn,
+        Map<String, List<String>> biggerStringResults,
+        Map<String, List<String>> smallerStringResults,
+        Map<String, List<Double>> biggerDoubleResults,
+        Map<String, List<Double>> smallerDoubleResults) {
+        final DataFrame df = new DataFrame();
+        // Add String results
+        for (String colName : biggerStringResults.keySet()) {
+            final String colNameForOutput =
+                smallerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? biggerName
+                    + "." + colName : colName;
+            df.addColumn(colNameForOutput,
+                biggerStringResults.get(colName).toArray(new String[0]));
+        }
+        for (String colName : smallerStringResults.keySet()) {
+            final String colNameForOutput =
+                biggerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? smallerName
+                    + "." + colName : colName;
+            df.addColumn(colNameForOutput,
+                smallerStringResults.get(colName).toArray(new String[0]));
+        }
+        // Add double results
+        for (String colName : biggerDoubleResults.keySet()) {
+            final String colNameForOutput =
+                smallerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? biggerName
+                    + "." + colName : colName;
+            df.addColumn(colNameForOutput,
+                biggerDoubleResults.get(colName).stream().mapToDouble((x) -> x).toArray());
+        }
+        for (String colName : smallerDoubleResults.keySet()) {
+            final String colNameForOutput =
+                biggerSchema.hasColumn(colName) && !colName.equals(joinColumn) ? smallerName
+                    + "." + colName : colName;
+            df.addColumn(colNameForOutput,
+                smallerDoubleResults.get(colName).stream().mapToDouble((x) -> x).toArray());
+        }
+        return df;
+    }
+
+    /**
+     * Evaluate join using hash-join algorithm
+     */
+    private void hashJoinWithIndex(final DataFrame bigger, final DataFrame smaller,
+        final String joinColumn,
+        final Map<String, Integer> colValuesToIndices,
+        final Map<String, List<String>> biggerStringResults,
+        final Map<String, List<String>> smallerStringResults,
+        final Map<String, List<Double>> biggerDoubleResults,
+        final Map<String, List<Double>> smallerDoubleResults) {
+
+        final String[] biggerColumn = bigger.project(joinColumn).getStringColumn(0);
+
+        for (int i = 0; i < biggerColumn.length; ++i) {
+            final String value = biggerColumn[i];
+            final Integer index = colValuesToIndices.get(value);
+            if (index != null) {
+                final Row biggerRow = bigger.getRow(i);
+                addResultToJoinOutput(biggerStringResults, smallerStringResults,
+                    biggerDoubleResults, smallerDoubleResults, biggerRow, smaller.getRow(index));
+            }
         }
     }
 
@@ -1031,7 +776,7 @@ class QueryEngine {
         final Map<String, List<String>> biggerStringResults,
         final Map<String, List<String>> smallerStringResults,
         final Map<String, List<Double>> biggerDoubleResults,
-        final Map<String, List<Double>> smallerDoubleResults) throws MacroBaseSQLException {
+        final Map<String, List<Double>> smallerDoubleResults) {
 
         final String[] smallerColumn = smaller.project(joinColumn).getStringColumn(0);
         Map<String, List<Integer>> colValuesToIndices = new HashMap<>();
@@ -1093,12 +838,6 @@ class QueryEngine {
 
     /**
      * TODO
-     * @param biggerStringResults
-     * @param smallerStringResults
-     * @param biggerDoubleResults
-     * @param smallerDoubleResults
-     * @param big
-     * @param small
      */
     private void addResultToJoinOutput(final Map<String, List<String>> biggerStringResults,
         final Map<String, List<String>> smallerStringResults,
@@ -1125,6 +864,7 @@ class QueryEngine {
      * all of the assumptions we make in {@link #evaluateJoin(Join)}:
      * 1) We join only on a single Column
      * 2) The join must be an equality join
+     *
      * @throws MacroBaseSQLException if the assumptions are violated
      */
     private String getJoinColumn(final JoinCriteria joinCriteria,

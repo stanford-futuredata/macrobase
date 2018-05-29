@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.sql;
 
-import static edu.stanford.futuredata.macrobase.sql.SQLTestUtils.loadDataFrameFromCSV;
+import static edu.stanford.futuredata.macrobase.sql.SQLTestUtils.loadDataFrameFromCsv;
 import static edu.stanford.futuredata.macrobase.sql.SQLTestUtils.runQueriesFromFile;
 
 import com.google.common.collect.ImmutableMap;
@@ -63,66 +63,66 @@ public class MacroBaseSQLDiffJoinTest {
     @Test
     public void diffJoinQuery1() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/1.sql",
-            loadDataFrameFromCSV("diff-joins/1.csv", ONE_ATTR_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/1.csv", ONE_ATTR_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery2() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/2.sql",
-            loadDataFrameFromCSV("diff-joins/2.csv", ONE_ATTR_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/2.csv", ONE_ATTR_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery3() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/3.sql",
-            loadDataFrameFromCSV("diff-joins/3.csv", ONE_ATTR_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/3.csv", ONE_ATTR_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery4() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/4.sql",
-            loadDataFrameFromCSV("diff-joins/4.csv", ONE_ATTR_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/4.csv", ONE_ATTR_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery5() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/5.sql",
-            loadDataFrameFromCSV("diff-joins/5.csv", TWO_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/5.csv", TWO_ATTRS_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery6() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/6.sql",
-            loadDataFrameFromCSV("diff-joins/6.csv", TWO_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/6.csv", TWO_ATTRS_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery7() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/7.sql",
-            loadDataFrameFromCSV("diff-joins/7.csv", TWO_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/7.csv", TWO_ATTRS_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery8() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/8.sql",
-            loadDataFrameFromCSV("diff-joins/8.csv", TWO_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/8.csv", TWO_ATTRS_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery9() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/9.sql",
-            loadDataFrameFromCSV("diff-joins/9.csv", FOUR_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/9.csv", FOUR_ATTRS_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery10() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/10.sql",
-            loadDataFrameFromCSV("diff-joins/10.csv", FOUR_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/10.csv", FOUR_ATTRS_SCHEMA));
     }
 
     @Test
     public void diffJoinQuery11() throws Exception {
         runQueriesFromFile(parser, queryEngine, "diff-joins/11.sql",
-            loadDataFrameFromCSV("diff-joins/11.csv", THREE_ATTRS_SCHEMA));
+            loadDataFrameFromCsv("diff-joins/11.csv", THREE_ATTRS_SCHEMA));
     }
 }

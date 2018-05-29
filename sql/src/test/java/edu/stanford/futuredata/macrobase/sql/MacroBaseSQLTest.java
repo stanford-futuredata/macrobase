@@ -1,6 +1,6 @@
 package edu.stanford.futuredata.macrobase.sql;
 
-import static edu.stanford.futuredata.macrobase.sql.SQLTestUtils.loadDataFrameFromCSV;
+import static edu.stanford.futuredata.macrobase.sql.SQLTestUtils.loadDataFrameFromCsv;
 import static edu.stanford.futuredata.macrobase.sql.SQLTestUtils.runQueryFromFile;
 import static org.junit.Assert.assertTrue;
 
@@ -79,96 +79,96 @@ public class MacroBaseSQLTest {
     @Test
     public void query1() throws Exception {
         runQueryFromFile(parser, queryEngine, "1.sql",
-            loadDataFrameFromCSV("1.csv", GLOBAL_RATIO_SCHEMA));
+            loadDataFrameFromCsv("1.csv", GLOBAL_RATIO_SCHEMA));
     }
 
     @Test
     public void query2() throws Exception {
         runQueryFromFile(parser, queryEngine, "2.sql",
-            loadDataFrameFromCSV("2.csv", GLOBAL_RATIO_SCHEMA));
+            loadDataFrameFromCsv("2.csv", GLOBAL_RATIO_SCHEMA));
     }
 
     @Test
     public void query3() throws Exception {
         runQueryFromFile(parser, queryEngine, "3.sql",
-            loadDataFrameFromCSV("3.csv", GLOBAL_RATIO_SCHEMA));
+            loadDataFrameFromCsv("3.csv", GLOBAL_RATIO_SCHEMA));
     }
 
     @Test
     public void query4() throws Exception {
         runQueryFromFile(parser, queryEngine, "4.sql",
-            loadDataFrameFromCSV("4.csv", GLOBAL_RATIO_SCHEMA));
+            loadDataFrameFromCsv("4.csv", GLOBAL_RATIO_SCHEMA));
     }
 
     @Test
     public void query5() throws Exception {
         runQueryFromFile(parser, queryEngine, "5.sql",
-            loadDataFrameFromCSV("5.csv", GLOBAL_RATIO_SCHEMA));
+            loadDataFrameFromCsv("5.csv", GLOBAL_RATIO_SCHEMA));
     }
 
     @Test
     public void query6() throws Exception {
         runQueryFromFile(parser, queryEngine, "6.sql",
-            loadDataFrameFromCSV("6.csv", RISK_RATIO_SCHEMA));
+            loadDataFrameFromCsv("6.csv", RISK_RATIO_SCHEMA));
     }
 
     @Test
     public void query7() throws Exception {
         runQueryFromFile(parser, queryEngine, "7.sql",
-            loadDataFrameFromCSV("7.csv", GLOBAL_RATIO_SCHEMA));
+            loadDataFrameFromCsv("7.csv", GLOBAL_RATIO_SCHEMA));
     }
 
     @Test
     public void query8() throws Exception {
         runQueryFromFile(parser, queryEngine, "8.sql",
-            loadDataFrameFromCSV("8.csv", RISK_RATIO_SCHEMA));
+            loadDataFrameFromCsv("8.csv", RISK_RATIO_SCHEMA));
     }
 
     @Test
     public void query9() throws Exception {
         runQueryFromFile(parser, queryEngine, "9.sql",
-            loadDataFrameFromCSV("9.csv", RISK_RATIO_SCHEMA));
+            loadDataFrameFromCsv("9.csv", RISK_RATIO_SCHEMA));
     }
 
     @Test
     public void query10() throws Exception {
         runQueryFromFile(parser, queryEngine, "10.sql",
-            loadDataFrameFromCSV("10.csv", RISK_RATIO_SCHEMA));
+            loadDataFrameFromCsv("10.csv", RISK_RATIO_SCHEMA));
     }
 
     @Test
     public void query11() throws Exception {
         runQueryFromFile(parser, queryEngine, "11.sql",
-            loadDataFrameFromCSV("11.csv", RISK_RATIO_SCHEMA));
+            loadDataFrameFromCsv("11.csv", RISK_RATIO_SCHEMA));
     }
 
     @Test
     public void query12() throws Exception {
         runQueryFromFile(parser, queryEngine, "12.sql",
-            loadDataFrameFromCSV("12.csv", RISK_RATIO_SCHEMA));
+            loadDataFrameFromCsv("12.csv", RISK_RATIO_SCHEMA));
     }
 
     @Test
     public void query13() throws Exception {
         runQueryFromFile(parser, queryEngine, "13.sql",
-            loadDataFrameFromCSV("13.csv", ImmutableMap.of("percentile(usage)", ColType.DOUBLE)));
+            loadDataFrameFromCsv("13.csv", ImmutableMap.of("percentile(usage)", ColType.DOUBLE)));
     }
 
     @Test
     public void query14() throws Exception {
         runQueryFromFile(parser, queryEngine, "14.sql",
-            loadDataFrameFromCSV("14.csv", ImmutableMap.of("pct", ColType.DOUBLE)));
+            loadDataFrameFromCsv("14.csv", ImmutableMap.of("pct", ColType.DOUBLE)));
     }
 
     @Test
     public void query15() throws Exception {
-        runQueryFromFile(parser, queryEngine, "15.sql", loadDataFrameFromCSV("15.csv",
+        runQueryFromFile(parser, queryEngine, "15.sql", loadDataFrameFromCsv("15.csv",
             ImmutableMap.of("usage", ColType.DOUBLE, "pct", ColType.DOUBLE)));
     }
 
     @Test
     public void query16() throws Exception {
-        runQueryFromFile(parser, queryEngine, "16.sql", loadDataFrameFromCSV("16.csv", ImmutableMap
+        runQueryFromFile(parser, queryEngine, "16.sql", loadDataFrameFromCsv("16.csv", ImmutableMap
             .of("usage", ColType.DOUBLE, "latency", ColType.DOUBLE, "location", ColType.STRING,
                 "version", ColType.STRING, "pct", ColType.DOUBLE)));
     }
@@ -176,26 +176,26 @@ public class MacroBaseSQLTest {
     @Test
     public void query17() throws Exception {
         runQueryFromFile(parser, queryEngine, "17.sql",
-            loadDataFrameFromCSV("17.csv", ImmutableMap.of("pct", ColType.DOUBLE)));
+            loadDataFrameFromCsv("17.csv", ImmutableMap.of("pct", ColType.DOUBLE)));
     }
 
     @Test
     public void query18() throws Exception {
-        runQueryFromFile(parser, queryEngine, "18.sql", loadDataFrameFromCSV("18.csv", ImmutableMap
+        runQueryFromFile(parser, queryEngine, "18.sql", loadDataFrameFromCsv("18.csv", ImmutableMap
             .of("usage", ColType.DOUBLE, "latency", ColType.DOUBLE, "location", ColType.STRING,
                 "version", ColType.STRING, "pct", ColType.DOUBLE)));
     }
 
     @Test
     public void query19() throws Exception {
-        runQueryFromFile(parser, queryEngine, "19.sql", loadDataFrameFromCSV("19.csv",
+        runQueryFromFile(parser, queryEngine, "19.sql", loadDataFrameFromCsv("19.csv",
             ImmutableMap.of("usage", ColType.DOUBLE, "pct", ColType.DOUBLE)));
     }
 
     @Test
     public void query20() throws Exception {
         runQueryFromFile(parser, queryEngine, "20.sql",
-            loadDataFrameFromCSV("20.csv", ImmutableMap.of("usage", ColType.DOUBLE)));
+            loadDataFrameFromCsv("20.csv", ImmutableMap.of("usage", ColType.DOUBLE)));
     }
 
     @Test
