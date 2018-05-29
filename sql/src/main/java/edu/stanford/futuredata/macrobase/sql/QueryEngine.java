@@ -301,18 +301,14 @@ class QueryEngine {
             return new DataFrame();
         }
 
-        log.info("Starting encoding");
-        final int[][] encodedValues = encoder.encodeAttributesByColumn(
-            common.getStringColsByName(explainColumnNames));
-        log.info("Encoding time: {} ms", System.currentTimeMillis() - encodingTime);
-
+        // Keep track of candidates in each column, needed for order-2 and order-3 combinations
         final long semiJoinAndMergeTime = System.currentTimeMillis();
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
         //    and merge common values that distinct keys may map to
         final Map<String, Integer> colValuesToIndices = semiJoinAndMerge(
             candidateForeignKeys, // K
             common.getStringColumnByName(joinColumn),
-            encodedValues); // T
+            common.getStringColsByName(explainColumnNames)); // T
         log.info("Semi-join and merge time: {} ms",
             System.currentTimeMillis() - semiJoinAndMergeTime);
 
@@ -399,16 +395,20 @@ class QueryEngine {
     }
 
     private Map<String, Integer> semiJoinAndMerge(final Set<String> candidateForeignKeys,
-        final String[] primaryKeyColumn, final int[][] encodedValues) {
+        final String[] primaryKeyColumn, List<String[]> attrValues) {
 
         int numAdditionalValues = 0;
-        final int numRows = encodedValues[0].length;
+        final int numRows = attrValues.get(0).length;
 
         if (candidateForeignKeys.isEmpty()) {
             log.info("candidateForeignKeys is empty");
         }
 
-        final Set<Integer> attrCandidatesByColumn = new HashSet<>();
+        final int numCols = attrValues.size();
+        final Set<String>[] attrCandidatesByColumn = new Set[numCols];
+        for (int i = 0; i < numCols; ++i) {
+            attrCandidatesByColumn[i] = new HashSet<>();
+        }
         final Map<String, Integer> colValuesToIndices = new HashMap<>();
 
         // 1) K \semijoin T: Go through the primary key column and see what candidateForeignKeys are contained.
@@ -419,9 +419,10 @@ class QueryEngine {
                 colValuesToIndices.put(primaryKey, i);
 
                 // extract the corresponding values for the candidate key
-                for (int[] encodedValue : encodedValues) {
-                    final int val = encodedValue[i];
-                    attrCandidatesByColumn.add(val);
+                for (int j = 0; j < numCols; ++j) {
+                    final String[] attrValuesCol = attrValues.get(j);
+                    final String val = attrValuesCol[i];
+                    attrCandidatesByColumn[j].add(val);
                 }
             }
         }
@@ -429,10 +430,11 @@ class QueryEngine {
         // 2) Go through again and check which saved values from the first pass map to new
         //    primary keys. If we find any new ones, add them to colValuesToIndices, so we
         //    can do the join
-        for (final int[] encodedColumn : encodedValues) {
+        for (int j = 0; j < numCols; ++j) {
+            final String[] attrValuesCol = attrValues.get(j);
             for (int i = 0; i < numRows; ++i) {
-                final int val = encodedColumn[i];
-                if (!attrCandidatesByColumn.contains(val)) {
+                final String val = attrValuesCol[i];
+                if (!attrCandidatesByColumn[j].contains(val)) {
                     // never found in the first pass
                     continue;
                 }
