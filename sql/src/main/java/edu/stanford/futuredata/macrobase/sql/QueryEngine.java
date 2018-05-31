@@ -255,16 +255,15 @@ class QueryEngine {
      * Execute DIFF-JOIN query using co-optimized algorithm. NOTE: Must be a Primary Key-Foreign Key
      * Join. TODO: We make the following assumptions in the method below:
      * 1) The two joins are both inner joins over the same, single column, which is of type String
-     * 2) @param explainCols can only be columns in T
-     * 3) The ratio metric is global_ratio
+     * 2) The ratio metric is global_ratio
      *
-     * R     S          T
+     *  R     S          T
      * ---   ---   -------------
-     * a     a     a | CA | v1
-     * a     b     b | CA | v2
-     * b     c     c | TX | v1
-     * b     d     d | TX | v2
-     * e           e | FL | v1
+     *  a     a     a | CA | v1
+     *  a     b     b | CA | v2
+     *  b     c     c | TX | v1
+     *  b     d     d | TX | v2
+     *  e           e | FL | v1
      *
      * @return result of the DIFF JOIN
      */
@@ -272,6 +271,9 @@ class QueryEngine {
         final DataFrame common, final String joinColumn, final List<String> explainColumnNames,
         final double minRatioMetric) {
         final long startTime = System.currentTimeMillis();
+
+        final List<String> explainColsInCommon = Lists.newArrayList(common.getSchema().getColumnNames());
+        explainColsInCommon.retainAll(explainColumnNames);
 
         final int numOutliers = outlierDf.getNumRows();
         final int numInliers = inlierDf.getNumRows();
@@ -286,8 +288,6 @@ class QueryEngine {
 
         final String[] outlierProjected = outlierDf.project(joinColumn).getStringColumn(0);
         final String[] inlierProjected = inlierDf.project(joinColumn).getStringColumn(0);
-        final AttributeEncoder encoder = new AttributeEncoder();
-        final long encodingTime = System.currentTimeMillis();
 
         // 1) Execute \delta(\proj_{A1} R, \proj_{A1} S);
         final long foreignKeyDiff = System.currentTimeMillis();
@@ -308,7 +308,7 @@ class QueryEngine {
         final Map<String, Integer> colValuesToIndices = semiJoinAndMerge(
             candidateForeignKeys, // K
             common.getStringColumnByName(joinColumn),
-            common.getStringColsByName(explainColumnNames)); // T
+            common.getStringColsByName(explainColsInCommon)); // T
         log.info("Semi-join and merge time: {} ms",
             System.currentTimeMillis() - semiJoinAndMergeTime);
 
