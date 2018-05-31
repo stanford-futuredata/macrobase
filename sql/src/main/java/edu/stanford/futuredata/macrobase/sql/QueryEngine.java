@@ -270,13 +270,16 @@ class QueryEngine {
      */
     private DataFrame evaluateDiffJoin(final DataFrame outlierDf, final DataFrame inlierDf,
         final DataFrame common, final String joinColumn, final List<String> explainColumnNames,
-        final double minRatioMetric)
-        throws MacroBaseException {
+        final double minRatioMetric) {
         final long startTime = System.currentTimeMillis();
 
         final int numOutliers = outlierDf.getNumRows();
         final int numInliers = inlierDf.getNumRows();
         log.info("Num Outliers:  {}, num inliers: {}", numOutliers, numInliers);
+        // NOTE: we assume that, because it's a PK-FK join, every value in the foreign key column
+        // will appear in the primary key (but not vice versa). This means that evaluating the join
+        // will never remove tuples from or add tuples to the inlier and outlier DataFrames. This allows
+        // us to calculate the minRatioThreshold based on the total number of outliers and inliers.
         final double globalRatioDenom =
             numOutliers / (numOutliers + numInliers + 0.0);
         final double minRatioThreshold = minRatioMetric * globalRatioDenom;
@@ -303,7 +306,6 @@ class QueryEngine {
             common.getStringColsByName(explainColumnNames));
         log.info("Encoding time: {} ms", System.currentTimeMillis() - encodingTime);
 
-        // Keep track of candidates in each column, needed for order-2 and order-3 combinations
         final long semiJoinAndMergeTime = System.currentTimeMillis();
         // 2) Execute K \semijoin T, to get V, the values in T associated with the candidate keys,
         //    and merge common values that distinct keys may map to
@@ -316,7 +318,7 @@ class QueryEngine {
 
         final DataFrame toReturn = diffJoinAndConcat(outlierDf, inlierDf, common, joinColumn,
             colValuesToIndices);
-        log.info("Total DiffJoin Time: {} ms", System.currentTimeMillis() - startTime);
+        log.info("DiffJoin Predicate Time: {} ms", System.currentTimeMillis() - startTime);
         return toReturn;
     }
 
