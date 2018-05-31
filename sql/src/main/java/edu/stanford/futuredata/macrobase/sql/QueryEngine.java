@@ -270,7 +270,6 @@ class QueryEngine {
     private DataFrame evaluateDiffJoin(final DataFrame outlierDf, final DataFrame inlierDf,
         final DataFrame common, final String joinColumn, final List<String> explainColumnNames,
         final double minRatioMetric) {
-        final long startTime = System.currentTimeMillis();
 
         final List<String> explainColsInCommon = Lists.newArrayList(common.getSchema().getColumnNames());
         explainColsInCommon.retainAll(explainColumnNames);
@@ -314,13 +313,13 @@ class QueryEngine {
 
         final DataFrame toReturn = diffJoinAndConcat(outlierDf, inlierDf, common, joinColumn,
             colValuesToIndices);
-        log.info("DiffJoin Predicate Time: {} ms", System.currentTimeMillis() - startTime);
         return toReturn;
     }
 
     @SuppressWarnings("Duplicates")
     private DataFrame diffJoinAndConcat(DataFrame outlierDf, DataFrame inlierDf, DataFrame common,
         final String joinColumn, Map<String, Integer> colValuesToIndices) {
+        log.info("Num candidate values: {}", colValuesToIndices.size());
 
         final DataFrame outliersDf = diffJoinSingle(outlierDf, common, joinColumn,
             colValuesToIndices);
@@ -330,11 +329,11 @@ class QueryEngine {
             outliersDf,
             inliersDf
         );
-
     }
 
     private DataFrame diffJoinSingle(DataFrame bigger, DataFrame smaller, String joinColumn,
         Map<String, Integer> colValuesToIndices) {
+        final long startTime = System.currentTimeMillis();
         final Map<String, List<String>> biggerStringResults = new HashMap<>();
         final Map<String, List<String>> smallerStringResults = new HashMap<>();
         for (String colName : bigger.getSchema().getColumnNamesByType(ColType.STRING)) {
@@ -361,6 +360,7 @@ class QueryEngine {
         }
         hashJoinWithIndex(bigger, smaller, joinColumn, colValuesToIndices, biggerStringResults,
             smallerStringResults, biggerDoubleResults, smallerDoubleResults);
+        log.info("Diff Join Single: {} ms", System.currentTimeMillis() - startTime);
         return joinResultToDataFrame("small", "big", bigger.getSchema(),
             smaller.getSchema(), joinColumn, biggerStringResults, smallerStringResults,
             biggerDoubleResults, smallerDoubleResults);
@@ -698,7 +698,7 @@ class QueryEngine {
                         biggerColType), biggerStringResults, smallerStringResults,
                         biggerDoubleResults, smallerDoubleResults);
                 }
-                log.info("Time spent in Join:  {} ms", System.currentTimeMillis() - startTime);
+                log.info("Time spent in Join: {} ms", System.currentTimeMillis() - startTime);
 
                 return joinResultToDataFrame(smallerName, biggerName, biggerSchema, smallerSchema,
                     joinColumn, biggerStringResults, smallerStringResults, biggerDoubleResults,
