@@ -20,7 +20,7 @@ export class AppComponent implements OnInit {
   isPlot = false;
 
   dataSource = "csv://../data/wikiticker.csv"
-  schemaSource = ""
+  schemaSource = "???"
   port = "4567"
 
   constructor(private queryService: QueryService, private displayService: DisplayService, private dataService: DataService) { }

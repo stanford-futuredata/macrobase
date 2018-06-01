@@ -60,23 +60,25 @@
 </div>
 
 <!-- EXPLORE EXPLANATIONS -->
-<div *ngIf="displayType=='Explore'">
-  <br>
-  <h1> Explore </h1>
-  <button id="plotButton" (click)="togglePlot()">Plot</button>
-  <br>
-  <br>
-  <div *ngFor="let id of exploreIDs">
-    <div id="summary{{id}}" class="summary" style="background-color:burlywood">
-      <app-query-summary id={{id}}></app-query-summary>
-    </div>
-    <div id="cell{{id}}" class="cell">
-      <app-cell id={{id}}></app-cell>
-    </div>
+<div class="row" *ngIf="displayType=='Explore'">
+  <div class="column">
     <br>
+    <h1> Explore </h1>
+    <button id="plotButton" (click)="togglePlot()">Plot</button>
+    <br>
+    <br>
+    <div *ngFor="let id of exploreIDs">
+      <div id="summary{{id}}" class="summary" style="background-color:burlywood">
+        <app-query-summary id={{id}}></app-query-summary>
+      </div>
+      <div id="cell{{id}}" class="cell">
+        <app-cell id={{id}}></app-cell>
+      </div>
+      <br>
+    </div>
   </div>
 
-  <div *ngIf="isPlot">
+  <div class="column" *ngIf="isPlot">
     <div *ngFor="let metric of plotIDsByMetric.keys()">
       <b>Metric: {{metric}}</b>
       <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">

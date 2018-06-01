@@ -85,3 +85,15 @@ button {
     text-align: left;
     border: 1px solid black;
 }
+
+.column {
+    float: left;
+    width: 45%;
+    padding: 10px;
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
