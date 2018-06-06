@@ -48,15 +48,15 @@ public class AttributeEncoder {
     public int[] getColCardinalities() {return colCardinalities;}
 
     /**
-     * Encodes columns giving each value which satisfies a minimum support threshold a key
-     * equal to its rank among all values which satisfy that threshold (so the single most common
-     * value has key 1, the next has key 2, and so on).  Encode all values not satisfying the threshold
-     * as AttributeEncoder.noSupport.
-     * @param columns Columns to be encoded.
-     * @param minSupport Minimum support to be satisfied.
-     * @param outlierColumn The ith value in this array is the number of outliers whose attributes are those of
-     *                      row i of columns.
-     * @return A two-dimensional array of encoded values.
+     * Encode as integers all attributes satisfying a minimum support threshold.  Also
+     * encode columns of attributes as bitmaps if their cardinalities are sufficiently
+     * low.
+     * @param columns A list of columns of attributes.
+     * @param minSupport The minimal support an attribute must have to be encoded.
+     * @param outlierColumn A column indicating whether a row of attributes is an inlier
+     *                      our outlier.
+     * @param useBitmaps Whether to encode any columns as bitmaps.
+     * @return The encoded matrix of attributes, stored as an array of arrays.
      */
     public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport,
         double[] outlierColumn, boolean useBitmaps) {
@@ -176,6 +176,12 @@ public class AttributeEncoder {
         return encodedAttributes;
     }
 
+    /**
+     * Encode as integers all attribute strings.
+     * @param columns A list of attribute strings from each column of the original
+     *                dataset.
+     * @return A matrix of encoded attributes, stored as an array of arrays.
+     */
     public int[][] encodeAttributesAsArray(List<String[]> columns) {
         if (columns.isEmpty()) {
             return new int[0][0];
@@ -215,6 +221,12 @@ public class AttributeEncoder {
         return encodedAttributes;
     }
 
+    /**
+     * Encode as integers all attribute strings.
+     * @param columns A list of attribute strings from each column of the original
+     *                dataset.
+     * @return A matrix of encoded attributes, stored as a list of arrays.
+     */
     public List<int[]> encodeAttributes(List<String[]> columns) {
         if (columns.isEmpty()) {
             return new ArrayList<>();
