@@ -154,6 +154,10 @@ public class AttributeEncoder {
                 colCardinalities[colIdx] = cardinalityThreshold + 1;
         }
         log.info("Column cardinalities: {}", Arrays.toString(colCardinalities));
+        // Encode the bitmaps.  Store bitmaps as an array indexed first
+        // by column and then by outlier/inlier.  Each entry in array
+        // is a map from encoded attribute value to the bitmap
+        // for that attribute among outliers or inliers.
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
