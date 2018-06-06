@@ -50,6 +50,11 @@
             <artifactId>okhttp</artifactId>
             <version>3.8.1</version>
         </dependency>
+        <dependency>
+            <groupId>edu.stanford.futuredata</groupId>
+            <artifactId>macrobase-sql</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

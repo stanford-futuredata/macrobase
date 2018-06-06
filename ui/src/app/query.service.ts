@@ -14,6 +14,7 @@ import * as $ from "jquery";
 export class QueryService {
   private queryURL = 'http://0.0.0.0:4567/query';
   private dataURL = 'http://0.0.0.0:4567/rows';
+  private sqlURL = 'http://0.0.0.0:4567/sql'
 
   //notify components that response has been received from server
   queryResponseReceived = new EventEmitter();
@@ -24,6 +25,9 @@ export class QueryService {
   itemsetData = new Map(); //map of [queryID, itemsetID] to rows of data, itemsetID of -1 = all
 
   constructor(private http: HttpClient, private messageService: MessageService) { }
+
+  runSQL(query: string, id: number) {
+  }
 
   runQuery(query: Query, id: number) {
     this.messageService.add("Query " + id + ": Running query on: " + JSON.stringify(query));
