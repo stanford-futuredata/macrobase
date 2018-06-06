@@ -9,6 +9,14 @@ import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 /**
+ * This class is based on the Java BitSet implementation.  We add one
+ * functions internally to the class, andCardinality.  This function
+ * returns the cardinality of the AND of bitmaps, calculating it
+ * without materializing the bitmaps.  That optimization is very
+ * important to Apriori performance.
+ */
+
+/**
  * This class implements a vector of bits that grows as needed. Each
  * component of the bit set has a {@code boolean} value. The
  * bits of a {@code ModBitSet} are indexed by nonnegative integers.
@@ -900,6 +908,13 @@ public class ModBitSet implements Cloneable, java.io.Serializable {
         checkInvariants();
     }
 
+    /**
+     * Return the cardinality of the logical AND of two bitmaps without materializing
+     * the AND.
+     * @param setOne A bit set.
+     * @param setTwo Another bit set.
+     * @return The cardinality of setOne & setTwo.
+     */
     public static int andCardinality(ModBitSet setOne, ModBitSet setTwo) {
         int cardinality = 0;
         long curWord;
@@ -911,7 +926,14 @@ public class ModBitSet implements Cloneable, java.io.Serializable {
         }
         return cardinality;
     }
-
+    /**
+     * Return the cardinality of the logical AND of three bitmaps without materializing
+     * the AND.
+     * @param setOne A bit set.
+     * @param setTwo Another bit set.
+     * @param setThree A third bit set.
+     * @return The cardinality of setOne & setTwo & setThree.
+     */
     public static int andCardinality(ModBitSet setOne, ModBitSet setTwo, ModBitSet setThree) {
         int cardinality = 0;
         long curWord;

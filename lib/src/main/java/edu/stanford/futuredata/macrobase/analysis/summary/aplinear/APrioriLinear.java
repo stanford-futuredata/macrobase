@@ -33,6 +33,11 @@ public class APrioriLinear {
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
+    /**
+     * @param qualityMetrics A list of all quality metrics for this DIFF
+     *                       operation.
+     * @param thresholds A list of the thresholds for each quality metric.
+     */
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
             List<Double> thresholds
@@ -46,6 +51,31 @@ public class APrioriLinear {
         this.savedAggregates = new HashMap<>(3);
     }
 
+    /**
+     * Use Aprori to compute explanations for a DIFF.
+     * @param attributes Encoded columns to DIFF over.
+     * @param aggregateColumns Calculated aggregates for the quality metrics.
+     * @param aggregationOps Operations used to aggregate the aggregates.
+     * @param cardinality The total number of encoded attributes.
+     * @param maxOrder Maximum order of explanations to calculate.
+     * @param numThreads Number of threads to use.
+     * @param bitmap Bitmap representation of attributes.  Stored as array indexed
+     *               by column and then by outlier/inlier.  Each entry in array
+     *               is a map from encoded attribute value to the bitmap
+     *               for that attribute among outliers or inliers.
+     * @param outlierList A list whose entries are arrays of all attributes in
+     *                    each column.
+     * @param colCardinalities  An array containing the number of unique encoded
+     *                          attributes in each column.
+     * @param useFDs A boolean flag indicating whether or not to use functional
+     *               dependency information.
+     * @param functionalDependencies An array whose entries are masks indicating
+     *                               which other columns a column is functionally
+     *                               determined by, if any.
+     * @param bitmapRatioThreshold The maximum product of column cardinalities for which
+     *                             a bitmap representation of the columns will be used.
+     * @return All explanations for the DIFF query.
+     */
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
@@ -152,12 +182,14 @@ public class APrioriLinear {
                         curCandidate = new IntSetAsArray(0);
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
+                            // Check whether or not to process using bitmaps
                             if (colCardinalities[colNum] < AttributeEncoder.cardinalityThreshold) {
                                 for (Integer curOutlierCandidate : outlierList[colNum]) {
                                     // Require that all order-one candidates have minimum support.
                                     if (curOutlierCandidate == AttributeEncoder.noSupport)
                                         continue;
                                     int outlierCount = 0, inlierCount = 0;
+                                    // Calculate aggregate values using bitmaps.
                                     if (byThreadBitmap[curThreadNum][colNum][1].containsKey(curOutlierCandidate))
                                         outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).cardinality();
                                     if (byThreadBitmap[curThreadNum][colNum][0].containsKey(curOutlierCandidate))
@@ -173,6 +205,7 @@ public class APrioriLinear {
                                 }
                             } else {
                                 int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
+                                // Calculate and update aggregate values via iteration, without bitmaps.
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     // Require that all order-one candidates have minimum support.
                                     if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
@@ -197,15 +230,16 @@ public class APrioriLinear {
                                     continue;
                                 }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
+                                // Check whether or not to process using bitmaps
                                 if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                         colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                         colCardinalities[colNumOne] * colCardinalities[colNumTwo] < bitmapRatioThreshold) {
-                                    // Bitmap-Bitmap
+                                    // Process columns with bitmaps
                                     allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                             byThreadBitmap[curThreadNum], colNumOne, colNumTwo, useIntSetAsArray,
                                             curCandidate, numAggregates);
                                 }  else {
-                                    // Normal-Normal
+                                    // Process columns via iteration, without bitmaps.
                                     allTwoNormal(thisThreadSetAggregates, curColumnOneAttributes,
                                             curColumnTwoAttributes, aggregationOps, singleNextArray,
                                             startIndex, endIndex, useIntSetAsArray, curCandidate, aRows,
@@ -230,19 +264,20 @@ public class APrioriLinear {
                                         continue;
                                     }
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
+                                    // Check whether or not to process using bitmaps
                                     if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                             colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
                                             colCardinalities[colNumThree] < AttributeEncoder.cardinalityThreshold &&
                                             colCardinalities[colNumOne] * colCardinalities[colNumTwo] *
                                                     colCardinalities[colNumThree] < bitmapRatioThreshold) {
-                                        // all 3 cols are bitmaps
+                                        // Process columns with bitmaps.
                                         allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                                 singleNextArray, byThreadBitmap[curThreadNum],
                                                 colNumOne, colNumTwo, colNumThree, useIntSetAsArray, curCandidate,
                                                 numAggregates);
 
                                     } else {
-                                        // all three are normal
+                                        // Process columns via iteration, without bitmaps.
                                         allThreeNormal(thisThreadSetAggregates, curColumnOneAttributes,
                                                 curColumnTwoAttributes, curColumnThreeAttributes,
                                                 aggregationOps, singleNextArray, startIndex, endIndex,
