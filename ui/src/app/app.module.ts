@@ -16,6 +16,7 @@ import { DisplayService } from './display.service';
 import { DataService } from './data.service';
 import { QuerySummaryComponent } from './query-summary/query-summary.component';
 import { PlotComponent } from './plot/plot.component';
+import { DataHomeComponent } from './data-home/data-home.component';
 
 
 @NgModule({
@@ -26,7 +27,8 @@ import { PlotComponent } from './plot/plot.component';
     MessagesComponent,
     DataHeaderComponent,
     QuerySummaryComponent,
-    PlotComponent
+    PlotComponent,
+    DataHomeComponent
   ],
   imports: [
     BrowserModule,

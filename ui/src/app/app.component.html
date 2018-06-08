@@ -6,26 +6,7 @@
 <div *ngIf="displayType=='DataHomepage'">
   <br>
   <h1> Data Homepage </h1>
-  <b> Data path: </b>
-  <div>
-    <input style="width:50%; font-size:16px"
-    [(ngModel)]="dataSource"
-    (change)="updateDataSource()">
-  </div>
-  <br>
-  <b> Schema path: </b>
-  <div>
-    <input style="width:50%; font-size:16px"
-    [(ngModel)]="schemaSource"
-    (change)="updateSchemaPath()">
-  </div>
-  <br>
-  <b> MacroBase port: </b>
-  <div>
-    <input style="width:25%; font-size:16px"
-    [(ngModel)]="port"
-    (change)="updatePort()">
-  </div>
+  <app-data-home></app-data-home>
 </div>
 
 <!-- History -->

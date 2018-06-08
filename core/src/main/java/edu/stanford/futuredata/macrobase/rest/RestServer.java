@@ -25,21 +25,8 @@ public class RestServer {
 
     /* Changing response headers to allow POST access from separately hosted UI */
     private static final HashMap<String, String> corsHeaders = new HashMap<String, String>();
-
     static {
         corsHeaders.put("Access-Control-Allow-Origin", "*");
-    }
-
-    public final static void apply() {
-        Filter filter = new Filter() {
-            @Override
-            public void handle(Request request, Response response) throws Exception {
-                corsHeaders.forEach((key, value) -> {
-                    response.header(key, value);
-                });
-            }
-        };
-        after(filter);
     }
 
     public static void main(String[] args) {
@@ -52,6 +39,18 @@ public class RestServer {
         exception(Exception.class, (exception, request, response) -> {
             log.error("An exception occurred: ", exception);
         });
+    }
+
+    public final static void apply() {
+        Filter filter = new Filter() {
+            @Override
+            public void handle(Request request, Response response) throws Exception {
+                corsHeaders.forEach((key, value) -> {
+                    response.header(key, value);
+                });
+            }
+        };
+        after(filter);
     }
 
     private static DataFrame processSQLQuery(Request request, Response response) throws MacroBaseException {

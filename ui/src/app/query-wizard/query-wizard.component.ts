@@ -12,8 +12,9 @@ import { MessageService } from '../message.service'
 })
 export class QueryWizardComponent implements OnInit {
   @Input() id: number;
-  query: Query;
+  sqlString: string;
 
+  tableName: string;
   possibleAttributes: string[];
   possibleMetrics: string[];
 
@@ -21,6 +22,8 @@ export class QueryWizardComponent implements OnInit {
   selectedMetric;
   minSupport;
   minRatioMetric;
+
+  percentileCutoff = 0.95;
 
   checkAll = false;
 
@@ -63,29 +66,11 @@ export class QueryWizardComponent implements OnInit {
   }
 
   getBaseQuery(): void {
-    this.query = {
-      pipeline: "BasicBatchPipeline",
-      inputURI: this.dataSource,
-      classifier: "percentile",
-      metric: "added",
-      cutoff: 1.1,
-      includeHi: true,
-      includeLo: true,
-      summarizer: "aplinear",
-      attributes: [],
-      ratioMetric: "globalratio",
-      minRatioMetric: 1.0,
-      minSupport: 0.01,
-      numRows: -1,
-      columnFilters: ""
-    };
-
-    for(var i in this.query.attributes){
-      this.attributeSet.add(this.query.attributes[i]);
-    }
-    this.selectedMetric = this.query.metric;
-    this.minSupport = this.query.minSupport;
-    this.minRatioMetric = this.query.minRatioMetric;
+    this.checkAll = true;
+    this.updateAll(); //select all attributes
+    this.selectedMetric = this.possibleMetrics[0];
+    this.minSupport = 0.01
+    this.minRatioMetric = 1;
   }
 
   updateAll() {
@@ -128,16 +113,21 @@ export class QueryWizardComponent implements OnInit {
     this.attributeSet.delete(attribute);
   }
 
-  updateQuery(): void {
-    this.query.metric = this.selectedMetric;
-    this.query.attributes = Array.from(this.attributeSet);
-    this.query.minSupport = parseFloat(this.minSupport);
-    this.query.minRatioMetric = parseFloat(this.minRatioMetric);
+  runQuery(query: Query) {
+    this.generateSQLString();
+    let key = this.id.toString();
+    this.queryService.runSQL(this.sqlString, key)
   }
 
-  runQuery(query: Query) {
-    this.updateQuery();
-    this.queryService.runQuery(this.query, this.id);
+  generateSQLString() {
+    let attributes = Array.from(this.attributeSet.values()).join(', ');
+    this.sqlString =
+      `SELECT * FROM DIFF
+         (SPLIT (
+           SELECT *, percentile(${ this.selectedMetric }) as percentile from ${ this.tableName })
+         WHERE percentile > ${ this.percentileCutoff })
+      ON ${ attributes }
+      WITH MIN SUPPORT ${ this.minSupport } MIN RATIO ${ this.minRatioMetric };`;
   }
 
 }

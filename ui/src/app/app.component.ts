@@ -9,7 +9,7 @@ import { DataService } from './data.service'
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  displayMessages = false;
+  displayMessages = true;
   newID = 0;
   validIDs = new Set();
   editID = 0;
@@ -18,10 +18,6 @@ export class AppComponent implements OnInit {
   exploreIDs = new Set();
   plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
   isPlot = false;
-
-  dataSource = "csv://../data/wikiticker.csv"
-  schemaSource = "???"
-  port = "4567"
 
   constructor(private queryService: QueryService, private displayService: DisplayService, private dataService: DataService) { }
 
@@ -38,16 +34,10 @@ export class AppComponent implements OnInit {
     this.displayService.selectedResultsChanged.subscribe(
         () => {if(this.displayType == "Explore") {this.refreshPlot();} }
       )
-
-    this.dataService.setDataSource(this.dataSource);
   }
 
   updateDisplayType(type: string) {
     this.displayType = type;
-  }
-
-  updateDataSource() {
-    this.dataService.setDataSource(this.dataSource);
   }
 
   updateValidIDs(id: number) {

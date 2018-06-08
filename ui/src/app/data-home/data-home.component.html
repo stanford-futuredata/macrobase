@@ -1,0 +1,23 @@
+<div>
+  <b> Data path: </b>
+  <div>
+    <input style="width:50%; font-size:16px"
+    [(ngModel)]="dataSource">
+  </div>
+  <br>
+  <b> Table name: </b>
+  <div>
+    <input style="width:50%; font-size:16px"
+    [(ngModel)]="tableName">
+  </div>
+  <br>
+  <b> MacroBase port: </b>
+  <div>
+    <input style="width:25%; font-size:16px"
+    [(ngModel)]="port">
+  </div>
+  <br>
+  <div>
+    <button (click)="importData()"> Import </button>
+  </div>
+</div>

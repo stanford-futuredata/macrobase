@@ -4,6 +4,8 @@ import { Injectable, EventEmitter } from '@angular/core';
 export class DataService {
 
   dataSource: string;
+  tableName: string;
+  port: string;
 
   dataSourceChanged = new EventEmitter();
 
@@ -15,6 +17,21 @@ export class DataService {
 
   setDataSource(pathname: string) {
     this.dataSource = pathname;
-    this.dataSourceChanged.emit();
+  }
+
+  getTableName() {
+    return this.tableName;
+  }
+
+  setTableName(name: string) {
+    this.tableName = name;
+  }
+
+  getPort() {
+    return this.port;
+  }
+
+  setPort(port: string) {
+    this.port = port;
   }
 }

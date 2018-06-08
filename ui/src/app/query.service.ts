@@ -19,14 +19,27 @@ export class QueryService {
   //notify components that response has been received from server
   queryResponseReceived = new EventEmitter();
   dataResponseReceived = new EventEmitter();
+  sqlResponseReceived = new EventEmitter();
 
   queries = new Map();
   queryResults = new Map();
   itemsetData = new Map(); //map of [queryID, itemsetID] to rows of data, itemsetID of -1 = all
+  sqlResults = new Map();
 
   constructor(private http: HttpClient, private messageService: MessageService) { }
 
-  runSQL(query: string, id: number) {
+  runSQL(query: string, key: string)  {
+    this.messageService.add(key + ": " + query);
+    this.http.post(this.sqlURL, query)
+      .subscribe(
+        data => {
+          this.queryResults.set(key, data);
+          this.queries.set(key, query);
+          this.sqlResponseReceived.emit();
+          alert(data);
+        },
+        err => { this.handleError('runSQL()', err); }
+      );
   }
 
   runQuery(query: Query, id: number) {
