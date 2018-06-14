@@ -45,9 +45,6 @@
   <div class="column">
     <br>
     <h1> Explore </h1>
-    <button id="plotButton" (click)="togglePlot()">Plot</button>
-    <br>
-    <br>
     <div *ngFor="let id of exploreIDs">
       <div id="summary{{id}}" class="summary" style="background-color:burlywood">
         <app-query-summary id={{id}}></app-query-summary>
@@ -59,12 +56,16 @@
     </div>
   </div>
 
-  <div class="column" *ngIf="isPlot">
-    <div *ngFor="let metric of plotIDsByMetric.keys()">
-      <b>Metric: {{metric}}</b>
-      <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
-        <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
-          <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>
+  <div class="column">
+    <br> <br> <br>
+    <button id="plotButton" (click)="togglePlot()">Plot</button>
+    <div *ngIf="isPlot">
+      <div *ngFor="let metric of plotIDsByMetric.keys()">
+        <b>Metric: {{metric}}</b>
+        <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
+          <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
+            <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>
+          </div>
         </div>
       </div>
     </div>

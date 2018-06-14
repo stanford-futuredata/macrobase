@@ -7,17 +7,13 @@ import { QueryService } from '../query.service'
   templateUrl: './data-home.component.html',
   styleUrls: ['./data-home.component.css']
 })
-export class DataHomeComponent implements OnInit {
-  dataSource = "csv://../data/wikiticker.csv"
+export class DataHomeComponent {
+  dataSource = "../data/wikiticker.csv"
   tableName = "wiki"
   port = "4567"
-  importSQLString: string;
+  query = new Object();
 
   constructor(private dataService: DataService, private queryService: QueryService) { }
-
-  ngOnInit() {
-    this.dataService.setDataSource(this.dataSource);
-  }
 
   importData() {
     this.dataService.setDataSource(this.dataSource);
@@ -26,7 +22,7 @@ export class DataHomeComponent implements OnInit {
     this.dataService.dataSourceChanged.emit();
 
     this.generateImportSQLString();
-    this.queryService.runSQL(this.importSQLString, "import")
+    this.queryService.runSQL(this.query, "import")
   }
 
   generateImportSQLString() {
@@ -36,9 +32,9 @@ export class DataHomeComponent implements OnInit {
   countryIsoCode string, isAnonymous string, isMinor string, isNew string,
   isRobot string, isUnpatrolled string, delta double, added double, deleted
   double`;
-    this.importSQLString =
+    this.query["sql"] =
       `IMPORT FROM CSV FILE '${ this.dataSource }'
-        INTO ${ this.tableName }(${ colTypes });`;
+        INTO ${ this.tableName }(${ colTypes })`;
   }
 
 }

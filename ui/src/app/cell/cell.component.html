@@ -2,46 +2,23 @@
   <table cellpadding="15" border="1px" width="100%">
     <tr>
       <th> Attributes </th>
-      <th> Outlier Count (out of {{totalOutliers}}) </th>
-      <th> Event Count (out of {{totalEvents}})</th>
-      <th> Global Ratio </th>
+      <th> Outlier Count </th>
+      <th> Event Count </th>
       <th> Support </th>
+      <th> Global Ratio </th>
     </tr>
-    <tr *ngFor="let result of queryResult.results; index as i" [attr.data-index]="i"
+    <tr *ngFor="let itemset of queryResult; index as i" [attr.data-index]="i"
      (click)="selectResult(i)" [style.background-color]="getSelectedColor(i)" id="result {{id}} {{i}}">
       <td>
-        <div *ngFor="let itemset of result.matcherString">
-          <i> {{itemset}} </i>
+        <div *ngFor="let attribute of itemset.attributes">
+          <i> {{attribute}} </i>
           <br>
         </div>
       </td>
-      <td> {{result.aggregate.Outliers}} <br> </td>
-      <td> {{result.aggregate.Count}} <br> </td>
-      <td> {{result.metric.global_ratio}} <br> </td>
-      <td> {{result.metric.support}} </td>
+      <td> {{itemset.nOutlier}} <br> </td>
+      <td> {{itemset.nTotal}} <br> </td>
+      <td> {{itemset.support}} <br> </td>
+      <td> {{itemset.ratio}} </td>
     </tr>
   </table>
 </div>
-
-<!-- <div *ngIf="displayData">
-  <table cellpadding="10" border="1px">
-    <tr>
-      <th *ngFor="let colName of itemsetData.schema.columnNames">
-        {{colName}}
-      </th>
-    </tr>
-
-    <tr *ngFor="let row of itemsetData.rows">
-      <td *ngFor="let entry of row.vals">
-        {{entry}}
-      </td>
-    </tr>
-  </table>
-</div> -->
-
-<!-- <div *ngIf="displayHistogram">
-  <div id="histogram" style="display:block;"></div>
-  <div style="text-align:center;">
-    <button (click)="clearHistogram()" style="background-color:darkred;"> Clear Plot </button>
-  </div>
-</div> -->

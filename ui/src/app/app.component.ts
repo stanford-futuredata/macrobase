@@ -27,8 +27,8 @@ export class AppComponent implements OnInit {
         () => {this.updateDisplayType(this.displayService.getDisplayType());}
       )
 
-    this.queryService.queryResponseReceived.subscribe(
-        (id) => {this.updateValidIDs(id);}
+    this.queryService.sqlResponseReceived.subscribe(
+        (key) => {this.updateValidIDs(key);}
       )
 
     this.displayService.selectedResultsChanged.subscribe(
@@ -40,10 +40,13 @@ export class AppComponent implements OnInit {
     this.displayType = type;
   }
 
-  updateValidIDs(id: number) {
+  updateValidIDs(key) {
+    if(isNaN(key)) return; //not a diff query (import or rows query)
+    let id = Number(key);
     this.validIDs.add(id);
     if(id == this.newID){
       this.newID++;
+      this.editID = this.newID;
     }
   }
 
@@ -111,21 +114,25 @@ export class AppComponent implements OnInit {
 
   createPlotIDs(){
     for(let queryID of Array.from(this.exploreIDs)) {
-      if(this.displayService.selectedResultsByID.has(queryID) &&
-        this.displayService.selectedResultsByID.get(queryID).size != 0){
-        let metric = this.queryService.queries.get(queryID).metric;
+      let key = queryID.toString();
+      if(this.displayService.selectedResultsByID.has(key) &&
+        this.displayService.selectedResultsByID.get(key).size != 0){
+        let metric = this.queryService.queries.get(key)["metric"];
 
         if(!this.plotIDsByMetric.has(metric)){
           this.plotIDsByMetric.set(metric, new Map());
         }
 
-        if(!this.plotIDsByMetric.get(metric).has(queryID)){
-          this.plotIDsByMetric.get(metric).set(queryID, [-1]);
+        if(!this.plotIDsByMetric.get(metric).has(key)){
+          this.plotIDsByMetric.get(metric).set(key, [-1]);
         }
 
-        for(let itemsetID of Array.from(this.displayService.selectedResultsByID.get(queryID).keys())){
+        alert("ok")
+        for(let itemsetID of Array.from(this.displayService.selectedResultsByID.get(key).keys())){
           this.plotIDsByMetric.get(metric).get(queryID).push(itemsetID);
+          alert(itemsetID);
         }
+        alert("done")
       }
     }
   }

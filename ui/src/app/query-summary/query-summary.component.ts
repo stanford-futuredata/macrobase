@@ -13,21 +13,24 @@ export class QuerySummaryComponent implements OnInit {
   attributes: string;
   support: number;
   ratio: number;
+  // query: string;
 
   constructor(private queryService: QueryService) { }
 
   ngOnInit() {
-    this.updateSummary(this.queryService.queries.get(this.id));
-    this.queryService.queryResponseReceived.subscribe(
-        () => {this.updateSummary(this.queryService.queries.get(this.id));}
+    let key = this.id.toString();
+    this.updateSummary(this.queryService.queries.get(key));
+    this.queryService.sqlResponseReceived.subscribe(
+        () => {this.updateSummary(this.queryService.queries.get(key));}
       )
   }
 
-  updateSummary(query: Query) {
-    this.metric = query.metric;
-    this.attributes = query.attributes.join(", ");
-    this.support = query.minSupport;
-    this.ratio = query.minRatioMetric;
+  updateSummary(query) {
+    // this.query = query;
+    this.metric = query["metric"];
+    this.attributes = Array.from(query["attributes"]).join(", ");
+    this.support = query["minSupport"];
+    this.ratio = query["minRatioMetric"];
   }
 
 }

@@ -11,6 +11,7 @@ export class DataHeaderComponent implements OnInit {
   constructor(private displayService: DisplayService, private dataService: DataService) { }
 
   dataSource: string;
+  tableName: string;
 
   ngOnInit() {
     this.updateDisplay(this.displayService.getDisplayType());
@@ -19,9 +20,13 @@ export class DataHeaderComponent implements OnInit {
       )
 
     this.dataSource = this.dataService.getDataSource();
+    this.tableName = this.dataService.getTableName();
     this.dataService.dataSourceChanged.subscribe(
-        () => {this.dataSource = this.dataService.getDataSource();}
-      )
+        () => {
+          this.dataSource = this.dataService.getDataSource();
+          this.tableName = this.dataService.getTableName();
+        }
+      );
   }
 
   setDisplayType(type: string){

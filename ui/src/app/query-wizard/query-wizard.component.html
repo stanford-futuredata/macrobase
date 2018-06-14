@@ -2,40 +2,62 @@
     <tr>
         <td>
             <b> Metric: </b>
-            <select [(ngModel)]="selectedMetric">
+            <select [(ngModel)]="selectedMetric"
+                style="border:0; font-size: 16px">
                 <option *ngFor="let possibleMetric of possibleMetrics"
                         [value] = "possibleMetric">
                     {{possibleMetric}}
                 </option>
             </select>
         </td>
-
-        <td align="right">
-            <b> Support: </b>
-            <input [(ngModel)]="minSupport">
-        </td>
-
-        <td>
-            <b> Risk Ratio: </b>
-            <input [(ngModel)]="minRatioMetric">
-        </td>
     </tr>
+
     <tr>
         <td>
             <b> Attributes: </b>
         </td>
     </tr>
+
+    <tr>
+        <td>
+            <ul>
+                <input type="checkbox" (change)="updateAll()" [(ngModel)]="checkAll"> Select all<br><br>
+                <li *ngFor="let possibleAttribute of possibleAttributes">
+                    <input type="checkbox"
+                    (change)="updateAttribute(possibleAttribute)"
+                    [checked]="checkAttribute(possibleAttribute)">
+                    {{possibleAttribute}}
+                </li>
+            </ul>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <b> Support: </b>
+            <input [(ngModel)]="minSupport"
+            style="margin-right: 20px">
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <b> Risk Ratio: </b>
+            <input [(ngModel)]="minRatioMetric">
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <b> SQL: </b> {{query["sql"]}}
+        </td>
+    </tr>
+
 </table>
 
-<ul>
-    <input type="checkbox" (change)="updateAll()" [(ngModel)]="checkAll"> Select all<br><br>
-    <li *ngFor="let possibleAttribute of possibleAttributes">
-        <input type="checkbox"
-        (change)="updateAttribute(possibleAttribute)"
-        [checked]="checkAttribute(possibleAttribute)">
-        {{possibleAttribute}}
-    </li>
-</ul>
+<div style="left:10;">
+
+</div>
 
 <div style="text-align:right;">
     <button class="submitButton" (click)="runQuery()"> Run Query </button>

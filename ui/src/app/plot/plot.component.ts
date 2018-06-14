@@ -2,6 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { QueryService } from '../query.service';
 import { MessageService } from "../message.service";
 import { DisplayService } from "../display.service";
+import { DataService } from "../data.service";
 
 @Component({
   selector: 'app-plot',
@@ -13,36 +14,68 @@ export class PlotComponent implements OnInit {
   @Input() itemsetID: number;
 
   query;
+  queryResult;
+
+  itemsetQuery;
   itemsetData;
+
+  tableName;
 
   dataLoaded = false;
 
-  constructor(private queryService: QueryService, private messageService: MessageService, private displayService: DisplayService) { }
+  constructor(private queryService: QueryService,
+              private dataService: DataService,
+              private messageService: MessageService,
+              private displayService: DisplayService) { }
 
   ngOnInit() {
-    this.query = this.queryService.queries.get(this.queryID);
+    alert(this.queryID)
+    alert(this.itemsetID)
+    let key = this.queryID.toString();
+    this.query = this.queryService.queries.get(key);
+    this.queryResult = this.queryService.sqlResults.get(key);
 
+    alert("requesting")
     this.requestData();
 
-    this.queryService.dataResponseReceived.subscribe(
+    this.queryService.sqlResponseReceived.subscribe(
         () => {this.updateData();}
       )
+
+    this.tableName = this.dataService.getTableName();
+    this.dataService.dataSourceChanged.subscribe(
+        () => {
+          this.tableName = this.dataService.getTableName();
+        }
+      );
   }
 
   requestData() {
-    let newQuery = this.query;
-    newQuery.numRows = -1; //select all rows
-    newQuery.columnFilters = this.getItemsetAttributes();
-
-    this.queryService.getItemsetData(newQuery, this.queryID, this.itemsetID);
+    this.generateSQL();
+    let key = this.queryID.toString() + ":" + this.itemsetID.toString();
+    this.queryService.runSQL(this.itemsetQuery, key);
   }
 
-  getItemsetAttributes() {
-    if(this.itemsetID < 0) {
-      return "";
+  generateSQL() {
+    let metric = this.query["metric"]
+    let attributeFilter = ""
+    if(this.itemsetID >= 0) {
+      attributeFilter = this.getAttributeFilter();
     }
-    let itemset = this.queryService.queryResults.get(this.queryID).results[this.itemsetID];
-    return JSON.stringify(itemset.matcher);
+
+    this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName } ${ attributeFilter }`
+  }
+
+  getAttributeFilter(): string {
+    let attributes = new Array();
+    let nAttribute = this.queryResult.stringCols.length;
+    for(let j = 0; j < nAttribute; j++) {
+      if(this.queryResult.stringCols[j][this.itemsetID] != null) {
+        attributes.push(this.queryResult.columnNames[j] + "=" + this.queryResult.stringCols[j][this.itemsetID]);
+      }
+    }
+    return "WHERE " + attributes.join(" AND ");
+
   }
 
   updateData() {
@@ -50,11 +83,11 @@ export class PlotComponent implements OnInit {
       return;
     }
 
-    let key = this.queryID.toString() + "," + this.itemsetID.toString()
-    if(this.queryService.itemsetData.has(key)) {
-      this.itemsetData = this.queryService.itemsetData.get(key);
+    let key = this.queryID.toString() + ":" + this.itemsetID.toString()
+    if(this.queryService.sqlResults.has(key)) {
+      this.itemsetData = this.queryService.sqlResults.get(key);
       this.dataLoaded = true;
-      this.makeHistogram();
+      // this.makeHistogram();
     }
   }
 
@@ -66,7 +99,7 @@ export class PlotComponent implements OnInit {
       histName = "all";
     }
     else{
-      histName = this.getItemsetAttributes();
+      histName = this.getAttributeFilter();
     }
 
     let data = [

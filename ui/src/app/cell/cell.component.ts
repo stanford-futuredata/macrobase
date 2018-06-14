@@ -13,7 +13,6 @@ export class CellComponent implements OnInit {
 
   displayItemsets = false;
 
-  query;
   totalEvents;
   totalOutliers;
   queryResult;
@@ -24,30 +23,36 @@ export class CellComponent implements OnInit {
   }
 
   ngOnInit() {
-    if(this.queryService.queries.has(this.id)){
-      this.updateQuery();
-    }
+    this.updateQuery();
     this.updateSelectedResults();
 
-    this.queryService.queryResponseReceived.subscribe(
+    this.queryService.sqlResponseReceived.subscribe(
         () => {this.updateQuery();}
       );
   }
 
   updateQuery() {
-    this.query = this.queryService.queries.get(this.id)
-    this.queryResult = this.queryService.queryResults.get(this.id);
-    this.totalEvents = this.queryResult.numTotal;
-    this.totalOutliers = this.queryResult.outliers;
-    let numItemsets = this.queryResult.results.length;
+    let key = this.id.toString()
+    if(!this.queryService.sqlResults.has(key)) return;
 
-    //JSON to string for itemset attributes
-    for(let result of this.queryResult.results) {
-      result.matcherString = []
-      for(let attribute in result.matcher) {
-        let itemset = attribute + ": " + result.matcher[attribute];
-        result.matcherString.push(itemset);
+    let result = this.queryService.sqlResults.get(key);
+    let nAttribute = result.stringCols.length;
+
+    this.queryResult = new Array();
+    for(let i = 0; i < result.numRows; i++) {
+      let itemset = new Object();
+      itemset["support"] = result.doubleCols[0][i].toFixed(3);
+      itemset["ratio"] = result.doubleCols[1][i].toFixed(3);
+      itemset["nOutlier"] = result.doubleCols[2][i];
+      itemset["nTotal"] = result.doubleCols[3][i];
+
+      itemset["attributes"] = new Array();
+      for(let j = 0; j < nAttribute; j++) {
+        if(result.stringCols[j][i] != null) {
+          itemset["attributes"].push(result.schema.columnNames[j] + ": " + result.stringCols[j][i])
+        }
       }
+      this.queryResult.push(itemset);
     }
 
     this.displayItemsets = true;

@@ -3,6 +3,7 @@ import { Query } from '../query';
 import { QueryResult } from '../query-result'
 
 import { QueryService } from '../query.service'
+import { DataService } from '../data.service'
 import { MessageService } from '../message.service'
 
 @Component({
@@ -12,28 +13,34 @@ import { MessageService } from '../message.service'
 })
 export class QueryWizardComponent implements OnInit {
   @Input() id: number;
-  sqlString: string;
+  query = new Object();
 
-  tableName: string;
+  tableName;
+
   possibleAttributes: string[];
   possibleMetrics: string[];
 
   attributeSet = new Set();
   selectedMetric;
-  minSupport;
-  minRatioMetric;
+  minSupport: number;
+  minRatioMetric: number;
 
   percentileCutoff = 0.95;
 
   checkAll = false;
 
-  dataSource = "csv://../data/wikiticker.csv";
-
-  constructor(private queryService: QueryService, private messageService: MessageService) { }
+  constructor(private queryService: QueryService, private dataService: DataService, private messageService: MessageService) { }
 
   ngOnInit() {
     this.loadSchema();
     this.getBaseQuery();
+
+    this.tableName = this.dataService.getTableName();
+    this.dataService.dataSourceChanged.subscribe(
+        () => {
+          this.tableName = this.dataService.getTableName();
+        }
+      );
   }
 
   //to be implemented
@@ -114,20 +121,28 @@ export class QueryWizardComponent implements OnInit {
   }
 
   runQuery(query: Query) {
+    if(this.tableName == null) {
+      alert("No data source given.");
+      return;
+    }
+    this.query["attributes"] = this.attributeSet;
+    this.query["metric"] = this.selectedMetric;
+    this.query["minSupport"] = this.minSupport;
+    this.query["minRatioMetric"] = this.minRatioMetric;
     this.generateSQLString();
     let key = this.id.toString();
-    this.queryService.runSQL(this.sqlString, key)
+    this.queryService.runSQL(this.query, key);
   }
 
   generateSQLString() {
     let attributes = Array.from(this.attributeSet.values()).join(', ');
-    this.sqlString =
+    this.query["sql"] =
       `SELECT * FROM DIFF
          (SPLIT (
            SELECT *, percentile(${ this.selectedMetric }) as percentile from ${ this.tableName })
          WHERE percentile > ${ this.percentileCutoff })
       ON ${ attributes }
-      WITH MIN SUPPORT ${ this.minSupport } MIN RATIO ${ this.minRatioMetric };`;
+      WITH MIN SUPPORT ${ this.minSupport.toFixed(2) } MIN RATIO ${ this.minRatioMetric.toFixed(2) }`;
   }
 
 }

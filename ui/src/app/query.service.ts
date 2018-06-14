@@ -28,15 +28,16 @@ export class QueryService {
 
   constructor(private http: HttpClient, private messageService: MessageService) { }
 
-  runSQL(query: string, key: string)  {
-    this.messageService.add(key + ": " + query);
-    this.http.post(this.sqlURL, query)
+  runSQL(query, key: string)  {
+    this.messageService.add(JSON.stringify(query));
+    this.messageService.add(key + ": " + query["sql"]);
+    this.http.post(this.sqlURL, query["sql"])
       .subscribe(
         data => {
-          this.queryResults.set(key, data);
+          this.sqlResults.set(key, data);
           this.queries.set(key, query);
-          this.sqlResponseReceived.emit();
-          alert(data);
+          this.sqlResponseReceived.emit(key);
+          this.messageService.add(JSON.stringify(data['schema']));
         },
         err => { this.handleError('runSQL()', err); }
       );

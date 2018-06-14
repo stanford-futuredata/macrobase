@@ -29,18 +29,6 @@ public class RestServer {
         corsHeaders.put("Access-Control-Allow-Origin", "*");
     }
 
-    public static void main(String[] args) {
-        RestServer.apply();
-
-        post("/sql", RestServer::processSQLQuery, RestServer::toJsonString);
-        post("/query", RestServer::processBasicBatchQuery, RestServer::toJsonString);
-        post("/rows", RestServer::getRows, RestServer::toJsonString);
-
-        exception(Exception.class, (exception, request, response) -> {
-            log.error("An exception occurred: ", exception);
-        });
-    }
-
     public final static void apply() {
         Filter filter = new Filter() {
             @Override
@@ -53,8 +41,28 @@ public class RestServer {
         after(filter);
     }
 
-    private static DataFrame processSQLQuery(Request request, Response response) throws MacroBaseException {
-        return session.executeQuery(request.queryString());
+    public static void main(String[] args) {
+        RestServer.apply();
+        try {
+            DataFrame df = session.executeQuery("IMPORT FROM CSV FILE '../data/wikiticker.csv' INTO wiki(time string, user string, page string, channel string, namespace string, comment string, metroCode string, cityName string, regionName string, regionIsoCode string, countryName string, countryIsoCode string, isAnonymous string, isMinor string, isNew string, isRobot string, isUnpatrolled string, delta double, added double, deleted double)");
+        } catch (MacroBaseException e) {
+            e.printStackTrace();
+        }
+
+        post("/sql", RestServer::processSQLQuery, RestServer::toJsonString);
+        post("/query", RestServer::processBasicBatchQuery, RestServer::toJsonString);
+        post("/rows", RestServer::getRows, RestServer::toJsonString);
+
+        exception(Exception.class, (exception, request, response) -> {
+            log.error("An exception occurred: ", exception);
+        });
+    }
+
+    public static DataFrame processSQLQuery(
+            Request request, Response response
+    ) throws Exception {
+        System.out.println(request.body());
+        return session.executeQuery(request.body());
     }
 
     public static Explanation processBasicBatchQuery(
