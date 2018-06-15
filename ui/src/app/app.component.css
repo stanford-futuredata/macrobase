@@ -88,8 +88,8 @@ button {
 
 .column {
     float: left;
-    width: 45%;
-    padding: 10px;
+    width: 50%;
+    padding: 0px;
 }
 
 .row:after {

@@ -9,7 +9,7 @@ import { DataService } from './data.service'
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  displayMessages = true;
+  displayMessages = false;
   newID = 0;
   validIDs = new Set();
   editID = 0;
@@ -28,7 +28,10 @@ export class AppComponent implements OnInit {
       )
 
     this.queryService.sqlResponseReceived.subscribe(
-        (key) => {this.updateValidIDs(key);}
+        (key) => {
+          this.updateValidIDs(key);
+          this.clearSelected(key);
+        }
       )
 
     this.displayService.selectedResultsChanged.subscribe(
@@ -38,6 +41,9 @@ export class AppComponent implements OnInit {
 
   updateDisplayType(type: string) {
     this.displayType = type;
+    if(this.displayType != "Edit") {
+      this.editID = this.newID;
+    }
   }
 
   updateValidIDs(key) {
@@ -46,7 +52,6 @@ export class AppComponent implements OnInit {
     this.validIDs.add(id);
     if(id == this.newID){
       this.newID++;
-      this.editID = this.newID;
     }
   }
 
@@ -83,6 +88,16 @@ export class AppComponent implements OnInit {
   editSelected() {
     this.editID = Array.from(this.selectedIDs)[0];
     this.displayService.setDisplayType('Edit')
+  }
+
+  clearSelected(key) {
+    if(isNaN(key)) {
+      return;
+    }
+    let id = Number(key);
+    this.selectedIDs.delete(id);
+    this.displayService.updateSelectedResults(id, new Set());
+    this.plotIDsByMetric = new Map();
   }
 
   deleteSelected() {
@@ -123,16 +138,13 @@ export class AppComponent implements OnInit {
           this.plotIDsByMetric.set(metric, new Map());
         }
 
-        if(!this.plotIDsByMetric.get(metric).has(key)){
-          this.plotIDsByMetric.get(metric).set(key, [-1]);
+        if(!this.plotIDsByMetric.get(metric).has(queryID)){
+          this.plotIDsByMetric.get(metric).set(queryID, [-1]);
         }
 
-        alert("ok")
-        for(let itemsetID of Array.from(this.displayService.selectedResultsByID.get(key).keys())){
+        for(let itemsetID of Array.from(this.displayService.selectedResultsByID.get(key))){
           this.plotIDsByMetric.get(metric).get(queryID).push(itemsetID);
-          alert(itemsetID);
         }
-        alert("done")
       }
     }
   }

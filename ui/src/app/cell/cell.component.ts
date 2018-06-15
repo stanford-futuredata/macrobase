@@ -27,7 +27,10 @@ export class CellComponent implements OnInit {
     this.updateSelectedResults();
 
     this.queryService.sqlResponseReceived.subscribe(
-        () => {this.updateQuery();}
+        (key) => {
+          this.updateQuery();
+          this.clearSelected(key);
+        }
       );
   }
 
@@ -56,6 +59,13 @@ export class CellComponent implements OnInit {
     }
 
     this.displayItemsets = true;
+  }
+
+  clearSelected(key: string) {
+    if(key == this.id.toString()){
+      this.selectedResults = new Set();
+      this.displayService.updateSelectedResults(this.id, new Set());
+    }
   }
 
   updateSelectedResults() {

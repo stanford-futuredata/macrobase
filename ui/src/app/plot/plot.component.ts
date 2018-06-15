@@ -16,7 +16,7 @@ export class PlotComponent implements OnInit {
   query;
   queryResult;
 
-  itemsetQuery;
+  itemsetQuery = new Object();
   itemsetData;
 
   tableName;
@@ -29,18 +29,9 @@ export class PlotComponent implements OnInit {
               private displayService: DisplayService) { }
 
   ngOnInit() {
-    alert(this.queryID)
-    alert(this.itemsetID)
     let key = this.queryID.toString();
     this.query = this.queryService.queries.get(key);
     this.queryResult = this.queryService.sqlResults.get(key);
-
-    alert("requesting")
-    this.requestData();
-
-    this.queryService.sqlResponseReceived.subscribe(
-        () => {this.updateData();}
-      )
 
     this.tableName = this.dataService.getTableName();
     this.dataService.dataSourceChanged.subscribe(
@@ -48,11 +39,17 @@ export class PlotComponent implements OnInit {
           this.tableName = this.dataService.getTableName();
         }
       );
+
+    this.requestData();
+
+    this.queryService.sqlResponseReceived.subscribe(
+        () => {this.updateData();}
+      )
   }
 
   requestData() {
     this.generateSQL();
-    let key = this.queryID.toString() + ":" + this.itemsetID.toString();
+    let key = this.queryID.toString() + "-" + this.itemsetID.toString();
     this.queryService.runSQL(this.itemsetQuery, key);
   }
 
@@ -62,7 +59,6 @@ export class PlotComponent implements OnInit {
     if(this.itemsetID >= 0) {
       attributeFilter = this.getAttributeFilter();
     }
-
     this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName } ${ attributeFilter }`
   }
 
@@ -71,7 +67,7 @@ export class PlotComponent implements OnInit {
     let nAttribute = this.queryResult.stringCols.length;
     for(let j = 0; j < nAttribute; j++) {
       if(this.queryResult.stringCols[j][this.itemsetID] != null) {
-        attributes.push(this.queryResult.columnNames[j] + "=" + this.queryResult.stringCols[j][this.itemsetID]);
+        attributes.push(this.queryResult.schema.columnNames[j] + '="' + this.queryResult.stringCols[j][this.itemsetID] + '"');
       }
     }
     return "WHERE " + attributes.join(" AND ");
@@ -83,16 +79,22 @@ export class PlotComponent implements OnInit {
       return;
     }
 
-    let key = this.queryID.toString() + ":" + this.itemsetID.toString()
+    let key = this.queryID.toString() + "-" + this.itemsetID.toString()
     if(this.queryService.sqlResults.has(key)) {
       this.itemsetData = this.queryService.sqlResults.get(key);
       this.dataLoaded = true;
-      // this.makeHistogram();
+      this.makeHistogram();
     }
   }
 
   makeHistogram() {
-    let metricData = this.getMetricData(this.itemsetData);
+    let metricName = this.query.metric;
+    let metricData = this.itemsetData["doubleCols"][0];
+
+    // if(this.itemsetID < 0) {
+    //   this.displayService.updateAxisBounds(metricName,
+    //                       Math.min.apply(Math, metricData), Math.max.apply(Math, metricData));
+    // }
 
     let histName = "";
     if(this.itemsetID < 0) {
@@ -112,53 +114,12 @@ export class PlotComponent implements OnInit {
 
     var layout = {
       title: histName,
-      xaxis: {title: this.query.metric, range: this.displayService.axisBounds.get(this.query.metric)},
+      // xaxis: {title: this.query.metric,
+      //         range: this.displayService.axisBounds.get(metricName)},
+      xaxis: {title: this.query.metric},
       yaxis: {title: 'Count'}
     };
 
     let div = "histogram" + " " + this.queryID.toString() + " " + this.itemsetID.toString();
     Plotly.newPlot(div, data=data, layout);
   }
-
-  /*
-   Return an array of just the metric column of a dataframe.
-  */
-  getMetricData(data){
-    let metricName = this.query.metric;
-    let metricCol = -1;
-
-    for(let i = 0; i < data.schema.numColumns; i++){
-      if(data.schema.columnNames[i] == metricName){
-        metricCol = i;
-        break;
-      }
-    }
-    if(metricCol == -1){
-      this.messageService.add("Bad metric column name");
-    }
-
-    let metricData = [];
-
-    let max = Number.NEGATIVE_INFINITY
-    let min = Number.POSITIVE_INFINITY
-
-    for(let i = 0; i < data.numRows; i++){
-      let val = data.rows[i].vals[metricCol]
-      metricData.push(val);
-      if(this.itemsetID < 0) {
-        if(val < min) {
-          min = val;
-        }
-        if(val > max) {
-          max = val;
-        }
-      }
-    }
-
-    if(this.itemsetID < 0) {
-      this.displayService.updateAxisBounds(metricName, min, max);
-    }
-
-    return metricData;
-  }
-}

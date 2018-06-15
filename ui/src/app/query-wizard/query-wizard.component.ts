@@ -33,7 +33,12 @@ export class QueryWizardComponent implements OnInit {
 
   ngOnInit() {
     this.loadSchema();
-    this.getBaseQuery();
+    if(this.queryService.queries.has(this.id.toString())) {
+      this.loadQuery();
+    }
+    else{
+      this.loadBaseQuery();
+    }
 
     this.tableName = this.dataService.getTableName();
     this.dataService.dataSourceChanged.subscribe(
@@ -72,7 +77,15 @@ export class QueryWizardComponent implements OnInit {
     ]
   }
 
-  getBaseQuery(): void {
+  loadQuery() {
+    this.query = this.queryService.queries.get(this.id.toString());
+    this.selectedMetric = this.query["metric"];
+    this.attributeSet = this.query["attributes"];
+    this.minSupport = this.query["minSupport"];
+    this.minRatioMetric = this.query["minRatioMetric"];
+  }
+
+  loadBaseQuery(): void {
     this.checkAll = true;
     this.updateAll(); //select all attributes
     this.selectedMetric = this.possibleMetrics[0];
@@ -125,6 +138,9 @@ export class QueryWizardComponent implements OnInit {
       alert("No data source given.");
       return;
     }
+    this.minSupport = Number(this.minSupport);
+    this.minRatioMetric = Number(this.minRatioMetric);
+
     this.query["attributes"] = this.attributeSet;
     this.query["metric"] = this.selectedMetric;
     this.query["minSupport"] = this.minSupport;
