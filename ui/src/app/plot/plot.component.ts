@@ -123,3 +123,4 @@ export class PlotComponent implements OnInit {
     let div = "histogram" + " " + this.queryID.toString() + " " + this.itemsetID.toString();
     Plotly.newPlot(div, data=data, layout);
   }
+}

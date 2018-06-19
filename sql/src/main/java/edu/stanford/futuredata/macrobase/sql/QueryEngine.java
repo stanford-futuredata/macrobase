@@ -80,8 +80,15 @@ class QueryEngine {
         final String tableName = importStatement.getTableName().toString();
         final Map<String, ColType> schema = importStatement.getSchema();
         try {
-            DataFrame df = new CSVDataFrameParser(filename, schema).load();
+            DataFrame df;
+            if(schema.isEmpty()) {
+                df = new CSVDataFrameParser(filename).load();
+            }
+            else {
+                df = new CSVDataFrameParser(filename, schema).load();
+            }
             tablesInMemory.put(tableName, df);
+            System.out.println(df.getSchema().toString());
             return df;
         } catch (Exception e) {
             throw new MacroBaseSQLException(e);
