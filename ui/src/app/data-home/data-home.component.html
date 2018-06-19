@@ -21,3 +21,23 @@
     <button (click)="importData()"> Import </button>
   </div>
 </div>
+
+<br> <br> <br>
+
+<table *ngIf="displayTypes"
+ cellpadding="15" border="1px" style="table-layout: fixed">
+  <tr>
+    <th> Column Name </th>
+    <th> isAttribute </th>
+    <th> isMetric </th>
+  </tr>
+  <tr *ngFor="let colName of colNames">
+    <td> {{colName}} </td>
+    <td (click)="setType(colName, 'attribute')"
+        [style.background-color]="getColor(colName, 'attribute')"
+        id="{{colName}} attribute"></td>
+    <td (click)="setType(colName, 'metric')"
+        [style.background-color]="getColor(colName, 'metric')"
+        id="{{colName}} metric"></td>
+  </tr>
+</table>

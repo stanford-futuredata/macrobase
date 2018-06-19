@@ -56,12 +56,13 @@
     </div>
   </div>
 
-  <div class="column">
+  <div class="column" style="text-align:center; font-size:20px;">
     <br> <br> <br>
     <button id="plotButton" (click)="togglePlot()">Plot</button>
+    <br> <br>
     <div *ngIf="isPlot">
       <div *ngFor="let metric of plotIDsByMetric.keys()">
-        <b>Metric: {{metric}}</b>
+        <b> Metric: {{metric}} </b>
         <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
           <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
             <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>

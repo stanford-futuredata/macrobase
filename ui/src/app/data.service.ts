@@ -7,6 +7,11 @@ export class DataService {
   tableName = "NONE";
   port: string;
 
+  types = new Map();
+  colNames = new Array();
+  attributeColumns: Array<string>;
+  metricColumns: Array<string>;
+
   dataSourceChanged = new EventEmitter();
 
   constructor() { }
@@ -17,6 +22,7 @@ export class DataService {
 
   setDataSource(pathname: string) {
     this.dataSource = pathname;
+    this.dataSourceChanged.emit();
   }
 
   getTableName() {
@@ -33,5 +39,37 @@ export class DataService {
 
   setPort(port: string) {
     this.port = port;
+  }
+
+  setTypes(colNames: Array<string>, types: Map<string, string>) {
+    this.types = types;
+    this.colNames = colNames;
+
+    this.attributeColumns = new Array();
+    this.metricColumns = new Array();
+    for (let colName of colNames) {
+      if(types.get(colName) == "attribute") {
+        this.attributeColumns.push(colName);
+      }
+      else if (types.get(colName) == "metric") {
+        this.metricColumns.push(colName);
+      }
+    }
+  }
+
+  getTypes() {
+    return this.types;
+  }
+
+  getColNames() {
+    return this.colNames;
+  }
+
+  getAttributeColumns() {
+    return this.attributeColumns
+  }
+
+  getMetricColumns() {
+    return this.metricColumns;
   }
 }

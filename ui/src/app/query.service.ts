@@ -37,7 +37,9 @@ export class QueryService {
           this.sqlResults.set(key, data);
           this.queries.set(key, query);
           this.sqlResponseReceived.emit(key);
-          this.messageService.add(JSON.stringify(data['schema']));
+          this.messageService.add(JSON.stringify(data));
+          // this.messageService.add(Object.keys(data).toString());
+          // this.messageService.add(JSON.stringify(data["schema"]));
         },
         err => { this.handleError('runSQL()', err); }
       );

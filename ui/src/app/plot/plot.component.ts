@@ -34,11 +34,6 @@ export class PlotComponent implements OnInit {
     this.queryResult = this.queryService.sqlResults.get(key);
 
     this.tableName = this.dataService.getTableName();
-    this.dataService.dataSourceChanged.subscribe(
-        () => {
-          this.tableName = this.dataService.getTableName();
-        }
-      );
 
     this.requestData();
 

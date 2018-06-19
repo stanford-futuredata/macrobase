@@ -17,8 +17,8 @@ export class QueryWizardComponent implements OnInit {
 
   tableName;
 
-  possibleAttributes: string[];
-  possibleMetrics: string[];
+  possibleAttributes: Array<string>;
+  possibleMetrics: Array<string>;
 
   attributeSet = new Set();
   selectedMetric;
@@ -41,40 +41,13 @@ export class QueryWizardComponent implements OnInit {
     }
 
     this.tableName = this.dataService.getTableName();
-    this.dataService.dataSourceChanged.subscribe(
-        () => {
-          this.tableName = this.dataService.getTableName();
-        }
-      );
   }
 
   //to be implemented
   loadSchema(): void {
-    this.possibleAttributes = [
-      "time",
-      "user",
-      "page",
-      "channel",
-      "namespace",
-      "comment",
-      "metroCode",
-      "cityName",
-      "regionName",
-      "regionIsoCode",
-      "countryName",
-      "countryIsoCode",
-      "isAnonymous",
-      "isMinor",
-      "isNew",
-      "isRobot",
-      "isUnpatrolled"
-    ]
+    this.possibleAttributes = this.dataService.getAttributeColumns();
 
-    this.possibleMetrics = [
-      "delta",
-      "added",
-      "deleted"
-    ]
+    this.possibleMetrics = this.dataService.getMetricColumns();
   }
 
   loadQuery() {

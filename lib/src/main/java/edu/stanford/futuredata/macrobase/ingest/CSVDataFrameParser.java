@@ -141,7 +141,10 @@ public class CSVDataFrameParser implements DataFrameLoader {
         int doubleParseFailures = 0;
 
         //load rows
-        do {
+        while (true) {
+            if (row == null) {
+                break;
+            }
             for (int c = 0, stringColNum = 0, doubleColNum = 0; c < numColumns; c++) {
                 if (schemaIndexMap[c] >= 0) {
                     int schemaIndex = schemaIndexMap[c];
@@ -162,7 +165,8 @@ public class CSVDataFrameParser implements DataFrameLoader {
                     }
                 }
             }
-        } while ((row = parser.parseNext()) != null);
+            row = parser.parseNext();
+        }
 
         if (doubleParseFailures > 0)
             log.warn("{} double values failed to parse", doubleParseFailures);

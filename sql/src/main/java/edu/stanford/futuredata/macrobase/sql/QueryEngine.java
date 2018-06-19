@@ -88,7 +88,6 @@ class QueryEngine {
                 df = new CSVDataFrameParser(filename, schema).load();
             }
             tablesInMemory.put(tableName, df);
-            System.out.println(df.getSchema().toString());
             return df;
         } catch (Exception e) {
             throw new MacroBaseSQLException(e);
