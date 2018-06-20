@@ -8,8 +8,8 @@ import { QueryService } from '../query.service'
   styleUrls: ['./data-home.component.css']
 })
 export class DataHomeComponent implements OnInit {
-  dataSource = "../data/wikiticker.csv"
-  tableName = "wiki"
+  dataSource = "core/demo/sample.csv"
+  tableName = "sample"
   port = "4567"
   query = new Object();
 
@@ -20,6 +20,12 @@ export class DataHomeComponent implements OnInit {
   constructor(private dataService: DataService, private queryService: QueryService) { }
 
   ngOnInit() {
+    if(this.dataService.getTableName() != "NONE") {
+      this.dataSource = this.dataService.getDataSource();
+      this.tableName = this.dataService.getTableName();
+      this.port = this.dataService.getPort();
+    }
+
     this.types = this.dataService.getTypes();
     this.colNames = this.dataService.getColNames();
     if(this.colNames.length > 0) {
@@ -27,8 +33,10 @@ export class DataHomeComponent implements OnInit {
     }
 
     this.queryService.sqlResponseReceived.subscribe(
-      () => {
-          this.setTypes();
+      (key) => {
+          if(key == "import"){
+            this.setTypes();
+          }
         }
       );
   }

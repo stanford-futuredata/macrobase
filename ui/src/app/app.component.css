@@ -11,21 +11,27 @@
 
 .dataHeader {
   position: fixed;
+  font-size: 18px;
   top: 0;
   left: 0;
   width: 100%;
 }
 
+.data-home{
+  font-size: 18px;
+}
+
 .wizard {
     display: block;
-    color: black;
-    background-color: #C0C0C0;
     border-color: black;
     border-style: solid;
+    font-size: 18px;
+    background-color: whitesmoke;
 }
 
 .cell {
     display: block;
+    font-size: 18px;
     color: black;
     top: 0;
     left: 0;

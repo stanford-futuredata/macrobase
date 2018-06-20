@@ -44,6 +44,9 @@ export class AppComponent implements OnInit {
     if(this.displayType != "Edit") {
       this.editID = this.newID;
     }
+    if(this.displayType == "Explore") {
+      this.isPlot = false;
+    }
   }
 
   updateValidIDs(key) {

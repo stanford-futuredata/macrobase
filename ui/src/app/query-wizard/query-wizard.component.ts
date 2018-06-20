@@ -24,8 +24,7 @@ export class QueryWizardComponent implements OnInit {
   selectedMetric;
   minSupport: number;
   minRatioMetric: number;
-
-  percentileCutoff = 0.95;
+  percentile: number;
 
   checkAll = false;
 
@@ -56,6 +55,7 @@ export class QueryWizardComponent implements OnInit {
     this.attributeSet = this.query["attributes"];
     this.minSupport = this.query["minSupport"];
     this.minRatioMetric = this.query["minRatioMetric"];
+    this.percentile = this.query["percentile"];
   }
 
   loadBaseQuery(): void {
@@ -64,6 +64,7 @@ export class QueryWizardComponent implements OnInit {
     this.selectedMetric = this.possibleMetrics[0];
     this.minSupport = 0.01
     this.minRatioMetric = 1;
+    this.percentile = 0.95;
   }
 
   updateAll() {
@@ -106,18 +107,20 @@ export class QueryWizardComponent implements OnInit {
     this.attributeSet.delete(attribute);
   }
 
-  runQuery(query: Query) {
+  runQuery() {
     if(this.tableName == null) {
       alert("No data source given.");
       return;
     }
     this.minSupport = Number(this.minSupport);
     this.minRatioMetric = Number(this.minRatioMetric);
+    this.percentile = Number(this.percentile);
 
     this.query["attributes"] = this.attributeSet;
     this.query["metric"] = this.selectedMetric;
     this.query["minSupport"] = this.minSupport;
     this.query["minRatioMetric"] = this.minRatioMetric;
+    this.query["percentile"] = this.percentile;
     this.generateSQLString();
     let key = this.id.toString();
     this.queryService.runSQL(this.query, key);
@@ -129,7 +132,7 @@ export class QueryWizardComponent implements OnInit {
       `SELECT * FROM DIFF
          (SPLIT (
            SELECT *, percentile(${ this.selectedMetric }) as percentile from ${ this.tableName })
-         WHERE percentile > ${ this.percentileCutoff })
+         WHERE percentile > ${ this.percentile.toFixed(2) })
       ON ${ attributes }
       WITH MIN SUPPORT ${ this.minSupport.toFixed(2) } MIN RATIO ${ this.minRatioMetric.toFixed(2) }`;
   }

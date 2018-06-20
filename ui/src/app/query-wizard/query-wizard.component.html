@@ -2,8 +2,7 @@
     <tr>
         <td>
             <b> Metric: </b>
-            <select [(ngModel)]="selectedMetric"
-                style="border:0; font-size: 16px">
+            <select [(ngModel)]="selectedMetric">
                 <option *ngFor="let possibleMetric of possibleMetrics"
                         [value] = "possibleMetric">
                     {{possibleMetric}}
@@ -17,7 +16,6 @@
             <b> Attributes: </b>
         </td>
     </tr>
-
     <tr>
         <td>
             <ul>
@@ -49,16 +47,21 @@
 
     <tr>
         <td>
+            <b> Percentile: </b>
+            <input [(ngModel)]="percentile">
+        </td>
+    </tr>
+
+    <tr>
+        <td>
             <b> SQL: </b> {{query["sql"]}}
         </td>
     </tr>
 
 </table>
 
-<div style="left:10;">
-
-</div>
-
-<div style="text-align:right;">
+<br>
+<div style="text-align:center;">
     <button class="submitButton" (click)="runQuery()"> Run Query </button>
 </div>
+<br>

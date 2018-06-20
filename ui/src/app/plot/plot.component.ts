@@ -54,7 +54,7 @@ export class PlotComponent implements OnInit {
     if(this.itemsetID >= 0) {
       attributeFilter = this.getAttributeFilter();
     }
-    this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName } ${ attributeFilter }`
+    this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName } WHERE ${ attributeFilter }`
   }
 
   getAttributeFilter(): string {
@@ -65,7 +65,7 @@ export class PlotComponent implements OnInit {
         attributes.push(this.queryResult.schema.columnNames[j] + '="' + this.queryResult.stringCols[j][this.itemsetID] + '"');
       }
     }
-    return "WHERE " + attributes.join(" AND ");
+    return attributes.join(" AND ");
 
   }
 

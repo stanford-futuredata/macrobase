@@ -1,0 +1,13 @@
+input {
+  font-size: 18px;
+}
+
+.importButton {
+  padding: 10px 10px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 18px;
+  border: none;
+  color: black;
+}

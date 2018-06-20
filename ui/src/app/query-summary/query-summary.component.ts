@@ -13,7 +13,7 @@ export class QuerySummaryComponent implements OnInit {
   attributes: string;
   support: number;
   ratio: number;
-  // query: string;
+  percentile: number;
 
   constructor(private queryService: QueryService) { }
 
@@ -26,11 +26,11 @@ export class QuerySummaryComponent implements OnInit {
   }
 
   updateSummary(query) {
-    // this.query = query;
     this.metric = query["metric"];
     this.attributes = Array.from(query["attributes"]).join(", ");
     this.support = query["minSupport"];
     this.ratio = query["minRatioMetric"];
+    this.percentile = query["percentile"]
   }
 
 }

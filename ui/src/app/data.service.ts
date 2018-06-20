@@ -31,6 +31,7 @@ export class DataService {
 
   setTableName(name: string) {
     this.tableName = name;
+    this.dataSourceChanged.emit();
   }
 
   getPort() {
@@ -39,6 +40,7 @@ export class DataService {
 
   setPort(port: string) {
     this.port = port;
+    this.dataSourceChanged.emit();
   }
 
   setTypes(colNames: Array<string>, types: Map<string, string>) {

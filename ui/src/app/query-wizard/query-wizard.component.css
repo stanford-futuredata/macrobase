@@ -4,14 +4,14 @@
 }
 
 .submitButton {
-  background-color: darkolivegreen; /* Green */
+  background-color: lightblue;
   border: none;
-  color: white;
+  color: black;
   padding: 10px 10px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .attribute {
@@ -23,19 +23,23 @@ ul{
   width:760px;
   margin-bottom:20px;
   overflow:hidden;
-  border-top:1px solid #ccc;
 }
 
 li{
-  font-size: 16px;
   line-height:1.5em;
-  border-bottom:1px solid #ccc;
   float:left;
   display:inline;
   width:33%; /*three columns*/
 }
 
 input{
-  font-size: 16px;
-  border: 0;
+  font-size: 18px;
+  border-style: solid;
+  border-color: lightgray;
+}
+
+select{
+  border-style: solid;
+  border-color: lightgray;
+  font-size: 18px;
 }
