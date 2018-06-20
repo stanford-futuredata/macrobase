@@ -1,27 +1,48 @@
-# MacrobaseUI
+# MacroBase UI
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.7.3.
 
-## Development server
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+##Installation and Setup
 
-## Code scaffolding
+1. Install npm (javascript package manager) from https://www.npmjs.com/get-npm.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+2. Navigate to "/ui" folder in macrobase.
 
-## Build
+3. In the command line, run "npm install" to install the requisite packages.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
+4. In the command line, run "ng serve" to start the UI running at http://localhost:4200/.
 
-## Running unit tests
+5. Navigate to the root folder in macrobase.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+6. In the command line, run "bin/server.sh" to start the MacroBase server that the UI calls.
 
-## Running end-to-end tests
+7. Open your browser and navigate to http://localhost:4200/ to run the UI.
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+In future, run only steps 4-7 to run the UI.
 
-## Further help
+##Usage
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+The UI is set up with 4 tabs: Data, History, Edit, and Explore.
+
+####Data
+Use the Data tab to load a CSV file into MacroBase and specify which columns to use as metrics and which to use as explanatory attributes.
+
+####History
+Use the History tab to manage past queries and select queries for editing or explorating. Select queries by clicking on them.
+
+####Edit
+Use the Edit tab to create new queries and edit old queries. Click "Run Query" to generate a SQL command based off of your input and run the command through MacroBase SQL to process the query. You can specify the following aspects of the query:
+
+*Metric* - The column to analyze.
+
+*Attributes* - The columns to be used to explain anomalies in the metric.
+
+*Percentile* - The percentile cutoff in the metric past which the rows should be treated as outliers to be explained.
+
+*Support* - The minimum support for a given set of attributes to be considered a valid explanation. Support is the proportion of outlier rows that contain a given set of attributes.
+
+*Risk Ratio* - The minimum risk ratio for a given set of attributes to be considered a valid explanation. Risk ratio is the proportion of rows corresponding to a given attribute set that are outliers divided by the proportion of rows not corresponding to that attribute set that are outliers. Intuitively, this represents how much more likely a data point is to be an outlier if it contains this attribute set.
+
+####Explore
+Use the Explore tab to compare explanations between queries and plot histograms of metrics filtered by explanations. Click on explanations to select them for plotting. Select queries to explore in the History tab.
