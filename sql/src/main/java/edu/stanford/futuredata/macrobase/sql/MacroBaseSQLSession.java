@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MacroBaseSQLSession {
     private static final Logger log = LoggerFactory.getLogger(MacroBaseSQLSession.class);
@@ -31,14 +32,15 @@ public class MacroBaseSQLSession {
         if (stmt instanceof ImportCsv) {
             final ImportCsv importStatement = (ImportCsv) stmt;
             DataFrame df = queryEngine.importTableFromCsv(importStatement);
-            return getImportInfo(df);
+            List<String> explanationCols = queryEngine.findExplanationColumns(df);
+            return getImportInfo(df, explanationCols);
         } else {
             final QueryBody q = ((Query) stmt).getQueryBody();
             return queryEngine.executeQuery(q);
         }
     }
 
-    private static DataFrame getImportInfo(final DataFrame data) {
+    private static DataFrame getImportInfo(final DataFrame data, final List<String> explanationCols) {
         Schema schema = new Schema();
         schema.addColumn(Schema.ColType.STRING, "columnName");
         schema.addColumn(Schema.ColType.STRING, "type");
@@ -50,8 +52,9 @@ public class MacroBaseSQLSession {
 
         for (int i = 0; i < numRows; i++) {
             ArrayList<Object> vals = new ArrayList<Object>(numColumns);
-            vals.add(oldSchema.getColumnName(i));
-            if(oldSchema.getColumnType(i) == Schema.ColType.STRING) {
+            String colName = oldSchema.getColumnName(i);
+            vals.add(colName);
+            if(oldSchema.getColumnType(i) == Schema.ColType.STRING && explanationCols.contains(colName)) {
                 vals.add("attribute");
             } else if (oldSchema.getColumnType(i) == Schema.ColType.DOUBLE) {
                 vals.add("metric");

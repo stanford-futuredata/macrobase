@@ -117,6 +117,36 @@ class QueryEngine {
     }
 
     /**
+     * Find columns that should be included in the "ON col1, col2, ..., coln" clause or the "Select all" checkbox in UI
+     *
+     * @return List of columns (as Strings)
+     */
+     List<String> findExplanationColumns(DataFrame df) {
+        Builder<String> builder = ImmutableList.builder();
+        final boolean sample = df.getNumRows() > 1000;
+        final int numRowsToSample = sample ? 1000 : df.getNumRows();
+        final List<String> stringCols = df.getSchema().getColumnNamesByType(ColType.STRING);
+        for (String colName : stringCols) {
+            final String[] colValues = df.getStringColumnByName(colName);
+            final Set<String> set = new HashSet<>();
+            if (sample) {
+                final Random random = new Random();
+                for (int i = 0; i < 1000; ++i) {
+                    set.add(colValues[random.nextInt(colValues.length)]);
+                }
+            } else {
+                set.addAll(Arrays.asList(colValues));
+            }
+            if (set.size() < numRowsToSample / 4) {
+                // if number of distinct elements is less than 1/4 the number of sampled rows,
+                // include it
+                builder.add(colName);
+            }
+        }
+        return builder.build();
+    }
+
+    /**
      * Execute a DIFF query, a query that's specific to MacroBase SQL (i.e., a query that may
      * contain DIFF and SPLIT operators).
      *
@@ -203,36 +233,6 @@ class QueryEngine {
         resultDf.renameColumn("count", "total_count");
 
         return evaluateSQLClauses(diffQuery, resultDf);
-    }
-
-    /**
-     * Find columns that should be included in the "ON col1, col2, ..., coln" clause
-     *
-     * @return List of columns (as Strings)
-     */
-    private List<String> findExplanationColumns(DataFrame df) {
-        Builder<String> builder = ImmutableList.builder();
-        final boolean sample = df.getNumRows() > 1000;
-        final int numRowsToSample = sample ? 1000 : df.getNumRows();
-        final List<String> stringCols = df.getSchema().getColumnNamesByType(ColType.STRING);
-        for (String colName : stringCols) {
-            final String[] colValues = df.getStringColumnByName(colName);
-            final Set<String> set = new HashSet<>();
-            if (sample) {
-                final Random random = new Random();
-                for (int i = 0; i < 1000; ++i) {
-                    set.add(colValues[random.nextInt(colValues.length)]);
-                }
-            } else {
-                set.addAll(Arrays.asList(colValues));
-            }
-            if (set.size() < numRowsToSample / 4) {
-                // if number of distinct elements is less than 1/4 the number of sampled rows,
-                // include it
-                builder.add(colName);
-            }
-        }
-        return builder.build();
     }
 
     /**
