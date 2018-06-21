@@ -1,3 +1,7 @@
+/*
+ * The cell represents a table of explanations that make up the response to a given query.
+ */
+
 import { Component, OnInit, Input } from '@angular/core';
 import { QueryService } from '../query.service';
 import { MessageService } from "../message.service";
@@ -28,15 +32,20 @@ export class CellComponent implements OnInit {
 
     this.queryService.sqlResponseReceived.subscribe(
         (key) => {
-          this.updateQuery();
-          this.clearSelected(key);
+          if(key == this.id.toString()) {
+            this.updateQuery();
+            this.clearSelected();
+          }
         }
       );
   }
 
-  updateQuery() {
+  /*
+   * After query response is received from server, update cell information to contain explanations.
+   */
+  private updateQuery() {
     let key = this.id.toString()
-    if(!this.queryService.sqlResults.has(key)) return;
+    if(!this.queryService.queries.has(key)) return;
 
     let result = this.queryService.sqlResults.get(key);
     let nAttribute = result.stringCols.length;
@@ -61,14 +70,18 @@ export class CellComponent implements OnInit {
     this.displayItemsets = true;
   }
 
-  clearSelected(key: string) {
-    if(key == this.id.toString()){
-      this.selectedResults = new Set();
-      this.displayService.updateSelectedResults(this.id, new Set());
-    }
+  /*
+   * Clear selection of explanations
+   */
+  private clearSelected() {
+    this.selectedResults = new Set();
+    this.displayService.updateSelectedResults(this.id, new Set());
   }
 
-  updateSelectedResults() {
+  /*
+   * Update selection of explanations based on display service
+   */
+  private updateSelectedResults() {
     if(this.displayService.selectedResultsByID.has(this.id)) {
       this.selectedResults = this.displayService.selectedResultsByID.get(this.id);
     }
@@ -77,7 +90,10 @@ export class CellComponent implements OnInit {
     }
   }
 
-  selectResult(i: number) {
+  /*
+   * Select a given explanation
+   */
+  private selectResult(i: number) {
     if(this.selectedResults.has(i)){
       this.selectedResults.delete(i);
       document.getElementById('result'+ " " + this.id + " " + i).style.backgroundColor = "white";
@@ -90,7 +106,10 @@ export class CellComponent implements OnInit {
     this.displayService.updateSelectedResults(this.id, this.selectedResults);
   }
 
-  getSelectedColor(i: number) {
+  /*
+   * Return the highlight color of a given explanation
+   */
+  private getSelectedColor(i: number) {
     if(this.selectedResults.has(i)){
       return "lightgray";
     }

@@ -11,21 +11,21 @@
 
 .dataHeader {
   position: fixed;
-  font-size: 18px;
+  font-size: 22px;
   top: 0;
   left: 0;
   width: 100%;
 }
 
 .data-home{
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .wizard {
     display: block;
     border-color: black;
     border-style: solid;
-    font-size: 18px;
+    font-size: 22px;
     background-color: whitesmoke;
 }
 
@@ -82,14 +82,19 @@
 }
 
 button {
-  font-size: 18px;
+  font-size: 20px;
   color: black;
 }
 
+input {
+  font-size: 20px;
+}
+
 .summary {
-    padding: 15px;
-    text-align: left;
-    border: 1px solid black;
+  font-size: 20px;
+  padding: 15px;
+  text-align: left;
+  border: 1px solid black;
 }
 
 .column {

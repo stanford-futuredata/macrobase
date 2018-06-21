@@ -1,7 +1,10 @@
-<table cellpadding="10">
+<table cellpadding="10" width="100%">
     <tr>
         <td>
             <b> Metric: </b>
+            <br>
+            <br>
+            &nbsp;&nbsp;
             <select [(ngModel)]="selectedMetric">
                 <option *ngFor="let possibleMetric of possibleMetrics"
                         [value] = "possibleMetric">
@@ -9,17 +12,12 @@
                 </option>
             </select>
         </td>
-    </tr>
 
-    <tr>
         <td>
             <b> Attributes: </b>
-        </td>
-    </tr>
-    <tr>
-        <td>
             <ul>
-                <input type="checkbox" (change)="updateAll()" [(ngModel)]="checkAll"> Select all<br><br>
+                <input type="checkbox" (change)="updateAll()" [(ngModel)]="checkAll"> Select All
+                <br>
                 <li *ngFor="let possibleAttribute of possibleAttributes">
                     <input type="checkbox"
                     (change)="updateAttribute(possibleAttribute)"
@@ -29,8 +27,20 @@
             </ul>
         </td>
     </tr>
+</table>
 
+<table cellpadding="10">
     <tr>
+        <td>
+            <b> Query Type: </b>
+            <select [(ngModel)]="queryType">
+                <option *ngFor="let possibleType of possibleTypes"
+                        [value] = "possibleType">
+                    {{possibleType}}
+                </option>
+            </select>
+        </td>
+
         <td>
             <b> Percentile: </b>
             <input [(ngModel)]="percentile">
@@ -43,22 +53,24 @@
             <input [(ngModel)]="minSupport"
             style="margin-right: 20px">
         </td>
-    </tr>
 
-    <tr>
         <td>
             <b> Risk Ratio: </b>
             <input [(ngModel)]="minRatioMetric">
         </td>
     </tr>
-
-    <tr>
-        <td>
-            <b> SQL: </b> {{query["sql"]}}
-        </td>
-    </tr>
-
 </table>
+
+<br>
+<div style="padding-left: 10px">
+    <b> SQL: </b> &nbsp;
+    SELECT * FROM
+    (SPLIT (
+    SELECT *, percentile(<i>{{selectedMetric}}</i>) as percentile from {{tableName}})
+    WHERE percentile > <i>{{percentile}}</i>)
+    ON <i>{{attributeString}}</i>
+    WITH MIN SUPPORT <i>{{minSupport}}</i> MIN RATIO <i>{{minRatioMetric}}</i>;
+</div>
 
 <br>
 <div style="text-align:center;">

@@ -3,7 +3,7 @@ import { Injectable, EventEmitter } from '@angular/core';
 @Injectable()
 export class DisplayService {
 
-  private displayType = "DataHomepage"; //DataHomepage, QueryWizard, Dashboard, Explore
+  private displayType = "DataHomepage"; //DataHomepage, Edit, Explore, History
 
   displayChanged = new EventEmitter();
 

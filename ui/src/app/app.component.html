@@ -11,27 +11,10 @@
   </div>
 </div>
 
-<!-- History -->
-<div *ngIf="displayType=='History'">
-  <br>
-  <h1> Query History </h1>
-  <button (click)="exploreSelected()"> Explore </button>
-  <button (click)="newQuery()"> New </button>
-  <button (click)="editSelected()"> Edit </button>
-  <button (click)="deleteSelected()"> Delete </button>
-  <br>
-  <br>
-  <table cellpadding="20" border="1px" width="100%">
-    <tr *ngFor="let id of validIDs" (click)="selectID(id)" [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
-      <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
-    </tr>
-  </table>
-</div>
-
 <!-- QUERY WIZARD -->
 <div *ngIf="displayType=='Edit'">
   <br>
-  <h1> Query Editor </h1>
+  <h1> Query Editor ({{editID}})</h1>
   <div id="wizard{{editID}}" class="wizard">
     <app-query-wizard id={{editID}}></app-query-wizard>
   </div>
@@ -75,7 +58,24 @@
   </div>
 </div>
 
+<!-- History -->
+<div *ngIf="displayType=='History'">
+  <br>
+  <h1> Query History </h1>
+  <button (click)="exploreSelected()"> Explore </button>
+  <button (click)="newQuery()"> New </button>
+  <button (click)="editSelected()"> Edit </button>
+  <button (click)="deleteSelected()"> Delete </button>
+  <br>
+  <br>
+  <table cellpadding="20" border="1px" width="100%">
+    <tr *ngFor="let id of validIDs" (click)="selectID(id)" [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
+      <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
+    </tr>
+  </table>
+</div>
 
+<!-- Messages -->
 <div class="footer" *ngIf="displayMessages">
   <app-messages></app-messages>
 </div>

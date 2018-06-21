@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
-import { DataService } from '../data.service'
-import { QueryService } from '../query.service'
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { DataService } from '../data.service';
+import { QueryService } from '../query.service';
+import { DisplayService } from '../display.service';
 
 @Component({
   selector: 'app-data-home',
@@ -8,16 +9,22 @@ import { QueryService } from '../query.service'
   styleUrls: ['./data-home.component.css']
 })
 export class DataHomeComponent implements OnInit {
-  dataSource = "core/demo/sample.csv"
-  tableName = "sample"
-  port = "4567"
-  query = new Object();
+  private dataSource = "core/demo/sample.csv"
+  private tableName = "data"
+  private port = "4567"
+  private query = new Object();
 
-  displayTypes = false;
-  colNames: Array<string>;
-  types: Map<string, string>;
+  private displayTypes = false;
+  private colNames: Array<string>;
+  private types: Map<string, string>;
 
-  constructor(private dataService: DataService, private queryService: QueryService) { }
+  constructor(private dataService: DataService, private queryService: QueryService, private cd: ChangeDetectorRef) {
+    this.queryService.importResponseReceived.subscribe(
+        () => {
+           this.setTypes()
+        }
+      );
+  }
 
   ngOnInit() {
     if(this.dataService.getTableName() != "NONE") {
@@ -31,17 +38,9 @@ export class DataHomeComponent implements OnInit {
     if(this.colNames.length > 0) {
       this.displayTypes = true;
     }
-
-    this.queryService.sqlResponseReceived.subscribe(
-      (key) => {
-          if(key == "import"){
-            this.setTypes();
-          }
-        }
-      );
   }
 
-  importData() {
+  private importData() {
     this.dataService.setDataSource(this.dataSource);
     this.dataService.setTableName(this.tableName);
     this.dataService.setPort(this.port);
@@ -50,12 +49,12 @@ export class DataHomeComponent implements OnInit {
     this.queryService.runSQL(this.query, "import")
   }
 
-  generateImportSQLString() {
+  private generateImportSQLString() {
     this.query["sql"] =
       `IMPORT FROM CSV FILE "${ this.dataSource }" INTO ${ this.tableName }`;
   }
 
-  setTypes() {
+  private setTypes() {
     this.colNames = new Array();
     this.types = new Map();
 
@@ -69,7 +68,7 @@ export class DataHomeComponent implements OnInit {
     this.dataService.setTypes(this.colNames, this.types);
   }
 
-  setType(colName: string, type: string) {
+  private setType(colName: string, type: string) {
     if (this.types.get(colName) == type) {
       this.types.set(colName, "none");
     }
@@ -80,7 +79,7 @@ export class DataHomeComponent implements OnInit {
     this.dataService.setTypes(this.colNames, this.types);
   }
 
-  updateColor(colName: string) {
+  private updateColor(colName: string) {
     if (this.types.get(colName) == "attribute") {
       document.getElementById(colName + " attribute").style.backgroundColor = "lightgray";
       document.getElementById(colName + " metric").style.backgroundColor = "white";
@@ -95,7 +94,7 @@ export class DataHomeComponent implements OnInit {
     }
   }
 
-  getColor(colName: string, type: string) {
+  private getColor(colName: string, type: string) {
     if (this.types.get(colName) == type) {
       return "lightgray";
     }

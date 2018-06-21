@@ -19,12 +19,15 @@ export class QueryWizardComponent implements OnInit {
 
   possibleAttributes: Array<string>;
   possibleMetrics: Array<string>;
+  possibleTypes: Array<string>
 
   attributeSet = new Set();
+  attributeString;
   selectedMetric;
+  queryType: string;
+  percentile: number;
   minSupport: number;
   minRatioMetric: number;
-  percentile: number;
 
   checkAll = false;
 
@@ -38,8 +41,11 @@ export class QueryWizardComponent implements OnInit {
     else{
       this.loadBaseQuery();
     }
+    this.updateAttributeString()
 
     this.tableName = this.dataService.getTableName();
+
+    this.possibleTypes = ["percentile"];
   }
 
   //to be implemented
@@ -53,18 +59,22 @@ export class QueryWizardComponent implements OnInit {
     this.query = this.queryService.queries.get(this.id.toString());
     this.selectedMetric = this.query["metric"];
     this.attributeSet = this.query["attributes"];
+    this.queryType = this.query["queryType"];
+    if(this.queryType == "percentile") {
+      this.percentile = this.query["percentile"];
+    }
     this.minSupport = this.query["minSupport"];
     this.minRatioMetric = this.query["minRatioMetric"];
-    this.percentile = this.query["percentile"];
   }
 
   loadBaseQuery(): void {
     this.checkAll = true;
     this.updateAll(); //select all attributes
     this.selectedMetric = this.possibleMetrics[0];
+    this.queryType = "percentile";
+    this.percentile = 0.95;
     this.minSupport = 0.01
     this.minRatioMetric = 1;
-    this.percentile = 0.95;
   }
 
   updateAll() {
@@ -80,6 +90,7 @@ export class QueryWizardComponent implements OnInit {
         }
       }
     }
+    this.updateAttributeString();
   }
 
   checkAttribute(attribute: string) {
@@ -92,11 +103,16 @@ export class QueryWizardComponent implements OnInit {
 
   updateAttribute(attribute: string) {
     if(this.checkAttribute(attribute)){
-      this.removeAttribute(attribute)
+      this.removeAttribute(attribute);
     }
     else{
-      this.addAttribute(attribute)
+      this.addAttribute(attribute);
     }
+    this.updateAttributeString();
+  }
+
+  updateAttributeString() {
+    this.attributeString = Array.from(this.attributeSet.values()).join(', ');
   }
 
   addAttribute(attribute: string): void {
@@ -112,28 +128,31 @@ export class QueryWizardComponent implements OnInit {
       alert("No data source given.");
       return;
     }
-    this.minSupport = Number(this.minSupport);
-    this.minRatioMetric = Number(this.minRatioMetric);
-    this.percentile = Number(this.percentile);
 
     this.query["attributes"] = this.attributeSet;
     this.query["metric"] = this.selectedMetric;
+    this.query["queryType"] = this.queryType;
+    if(this.queryType == "percentile") {
+      this.percentile = Number(this.percentile);
+      this.query["percentile"] = this.percentile;
+    }
+    this.minSupport = Number(this.minSupport);
     this.query["minSupport"] = this.minSupport;
+    this.minRatioMetric = Number(this.minRatioMetric);
     this.query["minRatioMetric"] = this.minRatioMetric;
-    this.query["percentile"] = this.percentile;
+
     this.generateSQLString();
     let key = this.id.toString();
     this.queryService.runSQL(this.query, key);
   }
 
   generateSQLString() {
-    let attributes = Array.from(this.attributeSet.values()).join(', ');
     this.query["sql"] =
       `SELECT * FROM DIFF
          (SPLIT (
            SELECT *, percentile(${ this.selectedMetric }) as percentile from ${ this.tableName })
          WHERE percentile > ${ this.percentile.toFixed(2) })
-      ON ${ attributes }
+      ON ${ this.attributeString }
       WITH MIN SUPPORT ${ this.minSupport.toFixed(2) } MIN RATIO ${ this.minRatioMetric.toFixed(2) }`;
   }
 

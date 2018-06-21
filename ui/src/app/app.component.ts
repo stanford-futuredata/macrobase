@@ -19,27 +19,44 @@ export class AppComponent implements OnInit {
   plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
   isPlot = false;
 
-  constructor(private queryService: QueryService, private displayService: DisplayService, private dataService: DataService) { }
+  constructor(private queryService: QueryService, private displayService: DisplayService, private dataService: DataService) {
+    this.queryService.sqlResponseReceived.subscribe(
+        (key) => {
+          this.updateValidIDs(key);
+          this.clearSelected(key);
+        }
+      );
 
-  ngOnInit() {
-    this.updateDisplayType(this.displayService.getDisplayType());
     this.displayService.displayChanged.subscribe(
         () => {this.updateDisplayType(this.displayService.getDisplayType());}
-      )
+      );
 
     this.queryService.sqlResponseReceived.subscribe(
         (key) => {
           this.updateValidIDs(key);
           this.clearSelected(key);
         }
-      )
+      );
+
+    this.dataService.dataSourceChanged.subscribe(
+        () => {
+          this.deleteAll();
+        }
+      );
 
     this.displayService.selectedResultsChanged.subscribe(
         () => {if(this.displayType == "Explore") {this.refreshPlot();} }
-      )
+      );
   }
 
-  updateDisplayType(type: string) {
+  ngOnInit() {
+    this.updateDisplayType(this.displayService.getDisplayType());
+  }
+
+  /*
+   * Change tab
+   */
+  private updateDisplayType(type: string) {
     this.displayType = type;
     if(this.displayType != "Edit") {
       this.editID = this.newID;
@@ -49,16 +66,25 @@ export class AppComponent implements OnInit {
     }
   }
 
-  updateValidIDs(key) {
-    if(isNaN(key)) return; //not a diff query (import or rows query)
+  /*
+   * If a query was just run, update valid IDs to contain the query ID and explore the query.
+   */
+  private updateValidIDs(key) {
+    if(isNaN(key)) return; //not a DIFF query (import or histogram query)
     let id = Number(key);
     this.validIDs.add(id);
     if(id == this.newID){
       this.newID++;
     }
+
+    this.exploreIDs = new Set([id]);
+    this.displayService.setDisplayType('Explore');
   }
 
-  getSelectedColor(id: number) {
+  /*
+   * Get color of ID in history tab
+   */
+  private getSelectedColor(id: number) {
     if(this.selectedIDs.has(id)){
       return "lightgray";
     }
@@ -67,7 +93,10 @@ export class AppComponent implements OnInit {
     }
   }
 
-  selectID(id: number) {
+  /*
+   * Select ID in history tab
+   */
+  private selectID(id: number) {
     if(this.selectedIDs.has(id)){
       this.selectedIDs.delete(id);
       document.getElementById('summary'+id).style.backgroundColor = "white";
@@ -78,22 +107,34 @@ export class AppComponent implements OnInit {
     }
   }
 
-  exploreSelected() {
+  /*
+   * Explore selected IDs
+   */
+  private exploreSelected() {
     this.exploreIDs = this.selectedIDs;
     this.displayService.setDisplayType('Explore');
   }
 
-  newQuery(){
+  /*
+   * Start a new query
+   */
+  private newQuery(){
     this.editID = this.newID;
     this.displayService.setDisplayType('Edit');
   }
 
-  editSelected() {
+  /*
+   * Edit the first selected ID
+   */
+  private editSelected() {
     this.editID = Array.from(this.selectedIDs)[0];
     this.displayService.setDisplayType('Edit')
   }
 
-  clearSelected(key) {
+  /*
+   * Remove ID from selected IDs and from set of explanations to plot
+   */
+  private clearSelected(key) {
     if(isNaN(key)) {
       return;
     }
@@ -103,21 +144,48 @@ export class AppComponent implements OnInit {
     this.plotIDsByMetric = new Map();
   }
 
-  deleteSelected() {
+  /*
+   * Delete selected queries
+   */
+  private deleteSelected() {
     this.selectedIDs.forEach( (id) => {
-      this.validIDs.delete(id);
-      this.queryService.removeID(id);
-      this.exploreIDs.delete(id);
-      this.selectedIDs.delete(id)
+      this.delete(id);
     });
   }
 
-  refreshPlot() {
+  /*
+   * Delete all queries
+   */
+  private deleteAll() {
+    this.validIDs.forEach( (id) => {
+      this.delete(id);
+    });
+    this.newID = 0;
+    this.editID = 0;
+  }
+
+  /*
+   * Delete query with given ID
+   */
+  private delete(id: number) {
+    this.validIDs.delete(id);
+    this.queryService.removeID(id);
+    this.exploreIDs.delete(id);
+    this.selectedIDs.delete(id);
+  }
+
+  /*
+   * Refresh histogram plotting
+   */
+  private refreshPlot() {
     this.togglePlot();
     this.togglePlot();
   }
 
-  togglePlot() {
+  /*
+   * Toggle histogram plotting
+   */
+  private togglePlot() {
     if(this.isPlot){
       this.isPlot = false;
       this.plotIDsByMetric = new Map();
@@ -130,7 +198,10 @@ export class AppComponent implements OnInit {
     }
   }
 
-  createPlotIDs(){
+  /*
+   * Build IDs of explanations to plot
+   */
+  private createPlotIDs(){
     for(let queryID of Array.from(this.exploreIDs)) {
       let key = queryID.toString();
       if(this.displayService.selectedResultsByID.has(key) &&
@@ -151,15 +222,4 @@ export class AppComponent implements OnInit {
       }
     }
   }
-
-  minimizeCell(id: number){
-    document.getElementById("cell"+id).style.display = "none";
-    document.getElementById("expandCell"+id).style.display = "block";
-  }
-
-  expandCell(id: number){
-    document.getElementById("cell"+id).style.display = "block";
-    document.getElementById("expandCell"+id).style.display = "none";
-  }
-
 }

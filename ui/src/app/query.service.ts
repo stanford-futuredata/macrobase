@@ -15,8 +15,8 @@ export class QueryService {
   private sqlURL = 'http://0.0.0.0:4567/sql'
 
   //notify components that response has been received from server
-  dataResponseReceived = new EventEmitter();
   sqlResponseReceived = new EventEmitter();
+  importResponseReceived = new EventEmitter();
 
   queries = new Map();
   sqlResults = new Map();
@@ -31,7 +31,12 @@ export class QueryService {
         data => {
           this.sqlResults.set(key, data);
           this.queries.set(key, query);
-          this.sqlResponseReceived.emit(key);
+          if(key == "import") {
+            this.importResponseReceived.emit();
+          }
+          else{
+            this.sqlResponseReceived.emit(key);
+          }
         },
         err => { this.handleError('runSQL()', err); }
       );
