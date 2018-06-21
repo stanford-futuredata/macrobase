@@ -1,4 +1,6 @@
 /*
+ * Component - DataHeader
+ * ######################
  * The data header stays at the top of the screen and provides access to the different tabs
  * as well as the data source.
  */
@@ -13,47 +15,47 @@ import { DataService } from '../data.service'
   styleUrls: ['./data-header.component.css']
 })
 export class DataHeaderComponent implements OnInit {
-  constructor(private displayService: DisplayService, private dataService: DataService) { }
+  private dataSource: string;
 
-  dataSource: string;
-  tableName: string;
+  constructor(private displayService: DisplayService,
+              private dataService: DataService) {
+  }
 
   ngOnInit() {
-    this.updateDisplay(this.displayService.getDisplayType());
     this.displayService.displayChanged.subscribe(
         () => {this.updateDisplay(this.displayService.getDisplayType());}
       );
 
-    this.dataSource = this.dataService.getDataSource();
-    this.tableName = this.dataService.getTableName();
     this.dataService.dataSourceChanged.subscribe(
         () => {
           this.dataSource = this.dataService.getDataSource();
-          this.tableName = this.dataService.getTableName();
         }
       );
+
+    this.updateDisplay(this.displayService.getDisplayType());
+    this.dataSource = this.dataService.getDataSource();
   }
 
   /*
-   *
+   * Change tab based on user click
    */
-  setDisplayType(type: string){
+  private setDisplayType(type: string){
     this.displayService.setDisplayType(type);
     this.updateDisplay(type);
   }
 
   /*
-   *
+   * Change which tab appears to be selected
    */
-  updateDisplay(type: string){
+  private updateDisplay(type: string){
     this.clearColors();
     document.getElementById(type).style.backgroundColor = "lightblue";
   }
 
   /*
-   *
+   * Clear all tabs of appearing to be selected
    */
-  clearColors() {
+  private clearColors() {
     document.getElementById('DataHomepage').style.backgroundColor = "gray";
     document.getElementById('History').style.backgroundColor = "gray";
     document.getElementById('Edit').style.backgroundColor = "gray";

@@ -1,3 +1,10 @@
+/*
+ * Component - Plot
+ * ################
+ * This component creates a histogram for a given explanation from a given query.
+ * Itemset/explanation ID = -1 creates a histogram of the metric of the given query over all rows.
+ */
+
 import { Component, OnInit, Input } from '@angular/core';
 import { QueryService } from '../query.service';
 import { MessageService } from "../message.service";
@@ -13,20 +20,24 @@ export class PlotComponent implements OnInit {
   @Input() queryID: number;
   @Input() itemsetID: number;
 
-  query;
-  queryResult;
+  private query;
+  private queryResult;
 
-  itemsetQuery = new Object();
-  itemsetData;
+  private itemsetQuery = new Object();
+  private itemsetData;
 
-  tableName;
+  private tableName;
 
-  dataLoaded = false;
+  private dataLoaded = false;
 
   constructor(private queryService: QueryService,
               private dataService: DataService,
               private messageService: MessageService,
-              private displayService: DisplayService) { }
+              private displayService: DisplayService) {
+    this.queryService.sqlResponseReceived.subscribe(
+        () => {this.updateData();}
+      )
+  }
 
   ngOnInit() {
     let key = this.queryID.toString();
@@ -36,10 +47,6 @@ export class PlotComponent implements OnInit {
     this.tableName = this.dataService.getTableName();
 
     this.requestData();
-
-    this.queryService.sqlResponseReceived.subscribe(
-        () => {this.updateData();}
-      )
   }
 
   requestData() {
@@ -86,11 +93,6 @@ export class PlotComponent implements OnInit {
     let metricName = this.query.metric;
     let metricData = this.itemsetData["doubleCols"][0];
 
-    // if(this.itemsetID < 0) {
-    //   this.displayService.updateAxisBounds(metricName,
-    //                       Math.min.apply(Math, metricData), Math.max.apply(Math, metricData));
-    // }
-
     let histName = "";
     if(this.itemsetID < 0) {
       histName = "all";
@@ -109,8 +111,6 @@ export class PlotComponent implements OnInit {
 
     var layout = {
       title: histName,
-      // xaxis: {title: this.query.metric,
-      //         range: this.displayService.axisBounds.get(metricName)},
       xaxis: {title: this.query.metric},
       yaxis: {title: 'Count'}
     };

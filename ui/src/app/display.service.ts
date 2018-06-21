@@ -5,31 +5,26 @@ export class DisplayService {
 
   private displayType = "DataHomepage"; //DataHomepage, Edit, Explore, History
 
-  displayChanged = new EventEmitter();
+  public displayChanged = new EventEmitter();
 
-  getDisplayType(): string {
-    return this.displayType
-  }
-
-  setDisplayType(type: string) {
-    this.displayType = type;
-    this.displayChanged.emit()
-  }
-
-  selectedResultsChanged = new EventEmitter
-  selectedResultsByID = new Map();
-
-  updateSelectedResults(queryID: number, selections) {
-    this.selectedResultsByID.set(queryID, selections);
-    this.selectedResultsChanged.emit()
-  }
-
-  axisBounds = new Map();
-
-  updateAxisBounds(metric: string, min: number, max: number){
-    this.axisBounds.set(metric, [min, max])
-  }
+  public selectedResultsChanged = new EventEmitter();
+  public selectedResultsByID = new Map();
 
   constructor() { }
 
+  public getDisplayType(): string {
+    return this.displayType
+  }
+
+  public setDisplayType(type: string) {
+    this.displayType = type;
+    this.displayChanged.emit()
+    alert("display emitted");
+  }
+
+  public updateSelectedResults(queryID: number, selections) {
+    alert("emitted");
+    this.selectedResultsByID.set(queryID, selections);
+    this.selectedResultsChanged.emit();
+  }
 }

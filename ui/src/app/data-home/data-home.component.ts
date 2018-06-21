@@ -1,4 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+/*
+ * Component - DataHome
+ * ####################
+ * The data home represents the Data tab and allows the user to import data from a given
+ * source and visualize and change column types (attribute / metric).
+ */
+
+import { Component, OnInit } from '@angular/core';
 import { DataService } from '../data.service';
 import { QueryService } from '../query.service';
 import { DisplayService } from '../display.service';
@@ -9,24 +16,26 @@ import { DisplayService } from '../display.service';
   styleUrls: ['./data-home.component.css']
 })
 export class DataHomeComponent implements OnInit {
-  private dataSource = "core/demo/sample.csv"
-  private tableName = "data"
-  private port = "4567"
+  private dataSource = "core/demo/sample.csv";
+  private tableName = "data";
+  private port = "4567";
   private query = new Object();
 
   private displayTypes = false;
   private colNames: Array<string>;
   private types: Map<string, string>;
 
-  constructor(private dataService: DataService, private queryService: QueryService, private cd: ChangeDetectorRef) {
-    this.queryService.importResponseReceived.subscribe(
-        () => {
-           this.setTypes()
-        }
-      );
+  constructor(private dataService: DataService,
+              private queryService: QueryService) {
   }
 
   ngOnInit() {
+    this.queryService.importResponseReceived.subscribe(
+        () => {
+           this.setTypes();
+        }
+      );
+
     if(this.dataService.getTableName() != "NONE") {
       this.dataSource = this.dataService.getDataSource();
       this.tableName = this.dataService.getTableName();
@@ -40,6 +49,9 @@ export class DataHomeComponent implements OnInit {
     }
   }
 
+  /*
+   * Send a request to server to run IMPORT... SQL command given user input of data source
+   */
   private importData() {
     this.dataService.setDataSource(this.dataSource);
     this.dataService.setTableName(this.tableName);
@@ -49,11 +61,18 @@ export class DataHomeComponent implements OnInit {
     this.queryService.runSQL(this.query, "import")
   }
 
+  /*
+   * Generate IMPORT... SQL command
+   */
   private generateImportSQLString() {
     this.query["sql"] =
       `IMPORT FROM CSV FILE "${ this.dataSource }" INTO ${ this.tableName }`;
   }
 
+  /*
+   * Load in the type data on column names and which should be attributes / metrics that
+   * is found in response from server
+   */
   private setTypes() {
     this.colNames = new Array();
     this.types = new Map();
@@ -68,6 +87,9 @@ export class DataHomeComponent implements OnInit {
     this.dataService.setTypes(this.colNames, this.types);
   }
 
+  /*
+   * Change column type based on user input
+   */
   private setType(colName: string, type: string) {
     if (this.types.get(colName) == type) {
       this.types.set(colName, "none");
@@ -79,6 +101,9 @@ export class DataHomeComponent implements OnInit {
     this.dataService.setTypes(this.colNames, this.types);
   }
 
+  /*
+   * Update visualization of column types
+   */
   private updateColor(colName: string) {
     if (this.types.get(colName) == "attribute") {
       document.getElementById(colName + " attribute").style.backgroundColor = "lightgray";
@@ -94,6 +119,9 @@ export class DataHomeComponent implements OnInit {
     }
   }
 
+  /*
+   * Return appropriate color for visualization of column types
+   */
   private getColor(colName: string, type: string) {
     if (this.types.get(colName) == type) {
       return "lightgray";

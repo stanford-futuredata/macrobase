@@ -13,13 +13,17 @@ export class AppComponent implements OnInit {
   newID = 0;
   validIDs = new Set();
   editID = 0;
-  displayType = this.displayService.getDisplayType(); //DataHomepage, Edit, History, Explore
+  displayType: string; //DataHomepage, Edit, History, Explore
   selectedIDs = new Set();
   exploreIDs = new Set();
   plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
   isPlot = false;
 
-  constructor(private queryService: QueryService, private displayService: DisplayService, private dataService: DataService) {
+  constructor(private queryService: QueryService,
+              private displayService: DisplayService,
+              private dataService: DataService) {}
+
+  ngOnInit() {
     this.queryService.sqlResponseReceived.subscribe(
         (key) => {
           this.updateValidIDs(key);
@@ -28,13 +32,18 @@ export class AppComponent implements OnInit {
       );
 
     this.displayService.displayChanged.subscribe(
-        () => {this.updateDisplayType(this.displayService.getDisplayType());}
+        () => {
+          alert("display received")
+          this.updateDisplayType(this.displayService.getDisplayType());
+        }
       );
 
-    this.queryService.sqlResponseReceived.subscribe(
-        (key) => {
-          this.updateValidIDs(key);
-          this.clearSelected(key);
+    this.displayService.selectedResultsChanged.subscribe(
+        () => {
+          alert("received");
+          if(this.displayType == "Explore") {
+            this.refreshPlot();
+          }
         }
       );
 
@@ -44,12 +53,6 @@ export class AppComponent implements OnInit {
         }
       );
 
-    this.displayService.selectedResultsChanged.subscribe(
-        () => {if(this.displayType == "Explore") {this.refreshPlot();} }
-      );
-  }
-
-  ngOnInit() {
     this.updateDisplayType(this.displayService.getDisplayType());
   }
 

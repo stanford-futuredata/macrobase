@@ -1,4 +1,6 @@
 /*
+ * Component - Cell
+ * ################
  * The cell represents a table of explanations that make up the response to a given query.
  */
 
@@ -15,21 +17,20 @@ import { DisplayService } from "../display.service";
 export class CellComponent implements OnInit {
   @Input() id: number;
 
-  displayItemsets = false;
+  private displayItemsets = false;
 
-  totalEvents;
-  totalOutliers;
-  queryResult;
+  private totalEvents;
+  private totalOutliers;
+  private queryResult;
 
-  selectedResults;
+  private selectedResults;
 
-  constructor(private queryService: QueryService, private messageService: MessageService, private displayService: DisplayService) {
+  constructor(private queryService: QueryService,
+              private messageService: MessageService,
+              private displayService: DisplayService) {
   }
 
   ngOnInit() {
-    this.updateQuery();
-    this.updateSelectedResults();
-
     this.queryService.sqlResponseReceived.subscribe(
         (key) => {
           if(key == this.id.toString()) {
@@ -38,6 +39,9 @@ export class CellComponent implements OnInit {
           }
         }
       );
+
+    this.updateQuery();
+    this.updateSelectedResults();
   }
 
   /*
@@ -76,6 +80,7 @@ export class CellComponent implements OnInit {
   private clearSelected() {
     this.selectedResults = new Set();
     this.displayService.updateSelectedResults(this.id, new Set());
+    this.displayService.selectedResultsChanged.emit();
   }
 
   /*
