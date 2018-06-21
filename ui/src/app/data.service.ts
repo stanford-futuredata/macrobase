@@ -1,49 +1,60 @@
+/*
+ * Service - Data
+ * ##############
+ * This service allows communication between components about the source of data / SQL table
+ * on which to run queries.
+ */
+
 import { Injectable, EventEmitter } from '@angular/core';
 
 @Injectable()
 export class DataService {
 
-  dataSource: string;
-  tableName = "NONE";
-  port: string;
+  private dataSource: string;
+  private tableName = "NONE";
+  private port: string;
 
-  types = new Map();
-  colNames = new Array();
-  attributeColumns: Array<string>;
-  metricColumns: Array<string>;
+  private types = new Map();
+  private colNames = new Array();
+  private attributeColumns: Array<string>;
+  private metricColumns: Array<string>;
 
-  dataSourceChanged = new EventEmitter();
+  public dataSourceChanged = new EventEmitter();
 
   constructor() { }
 
-  getDataSource() {
+  public getDataSource() {
     return this.dataSource;
   }
 
-  setDataSource(pathname: string) {
+  public setDataSource(pathname: string) {
     this.dataSource = pathname;
     this.dataSourceChanged.emit();
   }
 
-  getTableName() {
+  public getTableName() {
     return this.tableName;
   }
 
-  setTableName(name: string) {
+  public setTableName(name: string) {
     this.tableName = name;
     this.dataSourceChanged.emit();
   }
 
-  getPort() {
+  public getPort() {
     return this.port;
   }
 
-  setPort(port: string) {
+  public setPort(port: string) {
     this.port = port;
     this.dataSourceChanged.emit();
   }
 
-  setTypes(colNames: Array<string>, types: Map<string, string>) {
+  /*
+   * Given a list of column names and a map of column names to column type (attribute / metric / none),
+   * generates lists of attribute and metric columns
+   */
+  public setTypes(colNames: Array<string>, types: Map<string, string>) {
     this.types = types;
     this.colNames = colNames;
 
@@ -59,19 +70,19 @@ export class DataService {
     }
   }
 
-  getTypes() {
+  public getTypes() {
     return this.types;
   }
 
-  getColNames() {
+  public getColNames() {
     return this.colNames;
   }
 
-  getAttributeColumns() {
+  public getAttributeColumns() {
     return this.attributeColumns
   }
 
-  getMetricColumns() {
+  public getMetricColumns() {
     return this.metricColumns;
   }
 }

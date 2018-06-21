@@ -1,3 +1,10 @@
+/*
+ * Component - App
+ * ###############
+ * The main component of MacroBase UI.
+ * Organizes query IDs, switching tabs, selecting queries and explanations.
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { QueryService } from './query.service'
 import { DisplayService } from './display.service'
@@ -9,15 +16,15 @@ import { DataService } from './data.service'
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  displayMessages = false;
-  newID = 0;
-  validIDs = new Set();
-  editID = 0;
-  displayType: string; //DataHomepage, Edit, History, Explore
-  selectedIDs = new Set();
-  exploreIDs = new Set();
-  plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
-  isPlot = false;
+  private displayMessages = false;
+  private newID = 0;
+  private validIDs = new Set();
+  private editID = 0;
+  private displayType: string; //DataHomepage, Edit, History, Explore
+  private selectedIDs = new Set();
+  private exploreIDs = new Set();
+  private plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
+  private isPlot = false;
 
   constructor(private queryService: QueryService,
               private displayService: DisplayService,
@@ -33,14 +40,12 @@ export class AppComponent implements OnInit {
 
     this.displayService.displayChanged.subscribe(
         () => {
-          alert("display received")
           this.updateDisplayType(this.displayService.getDisplayType());
         }
       );
 
     this.displayService.selectedResultsChanged.subscribe(
         () => {
-          alert("received");
           if(this.displayType == "Explore") {
             this.refreshPlot();
           }
@@ -81,7 +86,6 @@ export class AppComponent implements OnInit {
     }
 
     this.exploreIDs = new Set([id]);
-    this.displayService.setDisplayType('Explore');
   }
 
   /*
@@ -202,7 +206,7 @@ export class AppComponent implements OnInit {
   }
 
   /*
-   * Build IDs of explanations to plot
+   * Build IDs of explanations to plot based on selected explanations in selected queries
    */
   private createPlotIDs(){
     for(let queryID of Array.from(this.exploreIDs)) {
@@ -213,10 +217,10 @@ export class AppComponent implements OnInit {
 
         if(!this.plotIDsByMetric.has(metric)){
           this.plotIDsByMetric.set(metric, new Map());
+          this.plotIDsByMetric.get(metric).set(queryID, [-1]); //plot metric without any filtering
         }
-
-        if(!this.plotIDsByMetric.get(metric).has(queryID)){
-          this.plotIDsByMetric.get(metric).set(queryID, [-1]);
+        else if(!this.plotIDsByMetric.get(metric).has(queryID)){
+          this.plotIDsByMetric.get(metric).set(queryID, new Array());
         }
 
         for(let itemsetID of Array.from(this.displayService.selectedResultsByID.get(key))){

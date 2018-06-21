@@ -1,3 +1,9 @@
+/*
+ * Service - Message
+ * #################
+ * Used for debugging purposes via custom messages.
+ */
+
 import { Injectable } from '@angular/core';
 
 @Injectable()

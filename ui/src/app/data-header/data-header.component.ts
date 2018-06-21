@@ -18,8 +18,7 @@ export class DataHeaderComponent implements OnInit {
   private dataSource: string;
 
   constructor(private displayService: DisplayService,
-              private dataService: DataService) {
-  }
+              private dataService: DataService) {}
 
   ngOnInit() {
     this.displayService.displayChanged.subscribe(

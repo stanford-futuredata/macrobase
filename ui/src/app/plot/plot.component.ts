@@ -33,13 +33,13 @@ export class PlotComponent implements OnInit {
   constructor(private queryService: QueryService,
               private dataService: DataService,
               private messageService: MessageService,
-              private displayService: DisplayService) {
-    this.queryService.sqlResponseReceived.subscribe(
-        () => {this.updateData();}
-      )
-  }
+              private displayService: DisplayService) {}
 
   ngOnInit() {
+    this.queryService.sqlResponseReceived.subscribe(
+        () => {this.updateData();}
+      );
+
     let key = this.queryID.toString();
     this.query = this.queryService.queries.get(key);
     this.queryResult = this.queryService.sqlResults.get(key);
@@ -49,22 +49,34 @@ export class PlotComponent implements OnInit {
     this.requestData();
   }
 
-  requestData() {
+  /*
+   * Send a request for metric column data to server via SQL command
+   */
+  private requestData() {
     this.generateSQL();
     let key = this.queryID.toString() + "-" + this.itemsetID.toString();
     this.queryService.runSQL(this.itemsetQuery, key);
   }
 
-  generateSQL() {
+  /*
+   * Generate the SQL command for retreiving metric column data
+   */
+  private generateSQL() {
     let metric = this.query["metric"]
     let attributeFilter = ""
     if(this.itemsetID >= 0) {
       attributeFilter = this.getAttributeFilter();
+      this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName } WHERE ${ attributeFilter }`
     }
-    this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName } WHERE ${ attributeFilter }`
+    else{
+      this.itemsetQuery["sql"] = `SELECT ${ metric } FROM ${ this.tableName }`
+    }
   }
 
-  getAttributeFilter(): string {
+  /*
+   * Generate string of attributes joined by " AND "
+   */
+  private getAttributeFilter(): string {
     let attributes = new Array();
     let nAttribute = this.queryResult.stringCols.length;
     for(let j = 0; j < nAttribute; j++) {
@@ -76,7 +88,10 @@ export class PlotComponent implements OnInit {
 
   }
 
-  updateData() {
+  /*
+   * Retreive data from response from server after running SQL command
+   */
+  private updateData() {
     if(this.dataLoaded) {
       return;
     }
@@ -89,7 +104,10 @@ export class PlotComponent implements OnInit {
     }
   }
 
-  makeHistogram() {
+  /*
+   * Generate the histogram
+   */
+  private makeHistogram() {
     let metricName = this.query.metric;
     let metricData = this.itemsetData["doubleCols"][0];
 

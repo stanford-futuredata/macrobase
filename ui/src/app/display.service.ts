@@ -1,3 +1,10 @@
+/*
+ * Service - Display
+ * #################
+ * This service allows communication between components about which tab to display and
+ * which explanations are currently selected by the user.
+ */
+
 import { Injectable, EventEmitter } from '@angular/core';
 
 @Injectable()
@@ -19,11 +26,9 @@ export class DisplayService {
   public setDisplayType(type: string) {
     this.displayType = type;
     this.displayChanged.emit()
-    alert("display emitted");
   }
 
   public updateSelectedResults(queryID: number, selections) {
-    alert("emitted");
     this.selectedResultsByID.set(queryID, selections);
     this.selectedResultsChanged.emit();
   }

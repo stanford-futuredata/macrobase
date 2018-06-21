@@ -1,6 +1,12 @@
+/*
+ * Component - QueryWizard
+ * #######################
+ * The query wizard allows users to generate queries and send them to be run as SQL commands
+ * on the server.
+ * Used in the Edit tab.
+ */
+
 import { Component, OnInit, Input } from '@angular/core';
-import { Query } from '../query';
-import { QueryResult } from '../query-result'
 
 import { QueryService } from '../query.service'
 import { DataService } from '../data.service'
@@ -13,25 +19,28 @@ import { MessageService } from '../message.service'
 })
 export class QueryWizardComponent implements OnInit {
   @Input() id: number;
-  query = new Object();
 
-  tableName;
+  private query = new Object();
 
-  possibleAttributes: Array<string>;
-  possibleMetrics: Array<string>;
-  possibleTypes: Array<string>
+  private tableName;
 
-  attributeSet = new Set();
-  attributeString;
-  selectedMetric;
-  queryType: string;
-  percentile: number;
-  minSupport: number;
-  minRatioMetric: number;
+  private possibleAttributes: Array<string>;
+  private possibleMetrics: Array<string>;
+  private possibleTypes: Array<string>
 
-  checkAll = false;
+  private attributeSet = new Set();
+  private attributeString;
+  private selectedMetric;
+  private queryType: string;
+  private percentile: number;
+  private minSupport: number;
+  private minRatioMetric: number;
 
-  constructor(private queryService: QueryService, private dataService: DataService, private messageService: MessageService) { }
+  private checkAll = false;
+
+  constructor(private queryService: QueryService,
+              private dataService: DataService,
+              private messageService: MessageService) {}
 
   ngOnInit() {
     this.loadSchema();
@@ -44,18 +53,21 @@ export class QueryWizardComponent implements OnInit {
     this.updateAttributeString()
 
     this.tableName = this.dataService.getTableName();
-
     this.possibleTypes = ["percentile"];
   }
 
-  //to be implemented
-  loadSchema(): void {
+  /*
+   * Load column names for attributes and metrics
+   */
+  private loadSchema(): void {
     this.possibleAttributes = this.dataService.getAttributeColumns();
-
     this.possibleMetrics = this.dataService.getMetricColumns();
   }
 
-  loadQuery() {
+  /*
+   * Load a previously run query for editing an existing query
+   */
+  private loadQuery() {
     this.query = this.queryService.queries.get(this.id.toString());
     this.selectedMetric = this.query["metric"];
     this.attributeSet = this.query["attributes"];
@@ -67,7 +79,10 @@ export class QueryWizardComponent implements OnInit {
     this.minRatioMetric = this.query["minRatioMetric"];
   }
 
-  loadBaseQuery(): void {
+  /*
+   * Load the base parameters for a new query
+   */
+  private loadBaseQuery(): void {
     this.checkAll = true;
     this.updateAll(); //select all attributes
     this.selectedMetric = this.possibleMetrics[0];
@@ -77,7 +92,10 @@ export class QueryWizardComponent implements OnInit {
     this.minRatioMetric = 1;
   }
 
-  updateAll() {
+  /*
+   * "Select all" functionality for attributes
+   */
+  private updateAll() {
     for(let attribute of this.possibleAttributes) {
       if(this.checkAll) {
         if(!this.checkAttribute(attribute)) {
@@ -93,7 +111,10 @@ export class QueryWizardComponent implements OnInit {
     this.updateAttributeString();
   }
 
-  checkAttribute(attribute: string) {
+  /*
+   * Check if attribute is already selected
+   */
+  private checkAttribute(attribute: string) {
     if(this.attributeSet.has(attribute)){
       return true;
     }
@@ -101,7 +122,10 @@ export class QueryWizardComponent implements OnInit {
     return false;
   }
 
-  updateAttribute(attribute: string) {
+  /*
+   * "Check/uncheck" attribute functionality
+   */
+  private updateAttribute(attribute: string) {
     if(this.checkAttribute(attribute)){
       this.removeAttribute(attribute);
     }
@@ -111,19 +135,31 @@ export class QueryWizardComponent implements OnInit {
     this.updateAttributeString();
   }
 
-  updateAttributeString() {
+  /*
+   * Update comma separated string list of attributes
+   */
+  private updateAttributeString() {
     this.attributeString = Array.from(this.attributeSet.values()).join(', ');
   }
 
-  addAttribute(attribute: string): void {
+  /*
+   * Add attribute to selection
+   */
+  private addAttribute(attribute: string): void {
     this.attributeSet.add(attribute);
   }
 
-  removeAttribute(attribute: string): void {
+  /*
+   * Remove attribute from selection
+   */
+  private removeAttribute(attribute: string): void {
     this.attributeSet.delete(attribute);
   }
 
-  runQuery() {
+  /*
+   * Send SQL command as request to server to run query
+   */
+  private runQuery() {
     if(this.tableName == null) {
       alert("No data source given.");
       return;
@@ -146,7 +182,10 @@ export class QueryWizardComponent implements OnInit {
     this.queryService.runSQL(this.query, key);
   }
 
-  generateSQLString() {
+  /*
+   * Generate the SQL command for the query
+   */
+  private generateSQLString() {
     this.query["sql"] =
       `SELECT * FROM DIFF
          (SPLIT (

@@ -17,6 +17,7 @@ import { DataService } from './data.service';
 import { QuerySummaryComponent } from './query-summary/query-summary.component';
 import { PlotComponent } from './plot/plot.component';
 import { DataHomeComponent } from './data-home/data-home.component';
+import { MainComponent } from './main/main.component';
 
 
 @NgModule({

@@ -26,8 +26,7 @@ export class DataHomeComponent implements OnInit {
   private types: Map<string, string>;
 
   constructor(private dataService: DataService,
-              private queryService: QueryService) {
-  }
+              private queryService: QueryService) { }
 
   ngOnInit() {
     this.queryService.importResponseReceived.subscribe(

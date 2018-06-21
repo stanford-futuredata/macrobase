@@ -1,3 +1,9 @@
+/*
+ * Component - Messages
+ * ####################
+ * Used for debugging by displaying custom messages at the bottom of the screen.
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { MessageService } from '../message.service';
 
