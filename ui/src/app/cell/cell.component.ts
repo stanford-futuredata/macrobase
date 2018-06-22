@@ -27,8 +27,7 @@ export class CellComponent implements OnInit {
 
   constructor(private queryService: QueryService,
               private messageService: MessageService,
-              private displayService: DisplayService) {
-  }
+              private displayService: DisplayService) {}
 
   ngOnInit() {
     this.queryService.sqlResponseReceived.subscribe(
