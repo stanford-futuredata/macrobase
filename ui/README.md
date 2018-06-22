@@ -2,6 +2,8 @@
 
 ## Installation and Setup
 
+Before setting up MacroBase UI, make sure you have built MacroBase (https://macrobase.stanford.edu/docs/sql/setup/).
+
 1. Install npm (javascript package manager) from https://www.npmjs.com/get-npm.
 
 2. Navigate to "/ui" folder in macrobase.
