@@ -6,6 +6,7 @@
  */
 
 import { Component, OnInit } from '@angular/core';
+
 import { QueryService } from './query.service'
 import { DisplayService } from './display.service'
 import { DataService } from './data.service'
@@ -18,13 +19,14 @@ import { DataService } from './data.service'
 export class AppComponent implements OnInit {
   private displayMessages = false;
   private newID = 0;
-  private validIDs = new Set();
+  private validIDs = new Array();
   private editID = 0;
-  private displayType: string; //DataHomepage, Edit, History, Explore
-  private selectedIDs = new Set();
-  private exploreIDs = new Set();
+  private displayType: string; //DataHomepage,Explore
+  private selectedIDs = new Array();
+  private exploreIDs = new Array();
   private plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
   private isPlot = false;
+  private isLoaded = false;
 
   constructor(private queryService: QueryService,
               private displayService: DisplayService,
@@ -55,6 +57,7 @@ export class AppComponent implements OnInit {
     this.dataService.dataSourceChanged.subscribe(
         () => {
           this.deleteAll();
+          this.isLoaded = true;
         }
       );
 
@@ -66,9 +69,6 @@ export class AppComponent implements OnInit {
    */
   private updateDisplayType(type: string) {
     this.displayType = type;
-    if(this.displayType != "Edit") {
-      this.editID = this.newID;
-    }
     if(this.displayType == "Explore") {
       this.isPlot = false;
     }
@@ -80,19 +80,21 @@ export class AppComponent implements OnInit {
   private updateValidIDs(key) {
     if(isNaN(key)) return; //not a DIFF query (import or histogram query)
     let id = Number(key);
-    this.validIDs.add(id);
+    if(!this.validIDs.includes(id)) {
+      this.validIDs.push(id);
+    }
     if(id == this.newID){
       this.newID++;
     }
 
-    this.exploreIDs = new Set([id]);
+    this.exploreIDs = new Array([id]);
   }
 
   /*
    * Get color of ID in history tab
    */
   private getSelectedColor(id: number) {
-    if(this.selectedIDs.has(id)){
+    if(this.selectedIDs.includes(id)){
       return "lightgray";
     }
     else{
@@ -104,12 +106,12 @@ export class AppComponent implements OnInit {
    * Select ID in history tab
    */
   private selectID(id: number) {
-    if(this.selectedIDs.has(id)){
-      this.selectedIDs.delete(id);
+    if(this.selectedIDs.includes(id)){
+      this.selectedIDs.splice(this.selectedIDs.indexOf(id), 1);
       document.getElementById('summary'+id).style.backgroundColor = "white";
     }
     else{
-      this.selectedIDs.add(id);
+      this.selectedIDs.push(id);
       document.getElementById('summary'+id).style.backgroundColor = "lightgray";
     }
   }
@@ -127,15 +129,20 @@ export class AppComponent implements OnInit {
    */
   private newQuery(){
     this.editID = this.newID;
-    this.displayService.setDisplayType('Edit');
+    this.displayService.openEditor(this.editID);
   }
 
   /*
    * Edit the first selected ID
    */
-  private editSelected() {
-    this.editID = Array.from(this.selectedIDs)[0];
-    this.displayService.setDisplayType('Edit')
+  private editSelected(id: number) {
+    if(id < 0) {
+      this.editID = Array.from(this.selectedIDs)[0];
+    }
+    else{
+      this.editID = id;
+    }
+    this.displayService.openEditor(this.editID);
   }
 
   /*
@@ -146,7 +153,7 @@ export class AppComponent implements OnInit {
       return;
     }
     let id = Number(key);
-    this.selectedIDs.delete(id);
+    this.selectedIDs.splice(this.selectedIDs.indexOf(id), 1);
     this.displayService.updateSelectedResults(id, new Set());
     this.plotIDsByMetric = new Map();
   }
@@ -175,10 +182,10 @@ export class AppComponent implements OnInit {
    * Delete query with given ID
    */
   private delete(id: number) {
-    this.validIDs.delete(id);
+    this.validIDs.splice(this.validIDs.indexOf(id), 1);
     this.queryService.removeID(id);
-    this.exploreIDs.delete(id);
-    this.selectedIDs.delete(id);
+    this.exploreIDs.splice(this.exploreIDs.indexOf(id), 1);
+    this.selectedIDs.splice(this.selectedIDs.indexOf(id), 1);
   }
 
   /*

@@ -1,4 +1,5 @@
-/* Master Styles */
+/*@import '~@angular/material/prebuilt-themes/deeppurple-amber.css';*/
+
 h1 {
   color: #369;
   font-family: Arial, Helvetica, sans-serif;
@@ -8,6 +9,9 @@ h2, h3 {
   color: #444;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: lighter;
+}
+h4 {
+  font-size: 200%;
 }
 body {
   margin: 2em;
@@ -38,36 +42,17 @@ button:disabled {
   cursor: auto;
 }
 
-/* Navigation link styles */
-nav a {
-  padding: 5px 10px;
-  text-decoration: none;
-  margin-right: 10px;
-  margin-top: 10px;
-  display: inline-block;
-  background-color: #eee;
-  border-radius: 4px;
-}
-nav a:visited, a:link {
-  color: #607D8B;
-}
-nav a:hover {
-  color: #039be5;
-  background-color: #CFD8DC;
-}
-nav a.active {
-  color: #039be5;
-}
-
-/* everywhere else */
 * {
-  font-family: Tahoma, Geneva, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
   color: black;
 }
 
 table{
   border-collapse: collapse;
 }
+
+
 
 /*
 Copyright 2017-2018 Google Inc. All Rights Reserved.

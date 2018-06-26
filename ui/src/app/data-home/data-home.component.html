@@ -1,30 +1,38 @@
 <div>
-  <b> Data path:    </b>
-  <div>
-    <input style="width:50%;"
-    [(ngModel)]="dataSource">
+  <mat-form-field style="width: 50%">
+    <input matInput type="text" placeholder="Data Path" [(ngModel)]="dataSource"/>
+  </mat-form-field>
 
-    <button class="importButton" (click)="importData()"> Import </button>
-  </div>
+  <button mat-raised-button color="primary" (click)="importData()">
+    Import
+  </button>
 </div>
 
 <br>
 
 <div *ngIf="displayTypes">
-  <table cellpadding="15" border="1px" width="75%">
+  <table cellpadding="15" border="1px" style="width: 50%">
     <tr>
       <th> Column Name </th>
-      <th> isAttribute </th>
-      <th> isMetric </th>
+      <th matTooltip="Metrics are continuous columns to be analyzed." matTooltipPosition="above">
+        Metric
+      </th>
+      <th matTooltip="Attributes are categorical columns whose values can be used to explain anamolies in a metric." matTooltipPosition="above">
+        Attribute
+      </th>
     </tr>
-    <tr *ngFor="let colName of colNames">
-      <td> {{colName}} </td>
-      <td (click)="setType(colName, 'attribute')"
-          [style.background-color]="getColor(colName, 'attribute')"
-          id="{{colName}} attribute"></td>
-      <td (click)="setType(colName, 'metric')"
-          [style.background-color]="getColor(colName, 'metric')"
-          id="{{colName}} metric"></td>
+    <tr *ngFor="let colType of colTypes; index as i" [attr.data-index]="i">
+      <td> {{colType.name}} </td>
+      <td>
+        <mat-checkbox (change)="updateType(i, 'metric')"
+                      [checked]="colTypes[i].isMetric">
+        </mat-checkbox>
+      </td>
+      <td>
+        <mat-checkbox (change)="updateType(i, 'attribute')"
+                      [checked]="colTypes[i].isAttribute">
+        </mat-checkbox>
+      </td>
     </tr>
   </table>
 </div>

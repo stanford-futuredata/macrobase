@@ -1,0 +1,105 @@
+<h1 mat-dialog-title>Query Editor (id - {{id}})</h1>
+<form>
+  <div mat-dialog-content>
+    <mat-list role="list">
+      <!-- Metric -->
+      <mat-list-item>
+        <mat-form-field>
+          <mat-select placeholder="Metric" required="true" name="metric"
+                      [(ngModel)]="selectedMetric">
+            <mat-option *ngFor="let possibleMetric of possibleMetrics"
+                        [value]="possibleMetric">
+              {{possibleMetric}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-list-item>
+
+      <!-- Attribute -->
+      <mat-list-item>
+        <mat-form-field>
+          <mat-select placeholder="Attributes" required="true" name="attribute" multiple
+                      [(ngModel)]="selectedAttributes" (change)="updateAttributeString()"
+                      #selection="ngModel">
+            <mat-select-trigger>
+              {{attributeString}}
+            </mat-select-trigger>
+            <mat-option disabled="true" class="meta-option">
+              <button mat-raised-button color="primary" (click)="selectAll(selection)">
+                Select All
+              </button>
+              <button mat-raised-button (click)="clear(selection)">
+                Clear
+              </button>
+            </mat-option>
+            <mat-option *ngFor="let possibleAttribute of possibleAttributes"
+                        [value]="possibleAttribute">
+              {{possibleAttribute}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-list-item>
+
+      <!-- Query Type -->
+      <mat-list-item>
+        <mat-form-field>
+          <mat-select placeholder="Query Type" required="true" name="querytype"
+                      [(ngModel)]="queryType">
+            <mat-option *ngFor="let possibleType of possibleTypes"
+                        [value]="possibleType">
+              {{possibleType}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-list-item>
+
+      <!-- Percentile -->
+      <mat-list-item>
+        <mat-form-field>
+          <input matInput placeholder="percentile" name="percentile" required
+                          [(ngModel)]="percentileString" type="number">
+        </mat-form-field>
+      </mat-list-item>
+
+      <!-- Support -->
+      <mat-list-item>
+        <mat-form-field>
+          <input matInput placeholder="Support" name="support"required
+                          [(ngModel)]="minSupportString" type="number">
+        </mat-form-field>
+      </mat-list-item>
+
+      <!-- Ratio -->
+      <mat-list-item>
+        <mat-form-field>
+          <input matInput placeholder="Risk Ratio" name="riskratio" required
+                          [(ngModel)]="minRatioMetricString" type="number">
+        </mat-form-field>
+      </mat-list-item>
+    </mat-list>
+
+    <div style="padding-left: 20px">
+      <u> SQL: </u> <br>
+      SELECT * FROM DIFF <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;(SPLIT (SELECT *, percentile(<i>{{selectedMetric ? selectedMetric : '___'}}</i>) as percentile from {{tableName}}) <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;WHERE percentile > <i>{{percentileString ? percentileString : '___'}}</i>) <br>
+      &nbsp;&nbsp;ON <i>{{attributeString && attributeString != '' ? attributeString : '___'}}</i> <br>
+      &nbsp;&nbsp;WITH MIN SUPPORT <i>{{minSupportString ? minSupportString: '___'}}</i> MIN RATIO <i>{{minRatioMetricString ? minRatioMetricString: '___'}}</i>; <br>
+    </div>
+  </div>
+  <br>
+
+  <div mat-dialog-actions>
+    <button mat-raised-button color="primary" (click)="runQuery()">
+      Run Query
+    </button>
+
+    <button mat-raised-button (click)="cancel()">
+      Cancel
+    </button>
+
+    <span *ngIf="running" style="text-align: right">
+      <mat-spinner></mat-spinner>
+    </span>
+  </div>
+</form>

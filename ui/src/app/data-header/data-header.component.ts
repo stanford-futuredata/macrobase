@@ -48,7 +48,7 @@ export class DataHeaderComponent implements OnInit {
    */
   private updateDisplay(type: string){
     this.clearColors();
-    document.getElementById(type).style.backgroundColor = "lightblue";
+    document.getElementById(type).style.backgroundColor = "#90caf9";
   }
 
   /*
@@ -56,8 +56,6 @@ export class DataHeaderComponent implements OnInit {
    */
   private clearColors() {
     document.getElementById('DataHomepage').style.backgroundColor = "gray";
-    document.getElementById('History').style.backgroundColor = "gray";
-    document.getElementById('Edit').style.backgroundColor = "gray";
     document.getElementById('Explore').style.backgroundColor = "gray";
   }
 }

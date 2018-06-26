@@ -6,6 +6,7 @@
  */
 
 import { Injectable, EventEmitter } from '@angular/core';
+import { ColType } from './coltype'
 
 @Injectable()
 export class DataService {
@@ -14,8 +15,7 @@ export class DataService {
   private tableName = "NONE";
   private port: string;
 
-  private types = new Map();
-  private colNames = new Array();
+  private colTypes = new Array();
   private attributeColumns: Array<string>;
   private metricColumns: Array<string>;
 
@@ -54,28 +54,23 @@ export class DataService {
    * Given a list of column names and a map of column names to column type (attribute / metric / none),
    * generates lists of attribute and metric columns
    */
-  public setTypes(colNames: Array<string>, types: Map<string, string>) {
-    this.types = types;
-    this.colNames = colNames;
+  public setTypes(colTypes: Array<ColType>) {
+    this.colTypes = colTypes;
 
     this.attributeColumns = new Array();
     this.metricColumns = new Array();
-    for (let colName of colNames) {
-      if(types.get(colName) == "attribute") {
-        this.attributeColumns.push(colName);
+    for (let i = 0; i < colTypes.length; i++) {
+      if(colTypes[i].isAttribute) {
+        this.attributeColumns.push(colTypes[i].name);
       }
-      else if (types.get(colName) == "metric") {
-        this.metricColumns.push(colName);
+      else if(colTypes[i].isMetric) {
+        this.metricColumns.push(colTypes[i].name);
       }
     }
   }
 
-  public getTypes() {
-    return this.types;
-  }
-
-  public getColNames() {
-    return this.colNames;
+  public getColTypes() {
+    return this.colTypes;
   }
 
   public getAttributeColumns() {

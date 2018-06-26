@@ -9,6 +9,7 @@ import { Component, OnInit } from '@angular/core';
 import { DataService } from '../data.service';
 import { QueryService } from '../query.service';
 import { DisplayService } from '../display.service';
+import { ColType } from '../coltype';
 
 @Component({
   selector: 'app-data-home',
@@ -22,8 +23,7 @@ export class DataHomeComponent implements OnInit {
   private query = new Object();
 
   private displayTypes = false;
-  private colNames: Array<string>;
-  private types: Map<string, string>;
+  private colTypes: Array<ColType>;
 
   constructor(private dataService: DataService,
               private queryService: QueryService) { }
@@ -41,9 +41,8 @@ export class DataHomeComponent implements OnInit {
       this.port = this.dataService.getPort();
     }
 
-    this.types = this.dataService.getTypes();
-    this.colNames = this.dataService.getColNames();
-    if(this.colNames.length > 0) {
+    this.colTypes = this.dataService.getColTypes();
+    if(this.colTypes.length > 0) {
       this.displayTypes = true;
     }
   }
@@ -73,60 +72,59 @@ export class DataHomeComponent implements OnInit {
    * is found in response from server
    */
   private setTypes() {
-    this.colNames = new Array();
-    this.types = new Map();
+    this.colTypes = new Array();
 
     let data = this.queryService.sqlResults.get('import');
     let numRows = data["numRows"];
     for (let i = 0; i < numRows; i++) {
-      this.colNames.push(data["stringCols"][0][i])
-      this.types.set(data["stringCols"][0][i], data["stringCols"][1][i]);
+      let colType = new ColType();
+      colType.name = data["stringCols"][0][i];
+
+      if (data["stringCols"][1][i] == 'attribute') {
+        colType.isAttribute = true;
+      }
+      else {
+        colType.isAttribute = false;
+      }
+
+      if (data["stringCols"][1][i] == 'metric') {
+        colType.isMetric = true;
+      }
+      else {
+        colType.isMetric = false;
+      }
+
+      this.colTypes.push(colType);
     }
+
     this.displayTypes = true;
-    this.dataService.setTypes(this.colNames, this.types);
+    this.dataService.setTypes(this.colTypes);
   }
 
   /*
    * Change column type based on user input
    */
-  private setType(colName: string, type: string) {
-    if (this.types.get(colName) == type) {
-      this.types.set(colName, "none");
+  private updateType(i: number, type: string) {
+    if(type == 'attribute') {
+      if(this.colTypes[i].isAttribute) {
+        this.colTypes[i].isAttribute = false;
+      }
+      else{
+        this.colTypes[i].isMetric = false;
+        this.colTypes[i].isAttribute = true;
+      }
     }
-    else {
-      this.types.set(colName, type);
-    }
-    this.updateColor(colName);
-    this.dataService.setTypes(this.colNames, this.types);
-  }
 
-  /*
-   * Update visualization of column types
-   */
-  private updateColor(colName: string) {
-    if (this.types.get(colName) == "attribute") {
-      document.getElementById(colName + " attribute").style.backgroundColor = "lightgray";
-      document.getElementById(colName + " metric").style.backgroundColor = "white";
+    if(type == 'metric') {
+      if(this.colTypes[i].isMetric) {
+        this.colTypes[i].isMetric = false;
+      }
+      else{
+        this.colTypes[i].isAttribute = false;
+        this.colTypes[i].isMetric = true;
+      }
     }
-    else if (this.types.get(colName) == "metric") {
-      document.getElementById(colName + " attribute").style.backgroundColor = "white";
-      document.getElementById(colName + " metric").style.backgroundColor = "lightgray";
-    }
-    else{
-      document.getElementById(colName + " attribute").style.backgroundColor = "white";
-      document.getElementById(colName + " metric").style.backgroundColor = "white";
-    }
-  }
 
-  /*
-   * Return appropriate color for visualization of column types
-   */
-  private getColor(colName: string, type: string) {
-    if (this.types.get(colName) == type) {
-      return "lightgray";
-    }
-    else{
-      return "white";
-    }
+    this.dataService.setTypes(this.colTypes);
   }
 }

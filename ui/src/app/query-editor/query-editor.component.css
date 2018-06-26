@@ -1,0 +1,11 @@
+.meta-option > .mat-pseudo-checkbox {
+  display: none !important;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-list-item {
+  padding-bottom: 20px;
+}

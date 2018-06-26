@@ -8,9 +8,9 @@
 
 import { Component, OnInit, Input } from '@angular/core';
 
-import { QueryService } from '../query.service'
-import { DataService } from '../data.service'
-import { MessageService } from '../message.service'
+import { QueryService } from '../query.service';
+import { DataService } from '../data.service';
+import { MessageService } from '../message.service';
 
 @Component({
   selector: 'app-query-wizard',

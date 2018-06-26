@@ -19,7 +19,8 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
-        "styles.css"
+        "styles.css",
+        "theme.scss"
       ],
       "scripts": [ "../node_modules/plotly.js/dist/plotly.js" ],
       "environmentSource": "environments/environment.ts",

@@ -1,38 +1,62 @@
-<div class="dataHeader">
+<mat-toolbar style="background-color: white">
   <app-data-header> </app-data-header>
-</div>
+</mat-toolbar>
 
 <!-- DATA HOMEPAGE -->
 <div *ngIf="displayType=='DataHomepage'">
-  <br>
-  <h1> Data Homepage </h1>
-  <div class="data-home">
-    <app-data-home></app-data-home>
-  </div>
-</div>
-
-<!-- QUERY WIZARD -->
-<div *ngIf="displayType=='Edit'">
-  <br>
-  <h1> Query Editor ({{editID}})</h1>
-  <div id="wizard{{editID}}" class="wizard">
-    <app-query-wizard id={{editID}}></app-query-wizard>
+  <div class="column">
+    <h1> Config </h1>
+    <div class="data-home">
+      <app-data-home></app-data-home>
+    </div>
   </div>
 
-  <div id="cell{{editID}}" class="cell">
-    <app-cell id={{editID}}></app-cell>
-  </div>
+  <div class="column">
+    <h1> Query </h1>
+    <br>
+    <div>
+      <button mat-raised-button color="primary"
+              (click)="newQuery()" [disabled]="!isLoaded">
+        New
+      </button>
+      <button mat-raised-button style="background-color:lightgray"
+              (click)="editSelected(-1)" [disabled]="selectedIDs.length == 0">
+        Edit
+      </button>
+      <button mat-raised-button style="background-color:lightgray"
+              (click)="deleteSelected()" [disabled]="selectedIDs.length == 0">
+        Delete
+      </button>
+      &nbsp;&nbsp;&nbsp;&nbsp;
+      <button mat-raised-button color="accent"
+              (click)="exploreSelected()" [disabled]="selectedIDs.length == 0">
+        Explore
+      </button>
 
+      <br>
+      <br>
+      <table cellpadding="20" border="1px" width="100%">
+        <tr *ngFor="let id of validIDs.reverse()" (click)="selectID(id)" [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
+          <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
+        </tr>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- EXPLORE EXPLANATIONS -->
 <div class="row" *ngIf="displayType=='Explore'">
   <div class="column">
-    <br>
-    <h1> Explore </h1>
+    <h1> Explanation </h1>
     <div *ngFor="let id of exploreIDs">
       <div id="summary{{id}}" class="summary" style="background-color:burlywood">
         <app-query-summary id={{id}}></app-query-summary>
+        <span style="text-align: right">
+          <button mat-raised-button
+                  (click)="editSelected(id)">
+            Edit
+          </button>
+        </span>
       </div>
       <div id="cell{{id}}" class="cell">
         <app-cell id={{id}}></app-cell>
@@ -41,38 +65,23 @@
     </div>
   </div>
 
-  <div class="column" style="text-align:center; font-size:20px;">
-    <br> <br> <br>
-    <button id="plotButton" (click)="togglePlot()">Plot</button>
-    <br> <br>
-    <div *ngIf="isPlot">
-      <div *ngFor="let metric of plotIDsByMetric.keys()">
-        <b> Metric: {{metric}} </b>
-        <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
-          <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
-            <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>
+  <div class="column">
+    <h1> &nbsp;&nbsp;&nbsp; Visualization </h1>
+    <div style="text-align:center;">
+      <button id="plotButton" (click)="togglePlot()">Plot</button>
+      <br> <br>
+      <div *ngIf="isPlot">
+        <div *ngFor="let metric of plotIDsByMetric.keys()">
+          <b> Metric: {{metric}} </b>
+          <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
+            <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
+              <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-
-<!-- History -->
-<div *ngIf="displayType=='History'">
-  <br>
-  <h1> Query History </h1>
-  <button (click)="exploreSelected()"> Explore </button>
-  <button (click)="newQuery()"> New </button>
-  <button (click)="editSelected()"> Edit </button>
-  <button (click)="deleteSelected()"> Delete </button>
-  <br>
-  <br>
-  <table cellpadding="20" border="1px" width="100%">
-    <tr *ngFor="let id of validIDs" (click)="selectID(id)" [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
-      <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
-    </tr>
-  </table>
 </div>
 
 <!-- Messages -->

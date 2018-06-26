@@ -6,6 +6,8 @@
  */
 
 import { Injectable, EventEmitter } from '@angular/core';
+import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material';
+import { QueryEditorComponent } from './query-editor/query-editor.component'
 
 @Injectable()
 export class DisplayService {
@@ -17,7 +19,7 @@ export class DisplayService {
   public selectedResultsChanged = new EventEmitter();
   public selectedResultsByID = new Map();
 
-  constructor() { }
+  constructor(private dialog: MatDialog) { }
 
   public getDisplayType(): string {
     return this.displayType
@@ -31,5 +33,25 @@ export class DisplayService {
   public updateSelectedResults(queryID: number, selections) {
     this.selectedResultsByID.set(queryID, selections);
     this.selectedResultsChanged.emit();
+  }
+
+  public openEditor(id: number) {
+    const dialogConfig = new MatDialogConfig();
+
+    dialogConfig.disableClose = true;
+    dialogConfig.autoFocus = false;
+    dialogConfig.width = "50%";
+    dialogConfig.height = "75%";
+    dialogConfig.data = {id: id};
+
+    let dialogRef = this.dialog.open(QueryEditorComponent, dialogConfig);
+
+    dialogRef.afterClosed().subscribe(
+        (isSuccess) => {
+          if(isSuccess){
+            this.setDisplayType("Explore");
+          }
+        }
+      );
   }
 }

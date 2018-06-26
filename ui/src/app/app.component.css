@@ -11,27 +11,23 @@
 
 .dataHeader {
   position: fixed;
-  font-size: 22px;
   top: 0;
   left: 0;
   width: 100%;
 }
 
 .data-home{
-  font-size: 22px;
 }
 
 .wizard {
     display: block;
     border-color: black;
     border-style: solid;
-    font-size: 22px;
     background-color: whitesmoke;
 }
 
 .cell {
     display: block;
-    font-size: 18px;
     color: black;
     top: 0;
     left: 0;
@@ -51,47 +47,14 @@
     text-align: left;
 }
 
-.closeButton {
-  background-color: firebrick;
-  border: none;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-}
-
-.minimizeButton {
-  background-color: khaki;
-  border: none;
-  color: black;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-}
-
-.addButton {
-  background-color: darkolivegreen;
-  border: none;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 12px;
-}
-
 button {
-  font-size: 20px;
   color: black;
 }
 
 input {
-  font-size: 20px;
 }
 
 .summary {
-  font-size: 20px;
   padding: 15px;
   text-align: left;
   border: 1px solid black;
