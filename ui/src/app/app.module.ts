@@ -19,6 +19,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import {MatIconRegistry} from '@angular/material/icon';
+import {DomSanitizer} from '@angular/platform-browser';
+
 import { CdkTableModule } from '@angular/cdk/table';
 import {
   MatAutocompleteModule,
@@ -118,4 +121,11 @@ import {
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  constructor(private matIconRegistry: MatIconRegistry, private domSanitizer: DomSanitizer){
+    matIconRegistry.addSvgIcon(
+      'home',
+      domSanitizer.bypassSecurityTrustResourceUrl('/assets/home.svg')
+    );
+  }
+}

@@ -1,16 +1,5 @@
-table {
-  border: 1px solid black;
-  width: 100%;
-  height: 100%;
-  table-layout: fixed;
-}
-
-td {
+.header{
   text-align: center;
-  border: 1px solid black;
-  background-color: gray;
-}
-
-td:hover {
-  background-color: darkgray;
+  font-size: 32px;
+  font-style: bold;
 }

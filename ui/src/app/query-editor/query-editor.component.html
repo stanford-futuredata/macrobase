@@ -20,7 +20,7 @@
         <mat-form-field>
           <mat-select placeholder="Attributes" required="true" name="attribute" multiple
                       [(ngModel)]="selectedAttributes" (change)="updateAttributeString()"
-                      #selection="ngModel">
+                      #selection="ngModel" class="attribute-select">
             <mat-select-trigger>
               {{attributeString}}
             </mat-select-trigger>

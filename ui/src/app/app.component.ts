@@ -19,13 +19,13 @@ import { DataService } from './data.service'
 export class AppComponent implements OnInit {
   private displayMessages = false;
   private newID = 0;
+  private oldID = 0;
   private validIDs = new Array();
   private editID = 0;
   private displayType: string; //DataHomepage,Explore
   private selectedIDs = new Array();
   private exploreIDs = new Array();
   private plotIDsByMetric = new Map(); // map of metricName to (map of queryID to attributeID)
-  private isPlot = false;
   private isLoaded = false;
 
   constructor(private queryService: QueryService,
@@ -37,6 +37,9 @@ export class AppComponent implements OnInit {
         (key) => {
           this.updateValidIDs(key);
           this.clearSelected(key);
+          if (this.displayType == "Explore") {
+            this.updatePlot();
+          }
         }
       );
 
@@ -49,7 +52,7 @@ export class AppComponent implements OnInit {
     this.displayService.selectedResultsChanged.subscribe(
         () => {
           if(this.displayType == "Explore") {
-            this.refreshPlot();
+            this.updatePlot();
           }
         }
       );
@@ -69,9 +72,6 @@ export class AppComponent implements OnInit {
    */
   private updateDisplayType(type: string) {
     this.displayType = type;
-    if(this.displayType == "Explore") {
-      this.isPlot = false;
-    }
   }
 
   /*
@@ -87,7 +87,15 @@ export class AppComponent implements OnInit {
       this.newID++;
     }
 
-    this.exploreIDs = new Array([id]);
+    if(this.displayType == "Explore") {
+      this.exploreIDs.push(id);
+      if(this.oldID >= 0) {
+        this.exploreIDs.splice(this.exploreIDs.indexOf(this.oldID), 1);
+      }
+    }
+    else {
+      this.exploreIDs = new Array([id]);
+    }
   }
 
   /*
@@ -121,6 +129,7 @@ export class AppComponent implements OnInit {
    */
   private exploreSelected() {
     this.exploreIDs = this.selectedIDs;
+    this.exploreIDs.sort();
     this.displayService.setDisplayType('Explore');
   }
 
@@ -128,8 +137,9 @@ export class AppComponent implements OnInit {
    * Start a new query
    */
   private newQuery(){
+    this.oldID = -1
     this.editID = this.newID;
-    this.displayService.openEditor(this.editID);
+    this.displayService.openEditor(this.editID, this.oldID);
   }
 
   /*
@@ -137,12 +147,14 @@ export class AppComponent implements OnInit {
    */
   private editSelected(id: number) {
     if(id < 0) {
-      this.editID = Array.from(this.selectedIDs)[0];
+      this.oldID = this.selectedIDs[0];
     }
     else{
-      this.editID = id;
+      this.oldID = id;
     }
-    this.displayService.openEditor(this.editID);
+    this.editID = this.newID;
+
+    this.displayService.openEditor(this.editID, this.oldID);
   }
 
   /*
@@ -162,7 +174,8 @@ export class AppComponent implements OnInit {
    * Delete selected queries
    */
   private deleteSelected() {
-    this.selectedIDs.forEach( (id) => {
+    let selectedIDs = this.selectedIDs.slice();
+    selectedIDs.forEach( (id) => {
       this.delete(id);
     });
   }
@@ -171,7 +184,8 @@ export class AppComponent implements OnInit {
    * Delete all queries
    */
   private deleteAll() {
-    this.validIDs.forEach( (id) => {
+    let validIDs = this.validIDs.slice();
+    validIDs.forEach( (id) => {
       this.delete(id);
     });
     this.newID = 0;
@@ -189,34 +203,18 @@ export class AppComponent implements OnInit {
   }
 
   /*
-   * Refresh histogram plotting
+   * Update histogram plotting
    */
-  private refreshPlot() {
-    this.togglePlot();
-    this.togglePlot();
-  }
-
-  /*
-   * Toggle histogram plotting
-   */
-  private togglePlot() {
-    if(this.isPlot){
-      this.isPlot = false;
-      this.plotIDsByMetric = new Map();
-      document.getElementById('plotButton').style.backgroundColor = "#eee";
-    }
-    else{
-      this.createPlotIDs();
-      this.isPlot = true;
-      document.getElementById('plotButton').style.backgroundColor = "lightblue";
-    }
+  private updatePlot() {
+    this.plotIDsByMetric = new Map();
+    this.createPlotIDs();
   }
 
   /*
    * Build IDs of explanations to plot based on selected explanations in selected queries
    */
   private createPlotIDs(){
-    for(let queryID of Array.from(this.exploreIDs)) {
+    for(let queryID of this.exploreIDs) {
       let key = queryID.toString();
       if(this.displayService.selectedResultsByID.has(key) &&
         this.displayService.selectedResultsByID.get(key).size != 0){

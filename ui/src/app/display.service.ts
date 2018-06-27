@@ -35,14 +35,14 @@ export class DisplayService {
     this.selectedResultsChanged.emit();
   }
 
-  public openEditor(id: number) {
+  public openEditor(id: number, oldID: number) {
     const dialogConfig = new MatDialogConfig();
 
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = false;
     dialogConfig.width = "50%";
     dialogConfig.height = "75%";
-    dialogConfig.data = {id: id};
+    dialogConfig.data = {id: id, oldID: oldID};
 
     let dialogRef = this.dialog.open(QueryEditorComponent, dialogConfig);
 

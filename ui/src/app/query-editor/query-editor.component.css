@@ -1,4 +1,4 @@
-.meta-option > .mat-pseudo-checkbox {
+.meta-option > ::ng-deep .mat-pseudo-checkbox {
   display: none !important;
 }
 

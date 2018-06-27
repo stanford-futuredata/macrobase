@@ -1,20 +1,26 @@
-<mat-toolbar style="background-color: white">
-  <app-data-header> </app-data-header>
+<mat-toolbar color="accent">
+  <div style="padding-left: 20px">
+    <button mat-icon-button (click)="updateDisplayType('DataHomepage')"
+            style="background-color: lightgray;">
+      <mat-icon svgIcon="home"></mat-icon>
+    </button>
+  </div>
+  <app-data-header style="width: 90%;"></app-data-header>
 </mat-toolbar>
 
 <!-- DATA HOMEPAGE -->
-<div *ngIf="displayType=='DataHomepage'">
-  <div class="column">
-    <h1> Config </h1>
-    <div class="data-home">
+<div *ngIf="displayType=='DataHomepage'"
+     style="margin-left: 2em; margin-right: 2em; margin-top: 1em">
+  <div class="column-small">
+    <h1>Config</h1>
+    <div class="data-home" style="padding-left: 5px">
       <app-data-home></app-data-home>
     </div>
   </div>
 
-  <div class="column">
-    <h1> Query </h1>
-    <br>
-    <div>
+  <div class="column-big">
+    <h1>Query</h1>
+    <div style="padding-top: 10px">
       <button mat-raised-button color="primary"
               (click)="newQuery()" [disabled]="!isLoaded">
         New
@@ -36,7 +42,8 @@
       <br>
       <br>
       <table cellpadding="20" border="1px" width="100%">
-        <tr *ngFor="let id of validIDs.reverse()" (click)="selectID(id)" [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
+        <tr *ngFor="let id of validIDs.reverse()" (click)="selectID(id)"
+            [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
           <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
         </tr>
       </table>
@@ -45,18 +52,25 @@
 </div>
 
 <!-- EXPLORE EXPLANATIONS -->
-<div class="row" *ngIf="displayType=='Explore'">
+<div *ngIf="displayType=='Explore'"
+     style="margin-left: 2em; margin-right: 2em; margin-top: 1em">
   <div class="column">
     <h1> Explanation </h1>
-    <div *ngFor="let id of exploreIDs">
-      <div id="summary{{id}}" class="summary" style="background-color:burlywood">
+    <div>
+      <button mat-raised-button color="primary" (click)="newQuery()">
+        New
+      </button>
+    </div>
+    <br>
+    <div *ngFor="let id of exploreIDs.reverse()">
+      <div id="summary{{id}}" class="summary" style="background-color:#9fa8da">
         <app-query-summary id={{id}}></app-query-summary>
-        <span style="text-align: right">
+        <div style="text-align: right; padding-top: 10px;">
           <button mat-raised-button
                   (click)="editSelected(id)">
             Edit
           </button>
-        </span>
+        </div>
       </div>
       <div id="cell{{id}}" class="cell">
         <app-cell id={{id}}></app-cell>
@@ -68,11 +82,9 @@
   <div class="column">
     <h1> &nbsp;&nbsp;&nbsp; Visualization </h1>
     <div style="text-align:center;">
-      <button id="plotButton" (click)="togglePlot()">Plot</button>
-      <br> <br>
-      <div *ngIf="isPlot">
+      <div *ngIf="plotIDsByMetric">
         <div *ngFor="let metric of plotIDsByMetric.keys()">
-          <b> Metric: {{metric}} </b>
+          <h4> Metric: {{metric}} </h4>
           <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
             <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
               <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>

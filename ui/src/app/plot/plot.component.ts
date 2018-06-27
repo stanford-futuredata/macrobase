@@ -113,7 +113,7 @@ export class PlotComponent implements OnInit {
 
     let histName = "";
     if(this.itemsetID < 0) {
-      histName = "all";
+      histName = "All rows";
     }
     else{
       histName = this.getAttributeFilter();
@@ -129,11 +129,18 @@ export class PlotComponent implements OnInit {
 
     var layout = {
       title: histName,
-      xaxis: {title: this.query.metric},
-      yaxis: {title: 'Count'}
+      // xaxis: {title: this.query.metric},
+      yaxis: {title: 'Count'},
+      margin: {
+        l: 100,
+        r: 50,
+        b: 40,
+        t: 40,
+        pad: 4
+      }
     };
 
     let div = "histogram" + " " + this.queryID.toString() + " " + this.itemsetID.toString();
-    Plotly.newPlot(div, data=data, layout);
+    Plotly.newPlot(div, data=data, layout, {displaylogo: false});
   }
 }

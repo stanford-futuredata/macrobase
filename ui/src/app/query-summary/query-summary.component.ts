@@ -24,10 +24,6 @@ export class QuerySummaryComponent implements OnInit {
   constructor(private queryService: QueryService) { }
 
   ngOnInit() {
-    this.queryService.sqlResponseReceived.subscribe(
-        () => {this.updateSummary(this.queryService.queries.get(key));}
-      );
-
     let key = this.id.toString();
     this.updateSummary(this.queryService.queries.get(key));
   }
@@ -40,7 +36,7 @@ export class QuerySummaryComponent implements OnInit {
     this.attributes = Array.from(query["attributes"]).join(", ");
     this.support = query["minSupport"];
     this.ratio = query["minRatioMetric"];
-    this.percentile = query["percentile"]
+    this.percentile = query["percentile"];
   }
 
 }

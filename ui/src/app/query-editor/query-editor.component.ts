@@ -12,6 +12,7 @@ import { DataService } from '../data.service';
 })
 export class QueryEditorComponent implements OnInit {
   private id: number;
+  private oldID: number;
 
   private query = new Object();
 
@@ -41,9 +42,10 @@ export class QueryEditorComponent implements OnInit {
 
   ngOnInit() {
     this.id = this.data.id;
+    this.oldID = this.data.oldID;
 
     this.loadSchema();
-    if(this.queryService.queries.has(this.id.toString())) {
+    if(this.queryService.queries.has(this.oldID.toString())) {
       this.loadQuery();
     }
     else{
@@ -54,13 +56,13 @@ export class QueryEditorComponent implements OnInit {
     this.tableName = this.dataService.getTableName();
     this.possibleTypes = ["percentile"];
 
-       this.queryService.sqlResponseReceived.subscribe(
-        () => {
-          if (this.running) {
-            this.dialogRef.close(true);
-          }
+    this.queryService.sqlResponseReceived.subscribe(
+      () => {
+        if (this.running) {
+          this.dialogRef.close(true);
         }
-      );
+      }
+    );
   }
 
   private cancel() {
@@ -79,15 +81,15 @@ export class QueryEditorComponent implements OnInit {
    * Load a previously run query for editing an existing query
    */
   private loadQuery() {
-    this.query = this.queryService.queries.get(this.id.toString());
-    this.selectedMetric = this.query["metric"];
-    this.selectedAttributes = this.query["attributes"];
-    this.queryType = this.query["queryType"];
+    let query = this.queryService.queries.get(this.oldID.toString());
+    this.selectedMetric = query["metric"];
+    this.selectedAttributes = query["attributes"];
+    this.queryType = query["queryType"];
     if(this.queryType == "percentile") {
-      this.percentileString = this.query["percentile"];
+      this.percentileString = query["percentile"];
     }
-    this.minSupportString = this.query["minSupport"];
-    this.minRatioMetricString = this.query["minRatioMetric"];
+    this.minSupportString = query["minSupport"];
+    this.minRatioMetricString = query["minRatioMetric"];
   }
 
   /*
@@ -169,9 +171,9 @@ export class QueryEditorComponent implements OnInit {
     if(this.selectedAttributes == null ||
        this.selectedMetric == null ||
        this.queryType == null ||
-       this.percentile == null ||
-       this.minSupport == null ||
-       this.minRatioMetric == null ||
+       this.percentileString == null ||
+       this.minSupportString == null ||
+       this.minRatioMetricString == null ||
        this.selectedAttributes.length == 0 ||
        this.minSupport < 0 || this.minSupport > 1 ||
        this.percentile < 0 || this.percentile > 1 ||

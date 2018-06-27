@@ -66,6 +66,18 @@ input {
     padding: 0px;
 }
 
+.column-small {
+    float: left;
+    width: 40%;
+    padding: 0px;
+}
+
+.column-big {
+    float: left;
+    width: 60%;
+    padding: 0px;
+}
+
 .row:after {
     content: "";
     display: table;
