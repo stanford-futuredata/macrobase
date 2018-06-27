@@ -1,9 +1,11 @@
 <div>
-  <mat-form-field style="width: 60%">
+  <mat-form-field style="width: 70%">
     <input matInput type="text" placeholder="Data Path" [(ngModel)]="dataSource"/>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="importData()">
+  <button mat-raised-button color="primary" (click)="importData()"
+          matTooltip="Load a csv file into MacroBase."
+          matTooltipPosition="above">
     Import
   </button>
 </div>
@@ -11,13 +13,14 @@
 <br>
 
 <div *ngIf="displayTypes">
-  <table cellpadding="15" border="1px" style="width: 90%">
+  <table cellpadding="15" border="1px" style="width: 80%">
     <tr>
       <th> Column Name </th>
       <th matTooltip="Metrics are continuous columns to be analyzed." matTooltipPosition="above">
         Metric
       </th>
-      <th matTooltip="Attributes are categorical columns whose values can be used to explain anamolies in a metric." matTooltipPosition="above">
+      <th matTooltip="Attributes are categorical columns whose values can be used to explain anamolies in a metric."
+      matTooltipPosition="above">
         Attribute
       </th>
     </tr>
@@ -35,4 +38,12 @@
       </td>
     </tr>
   </table>
+
+  <br>
+  <button mat-raised-button (click)="setTypes()" [disabled]="!typesChanged"
+          style="background-color: lightgray"
+          matTooltip="Reset column types to defaults inferred from data."
+          matTooltipPosition="right">
+    Reset
+  </button>
 </div>

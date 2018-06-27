@@ -1,11 +1,13 @@
 <mat-toolbar color="accent">
   <div style="padding-left: 20px">
     <button mat-icon-button (click)="updateDisplayType('DataHomepage')"
-            style="background-color: lightgray;">
+            style="background-color: lightgray;"
+            matTooltip="Go to homepage."
+            matTooltipPosition="right">
       <mat-icon svgIcon="home"></mat-icon>
     </button>
   </div>
-  <app-data-header style="width: 90%;"></app-data-header>
+  <app-data-header style="width: 85%;"></app-data-header>
 </mat-toolbar>
 
 <!-- DATA HOMEPAGE -->
@@ -22,20 +24,28 @@
     <h1>Query</h1>
     <div style="padding-top: 10px">
       <button mat-raised-button color="primary"
-              (click)="newQuery()" [disabled]="!isLoaded">
+              (click)="newQuery()" [disabled]="!isLoaded"
+              matTooltip="Create a MacroBase query."
+              matTooltipPosition="above">
         New
       </button>
       <button mat-raised-button style="background-color:lightgray"
-              (click)="editSelected(-1)" [disabled]="selectedIDs.length == 0">
+              (click)="editSelected(-1)" [disabled]="selectedIDs.length == 0"
+              matTooltip="Edit a selected query."
+              matTooltipPosition="above">
         Edit
       </button>
       <button mat-raised-button style="background-color:lightgray"
-              (click)="deleteSelected()" [disabled]="selectedIDs.length == 0">
+              (click)="deleteSelected()" [disabled]="selectedIDs.length == 0"
+              matTooltip="Delete selected queries."
+              matTooltipPosition="above">
         Delete
       </button>
       &nbsp;&nbsp;&nbsp;&nbsp;
       <button mat-raised-button color="accent"
-              (click)="exploreSelected()" [disabled]="selectedIDs.length == 0">
+              (click)="exploreSelected()" [disabled]="selectedIDs.length == 0"
+              matTooltip="Explore query results and visualizations."
+              matTooltipPosition="above">
         Explore
       </button>
 
@@ -44,7 +54,11 @@
       <table cellpadding="20" border="1px" width="100%">
         <tr *ngFor="let id of validIDs.reverse()" (click)="selectID(id)"
             [style.background-color]="getSelectedColor(id)" id="summary{{id}}">
-          <td class="summary"> <app-query-summary id={{id}}></app-query-summary> </td>
+          <td class="summary">
+            <mat-checkbox [checked]="selectedIDs.includes(id)" [disabled]="true"></mat-checkbox>
+            &nbsp;
+            <app-query-summary id={{id}}></app-query-summary>
+          </td>
         </tr>
       </table>
     </div>
@@ -57,7 +71,9 @@
   <div class="column">
     <h1> Explanation </h1>
     <div>
-      <button mat-raised-button color="primary" (click)="newQuery()">
+      <button mat-raised-button color="primary" (click)="newQuery()"
+              matTooltip="Create a MacroBase query."
+              matTooltipPosition="right">
         New
       </button>
     </div>
@@ -66,8 +82,9 @@
       <div id="summary{{id}}" class="summary" style="background-color:#9fa8da">
         <app-query-summary id={{id}}></app-query-summary>
         <div style="text-align: right; padding-top: 10px;">
-          <button mat-raised-button
-                  (click)="editSelected(id)">
+          <button mat-raised-button (click)="editSelected(id)"
+                  matTooltip="Edit this query."
+                  matTooltipPosition="left">
             Edit
           </button>
         </div>
@@ -80,11 +97,13 @@
   </div>
 
   <div class="column">
-    <h1> &nbsp;&nbsp;&nbsp; Visualization </h1>
+    <h1 style="padding-left: 50px">
+      Visualization
+    </h1>
     <div style="text-align:center;">
       <div *ngIf="plotIDsByMetric">
         <div *ngFor="let metric of plotIDsByMetric.keys()">
-          <h4> Metric: {{metric}} </h4>
+          <h5> Metric: {{metric}} </h5>
           <div *ngFor="let queryID of plotIDsByMetric.get(metric).keys()">
             <div *ngFor="let itemsetID of plotIDsByMetric.get(metric).get(queryID)">
               <app-plot queryID={{queryID}} itemsetID={{itemsetID}}></app-plot>

@@ -1,11 +1,29 @@
 <div *ngIf="displayItemsets">
   <table cellpadding="15" border="1px" width="100%" style="table-layout: fixed">
     <tr>
-      <th> Attributes </th>
-      <th> Outlier Count </th>
-      <th> Event Count </th>
-      <th> Support </th>
-      <th> Global Ratio </th>
+      <th matTooltip="The set of attribute key-value pairs that make up the explanation."
+          matTooltipPosition="right">
+        Attributes
+      </th>
+      <th matTooltip="The number of outlying rows that contain these attributes."
+          matTooltipPosition="above">
+        Outlier Count
+      </th>
+      <th matTooltip="The total number of rows that contain these attributes."
+          matTooltipPosition="above">
+        Event Count
+      </th>
+      <th matTooltip="The proportion of outlier rows that contain these attributes."
+          matTooltipPosition="above">
+        Support
+      </th>
+      <th matTooltip="The probablity of a row being an outlier given that it contains these attributes divided by the probability of a row being an outlier given that it does not contain these attributes."
+          matTooltipPosition="above">
+        Global Ratio
+      </th>
+      <th>
+        Plot
+      </th>
     </tr>
     <tr *ngFor="let itemset of queryResult; index as i" [attr.data-index]="i"
      (click)="selectResult(i)" [style.background-color]="getSelectedColor(i)" id="result {{id}} {{i}}">
@@ -19,6 +37,9 @@
       <td> {{itemset.nTotal}} <br> </td>
       <td> {{itemset.support}} <br> </td>
       <td> {{itemset.ratio}} </td>
+      <td style="text-align: center">
+        <mat-checkbox [checked]="selectedResults.has(i)" [disabled]="true"></mat-checkbox>
+      </td>
     </tr>
   </table>
 </div>

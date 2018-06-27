@@ -23,6 +23,7 @@ export class DataHomeComponent implements OnInit {
   private query = new Object();
 
   private displayTypes = false;
+  private typesChanged = false;
   private colTypes: Array<ColType>;
 
   constructor(private dataService: DataService,
@@ -99,6 +100,8 @@ export class DataHomeComponent implements OnInit {
 
     this.displayTypes = true;
     this.dataService.setTypes(this.colTypes);
+
+    this.typesChanged = false;
   }
 
   /*
@@ -126,5 +129,6 @@ export class DataHomeComponent implements OnInit {
     }
 
     this.dataService.setTypes(this.colTypes);
+    this.typesChanged = true;
   }
 }

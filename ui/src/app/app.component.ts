@@ -72,6 +72,7 @@ export class AppComponent implements OnInit {
    */
   private updateDisplayType(type: string) {
     this.displayType = type;
+    console.log(this.exploreIDs)
   }
 
   /*
@@ -88,14 +89,15 @@ export class AppComponent implements OnInit {
     }
 
     if(this.displayType == "Explore") {
-      this.exploreIDs.push(id);
       if(this.oldID >= 0) {
         this.exploreIDs.splice(this.exploreIDs.indexOf(this.oldID), 1);
       }
+      this.exploreIDs.push(id);
     }
     else {
       this.exploreIDs = new Array([id]);
     }
+    console.log(this.exploreIDs)
   }
 
   /*
@@ -128,7 +130,7 @@ export class AppComponent implements OnInit {
    * Explore selected IDs
    */
   private exploreSelected() {
-    this.exploreIDs = this.selectedIDs;
+    this.exploreIDs = Array.from(this.selectedIDs);
     this.exploreIDs.sort();
     this.displayService.setDisplayType('Explore');
   }

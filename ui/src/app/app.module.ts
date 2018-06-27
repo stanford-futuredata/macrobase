@@ -1,5 +1,4 @@
 import { AppComponent } from './app.component';
-import { QueryWizardComponent } from './query-wizard/query-wizard.component';
 import { CellComponent } from './cell/cell.component';
 import { MessagesComponent } from './messages/messages.component';
 import { MessageService } from './message.service';
@@ -101,7 +100,6 @@ import {
   ],
   declarations: [
     AppComponent,
-    QueryWizardComponent,
     CellComponent,
     MessagesComponent,
     DataHeaderComponent,

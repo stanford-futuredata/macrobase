@@ -40,8 +40,8 @@ export class DisplayService {
 
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = false;
-    dialogConfig.width = "50%";
-    dialogConfig.height = "75%";
+    dialogConfig.width = "70%";
+    dialogConfig.height = "700px";
     dialogConfig.data = {id: id, oldID: oldID};
 
     let dialogRef = this.dialog.open(QueryEditorComponent, dialogConfig);
