@@ -43,11 +43,7 @@ public class BasicBatchPipeline implements Pipeline {
     private double minRiskRatio;
     private double meanShiftRatio;
 
-    private int numRows;
-    private String columnFiltersJson;
-
-
-    public BasicBatchPipeline (PipelineConfig conf) {
+    public BasicBatchPipeline(PipelineConfig conf) {
         inputURI = conf.get("inputURI");
 
         classifierType = conf.get("classifier", "percentile");
@@ -66,32 +62,14 @@ public class BasicBatchPipeline implements Pipeline {
             cutoff = conf.get("cutoff", 1.0);
         }
 
-        pctileHigh = conf.get("includeHi",true);
+        pctileHigh = conf.get("includeHi", true);
         pctileLow = conf.get("includeLo", true);
         predicateStr = conf.get("predicate", "==").trim();
-
         summarizerType = conf.get("summarizer", "apriori");
         attributes = conf.get("attributes");
         ratioMetric = conf.get("ratioMetric", "globalRatio");
-
-        //Allowing conversion from integer b/c of type confusion by UI (via JSON.stringify)
-        if(conf.get("minRatioMetric", 3.0) instanceof Double) {
-            minRiskRatio = (double) conf.get("minRatioMetric", 3.0);
-        }
-        else {
-            minRiskRatio = (double) (int) conf.get("minRatioMetric", 3);
-        }
-
-        if(conf.get("minSupport", 0.01) instanceof Double) {
-            minSupport = (double) conf.get("minSupport", 0.01);
-        }
-        else {
-            minSupport= (double) (int) conf.get("minSupport", 0);
-        }
-
-        numRows = conf.get("numRows", -1); //-1 indicating all
-        columnFiltersJson = conf.get("columnFilters", "");
-
+        minRiskRatio = conf.get("minRatioMetric", 3.0);
+        minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         meanColumn = Optional.ofNullable(conf.get("meanColumn"));
         meanShiftRatio = conf.get("meanShiftRatio", 1.0);
@@ -122,14 +100,14 @@ public class BasicBatchPipeline implements Pipeline {
                 }
             }
             case "predicate": {
-                if (isStrPredicate){
+                if (isStrPredicate) {
                     PredicateClassifier classifier = new PredicateClassifier(metric, predicateStr, strCutoff);
                     return classifier;
                 }
                 PredicateClassifier classifier = new PredicateClassifier(metric, predicateStr, cutoff);
                 return classifier;
             }
-            default : {
+            default: {
                 throw new MacroBaseException("Bad Classifier Type");
             }
         }
@@ -174,8 +152,7 @@ public class BasicBatchPipeline implements Pipeline {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         if (isStrPredicate) {
             colTypes.put(metric, Schema.ColType.STRING);
-        }
-        else{
+        } else {
             colTypes.put(metric, Schema.ColType.DOUBLE);
         }
         List<String> requiredColumns = new ArrayList<>(attributes);
@@ -212,33 +189,5 @@ public class BasicBatchPipeline implements Pipeline {
         Explanation output = summarizer.getResults();
 
         return output;
-    }
-
-    @Override
-    public DataFrame getRows() throws Exception {
-        long startTime = System.currentTimeMillis();
-        DataFrame df = loadData();
-        long elapsed = System.currentTimeMillis() - startTime;
-
-        log.info("Loading time: {} ms", elapsed);
-        log.info("{} rows", df.getNumRows());
-        log.info("Metric: {}", metric);
-        log.info("Attributes: {}", attributes);
-
-        if(!columnFiltersJson.equals("")){
-            Map<String, Object> columnFilters = PipelineUtils.jsonStringToMap(columnFiltersJson);
-            for(String columnName: columnFilters.keySet()) {
-                Predicate<Object> columnPredicate = (i) -> (i.equals(columnFilters.get(columnName)));
-                df = df.filter(columnName, columnPredicate);
-                log.info("Filtering on column {} == {}", columnName, columnFilters.get(columnName));
-            }
-        }
-
-        if(numRows >= 0){
-            df = df.limit(numRows);
-            log.info("Limiting on {} rows", numRows);
-        }
-
-        return df;
     }
 }

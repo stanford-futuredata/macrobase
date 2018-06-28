@@ -5,5 +5,4 @@ import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 
 public interface Pipeline {
     Explanation results() throws Exception;
-    DataFrame getRows() throws Exception;
 }

@@ -46,7 +46,6 @@ public class RestServer {
 
         post("/sql", RestServer::processSQLQuery, RestServer::toJsonString);
         post("/query", RestServer::processBasicBatchQuery, RestServer::toJsonString);
-        post("/rows", RestServer::getRows, RestServer::toJsonString);
 
         exception(Exception.class, (exception, request, response) -> {
             log.error("An exception occurred: ", exception);
@@ -68,16 +67,6 @@ public class RestServer {
         PipelineConfig conf = PipelineConfig.fromJsonString(req.body());
         Pipeline p = PipelineUtils.createPipeline(conf);
         return p.results();
-    }
-
-    public static DataFrame getRows(
-            Request req, Response res
-    ) throws Exception {
-        //res.type()
-        PipelineConfig conf = PipelineConfig.fromJsonString(req.body());
-        Pipeline p = PipelineUtils.createPipeline(conf);
-        DataFrame df = p.getRows();
-        return df;
     }
 
     public static String toJsonString(Object o) throws JsonProcessingException {
