@@ -2,7 +2,7 @@
 @include mat-core();
 
 $my-app-primary: mat-palette($mat-blue, 200);
-$my-app-accent:  mat-palette($mat-indigo, 200, 900, A100);
+$my-app-accent:  mat-palette($mat-indigo, 100, 900, A100);
 $my-app-warn:    mat-palette($mat-deep-orange);
 
 $my-app-theme: mat-light-theme($my-app-primary, $my-app-accent, $my-app-warn);

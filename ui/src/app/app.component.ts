@@ -72,7 +72,9 @@ export class AppComponent implements OnInit {
    */
   private updateDisplayType(type: string) {
     this.displayType = type;
-    console.log(this.exploreIDs)
+    if(this.displayType == "Explore") {
+      this.updatePlot();
+    }
   }
 
   /*
@@ -97,7 +99,6 @@ export class AppComponent implements OnInit {
     else {
       this.exploreIDs = new Array([id]);
     }
-    console.log(this.exploreIDs)
   }
 
   /*

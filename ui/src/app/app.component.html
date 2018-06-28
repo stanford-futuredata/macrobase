@@ -30,7 +30,7 @@
         New
       </button>
       <button mat-raised-button style="background-color:lightgray"
-              (click)="editSelected(-1)" [disabled]="selectedIDs.length == 0"
+              (click)="editSelected(-1)" [disabled]="selectedIDs.length != 1"
               matTooltip="Edit a selected query."
               matTooltipPosition="above">
         Edit
@@ -79,7 +79,7 @@
     </div>
     <br>
     <div *ngFor="let id of exploreIDs.reverse()">
-      <div id="summary{{id}}" class="summary" style="background-color:#9fa8da">
+      <div id="summary{{id}}" class="summary" style="background-color:#c5cae9">
         <app-query-summary id={{id}}></app-query-summary>
         <div style="text-align: right; padding-top: 10px;">
           <button mat-raised-button (click)="editSelected(id)"
