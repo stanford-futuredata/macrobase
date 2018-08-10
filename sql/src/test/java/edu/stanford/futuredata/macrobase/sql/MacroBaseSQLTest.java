@@ -214,7 +214,7 @@ public class MacroBaseSQLTest {
 
     private DataFrame loadDataFrameFromCSV(final String csvFilename,
         final Map<String, ColType> schema) throws Exception {
-        return new CSVDataFrameParser(Resources.getResource(csvFilename).getFile(), schema).load();
+        return new CSVDataFrameParser(Resources.getResource(csvFilename).getFile(), schema, false).load();
     }
 
     private void runQueryFromFile(final String queryFilename, final DataFrame expected)
