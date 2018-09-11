@@ -184,6 +184,32 @@ public class DataXRaySolver {
             }
         }
 
+        /** Initialize feature by buffered reader */
+        public Feature(BufferedReader br) throws IOException {
+            final String firstLine = br.readLine();
+            final String[] properties = firstLine.split("\t")[1].split(";"); // split properties
+            // update max level
+            String[] maxs = properties[0].split(":");
+            maxDimLevel = new int[maxs.length];
+            for(int i = 0; i < maxs.length; ++i)
+                maxDimLevel[i] = Integer.valueOf(maxs[i]);
+
+            errorrate = Double.valueOf(properties[1]); // update error rate
+            cost = Double.valueOf(properties[2]); // update cost
+            flagS = Boolean.valueOf(properties[3]); // update is_select flag
+
+            featureVector = new FeatureVector(properties[4]); // update feature vector
+            structureVector = new StructureVector(properties[5]); // update structure vector
+
+            // update elements
+            listOfElement = new HashMap<>();
+            String line;
+            while ((line = br.readLine()) != null) {
+                Element element = new Element(line);
+                listOfElement.put(element.id, element);
+            }
+        }
+
         /** initialize feature */
         public Feature(FeatureVector f_, StructureVector s_, double a_, int[] maxDimLevel_, ArrayList<Element> elements){
             featureVector = f_;
@@ -602,10 +628,9 @@ public class DataXRaySolver {
 
     public void readData(String inputpath) throws Exception {
         BufferedReader br = new BufferedReader(new FileReader(inputpath));
-        String line = br.readLine();
+//        String line = br.readLine();
+        Feature feature = new Feature(br);
         br.close();
-        String[] pieces = line.split("\t");
-        Feature feature = new Feature(pieces[1]);
         allElements = new ArrayList<Element>();
         allElements.addAll(feature.listOfElement.values());
         maxDimLevel = feature.maxDimLevel;

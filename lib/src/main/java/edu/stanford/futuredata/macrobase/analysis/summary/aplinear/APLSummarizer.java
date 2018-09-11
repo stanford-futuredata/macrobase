@@ -113,10 +113,10 @@ public abstract class APLSummarizer extends BatchSummarizer {
 
             DataXRaySolver dataxray = new DataXRaySolver(alpha, gErrB_, bErrB_, gVarB_, bVarB_, dataXRayMap);
             dataxray.readData("DataXRayAppInsights.in"); // read data
-	    long XRayStartTime = System.currentTimeMillis();
+            long XRayStartTime = System.currentTimeMillis();
             dataxray.solveFeatures(); // solve for features
-            dataxray.printBadFeature("DataXRayAppInsights.out");// save bad features
             log.info("XRay Time: {}", System.currentTimeMillis() - XRayStartTime);
+            dataxray.printBadFeature("DataXRayAppInsights.out");// save bad features
         }
 
     }
