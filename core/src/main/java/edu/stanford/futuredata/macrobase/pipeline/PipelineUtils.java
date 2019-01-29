@@ -61,7 +61,8 @@ public class PipelineUtils {
             CsvParserSettings settings = new CsvParserSettings();
             settings.setLineSeparatorDetectionEnabled(true);
             CsvParser csvParser = new CsvParser(settings);
-            InputStream targetStream = new ByteArrayInputStream(jsonBody.get("content").toString().getBytes(StandardCharsets.UTF_8.name()));
+            byte[] contentBytes = jsonBody.get("content").toString().getBytes(StandardCharsets.UTF_8.name());
+            InputStream targetStream = new ByteArrayInputStream(contentBytes);
             InputStreamReader targetReader = new InputStreamReader(targetStream, "UTF-8");
             
             csvParser.beginParsing(targetReader);
