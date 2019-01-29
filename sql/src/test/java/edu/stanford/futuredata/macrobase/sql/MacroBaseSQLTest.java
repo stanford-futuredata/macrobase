@@ -221,33 +221,4 @@ public class MacroBaseSQLTest {
         query19();
         query20();
     }
-
-    private DataFrame loadDataFrameFromCSV(final String csvFilename,
-        final Map<String, ColType> schema) throws Exception {
-        return new CSVDataFrameParser(Resources.getResource(csvFilename).getFile(), schema, false).load();
-    }
-
-    private void runQueryFromFile(final String queryFilename, final DataFrame expected)
-        throws IOException {
-        final String queryStr = Resources
-            .toString(Resources.getResource(queryFilename), Charsets.UTF_8);
-        final Statement stmt;
-        try {
-            stmt = parser.createStatement(queryStr.replace(";", ""));
-            assertTrue(queryFilename + " should generate a Statement of type Query",
-                stmt instanceof Query);
-        } catch (ParsingException e) {
-            e.printStackTrace();
-            throw new Error(queryFilename + " should parse");
-        }
-        final QueryBody q = ((Query) stmt).getQueryBody();
-        try {
-            final DataFrame result = queryEngine.executeQuery(q);
-            assertTrue(expected.equals(result));
-        } catch (MacroBaseException e) {
-            e.printStackTrace();
-            throw new Error(queryFilename + " should not throw an exception");
-        }
-    }
-
 }
