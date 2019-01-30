@@ -61,7 +61,7 @@ public class PipelineUtils {
             CsvParserSettings settings = new CsvParserSettings();
             settings.setLineSeparatorDetectionEnabled(true);
             CsvParser csvParser = new CsvParser(settings);
-            InputStreamReader targetReader = GetStreamReaderFromString(jsonBody.get("content").toString());
+            InputStreamReader targetReader = getStreamReaderFromString(jsonBody.get("content").toString());
             
             csvParser.beginParsing(targetReader);
             CSVDataFrameParser dfParser = new CSVDataFrameParser(csvParser, requiredColumns);
@@ -73,7 +73,7 @@ public class PipelineUtils {
         }
     }
 
-    public static InputStreamReader GetStreamReaderFromString(
+    public static InputStreamReader getStreamReaderFromString(
         String jsonContent
     ) throws Exception {
         byte[] contentBytes = jsonContent.getBytes(StandardCharsets.UTF_8.name());

@@ -24,7 +24,7 @@ public class PipelineUtilsTest {
         Map<String, Object> jsonBody = conf.get("jsonBody", null);
         
         // Reader
-        InputStreamReader reader = PipelineUtils.GetStreamReaderFromString(jsonBody.get("content").toString());
+        InputStreamReader reader = PipelineUtils.getStreamReaderFromString(jsonBody.get("content").toString());
 
         // Parse
         CsvParserSettings settings = new CsvParserSettings();
@@ -44,7 +44,7 @@ public class PipelineUtilsTest {
         Map<String, Object> jsonBody = conf.get("jsonBody", null);
         
         // Reader
-        InputStreamReader reader = PipelineUtils.GetStreamReaderFromString(jsonBody.get("content").toString());
+        InputStreamReader reader = PipelineUtils.getStreamReaderFromString(jsonBody.get("content").toString());
 
         // Parse
         CsvParserSettings settings = new CsvParserSettings();
