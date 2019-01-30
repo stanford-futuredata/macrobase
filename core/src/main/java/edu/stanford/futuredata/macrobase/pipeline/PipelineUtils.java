@@ -61,9 +61,7 @@ public class PipelineUtils {
             CsvParserSettings settings = new CsvParserSettings();
             settings.setLineSeparatorDetectionEnabled(true);
             CsvParser csvParser = new CsvParser(settings);
-            byte[] contentBytes = jsonBody.get("content").toString().getBytes(StandardCharsets.UTF_8.name());
-            InputStream targetStream = new ByteArrayInputStream(contentBytes);
-            InputStreamReader targetReader = new InputStreamReader(targetStream, "UTF-8");
+            InputStreamReader targetReader = GetStreamReaderFromString(jsonBody.get("content").toString());
             
             csvParser.beginParsing(targetReader);
             CSVDataFrameParser dfParser = new CSVDataFrameParser(csvParser, requiredColumns);
@@ -73,6 +71,15 @@ public class PipelineUtils {
         } else {
             throw new MacroBaseException("Unsupported URI");
         }
+    }
+
+    public static InputStreamReader GetStreamReaderFromString(
+        String jsonContent
+    ) throws Exception {
+        byte[] contentBytes = jsonContent.getBytes(StandardCharsets.UTF_8.name());
+        InputStream targetStream = new ByteArrayInputStream(contentBytes);
+        InputStreamReader targetReader = new InputStreamReader(targetStream, "UTF-8");
+        return targetReader;
     }
 
     public static Pipeline createPipeline(
