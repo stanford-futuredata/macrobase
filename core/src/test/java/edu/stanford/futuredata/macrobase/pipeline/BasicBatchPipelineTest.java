@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
