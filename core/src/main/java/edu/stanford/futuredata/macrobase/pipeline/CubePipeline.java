@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
+import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
@@ -32,12 +33,12 @@ public class CubePipeline implements Pipeline {
     // Classifiers
     private String classifierType;
     private String countColumn;
-    private double cutoff;
-    private String strCutoff;
+    private Object cutoff;
     private boolean isStrPredicate;
     private int numThreads;
 
     private String predicateStr;
+    private MBPredicate mbPredicate;
     private Optional<String> metric;
 
     private boolean includeHi;
@@ -54,7 +55,7 @@ public class CubePipeline implements Pipeline {
 
     private boolean debugDump;
 
-    public CubePipeline(PipelineConfig conf) {
+    public CubePipeline(PipelineConfig conf) throws MacroBaseException {
         inputURI = conf.get("inputURI");
         restHeader = conf.get("restHeader", null);
         jsonBody = conf.get("jsonBody", null);
@@ -63,20 +64,16 @@ public class CubePipeline implements Pipeline {
         classifierType = conf.get("classifier", "arithmetic");
         countColumn = conf.get("countColumn", "count");
 
+        predicateStr = conf.get("predicate", "==").trim();
         if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
-            Object rawCutoff = conf.get("cutoff");
-            isStrPredicate = rawCutoff instanceof String;
-            if (isStrPredicate) {
-                strCutoff = (String) rawCutoff;
-            } else {
-                cutoff = (double) rawCutoff;
-            }
+            cutoff = (Object)conf.get("cutoff");
+            mbPredicate = new MBPredicate(predicateStr, cutoff);
+            isStrPredicate = mbPredicate.isStrPredicate();
         } else {
             isStrPredicate = false;
             cutoff = conf.get("cutoff", 1.0);
         }
 
-        predicateStr = conf.get("predicate", "==").trim();
         metric = Optional.ofNullable(conf.get("metric"));
 
         includeHi = conf.get("includeHi", true);
@@ -141,19 +138,17 @@ public class CubePipeline implements Pipeline {
     private Map<String, Schema.ColType> getColTypes() throws MacroBaseException {
         Map<String, Schema.ColType> colTypes = new HashMap<>();
         colTypes.put(countColumn, Schema.ColType.DOUBLE);
+        Schema.ColType metricType = Schema.ColType.DOUBLE;
+        if (isStrPredicate) {
+            metricType = Schema.ColType.STRING;
+        }
         switch (classifierType) {
             case "countmeanshift":
-                if (isStrPredicate) {
-                    colTypes.put(metric.orElseThrow(
-                            () -> new MacroBaseException("metric column not present in config")),
-                            Schema.ColType.STRING);
-                } else {
-                    colTypes.put(metric.orElseThrow(
-                            () -> new MacroBaseException("metric column not present in config")),
-                            Schema.ColType.DOUBLE);
-                }
-                colTypes.put(meanColumn
-                                .orElseThrow(() -> new MacroBaseException("mean column not present in config")),
+                colTypes.put(metric.orElseThrow(
+                        () -> new MacroBaseException("metric column not present in config")),
+                        metricType);
+                colTypes.put(meanColumn.orElseThrow(
+                        () -> new MacroBaseException("mean column not present in config")),
                         Schema.ColType.DOUBLE);
                 return colTypes;
             case "meanshift":
@@ -173,15 +168,9 @@ public class CubePipeline implements Pipeline {
                 return colTypes;
             }
             case "predicate": {
-                if (isStrPredicate) {
-                    colTypes.put(metric.orElseThrow(
+                colTypes.put(metric.orElseThrow(
                         () -> new MacroBaseException("metric column not present in config")),
-                        Schema.ColType.STRING);
-                } else {
-                    colTypes.put(metric.orElseThrow(
-                        () -> new MacroBaseException("metric column not present in config")),
-                        Schema.ColType.DOUBLE);
-                }
+                        metricType);
                 return colTypes;
             }
             case "raw": {
@@ -197,21 +186,15 @@ public class CubePipeline implements Pipeline {
     private CubeClassifier getClassifier() throws MacroBaseException {
         switch (classifierType) {
             case "countmeanshift": {
-                if (isStrPredicate) {
-                    return new CountMeanShiftCubedClassifier(countColumn,
-                            metric.orElseThrow(
-                                    () -> new MacroBaseException("metric column not present in config")),
-                            meanColumn.orElseThrow(
-                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                            strCutoff);
-                } else {
-                    return new CountMeanShiftCubedClassifier(countColumn,
-                            metric.orElseThrow(
-                                    () -> new MacroBaseException("metric column not present in config")),
-                            meanColumn.orElseThrow(
-                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                            cutoff);
-                }
+                return new CountMeanShiftCubedClassifier(
+                        countColumn,
+                        metric.orElseThrow(
+                                () -> new MacroBaseException("metric column not present in config")),
+                        meanColumn.orElseThrow(
+                                () -> new MacroBaseException("mean column not present in config")),
+                        predicateStr,
+                        cutoff
+                );
             }
             case "arithmetic": {
                 ArithmeticClassifier classifier =
@@ -219,7 +202,7 @@ public class CubePipeline implements Pipeline {
                         () -> new MacroBaseException("mean column not present in config")),
                         stdColumn.orElseThrow(
                             () -> new MacroBaseException("std column not present in config")));
-                classifier.setPercentile(cutoff);
+                classifier.setPercentile((Double)cutoff);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
                 return classifier;
@@ -227,18 +210,12 @@ public class CubePipeline implements Pipeline {
             case "quantile": {
                 QuantileClassifier classifier =
                     new QuantileClassifier(countColumn, quantileColumns);
-                classifier.setPercentile(cutoff);
+                classifier.setPercentile((Double)cutoff);
                 classifier.setIncludeHigh(includeHi);
                 classifier.setIncludeLow(includeLo);
                 return classifier;
             }
             case "predicate": {
-                if (isStrPredicate) {
-                    return new PredicateCubeClassifier(countColumn,
-                        metric.orElseThrow(
-                            () -> new MacroBaseException("metric column not present in config")),
-                        predicateStr, strCutoff);
-                }
                 return new PredicateCubeClassifier(countColumn,
                     metric.orElseThrow(
                         () -> new MacroBaseException("metric column not present in config")),

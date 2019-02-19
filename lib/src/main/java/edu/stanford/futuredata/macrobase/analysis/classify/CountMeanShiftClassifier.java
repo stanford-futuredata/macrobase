@@ -22,40 +22,26 @@ public class CountMeanShiftClassifier extends Classifier {
     /**
      * @param metricColumnName Column on which to classify outliers
      * @param meanColumnName Column containing means whose shifts will be explained
-     * @param predicateStr Predicate used for classification: "==" or "!="
-     * @param sentinel String sentinel value used when evaluating the predicate to determine outlier
+     * @param predicateStr Predicate used for classification
+     * @param sentinel sentinel value used when evaluating the predicate to determine outlier
      * @throws MacroBaseException
      */
     public CountMeanShiftClassifier(
             final String metricColumnName,
             final String meanColumnName,
             final String predicateStr,
-            final String sentinel
+            final Object sentinel
     ) throws MacroBaseException {
         super(meanColumnName);
         this.metricColumnName = metricColumnName;
         this.meanColumnName = meanColumnName;
-        this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinel);
-        this.isStrPredicate = true;
-    }
-
-    /**
-     * @param metricColumnName Column on which to classify outliers
-     * @param meanColumnName Column containing means whose shifts will be explained
-     * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
-     * @param sentinel Double sentinel value used when evaluating the predicate to determine outlier
-     */
-    public CountMeanShiftClassifier(
-            final String metricColumnName,
-            final String meanColumnName,
-            final String predicateStr,
-            final double sentinel
-    ) throws MacroBaseException {
-        super(meanColumnName);
-        this.metricColumnName = metricColumnName;
-        this.meanColumnName = meanColumnName;
-        this.doublePredicate = MBPredicate.getDoublePredicate(predicateStr, sentinel);
-        this.isStrPredicate = false;
+        MBPredicate mp = new MBPredicate(predicateStr, sentinel);
+        this.isStrPredicate = mp.isStrPredicate();
+        if (isStrPredicate) {
+            this.strPredicate = mp.getStringPredicate();
+        } else {
+            this.doublePredicate = mp.getDoublePredicate();
+        }
     }
 
     /**
