@@ -4,10 +4,10 @@
   "classifier": "predicate",
   "countColumn": "count",
 
-  "metric": "release",
-  "predicate": "str_range",
+  "metric": "mean",
+  "predicate": "num_range",
   "cutoff": {
-    "outlier": [["12-11-10","12-30-00"], ["12-01-17"]]
+    "outlier": [[0,10], [50,100]]
   },
 
   "attributes": [

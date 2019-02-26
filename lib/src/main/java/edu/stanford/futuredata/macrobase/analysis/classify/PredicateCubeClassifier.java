@@ -4,9 +4,6 @@ import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 
-import javax.crypto.Mac;
-import java.util.Collection;
-import java.util.Map;
 import java.util.function.DoublePredicate;
 import java.util.function.Predicate;
 
@@ -47,7 +44,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
      * @throws Exception
      */
     @Override
-    public void process(DataFrame input) throws Exception {
+    public void process(DataFrame input) {
         if (isStrPredicate) {
             processString(input);
         } else {
@@ -56,7 +53,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
     }
 
 
-    public void processDouble(DataFrame input) throws Exception {
+    public void processDouble(DataFrame input) {
         double[] metrics = input.getDoubleColumnByName(metricColumnName);
         int len = metrics.length;
         output = input.copy();
@@ -74,7 +71,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
     }
 
 
-    public void processString(DataFrame input) throws Exception {
+    public void processString(DataFrame input) {
         String[] metrics = input.getStringColumnByName(metricColumnName);
         int len = metrics.length;
         output = input.copy();
