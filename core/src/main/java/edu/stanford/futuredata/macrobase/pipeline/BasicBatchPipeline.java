@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
+import edu.stanford.futuredata.macrobase.analysis.classify.stats.MBPredicate;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
@@ -25,13 +26,14 @@ public class BasicBatchPipeline implements Pipeline {
 
     private String classifierType;
     private String metric;
-    private double cutoff;
+    private Object cutoff;
     private Optional<String> meanColumn;
-    private String strCutoff;
+    private String predicateStr;
     private boolean isStrPredicate;
+    private MBPredicate mbPredicate;
+
     private boolean pctileHigh;
     private boolean pctileLow;
-    private String predicateStr;
     private int numThreads;
 
     private String summarizerType;
@@ -42,20 +44,16 @@ public class BasicBatchPipeline implements Pipeline {
     private double meanShiftRatio;
 
 
-    public BasicBatchPipeline (PipelineConfig conf) {
+    public BasicBatchPipeline (PipelineConfig conf) throws MacroBaseException {
         inputURI = conf.get("inputURI");
 
         classifierType = conf.get("classifier", "percentile");
         metric = conf.get("metric");
 
         if (classifierType.equals("predicate") || classifierType.equals("countmeanshift")){
-            Object rawCutoff = conf.get("cutoff");
-            isStrPredicate = rawCutoff instanceof String;
-            if (isStrPredicate) {
-                strCutoff = (String) rawCutoff;
-            } else {
-                cutoff = (double) rawCutoff;
-            }
+            cutoff = conf.get("cutoff");
+            mbPredicate = new MBPredicate(predicateStr, cutoff);
+            isStrPredicate = mbPredicate.isStrPredicate();
         } else {
             isStrPredicate = false;
             cutoff = conf.get("cutoff", 1.0);
@@ -79,31 +77,19 @@ public class BasicBatchPipeline implements Pipeline {
         switch (classifierType.toLowerCase()) {
             case "percentile": {
                 PercentileClassifier classifier = new PercentileClassifier(metric);
-                classifier.setPercentile(cutoff);
+                classifier.setPercentile((Double)cutoff);
                 classifier.setIncludeHigh(pctileHigh);
                 classifier.setIncludeLow(pctileLow);
                 return classifier;
             }
             case "countmeanshift": {
-                if (isStrPredicate) {
-                    return new CountMeanShiftClassifier(
-                            metric,
-                            meanColumn.orElseThrow(
-                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                            strCutoff);
-                } else {
-                    return new CountMeanShiftClassifier(
-                            metric,
-                            meanColumn.orElseThrow(
-                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                            cutoff);
-                }
+                return new CountMeanShiftClassifier(
+                        metric,
+                        meanColumn.orElseThrow(
+                                () -> new MacroBaseException("mean column not present in config")), predicateStr,
+                        cutoff);
             }
             case "predicate": {
-                if (isStrPredicate){
-                    PredicateClassifier classifier = new PredicateClassifier(metric, predicateStr, strCutoff);
-                    return classifier;
-                }
                 PredicateClassifier classifier = new PredicateClassifier(metric, predicateStr, cutoff);
                 return classifier;
             }

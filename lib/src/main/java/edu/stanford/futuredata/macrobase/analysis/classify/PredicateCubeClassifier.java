@@ -21,44 +21,22 @@ public class PredicateCubeClassifier extends CubeClassifier {
     private String metricColumnName; //hack
     private boolean isStrPredicate;
 
-
-    /**
-     * @param metricColumnName Column on which to classifier outliers
-     * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
-     * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     * @throws MacroBaseException
-     */
     public PredicateCubeClassifier(
             final String countColumnName,
             final String metricColumnName,
             final String predicateStr,
-            final double sentinel
+            final Object sentinel
     ) throws MacroBaseException {
         super(countColumnName);
         this.metricColumnName = metricColumnName;
-        this.predicate = MBPredicate.getDoublePredicate(predicateStr, sentinel);
-        this.isStrPredicate = false;
+        MBPredicate mp = new MBPredicate(predicateStr, sentinel);
+        this.isStrPredicate = mp.isStrPredicate();
+        if (isStrPredicate) {
+            this.strPredicate = mp.getStringPredicate();
+        } else {
+            this.predicate = mp.getDoublePredicate();
+        }
     }
-
-
-    /**
-     * @param metricColumnName Column on which to classifier outliers
-     * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
-     * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     * @throws MacroBaseException
-     */
-    public PredicateCubeClassifier(
-            final String countColumnName,
-            final String metricColumnName,
-            final String predicateStr,
-            final String sentinel
-    ) throws MacroBaseException {
-        super(countColumnName);
-        this.metricColumnName = metricColumnName;
-        this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinel);
-        this.isStrPredicate = true;
-    }
-
 
     /**
      * Scan through the metric column, and evaluate the predicate on every value in the column. The ``input'' DataFrame
@@ -66,7 +44,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
      * @throws Exception
      */
     @Override
-    public void process(DataFrame input) throws Exception {
+    public void process(DataFrame input) {
         if (isStrPredicate) {
             processString(input);
         } else {
@@ -75,7 +53,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
     }
 
 
-    public void processDouble(DataFrame input) throws Exception {
+    public void processDouble(DataFrame input) {
         double[] metrics = input.getDoubleColumnByName(metricColumnName);
         int len = metrics.length;
         output = input.copy();
@@ -93,7 +71,7 @@ public class PredicateCubeClassifier extends CubeClassifier {
     }
 
 
-    public void processString(DataFrame input) throws Exception {
+    public void processString(DataFrame input) {
         String[] metrics = input.getStringColumnByName(metricColumnName);
         int len = metrics.length;
         output = input.copy();

@@ -29,31 +29,19 @@ public class PredicateClassifier extends Classifier {
     private boolean isStrPredicate;
 
 
-    /**
-     * @param columnName Column on which to classifier outliers
-     * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
-     * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     */
-    public PredicateClassifier(final String columnName, final String predicateStr,
-        final double sentinel)
-        throws MacroBaseException {
+    public PredicateClassifier(
+            final String columnName,
+            final String predicateStr,
+            final Object sentinel
+    ) throws MacroBaseException {
         super(columnName);
-        this.predicate = MBPredicate.getDoublePredicate(predicateStr, sentinel);
-        this.isStrPredicate = false;
-    }
-
-
-    /**
-     * @param columnName Column on which to classifier outliers
-     * @param predicateStr Predicate used for classification: "==", "!=", "<", ">", "<=", or ">="
-     * @param sentinel Sentinel value used when evaluating the predicate to determine outlier
-     */
-    public PredicateClassifier(final String columnName, final String predicateStr,
-        final String sentinel)
-        throws MacroBaseException {
-        super(columnName);
-        this.strPredicate = MBPredicate.getStrPredicate(predicateStr, sentinel);
-        this.isStrPredicate = true;
+        MBPredicate mp = new MBPredicate(predicateStr, sentinel);
+        this.isStrPredicate = mp.isStrPredicate();
+        if (isStrPredicate) {
+            this.strPredicate = mp.getStringPredicate();
+        } else {
+            this.predicate = mp.getDoublePredicate();
+        }
     }
 
     /**
