@@ -2,6 +2,7 @@ package macrobase.conf;
 
 import com.google.common.collect.Lists;
 import io.dropwizard.configuration.ConfigurationFactory;
+import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import macrobase.ingest.CSVIngester;
 import macrobase.ingest.DiskCachingIngester;
@@ -95,7 +96,7 @@ public class MacroBaseConfTest {
 
     @Test
     public void testParsing() throws Exception {
-        ConfigurationFactory<MacroBaseConf> cfFactory = new ConfigurationFactory<>(MacroBaseConf.class,
+        ConfigurationFactory<MacroBaseConf> cfFactory = new YamlConfigurationFactory<>(MacroBaseConf.class,
                                                                                    null,
                                                                                    Jackson.newObjectMapper(),
                                                                                    "");
