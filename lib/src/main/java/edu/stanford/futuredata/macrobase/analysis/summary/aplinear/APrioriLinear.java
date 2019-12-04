@@ -412,6 +412,7 @@ public class APrioriLinear {
 
         log.info("Time spent in APriori:  {} ms", System.currentTimeMillis() - beginTime);
         List<List<APLExplanationResult>> results = new ArrayList<>();
+        // Iterate through all thresholds in the multi-query and select the appropriate results for each.
         for (List<Double> threshold: allThresholds) {
             List<APLExplanationResult> result = new ArrayList<>();
             Set<IntSet> o1Saved = new HashSet<>();
@@ -420,6 +421,7 @@ public class APrioriLinear {
                 Map<IntSet, double[]> curOrderSavedAggregates = savedAggregates.get(curOrder);
                 for (IntSet curSet : curOrderSavedAggregates.keySet()) {
                     double[] aggregates = curOrderSavedAggregates.get(curSet);
+                    // First, check if the candidate satisfies all thresholds.
                     QualityMetric.Action action = QualityMetric.Action.KEEP;
                     for (int i = 0; i < qualityMetrics.length; i++) {
                         QualityMetric q = qualityMetrics[i];
@@ -427,6 +429,7 @@ public class APrioriLinear {
                         action = QualityMetric.Action.combine(action, q.getAction(aggregates, t));
                     }
                     if (action == QualityMetric.Action.KEEP) {
+                        // Then, check minimality against saved candidates for this threshold.
                         if (curOrder == 2) {
                             if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
                             || o1Saved.contains(new IntSetAsArray(curSet.getSecond()))) {
@@ -442,6 +445,7 @@ public class APrioriLinear {
                                 continue;
                             }
                         }
+                        // Return an explanation.
                         double[] metrics = new double[qualityMetrics.length];
                         for (int i = 0; i < metrics.length; i++) {
                             metrics[i] = qualityMetrics[i].value(aggregates);
@@ -460,14 +464,14 @@ public class APrioriLinear {
             results.add(result);
             log.info("Threshold: {} Num results: {}", threshold, result.size());
         }
-        return results.get(0);
+        return results.get(0); //TODO:  Properly return all results.
     }
 
     /**
      * Check if all order-2 subsets of an order-3 candidate are valid candidates.
      * @param o2Candidates All candidates of order 2 with minimum support.
-     * @param curCandidate An order-3 candidate
-     * @return Boolean
+     * @param curCandidate An order-3 candidate.
+     * @return Boolean.
      */
     private boolean allPairsValid(IntSet curCandidate,
                                   HashSet<IntSet> o2Candidates) {
@@ -489,6 +493,12 @@ public class APrioriLinear {
         return false;
     }
 
+    /**
+     * Check if no order-2 subsets of an order-3 candidate are already saved (minimality).
+     * @param curCandidate  An order-3 candidate.
+     * @param o2Saved  Saved, to-be-returned order-2 candidates.
+     * @return  Boolean.
+     */
     private boolean noPairsSaved(IntSet curCandidate,
                                  Set<IntSet> o2Saved) {
         IntSet subPair;
