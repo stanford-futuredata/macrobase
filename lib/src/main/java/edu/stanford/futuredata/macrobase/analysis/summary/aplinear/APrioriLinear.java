@@ -23,7 +23,7 @@ public class APrioriLinear {
 
     // **Parameters**
     private QualityMetric[] qualityMetrics;
-    private List<Double> allThresholds;
+    private List<List<Double>> allThresholds;
     private double[] minPruningThresholds;
 
     // **Cached values**
@@ -43,7 +43,12 @@ public class APrioriLinear {
             List<List<Double>> allThresholds
     ) {
         log.info("Thresholds: {}", allThresholds);
+        this.allThresholds = allThresholds;
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
+        // Choose the thresholds that minimize pruning--minimal values (least restrictive)
+        // for monotonic metrics to minimize pruning
+        // through monotonicity, maximal values (most restrictive)
+        // for non-monotonic metrics to minimize pruning through minimality.
         this.minPruningThresholds = new double[allThresholds.get(0).size()];
         for (int i = 0; i < minPruningThresholds.length; i++) {
             if (qualityMetrics.get(i).isMonotonic()) {
@@ -392,6 +397,9 @@ public class APrioriLinear {
             for (IntSet curSaved : curOrderSaved) {
                 curSavedAggregates.put(curSaved, setAggregates.get(curSaved));
             }
+            for (IntSet curNext : curOrderNext) {
+                curSavedAggregates.put(curNext, setAggregates.get(curNext));
+            }
             savedAggregates.put(curOrder, curSavedAggregates);
             setNext.put(curOrder, curOrderNext);
             if (curOrder == 1) {
@@ -403,21 +411,56 @@ public class APrioriLinear {
         }
 
         log.info("Time spent in APriori:  {} ms", System.currentTimeMillis() - beginTime);
-        List<APLExplanationResult> results = new ArrayList<>();
-        for (int curOrder: savedAggregates.keySet()) {
-            Map<IntSet, double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
-            for (IntSet curSet : curOrderSavedAggregates.keySet()) {
-                double[] aggregates = curOrderSavedAggregates.get(curSet);
-                double[] metrics = new double[qualityMetrics.length];
-                for (int i = 0; i < metrics.length; i++) {
-                    metrics[i] = qualityMetrics[i].value(aggregates);
+        List<List<APLExplanationResult>> results = new ArrayList<>();
+        for (List<Double> threshold: allThresholds) {
+            List<APLExplanationResult> result = new ArrayList<>();
+            Set<IntSet> o1Saved = new HashSet<>();
+            Set<IntSet> o2Saved = new HashSet<>();
+            for (int curOrder : savedAggregates.keySet()) {
+                Map<IntSet, double[]> curOrderSavedAggregates = savedAggregates.get(curOrder);
+                for (IntSet curSet : curOrderSavedAggregates.keySet()) {
+                    double[] aggregates = curOrderSavedAggregates.get(curSet);
+                    QualityMetric.Action action = QualityMetric.Action.KEEP;
+                    for (int i = 0; i < qualityMetrics.length; i++) {
+                        QualityMetric q = qualityMetrics[i];
+                        double t = threshold.get(i);
+                        action = QualityMetric.Action.combine(action, q.getAction(aggregates, t));
+                    }
+                    if (action == QualityMetric.Action.KEEP) {
+                        if (curOrder == 2) {
+                            if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
+                            || o1Saved.contains(new IntSetAsArray(curSet.getSecond()))) {
+                                continue;
+                            }
+                        } else if (curOrder == 3) {
+                            if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
+                                    || o1Saved.contains(new IntSetAsArray(curSet.getSecond()))
+                                    || o1Saved.contains(new IntSetAsArray(curSet.getThird()))) {
+                                continue;
+                            }
+                            if (!noPairsSaved(curSet, o2Saved)) {
+                                continue;
+                            }
+                        }
+                        double[] metrics = new double[qualityMetrics.length];
+                        for (int i = 0; i < metrics.length; i++) {
+                            metrics[i] = qualityMetrics[i].value(aggregates);
+                        }
+                        result.add(
+                                new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                        );
+                        if (curOrder == 1) {
+                            o1Saved.add(curSet);
+                        } else if (curOrder == 2) {
+                            o2Saved.add(curSet);
+                        }
+                    }
                 }
-                results.add(
-                        new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
-                );
             }
+            results.add(result);
+            log.info("Threshold: {} Num results: {}", threshold, result.size());
         }
-        return results;
+        return results.get(0);
     }
 
     /**
@@ -445,4 +488,25 @@ public class APrioriLinear {
         }
         return false;
     }
+
+    private boolean noPairsSaved(IntSet curCandidate,
+                                 Set<IntSet> o2Saved) {
+        IntSet subPair;
+        subPair = new IntSetAsArray(
+                curCandidate.getFirst(),
+                curCandidate.getSecond());
+        if (!o2Saved.contains(subPair)) {
+            subPair = new IntSetAsArray(
+                    curCandidate.getSecond(),
+                    curCandidate.getThird());
+            if (!o2Saved.contains(subPair)) {
+                subPair = new IntSetAsArray(
+                        curCandidate.getFirst(),
+                        curCandidate.getThird());
+                return !o2Saved.contains(subPair);
+            }
+        }
+        return false;
+    }
 }
+
