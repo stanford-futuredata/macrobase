@@ -1,3 +1,5 @@
+data/
+conf/
 *.class
 .classpath
 .project
