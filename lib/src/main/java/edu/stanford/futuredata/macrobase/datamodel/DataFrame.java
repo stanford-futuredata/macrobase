@@ -357,6 +357,10 @@ public class DataFrame {
     public ArrayList<double[]> getDoubleCols(List<Integer> columns) {
         ArrayList<double[]> cols = new ArrayList<>();
         for (int c : columns) {
+            if (schema.getColumnType(c) != ColType.DOUBLE) {
+                throw new UnsupportedOperationException(
+                    "Column " + schema.getColumnName(c) + " not of type Double!");
+            }
             cols.add(getDoubleColumn(c));
         }
         return cols;
@@ -373,6 +377,10 @@ public class DataFrame {
     public ArrayList<String[]> getStringCols(List<Integer> columns) {
         ArrayList<String[]> cols = new ArrayList<>();
         for (int c : columns) {
+            if (schema.getColumnType(c) != ColType.STRING) {
+                throw new UnsupportedOperationException(
+                    "Column " + schema.getColumnName(c) + " not of type String!");
+            }
             cols.add(getStringColumn(c));
         }
         return cols;

@@ -4,6 +4,7 @@ import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Schema;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +25,10 @@ public class CSVDataFrameParser implements DataFrameLoader {
     private CsvParser parser;
     private final List<String> requiredColumns;
     private Map<String, Schema.ColType> columnTypes;
+    // when reading file, convert nulls to String "NULL" (default should be true)
+    private final boolean convertNulls;
 
-    public CSVDataFrameParser(CsvParser parser, List<String> requiredColumns) {
-        this.requiredColumns = requiredColumns;
-        this.parser = parser;
-    }
-
-    public CSVDataFrameParser(String filename, List<String> requiredColumns) throws IOException {
-        this.requiredColumns = requiredColumns;
+    private void init(String filename) {
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setLineSeparator("\n");
         settings.setMaxCharsPerColumn(16384);
@@ -39,14 +37,30 @@ public class CSVDataFrameParser implements DataFrameLoader {
         this.parser = csvParser;
     }
 
+    public CSVDataFrameParser(CsvParser parser, List<String> requiredColumns) {
+        this.requiredColumns = requiredColumns;
+        this.parser = parser;
+        this.convertNulls = true;
+    }
+
+    public CSVDataFrameParser(String filename, List<String> requiredColumns) throws IOException {
+        this.requiredColumns = requiredColumns;
+        init(filename);
+        this.convertNulls = true;
+    }
+
     public CSVDataFrameParser(String filename, Map<String, Schema.ColType> types) throws IOException {
         this.requiredColumns = new ArrayList<>(types.keySet());
         this.columnTypes = types;
-        CsvParserSettings settings = new CsvParserSettings();
-        settings.getFormat().setLineSeparator("\n");
-        CsvParser csvParser = new CsvParser(settings);
-        csvParser.beginParsing(getReader(filename));
-        this.parser = csvParser;
+        init(filename);
+        this.convertNulls = true;
+    }
+
+    public CSVDataFrameParser(String filename, Map<String, Schema.ColType> types, boolean convertNulls) throws IOException {
+        this.requiredColumns = new ArrayList<>(types.keySet());
+        this.columnTypes = types;
+        init(filename);
+        this.convertNulls = convertNulls;
     }
 
     @Override
@@ -91,11 +105,11 @@ public class CSVDataFrameParser implements DataFrameLoader {
             }
         }
 
-        ArrayList<String>[] stringColumns = (ArrayList<String>[])new ArrayList[numStringColumns];
+        ArrayList<String>[] stringColumns = (ArrayList<String>[]) new ArrayList[numStringColumns];
         for (int i = 0; i < numStringColumns; i++) {
             stringColumns[i] = new ArrayList<>();
         }
-        ArrayList<Double>[] doubleColumns = (ArrayList<Double>[])new ArrayList[numDoubleColumns];
+        ArrayList<Double>[] doubleColumns = (ArrayList<Double>[]) new ArrayList[numDoubleColumns];
         for (int i = 0; i < numDoubleColumns; i++) {
             doubleColumns[i] = new ArrayList<>();
         }
@@ -109,6 +123,9 @@ public class CSVDataFrameParser implements DataFrameLoader {
                     Schema.ColType t = columnTypeList[schemaIndex];
                     String rowValue = row[c];
                     if (t == Schema.ColType.STRING) {
+                        if (rowValue == null && convertNulls) {
+                            rowValue = "NULL";
+                        }
                         stringColumns[stringColNum++].add(rowValue);
                     } else if (t == Schema.ColType.DOUBLE) {
                         try {
@@ -134,7 +151,7 @@ public class CSVDataFrameParser implements DataFrameLoader {
     private static Reader getReader(String path) {
         try {
             InputStream targetStream = new FileInputStream(
-                path.replaceFirst("^~", System.getProperty("user.home")));
+                    path.replaceFirst("^~", System.getProperty("user.home")));
             return new InputStreamReader(targetStream, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("File " + path + "is not encoded using UTF-8", e);

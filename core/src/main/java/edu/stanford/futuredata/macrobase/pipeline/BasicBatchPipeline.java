@@ -1,6 +1,5 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
-import com.fasterxml.jackson.databind.jsonschema.SchemaAware;
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
