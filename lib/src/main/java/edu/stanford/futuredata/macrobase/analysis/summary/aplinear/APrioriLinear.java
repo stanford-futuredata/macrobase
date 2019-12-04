@@ -6,8 +6,6 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Qu
 import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.roaringbitmap.RoaringBitmap;
-import org.w3c.dom.Attr;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -25,13 +23,15 @@ public class APrioriLinear {
 
     // **Parameters**
     private QualityMetric[] qualityMetrics;
-    private double[] thresholds;
+    private List<Double> allThresholds;
+    private double[] minPruningThresholds;
 
     // **Cached values**
     // Sets that have high enough support but not high qualityMetrics, need to be explored
     private HashMap<Integer, HashSet<IntSet>> setNext;
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
+
 
     /**
      * @param qualityMetrics A list of all quality metrics for this DIFF
@@ -44,11 +44,29 @@ public class APrioriLinear {
     ) {
         log.info("Thresholds: {}", allThresholds);
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
-        List<Double> thresholds = allThresholds.get(0);
-        this.thresholds = new double[thresholds.size()];
-        for (int i = 0; i < thresholds.size(); i++) {
-            this.thresholds[i] = thresholds.get(i);
+        this.minPruningThresholds = new double[allThresholds.get(0).size()];
+        for (int i = 0; i < minPruningThresholds.length; i++) {
+            if (qualityMetrics.get(i).isMonotonic()) {
+                minPruningThresholds[i] = Double.POSITIVE_INFINITY;
+            } else {
+                minPruningThresholds[i] = Double.NEGATIVE_INFINITY;
+            }
         }
+        for (int i = 0; i < allThresholds.size(); i++) {
+            List<Double> iThreshold = allThresholds.get(i);
+            for (int j = 0; j < minPruningThresholds.length; j++) {
+                if (qualityMetrics.get(j).isMonotonic()) {
+                    if (iThreshold.get(j) < minPruningThresholds[j]) {
+                        minPruningThresholds[j] = iThreshold.get(j);
+                    }
+                } else {
+                    if (iThreshold.get(j) > minPruningThresholds[j]) {
+                        minPruningThresholds[j] = iThreshold.get(j);
+                    }
+                }
+            }
+        }
+        log.info("minPruningThresholds: {}", minPruningThresholds);
         this.setNext = new HashMap<>(3);
         this.savedAggregates = new HashMap<>(3);
     }
@@ -350,7 +368,7 @@ public class APrioriLinear {
                     double[] curAggregates = setAggregates.get(curCandidate);
                     for (int i = 0; i < qualityMetrics.length; i++) {
                         QualityMetric q = qualityMetrics[i];
-                        double t = thresholds[i];
+                        double t = minPruningThresholds[i];
                         action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                     }
                     if (action == QualityMetric.Action.KEEP) {
