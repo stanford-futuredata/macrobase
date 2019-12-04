@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -72,8 +73,8 @@ public class APLCountMeanShiftSummarizer  extends APLSummarizer {
     }
 
     @Override
-    public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minOutlierSupport, minMeanShift);
+    public List<List<Double>> getThresholds() {
+        return Collections.singletonList(Arrays.asList(minOutlierSupport, minOutlierSupport, minMeanShift));
     }
 
     @Override

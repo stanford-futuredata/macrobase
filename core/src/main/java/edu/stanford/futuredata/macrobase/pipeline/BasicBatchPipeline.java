@@ -37,6 +37,8 @@ public class BasicBatchPipeline implements Pipeline {
 
     private String summarizerType;
     private List<String> attributes;
+    private List<Double> minSupports;
+    private List<Double> minRiskRatios;
     private String ratioMetric;
     private double minSupport;
     private double minRiskRatio;
@@ -76,6 +78,9 @@ public class BasicBatchPipeline implements Pipeline {
         minSupport = conf.get("minSupport", 0.01);
         numThreads = conf.get("numThreads", Runtime.getRuntime().availableProcessors());
         bitmapRatioThreshold = conf.get("bitmapRatioThreshold", 256);
+
+        minSupports = conf.get("minSupports", null);
+        minRiskRatios = conf.get("minRiskRatios", null);
 
 
         //if FDs are behind used, parse them into bitmaps. For now, all FDs must be in the first 31 attributes
@@ -146,11 +151,19 @@ public class BasicBatchPipeline implements Pipeline {
             }
             case "aplinear":
             case "apriori": {
+                if (minSupports == null) {
+                    assert (minRiskRatios == null);
+                    minSupports = Collections.singletonList(minSupport);
+                    minRiskRatios = Collections.singletonList(minRiskRatio);
+                }
+                minSupport = Collections.min(minSupports);
+                assert(minSupports.size() == minRiskRatios.size());
                 APLOutlierSummarizer summarizer = new APLOutlierSummarizer(true);
                 summarizer.setOutlierColumn(outlierColumnName);
                 summarizer.setAttributes(attributes);
                 summarizer.setMinSupport(minSupport);
-                summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setMinOutlierSupports(minSupports);
+                summarizer.setMinRatioMetrics(minRiskRatios);
                 summarizer.setBitmapRatioThreshold(bitmapRatioThreshold);
                 summarizer.setNumThreads(numThreads);
                 summarizer.setFDUsage(useFDs);

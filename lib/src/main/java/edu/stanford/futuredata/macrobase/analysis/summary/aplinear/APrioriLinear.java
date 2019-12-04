@@ -36,13 +36,15 @@ public class APrioriLinear {
     /**
      * @param qualityMetrics A list of all quality metrics for this DIFF
      *                       operation.
-     * @param thresholds A list of the thresholds for each quality metric.
+     * @param allThresholds A list of the thresholds for each quality metric.
      */
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
-            List<Double> thresholds
+            List<List<Double>> allThresholds
     ) {
+        log.info("Thresholds: {}", allThresholds);
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
+        List<Double> thresholds = allThresholds.get(0);
         this.thresholds = new double[thresholds.size()];
         for (int i = 0; i < thresholds.size(); i++) {
             this.thresholds[i] = thresholds.get(i);
