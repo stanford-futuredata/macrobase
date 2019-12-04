@@ -37,8 +37,8 @@ public class APLOutlierSummarizerTest {
                 "version"
         );
         APLOutlierSummarizer summ = new APLOutlierSummarizer(true);
-        summ.setMinSupport(.01);
-        summ.setMinRatioMetric(10.0);
+        summ.setMinOutlierSupports(Collections.singletonList(.01));
+        summ.setMinRatioMetrics(Collections.singletonList(10.0));
         summ.setAttributes(explanationAttributes);
         summ.process(dfClassified);
 
@@ -70,8 +70,8 @@ public class APLOutlierSummarizerTest {
         APLOutlierSummarizer summ = new APLOutlierSummarizer(false);
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
-        summ.setMinSupport(.1);
-        summ.setMinRatioMetric(3.0);
+        summ.setMinOutlierSupports(Collections.singletonList(.1));
+        summ.setMinRatioMetrics(Collections.singletonList(3.0));
         summ.setAttributes(explanationAttributes);
         summ.process(df);
         APLExplanation e = summ.getResults();
@@ -102,8 +102,8 @@ public class APLOutlierSummarizerTest {
         APLOutlierSummarizer summ = new APLOutlierSummarizer(true);
         summ.setCountColumn("counts");
         summ.setOutlierColumn("oCounts");
-        summ.setMinSupport(.1);
-        summ.setMinRatioMetric(3.0);
+        summ.setMinOutlierSupports(Collections.singletonList(.1));
+        summ.setMinRatioMetrics(Collections.singletonList(3.0));
         summ.setAttributes(explanationAttributes);
         summ.process(df);
         APLExplanation e = summ.getResults();

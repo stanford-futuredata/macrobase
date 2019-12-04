@@ -21,7 +21,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     APLExplanation explanation;
     APrioriLinear aplKernel;
     List<QualityMetric> qualityMetricList;
-    List<Double> thresholds;
+    List<List<Double>> thresholds;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -31,7 +31,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public abstract AggregationOp[] getAggregationOps();
     public abstract double[][] getAggregateColumns(DataFrame input);
     public abstract List<QualityMetric> getQualityMetricList();
-    public abstract List<Double> getThresholds();
+    public abstract List<List<Double>> getThresholds();
     public abstract int[][] getEncoded(List<String[]> columns, DataFrame input);
     public abstract double getNumberOutliers(double[][] aggregates);
 

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -77,8 +78,8 @@ public class APLMeanSummarizer extends APLSummarizer {
     }
 
     @Override
-    public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minStdDev);
+    public List<List<Double>> getThresholds() {
+        return Collections.singletonList(Arrays.asList(minOutlierSupport, minStdDev));
     }
 
     @Override
@@ -86,7 +87,7 @@ public class APLMeanSummarizer extends APLSummarizer {
         int n = aggregates[0].length;
         int k = aggregates.length;
         QualityMetric meanDevMetric = qualityMetricList.get(1);
-        double meanDevThreshold = thresholds.get(1);
+        double meanDevThreshold = thresholds.get(0).get(1);
         double[] curRow = new double[k];
         double outlierCount = 0;
         for (int i = 0; i < n; i++) {

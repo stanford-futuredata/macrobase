@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.*;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +18,19 @@ public class APLOutlierSummarizer extends APLSummarizer {
     private String countColumn = null;
     private boolean useBitmaps;
 
+    private List<Double> minOutlierSupports;
+    private List<Double> minRatioMetrics;
+
     public APLOutlierSummarizer(boolean useBitmaps) {
         this.useBitmaps = useBitmaps;
+    }
+
+    public void setMinOutlierSupports(List<Double> minOutlierSupports) {
+        this.minOutlierSupports = minOutlierSupports;
+    }
+
+    public void setMinRatioMetrics(List<Double> minRatioMetrics) {
+        this.minRatioMetrics = minRatioMetrics;
     }
 
     @Override
@@ -77,8 +89,19 @@ public class APLOutlierSummarizer extends APLSummarizer {
     }
 
     @Override
-    public List<Double> getThresholds() {
-        return Arrays.asList(minOutlierSupport, minRatioMetric);
+    public List<List<Double>> getThresholds() {
+        if (minOutlierSupports == null) {
+            assert(minRatioMetrics == null);
+            return Collections.singletonList(Arrays.asList(minOutlierSupport, minRatioMetric));
+        }
+        List<List<Double>> retList = new ArrayList<>();
+        for(int i = 0; i < minOutlierSupports.size(); i++) {
+            List<Double> rowList = new ArrayList<>();
+            rowList.add(minOutlierSupports.get(i));
+            rowList.add(minRatioMetrics.get(i));
+            retList.add(rowList);
+        }
+        return retList;
     }
 
     @Override
@@ -97,9 +120,5 @@ public class APLOutlierSummarizer extends APLSummarizer {
 
     public void setCountColumn(String countColumn) {
         this.countColumn = countColumn;
-    }
-
-    public double getMinRatioMetric() {
-        return minRatioMetric;
     }
 }
