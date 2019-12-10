@@ -405,7 +405,6 @@ public class APrioriLinear {
                 }
             } else {
                 for (IntSet curCandidate: setAggregates.keySet()) {
-                    debugCombo(curCandidate, setAggregates.get(curCandidate));
                     QualityMetric.Action action = QualityMetric.Action.KEEP;
                     if (curOrder != 1 || curCandidate.getFirst() != AttributeEncoder.noSupport) {
                         double[] curAggregates = setAggregates.get(curCandidate);
