@@ -11,6 +11,7 @@ import java.util.Optional;
 public class DiffQuerySpecification extends QueryBody {
 
     private final Select select;
+    private final boolean anti;
     // Either first and second are present, or splitQuery is
     private final Optional<TableSubquery> first;
     private final Optional<TableSubquery> second;
@@ -39,6 +40,7 @@ public class DiffQuerySpecification extends QueryBody {
 
     public DiffQuerySpecification(
         Select select,
+        boolean anti,
         Optional<TableSubquery> first,
         Optional<TableSubquery> second,
         Optional<SplitQuery> splitQuery,
@@ -51,13 +53,14 @@ public class DiffQuerySpecification extends QueryBody {
         Optional<OrderBy> orderBy,
         Optional<String> limit,
         Optional<ExportClause> exportExpr) {
-        this(Optional.empty(), select, first, second, splitQuery, attributeCols, minRatioExpr,
+        this(Optional.empty(), select, anti, first, second, splitQuery, attributeCols, minRatioExpr,
             minSupportExpr, ratioMetricExpr, maxCombo, where, orderBy, limit, exportExpr);
     }
 
     public DiffQuerySpecification(
         NodeLocation location,
         Select select,
+        boolean anti,
         Optional<TableSubquery> first,
         Optional<TableSubquery> second,
         Optional<SplitQuery> splitQuery,
@@ -70,13 +73,14 @@ public class DiffQuerySpecification extends QueryBody {
         Optional<OrderBy> orderBy,
         Optional<String> limit,
         Optional<ExportClause> exportExpr) {
-        this(Optional.of(location), select, first, second, splitQuery, attributeCols, minRatioExpr,
+        this(Optional.of(location), select, anti, first, second, splitQuery, attributeCols, minRatioExpr,
             minSupportExpr, ratioMetricExpr, maxCombo, where, orderBy, limit, exportExpr);
     }
 
     private DiffQuerySpecification(
         Optional<NodeLocation> location,
         Select select,
+        boolean anti,
         Optional<TableSubquery> first,
         Optional<TableSubquery> second,
         Optional<SplitQuery> splitQuery,
@@ -105,6 +109,7 @@ public class DiffQuerySpecification extends QueryBody {
         requireNonNull(exportExpr, "exportExpr is null");
 
         this.select = select;
+        this.anti = anti;
         this.first = first;
         this.second = second;
         this.splitQuery = splitQuery;
@@ -122,6 +127,8 @@ public class DiffQuerySpecification extends QueryBody {
     public Select getSelect() {
         return select;
     }
+
+    public boolean isAnti() { return anti; }
 
     public Optional<TableSubquery> getFirst() {
         return first;
@@ -184,6 +191,9 @@ public class DiffQuerySpecification extends QueryBody {
     public List<Node> getChildren() {
         ImmutableList.Builder<Node> nodes = ImmutableList.builder();
         nodes.add(select);
+        if (anti) {
+            nodes.add(new StringLiteral("ANTI"));
+        }
         first.ifPresent(nodes::add);
         second.ifPresent(nodes::add);
         nodes.addAll(attributeCols);
@@ -202,6 +212,7 @@ public class DiffQuerySpecification extends QueryBody {
     public String toString() {
         return toStringHelper(this)
             .add("select", select)
+            .add("anti", anti)
             .add("first", first)
             .add("second", second.orElse(null))
             .add("attributeCols", attributeCols)
@@ -226,6 +237,7 @@ public class DiffQuerySpecification extends QueryBody {
         }
         DiffQuerySpecification o = (DiffQuerySpecification) obj;
         return Objects.equals(select, o.select) &&
+            Objects.equals(anti, o.anti) &&
             Objects.equals(first, o.first) &&
             Objects.equals(second, o.second) &&
             Objects.equals(attributeCols, o.attributeCols) &&
@@ -242,7 +254,7 @@ public class DiffQuerySpecification extends QueryBody {
     @Override
     public int hashCode() {
         return Objects
-            .hash(select, first, second, attributeCols, minRatioExpr, minSupportExpr,
+            .hash(select, anti, first, second, attributeCols, minRatioExpr, minSupportExpr,
                 ratioMetricExpr,
                 maxCombo, where, orderBy,
                 limit, exportExpr);

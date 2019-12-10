@@ -26,6 +26,7 @@ class SQLTestUtils {
         throws IOException {
         final String queryStr = Resources
             .toString(Resources.getResource(queryFilename), Charsets.UTF_8);
+        System.out.println(queryStr);
         final Statement stmt;
         try {
             stmt = parser.createStatement(queryStr.replace(";", ""));
@@ -38,6 +39,7 @@ class SQLTestUtils {
         final QueryBody q = ((Query) stmt).getQueryBody();
         try {
             final DataFrame result = queryEngine.executeQuery(q);
+            result.prettyPrint();
             assertEquals(expected, result);
         } catch (MacroBaseException e) {
             e.printStackTrace();
@@ -68,6 +70,7 @@ class SQLTestUtils {
                 if (stmt instanceof Query) {
                     final QueryBody q = ((Query) stmt).getQueryBody();
                     final DataFrame result = queryEngine.executeQuery(q);
+                    result.prettyPrint();
                     assertEquals(expected, result);
                 } else if (stmt instanceof ImportCsv) {
                     final ImportCsv importStatement = (ImportCsv) stmt;

@@ -1,0 +1,1061 @@
+usage,latency,location,version,device
+30.77,238,CAN,v2,iPhone
+31.28,611,CAN,v2,iPhone
+31.17,768,RUS,v4,iPhone
+30.94,192,AUS,v3,HTC Vive
+35.36,401,UK,v3,iPhone
+39.12,531,RUS,v4,iPhone
+33.9,223,UK,v3,iPhone
+40.09,582,USA,v1,iPhone
+2.897,391,CAN,v3,iPhone
+39.03,441,CAN,v2,iPhone
+32.2,430,CAN,v1,iPhone
+42.3,572,RUS,v4,iPhone
+33.64,541,AUS,v4,iPhone
+38.54,88,USA,v1,iPhone
+25.46,918,UK,v3,iPhone
+35.69,931,AUS,v3,iPhone
+29.21,369,CAN,v2,iPhone
+25.83,627,RUS,v4,iPhone
+39.32,609,USA,v1,iPhone
+41.52,39,CAN,v2,iPhone
+35.41,140,AUS,v3,iPhone
+32.42,166,AUS,v3,iPhone
+29.84,351,AUS,v3,iPhone
+46.88,836,AUS,v3,iPhone
+38.59,790,AUS,v3,iPhone
+38.61,548,UK,v2,iPhone
+31.18,546,RUS,v4,iPhone
+29.31,955,AUS,v3,iPhone
+28.82,744,UK,v2,iPhone
+36.5,406,USA,v1,iPhone
+41.19,80,AUS,v3,iPhone
+38.68,102,CAN,v2,iPhone
+40.11,148,RUS,v4,iPhone
+42.31,138,AUS,v3,iPhone
+37.55,967,RUS,v4,iPhone
+35.69,600,USA,v1,iPhone
+42.1,344,AUS,v3,iPhone
+30.42,890,UK,v3,iPhone
+35.78,198,AUS,v4,iPhone
+31.81,20,CAN,v2,iPhone
+36.35,584,USA,v1,iPhone
+41,699,UK,v2,iPhone
+34.88,800,CAN,v1,HTC Vive
+35.31,996,RUS,v4,HTC Vive
+29.78,905,RUS,v4,HTC Vive
+33.68,647,AUS,v3,HTC Vive
+40.16,279,RUS,v4,HTC Vive
+32.04,254,RUS,v4,HTC Vive
+35.39,328,RUS,v4,HTC Vive
+32.14,261,USA,v1,HTC Vive
+28.21,979,RUS,v4,HTC Vive
+10.56,661,CAN,v3,HTC Vive
+43.79,887,USA,v1,HTC Vive
+40.98,793,AUS,v4,HTC Vive
+32.15,789,USA,v1,HTC Vive
+36.3,588,CAN,v2,iPhone
+34.76,825,CAN,v2,iPhone
+36.07,204,UK,v3,iPhone
+39.48,102,UK,v3,iPhone
+8.187,354,CAN,v3,iPhone
+38.07,953,AUS,v3,iPhone
+32.77,329,UK,v3,iPhone
+33.68,465,UK,v2,iPhone
+39.5,864,RUS,v4,iPhone
+32.28,379,CAN,v2,iPhone
+33.29,932,UK,v3,iPhone
+29.8,874,USA,v1,iPhone
+31.13,437,CAN,v1,iPhone
+36.8,454,RUS,v4,iPhone
+41.34,706,UK,v2,iPhone
+36.51,498,CAN,v2,iPhone
+40.4,272,RUS,v4,iPhone
+36.79,740,CAN,v2,iPhone
+32.98,318,CAN,v2,iPhone
+32.24,911,AUS,v3,iPhone
+24.32,645,UK,v3,iPhone
+39.32,123,RUS,v4,iPhone
+29.78,38,UK,v2,iPhone
+36.03,635,USA,v1,iPhone
+39.9,84,USA,v1,iPhone
+38.7,250,AUS,v3,iPhone
+30.42,233,USA,v1,iPhone
+32.11,361,CAN,v2,iPhone
+30.3,291,RUS,v4,iPhone
+46.69,209,AUS,v3,iPhone
+41.92,401,CAN,v1,iPhone
+32.01,251,RUS,v4,iPhone
+31.66,924,RUS,v4,iPhone
+31.45,882,RUS,v4,iPhone
+28.73,522,UK,v2,iPhone
+38.47,806,CAN,v2,HTC Vive
+37.89,778,UK,v2,iPhone
+43.04,152,UK,v3,iPhone
+33.36,245,CAN,v1,iPhone
+32.07,675,RUS,v4,iPhone
+25.95,250,AUS,v4,iPhone
+7.931,279,CAN,v3,iPhone
+36.71,724,CAN,v1,iPhone
+34.63,553,RUS,v4,iPhone
+40.6,494,USA,v1,iPhone
+39.31,8,UK,v3,iPhone
+34.92,161,CAN,v2,HTC Vive
+45.56,961,AUS,v3,iPhone
+35.83,948,RUS,v4,iPhone
+37.67,816,UK,v2,iPhone
+40.2,198,RUS,v4,iPhone
+38.48,907,RUS,v4,iPhone
+34.49,345,AUS,v3,iPhone
+34.49,453,USA,v1,iPhone
+27.07,892,AUS,v4,iPhone
+35.31,871,CAN,v2,HTC Vive
+34.08,13,CAN,v1,iPhone
+35.04,476,USA,v1,iPhone
+39.42,925,USA,v1,iPhone
+37.45,243,AUS,v4,iPhone
+38,208,UK,v2,iPhone
+34.52,418,RUS,v4,iPhone
+33.88,532,AUS,v3,iPhone
+36.6,921,CAN,v1,iPhone
+35.06,156,CAN,v2,HTC Vive
+32.44,164,CAN,v1,iPhone
+32.9,120,RUS,v4,iPhone
+33.39,367,AUS,v4,iPhone
+31.24,304,AUS,v4,iPhone
+31.44,78,USA,v1,iPhone
+36.15,639,AUS,v3,iPhone
+31.42,636,CAN,v2,HTC Vive
+38.11,682,USA,v1,iPhone
+28.97,923,UK,v3,iPhone
+45.73,745,UK,v3,iPhone
+28.17,876,USA,v1,iPhone
+37.74,308,CAN,v1,iPhone
+2.745,926,CAN,v3,iPhone
+41.21,196,RUS,v4,iPhone
+32.35,258,UK,v3,iPhone
+29.31,263,USA,v1,iPhone
+36.37,116,AUS,v3,iPhone
+43.04,528,CAN,v1,iPhone
+33.92,932,AUS,v4,iPhone
+39.12,694,AUS,v4,iPhone
+41.14,718,RUS,v4,iPhone
+30.69,292,USA,v1,iPhone
+33.59,628,CAN,v2,HTC Vive
+31.34,190,USA,v1,iPhone
+39.46,144,AUS,v3,iPhone
+40.46,143,UK,v2,iPhone
+38.39,689,AUS,v3,iPhone
+21.48,25,UK,v2,iPhone
+35.07,25,CAN,v2,HTC Vive
+24.56,526,USA,v1,iPhone
+37.92,931,AUS,v3,iPhone
+34.2,409,RUS,v4,iPhone
+31.83,217,UK,v3,iPhone
+28.09,640,USA,v1,iPhone
+37.35,247,RUS,v4,iPhone
+38.68,49,AUS,v3,iPhone
+41.47,525,UK,v2,iPhone
+39.52,181,UK,v2,iPhone
+41.57,161,CAN,v2,HTC Vive
+43.66,671,AUS,v3,iPhone
+37.88,187,AUS,v3,iPhone
+32.74,764,UK,v3,iPhone
+35.76,763,CAN,v1,iPhone
+35.54,416,AUS,v4,iPhone
+39.08,961,USA,v1,iPhone
+32.35,391,CAN,v2,HTC Vive
+35.89,544,UK,v3,iPhone
+10.2,54,CAN,v3,iPhone
+41.31,736,AUS,v3,iPhone
+39.42,354,USA,v1,iPhone
+34.43,837,UK,v2,iPhone
+39.24,278,AUS,v3,iPhone
+33.98,572,UK,v2,iPhone
+25.9,722,CAN,v2,HTC Vive
+39.46,732,USA,v1,iPhone
+19.75,548,USA,v1,iPhone
+40.48,875,RUS,v4,iPhone
+33,324,AUS,v3,iPhone
+37.35,237,AUS,v4,iPhone
+38.04,118,RUS,v4,iPhone
+31.81,566,CAN,v2,HTC Vive
+31.15,148,USA,v1,iPhone
+40.54,26,UK,v3,iPhone
+28.85,611,USA,v1,iPhone
+41.1,939,UK,v3,iPhone
+33.14,881,USA,v1,iPhone
+34.61,319,RUS,v4,iPhone
+31.57,250,UK,v2,iPhone
+43.54,706,AUS,v3,iPhone
+30.34,905,USA,v1,iPhone
+32.98,543,AUS,v4,iPhone
+17.25,953,CAN,v2,HTC Vive
+30.21,675,USA,v1,iPhone
+37.42,902,CAN,v2,HTC Vive
+37.96,146,CAN,v2,HTC Vive
+35.28,830,UK,v3,iPhone
+30.9,290,CAN,v2,HTC Vive
+31.95,401,UK,v2,iPhone
+35.29,353,UK,v3,iPhone
+27.52,710,USA,v1,iPhone
+32.7,497,USA,v1,iPhone
+36.02,844,RUS,v4,iPhone
+38.03,212,RUS,v4,iPhone
+38.03,894,RUS,v4,iPhone
+42.23,491,RUS,v4,iPhone
+31.27,879,AUS,v3,iPhone
+35.07,664,USA,v1,iPhone
+35.76,717,CAN,v2,HTC Vive
+34.98,92,AUS,v4,iPhone
+45.36,635,RUS,v4,iPhone
+22.78,558,USA,v1,iPhone
+34.17,321,USA,v1,iPhone
+35.29,393,USA,v1,iPhone
+34.93,154,CAN,v2,HTC Vive
+44.51,312,CAN,v1,iPhone
+35.22,585,UK,v2,iPhone
+32.87,782,USA,v1,iPhone
+37,921,CAN,v2,HTC Vive
+36.43,608,RUS,v4,iPhone
+41.3,982,RUS,v4,iPhone
+26.95,831,UK,v3,iPhone
+34.99,541,RUS,v4,iPhone
+42.74,104,AUS,v3,iPhone
+36.67,423,UK,v2,iPhone
+45.34,202,AUS,v3,iPhone
+38.66,971,RUS,v4,iPhone
+36.33,533,USA,v1,iPhone
+23.46,420,UK,v3,iPhone
+37.89,487,CAN,v1,iPhone
+30.01,168,UK,v2,iPhone
+42.59,919,USA,v1,iPhone
+28.59,561,RUS,v4,iPhone
+32.86,546,UK,v2,iPhone
+36.74,702,RUS,v4,iPhone
+32.93,952,USA,v1,iPhone
+43.78,43,UK,v2,iPhone
+40.4,395,CAN,v2,HTC Vive
+33.19,168,CAN,v2,HTC Vive
+27.82,730,RUS,v4,iPhone
+39.03,571,RUS,v4,iPhone
+27.37,804,AUS,v3,iPhone
+28.49,884,USA,v1,iPhone
+35.17,46,USA,v1,iPhone
+27.91,41,CAN,v2,HTC Vive
+34.55,668,USA,v1,iPhone
+32.36,655,RUS,v4,iPhone
+39.18,472,AUS,v3,iPhone
+45.89,606,RUS,v4,iPhone
+23.15,864,USA,v1,iPhone
+35.64,791,USA,v1,iPhone
+34.55,764,UK,v2,iPhone
+37.49,13,AUS,v3,iPhone
+38.64,436,AUS,v4,iPhone
+32.74,91,UK,v3,iPhone
+42.18,654,RUS,v4,iPhone
+40.79,240,USA,v1,iPhone
+31.09,252,UK,v3,iPhone
+38.45,893,USA,v1,iPhone
+32.36,27,USA,v1,iPhone
+36.58,732,USA,v1,iPhone
+36.89,685,UK,v3,iPhone
+33.71,988,CAN,v2,HTC Vive
+32.06,522,CAN,v2,HTC Vive
+27.7,390,RUS,v4,iPhone
+40.53,909,UK,v3,iPhone
+34.67,450,USA,v1,iPhone
+15.5,470,CAN,v3,iPhone
+45.03,525,RUS,v4,HTC Vive
+35.94,408,USA,v1,HTC Vive
+37.55,917,USA,v1,HTC Vive
+29.84,610,RUS,v4,HTC Vive
+44.28,648,CAN,v1,HTC Vive
+36.67,849,CAN,v2,HTC Vive
+29.57,247,CAN,v1,iPhone
+33.46,577,USA,v1,iPhone
+28.97,553,AUS,v4,iPhone
+42.51,179,USA,v1,iPhone
+34.57,375,USA,v1,iPhone
+30.68,211,CAN,v2,HTC Vive
+18.75,778,UK,v3,iPhone
+39.23,274,AUS,v3,iPhone
+28.63,958,USA,v1,iPhone
+37.6,813,USA,v1,iPhone
+31.53,774,AUS,v3,iPhone
+17.24,488,USA,v1,iPhone
+39.28,968,USA,v1,iPhone
+41.58,420,UK,v3,iPhone
+33.5,995,AUS,v4,iPhone
+37.57,517,AUS,v3,iPhone
+45.18,221,UK,v2,iPhone
+42.1,690,UK,v2,iPhone
+31.25,999,UK,v3,iPhone
+39.55,619,RUS,v4,HTC Vive
+34.44,543,USA,v1,HTC Vive
+40.19,890,RUS,v4,HTC Vive
+35.42,815,RUS,v4,HTC Vive
+36.9,170,CAN,v2,HTC Vive
+33.2,888,RUS,v4,iPhone
+32.09,563,USA,v1,iPhone
+33.49,981,UK,v2,iPhone
+40.52,484,CAN,v2,HTC Vive
+43.23,8,USA,v1,iPhone
+23.58,336,AUS,v4,iPhone
+34.89,237,UK,v2,iPhone
+40.79,150,RUS,v4,iPhone
+28.13,468,RUS,v4,iPhone
+36.05,141,UK,v2,iPhone
+38.55,848,UK,v2,iPhone
+34.58,769,RUS,v4,iPhone
+37.96,440,AUS,v3,iPhone
+37.89,315,RUS,v4,iPhone
+36.05,653,CAN,v2,HTC Vive
+47.86,680,RUS,v4,iPhone
+37.98,689,AUS,v3,iPhone
+37.42,314,CAN,v1,iPhone
+35.33,38,CAN,v1,iPhone
+28.86,408,AUS,v3,iPhone
+33.86,3,AUS,v3,iPhone
+38.43,533,UK,v2,iPhone
+35.87,96,UK,v2,iPhone
+37.46,785,UK,v3,iPhone
+10.44,453,CAN,v3,iPhone
+36.26,681,AUS,v3,iPhone
+34.35,149,UK,v3,iPhone
+42.33,755,USA,v1,iPhone
+41.37,201,RUS,v4,iPhone
+41.48,539,AUS,v3,iPhone
+36.5,304,AUS,v3,iPhone
+39.1,259,CAN,v1,iPhone
+-0.335,729,CAN,v3,iPhone
+49.22,464,RUS,v4,iPhone
+50.04,735,RUS,v4,iPhone
+26.31,582,CAN,v1,iPhone
+32.73,561,UK,v2,iPhone
+39.01,567,AUS,v3,iPhone
+34.1,855,CAN,v2,HTC Vive
+26.11,856,UK,v3,iPhone
+39.03,380,CAN,v2,HTC Vive
+32.7,850,USA,v1,iPhone
+30.34,879,USA,v1,iPhone
+32.41,74,USA,v1,iPhone
+35.75,583,UK,v2,iPhone
+29.23,663,USA,v1,iPhone
+35.28,866,UK,v2,iPhone
+42.02,514,UK,v2,iPhone
+33.84,147,UK,v2,iPhone
+34.27,549,AUS,v3,iPhone
+38.32,168,UK,v3,iPhone
+40.92,838,RUS,v4,HTC Vive
+18.85,427,CAN,v3,HTC Vive
+38.83,623,RUS,v4,HTC Vive
+35.66,903,AUS,v3,iPhone
+27.11,713,CAN,v2,HTC Vive
+29.53,664,USA,v1,iPhone
+35.63,751,UK,v2,iPhone
+36,571,UK,v3,HTC Vive
+33.85,27,RUS,v4,iPhone
+33.08,3,AUS,v3,iPhone
+42.53,462,UK,v3,HTC Vive
+27.03,870,UK,v3,HTC Vive
+44.08,737,UK,v2,iPhone
+35.12,320,AUS,v3,iPhone
+37.19,668,USA,v1,HTC Vive
+44.71,610,AUS,v2,HTC Vive
+26.76,345,RUS,v4,HTC Vive
+30.96,725,CAN,v2,HTC Vive
+44.81,943,UK,v3,HTC Vive
+35.33,850,USA,v1,iPhone
+31.13,438,RUS,v4,iPhone
+34.3,525,USA,v1,iPhone
+29.8,594,CAN,v2,HTC Vive
+30.67,95,AUS,v4,HTC Vive
+33.04,39,AUS,v4,HTC Vive
+25.02,234,UK,v2,HTC Vive
+32.96,794,UK,v3,HTC Vive
+40.8,455,RUS,v4,HTC Vive
+38.66,73,AUS,v2,HTC Vive
+36.7,376,USA,v1,HTC Vive
+39.98,27,RUS,v4,HTC Vive
+18.54,604,CAN,v3,HTC Vive
+36.47,542,CAN,v1,iPhone
+39.54,856,AUS,v3,HTC Vive
+40.54,685,UK,v3,HTC Vive
+35.21,481,AUS,v3,HTC Vive
+37.35,877,AUS,v3,HTC Vive
+36.75,308,UK,v3,HTC Vive
+37.09,639,AUS,v4,HTC Vive
+37.34,691,RUS,v4,iPhone
+32.87,232,UK,v2,iPhone
+33.45,188,CAN,v2,HTC Vive
+38.84,302,UK,v3,HTC Vive
+36.76,307,USA,v1,iPhone
+36.97,865,UK,v2,iPhone
+32.5,894,USA,v1,iPhone
+37.33,340,RUS,v4,iPhone
+28.98,454,UK,v2,iPhone
+44.99,915,USA,v1,iPhone
+28.18,588,RUS,v4,iPhone
+39.26,817,AUS,v3,iPhone
+37.95,589,RUS,v4,iPhone
+38.45,389,CAN,v2,HTC Vive
+37.84,371,CAN,v2,HTC Vive
+33.66,745,AUS,v4,HTC Vive
+33.02,875,AUS,v3,iPhone
+39.6,189,USA,v1,iPhone
+41.51,3,USA,v1,iPhone
+34.32,345,CAN,v2,HTC Vive
+36.48,706,USA,v1,iPhone
+32.21,528,CAN,v1,iPhone
+29.76,68,AUS,v3,iPhone
+32.3,270,AUS,v3,iPhone
+22.74,102,AUS,v4,HTC Vive
+38.9,294,UK,v2,iPhone
+3.703,392,CAN,v3,iPhone
+29.29,367,USA,v1,iPhone
+40.23,539,UK,v2,iPhone
+35.64,905,CAN,v1,iPhone
+30.23,846,UK,v2,iPhone
+37.3,332,UK,v3,iPhone
+33.36,657,AUS,v3,iPhone
+36.61,636,USA,v1,iPhone
+35.36,891,AUS,v3,iPhone
+38.96,702,USA,v1,iPhone
+39.14,723,USA,v1,iPhone
+28.83,159,RUS,v4,iPhone
+30.67,419,AUS,v3,iPhone
+44.18,283,RUS,v4,iPhone
+43.59,900,CAN,v2,HTC Vive
+31.63,920,RUS,v4,iPhone
+31.98,81,RUS,v4,iPhone
+31.62,632,UK,v2,iPhone
+36.87,271,CAN,v2,HTC Vive
+43.18,482,USA,v1,iPhone
+41.3,82,RUS,v4,iPhone
+45.08,747,UK,v3,iPhone
+37.89,553,USA,v1,iPhone
+28.11,655,UK,v3,iPhone
+33.77,348,UK,v2,iPhone
+40.6,574,USA,v1,iPhone
+37.09,173,RUS,v4,iPhone
+29.13,239,RUS,v4,iPhone
+35.07,224,AUS,v3,iPhone
+41.33,622,UK,v2,iPhone
+35.17,867,USA,v1,iPhone
+35.61,175,CAN,v1,iPhone
+35.44,968,UK,v3,iPhone
+33.83,898,CAN,v1,iPhone
+32.36,119,CAN,v1,iPhone
+29.69,608,UK,v3,iPhone
+22.81,136,USA,v1,iPhone
+39.85,162,UK,v2,iPhone
+33.12,113,USA,v1,iPhone
+41.27,167,UK,v2,iPhone
+31.76,397,USA,v1,iPhone
+30.25,723,AUS,v3,iPhone
+26.59,656,CAN,v2,HTC Vive
+36.88,656,CAN,v2,HTC Vive
+32.72,799,USA,v1,iPhone
+20.34,24,CAN,v2,HTC Vive
+35.62,334,CAN,v2,HTC Vive
+37.34,56,AUS,v3,iPhone
+36.61,364,CAN,v2,HTC Vive
+32.11,507,CAN,v1,iPhone
+46.61,684,AUS,v4,HTC Vive
+33.5,700,AUS,v3,iPhone
+31.18,395,UK,v3,iPhone
+40.9,943,AUS,v3,iPhone
+29.65,998,UK,v3,iPhone
+29.23,714,CAN,v2,HTC Vive
+18.72,963,CAN,v1,iPhone
+32.83,933,UK,v2,iPhone
+32.93,239,CAN,v2,HTC Vive
+38.29,563,CAN,v2,HTC Vive
+37.13,262,AUS,v3,iPhone
+26.56,557,USA,v1,iPhone
+30.63,660,UK,v3,iPhone
+34.8,635,UK,v2,iPhone
+38.14,875,CAN,v2,HTC Vive
+36.36,836,UK,v2,iPhone
+36.97,346,USA,v1,iPhone
+32.94,883,RUS,v4,iPhone
+26.78,478,USA,v1,iPhone
+26.28,168,AUS,v3,iPhone
+44.68,125,CAN,v2,HTC Vive
+32.89,344,AUS,v4,HTC Vive
+40.26,654,CAN,v2,HTC Vive
+36.25,656,AUS,v3,iPhone
+37.08,983,CAN,v2,HTC Vive
+29.42,785,RUS,v4,iPhone
+27.72,507,USA,v1,iPhone
+32.53,680,USA,v1,iPhone
+28.51,756,RUS,v4,iPhone
+39.49,979,USA,v1,iPhone
+42.28,107,CAN,v2,HTC Vive
+38.78,392,USA,v1,iPhone
+39.64,480,CAN,v2,HTC Vive
+37.62,544,AUS,v3,iPhone
+41.93,19,UK,v3,iPhone
+41.29,46,AUS,v3,iPhone
+41.83,163,CAN,v2,HTC Vive
+34.65,861,UK,v2,iPhone
+41.7,515,RUS,v4,iPhone
+29.96,282,RUS,v4,iPhone
+32.93,614,USA,v1,iPhone
+37.53,928,USA,v1,iPhone
+24.69,234,AUS,v4,HTC Vive
+36.05,580,USA,v1,iPhone
+39.25,161,CAN,v1,iPhone
+34.11,789,AUS,v3,iPhone
+36.36,886,CAN,v2,HTC Vive
+38.06,695,AUS,v4,HTC Vive
+36.64,626,AUS,v3,iPhone
+27.98,534,USA,v1,iPhone
+34.96,755,CAN,v2,HTC Vive
+35.72,744,RUS,v4,iPhone
+29.9,440,CAN,v2,HTC Vive
+29.99,647,RUS,v4,iPhone
+39.3,594,CAN,v1,iPhone
+38.34,575,AUS,v3,iPhone
+34.8,946,CAN,v2,HTC Vive
+28.81,113,USA,v1,iPhone
+32.16,81,USA,v1,iPhone
+34.89,910,USA,v1,iPhone
+32.99,998,RUS,v4,iPhone
+28.98,161,RUS,v4,iPhone
+33.69,803,CAN,v2,HTC Vive
+37.38,481,CAN,v2,HTC Vive
+38.07,773,AUS,v3,iPhone
+36.37,726,RUS,v4,iPhone
+37.94,806,CAN,v2,HTC Vive
+33.05,808,RUS,v4,iPhone
+32.51,515,RUS,v4,iPhone
+28.72,798,UK,v3,iPhone
+35.52,491,UK,v2,iPhone
+38.38,215,RUS,v4,iPhone
+33.93,855,CAN,v2,HTC Vive
+30.28,793,AUS,v3,iPhone
+28.71,534,AUS,v3,iPhone
+38.35,540,CAN,v2,HTC Vive
+46.33,838,RUS,v4,iPhone
+39.41,96,UK,v3,iPhone
+32.11,280,UK,v3,iPhone
+35.37,192,CAN,v2,HTC Vive
+32.6,572,UK,v2,iPhone
+34.14,103,AUS,v3,iPhone
+33.47,549,CAN,v2,HTC Vive
+30.83,346,AUS,v4,HTC Vive
+29.72,494,USA,v1,iPhone
+30.43,719,CAN,v1,iPhone
+35.21,462,RUS,v4,iPhone
+37.79,585,UK,v2,iPhone
+35.26,937,CAN,v2,HTC Vive
+34.75,699,USA,v1,iPhone
+35.67,592,CAN,v2,HTC Vive
+31.03,221,USA,v1,iPhone
+42.85,346,UK,v3,iPhone
+7.104,80,CAN,v3,iPhone
+25.59,788,CAN,v1,iPhone
+35.45,147,AUS,v4,HTC Vive
+37.3,737,AUS,v3,iPhone
+41.19,740,USA,v1,iPhone
+38.26,433,UK,v3,iPhone
+29.97,627,AUS,v4,HTC Vive
+46.54,429,AUS,v4,HTC Vive
+30.85,589,UK,v3,iPhone
+33.44,361,USA,v1,iPhone
+41.29,110,USA,v1,iPhone
+35.93,471,CAN,v1,iPhone
+31.17,962,CAN,v2,HTC Vive
+40.01,877,UK,v2,iPhone
+25.55,597,USA,v1,iPhone
+29.75,28,UK,v3,iPhone
+40.3,625,AUS,v4,HTC Vive
+43.52,531,USA,v1,iPhone
+32.01,124,USA,v1,iPhone
+35.33,67,CAN,v2,HTC Vive
+31.9,71,UK,v2,iPhone
+28.64,436,USA,v1,iPhone
+31.8,259,RUS,v4,iPhone
+34.58,537,AUS,v4,HTC Vive
+31.33,506,AUS,v3,iPhone
+41.15,946,USA,v1,iPhone
+36.54,737,CAN,v2,HTC Vive
+35.14,270,UK,v2,iPhone
+39.35,218,RUS,v4,iPhone
+35.08,245,AUS,v3,iPhone
+30.57,789,USA,v1,iPhone
+31.25,150,USA,v1,iPhone
+36.08,257,CAN,v2,HTC Vive
+36.08,774,UK,v3,iPhone
+36.75,179,UK,v3,iPhone
+30.62,657,UK,v3,iPhone
+40.81,852,USA,v1,iPhone
+31.02,430,RUS,v4,iPhone
+35.22,645,AUS,v3,iPhone
+35.09,295,UK,v2,iPhone
+36.93,643,UK,v2,iPhone
+37.7,244,CAN,v2,HTC Vive
+30.01,713,RUS,v4,iPhone
+33.03,921,USA,v1,iPhone
+45.22,720,USA,v1,iPhone
+30.33,546,UK,v3,iPhone
+32.6,640,USA,v1,iPhone
+36.85,639,UK,v2,iPhone
+34.73,643,CAN,v2,HTC Vive
+35.17,513,RUS,v4,iPhone
+35.36,313,UK,v3,iPhone
+24.03,567,USA,v1,iPhone
+33.71,463,UK,v3,iPhone
+37.08,136,USA,v1,iPhone
+29.56,756,RUS,v4,iPhone
+31.19,280,AUS,v3,iPhone
+38.53,65,CAN,v1,iPhone
+27.91,220,RUS,v4,iPhone
+34.06,807,USA,v1,iPhone
+26.32,121,CAN,v1,iPhone
+31.34,910,UK,v3,iPhone
+12.6,524,CAN,v3,iPhone
+34.43,594,AUS,v3,iPhone
+33.24,277,AUS,v3,iPhone
+38.99,485,USA,v1,iPhone
+37.51,223,RUS,v4,iPhone
+39.73,7,AUS,v3,iPhone
+31.61,102,CAN,v2,HTC Vive
+31.12,446,RUS,v4,iPhone
+28.29,829,CAN,v2,HTC Vive
+27.41,777,USA,v1,iPhone
+32.02,14,USA,v1,iPhone
+23.9,982,USA,v1,iPhone
+37.57,239,RUS,v4,iPhone
+40.54,300,RUS,v4,iPhone
+30.39,549,CAN,v1,iPhone
+35.34,312,AUS,v3,iPhone
+31.18,982,AUS,v3,iPhone
+37.07,764,AUS,v4,iPhone
+33.75,375,AUS,v3,iPhone
+31.69,517,AUS,v3,iPhone
+43.2,122,RUS,v4,iPhone
+39.18,313,RUS,v4,iPhone
+40.27,971,CAN,v1,iPhone
+44.25,871,RUS,v4,iPhone
+30.33,377,RUS,v4,iPhone
+44.73,997,RUS,v4,iPhone
+37.74,848,USA,v1,iPhone
+33.18,881,RUS,v4,iPhone
+36.29,768,USA,v1,iPhone
+30.04,86,CAN,v1,iPhone
+29.44,124,UK,v3,iPhone
+38.15,430,RUS,v4,iPhone
+37.05,960,UK,v3,iPhone
+29.52,196,AUS,v2,HTC Vive
+32.36,141,RUS,v4,iPhone
+35.63,189,CAN,v2,HTC Vive
+43.15,848,RUS,v4,iPhone
+47.17,317,CAN,v2,HTC Vive
+42.37,813,RUS,v4,iPhone
+0.9782,809,CAN,v3,iPhone
+31.24,510,AUS,v3,iPhone
+35.72,178,CAN,v2,iPhone
+30.72,151,AUS,v3,iPhone
+39.9,208,UK,v3,iPhone
+39.81,188,RUS,v4,iPhone
+32.46,537,CAN,v2,iPhone
+36.04,320,UK,v2,iPhone
+34.71,742,USA,v1,iPhone
+32.92,998,UK,v2,iPhone
+33.48,652,USA,v1,iPhone
+34.26,106,UK,v2,iPhone
+31.53,761,USA,v1,iPhone
+26.81,377,USA,v1,iPhone
+42.38,630,CAN,v1,iPhone
+35.96,108,UK,v3,iPhone
+26.69,699,CAN,v1,iPhone
+41.35,67,UK,v2,iPhone
+33.21,796,AUS,v4,iPhone
+41.3,523,USA,v1,iPhone
+35.31,406,UK,v2,iPhone
+33.04,401,AUS,v3,iPhone
+28.73,61,AUS,v3,iPhone
+38.88,200,RUS,v4,iPhone
+35.26,195,CAN,v2,iPhone
+33.46,135,AUS,v3,iPhone
+40.29,476,USA,v1,iPhone
+31.84,178,RUS,v4,iPhone
+38.45,320,RUS,v4,iPhone
+40.96,115,RUS,v4,iPhone
+46.4,787,AUS,v3,iPhone
+43.37,125,CAN,v2,iPhone
+30.92,751,AUS,v4,iPhone
+47.89,642,AUS,v3,iPhone
+34.34,386,AUS,v3,iPhone
+44.67,539,RUS,v4,iPhone
+34.05,752,AUS,v3,iPhone
+40.36,549,RUS,v4,iPhone
+36.6,638,AUS,v4,iPhone
+33.23,393,AUS,v3,iPhone
+27.97,581,UK,v2,iPhone
+32.92,478,USA,v1,iPhone
+36.9,742,RUS,v4,iPhone
+33.61,422,AUS,v3,iPhone
+25.34,228,UK,v3,iPhone
+29.86,658,RUS,v4,iPhone
+40.78,770,CAN,v2,iPhone
+39.52,512,RUS,v4,iPhone
+33.67,292,USA,v1,iPhone
+23.99,468,UK,v3,iPhone
+45.69,505,UK,v2,iPhone
+30.27,508,RUS,v4,iPhone
+32.21,373,USA,v1,iPhone
+40.09,360,CAN,v2,iPhone
+46.49,976,UK,v2,iPhone
+32.69,86,RUS,v4,iPhone
+29.12,69,UK,v3,iPhone
+39.87,946,UK,v3,iPhone
+36.95,465,UK,v2,iPhone
+32.18,304,RUS,v4,iPhone
+35.74,936,CAN,v2,iPhone
+38.01,227,USA,v1,iPhone
+34.21,86,RUS,v4,iPhone
+32.62,981,UK,v2,iPhone
+30.92,385,AUS,v4,iPhone
+36.39,873,RUS,v4,iPhone
+39.71,84,CAN,v2,iPhone
+31.89,904,AUS,v3,iPhone
+36.05,748,AUS,v3,iPhone
+30.98,630,AUS,v3,iPhone
+41.47,745,UK,v2,iPhone
+31.29,673,UK,v2,iPhone
+29.02,110,USA,v1,iPhone
+31.59,650,CAN,v2,iPhone
+28.13,607,RUS,v4,iPhone
+42.24,435,USA,v1,iPhone
+36.43,282,CAN,v2,iPhone
+33.62,171,CAN,v2,iPhone
+33.58,268,RUS,v4,iPhone
+27.26,91,AUS,v3,iPhone
+30.99,622,CAN,v2,iPhone
+38.2,645,RUS,v4,iPhone
+31.56,647,RUS,v4,iPhone
+32.93,246,RUS,v4,iPhone
+40.68,863,USA,v1,iPhone
+44.27,197,USA,v1,iPhone
+32.94,832,USA,v1,iPhone
+37.29,507,RUS,v4,iPhone
+31.17,570,CAN,v2,iPhone
+28.53,497,RUS,v4,iPhone
+33.75,194,CAN,v2,iPhone
+8.413,489,CAN,v3,iPhone
+45.43,63,USA,v1,iPhone
+35.49,314,UK,v3,iPhone
+32,216,RUS,v4,iPhone
+31.13,712,UK,v2,iPhone
+35.14,414,UK,v3,iPhone
+36.25,506,RUS,v4,iPhone
+36.31,53,RUS,v4,iPhone
+34.86,337,AUS,v3,iPhone
+35.41,899,AUS,v4,iPhone
+33.82,325,UK,v2,iPhone
+41.47,60,RUS,v4,iPhone
+36.78,851,USA,v1,iPhone
+25.05,817,CAN,v2,iPhone
+32.92,541,AUS,v4,iPhone
+35.4,380,AUS,v3,iPhone
+28.58,150,AUS,v4,iPhone
+30.45,266,CAN,v2,iPhone
+31.31,545,AUS,v3,iPhone
+42.11,234,USA,v1,iPhone
+32.62,971,CAN,v2,iPhone
+33.73,501,USA,v1,iPhone
+34.71,678,AUS,v3,iPhone
+38.7,102,AUS,v3,iPhone
+32.84,155,UK,v2,iPhone
+32.24,909,UK,v2,iPhone
+32.48,357,CAN,v2,iPhone
+36.83,567,CAN,v2,iPhone
+26.29,142,CAN,v1,iPhone
+29.71,112,AUS,v3,iPhone
+34.55,111,RUS,v4,iPhone
+33.66,672,CAN,v2,iPhone
+38.11,110,UK,v2,iPhone
+43.57,902,USA,v1,iPhone
+34.35,670,CAN,v2,iPhone
+46.82,514,RUS,v4,iPhone
+37.52,625,RUS,v4,iPhone
+32.22,602,RUS,v4,iPhone
+37.24,566,CAN,v2,iPhone
+34.54,439,RUS,v4,iPhone
+35.07,406,AUS,v3,iPhone
+35.29,672,AUS,v4,iPhone
+28.71,55,UK,v3,iPhone
+36.34,659,USA,v1,iPhone
+34.52,756,USA,v1,iPhone
+39.01,164,RUS,v4,iPhone
+38.44,704,USA,v1,iPhone
+30.89,28,RUS,v4,iPhone
+40.47,405,AUS,v3,iPhone
+25.95,787,USA,v1,iPhone
+30.93,444,CAN,v2,iPhone
+37.11,754,AUS,v3,iPhone
+40.18,216,USA,v1,iPhone
+39.43,444,RUS,v4,iPhone
+32.82,765,UK,v2,iPhone
+35.12,871,UK,v3,iPhone
+33.94,366,USA,v1,iPhone
+30.6,332,UK,v2,iPhone
+27.51,615,AUS,v3,iPhone
+32.29,125,UK,v2,iPhone
+36.71,74,RUS,v4,iPhone
+36.52,984,CAN,v2,iPhone
+28.13,464,USA,v1,iPhone
+32.24,430,CAN,v2,iPhone
+30.95,9,UK,v3,iPhone
+33.8,996,USA,v1,iPhone
+33.73,190,USA,v1,iPhone
+26.14,861,UK,v3,iPhone
+36.9,619,UK,v3,iPhone
+38.3,245,CAN,v2,iPhone
+37.21,890,CAN,v2,iPhone
+37.5,549,USA,v1,iPhone
+32.21,229,RUS,v4,iPhone
+34.68,415,RUS,v4,iPhone
+36.59,373,USA,v1,iPhone
+34.97,110,RUS,v4,iPhone
+42.41,603,UK,v3,iPhone
+44.69,557,RUS,v4,iPhone
+31.37,434,AUS,v4,iPhone
+40.06,116,CAN,v2,iPhone
+38.82,400,USA,v1,iPhone
+34.73,666,CAN,v1,iPhone
+35.77,546,CAN,v1,iPhone
+34.76,723,RUS,v4,iPhone
+40.81,884,USA,v1,iPhone
+42.37,670,AUS,v3,iPhone
+31.97,342,USA,v1,iPhone
+40.76,525,AUS,v4,iPhone
+34.17,797,AUS,v3,iPhone
+37.21,282,UK,v2,iPhone
+30.62,929,AUS,v3,iPhone
+33.97,976,USA,v1,iPhone
+41.39,297,UK,v3,iPhone
+37.2,564,USA,v1,iPhone
+31.28,963,USA,v1,iPhone
+3.794,991,CAN,v3,iPhone
+30.49,727,CAN,v2,iPhone
+39.95,545,AUS,v4,iPhone
+36.59,67,UK,v2,iPhone
+30.83,48,AUS,v3,iPhone
+38.45,223,USA,v1,iPhone
+36.45,928,CAN,v2,iPhone
+37.39,562,RUS,v4,iPhone
+40.23,817,UK,v3,iPhone
+33.43,7,CAN,v2,iPhone
+37.43,296,AUS,v3,iPhone
+38.6,305,RUS,v4,iPhone
+28.13,319,RUS,v4,iPhone
+39.75,639,RUS,v4,iPhone
+31.05,716,UK,v2,iPhone
+34.19,361,CAN,v1,iPhone
+44,130,UK,v2,iPhone
+43.23,198,AUS,v3,iPhone
+36.64,45,RUS,v4,iPhone
+29.31,900,CAN,v2,iPhone
+40.86,66,CAN,v2,iPhone
+36.51,534,AUS,v3,iPhone
+31.01,857,RUS,v4,iPhone
+29.45,321,RUS,v4,iPhone
+38.19,295,CAN,v2,iPhone
+30.56,379,RUS,v4,iPhone
+40.05,949,UK,v3,iPhone
+34.21,792,RUS,v4,iPhone
+36.38,237,UK,v2,iPhone
+27.86,63,CAN,v1,iPhone
+26.67,91,RUS,v4,iPhone
+37.84,733,USA,v1,iPhone
+40.96,198,CAN,v2,iPhone
+37.66,698,RUS,v4,iPhone
+37.79,547,USA,v1,iPhone
+35.15,6,CAN,v2,iPhone
+32.26,672,AUS,v3,iPhone
+31.97,527,USA,v1,iPhone
+34.03,56,RUS,v4,iPhone
+28.88,664,UK,v3,iPhone
+24.14,314,UK,v3,iPhone
+31.92,422,UK,v2,iPhone
+4.815,635,CAN,v3,iPhone
+33.56,941,CAN,v2,iPhone
+34.88,955,AUS,v3,iPhone
+37.76,761,UK,v3,iPhone
+33.27,788,UK,v2,iPhone
+31.17,731,RUS,v4,iPhone
+27.81,39,RUS,v4,iPhone
+43.63,771,CAN,v2,iPhone
+38.98,332,AUS,v3,iPhone
+28.98,48,AUS,v3,iPhone
+41.24,921,UK,v2,iPhone
+34.35,785,USA,v1,iPhone
+33.16,450,RUS,v4,iPhone
+34.51,233,AUS,v4,iPhone
+33.96,775,AUS,v4,iPhone
+30.58,908,AUS,v4,iPhone
+29,465,AUS,v3,iPhone
+30.72,483,RUS,v4,iPhone
+43.39,545,AUS,v3,iPhone
+35.11,559,USA,v1,iPhone
+41.19,511,CAN,v2,iPhone
+31.12,398,UK,v3,iPhone
+31.08,750,CAN,v2,iPhone
+29.28,768,UK,v3,iPhone
+30.16,531,USA,v1,iPhone
+41.04,122,AUS,v3,iPhone
+24.75,290,CAN,v2,iPhone
+34.82,973,CAN,v2,iPhone
+30.26,567,AUS,v3,iPhone
+32.45,174,RUS,v4,iPhone
+43.99,833,RUS,v4,iPhone
+33.11,189,USA,v1,iPhone
+37.63,903,UK,v3,iPhone
+29.24,272,RUS,v4,iPhone
+31.41,439,CAN,v1,iPhone
+31.67,134,CAN,v1,iPhone
+31.66,711,USA,v1,iPhone
+38.71,870,CAN,v2,iPhone
+42.59,848,RUS,v4,iPhone
+32.74,668,AUS,v3,iPhone
+29.58,952,RUS,v4,iPhone
+33.36,493,CAN,v2,iPhone
+29.83,443,UK,v3,iPhone
+32.95,414,RUS,v4,iPhone
+36.15,16,UK,v3,iPhone
+29.93,872,USA,v1,iPhone
+32.34,155,CAN,v2,iPhone
+30.44,788,UK,v2,iPhone
+37.78,196,USA,v1,iPhone
+36.5,400,USA,v1,iPhone
+31.84,702,RUS,v4,iPhone
+37.73,80,AUS,v3,iPhone
+37.41,87,UK,v2,iPhone
+37.53,820,USA,v1,iPhone
+29.63,914,USA,v1,iPhone
+35.65,613,RUS,v4,iPhone
+36.52,792,RUS,v4,iPhone
+35.46,953,USA,v1,iPhone
+28.08,651,RUS,v4,iPhone
+36.33,346,RUS,v4,iPhone
+29.57,921,USA,v1,iPhone
+39.43,864,UK,v3,iPhone
+29.35,401,AUS,v3,iPhone
+29.71,236,UK,v2,iPhone
+37.16,223,UK,v2,iPhone
+30.08,379,RUS,v4,iPhone
+34.92,319,CAN,v2,iPhone
+32.97,905,USA,v1,iPhone
+37.57,442,CAN,v2,iPhone
+40.32,522,UK,v2,iPhone
+33.13,444,CAN,v2,iPhone
+33.6,257,USA,v1,iPhone
+37.43,60,AUS,v3,iPhone
+34.64,345,UK,v3,iPhone
+35.52,449,CAN,v2,Galaxy S9
+40.95,244,USA,v1,iPhone
+36.78,766,AUS,v3,iPhone
+38.78,765,AUS,v3,iPhone
+27.63,880,UK,v3,iPhone
+30.82,707,UK,v2,iPhone
+38.49,707,UK,v3,iPhone
+42.34,806,RUS,v4,iPhone
+29.3,221,RUS,v4,iPhone
+27.02,561,USA,v1,iPhone
+28.68,865,RUS,v4,iPhone
+6.395,470,CAN,v3,iPhone
+33.3,533,CAN,v2,Galaxy S9
+11.94,255,CAN,v3,iPhone
+39.17,206,AUS,v3,iPhone
+37.37,754,UK,v3,iPhone
+38.65,501,USA,v1,iPhone
+24.02,84,CAN,v2,Galaxy S9
+34.22,302,RUS,v4,iPhone
+32.55,206,CAN,v2,Galaxy S9
+29.63,494,USA,v1,iPhone
+28.42,585,CAN,v2,Galaxy S9
+41.77,227,CAN,v2,Galaxy S9
+28.1,893,RUS,v4,iPhone
+37.86,594,UK,v2,iPhone
+41.11,594,CAN,v2,Galaxy S9
+34.56,585,AUS,v4,iPhone
+42.94,601,RUS,v4,iPhone
+40.76,602,UK,v3,iPhone
+36.73,299,CAN,v2,Galaxy S9
+40.35,999,RUS,v4,iPhone
+29.14,254,CAN,v1,iPhone
+36.38,102,USA,v1,iPhone
+37.61,198,RUS,v4,iPhone
+30.6,915,AUS,v3,iPhone
+35.62,551,AUS,v3,iPhone
+38.21,467,AUS,v3,iPhone
+43.68,657,AUS,v3,iPhone
+31.78,400,AUS,v3,iPhone
+34.7,376,CAN,v1,iPhone
+35.38,342,USA,v1,iPhone
+24.02,657,USA,v1,iPhone
+33.21,856,AUS,v3,iPhone
+38.8,312,UK,v2,iPhone
+32.42,166,AUS,v3,iPhone
+38.28,720,USA,v1,iPhone
+32.53,580,AUS,v4,iPhone
+28.86,425,CAN,v2,Galaxy S9
+27.55,495,RUS,v4,iPhone
+32.34,465,USA,v1,iPhone
+35.3,517,UK,v3,iPhone
+45.42,464,UK,v3,iPhone
+45.11,836,CAN,v2,Galaxy S9
+41.88,141,AUS,v3,iPhone
+37.68,764,CAN,v2,Galaxy S9
+37.36,936,USA,v1,iPhone
+30.69,216,AUS,v3,iPhone
+32.11,248,RUS,v4,iPhone
+41.17,644,RUS,v4,iPhone
+40.11,497,RUS,v4,iPhone
+34.42,247,USA,v1,iPhone
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,CAN,v2,Galaxy S9
+1000.76,864,USA,v1,Galaxy S9
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,iPhone
+1000.76,864,UK,v1,Galaxy S9
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v3,HTC Vive
+1000.77,864,AUS,v2,HTC Vive

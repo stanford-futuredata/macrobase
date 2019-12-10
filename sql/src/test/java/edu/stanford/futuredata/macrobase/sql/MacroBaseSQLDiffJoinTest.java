@@ -55,7 +55,7 @@ public class MacroBaseSQLDiffJoinTest {
         .build();
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         queryEngine = new QueryEngine();
         parser = new SqlParser();
     }

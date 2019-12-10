@@ -25,6 +25,7 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
     protected int maxOrder = 3;
     protected boolean useFDs = false;
     protected int[] functionalDependencies;
+    protected boolean anti = false;
 
     /**
      * Adjust this to tune the significance (e.g. number of rows affected) of the results returned.
@@ -93,6 +94,11 @@ public abstract class BatchSummarizer implements Operator<DataFrame, Explanation
 
     public BatchSummarizer setFDValues(final int[] functionalDependencies) {
         this.functionalDependencies = functionalDependencies;
+        return this;
+    }
+
+    public BatchSummarizer setAnti(boolean anti) {
+        this.anti = anti;
         return this;
     }
 }

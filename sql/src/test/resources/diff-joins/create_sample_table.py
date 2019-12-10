@@ -42,7 +42,7 @@ if __name__ == '__main__':
     generate_csv(num_rows, 1, num_distinct_vals, 'table_R.csv')
     generate_csv(num_rows, 1, num_distinct_vals, 'table_S.csv')
     # add one, to include primary key column, which has one entry
-    # for every possible value. The other columns have fewer distinc
+    # for every possible value. The other columns have fewer distinct
     # values
     generate_csv(num_distinct_vals, num_cols + 1, list(int(num_distinct_vals / 5)
                                                    for i in range(num_cols)),

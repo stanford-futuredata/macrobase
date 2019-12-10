@@ -22,6 +22,7 @@ public class BasicBatchPipeline implements Pipeline {
     Logger log = LoggerFactory.getLogger(Pipeline.class);
 
     private String inputURI = null;
+    private boolean isAnti;
 
     private String classifierType;
     private String metric;
@@ -50,6 +51,7 @@ public class BasicBatchPipeline implements Pipeline {
 
     public BasicBatchPipeline (PipelineConfig conf) {
         inputURI = conf.get("inputURI");
+        isAnti = conf.get("anti", false);
 
         classifierType = conf.get("classifier", "percentile");
         metric = conf.get("metric");
@@ -218,6 +220,7 @@ public class BasicBatchPipeline implements Pipeline {
         df = classifier.getResults();
 
         BatchSummarizer summarizer = getSummarizer(classifier.getOutputColumnName());
+        summarizer.setAnti(isAnti);
 
         startTime = System.currentTimeMillis();
         summarizer.process(df);

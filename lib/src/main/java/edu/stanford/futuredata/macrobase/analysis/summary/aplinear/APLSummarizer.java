@@ -54,7 +54,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     }
 
 
-    public void process(DataFrame input) throws Exception {
+    public void process(DataFrame input) {
         encoder = new AttributeEncoder();
         encoder.setColumnNames(attributes);
         long startTime = System.currentTimeMillis();
@@ -67,7 +67,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
         qualityMetricList = getQualityMetricList();
         aplKernel = new APrioriLinear(
                 qualityMetricList,
-                thresholds
+                thresholds,
+                encoder
         );
 
         double[][] aggregateColumns = getAggregateColumns(input);
@@ -85,7 +86,8 @@ public abstract class APLSummarizer extends BatchSummarizer {
                 encoder.getColCardinalities(),
                 useFDs,
                 functionalDependencies,
-                bitmapRatioThreshold
+                bitmapRatioThreshold,
+                anti
         );
         log.info("Number of results: {}", aplResults.size());
         numOutliers = (long)getNumberOutliers(aggregateColumns);

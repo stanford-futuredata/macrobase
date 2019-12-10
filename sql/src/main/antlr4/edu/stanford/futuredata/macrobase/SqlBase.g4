@@ -66,7 +66,7 @@ querySpecification
 
 diffQuerySpecification
     : SELECT setQuantifier? selectItem (',' selectItem)*
-      FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
+      FROM (ANTI?) DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON (columnAliases | ASTERISK)
       (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
@@ -77,7 +77,7 @@ diffQuerySpecification
       exportClause?
     | SELECT setQuantifier? selectItem (',' selectItem)*
       exportClause?
-      FROM DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
+      FROM (ANTI?) DIFF queryTerm qualifiedName? ',' queryTerm qualifiedName?
       ON (columnAliases | ASTERISK)
       (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
@@ -86,7 +86,7 @@ diffQuerySpecification
       (ORDER BY sortItem (',' sortItem)*)?
       (LIMIT limit=(INTEGER_VALUE | ALL))?
     | SELECT setQuantifier? selectItem (',' selectItem)*
-      FROM DIFF '(' splitQuery ')'
+      FROM (ANTI?) DIFF '(' splitQuery ')'
       ON (columnAliases | ASTERISK)
       (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
@@ -97,7 +97,7 @@ diffQuerySpecification
       exportClause?
     | SELECT setQuantifier? selectItem (',' selectItem)*
       exportClause?
-      FROM DIFF '(' splitQuery ')'
+      FROM (ANTI?) DIFF '(' splitQuery ')'
       ON (columnAliases | ASTERISK)
       (WITH (minRatioExpression? minSupportExpression? | minSupportExpression? minRatioExpression?))?
       (COMPARE BY ratioMetricExpression)?
@@ -362,6 +362,7 @@ ALL: 'ALL';
 ALTER: 'ALTER';
 ANALYZE: 'ANALYZE';
 AND: 'AND';
+ANTI: 'ANTI';
 ANY: 'ANY';
 ARRAY: 'ARRAY';
 AS: 'AS';

@@ -1,0 +1,4 @@
+location,version,support,global_ratio,outlier_count,total_count
+CAN,,1.0,4.1128404669260705,38.0,257.0
+,v1,0.7894736842105263,2.9909451046972273,30.0,279.0
+,v2,.210526,.862505,8.0,258.0

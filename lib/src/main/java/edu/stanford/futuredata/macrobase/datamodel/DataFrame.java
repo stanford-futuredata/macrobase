@@ -3,6 +3,7 @@ package edu.stanford.futuredata.macrobase.datamodel;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsLast;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
@@ -160,11 +161,12 @@ public class DataFrame {
      * same order as the second List
      */
     private boolean compareDoubleCols(final List<double[]> first, final List<double[]> second) {
+        final double EPSILON = 1e-6;
         for (int i = 0; i < first.size(); ++i) {
             final double[] arr1 = first.get(i);
             final double[] arr2 = second.get(i);
             for (int j = 0; j < arr1.length; ++j) {
-                if (arr1[j] != arr2[j]) {
+                if (Math.abs(arr1[j] - arr2[j]) >= EPSILON) {
                     return false;
                 }
             }

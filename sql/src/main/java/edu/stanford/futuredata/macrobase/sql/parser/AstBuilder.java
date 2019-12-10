@@ -146,6 +146,7 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
                 new DiffQuerySpecification(
                     getLocation(context),
                     diffQuery.getSelect(),
+                    diffQuery.isAnti(),
                     diffQuery.getFirst(),
                     diffQuery.getSecond(),
                     diffQuery.getSplitQuery(),
@@ -261,6 +262,8 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
                 .isPresent(),
             "At least one and at most two subqueries required for a DiffQuery", context);
 
+        boolean isAnti = context.ANTI() != null;
+
         if (subqueries.size() == 2) {
             first = Optional.of(subqueries.get(0));
             second = Optional.of(subqueries.get(1));
@@ -304,6 +307,7 @@ class AstBuilder extends SqlBaseBaseVisitor<Node> {
             getLocation(context),
             new Select(getLocation(context.SELECT()), isDistinct(context.setQuantifier()),
                 selectItems),
+            isAnti,
             first,
             second,
             splitQuery,

@@ -233,7 +233,8 @@ class QueryEngine {
             .setMinRatioMetric(minRatioMetric)
             .setOutlierColumn(outlierColName)
             .setAttributes(explainCols)
-            .setNumThreads(numThreads);
+            .setNumThreads(numThreads)
+            .setAnti(diffQuery.isAnti());
 
         if (aggregateColumns != null) {
             summarizer.setGlobalAggregateCols(aggregateColumns);

@@ -4,6 +4,7 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
 import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,8 @@ import static edu.stanford.futuredata.macrobase.analysis.summary.aplinear.Bitmap
  * are the most interesting as defined by "quality metrics" on these aggregates.
  */
 public class APrioriLinear {
+
+    private AttributeEncoder encoder;
     private Logger log = LoggerFactory.getLogger("APrioriLinear");
 
     // **Parameters**
@@ -33,6 +36,11 @@ public class APrioriLinear {
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
 
+    private void debugCombo(IntSet combo, double[] aggregates) {
+        log.info(String.join(", ", combo.getSet().stream().map(encoder::decodeValue).collect(Collectors.toList())) + ": [" + String.join(", ",
+            Arrays.stream(aggregates).mapToObj(i -> "" + i).collect(Collectors.toList())) + "]");
+    }
+
     /**
      * @param qualityMetrics A list of all quality metrics for this DIFF
      *                       operation.
@@ -40,10 +48,12 @@ public class APrioriLinear {
      */
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
-            List<List<Double>> allThresholds
+            List<List<Double>> allThresholds,
+            AttributeEncoder encoder
     ) {
         log.info("Thresholds: {}", allThresholds);
         this.allThresholds = allThresholds;
+        this.encoder = encoder;
         this.qualityMetrics = qualityMetrics.toArray(new QualityMetric[0]);
         // Choose the thresholds that minimize pruning--minimal values (least restrictive)
         // for monotonic metrics to minimize pruning
@@ -114,7 +124,8 @@ public class APrioriLinear {
             int[] colCardinalities,
             boolean useFDs,
             int[] functionalDependencies,
-            int bitmapRatioThreshold
+            int bitmapRatioThreshold,
+            boolean evaluateAntiDiff
     ) {
         final long beginTime = System.currentTimeMillis();
         final int numAggregates = aggregateColumns.length;
@@ -122,7 +133,7 @@ public class APrioriLinear {
         final int numColumns = attributes[0].length;
 
         // Singleton viable sets for quick lookup
-        boolean[] singleNextArray = new boolean[cardinality];;
+        boolean[] singleNextArray = new boolean[cardinality];
 
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
@@ -134,6 +145,7 @@ public class APrioriLinear {
         } else{
             useIntSetAsArray = false;
         }
+        log.info("ANTI DIFF: {}", evaluateAntiDiff);
         log.info("NumThreads: {}", numThreads);
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
@@ -365,28 +377,52 @@ public class APrioriLinear {
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
-            for (IntSet curCandidate: setAggregates.keySet()) {
-                QualityMetric.Action action = QualityMetric.Action.KEEP;
-                if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
-                    action = QualityMetric.Action.PRUNE;
-                } else {
-                    double[] curAggregates = setAggregates.get(curCandidate);
-                    for (int i = 0; i < qualityMetrics.length; i++) {
-                        QualityMetric q = qualityMetrics[i];
-                        double t = minPruningThresholds[i];
-                        action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
-                    }
-                    if (action == QualityMetric.Action.KEEP) {
-                        // Make sure the candidate isn't already covered by a pair
-                        if (curOrder != 3 || allPairsValid(curCandidate, setNext.get(2))) {
-                            // if a set is already past the threshold on all metrics,
-                            // save it and no need for further exploration if we do containment
-                            curOrderSaved.add(curCandidate);
+            if (!evaluateAntiDiff) {
+                for (IntSet curCandidate: setAggregates.keySet()) {
+                    QualityMetric.Action action = QualityMetric.Action.KEEP;
+                    if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
+                        action = QualityMetric.Action.PRUNE;
+                    } else {
+                        double[] curAggregates = setAggregates.get(curCandidate);
+                        for (int i = 0; i < qualityMetrics.length; i++) {
+                            QualityMetric q = qualityMetrics[i];
+                            double t = minPruningThresholds[i];
+                            action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
                         }
-                    } else if (action == QualityMetric.Action.NEXT) {
-                        // otherwise if a set still has potentially good subsets,
-                        // save it for further examination
-                        curOrderNext.add(curCandidate);
+                        if (action == QualityMetric.Action.KEEP) {
+                            // Make sure the candidate isn't already covered by a pair
+                            if (curOrder != 3 || allPairsValid(curCandidate, setNext.get(2))) {
+                                // if a set is already past the threshold on all metrics,
+                                // save it and no need for further exploration if we do containment
+                                curOrderSaved.add(curCandidate);
+                            }
+                        } else if (action == QualityMetric.Action.NEXT) {
+                            // otherwise if a set still has potentially good subsets,
+                            // save it for further examination
+                            curOrderNext.add(curCandidate);
+                        }
+                    }
+                }
+            } else {
+                for (IntSet curCandidate: setAggregates.keySet()) {
+                    debugCombo(curCandidate, setAggregates.get(curCandidate));
+                    QualityMetric.Action action = QualityMetric.Action.KEEP;
+                    if (curOrder != 1 || curCandidate.getFirst() != AttributeEncoder.noSupport) {
+                        double[] curAggregates = setAggregates.get(curCandidate);
+                        // NOTE: this assumes that outlier count is the first aggregate in the array
+                        // TODO: come up with a cleaner solution
+                        if (curAggregates[0] == 0.0) {
+                            continue;
+                        }
+                        for (int i = 0; i < qualityMetrics.length; i++) {
+                            QualityMetric q = qualityMetrics[i];
+                            double t = minPruningThresholds[i];
+                            action = QualityMetric.Action.combine(action, q.getAction(curAggregates, t));
+                        }
+                        if (action == QualityMetric.Action.PRUNE || action == QualityMetric.Action.NEXT) {
+                            curOrderSaved.add(curCandidate);
+                            curOrderNext.add(curCandidate);
+                        }
                     }
                 }
             }
@@ -409,7 +445,6 @@ public class APrioriLinear {
             }
             log.info("Time spent in order {}:  {} ms", curOrderFinal, System.currentTimeMillis() - startTime);
         }
-
         log.info("Time spent in APriori:  {} ms", System.currentTimeMillis() - beginTime);
         List<List<APLExplanationResult>> results = new ArrayList<>();
         // Iterate through all thresholds in the multi-query and select the appropriate results for each.
@@ -428,6 +463,7 @@ public class APrioriLinear {
                         double t = threshold.get(i);
                         action = QualityMetric.Action.combine(action, q.getAction(aggregates, t));
                     }
+                    // TODO: add Anti-DIFF support
                     if (action == QualityMetric.Action.KEEP) {
                         // Then, check minimality against saved candidates for this threshold.
                         if (curOrder == 2) {
@@ -469,12 +505,11 @@ public class APrioriLinear {
 
     /**
      * Check if all order-2 subsets of an order-3 candidate are valid candidates.
-     * @param o2Candidates All candidates of order 2 with minimum support.
      * @param curCandidate An order-3 candidate.
+     * @param o2Candidates All candidates of order 2 with minimum support.
      * @return Boolean.
      */
-    private boolean allPairsValid(IntSet curCandidate,
-                                  HashSet<IntSet> o2Candidates) {
+    private boolean allPairsValid(IntSet curCandidate, HashSet<IntSet> o2Candidates) {
         IntSet subPair;
         subPair = new IntSetAsArray(
                 curCandidate.getFirst(),
