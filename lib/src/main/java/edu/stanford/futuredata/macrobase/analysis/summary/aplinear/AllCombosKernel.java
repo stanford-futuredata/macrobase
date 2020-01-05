@@ -272,6 +272,11 @@ public class AllCombosKernel extends APrioriLinear {
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
             for (IntSet curCandidate: setAggregates.keySet()) {
+                // NOTE: this assumes that outlier count is the first aggregate in the array
+                // TODO: come up with a cleaner solution
+                if (setAggregates.get(curCandidate)[0] == 0.0) {
+                    continue;
+                }
                 curOrderSaved.add(curCandidate);
                 curOrderNext.add(curCandidate);
             }

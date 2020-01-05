@@ -117,6 +117,28 @@ public class IntSetAsArray implements IntSet {
         return curSet;
     }
 
+    @Override
+    public Set<IntSet> getCombos() {
+        Set<IntSet> combos = new HashSet<>();
+        int first = this.getFirst();
+        combos.add(new IntSetAsArray(first));
+
+        if (values.length > 1) {
+            int second = values[1];
+            combos.add(new IntSetAsArray(second));
+            combos.add(new IntSetAsArray(first, second));
+
+            if (values.length > 2) {
+                int third = values[2];
+                combos.add(new IntSetAsArray(third));
+                combos.add(new IntSetAsArray(first, third));
+                combos.add(new IntSetAsArray(second, third));
+                combos.add(new IntSetAsArray(first, second, third));
+            }
+        }
+        return combos;
+    }
+
     public boolean contains(int i) {
         switch (values.length) {
             case 1: {

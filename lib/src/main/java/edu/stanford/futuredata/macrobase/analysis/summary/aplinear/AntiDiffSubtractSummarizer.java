@@ -96,7 +96,17 @@ public class AntiDiffSubtractSummarizer extends APLOutlierSummarizer {
     private List<APLExplanationResult> subtract(List<APLExplanationResult> allResults, Set<IntSet> attrsInDef) {
         List<APLExplanationResult> notInDiff = new ArrayList<>();
         for (APLExplanationResult result : allResults) {
-            if (!attrsInDef.contains(result.matcher)) {
+            // if the attributes---or any subset of them--do not appear in the DIFF output, then
+            // we include them
+            boolean add = true;
+            for (IntSet combo : result.matcher.getCombos()) {
+                if (attrsInDef.contains(combo)) {
+                    add = false;
+                    break;
+                }
+            }
+            if (add) {
+
                 notInDiff.add(result);
             }
         }

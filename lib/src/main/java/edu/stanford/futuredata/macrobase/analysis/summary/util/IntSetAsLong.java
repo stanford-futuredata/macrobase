@@ -169,6 +169,27 @@ public class IntSetAsLong implements IntSet {
     }
 
     @Override
+    public Set<IntSet> getCombos() {
+        Set<IntSet> combos = new HashSet<>();
+        int first = this.getFirst();
+        combos.add(new IntSetAsArray(first));
+
+        int second = this.getSecond();
+        int third = this.getThird();
+        if (second != 0) {
+            combos.add(new IntSetAsArray(second));
+            combos.add(new IntSetAsArray(first, second));
+        }
+        if (third != 0) {
+            combos.add(new IntSetAsArray(third));
+            combos.add(new IntSetAsArray(first, third));
+            combos.add(new IntSetAsArray(second, third));
+            combos.add(new IntSetAsArray(first, second, third));
+        }
+        return combos;
+    }
+
+    @Override
     public boolean equals(Object o) {
         return ((IntSetAsLong) o).value == this.value;
     }
