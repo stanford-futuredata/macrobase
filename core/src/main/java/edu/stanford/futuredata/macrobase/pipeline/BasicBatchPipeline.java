@@ -1,6 +1,7 @@
 package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.AntiDiffSubtractSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
@@ -149,6 +150,18 @@ public class BasicBatchPipeline implements Pipeline {
                 summarizer.setMinSupport(minSupport);
                 summarizer.setMinRiskRatio(minRiskRatio);
                 summarizer.setUseAttributeCombinations(true);
+                return summarizer;
+            }
+            case "antidiffsubtract": {
+                AntiDiffSubtractSummarizer summarizer = new AntiDiffSubtractSummarizer(true);
+                summarizer.setOutlierColumn(outlierColumnName);
+                summarizer.setAttributes(attributes);
+                summarizer.setMinSupport(minSupport);
+                summarizer.setMinRatioMetric(minRiskRatio);
+                summarizer.setNumThreads(numThreads);
+                // Force this to be false, so that antiDiff optimization isn't evaluated in
+                // APrioriLinear
+                isAnti = false;
                 return summarizer;
             }
             case "aplinear":

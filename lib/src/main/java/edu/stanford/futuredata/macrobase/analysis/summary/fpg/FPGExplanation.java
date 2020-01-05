@@ -3,6 +3,7 @@ package edu.stanford.futuredata.macrobase.analysis.summary.fpg;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
 import edu.stanford.futuredata.macrobase.analysis.summary.fpg.result.FPGAttributeSet;
 
+import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +76,13 @@ public class FPGExplanation implements Explanation {
 
     public double numOutliers() { return (double)numOutliers;}
     public double numTotal() {return (double)numOutliers + numInliers;}
+
+    @Override
+    public DataFrame toDataFrame(List<String> attrsToInclude) {
+        // TODO
+        return null;
+    }
+
     public long getNumOutliers() {
         return numOutliers;
     }

@@ -1,5 +1,4 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.aplinear;
-
 import edu.stanford.futuredata.macrobase.analysis.summary.util.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.AggregationOp;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.QualityMetric;
@@ -36,7 +35,7 @@ public class APrioriLinear {
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
 
-    private void debugCombo(IntSet combo, double[] aggregates) {
+    protected void debugCombo(IntSet combo, double[] aggregates) {
         log.info(String.join(", ", combo.getSet().stream().map(encoder::decodeValue).collect(Collectors.toList())) + ": [" + String.join(", ",
             Arrays.stream(aggregates).mapToObj(i -> "" + i).collect(Collectors.toList())) + "]");
     }

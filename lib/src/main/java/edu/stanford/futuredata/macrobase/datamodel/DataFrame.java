@@ -3,7 +3,6 @@ package edu.stanford.futuredata.macrobase.datamodel;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsLast;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Joiner;
