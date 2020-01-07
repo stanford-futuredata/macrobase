@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public class AntiDiffSubtractSummarizer extends APLOutlierSummarizer {
 
-    private Logger log = LoggerFactory.getLogger("APLOutlierSummarizer");
+    private Logger log = LoggerFactory.getLogger("AntiDiffSubtractSummarizer");
 
     public AntiDiffSubtractSummarizer(boolean useBitmaps) {
         super(useBitmaps);
