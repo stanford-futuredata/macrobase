@@ -31,6 +31,8 @@ public class MeanDevQualityMetric implements QualityMetric {
         globalStdDev = Math.sqrt(
                 globalAggregates[m2Idx]/n - globalMean*globalMean
         );
+        // TODO: this shouldn't return null, change the type signature
+        // of the method to void
         return null;
     }
 

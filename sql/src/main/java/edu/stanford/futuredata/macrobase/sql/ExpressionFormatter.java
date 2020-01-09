@@ -27,6 +27,7 @@ import edu.stanford.futuredata.macrobase.sql.tree.BooleanLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.CharLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.ComparisonExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DecimalLiteral;
+import edu.stanford.futuredata.macrobase.sql.tree.DereferenceExpression;
 import edu.stanford.futuredata.macrobase.sql.tree.DoubleLiteral;
 import edu.stanford.futuredata.macrobase.sql.tree.ExistsPredicate;
 import edu.stanford.futuredata.macrobase.sql.tree.Expression;
@@ -150,6 +151,12 @@ public final class ExpressionFormatter {
             } else {
                 return '"' + node.getValue().replace("\"", "\"\"") + '"';
             }
+        }
+
+        @Override
+        protected String visitDereferenceExpression(DereferenceExpression node, Void context) {
+            String baseString = process(node.getBase(), context);
+            return baseString + "." + process(node.getField());
         }
 
         private static String formatQualifiedName(QualifiedName name) {

@@ -18,7 +18,7 @@ public class BitmapHelperFunctions {
      */
     public static void updateAggregates(FastFixedHashTable thisThreadSetAggregates,
                                         IntSet curCandidate, AggregationOp[] aggregationOps,
-                                  double[] aggregateVal, int numAggregates) {
+                                        double[] aggregateVal, int numAggregates) {
         double[] candidateVal = thisThreadSetAggregates.get(curCandidate);
         if (candidateVal == null) {
             thisThreadSetAggregates.put(curCandidate,
@@ -53,11 +53,11 @@ public class BitmapHelperFunctions {
      * @param numAggregates The length of a row in aRows.
      */
     public static void allTwoNormal(FastFixedHashTable thisThreadSetAggregates,
-                              int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
-                              AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                              int startIndex, int endIndex,
-                              boolean useIntSetAsArray, IntSet curCandidate,
-                              double[][] aRows, int numAggregates) {
+                                    int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
+                                    AggregationOp[] aggregationOps, boolean[] singleNextArray,
+                                    int startIndex, int endIndex,
+                                    boolean useIntSetAsArray, IntSet curCandidate,
+                                    double[][] aRows, int numAggregates) {
         for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
             int rowNumInCol = rowNum - startIndex;
             // Only examine a pair if both its members have minimum support.
@@ -100,11 +100,11 @@ public class BitmapHelperFunctions {
      * @param numAggregates The length of a row in aRows.
      */
     public static void allTwoBitmap(FastFixedHashTable thisThreadSetAggregates,
-                              ArrayList<Integer>[] outlierList,
-                              AggregationOp[] aggregationOps, boolean[] singleNextArray,
-                              HashMap<Integer, ModBitSet>[][] byThreadBitmap,
-                              int colNumOne, int colNumTwo,
-                              boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                                    ArrayList<Integer>[] outlierList,
+                                    AggregationOp[] aggregationOps, boolean[] singleNextArray,
+                                    HashMap<Integer, ModBitSet>[][] byThreadBitmap,
+                                    int colNumOne, int colNumTwo,
+                                    boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
         for (Integer curCandidateOne : outlierList[colNumOne]) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])
                 continue;
@@ -157,12 +157,12 @@ public class BitmapHelperFunctions {
      */
     // All Three Normal or All Three Bitmap
     public static void allThreeNormal(FastFixedHashTable thisThreadSetAggregates,
-                                int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
-                                int[] curColumnThreeAttributes,
-                                AggregationOp[]  aggregationOps, boolean[] singleNextArray,
-                                int startIndex, int endIndex,
-                                boolean useIntSetAsArray, IntSet curCandidate,
-                                double[][] aRows, int numAggregates) {
+                                      int[] curColumnOneAttributes, int[] curColumnTwoAttributes,
+                                      int[] curColumnThreeAttributes,
+                                      AggregationOp[]  aggregationOps, boolean[] singleNextArray,
+                                      int startIndex, int endIndex,
+                                      boolean useIntSetAsArray, IntSet curCandidate,
+                                      double[][] aRows, int numAggregates) {
         for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
             int rowNumInCol = rowNum - startIndex;
             // Only construct a triple if all its singleton members have minimum support.
@@ -211,11 +211,11 @@ public class BitmapHelperFunctions {
      * @param numAggregates The length of a row in aRows.
      */
     public static void allThreeBitmap(FastFixedHashTable thisThreadSetAggregates,
-                                ArrayList<Integer>[] outlierList,
-                                AggregationOp[]  aggregationOps, boolean[] singleNextArray,
-                                HashMap<Integer, ModBitSet>[][] byThreadBitmap,
-                                int colNumOne, int colNumTwo, int colNumThree,
-                                boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
+                                      ArrayList<Integer>[] outlierList,
+                                      AggregationOp[]  aggregationOps, boolean[] singleNextArray,
+                                      HashMap<Integer, ModBitSet>[][] byThreadBitmap,
+                                      int colNumOne, int colNumTwo, int colNumThree,
+                                      boolean useIntSetAsArray, IntSet curCandidate, int numAggregates) {
 
         for (Integer curCandidateOne : outlierList[colNumOne]) {
             if (curCandidateOne == AttributeEncoder.noSupport || !singleNextArray[curCandidateOne])

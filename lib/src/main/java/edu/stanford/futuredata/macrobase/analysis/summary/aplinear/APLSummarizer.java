@@ -22,6 +22,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     APrioriLinear aplKernel;
     List<QualityMetric> qualityMetricList;
     List<Double> thresholds;
+    private double[][] globalAggregateCols = null;
 
     protected long numEvents = 0;
     protected long numOutliers = 0;
@@ -74,6 +75,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
         AggregationOp[] aggregationOps = getAggregationOps();
         List<APLExplanationResult> aplResults = aplKernel.explain(encoded,
                 aggregateColumns,
+                globalAggregateCols == null ?  aggregateColumns : globalAggregateCols,
                 aggregationOps,
                 encoder.getNextKey(),
                 maxOrder,
@@ -105,5 +107,11 @@ public abstract class APLSummarizer extends BatchSummarizer {
     public void setBitmapRatioThreshold(int bitmapRatioThreshold) {
         this.bitmapRatioThreshold = bitmapRatioThreshold;
     }
+
+    public void setGlobalAggregateCols(double[][] globalAggregateCols) {
+        this.globalAggregateCols = globalAggregateCols;
+    }
+
+
 
 }

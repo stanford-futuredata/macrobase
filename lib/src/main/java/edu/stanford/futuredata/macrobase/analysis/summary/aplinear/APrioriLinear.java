@@ -79,6 +79,7 @@ public class APrioriLinear {
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
+            double[][] globalAggregateCols,
             AggregationOp[] aggregationOps,
             int cardinality,
             final int maxOrder,
@@ -142,8 +143,8 @@ public class APrioriLinear {
         for (int j = 0; j < numAggregates; j++) {
             AggregationOp curOp = aggregationOps[j];
             globalAggregates[j] = curOp.initValue();
-            double[] curColumn = aggregateColumns[j];
-            for (int i = 0; i < numRows; i++) {
+            double[] curColumn = globalAggregateCols[j];
+            for (int i = 0; i < curColumn.length; i++) {
                 globalAggregates[j] = curOp.combine(globalAggregates[j], curColumn[i]);
             }
         }
@@ -404,22 +405,22 @@ public class APrioriLinear {
      * @return Boolean
      */
     private boolean allPairsValid(IntSet curCandidate,
-                                      HashSet<IntSet> o2Candidates) {
-            IntSet subPair;
+                                  HashSet<IntSet> o2Candidates) {
+        IntSet subPair;
+        subPair = new IntSetAsArray(
+                curCandidate.getFirst(),
+                curCandidate.getSecond());
+        if (o2Candidates.contains(subPair)) {
             subPair = new IntSetAsArray(
-                    curCandidate.getFirst(),
-                    curCandidate.getSecond());
+                    curCandidate.getSecond(),
+                    curCandidate.getThird());
             if (o2Candidates.contains(subPair)) {
                 subPair = new IntSetAsArray(
-                        curCandidate.getSecond(),
+                        curCandidate.getFirst(),
                         curCandidate.getThird());
-                if (o2Candidates.contains(subPair)) {
-                    subPair = new IntSetAsArray(
-                            curCandidate.getFirst(),
-                            curCandidate.getThird());
-                    return o2Candidates.contains(subPair);
-                }
+                return o2Candidates.contains(subPair);
             }
+        }
         return false;
     }
 }

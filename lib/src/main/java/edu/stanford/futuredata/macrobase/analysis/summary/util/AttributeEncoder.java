@@ -59,7 +59,7 @@ public class AttributeEncoder {
      * @return The encoded matrix of attributes, stored as an array of arrays.
      */
     public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport,
-        double[] outlierColumn, boolean useBitmaps) {
+                                               double[] outlierColumn, boolean useBitmaps) {
         if (columns.isEmpty()) {
             return new int[0][0];
         }
