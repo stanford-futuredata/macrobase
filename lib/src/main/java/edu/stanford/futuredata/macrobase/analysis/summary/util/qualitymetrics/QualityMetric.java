@@ -30,6 +30,10 @@ public interface QualityMetric {
         }
     }
 
+    default void setAPLThresholdsForOptimization(double[] thresholds) {
+        return;
+    }
+
     // can override for more fancy tight quality metric bounds
     default double maxSubgroupValue(double[] aggregates) {
         if (isMonotonic()) {
