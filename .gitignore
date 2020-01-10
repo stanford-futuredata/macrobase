@@ -1,8 +1,11 @@
+data/
+conf/
 *.class
 .classpath
 .project
 .settings/*
 *.log
+*.csv
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

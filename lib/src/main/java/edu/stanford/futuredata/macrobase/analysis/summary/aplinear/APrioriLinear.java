@@ -7,6 +7,7 @@ import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.roaringbitmap.RoaringBitmap;
+import org.w3c.dom.Attr;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -32,6 +33,11 @@ public class APrioriLinear {
     // Aggregate values for all of the sets we saved
     private HashMap<Integer, Map<IntSet, double []>> savedAggregates;
 
+    /**
+     * @param qualityMetrics A list of all quality metrics for this DIFF
+     *                       operation.
+     * @param thresholds A list of the thresholds for each quality metric.
+     */
     public APrioriLinear(
             List<QualityMetric> qualityMetrics,
             List<Double> thresholds
@@ -45,6 +51,31 @@ public class APrioriLinear {
         this.savedAggregates = new HashMap<>(3);
     }
 
+    /**
+     * Use Aprori to compute explanations for a DIFF.
+     * @param attributes Encoded columns to DIFF over.
+     * @param aggregateColumns Calculated aggregates for the quality metrics.
+     * @param aggregationOps Operations used to aggregate the aggregates.
+     * @param cardinality The total number of encoded attributes.
+     * @param maxOrder Maximum order of explanations to calculate.
+     * @param numThreads Number of threads to use.
+     * @param bitmap Bitmap representation of attributes.  Stored as array indexed
+     *               by column and then by outlier/inlier.  Each entry in array
+     *               is a map from encoded attribute value to the bitmap
+     *               for that attribute among outliers or inliers.
+     * @param outlierList A list whose entries are arrays of all attributes in
+     *                    each column.
+     * @param colCardinalities  An array containing the number of unique encoded
+     *                          attributes in each column.
+     * @param useFDs A boolean flag indicating whether or not to use functional
+     *               dependency information.
+     * @param functionalDependencies An array whose entries are masks indicating
+     *                               which other columns a column is functionally
+     *                               determined by, if any.
+     * @param bitmapRatioThreshold The maximum product of column cardinalities for which
+     *                             a bitmap representation of the columns will be used.
+     * @return All explanations for the DIFF query.
+     */
     public List<APLExplanationResult> explain(
             final int[][] attributes,
             double[][] aggregateColumns,
@@ -53,9 +84,12 @@ public class APrioriLinear {
             int cardinality,
             final int maxOrder,
             int numThreads,
-            HashMap<Integer, RoaringBitmap>[][] bitmap,
+            HashMap<Integer, ModBitSet>[][] bitmap,
             ArrayList<Integer>[] outlierList,
-            boolean[] isBitmapEncoded
+            int[] colCardinalities,
+            boolean useFDs,
+            int[] functionalDependencies,
+            int bitmapRatioThreshold
     ) {
         final long beginTime = System.currentTimeMillis();
         final int numAggregates = aggregateColumns.length;
@@ -63,7 +97,7 @@ public class APrioriLinear {
         final int numColumns = attributes[0].length;
 
         // Singleton viable sets for quick lookup
-        boolean[] singleNextArray = new boolean[cardinality];
+        boolean[] singleNextArray = new boolean[cardinality];;
 
         // Maximum order of explanations.
         final boolean useIntSetAsArray;
@@ -79,7 +113,7 @@ public class APrioriLinear {
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
                 new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
-        final HashMap<Integer, RoaringBitmap>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
+        final HashMap<Integer, ModBitSet>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
         for (int i = 0; i < numThreads; i++)
             for (int j = 0; j < numColumns; j++)
                 for (int k = 0; k < 2; k++)
@@ -91,13 +125,11 @@ public class APrioriLinear {
                 for (int j = startIndex; j < endIndex; j++) {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
                 }
-                if (isBitmapEncoded[i]) {
+                if (colCardinalities[i] < AttributeEncoder.cardinalityThreshold) {
                     for (int j = 0; j < 2; j++) {
-                        for (HashMap.Entry<Integer, RoaringBitmap> entry : bitmap[i][j].entrySet()) {
-                            RoaringBitmap rr = new RoaringBitmap();
-                            rr.add((long) startIndex, (long) endIndex);
-                            rr.and(entry.getValue());
-                            if (rr.getCardinality() > 0) {
+                        for (HashMap.Entry<Integer, ModBitSet> entry : bitmap[i][j].entrySet()) {
+                            ModBitSet rr = entry.getValue().get(startIndex, endIndex);
+                            if (rr.cardinality() > 0) {
                                 byThreadBitmap[threadNum][i][j].put(entry.getKey(), rr);
                             }
                         }
@@ -152,16 +184,18 @@ public class APrioriLinear {
                         curCandidate = new IntSetAsArray(0);
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
-                            if (isBitmapEncoded[colNum]) {
+                            // Check whether or not to process using bitmaps
+                            if (colCardinalities[colNum] < AttributeEncoder.cardinalityThreshold) {
                                 for (Integer curOutlierCandidate : outlierList[colNum]) {
                                     // Require that all order-one candidates have minimum support.
                                     if (curOutlierCandidate == AttributeEncoder.noSupport)
                                         continue;
                                     int outlierCount = 0, inlierCount = 0;
+                                    // Calculate aggregate values using bitmaps.
                                     if (byThreadBitmap[curThreadNum][colNum][1].containsKey(curOutlierCandidate))
-                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).getCardinality();
+                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).cardinality();
                                     if (byThreadBitmap[curThreadNum][colNum][0].containsKey(curOutlierCandidate))
-                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).getCardinality();
+                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).cardinality();
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
                                         curCandidate = new IntSetAsArray(curOutlierCandidate);
@@ -173,6 +207,7 @@ public class APrioriLinear {
                                 }
                             } else {
                                 int[] curColumnAttributes = byThreadAttributesTranspose[curThreadNum][colNum];
+                                // Calculate and update aggregate values via iteration, without bitmaps.
                                 for (int rowNum = startIndex; rowNum < endIndex; rowNum++) {
                                     // Require that all order-one candidates have minimum support.
                                     if (curColumnAttributes[rowNum - startIndex] == AttributeEncoder.noSupport)
@@ -192,14 +227,21 @@ public class APrioriLinear {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                                //if FDs are enabled, and these two attribute cols are FDs, skip
+                                if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                    continue;
+                                }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
-                                if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
-                                    // Bitmap-Bitmap
+                                // Check whether or not to process using bitmaps
+                                if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] * colCardinalities[colNumTwo] < bitmapRatioThreshold) {
+                                    // Process columns with bitmaps
                                     allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                             byThreadBitmap[curThreadNum], colNumOne, colNumTwo, useIntSetAsArray,
                                             curCandidate, numAggregates);
                                 }  else {
-                                    // Normal-Normal
+                                    // Process columns via iteration, without bitmaps.
                                     allTwoNormal(thisThreadSetAggregates, curColumnOneAttributes,
                                             curColumnTwoAttributes, aggregationOps, singleNextArray,
                                             startIndex, endIndex, useIntSetAsArray, curCandidate, aRows,
@@ -212,19 +254,32 @@ public class APrioriLinear {
                         for (int colNumOne = 0; colNumOne < numColumns; colNumOne++) {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne % numColumns];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
+                                //if FD on and attributes 1 and 2 are FDs, skip
+                                if (useFDs && ((functionalDependencies[colNumOne] & (1<<colNumTwo)) == (1<<colNumTwo))) {
+                                    continue;
+                                }
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
                                 for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
+                                    //if FD on and attribute 3 is FD w/ 1 or 2, skip
+                                    if (useFDs && (((functionalDependencies[colNumOne] & (1 << colNumThree)) == (1 << colNumThree))
+                                            || ((functionalDependencies[colNumTwo] & (1 << colNumThree)) == (1 << colNumThree)))) {
+                                        continue;
+                                    }
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
-                                    if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                            isBitmapEncoded[colNumThree]) {
-                                        // all 3 cols are bitmaps
+                                    // Check whether or not to process using bitmaps
+                                    if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                            colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                            colCardinalities[colNumThree] < AttributeEncoder.cardinalityThreshold &&
+                                            colCardinalities[colNumOne] * colCardinalities[colNumTwo] *
+                                                    colCardinalities[colNumThree] < bitmapRatioThreshold) {
+                                        // Process columns with bitmaps.
                                         allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                                 singleNextArray, byThreadBitmap[curThreadNum],
                                                 colNumOne, colNumTwo, colNumThree, useIntSetAsArray, curCandidate,
                                                 numAggregates);
 
                                     } else {
-                                        // all three are normal
+                                        // Process columns via iteration, without bitmaps.
                                         allThreeNormal(thisThreadSetAggregates, curColumnOneAttributes,
                                                 curColumnTwoAttributes, curColumnThreeAttributes,
                                                 aggregationOps, singleNextArray, startIndex, endIndex,
@@ -236,8 +291,6 @@ public class APrioriLinear {
                     } else {
                         throw new MacroBaseInternalError("High Order not supported");
                     }
-                    log.info("Time spent in Thread {} in order {}:  {} ms",
-                            curThreadNum, curOrderFinal, System.currentTimeMillis() - startTime);
                     doneSignal.countDown();
                 };
                 // Run numThreads lambdas in separate threads
@@ -326,11 +379,10 @@ public class APrioriLinear {
                     singleNextArray[i.getFirst()] = true;
                 }
             }
+            log.info("Time spent in order {}:  {} ms", curOrderFinal, System.currentTimeMillis() - startTime);
         }
+
         log.info("Time spent in APriori:  {} ms", System.currentTimeMillis() - beginTime);
-
-
-
         List<APLExplanationResult> results = new ArrayList<>();
         for (int curOrder: savedAggregates.keySet()) {
             Map<IntSet, double []> curOrderSavedAggregates = savedAggregates.get(curOrder);
@@ -355,22 +407,22 @@ public class APrioriLinear {
      * @return Boolean
      */
     private boolean allPairsValid(IntSet curCandidate,
-                                      HashSet<IntSet> o2Candidates) {
-            IntSet subPair;
+                                  HashSet<IntSet> o2Candidates) {
+        IntSet subPair;
+        subPair = new IntSetAsArray(
+                curCandidate.getFirst(),
+                curCandidate.getSecond());
+        if (o2Candidates.contains(subPair)) {
             subPair = new IntSetAsArray(
-                    curCandidate.getFirst(),
-                    curCandidate.getSecond());
+                    curCandidate.getSecond(),
+                    curCandidate.getThird());
             if (o2Candidates.contains(subPair)) {
                 subPair = new IntSetAsArray(
-                        curCandidate.getSecond(),
+                        curCandidate.getFirst(),
                         curCandidate.getThird());
-                if (o2Candidates.contains(subPair)) {
-                    subPair = new IntSetAsArray(
-                            curCandidate.getFirst(),
-                            curCandidate.getThird());
-                    return o2Candidates.contains(subPair);
-                }
+                return o2Candidates.contains(subPair);
             }
+        }
         return false;
     }
 }

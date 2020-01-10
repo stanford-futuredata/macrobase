@@ -1,14 +1,8 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-import org.roaringbitmap.RoaringBitmap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +13,10 @@ import org.slf4j.LoggerFactory;
  * column values.
  */
 public class AttributeEncoder {
-    private static final Logger log = LoggerFactory.getLogger("AttributeEncoder");
-
+    private Logger log = LoggerFactory.getLogger("AttributeEncoder");
     // An encoding for values which do not satisfy the minimum support threshold in encodeAttributesWithSupport.
     public static int noSupport = Integer.MAX_VALUE;
-    private final int cardinalityThreshold = 5;
+    public static int cardinalityThreshold = 128;
 
     private HashMap<Integer, Map<String, Integer>> encoder;
     private int nextKey;
@@ -31,9 +24,9 @@ public class AttributeEncoder {
     private HashMap<Integer, String> valueDecoder;
     private HashMap<Integer, Integer> columnDecoder;
     private List<String> colNames;
-    private HashMap<Integer, RoaringBitmap>[][] bitmap;
+    private HashMap<Integer, ModBitSet>[][] bitmap;
+    private int[] colCardinalities;
     private ArrayList<Integer> outlierList[];
-    private boolean isBitmapEncoded[];
 
     public AttributeEncoder() {
         encoder = new HashMap<>();
@@ -50,30 +43,29 @@ public class AttributeEncoder {
     public String decodeColumnName(int i) {return colNames.get(columnDecoder.get(i));}
     public String decodeValue(int i) {return valueDecoder.get(i);}
     public HashMap<Integer, Integer> getColumnDecoder() {return columnDecoder;}
-    public HashMap<Integer, RoaringBitmap>[][] getBitmap() {return bitmap;}
+    public HashMap<Integer, ModBitSet>[][] getBitmap() {return bitmap;}
     public ArrayList<Integer>[] getOutlierList() {return outlierList;}
-    public boolean[] getIsBitmapEncodedArray() {return isBitmapEncoded;}
+    public int[] getColCardinalities() {return colCardinalities;}
 
     /**
-     * Encodes columns giving each value which satisfies a minimum support threshold a key
-     * equal to its rank among all values which satisfy that threshold (so the single most common
-     * value has key 1, the next has key 2, and so on).  Encode all values not satisfying the threshold
-     * as AttributeEncoder.noSupport.
-     * @param columns Columns to be encoded.
-     * @param minSupport Minimum support to be satisfied.
-     * @param outlierColumn The ith value in this array is the number of outliers whose attributes are those of
-     *                      row i of columns.
-     * @return A two-dimensional array of encoded values.
+     * Encode as integers all attributes satisfying a minimum support threshold.  Also
+     * encode columns of attributes as bitmaps if their cardinalities are sufficiently
+     * low.
+     * @param columns A list of columns of attributes.
+     * @param minSupport The minimal support an attribute must have to be encoded.
+     * @param outlierColumn A column indicating whether a row of attributes is an inlier
+     *                      our outlier.
+     * @param useBitmaps Whether to encode any columns as bitmaps.
+     * @return The encoded matrix of attributes, stored as an array of arrays.
      */
     public int[][] encodeAttributesWithSupport(List<String[]> columns, double minSupport,
-        double[] outlierColumn, boolean useBitmaps) {
+                                               double[] outlierColumn, boolean useBitmaps) {
         if (columns.isEmpty()) {
             return new int[0][0];
         }
 
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
-        log.info("numValuesEncoded: {}",  numColumns*numRows);
 
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
@@ -126,7 +118,7 @@ public class AttributeEncoder {
         outlierList = new ArrayList[numColumns];
         for (int i = 0; i < numColumns; i++)
             outlierList[i] = new ArrayList<>();
-        isBitmapEncoded = new boolean[numColumns];
+        colCardinalities = new int[numColumns];
 
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
@@ -157,27 +149,43 @@ public class AttributeEncoder {
                     outlierList[colIdx].add(curKey);
                 }
             }
-            if (useBitmaps && outlierList[colIdx].size() < cardinalityThreshold) {
-                isBitmapEncoded[colIdx] = true;
+            colCardinalities[colIdx] = outlierList[colIdx].size();
+            if (!useBitmaps)
+                colCardinalities[colIdx] = cardinalityThreshold + 1;
+        }
+        log.info("Column cardinalities: {}", Arrays.toString(colCardinalities));
+        // Encode the bitmaps.  Store bitmaps as an array indexed first
+        // by column and then by outlier/inlier.  Each entry in array
+        // is a map from encoded attribute value to the bitmap
+        // for that attribute among outliers or inliers.
+        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
+            Map<String, Integer> curColEncoder = encoder.get(colIdx);
+            String[] curCol = columns.get(colIdx);
+            if (useBitmaps && colCardinalities[colIdx] < cardinalityThreshold) {
                 for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
                     String colVal = curCol[rowIdx];
                     int oidx = (outlierColumn[rowIdx] > 0.0) ? 1 : 0; //1 = outlier, 0 = inlier
                     int curKey = curColEncoder.get(colVal);
                     if (curKey != noSupport) {
                         if (bitmap[colIdx][oidx].containsKey(curKey)) {
-                            bitmap[colIdx][oidx].get(curKey).add(rowIdx);
+                            bitmap[colIdx][oidx].get(curKey).set(rowIdx);
                         } else {
-                            bitmap[colIdx][oidx].put(curKey, RoaringBitmap.bitmapOf(rowIdx));
+                            bitmap[colIdx][oidx].put(curKey, new ModBitSet());
+                            bitmap[colIdx][oidx].get(curKey).set(rowIdx);
                         }
                     }
                 }
             }
         }
-        log.info("Bitmap-encoded columns: {}", Arrays.toString(isBitmapEncoded));
-
         return encodedAttributes;
     }
 
+    /**
+     * Encode as integers all attribute strings.
+     * @param columns A list of attribute strings from each column of the original
+     *                dataset.
+     * @return A matrix of encoded attributes, stored as an array of arrays.
+     */
     public int[][] encodeAttributesAsArray(List<String[]> columns) {
         if (columns.isEmpty()) {
             return new int[0][0];
@@ -186,18 +194,18 @@ public class AttributeEncoder {
         int numColumns = columns.size();
         int numRows = columns.get(0).length;
 
-        // No columns are bitmap encoded, all are false.
-        isBitmapEncoded = new boolean[numColumns];
-
         for (int i = 0; i < numColumns; i++) {
             if (!encoder.containsKey(i)) {
                 encoder.put(i, new HashMap<>());
             }
         }
 
+        colCardinalities = new int[numColumns];
+        for (int i = 0; i < numColumns; i++)
+            colCardinalities[i] = cardinalityThreshold + 1;
+
         int[][] encodedAttributes = new int[numRows][numColumns];
 
-        // noinspection Duplicates
         for (int colIdx = 0; colIdx < numColumns; colIdx++) {
             Map<String, Integer> curColEncoder = encoder.get(colIdx);
             String[] curCol = columns.get(colIdx);
@@ -217,44 +225,12 @@ public class AttributeEncoder {
         return encodedAttributes;
     }
 
-    public int[][] encodeAttributesByColumn(List<String[]> columns) {
-        if (columns.isEmpty()) {
-            log.info("numValuesEncoded: 0");
-            return new int[0][0];
-        }
-
-        int numColumns = columns.size();
-        int numRows = columns.get(0).length;
-
-        for (int i = 0; i < numColumns; i++) {
-            if (!encoder.containsKey(i)) {
-                encoder.put(i, new HashMap<>());
-            }
-        }
-
-        int[][] encodedAttributes = new int[numColumns][numRows];
-        log.info("numValuesEncoded: {}", numColumns*numRows);
-
-        // noinspection Duplicates
-        for (int colIdx = 0; colIdx < numColumns; colIdx++) {
-            Map<String, Integer> curColEncoder = encoder.get(colIdx);
-            String[] curCol = columns.get(colIdx);
-            for (int rowIdx = 0; rowIdx < numRows; rowIdx++) {
-                String colVal = curCol[rowIdx];
-                if (!curColEncoder.containsKey(colVal)) {
-                    curColEncoder.put(colVal, nextKey);
-                    valueDecoder.put(nextKey, colVal);
-                    columnDecoder.put(nextKey, colIdx);
-                    nextKey++;
-                }
-                int curKey = curColEncoder.get(colVal);
-                encodedAttributes[colIdx][rowIdx] = curKey;
-            }
-        }
-
-        return encodedAttributes;
-    }
-
+    /**
+     * Encode as integers all attribute strings.
+     * @param columns A list of attribute strings from each column of the original
+     *                dataset.
+     * @return A matrix of encoded attributes, stored as a list of arrays.
+     */
     public List<int[]> encodeAttributes(List<String[]> columns) {
         if (columns.isEmpty()) {
             return new ArrayList<>();
