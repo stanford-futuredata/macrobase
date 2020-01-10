@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.stanford.futuredata.macrobase.analysis.MBFunction;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.AttributeEncoder;
 import edu.stanford.futuredata.macrobase.analysis.summary.util.ModBitSet;
 import edu.stanford.futuredata.macrobase.datamodel.DataFrame;
 import edu.stanford.futuredata.macrobase.datamodel.Row;
@@ -56,7 +55,6 @@ import edu.stanford.futuredata.macrobase.util.MacroBaseException;
 import edu.stanford.futuredata.macrobase.util.MacroBaseSQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import edu.stanford.futuredata.macrobase.analysis.summary.util.ModBitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -815,7 +813,7 @@ class QueryEngine {
         final Map<String, List<String>> biggerStringResults,
         final Map<String, List<String>> smallerStringResults,
         final Map<String, List<Double>> biggerDoubleResults,
-        final Map<String, List<Double>> smallerDoubleResults) throws MacroBaseSQLException {
+        final Map<String, List<Double>> smallerDoubleResults) {
         for (Row bigRow : bigger.getRowIterator()) {
             for (Row smallRow : smaller.getRowIterator()) {
                 if (lambda.test(bigRow, smallRow)) {

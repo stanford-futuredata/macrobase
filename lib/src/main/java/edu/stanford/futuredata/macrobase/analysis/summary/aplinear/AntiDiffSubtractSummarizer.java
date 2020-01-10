@@ -56,7 +56,9 @@ public class AntiDiffSubtractSummarizer extends APLOutlierSummarizer {
             numThreads,
             encoder.getBitmap(),
             encoder.getOutlierList(),
-            encoder.getIsBitmapEncodedArray());
+            encoder.getColCardinalities(),
+            bitmapRatioThreshold
+        );
         elapsed = System.currentTimeMillis() - startTime;
         log.info("All combos time: {} ms", elapsed);
 
@@ -70,7 +72,10 @@ public class AntiDiffSubtractSummarizer extends APLOutlierSummarizer {
             numThreads,
             encoder.getBitmap(),
             encoder.getOutlierList(),
-            encoder.getIsBitmapEncodedArray(),
+            encoder.getColCardinalities(),
+            useFDs,
+            functionalDependencies,
+            bitmapRatioThreshold,
             false
         );
 

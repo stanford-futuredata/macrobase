@@ -12,7 +12,6 @@ import edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics.Qu
 import edu.stanford.futuredata.macrobase.util.MacroBaseInternalError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.roaringbitmap.RoaringBitmap;
 
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -37,9 +36,10 @@ public class AllCombosKernel extends APrioriLinear {
         int cardinality,
         final int maxOrder,
         int numThreads,
-        HashMap<Integer, RoaringBitmap>[][] bitmap,
+        HashMap<Integer, ModBitSet>[][] bitmap,
         ArrayList<Integer>[] outlierList,
-        boolean[] isBitmapEncoded
+        int[] colCardinalities,
+        int bitmapRatioThreshold
     ) {
         final long beginTime = System.currentTimeMillis();
         final int numAggregates = aggregateColumns.length;
@@ -64,7 +64,7 @@ public class AllCombosKernel extends APrioriLinear {
         // Shard the dataset by rows for the threads, but store it by column for fast processing
         final int[][][] byThreadAttributesTranspose =
             new int[numThreads][numColumns][(numRows + numThreads)/numThreads];
-        final HashMap<Integer, RoaringBitmap>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
+        final HashMap<Integer, ModBitSet>[][][] byThreadBitmap = new HashMap[numThreads][numColumns][2];
         for (int i = 0; i < numThreads; i++)
             for (int j = 0; j < numColumns; j++)
                 for (int k = 0; k < 2; k++)
@@ -76,13 +76,11 @@ public class AllCombosKernel extends APrioriLinear {
                 for (int j = startIndex; j < endIndex; j++) {
                     byThreadAttributesTranspose[threadNum][i][j - startIndex] = attributes[j][i];
                 }
-                if (isBitmapEncoded[i]) {
+                if (colCardinalities[i] < AttributeEncoder.cardinalityThreshold) {
                     for (int j = 0; j < 2; j++) {
-                        for (HashMap.Entry<Integer, RoaringBitmap> entry : bitmap[i][j].entrySet()) {
-                            RoaringBitmap rr = new RoaringBitmap();
-                            rr.add((long) startIndex, (long) endIndex);
-                            rr.and(entry.getValue());
-                            if (rr.getCardinality() > 0) {
+                        for (HashMap.Entry<Integer, ModBitSet> entry : bitmap[i][j].entrySet()) {
+                            ModBitSet rr = entry.getValue().get(startIndex, endIndex);
+                            if (rr.cardinality() > 0) {
                                 byThreadBitmap[threadNum][i][j].put(entry.getKey(), rr);
                             }
                         }
@@ -137,16 +135,16 @@ public class AllCombosKernel extends APrioriLinear {
                         curCandidate = new IntSetAsArray(0);
                     if (curOrderFinal == 1) {
                         for (int colNum = 0; colNum < numColumns; colNum++) {
-                            if (isBitmapEncoded[colNum]) {
+                            if (colCardinalities[colNum] < AttributeEncoder.cardinalityThreshold) {
                                 for (Integer curOutlierCandidate : outlierList[colNum]) {
                                     // Require that all order-one candidates have minimum support.
                                     if (curOutlierCandidate == AttributeEncoder.noSupport)
                                         continue;
                                     int outlierCount = 0, inlierCount = 0;
                                     if (byThreadBitmap[curThreadNum][colNum][1].containsKey(curOutlierCandidate))
-                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).getCardinality();
+                                        outlierCount = byThreadBitmap[curThreadNum][colNum][1].get(curOutlierCandidate).cardinality();
                                     if (byThreadBitmap[curThreadNum][colNum][0].containsKey(curOutlierCandidate))
-                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).getCardinality();
+                                        inlierCount = byThreadBitmap[curThreadNum][colNum][0].get(curOutlierCandidate).cardinality();
                                     // Cascade to arrays if necessary, but otherwise pack attributes into longs.
                                     if (useIntSetAsArray) {
                                         curCandidate = new IntSetAsArray(curOutlierCandidate);
@@ -178,7 +176,9 @@ public class AllCombosKernel extends APrioriLinear {
                             int[] curColumnOneAttributes = byThreadAttributesTranspose[curThreadNum][colNumOne];
                             for (int colNumTwo = colNumOne + 1; colNumTwo < numColumns; colNumTwo++) {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo];
-                                if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo]) {
+                                if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                    colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                    colCardinalities[colNumOne] * colCardinalities[colNumTwo] < bitmapRatioThreshold) {
                                     // Bitmap-Bitmap
                                     allTwoBitmap(thisThreadSetAggregates, outlierList, aggregationOps, singleNextArray,
                                         byThreadBitmap[curThreadNum], colNumOne, colNumTwo, useIntSetAsArray,
@@ -200,8 +200,11 @@ public class AllCombosKernel extends APrioriLinear {
                                 int[] curColumnTwoAttributes = byThreadAttributesTranspose[curThreadNum][colNumTwo % numColumns];
                                 for (int colNumThree = colNumTwo + 1; colNumThree < numColumns; colNumThree++) {
                                     int[] curColumnThreeAttributes = byThreadAttributesTranspose[curThreadNum][colNumThree % numColumns];
-                                    if (isBitmapEncoded[colNumOne] && isBitmapEncoded[colNumTwo] &&
-                                        isBitmapEncoded[colNumThree]) {
+                                    if (colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumThree] < AttributeEncoder.cardinalityThreshold &&
+                                        colCardinalities[colNumOne] * colCardinalities[colNumTwo] *
+                                            colCardinalities[colNumThree] < bitmapRatioThreshold) {
                                         // all 3 cols are bitmaps
                                         allThreeBitmap(thisThreadSetAggregates, outlierList, aggregationOps,
                                             singleNextArray, byThreadBitmap[curThreadNum],
