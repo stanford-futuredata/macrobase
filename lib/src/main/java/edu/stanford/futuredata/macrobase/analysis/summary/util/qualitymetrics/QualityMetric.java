@@ -1,5 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
+import java.util.List;
+
 /**
  * Measures how interesting a subgroup is as a function of its linear aggregates.
  * Risk ratio, support, and deviation from mean are examples.
@@ -30,7 +32,7 @@ public interface QualityMetric {
         }
     }
 
-    default void setAPLThresholdsForOptimization(double[] thresholds) {
+    default void setAPLThresholdsForOptimization(List<Double> thresholds) {
         return;
     }
 

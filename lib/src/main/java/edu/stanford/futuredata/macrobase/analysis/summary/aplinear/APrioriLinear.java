@@ -340,6 +340,8 @@ public class APrioriLinear {
             // Prune all the collected aggregates
             HashSet<IntSet> curOrderNext = new HashSet<>();
             HashSet<IntSet> curOrderSaved = new HashSet<>();
+            int saved = 0;
+            int next = 0;
             for (IntSet curCandidate: setAggregates.keySet()) {
                 QualityMetric.Action action = QualityMetric.Action.KEEP;
                 if (curOrder == 1 && curCandidate.getFirst() == AttributeEncoder.noSupport) {
@@ -357,14 +359,17 @@ public class APrioriLinear {
                             // if a set is already past the threshold on all metrics,
                             // save it and no need for further exploration if we do containment
                             curOrderSaved.add(curCandidate);
+                            saved += 1;
                         }
                     } else if (action == QualityMetric.Action.NEXT) {
                         // otherwise if a set still has potentially good subsets,
                         // save it for further examination
                         curOrderNext.add(curCandidate);
+                        next += 1;
                     }
                 }
             }
+            System.out.println("Order: "+curOrder+ "Saved: "+saved+ "Next: "+next);
 
             // Save aggregates that pass all qualityMetrics to return later, store aggregates
             // that have minimum support for higher-order exploration.

@@ -1,5 +1,7 @@
 package edu.stanford.futuredata.macrobase.analysis.summary.util.qualitymetrics;
 
+import java.util.List;
+
 /**
  * Measures the relative shift of the mean of a value from the inlier to
  * the outlier population with chebyshev pruning.
@@ -32,9 +34,9 @@ public class MeanShiftChebyQualityMetric implements QualityMetric {
         iSuppThreshIdx = i2;
     }
     @Override
-    public void setAPLThresholdsForOptimization(double[] thresholds) {
-        oSuppThreshold = thresholds[oSuppThreshIdx];
-        iSuppThreshold = thresholds[iSuppThreshIdx];
+    public void setAPLThresholdsForOptimization(List<Double> thresholds) {
+        oSuppThreshold = thresholds.get(oSuppThreshIdx);
+        iSuppThreshold = thresholds.get(iSuppThreshIdx);
     }
     @Override
     public double maxSubgroupValue(double[] aggregates) {
@@ -56,13 +58,16 @@ public class MeanShiftChebyQualityMetric implements QualityMetric {
         double iTargetFrac = iSuppThreshold * globalICount / iCount;
         double iMeanMax = iMean + iStd * Math.sqrt(1/iTargetFrac);
         double iMeanMin = iMean - iStd * Math.sqrt(1/iTargetFrac);
+        double retVal;
         if (iMeanMax * iMeanMin <= 0) {
-            return Double.POSITIVE_INFINITY;
+            retVal = Double.POSITIVE_INFINITY;
         } else if (iMeanMin > 0) {
-            return oMeanMax / iMeanMin;
+            retVal = oMeanMax / iMeanMin;
         } else { // case where the values are negative
-            return oMeanMin / iMeanMax;
+            retVal = oMeanMin / iMeanMax;
         }
+        System.out.println("Subgroup Value: "+retVal);
+        return retVal;
     }
 
     @Override

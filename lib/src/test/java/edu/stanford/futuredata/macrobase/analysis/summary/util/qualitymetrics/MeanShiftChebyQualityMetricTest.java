@@ -5,6 +5,9 @@ import static junit.framework.TestCase.assertEquals;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class MeanShiftChebyQualityMetricTest {
     @Test
     public void testSimple() {
@@ -13,7 +16,7 @@ public class MeanShiftChebyQualityMetricTest {
         );
         double[] globalAggregates = {100, 100, 100, 100, 1000, 1000};
         m.initialize(globalAggregates);
-        double[] summarizerThresholds = {.2, .2};
+        List<Double> summarizerThresholds = Arrays.asList(.2, .2);
         m.setSupportThresholdIdxs(0, 1);
         m.setAPLThresholdsForOptimization(summarizerThresholds);
 
