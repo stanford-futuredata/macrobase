@@ -64,13 +64,5 @@ public class MacroBaseSQLAntiDiffTest {
         runQueriesFromFile(parser, queryEngine, "anti-diff/4.sql",
             loadDataFrameFromCsv("anti-diff/4.csv", QUERY_4_SCHEMA));
     }
-
-    @Test
-    public void testAllQueries() throws Exception {
-        query1();
-        query2();
-        query3();
-        query4();
-    }
 }
 

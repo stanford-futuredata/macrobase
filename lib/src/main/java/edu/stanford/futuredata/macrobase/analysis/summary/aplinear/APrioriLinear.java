@@ -24,9 +24,9 @@ public class APrioriLinear {
     private Logger log = LoggerFactory.getLogger("APrioriLinear");
 
     // **Parameters**
-    private QualityMetric[] qualityMetrics;
-    private List<List<Double>> allThresholds;
-    private double[] minPruningThresholds;
+    protected QualityMetric[] qualityMetrics;
+    protected List<List<Double>> allThresholds;
+    protected double[] minPruningThresholds;
 
     // **Cached values**
     // Sets that have high enough support but not high qualityMetrics, need to be explored
@@ -448,8 +448,12 @@ public class APrioriLinear {
         // Iterate through all thresholds in the multi-query and select the appropriate results for each.
         for (List<Double> threshold: allThresholds) {
             List<APLExplanationResult> result = new ArrayList<>();
-            Set<IntSet> o1Saved = new HashSet<>();
-            Set<IntSet> o2Saved = new HashSet<>();
+            Set<IntSet> o1Saved = null;
+            Set<IntSet> o2Saved = null;
+            if (!evaluateAntiDiff) {
+                o1Saved = new HashSet<>();
+                o2Saved = new HashSet<>();
+            }
             for (int curOrder : savedAggregates.keySet()) {
                 Map<IntSet, double[]> curOrderSavedAggregates = savedAggregates.get(curOrder);
                 for (IntSet curSet : curOrderSavedAggregates.keySet()) {
@@ -461,37 +465,50 @@ public class APrioriLinear {
                         double t = threshold.get(i);
                         action = QualityMetric.Action.combine(action, q.getAction(aggregates, t));
                     }
-                    // TODO: add Anti-DIFF support
-                    if (action == QualityMetric.Action.KEEP) {
-                        // Then, check minimality against saved candidates for this threshold.
-                        if (curOrder == 2) {
-                            if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
-                            || o1Saved.contains(new IntSetAsArray(curSet.getSecond()))) {
-                                continue;
-                            }
-                        } else if (curOrder == 3) {
-                            if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
+                    if (!evaluateAntiDiff) {
+                        if (action == QualityMetric.Action.KEEP) {
+                            // Then, check minimality against saved candidates for this threshold.
+                            if (curOrder == 2) {
+                                if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
+                                    || o1Saved.contains(new IntSetAsArray(curSet.getSecond()))) {
+                                    continue;
+                                }
+                            } else if (curOrder == 3) {
+                                if (o1Saved.contains(new IntSetAsArray(curSet.getFirst()))
                                     || o1Saved.contains(new IntSetAsArray(curSet.getSecond()))
                                     || o1Saved.contains(new IntSetAsArray(curSet.getThird()))) {
-                                continue;
+                                    continue;
+                                }
+                                if (!noPairsSaved(curSet, o2Saved)) {
+                                    continue;
+                                }
                             }
-                            if (!noPairsSaved(curSet, o2Saved)) {
-                                continue;
+                            // Return an explanation.
+                            double[] metrics = new double[qualityMetrics.length];
+                            for (int i = 0; i < metrics.length; i++) {
+                                metrics[i] = qualityMetrics[i].value(aggregates);
                             }
-                        }
-                        // Return an explanation.
-                        double[] metrics = new double[qualityMetrics.length];
-                        for (int i = 0; i < metrics.length; i++) {
-                            metrics[i] = qualityMetrics[i].value(aggregates);
-                        }
-                        result.add(
+                            result.add(
                                 new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
-                        );
-                        if (curOrder == 1) {
-                            o1Saved.add(curSet);
-                        } else if (curOrder == 2) {
-                            o2Saved.add(curSet);
+                            );
+                            if (curOrder == 1) {
+                                o1Saved.add(curSet);
+                            } else if (curOrder == 2) {
+                                o2Saved.add(curSet);
+                            }
                         }
+                    } else {
+                        if (action != QualityMetric.Action.KEEP) {
+                            // Return an explanation, don't check minimality
+                            double[] metrics = new double[qualityMetrics.length];
+                            for (int i = 0; i < metrics.length; i++) {
+                                metrics[i] = qualityMetrics[i].value(aggregates);
+                            }
+                            result.add(
+                                new APLExplanationResult(qualityMetrics, curSet, aggregates, metrics)
+                            );
+                        }
+
                     }
                 }
             }

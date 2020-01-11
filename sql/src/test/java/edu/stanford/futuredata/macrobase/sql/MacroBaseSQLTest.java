@@ -198,6 +198,8 @@ public class MacroBaseSQLTest {
             loadDataFrameFromCsv("20.csv", ImmutableMap.of("usage", ColType.DOUBLE)));
     }
 
+    // Integration test: make sure that state carried over between queries doesn't corrupt the
+    // return value
     @Test
     public void testAllQueries() throws Exception {
         query1();

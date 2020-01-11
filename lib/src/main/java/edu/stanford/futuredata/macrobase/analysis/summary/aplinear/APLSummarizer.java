@@ -21,7 +21,7 @@ public abstract class APLSummarizer extends BatchSummarizer {
     APLExplanation explanation;
     APrioriLinear aplKernel;
     List<QualityMetric> qualityMetricList;
-    private double[][] globalAggregateCols = null;
+    protected double[][] globalAggregateCols = null;
     List<List<Double>> thresholds;
 
     protected long numEvents = 0;

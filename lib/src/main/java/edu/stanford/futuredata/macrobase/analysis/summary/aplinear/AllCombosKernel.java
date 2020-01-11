@@ -20,11 +20,9 @@ public class AllCombosKernel extends APrioriLinear {
 
     private Logger log = LoggerFactory.getLogger("AllCombosKernel");
 
-    public AllCombosKernel(
-        List<QualityMetric> qualityMetrics,
-        List<Double> thresholds,
-        AttributeEncoder encoder
-    ) {
+    public AllCombosKernel(List<QualityMetric> qualityMetrics, List<List<Double>> thresholds,
+        AttributeEncoder encoder) {
+        // TODO support list of thresholds
         super(qualityMetrics, thresholds, encoder);
     }
 
