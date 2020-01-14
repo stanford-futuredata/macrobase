@@ -66,7 +66,6 @@ public class MeanShiftChebyQualityMetric implements QualityMetric {
         } else { // case where the values are negative
             retVal = oMeanMin / iMeanMax;
         }
-        System.out.println("Subgroup Value: "+retVal);
         return retVal;
     }
 

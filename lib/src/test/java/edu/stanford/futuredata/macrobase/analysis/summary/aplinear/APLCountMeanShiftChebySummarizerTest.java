@@ -48,7 +48,7 @@ public class APLCountMeanShiftChebySummarizerTest {
         );
 
         APLCountMeanShiftChebySummarizer summ = new APLCountMeanShiftChebySummarizer();
-        summ.setMinSupport(.02);
+        summ.setMinSupport(.01);
         summ.setMinMeanShift(4.0);
         summ.setAttributes(explanationAttributes);
         summ.process(output);

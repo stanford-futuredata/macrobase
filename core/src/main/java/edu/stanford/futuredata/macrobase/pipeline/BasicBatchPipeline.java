@@ -2,6 +2,7 @@ package edu.stanford.futuredata.macrobase.pipeline;
 
 import edu.stanford.futuredata.macrobase.analysis.classify.*;
 import edu.stanford.futuredata.macrobase.analysis.summary.Explanation;
+import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftChebySummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLCountMeanShiftSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.aplinear.APLOutlierSummarizer;
 import edu.stanford.futuredata.macrobase.analysis.summary.BatchSummarizer;
@@ -24,6 +25,7 @@ public class BasicBatchPipeline implements Pipeline {
     private String inputURI = null;
 
     private String classifierType;
+    private boolean useChebyPruning;
     private String metric;
     private double cutoff;
     private Optional<String> meanColumn;
@@ -64,6 +66,7 @@ public class BasicBatchPipeline implements Pipeline {
             isStrPredicate = false;
             cutoff = conf.get("cutoff", 1.0);
         }
+        useChebyPruning = conf.get("chebyshevPruning", false);
 
         pctileHigh = conf.get("includeHi",true);
         pctileLow = conf.get("includeLo", true);
@@ -105,18 +108,20 @@ public class BasicBatchPipeline implements Pipeline {
                 return classifier;
             }
             case "countmeanshift": {
-                if (isStrPredicate) {
-                    return new CountMeanShiftClassifier(
-                            metric,
-                            meanColumn.orElseThrow(
-                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                            strCutoff);
+                String curMeanColumn = meanColumn.orElseThrow(
+                        () -> new MacroBaseException("mean column not present in config"));
+                if (!useChebyPruning) {
+                    if (isStrPredicate) {
+                        return new CountMeanShiftClassifier(metric, curMeanColumn, predicateStr, strCutoff);
+                    } else {
+                        return new CountMeanShiftClassifier(metric, curMeanColumn, predicateStr, cutoff);
+                    }
                 } else {
-                    return new CountMeanShiftClassifier(
-                            metric,
-                            meanColumn.orElseThrow(
-                                    () -> new MacroBaseException("mean column not present in config")), predicateStr,
-                            cutoff);
+                    if (isStrPredicate) {
+                        return new CountMeanShiftChebyClassifier(metric, curMeanColumn, predicateStr, strCutoff);
+                    } else {
+                        return new CountMeanShiftChebyClassifier(metric, curMeanColumn, predicateStr, cutoff);
+                    }
                 }
             }
             case "predicate": {
@@ -158,12 +163,22 @@ public class BasicBatchPipeline implements Pipeline {
                 return summarizer;
             }
             case "countmeanshift": {
-                APLCountMeanShiftSummarizer summarizer = new APLCountMeanShiftSummarizer();
-                summarizer.setAttributes(attributes);
-                summarizer.setMinSupport(minSupport);
-                summarizer.setMinMeanShift(meanShiftRatio);
-                summarizer.setNumThreads(numThreads);
-                return summarizer;
+                if (useChebyPruning) {
+                    APLCountMeanShiftChebySummarizer summarizer = new APLCountMeanShiftChebySummarizer();
+                    summarizer.setAttributes(attributes);
+                    summarizer.setMinSupport(minSupport);
+                    summarizer.setMinMeanShift(meanShiftRatio);
+                    summarizer.setNumThreads(numThreads);
+                    return summarizer;
+
+                } else {
+                    APLCountMeanShiftSummarizer summarizer = new APLCountMeanShiftSummarizer();
+                    summarizer.setAttributes(attributes);
+                    summarizer.setMinSupport(minSupport);
+                    summarizer.setMinMeanShift(meanShiftRatio);
+                    summarizer.setNumThreads(numThreads);
+                    return summarizer;
+                }
             }
             default: {
                 throw new MacroBaseException("Bad Summarizer Type");
