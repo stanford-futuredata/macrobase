@@ -40,19 +40,10 @@ public class MeanShiftChebyQualityMetric implements QualityMetric {
     }
     @Override
     public double maxSubgroupValue(double[] aggregates) {
-        double oSum = aggregates[oSumIdx];
-        double oSum2 = aggregates[oSum2Idx];
-        double oCount = aggregates[oCountIdx];
+
         double iSum = aggregates[iSumIdx];
         double iSum2 = aggregates[iSum2Idx];
         double iCount = aggregates[iCountIdx];
-
-        double oMean = oSum / oCount;
-        double oStd = Math.sqrt(oSum2 / oCount - oMean*oMean);
-        double oTargetFrac = oSuppThreshold * globalOCount / oCount;
-        double oMeanMax = oMean + oStd * Math.sqrt(1/oTargetFrac);
-        double oMeanMin = oMean - oStd * Math.sqrt(1/oTargetFrac);
-
         double iMean = iSum / iCount;
         double iStd = Math.sqrt(iSum2 / iCount - iMean*iMean);
         double iTargetFrac = iSuppThreshold * globalICount / iCount;
@@ -61,11 +52,22 @@ public class MeanShiftChebyQualityMetric implements QualityMetric {
         double retVal;
         if (iMeanMax * iMeanMin <= 0) {
             retVal = Double.POSITIVE_INFINITY;
-        } else if (iMeanMin > 0) {
-            retVal = oMeanMax / iMeanMin;
-        } else { // case where the values are negative
-            retVal = oMeanMin / iMeanMax;
+        } else {
+            double oSum = aggregates[oSumIdx];
+            double oSum2 = aggregates[oSum2Idx];
+            double oCount = aggregates[oCountIdx];
+            double oMean = oSum / oCount;
+            double oStd = Math.sqrt(oSum2 / oCount - oMean*oMean);
+            double oTargetFrac = oSuppThreshold * globalOCount / oCount;
+            if (iMeanMin > 0) {
+                double oMeanMax = oMean + oStd * Math.sqrt(1/oTargetFrac);
+                retVal = oMeanMax / iMeanMin;
+            } else { // case where the values are negative
+                double oMeanMin = oMean - oStd * Math.sqrt(1/oTargetFrac);
+                retVal = oMeanMin / iMeanMax;
+            }
         }
+
         return retVal;
     }
 
