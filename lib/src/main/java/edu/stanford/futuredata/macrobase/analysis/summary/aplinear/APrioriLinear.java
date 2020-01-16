@@ -369,7 +369,7 @@ public class APrioriLinear {
                     }
                 }
             }
-            System.out.println("Order: "+curOrder+ "Saved: "+saved+ "Next: "+next);
+            log.info("Order: "+curOrder+ " Saved: "+saved+ " Next: "+next);
 
             // Save aggregates that pass all qualityMetrics to return later, store aggregates
             // that have minimum support for higher-order exploration.

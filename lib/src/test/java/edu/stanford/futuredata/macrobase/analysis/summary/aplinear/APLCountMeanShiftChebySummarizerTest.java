@@ -26,7 +26,7 @@ public class APLCountMeanShiftChebySummarizerTest {
         colTypes.put("d2", Schema.ColType.STRING);
         colTypes.put("x", Schema.ColType.DOUBLE);
         CSVDataFrameParser loader = new CSVDataFrameParser(
-                "/Users/edgan/Documents/projects/macrobase/tools/synth_cluster_tight.csv",
+                "src/test/resources/synth_cluster_tight.csv",
                 requiredColumns
         );
         loader.setColumnTypes(colTypes);
