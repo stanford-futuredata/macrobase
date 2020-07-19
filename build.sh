@@ -40,3 +40,6 @@ else
   done
 fi
 
+# Build MB SQL
+cd sql
+mvn clean install
